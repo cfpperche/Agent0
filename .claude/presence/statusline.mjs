@@ -11,10 +11,10 @@
 //   line1: <model> · <effort?> · <agent?> · <wt?> · <project> · <branch> · <bar> <%> <eta?> · <5h?> · <7d?> · <warning?>
 //   line2: $<cost> · ↑↓<turn-tokens> · $<cost-per-min?> · <duration?> · +<add>/-<rem>? · <lines/$?> · <cache-hit?>
 //
-// State written under <projectDir>/.agent/runtime/statusline/:
+// State written under <projectDir>/.claude/.runtime/statusline/:
 //   - branch.json — git branch cache (5s TTL)
 //   - tokens/<sessionId>.json — input/output tokens snapshot for per-turn delta
-//   - context-markers/<sessionId>-current — current ctx usage marker (read by other agent-core skills)
+//   - context-markers/<sessionId>-current — current ctx usage marker
 //
 // Vendor-agnostic: no anthill-specific paths (unleash/delegation/pipeline excluded by design).
 // Performance budget: <50ms steady state (no network, branch cached, jq-free).
@@ -86,7 +86,7 @@ const sevenDayUsed = data.rate_limits?.seven_day?.used_percentage;
 const sevenDayResets = data.rate_limits?.seven_day?.resets_at;
 
 // ── Git branch (cached for 5s to avoid spawning git on every update) ─────
-const STATE_DIR = projectDir ? `${projectDir}/.agent/runtime/statusline` : null;
+const STATE_DIR = projectDir ? `${projectDir}/.claude/.runtime/statusline` : null;
 const BRANCH_CACHE = STATE_DIR ? `${STATE_DIR}/branch.json` : null;
 try {
 	if (STATE_DIR && !existsSync(STATE_DIR)) mkdirSync(STATE_DIR, { recursive: true });

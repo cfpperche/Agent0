@@ -3,5 +3,6 @@
 CLAUDE.local.md
 .claude/projects/
 
-# Statusline runtime state (branch cache, per-turn token snapshots, context markers)
-.agent/runtime/
+# Ephemeral state under .claude/ — per-machine runtime, never commit
+.claude/.runtime/
+.claude/.session-state/

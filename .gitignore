@@ -2,3 +2,6 @@
 .claude/settings.local.json
 CLAUDE.local.md
 .claude/projects/
+
+# Statusline runtime state (branch cache, per-turn token snapshots, context markers)
+.agent/runtime/

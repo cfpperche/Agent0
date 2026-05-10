@@ -4,5 +4,9 @@
     "defaultMode": "bypassPermissions",
     "allow": [],
     "deny": []
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/presence/statusline.mjs"
   }
 }

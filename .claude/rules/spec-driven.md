@@ -26,7 +26,7 @@ When in doubt, write a spec — 5 minutes of markdown is cheap insurance.
 
 ## The three artifacts
 
-Specs live under `specs/NNN-<slug>/` where `NNN` is zero-padded sequential (001, 002, …). Each spec has three files:
+Specs live under `docs/specs/NNN-<slug>/` where `NNN` is zero-padded sequential (001, 002, …). Each spec has three files:
 
 - **`spec.md`** — the *what* and *why*. Intent, acceptance criteria as a checklist, non-goals, open questions. This is the contract — hand it to a stakeholder or paste it into the PR body.
 - **`plan.md`** — the *how*. Approach, files to touch, alternatives considered and rejected (with reasoning), risks and unknowns. This is the engineering judgment.
@@ -49,6 +49,6 @@ Specs are **git-tracked** — they are the project's design memory. Don't gitign
 
 ## Escalation path
 
-For larger projects (multi-week features, multiple contributors), this convention-light approach has limits. Lightest opt-in upgrade: [OpenSpec](https://openspec.dev/) — `npm i -g @fission-ai/openspec && openspec init` adds delta-spec tracking (`ADDED` / `MODIFIED` / `REMOVED`) and proposal review on top of plain markdown. Doesn't conflict with `specs/`; just adds an `openspec/` tree alongside.
+For larger projects (multi-week features, multiple contributors), this convention-light approach has limits. Lightest opt-in upgrade: [OpenSpec](https://openspec.dev/) — `npm i -g @fission-ai/openspec && openspec init` adds delta-spec tracking (`ADDED` / `MODIFIED` / `REMOVED`) and proposal review on top of plain markdown. Doesn't conflict with `docs/specs/`; just adds an `openspec/` tree alongside.
 
 Heavier tools (spec-kit, BMAD) are an option but bring Python/multi-agent overhead. Reach for them only if the project actually needs them.

@@ -1,11 +1,11 @@
 ---
-description: Spec-driven development scaffolding. Use when starting non-trivial work (3+ files, new module, API/schema change, vague request needing decomposition). Creates and progresses specs/NNN-slug/{spec,plan,tasks}.md per the spec-driven workflow. Subcommands - new <slug>, plan, tasks, list. See .claude/rules/spec-driven.md for when SDD applies and when to skip.
+description: Spec-driven development scaffolding. Use when starting non-trivial work (3+ files, new module, API/schema change, vague request needing decomposition). Creates and progresses docs/specs/NNN-slug/{spec,plan,tasks}.md per the spec-driven workflow. Subcommands - new <slug>, plan, tasks, list. See .claude/rules/spec-driven.md for when SDD applies and when to skip.
 argument-hint: <new <slug> | plan | tasks | list>
 ---
 
 # /sdd — spec-driven development
 
-Scaffolds and progresses spec folders for non-trivial work. Each feature gets `specs/NNN-<slug>/` with three files: `spec.md` (what + why), `plan.md` (how), `tasks.md` (do).
+Scaffolds and progresses spec folders for non-trivial work. Each feature gets `docs/specs/NNN-<slug>/` with three files: `spec.md` (what + why), `plan.md` (how), `tasks.md` (do).
 
 See `.claude/rules/spec-driven.md` for the workflow rationale and when to apply / skip SDD.
 
@@ -22,16 +22,16 @@ Scaffold a new spec dir. Parse `$ARGUMENTS`: first token must be `new`, second t
 1. **Validate** — refuse with a clear message if:
    - slug is empty
    - slug doesn't match `^[a-z][a-z0-9-]*$` (kebab-case starting with a letter)
-   - `specs/NNN-<slug>/` with that slug already exists (suggest a different slug or `/sdd list`)
+   - `docs/specs/NNN-<slug>/` with that slug already exists (suggest a different slug or `/sdd list`)
 
-2. **Find next NNN** — scan `specs/` for existing `NNN-*` dirs (ignore hidden files like `.gitkeep`), take the highest NNN, increment. Start at `001` if none exist. Zero-pad to 3 digits.
+2. **Find next NNN** — scan `docs/specs/` for existing `NNN-*` dirs (ignore hidden files like `.gitkeep`), take the highest NNN, increment. Start at `001` if none exist. Zero-pad to 3 digits.
 
 3. **Create the dir and copy templates** — use the templates in `${CLAUDE_SKILL_DIR}/templates/`:
    ```
-   mkdir -p specs/NNN-<slug>
-   cp ${CLAUDE_SKILL_DIR}/templates/spec.md.tmpl  specs/NNN-<slug>/spec.md
-   cp ${CLAUDE_SKILL_DIR}/templates/plan.md.tmpl  specs/NNN-<slug>/plan.md
-   cp ${CLAUDE_SKILL_DIR}/templates/tasks.md.tmpl specs/NNN-<slug>/tasks.md
+   mkdir -p docs/specs/NNN-<slug>
+   cp ${CLAUDE_SKILL_DIR}/templates/spec.md.tmpl  docs/specs/NNN-<slug>/spec.md
+   cp ${CLAUDE_SKILL_DIR}/templates/plan.md.tmpl  docs/specs/NNN-<slug>/plan.md
+   cp ${CLAUDE_SKILL_DIR}/templates/tasks.md.tmpl docs/specs/NNN-<slug>/tasks.md
    ```
 
 4. **Substitute placeholders** in each created file — replace literally:
@@ -45,7 +45,7 @@ Scaffold a new spec dir. Parse `$ARGUMENTS`: first token must be `new`, second t
 
 Draft `plan.md` from an existing `spec.md`. No positional argument — operate on the most recent spec dir (highest NNN) unless the user has already named a specific one in conversation.
 
-1. **Locate target** — find the latest `specs/NNN-*/` dir. If multiple are in flight and ambiguous, ask which one.
+1. **Locate target** — find the latest `docs/specs/NNN-*/` dir. If multiple are in flight and ambiguous, ask which one.
 2. **Read `spec.md`** — refuse if it still has unfilled template placeholders (`{{` substrings) or is essentially empty. Tell the user to fill spec first.
 3. **Draft `plan.md`** — preserve the existing template section headers; fill them from `spec.md` + your understanding of the codebase. For "Alternatives considered" you MUST list at least one rejected option with reasoning — if there genuinely was no alternative, say so explicitly ("no real alternatives; only viable approach is X because Y").
 4. **Cite research** — if the spec or plan involved web research or codebase exploration, link the sources in the plan. This satisfies `research-before-proposing.md`.
@@ -69,7 +69,7 @@ Generate `tasks.md` from `plan.md`. Same target-selection rule as `plan`.
 
 List all specs in the repo with a one-line status each.
 
-1. Scan `specs/` for `NNN-*/` dirs (sorted by NNN ascending).
+1. Scan `docs/specs/` for `NNN-*/` dirs (sorted by NNN ascending).
 2. For each, emit one line: `NNN-<slug>  [status]  — <h1 of spec.md, or "(no spec)" if empty>`.
 3. Status heuristic:
    - `spec` — `spec.md` has content but `plan.md` still has placeholders

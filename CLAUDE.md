@@ -1,14 +1,14 @@
-# Atelier — repositório base
+# Agent0 — base repository
 
-Ponto de partida para novos projetos de software. Cada nova iniciação substitui as seções abaixo conforme o projeto cresce.
+Starting point for new software projects. Replace the placeholder sections below as the project evolves.
 
-## Visão geral
+## Overview
 
-_Breve descrição do projeto e seu propósito._
+_Brief description of the project and its purpose._
 
 ## Stack
 
-_Linguagem, framework, dependências principais._
+_Language, framework, main dependencies._
 
 ## Build & test
 
@@ -18,10 +18,10 @@ _Linguagem, framework, dependências principais._
 # lint:
 ```
 
-## Convenções de código
+## Conventions
 
-_Estilo, padrões, decisões arquiteturais relevantes — o que não é óbvio pelo código._
+_Style, patterns, architectural decisions — what's not obvious from the code._
 
 ## Gotchas
 
-_Comportamentos não-óbvios, armadilhas conhecidas, contexto que não está versionado._
+_Non-obvious behaviors, known pitfalls, context not captured in code._

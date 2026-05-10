@@ -28,7 +28,7 @@ When in doubt, write a spec — 5 minutes of markdown is cheap insurance.
 
 Specs live under `docs/specs/NNN-<slug>/` where `NNN` is zero-padded sequential (001, 002, …). Each spec has three files:
 
-- **`spec.md`** — the *what* and *why*. Intent, acceptance criteria as a checklist, non-goals, open questions. This is the contract — hand it to a stakeholder or paste it into the PR body.
+- **`spec.md`** — the *what* and *why*. Intent, acceptance criteria as scenarios or a checklist (see § *Acceptance scenarios* below), non-goals, open questions. This is the contract — hand it to a stakeholder or paste it into the PR body.
 - **`plan.md`** — the *how*. Approach, files to touch, alternatives considered and rejected (with reasoning), risks and unknowns. This is the engineering judgment.
 - **`tasks.md`** — the *do*. Numbered checklist of concrete execution steps. This is what Claude (or you) works through one at a time, checking off as it goes.
 
@@ -41,6 +41,43 @@ Specs are **git-tracked** — they are the project's design memory. Don't gitign
 3. **Tasks** — `/sdd tasks` drafts `tasks.md` from `plan.md`. Each task should be small enough that completing it is unambiguous.
 4. **Implement** — work `tasks.md` top-to-bottom. Check off as you go. If a task reveals the plan is wrong, update `plan.md` *before* continuing.
 5. **Close** — when the spec is delivered, the spec dir stays — it's the historical record. Reference it from the commit / PR.
+
+## Acceptance scenarios
+
+The acceptance section of `spec.md` should describe **observable behavior** in Given/When/Then scenarios. A scenario is a contract a verifier (human or sub-agent) can mirror directly into `tasks.md`'s verification steps.
+
+### Canonical shape — nested sub-bullets
+
+- [ ] **Scenario: <short title>**
+  - **Given** <precondition: state that must hold>
+  - **When** <action that triggers the behavior>
+  - **Then** <observable outcome: what becomes true / visible>
+
+### Compact shape — inline prose
+
+For short scenarios that fit on one line:
+
+- [ ] **Scenario: <title>** — **Given** <precondition>; **When** <action>; **Then** <outcome>
+
+Use the nested shape by default; switch to inline only when the scenario is genuinely one-line.
+
+### Plain bullets — for static-fact criteria
+
+Not every criterion is a behavior. Existence checks, executable bits, JSON parses, file paths — these are static facts. Use a plain checkbox bullet:
+
+- [ ] `<concrete static fact, e.g. .claude/hooks/foo.sh exists and is executable>`
+
+Mixing scenario bullets with plain bullets in the same `## Acceptance criteria` is expected and correct. Do not force a static fact into Given/When/Then; do not write a behavior as a flat bullet.
+
+### Why this shape
+
+- A scenario is **executable in prose**: a sub-agent dispatched (via the 002-delegation gate) with a 5-field brief whose DELIVERABLE references "scenario N from `docs/specs/NNN-<slug>/spec.md`" can construct the verification without follow-up clarification.
+- The Given/When/Then split prevents the common failure mode where an acceptance bullet describes *what* without *when* — the verifier then has to infer the precondition and trigger from plan.md or conversation.
+- Tasks.md verification steps map 1:1 from scenarios: each scenario becomes one task that asserts the Then under the Given/When.
+
+### What this does NOT introduce
+
+This is a writing discipline. There is no Cucumber, no Gherkin parser, no test-runner integration, no hook that validates `spec.md` shape. Scenarios are prose; their value is clarity for the next reader (often a sub-agent), not machine consumption. Specs 001-003 keep their flat-checklist shape — `git log` is the audit trail, not a rewrite.
 
 ## Relationship to other rules
 

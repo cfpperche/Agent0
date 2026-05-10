@@ -76,6 +76,15 @@ fi
 if [ "$OK" = "true" ]; then
   : > "$STATE_FILE" 2>/dev/null || true
   printf '0' > "$STATE_FILE" 2>/dev/null || true
+
+  # TDD advisory surfacing (spec 005). Validator may append a `warnings` array
+  # on stack-detected paths; echo each message to stderr so the agent sees it
+  # on its next turn. Always exit 0 — advisories never block.
+  WARNINGS_COUNT="$(printf '%s' "$VALIDATOR_OUT" | jq -r 'if type == "object" and has("warnings") then (.warnings | length) else 0 end' 2>/dev/null || true)"
+  if [ "${WARNINGS_COUNT:-0}" -gt 0 ]; then
+    printf '%s' "$VALIDATOR_OUT" | jq -r '.warnings[] | "tdd-advisory: " + .message' >&2
+  fi
+
   exit 0
 fi
 

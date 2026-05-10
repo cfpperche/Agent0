@@ -48,6 +48,8 @@ Tuning:
 
 If the validator is missing, non-executable, or emits unparseable output, the hook fails open (no block). A broken validator must never permanently lock the agent out of editing.
 
+The validator may also append a `warnings` array to its JSON output on stack-detected paths. The post-edit hook reads any warnings and echoes each one to stderr with a `tdd-advisory:` prefix on the exit-0 path — non-blocking advisories that surface to the agent on its next turn. This is how TDD test-coverage advisories reach the agent today; see `.claude/rules/tdd.md` for the warning shape and the response convention.
+
 ## Audit log
 
 `.claude/delegation-audit.jsonl` (gitignored, append-only). One JSON object per line, ten fields: `ts`, `session_id`, `subagent_type`, `model`, `model_specified`, `formatted`, `override`, `advisory_emitted`, `escalation_signals`, `task_summary`. Read with `jq -c .` or `tail -f`. Blocked calls are NOT logged — only allowed dispatches reach the audit phase.

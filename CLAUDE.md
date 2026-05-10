@@ -34,6 +34,10 @@ Non-trivial work is spec-first: write intent before code under `docs/specs/NNN-<
 
 Sub-agent dispatches via the `Agent` tool are gated by `.claude/hooks/delegation-gate.sh`: every call must use the 5-field handoff (TASK / CONTEXT / CONSTRAINTS / DELIVERABLE-or-DONE_WHEN) so the delegated agent has scope, constraints, and a verifiable outcome instead of inventing its own framing. Edits made by delegated sub-agents are then re-validated by `.claude/hooks/post-edit-validate.sh`, which runs the project validator (`.claude/validators/run.sh`, auto-detects bun/pnpm/npm/python/go/rust) and blocks the sub-agent into a fix-then-retry loop on failure (capped by `CLAUDE_DELEGATION_LOOP_BUDGET`, default 5). Parent edits are exempt; the audit log lives at `.claude/delegation-audit.jsonl`. Same `# OVERRIDE: <reason ≥10 chars>` escape as the governance gate. See `.claude/rules/delegation.md`.
 
+## Test-driven development
+
+TDD is a *cultural* discipline reinforced by the validator — not a blocking gate. Production code follows red → green → refactor; tests land in the same diff that introduces the behavior they cover. When a delegated sub-agent edits production files in a project with a detected test stack, the validator appends a non-blocking `warnings` entry that the post-edit hook surfaces to stderr with a `tdd-advisory:` prefix; the agent should add the missing test before declaring done unless the change is genuinely test-exempt (rename, comment, doc, dependency bump). The `# OVERRIDE: tdd-exempt: <reason ≥10 chars>` shape on a brief documents deliberate skips. BDD scenarios from `spec.md` map naturally to test names. See `.claude/rules/tdd.md`.
+
 ## Compact Instructions
 
 When summarizing this conversation for context compaction, prioritize keeping:

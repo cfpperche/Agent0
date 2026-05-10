@@ -30,6 +30,10 @@ _Non-obvious behaviors, known pitfalls, context not captured in code._
 
 Non-trivial work is spec-first: write intent before code under `docs/specs/NNN-<slug>/{spec,plan,tasks}.md`. Specs are dual-consumer design memory — humans read them for review/audit/validation, agents read them to guide execution (acceptance criteria, approach, task order). `.claude/` is reserved for harness configuration (rules, skills, hooks) that the Claude Code runtime consumes to shape its own behavior. The `/sdd` skill scaffolds and progresses these (`/sdd new <slug>`, `/sdd plan`, `/sdd tasks`, `/sdd list`). See `.claude/rules/spec-driven.md` for when to apply and when to skip.
 
+## Delegation
+
+Sub-agent dispatches via the `Agent` tool are gated by `.claude/hooks/delegation-gate.sh`: every call must use the 5-field handoff (TASK / CONTEXT / CONSTRAINTS / DELIVERABLE-or-DONE_WHEN) so the delegated agent has scope, constraints, and a verifiable outcome instead of inventing its own framing. Edits made by delegated sub-agents are then re-validated by `.claude/hooks/post-edit-validate.sh`, which runs the project validator (`.claude/validators/run.sh`, auto-detects bun/pnpm/npm/python/go/rust) and blocks the sub-agent into a fix-then-retry loop on failure (capped by `CLAUDE_DELEGATION_LOOP_BUDGET`, default 5). Parent edits are exempt; the audit log lives at `.claude/delegation-audit.jsonl`. Same `# OVERRIDE: <reason ≥10 chars>` escape as the governance gate. See `.claude/rules/delegation.md`.
+
 ## Compact Instructions
 
 When summarizing this conversation for context compaction, prioritize keeping:

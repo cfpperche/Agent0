@@ -26,6 +26,10 @@ _Style, patterns, architectural decisions — what's not obvious from the code._
 
 _Non-obvious behaviors, known pitfalls, context not captured in code._
 
+## Spec-driven development
+
+Non-trivial work is spec-first: write intent before code under `specs/NNN-<slug>/{spec,plan,tasks}.md`. The `/sdd` skill scaffolds and progresses these (`/sdd new <slug>`, `/sdd plan`, `/sdd tasks`, `/sdd list`). See `.claude/rules/spec-driven.md` for when to apply and when to skip.
+
 ## Compact Instructions
 
 When summarizing this conversation for context compaction, prioritize keeping:

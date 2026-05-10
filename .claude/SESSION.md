@@ -8,48 +8,61 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ## Current state
 
-Five capacities on `main`, plus the two foundational hooks (compaction continuity, session handoff). Listed in spec order:
+Seven capacities on `main` plus the foundational hooks (compaction continuity, session handoff). Listed in spec order:
 
 1. **Compaction continuity** — `PreCompact` snapshots last 12 real user turns into `.claude/COMPACT_NOTES.md` (gitignored); `SessionStart(source=compact)` re-injects it. `CLAUDE.md` § *Compact Instructions* steers the summarizer.
 
-2. **Spec-driven development** — `/sdd` skill (`.claude/skills/sdd/`) scaffolds `docs/specs/NNN-<slug>/{spec,plan,tasks}.md`. Rule `.claude/rules/spec-driven.md`. End-to-end used for 002-delegation this session, with the workflow paying off when dogfood revealed bugs cheaply during plan/task execution.
+2. **Spec-driven development** — `/sdd` skill scaffolds `docs/specs/NNN-<slug>/{spec,plan,tasks}.md`. Rule `.claude/rules/spec-driven.md`. The workflow has been the spine of every non-trivial change for four specs running; dogfood reliably catches design bugs cheaply during plan/task execution.
 
 3. **Governance gate** _(spec 001)_ — `.claude/hooks/governance-gate.sh` on `PreToolUse(Bash)`. Blocks destructive ops, hook bypass, blanket staging. Escape: inline `# OVERRIDE: <reason ≥10 chars>`.
 
-4. **Delegation capacity** _(spec 002, this session, `c2d15f9`)_ — Two hooks plus a project-side validator. `PreToolUse(Agent)` via `.claude/hooks/delegation-gate.sh` enforces a 5-field handoff (TASK / CONTEXT / CONSTRAINTS / DELIVERABLE-or-DONE_WHEN), logs every dispatch to `.claude/delegation-audit.jsonl`, and emits an opus-escalation advisory when 2+ signals fire on a non-opus model. `PostToolUse(Edit|Write|MultiEdit)` via `.claude/hooks/post-edit-validate.sh` runs `.claude/validators/run.sh` on sub-agent edits only (parent edits exempt by `agent_id` detection), with a per-agent loop budget defaulting to 5. Same `# OVERRIDE:` escape as governance. Rule `.claude/rules/delegation.md`.
+4. **Delegation capacity** _(spec 002, `c2d15f9`)_ — `PreToolUse(Agent)` enforces a 5-field handoff (TASK / CONTEXT / CONSTRAINTS / DELIVERABLE-or-DONE_WHEN), logs to `.claude/delegation-audit.jsonl`, emits an opus-escalation advisory on ≥2 signals. `PostToolUse(Edit|Write|MultiEdit)` runs `.claude/validators/run.sh` on sub-agent edits only (parent edits exempt by `agent_id` detection), with a per-agent loop budget of 5. Rule `.claude/rules/delegation.md`.
 
-5. **Reminders capacity** _(spec 003, prior session + this session's `657df34`)_ — `/remind` skill with subcommands `add | list | dismiss`. State at `.claude/REMINDERS.md`. SessionStart hook `reminders-readout.sh` surfaces it at start. Rule `.claude/rules/reminders.md`.
+5. **Reminders capacity** _(spec 003, `eb2dd2e` + `657df34`)_ — `/remind` skill with `add | list | dismiss`. State at `.claude/REMINDERS.md`. SessionStart hook `reminders-readout.sh` surfaces it at start. Rule `.claude/rules/reminders.md`.
+
+6. **BDD acceptance scenarios** _(spec 004, `2689c49`)_ — `/sdd` template now scaffolds acceptance criteria as Given/When/Then scenarios for behavior + plain checkbox bullets for static facts. Rule extension at `.claude/rules/spec-driven.md § Acceptance scenarios`. Empirically validated: a delegated sub-agent can verify a scenario directly from `spec.md` with zero follow-up clarification (live test, 2 tool calls). Specs 001-003 keep their flat checklists as historical record.
+
+7. **TDD working agreement** _(spec 005, `3115cf6`)_ — Cultural discipline (red→green→refactor), reinforced by an additive `warnings` field on the validator JSON contract. `.claude/validators/run.sh` detects per-stack test patterns + honors `CLAUDE_TDD_TEST_PATTERNS` env var override + unions `git diff` with `git ls-files --others --exclude-standard` to catch untracked test files. `post-edit-validate.sh` echoes each warning to stderr with `tdd-advisory:` prefix on exit-0 paths. Rule `.claude/rules/tdd.md`. Inert in this base repo (no language stack); fires when a project plugs in a stack.
 
 ## WIP
 
-Nothing in flight. Both 002-delegation and the deferred 003-reminders `settings.json` wiring landed this session.
+Nothing in flight. Branch is at `origin/main` after this session (`3115cf6` pushed).
 
 ## Next steps
 
-- **Cross-session smoke** on next start: confirm the `=== REMINDERS ===` frame appears (the 003 acceptance criterion #7 deferred from the prior session) and that the delegation gate fires on the first real `Agent` call (audit log gains an entry, advisory surfaces if signals fire).
-- **Push to origin** — branch is 2 commits ahead of `origin/main` after this session.
-- **Validator is currently inert** in this base repo (no language stack → `no-stack-detected` → `ok=true` always). When this template is forked into a real project, plug in the actual typecheck+test commands by editing `.claude/validators/run.sh` (or override at runtime via `CLAUDE_DELEGATION_VALIDATOR=/abs/path`).
+- **Cross-session smoke** on next start: confirm the `=== REMINDERS ===` frame appears (003 acceptance #7, deferred from the original /remind session) and that the delegation gate fires on the first real `Agent` call (audit log gains an entry, advisory surfaces if signals fire).
+- **Validator inert in this base repo** — remains the dogfood baseline. When this template is forked into a real project: edit `.claude/validators/run.sh` per-stack branches with the actual typecheck+test commands, OR set `CLAUDE_DELEGATION_VALIDATOR=/abs/path` to a project script that emits the JSON contract. The TDD warnings logic also activates automatically once a stack is detected.
+- **Optional next iterations** if the discipline gets exercised hard and exposes friction:
+  - `Background` shared-Given section in BDD scenarios (parked in 004 plan as "revisit if specs feel repetitive").
+  - Per-`agent_id` file-tracking in the validator (parked in 005 plan as "revisit if `git diff` parent+sub conflation produces real false-results").
+  - `cd "$CLAUDE_PROJECT_DIR"` at the top of `run.sh` to fix the parent-side test gotcha (see § *Decisions & gotchas*).
 
 ## Decisions & gotchas
 
-- **Path discipline.** `.claude/` is *harness configuration* (rules, skills, hooks, settings, state files) — what the Claude Code runtime reads to shape its own behavior. `docs/` is *project artifacts* (specs, design memory). Specs live in `docs/specs/NNN-<slug>/`.
+- **Path discipline.** `.claude/` is *harness configuration* (rules, skills, hooks, settings, state files). `docs/` is *project artifacts* (specs as design memory). Specs live in `docs/specs/NNN-<slug>/`, never under `.claude/`.
 
-- **PreToolUse activates mid-session; SessionStart / Stop / PostToolUse don't.** SessionStart and Stop register on the *next* session. PreToolUse takes effect immediately after the `settings.json` save. PostToolUse also activates mid-session (confirmed via the dogfood probe this session). This is why reminders auto-surfacing has to be smoke-checked next session.
+- **Activation timing of hook events.** `PreToolUse` and `PostToolUse` activate immediately after the `settings.json` save. `SessionStart` and `Stop` register on the *next* session — that's why "reminders auto-surface" and "session-handoff Stop nag" need cross-session smoke checks rather than same-session validation.
 
-- **Skill discovery is live.** A new `.claude/skills/<name>/SKILL.md` with valid frontmatter appears in the available-skills list within the same session — confirmed three times now (`sdd`, `remind`, plus the dogfood Skill invocations).
+- **Skill discovery is live.** A new `.claude/skills/<name>/SKILL.md` with valid frontmatter appears in the available-skills list within the same session. Description changes also flow through.
 
-- **`/plan` is built-in.** Avoid that name for user skills. `/remind`, `/sdd` verified free. For future skills: ask `claude-code-guide` before claiming a name.
+- **`/plan` is built-in.** Avoid that name for user skills. `/remind`, `/sdd` verified free. For new skills: ask `claude-code-guide` before claiming a name.
 
-- **Compaction notes are mechanical, not semantic.** PreCompact captures raw signal (user prompts verbatim, assistant text verbatim, tool names + truncated args). `/compact` does the semantic pass. Tool outputs and thinking blocks are dropped.
+- **Compaction notes are mechanical, not semantic.** `PreCompact` captures raw signal (user prompts verbatim, assistant text verbatim, tool names + truncated args). `/compact` does the semantic pass. Tool outputs and thinking blocks are dropped.
 
 - **SDD content vs structure.** The `/sdd` skill provides *structure*; Claude provides *content* only after the user describes intent. Never auto-fill `spec.md`. Same discipline applies to `/remind`.
 
-- **Override marker (delegation 002): start-of-line anchored + audit-honest.** Discovered during dogfood: the original unanchored regex captured `# OVERRIDE:` from prose that *documented* the marker, treating a perfectly formatted brief as a bypass. Fix: anchored to `^[[:space:]]*# OVERRIDE: `, AND validation always runs (override only suppresses the *block*, not the check). Audit `formatted` field reflects the actual check result, not whether validation was skipped. Same shape governance still uses but with this refinement — consider porting if governance ever has the same false-positive class.
+- **Override marker (delegation 002): start-of-line anchored + audit-honest.** Dogfood-discovered: original unanchored regex captured `# OVERRIDE:` from prose that *documented* the marker. Fix: anchored to `^[[:space:]]*# OVERRIDE: `, AND validation always runs (override only suppresses the *block*, not the check). Governance gate still uses the unanchored shape — port if it ever hits the same false-positive class.
 
-- **`agent_id` IS in PostToolUse payload.** Documented as not exposed (`code.claude.com/docs/en/hooks.md`); empirically present and reliable. Spec 002 plan.md captures the discovery. `session_id` and `transcript_path` are *inherited from parent* and useless for actor detection — only `agent_id` discriminates. Loop-budget counters key on `agent_id`.
+- **`agent_id` IS in PostToolUse payload** (undocumented but reliable). Spec 002 plan.md captures the discovery. `session_id` and `transcript_path` are inherited from parent and useless for actor detection — only `agent_id` discriminates. Loop-budget counters key on `agent_id`.
 
-- **`additionalContext` from PreToolUse renders as system-reminder in parent.** Plan-flagged risk #2 ("not yet confirmed empirically that the parent agent reliably sees the advisory") resolved positive: the harness injects the string verbatim as a `system-reminder` block on the parent's next turn after the `Agent` dispatch. Confirmed via the live dogfood.
+- **`additionalContext` from PreToolUse renders as `system-reminder`** in the parent's next turn. Confirmed empirically (002 + 004 live tests). The same channel carries TDD warnings via stderr echo from the post-edit hook.
 
-- **Two bash gotchas now in `.claude/rules/delegation.md`** — both bit during post-edit-validate.sh implementation and would re-bite anyone copying the patterns: (1) `jq '.field // empty'` collapses `false` and missing into the same empty string, so validator `ok=false` silently fails-open; use `if type=="object" and has("ok") then (.ok|tostring) else "" end`. (2) `exec 9>"$LOCK_PATH" 2>/dev/null` is a *sticky* stderr redirect — it permanently silences FD 2 for the rest of the script. Probe writability in a subshell first.
+- **Validator stack-detection is cwd-anchored, not `CLAUDE_PROJECT_DIR`-anchored.** `[ -f bun.lockb ]` resolves against `pwd`, not the env var. In production this is fine — the harness sets cwd to the project dir before invoking the hook. But parent-side tests need `(cd $TMP && bash <repo>/.claude/validators/run.sh)` to actually trigger detection. Fixable with `cd "${CLAUDE_PROJECT_DIR:-$PWD}" || exit 0` at the top of `run.sh`; not done because the gap is parent-side-test-only and the validator stays small.
+
+- **Bash gotchas in `.claude/rules/delegation.md`** — both bit during post-edit-validate.sh implementation: (1) `jq '.field // empty'` collapses `false` and missing into the same empty string — use `if type=="object" and has("ok") then (.ok|tostring) else ""`. (2) `exec N>file 2>/dev/null` is a *sticky* stderr redirect that permanently silences FD 2. Probe writability in a subshell first.
+
+- **`git diff --name-only` does NOT include untracked files** (caught by spec 005 dogfood). A sub-agent's `Write` of a new test file leaves it untracked; plain `git diff` would miss it and the TDD warning would falsely fire. Validator unions `git diff --name-only` with `git ls-files --others --exclude-standard` and dedupes via `sort -u`.
+
+- **Dogfood loop is the design discipline.** Three real bugs (override marker false-positive in 002, jq-`// empty` + sticky-stderr-redirect in 002, untracked-files in 005) all surfaced via real implementation passes, not by review. The pattern: delegate substantial implementation to sub-agents with full 5-field briefs, parent runs verification + cross-doc updates + commit. Cheaper than testing in CI; faster than catching in review.
 
 - **OpenSpec is the documented upgrade path** for multi-week / multi-contributor specs (`.claude/rules/spec-driven.md`). Adds an `openspec/` tree alongside `docs/specs/` — no conflict.

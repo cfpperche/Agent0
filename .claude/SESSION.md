@@ -8,52 +8,48 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ## Current state
 
-Four pieces of infrastructure on `main` (or in flight on this branch):
+Five capacities on `main`, plus the two foundational hooks (compaction continuity, session handoff). Listed in spec order:
 
 1. **Compaction continuity** — `PreCompact` snapshots last 12 real user turns into `.claude/COMPACT_NOTES.md` (gitignored); `SessionStart(source=compact)` re-injects it. `CLAUDE.md` § *Compact Instructions* steers the summarizer.
 
-2. **Spec-driven development** — `/sdd` skill (`.claude/skills/sdd/`) scaffolds `docs/specs/NNN-<slug>/{spec,plan,tasks}.md`. Rule `.claude/rules/spec-driven.md`. Templates use `{{NNN}} / {{SLUG}} / {{DATE}}` metadata + content slots. End-to-end used for 003-reminders this session.
+2. **Spec-driven development** — `/sdd` skill (`.claude/skills/sdd/`) scaffolds `docs/specs/NNN-<slug>/{spec,plan,tasks}.md`. Rule `.claude/rules/spec-driven.md`. End-to-end used for 002-delegation this session, with the workflow paying off when dogfood revealed bugs cheaply during plan/task execution.
 
-3. **Governance gate** — `.claude/hooks/governance-gate.sh` on `PreToolUse(Bash)` blocks destructive ops (`rm -rf` variants, `git push --force/-f`, `git reset --hard`), hook bypass (`--no-verify`), and blanket staging (`git add -A/--all/./*`, `git commit -a/-am/-ma/--all`). Escape: inline `# OVERRIDE: <reason ≥10 chars>`. Spec at `docs/specs/001-governance-gate/`.
+3. **Governance gate** _(spec 001)_ — `.claude/hooks/governance-gate.sh` on `PreToolUse(Bash)`. Blocks destructive ops, hook bypass, blanket staging. Escape: inline `# OVERRIDE: <reason ≥10 chars>`.
 
-4. **Reminders capacity** _(this session)_ — `/remind` skill (`.claude/skills/remind/SKILL.md`, subcommands `add "<text>" [--due <YYYY-MM-DD>]` / `list` / `dismiss <N>`). State file `.claude/REMINDERS.md` (git-tracked, created on first `add`). Second entry under `SessionStart[0].hooks` calls `.claude/hooks/reminders-readout.sh`, which cats the file (or `(no pending reminders)` in a frame) into context. Rule `.claude/rules/reminders.md`. Spec at `docs/specs/003-reminders/`.
+4. **Delegation capacity** _(spec 002, this session, `c2d15f9`)_ — Two hooks plus a project-side validator. `PreToolUse(Agent)` via `.claude/hooks/delegation-gate.sh` enforces a 5-field handoff (TASK / CONTEXT / CONSTRAINTS / DELIVERABLE-or-DONE_WHEN), logs every dispatch to `.claude/delegation-audit.jsonl`, and emits an opus-escalation advisory when 2+ signals fire on a non-opus model. `PostToolUse(Edit|Write|MultiEdit)` via `.claude/hooks/post-edit-validate.sh` runs `.claude/validators/run.sh` on sub-agent edits only (parent edits exempt by `agent_id` detection), with a per-agent loop budget defaulting to 5. Same `# OVERRIDE:` escape as governance. Rule `.claude/rules/delegation.md`.
+
+5. **Reminders capacity** _(spec 003, prior session + this session's `657df34`)_ — `/remind` skill with subcommands `add | list | dismiss`. State at `.claude/REMINDERS.md`. SessionStart hook `reminders-readout.sh` surfaces it at start. Rule `.claude/rules/reminders.md`.
 
 ## WIP
 
-Reminders capacity is built and verified inside this session, with two tails:
-
-- **Acceptance criterion #7 (session-start auto-surfacing) verifies only on the next session.** SessionStart hook registration is per-session, so the `reminders-readout.sh` entry registered in this session's `settings.json` save will actually fire only on the next session start. Smoke check on next start: the `=== REMINDERS ===` frame should appear with whatever bullets are in `.claude/REMINDERS.md` at that moment.
-
-- **`.claude/REMINDERS.md` contains test data from the verification walk** — bullets `circle back on caching` and `update README after auth lands` (`review pricing` was dismissed in scenario 5). Per the no-auto-anything discipline I did not delete; founder reviews `git diff` and decides: commit empty, delete entirely (skill recreates on first real `add`), or replace with real reminders before the commit.
-
-- **Parallel 002-delegation work is also in this branch.** Not from this session, but landed alongside: `.claude/hooks/delegation-gate.sh`, `.claude/hooks/post-edit-validate.sh`, `.claude/validators/`, `.claude/rules/delegation.md`, `docs/specs/002-delegation/`, plus a `.gitignore` addition (`.claude/.delegation-state/` and `.claude/delegation-audit.jsonl`). `settings.json` also gained a `PreToolUse(Agent)` entry and a `PostToolUse(Edit|Write|MultiEdit)` entry. No conflicts with reminders, but coordinate before committing so each spec's surface lands as a separate commit.
+Nothing in flight. Both 002-delegation and the deferred 003-reminders `settings.json` wiring landed this session.
 
 ## Next steps
 
-- **Smoke-check** on next session: confirm the `=== REMINDERS ===` frame appears at start. If not, inspect `settings.json` and re-trace `reminders-readout.sh`.
-- **Commit grouping** (recommendation): one commit for 003-reminders (`.claude/skills/remind/`, `.claude/hooks/reminders-readout.sh`, `.claude/rules/reminders.md`, the `settings.json` SessionStart additive lines, `docs/specs/003-reminders/`), separate from 002-delegation. Decide on `REMINDERS.md` content (test bullets / empty / real) before staging.
-- Use `/remind add ...` itself for any deferred items from this session that don't fit the next session's first five minutes.
+- **Cross-session smoke** on next start: confirm the `=== REMINDERS ===` frame appears (the 003 acceptance criterion #7 deferred from the prior session) and that the delegation gate fires on the first real `Agent` call (audit log gains an entry, advisory surfaces if signals fire).
+- **Push to origin** — branch is 2 commits ahead of `origin/main` after this session.
+- **Validator is currently inert** in this base repo (no language stack → `no-stack-detected` → `ok=true` always). When this template is forked into a real project, plug in the actual typecheck+test commands by editing `.claude/validators/run.sh` (or override at runtime via `CLAUDE_DELEGATION_VALIDATOR=/abs/path`).
 
 ## Decisions & gotchas
 
 - **Path discipline.** `.claude/` is *harness configuration* (rules, skills, hooks, settings, state files) — what the Claude Code runtime reads to shape its own behavior. `docs/` is *project artifacts* (specs, design memory). Specs live in `docs/specs/NNN-<slug>/`.
 
-- **PreToolUse activates mid-session; SessionStart / Stop don't.** SessionStart and Stop register on the *next* session. PreToolUse takes effect immediately after the `settings.json` save. This is why reminders auto-surfacing has to be smoke-checked next session.
+- **PreToolUse activates mid-session; SessionStart / Stop / PostToolUse don't.** SessionStart and Stop register on the *next* session. PreToolUse takes effect immediately after the `settings.json` save. PostToolUse also activates mid-session (confirmed via the dogfood probe this session). This is why reminders auto-surfacing has to be smoke-checked next session.
 
-- **Skill discovery is live.** A new `.claude/skills/<name>/SKILL.md` with valid frontmatter appears in the available-skills list within the same session — confirmed twice now (`sdd` and `remind`). Description changes also flow through.
+- **Skill discovery is live.** A new `.claude/skills/<name>/SKILL.md` with valid frontmatter appears in the available-skills list within the same session — confirmed three times now (`sdd`, `remind`, plus the dogfood Skill invocations).
 
-- **`/plan` is built-in.** Avoid that name for user skills. `/remind`, `/sdd` verified free. For future skills: ask `claude-code-guide` before claiming a name — it checks current docs against the built-in list.
-
-- **Governance self-test obstacle.** The gate scans the *entire* bash command string, so test runners that include `git push --force` etc. as fixture data trigger the gate against themselves. Workaround: write fixtures to a separate file via the Write tool (not Bash) and have the runner read them.
-
-- **Combined-flag regex for `git <verb>`.** The gate's pattern allows optional `([^[:space:];|&]+[[:space:]]+)*` between `git` and the verb so `git -C /path push --force`, `git --no-pager commit --no-verify`, etc. are caught. `--force-with-lease` stays allowed by design.
+- **`/plan` is built-in.** Avoid that name for user skills. `/remind`, `/sdd` verified free. For future skills: ask `claude-code-guide` before claiming a name.
 
 - **Compaction notes are mechanical, not semantic.** PreCompact captures raw signal (user prompts verbatim, assistant text verbatim, tool names + truncated args). `/compact` does the semantic pass. Tool outputs and thinking blocks are dropped.
 
-- **SDD content vs structure.** The `/sdd` skill provides *structure*; Claude provides *content* only after the user describes intent. Never auto-fill `spec.md`. Same discipline now applies to `/remind`: the skill executes a contract; it does not invent reminders.
+- **SDD content vs structure.** The `/sdd` skill provides *structure*; Claude provides *content* only after the user describes intent. Never auto-fill `spec.md`. Same discipline applies to `/remind`.
 
-- **Reminders ≠ memory ≠ session-state.** `/remind add` is for *action-shaped future items*. Facts and decisions → `MEMORY.md` (personal) or `.claude/rules/<topic>.md` (project). In-flight work → `SESSION.md`. One-file fixes → just do them.
+- **Override marker (delegation 002): start-of-line anchored + audit-honest.** Discovered during dogfood: the original unanchored regex captured `# OVERRIDE:` from prose that *documented* the marker, treating a perfectly formatted brief as a bypass. Fix: anchored to `^[[:space:]]*# OVERRIDE: `, AND validation always runs (override only suppresses the *block*, not the check). Audit `formatted` field reflects the actual check result, not whether validation was skipped. Same shape governance still uses but with this refinement — consider porting if governance ever has the same false-positive class.
 
-- **Reminder dismissal is deletion, not check-marking.** Position numbers are display indices for the current `list` output only — re-list between multi-dismisses. Audit is `git log -- .claude/REMINDERS.md`, not an in-file archive.
+- **`agent_id` IS in PostToolUse payload.** Documented as not exposed (`code.claude.com/docs/en/hooks.md`); empirically present and reliable. Spec 002 plan.md captures the discovery. `session_id` and `transcript_path` are *inherited from parent* and useless for actor detection — only `agent_id` discriminates. Loop-budget counters key on `agent_id`.
+
+- **`additionalContext` from PreToolUse renders as system-reminder in parent.** Plan-flagged risk #2 ("not yet confirmed empirically that the parent agent reliably sees the advisory") resolved positive: the harness injects the string verbatim as a `system-reminder` block on the parent's next turn after the `Agent` dispatch. Confirmed via the live dogfood.
+
+- **Two bash gotchas now in `.claude/rules/delegation.md`** — both bit during post-edit-validate.sh implementation and would re-bite anyone copying the patterns: (1) `jq '.field // empty'` collapses `false` and missing into the same empty string, so validator `ok=false` silently fails-open; use `if type=="object" and has("ok") then (.ok|tostring) else "" end`. (2) `exec 9>"$LOCK_PATH" 2>/dev/null` is a *sticky* stderr redirect — it permanently silences FD 2 for the rest of the script. Probe writability in a subshell first.
 
 - **OpenSpec is the documented upgrade path** for multi-week / multi-contributor specs (`.claude/rules/spec-driven.md`). Adds an `openspec/` tree alongside `docs/specs/` — no conflict.

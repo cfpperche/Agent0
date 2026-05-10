@@ -2,6 +2,18 @@
 
 Starting point for new software projects. Replace the placeholder sections below as the project evolves.
 
+## Working agreement
+
+These rules apply in every project derived from Agent0. They are part of the template — keep them unless a project-specific reason demands otherwise.
+
+### Research before proposing
+
+For any task that requires planning (configuration, architecture, tool choice, non-trivial technical decisions), do not propose a solution from prior knowledge alone. Run web research first — `WebSearch` / `WebFetch`, or the `claude-code-guide` agent for Claude Code / SDK / API topics — until the subject is well understood, then present options or a plan. Cite sources. Mechanical, obvious tasks (rename a variable, read a file, run a test) do not require research.
+
+### Language
+
+All communication and repository artifacts default to English. The user may explicitly request another language for a specific message or artifact, but the default is English.
+
 ## Overview
 
 _Brief description of the project and its purpose._

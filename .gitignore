@@ -1,0 +1,4 @@
+# Claude Code — config pessoal e estado local (não versionar)
+.claude/settings.local.json
+CLAUDE.local.md
+.claude/projects/

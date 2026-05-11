@@ -23,7 +23,7 @@ fi
 
 command_str=""
 stack=""
-if [ -f "bun.lockb" ] || [ -f "bunfig.toml" ]; then
+if [ -f "bun.lockb" ] || [ -f "bun.lock" ] || [ -f "bunfig.toml" ]; then
   stack="js"
   if [ -f "tsconfig.json" ]; then
     command_str='bun test && bun tsc --noEmit'

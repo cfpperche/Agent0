@@ -11,3 +11,7 @@ CLAUDE.local.md
 .claude/delegation-audit.jsonl
 .claude/secrets-audit.jsonl
 .claude/secrets-audit.jsonl.lock
+
+# Spec 007 scenario tests run in mktemp /tmp dirs by default, but reserve a
+# scratchpad path in case a future test variant needs in-repo state.
+tests/secrets-scan/.tmp/

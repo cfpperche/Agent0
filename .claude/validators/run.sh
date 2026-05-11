@@ -72,13 +72,23 @@ stdout_file="$(mktemp 2>/dev/null || mktemp -t validator-stdout)"
 stderr_file="$(mktemp 2>/dev/null || mktemp -t validator-stderr)"
 trap 'rm -f "$stdout_file" "$stderr_file"' EXIT
 
-# Portable millisecond clock: `date +%s%3N` is GNU-only; fall back to seconds*1000 on macOS.
+# Portable millisecond clock. Computes (seconds * 1000) + (nanoseconds / 1_000_000).
+# Avoids `date +%s%3N` because the `%3N` precision specifier is silently dropped
+# on some platforms (observed on WSL2 GNU coreutils 2026-05) leaving full 9-digit
+# nanoseconds appended — the regex `^[0-9]+$` cannot distinguish the two shapes.
+# Using `%s` + `%N` separately and reducing in shell arithmetic is unambiguous.
+# On BSD/macOS `%N` returns the literal `%N`; the regex check falls back to ms=0.
 now_ms() {
-  if date +%s%3N 2>/dev/null | grep -qE '^[0-9]+$'; then
-    date +%s%3N
+  local secs nanos ms
+  secs=$(date +%s)
+  nanos=$(date +%N 2>/dev/null)
+  if [[ "$nanos" =~ ^[0-9]+$ ]]; then
+    # `10#` forces base-10 to avoid octal-parse on leading-zero nanos (e.g. "045123456").
+    ms=$((10#$nanos / 1000000))
   else
-    echo $(( $(date +%s) * 1000 ))
+    ms=0
   fi
+  echo $((secs * 1000 + ms))
 }
 
 start_ms="$(now_ms)"

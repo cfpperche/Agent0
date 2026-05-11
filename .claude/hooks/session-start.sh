@@ -59,6 +59,21 @@ if [[ -x "$PROBE_TOOL" ]]; then
   printf '=== end runtime-introspect ===\n'
 fi
 
+# githooks-activation (spec 018): surface the manual core.hooksPath activation
+# command when .githooks/ is present but config doesn't point at it.
+# Auto-activation is refused on purpose (Lazarus vector — see
+# .claude/rules/secrets-scan.md § Gotchas); the passive advisory closes the
+# discoverability gap without crossing into automation.
+if [[ -d "$PROJECT_DIR/.githooks" && "${CLAUDE_SKIP_GITHOOKS_HINT:-0}" != "1" ]]; then
+  current_hookspath="$(git -C "$PROJECT_DIR" config --get core.hooksPath 2>/dev/null || true)"
+  if [[ "$current_hookspath" != ".githooks" ]]; then
+    printf '\n=== githooks-activation ===\n'
+    printf 'Native git hooks NOT activated (gitleaks pre-commit inert).\n'
+    printf 'Run once: git config core.hooksPath .githooks\n'
+    printf '=== end githooks-activation ===\n'
+  fi
+fi
+
 # Cleanup (spec 017): best-effort removal of session-state subdirs older than
 # 7 days. Failure NEVER blocks the hook — silenced with 2>/dev/null || true.
 find "$SESSION_STATE_ROOT" -mindepth 1 -maxdepth 1 -type d -mtime +7 -exec rm -rf {} + 2>/dev/null || true

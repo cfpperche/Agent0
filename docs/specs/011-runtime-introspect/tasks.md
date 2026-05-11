@@ -10,16 +10,16 @@ _Generated from `plan.md` on 2026-05-11. Work top-to-bottom. Check boxes as task
 
 ### Phase 2 — RED test suite (no implementation yet)
 
-- [ ] 2. Create `.claude/tests/runtime-introspect/` and copy the driver pattern from `.claude/tests/supply-chain/run-all.sh` into `.claude/tests/runtime-introspect/run-all.sh`. Driver runs every `NN-*.sh` in lex order, prints `PASS`/`FAIL`/`SKIP`, returns non-zero on any failure.
-- [ ] 3. Write `01-bun-test-capture.sh`. Feeds the capture hook a fixture `tool_input.command="bun test"` PostToolUse JSON with `tool_response.exit_code=0` and tiny stdout. Asserts `.claude/.runtime-state/last-run.json` is created, parses as JSON, and contains `command`, `exit`, `detector="bun-test"`, plus a non-empty `started_at`.
-- [ ] 4. Write `02-pytest-capture.sh`. Same shape, `pytest` command, asserts `detector="pytest"`.
-- [ ] 5. Write `03-skip-non-detect.sh`. Feeds `ls -la` payload. Asserts no `last-run.json` write and no audit file appended (the capacity writes no audit log by design).
-- [ ] 6. Write `04-tail-size-cap.sh`. Synthesises a 64 KB stdout blob in `tool_response`. Asserts captured `stdout_head` is exactly 4096 bytes, `stdout_tail` is exactly 4096 bytes, and a truncation marker field (`stdout_truncated: true`) is set.
-- [ ] 7. Write `05-stale-flag.sh`. Writes a `last-run.json` whose `started_at` precedes `.claude/.session-state/started-at`. Runs `bash .claude/tools/probe.sh last-run`, asserts output contains `stale: true`.
-- [ ] 8. Write `06-never-block.sh`. Makes `.claude/.runtime-state/` read-only (or points the hook at a non-writeable path via env override) and invokes the hook. Asserts exit 0, no stdout pollution, no stderr unless `CLAUDE_RUNTIME_INTROSPECT_DEBUG=1`.
-- [ ] 9. Write `07-probe-missing-state.sh`. Removes any pre-existing `last-run.json`. Runs `bash .claude/tools/probe.sh last-run`. Asserts exit 0 and a friendly empty-state message that names an example invocation (so the agent learns the loop).
-- [ ] 10. Write `08-env-extra-detect.sh`. With `CLAUDE_RUNTIME_INTROSPECT_EXTRA_DETECT="make test"`, feeds the hook a `make test` payload. Asserts capture happens and `detector="extra:make-test"` (or similar prefix that distinguishes it from the core allowlist).
-- [ ] 11. Run `bash .claude/tests/runtime-introspect/run-all.sh`. Expected: 0/9 PASS — all RED. Record exact failure shapes; this is the contract the implementation must satisfy.
+- [x] 2. Create `.claude/tests/runtime-introspect/` and copy the driver pattern from `.claude/tests/supply-chain/run-all.sh` into `.claude/tests/runtime-introspect/run-all.sh`. Driver runs every `NN-*.sh` in lex order, prints `PASS`/`FAIL`/`SKIP`, returns non-zero on any failure.
+- [x] 3. Write `01-bun-test-capture.sh`. Feeds the capture hook a fixture `tool_input.command="bun test"` PostToolUse JSON with `tool_response.exit_code=0` and tiny stdout. Asserts `.claude/.runtime-state/last-run.json` is created, parses as JSON, and contains `command`, `exit`, `detector="bun-test"`, plus a non-empty `started_at`.
+- [x] 4. Write `02-pytest-capture.sh`. Same shape, `pytest` command, asserts `detector="pytest"`.
+- [x] 5. Write `03-skip-non-detect.sh`. Feeds `ls -la` payload. Asserts no `last-run.json` write and no audit file appended (the capacity writes no audit log by design).
+- [x] 6. Write `04-tail-size-cap.sh`. Synthesises a 64 KB stdout blob in `tool_response`. Asserts captured `stdout_head` is exactly 4096 bytes, `stdout_tail` is exactly 4096 bytes, and a truncation marker field (`stdout_truncated: true`) is set.
+- [x] 7. Write `05-stale-flag.sh`. Writes a `last-run.json` whose `started_at` precedes `.claude/.session-state/started-at`. Runs `bash .claude/tools/probe.sh last-run`, asserts output contains `stale: true`.
+- [x] 8. Write `06-never-block.sh`. Makes `.claude/.runtime-state/` read-only (or points the hook at a non-writeable path via env override) and invokes the hook. Asserts exit 0, no stdout pollution, no stderr unless `CLAUDE_RUNTIME_INTROSPECT_DEBUG=1`.
+- [x] 9. Write `07-probe-missing-state.sh`. Removes any pre-existing `last-run.json`. Runs `bash .claude/tools/probe.sh last-run`. Asserts exit 0 and a friendly empty-state message that names an example invocation (so the agent learns the loop).
+- [x] 10. Write `08-env-extra-detect.sh`. With `CLAUDE_RUNTIME_INTROSPECT_EXTRA_DETECT="make test"`, feeds the hook a `make test` payload. Asserts capture happens and `detector="extra:make-test"` (or similar prefix that distinguishes it from the core allowlist).
+- [x] 11. Run `bash .claude/tests/runtime-introspect/run-all.sh`. Confirmed 0/8 PASS — all RED (driver loop ran, every fixture returned FAIL via missing-hook / missing-probe path). Record exact failure shapes; this is the contract the implementation must satisfy.
 
 ### Phase 3 — Implementation
 

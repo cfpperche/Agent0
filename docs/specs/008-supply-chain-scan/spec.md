@@ -31,14 +31,14 @@ First iteration is **advisory-only** (no blocking) — the audit log + the stder
   - **Then** no advisory, no audit row (the agent_id actor-split, mirrored from `.claude/rules/delegation.md` § *Post-edit validator loop*)
 
 - [ ] **Scenario: override marker recorded in audit, advisory suppressed**
-  - **Given** a Bash command `npm install axios  # OVERRIDE: documented chart-library upgrade per discussion in conversation`
+  - **Given** a two-line Bash command — line 1 is `npm install axios`, line 2 is `# OVERRIDE: documented chart-library upgrade per discussion in conversation` (marker on its own line, start-of-line anchored — same shape as `secrets-scan.sh` override grammar; inline trailing markers are NOT accepted)
   - **When** the `PreToolUse(Bash)` hook fires
   - **Then** no stderr advisory line; one audit row with `decision: "advisory-override"` and `override_reason: "documented chart-library upgrade per discussion in conversation"`; command proceeds
 
-- [ ] **Scenario: short override reason rejects the marker (still advises)**
-  - **Given** a Bash command `npm install axios  # OVERRIDE: ok`
+- [ ] **Scenario: short override reason silently drops the marker (still advises)**
+  - **Given** a two-line Bash command with line 2 `# OVERRIDE: ok` (reason < 10 chars after trim)
   - **When** the `PreToolUse(Bash)` hook fires
-  - **Then** the marker is rejected (reason `< 10 chars`); the advisory fires as if no marker were present; audit row records `decision: "advisory"` with no `override_reason` field
+  - **Then** the marker is dropped (no env-var propagation, no `override_reason` populated); the advisory fires as if no marker were present; audit row records `decision: "advisory"` with `override_reason: null`. No stderr error about the short reason — supply-chain is advisory-only, so an invalid override silently degrades to the normal advisory path rather than blocking with a corrective stderr template (which is the secrets-scan preflight's pattern because it has shape-rejection semantics)
 
 - [ ] **Scenario: env-var disables both layers**
   - **Given** `CLAUDE_SKIP_SUPPLY_CHAIN_SCAN=1` is set in the agent's environment

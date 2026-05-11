@@ -8,30 +8,40 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ## Current state
 
-Eleven capacities on `main`, all green. Last delivered: rshrnk live-dogfood pass for spec 009 + 2 cargo coverage fixes (commits `cc9d981` / `55cc935` / `158a9a3`):
+Two specs in flight, both draft, both untracked:
 
-- cargo verb whitelist gained `install` (was `add update` only — asymmetric with npm/pip/yarn/bun/pnpm whose `install` verb is detected too)
-- value-taking flag allowlist gained `--features` / `-F` (feature names were leaking as packages, e.g. `cargo add tokio --features full` → `["tokio","full"]`)
+- **010-audit-forensics** — `spec.md` filled (prior session), awaiting user review. `plan.md` / `tasks.md` still template placeholders.
+- **011-runtime-introspect** — `spec.md` filled THIS session. Open questions block `/sdd plan`. `plan.md` / `tasks.md` still template placeholders.
 
-Supply-chain suite 12/12 PASS via `bash .claude/tests/supply-chain/run-all.sh`.
+Eleven shipped capacities on `main` still green. No code changes this session — only spec + memory.
 
 ## WIP
 
-None.
+`docs/specs/011-runtime-introspect/spec.md` — capacity that lets the agent close edit→verify loop on its own work without human ratification. v1 = `PostToolUse(Bash)` captures last test/build/run output to `.claude/.runtime-state/last-run.json`; agent reads it via `.claude/tools/probe.sh last-run`. Hook + shell tool grain (NOT MCP); v1 stacks Node + Python only.
+
+4 open questions in spec, all with proposals:
+1. Tail size cap (proposal: 4 KB head + 4 KB tail per stream)
+2. Detector allowlist boundary (proposal: strict + env-var `CLAUDE_RUNTIME_INTROSPECT_EXTRA_DETECT`)
+3. Audit log adicional? (proposal: only `last-run.json`, no per-Bash audit row — avoid the supply-chain skip-not-install noise pattern)
+4. Dogfood target (user said "encurtador de links" — pick rshrnk / pyshrnk / new Node fork)
+
+Next user turn: resolve the 4 questions → `/sdd plan`.
 
 ## Next steps
 
-No spec in flight. Candidates:
+1. User resolves 011 open questions → `/sdd plan` → `/sdd tasks` → RED-tests-first implementation
+2. 010-audit-forensics also still needs user confirmation (deferred during this session in favour of 011 conversation)
+3. Follow-up spec after 011 ships: `.mcp.json.example` documenting Playwright / Chrome DevTools / DBHub as opt-in MCPs forks install for browser/DB introspection (explicit non-goal of 011)
 
-- **Second cargo dogfood pass** — yield-decay rule isn't satisfied (rshrnk surfaced 2 findings; need one 0-finding pass to graduate). Another sibling fork or extended rshrnk probes (workspace flags, `cargo install --path .` local installs, `cargo remove`).
-- **Go dogfood pass** — last unverified validator branch; low expected yield, defer until something Go-shaped becomes interesting.
-- **Audit-log forensics tooling** — `jq` one-liners (block rate per session, top blocked packages, override-reason patterns) packaged under `.claude/tools/` if forensic analysis becomes recurring.
+Deferred (still queued from prior sessions):
+- Second cargo dogfood pass (graduation by yield-decay rule)
+- Go dogfood pass (low expected yield)
 
 ## Decisions & gotchas
 
-Process-knowledge that doesn't fit cleanly in any `.claude/rules/*.md` (capacity-specific gotchas live there — don't duplicate):
-
-- **Dogfood until two consecutive 0-finding passes, then graduate (per-ecosystem).** Tally: bun=0, uv=2, cargo=2. Bun graduated; cargo needs another 0-finding pass.
-- **Every capacity needs a live-dogfood pass before "done".** Smoke tests miss tokenizer leaks, stderr-observability gaps, and recursive FPs (the cargo-install verb fix's commit body tripped its own new block — caught via OVERRIDE multi-line shape outside the heredoc).
-- **For hook changes with a clean spec, write all RED tests first.** Two confirmations — spec 009 (4 REDs → 11/11 first attempt) and rshrnk fixes (2 REDs → 12/12 first attempt).
+- **Visibility wedge framed as agent-self-debug, NOT human dashboard.** User explicit 2026-05-11. Saved to memory `project_visibility_intent.md`. OTel / Grafana / Langfuse paths acknowledged as valuable but de-prioritised for this wedge. Future visibility specs should respect this scoping unless user signals otherwise.
+- **Scope split: build vs adopt.** 011 builds only what no mature MCP covers (generic local test/build capture). Playwright MCP (Microsoft 32k★), Chrome DevTools MCP (Google), DBHub (Bytebase), laravel-boost, next-devtools-mcp, rails-mcp-server already cover their slices — Agent0 must NOT duplicate; recommends them via `.mcp.json.example` in a follow-up.
+- **Hook + shell tool, not MCP server in v1.** Follows the grain of all existing capacities (governance, delegation, supply-chain, secrets — all hook-based, none MCP). Promotion to MCP only if shell-tool friction warrants follow-up; mirrors delegation-gate evolution.
+- **Detector allowlist mirrors supply-chain manager table.** Strict list of `<tool> <verb>` pairs (bun test / npm test / pnpm test / yarn test / npm run build / pytest / python -m pytest). Same FP-vs-FN tradeoff conversation as supply-chain. Extension via env var, not hardcode bloat.
+- **Two web-research delegations ran this session** (MCP introspection landscape + agent self-observability landscape). Citations live in `011/spec.md` § Context / references and in agent task results — not in SESSION.md (cache pressure).
 - **SESSION.md auto-injection has a ~2KB preview budget.** When SESSION.md exceeds it, only the preview reaches context; the full file lands at a persisted path on disk. Keep this file terse — replace stale content rather than appending (`git log` is the audit trail).

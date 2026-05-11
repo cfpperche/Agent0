@@ -42,6 +42,10 @@ TDD is a *cultural* discipline reinforced by the validator — not a blocking ga
 
 Two layers (spec 007): the native `.githooks/pre-commit` runs gitleaks over the staged diff at git's actual commit moment and is the primary block; the Claude Code preflight `.claude/hooks/secrets-scan.sh` (PreToolUse Bash) gates dangerous command shapes (compound `git add && git commit`, `git commit -a`, `--no-verify`), parses the override marker, and bridges it across via `CLAUDE_SECRETS_OVERRIDE_REASON`. Activation per-fork: `git config core.hooksPath .githooks` after `git init` (manual on purpose — Lazarus vector). Same `# OVERRIDE: <reason ≥10 chars>` escape as the other gates (multi-line form: marker on its own line); `CLAUDE_SKIP_SECRETS_SCAN=1` disables both layers for throwaway sessions; `CLAUDE_SECRETS_ADVISE_ON_EDIT=1` opts into the soft `secrets-advisory:` on sub-agent edits. Both layers fail open when gitleaks is absent. See `.claude/rules/secrets-scan.md`.
 
+## Supply chain
+
+Two-layer advisory capacity (spec 008): a `PreToolUse(Bash)` preflight (`.claude/hooks/supply-chain-scan.sh`) detects dep-mutating commands across 10 managers (npm/pnpm/yarn/bun/pip/uv/poetry/pdm/cargo/go), and a `PostToolUse(Edit|Write|MultiEdit)` hook (`.claude/hooks/supply-chain-advise.sh`) flags sub-agent edits to manifest/lockfile basenames (`package.json`, `Cargo.toml`, etc.). **Advisory-only — never blocks.** Each match emits `supply-chain-advisory: ...` on stderr and writes a JSONL row to `.claude/supply-chain-audit.jsonl`. Same `# OVERRIDE: <reason ≥10 chars>` escape (multi-line form); a valid override records `decision: "advisory-override"` with reason populated and suppresses the stderr line. `CLAUDE_SKIP_SUPPLY_CHAIN_SCAN=1` disables both layers for throwaway sessions. See `.claude/rules/supply-chain.md`.
+
 ## Compact Instructions
 
 When summarizing this conversation for context compaction, prioritize keeping:

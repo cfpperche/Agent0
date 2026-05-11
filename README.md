@@ -32,8 +32,9 @@ Eight capacities are live on `main`. Each one is documented in its own rule file
 | BDD acceptance scenarios | `/sdd` template scaffolds Given/When/Then scenarios in `spec.md` | `spec-driven.md` § *Acceptance scenarios* | `004-bdd/` |
 | TDD working agreement | Cultural red→green→refactor + non-blocking validator advisory when prod files move without tests | `tdd.md` | `005-tdd/` |
 | Secrets scan | Layered: native `.githooks/pre-commit` runs gitleaks over the staged diff (primary block); `PreToolUse(Bash)` preflight gates command shape + parses override marker + bridges the override via env var to the native layer | `secrets-scan.md` | `006-secrets-scan/`, `007-secrets-scan-timing/` |
+| Supply chain scan | Advisory-only: `PreToolUse(Bash)` detects dep-install commands across 10 managers (npm/pnpm/yarn/bun/pip/uv/poetry/pdm/cargo/go); `PostToolUse(Edit\|Write\|MultiEdit)` flags sub-agent edits to manifest/lockfile basenames. Audit + stderr advisory; override marker records intent | `supply-chain.md` | `008-supply-chain-scan/` |
 
-The override marker `# OVERRIDE: <reason ≥10 chars>` is honored by the governance, delegation, TDD, and secrets-scan gates. The reason is recorded in the audit log — `"skip"` / `"bypass"` are rejected.
+The override marker `# OVERRIDE: <reason ≥10 chars>` is honored by the governance, delegation, TDD, secrets-scan, and supply-chain gates. The reason is recorded in the audit log — `"skip"` / `"bypass"` are rejected.
 
 ## Per-fork checklist
 

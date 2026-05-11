@@ -8,7 +8,17 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ## Current state
 
-Nine capacities on `main`, all green. This session was a **dogfood-and-tune pass**: bifurcated the full harness into `/home/goat/shrnk` (a sibling TS+Bun URL-shortener MVP — NOT inside this repo), exercised the per-fork checklist end-to-end, measured harness weight along two axes (LOC on disk + tokens in agent context), surfaced one validator drift, fixed it, and trimmed the heaviest rule. Three commits landed and pushed (`d9929a5`, `d7adf69`, `eb41c5a`); working tree clean modulo this update.
+Nine capacities on `main`, all green. This session ran **two dogfood-and-tune passes** against sibling projects (NOT inside this repo): `/home/goat/shrnk` (TS+Bun) first, then `/home/goat/pyshrnk` (Python 3.14 + WSGI stdlib + uv). Together the passes surfaced six harness improvements; all six landed upstream:
+
+- `d9929a5` chore: SESSION + reminder from shrnk dogfood
+- `d7adf69` fix: validator detects `bun.lock` (text) alongside `bun.lockb`
+- `eb41c5a` docs: trim `secrets-scan.md` (~1k tokens off the always-on context budget)
+- `11c1e6d` docs: per-fork checklist step 7 (optional drop of self-verification suite)
+- `5608580` docs: spec 001 — Gotcha for byte-level regex false-positives in commit messages
+- `7ffacfe` refactor: relocate `tests/secrets-scan/` → `.claude/tests/secrets-scan/` (harness-internal; supersedes the step-7 band-aid)
+- `f67b560` fix: validator python branch — pytest blocks (was being swallowed by `|| true`), mypy non-blocking, venv-aware (`uv run` / `poetry run` / `pdm run` auto-detected)
+
+Plus the housekeeping chore commits for SESSION refreshes.
 
 ## WIP
 
@@ -16,11 +26,7 @@ None.
 
 ## Next steps
 
-No spec in flight. One open candidate if a future session wants more:
-
-- **Harvest more harness-improvement signals from another fork pass.** This dogfood surfaced three real issues (validator bun.lock drift, secrets-scan.md context weight, harness self-verification suite weight) in one session. A second pass against a different stack (Python, Rust) would likely surface more.
-
-The `tests/secrets-scan/` placement question initially resolved by step 7 (fork-optional delete) was reconsidered mid-session 2026-05-11 when the user pushed harder on "why are forks receiving these at all?". The revised resolution landed as option (A): the suite was relocated under `.claude/tests/secrets-scan/` (alongside hooks, rules, skills, validators) where it's semantically obvious as harness internal and pytest/bun-test/etc. don't auto-discover it. Step 7 stays in the per-fork checklist (text updated to point at the new path) for forks that want to delete the suite entirely. The move-under-spec option (b) — `docs/specs/007-secrets-scan-timing/tests/` — stays rejected; convention rupture and fragmentation risk are unchanged.
+No spec in flight. Two-stacks-tested cadence felt productive — a third pass against Rust (or Go) would test the remaining auto-detected branches in `.claude/validators/run.sh` and likely surface anything specific to compiled-language tooling (e.g. workspace member resolution, `target/` artefact bloat, cargo workspace vs. crate-only). Not urgent.
 
 ## Decisions & gotchas
 
@@ -31,6 +37,10 @@ Newly observed and load-bearing:
 - **`secrets-scan.md` trimmed from 4,885 → 3,882 tokens (-20%) in commit `eb41c5a`.** Compression was purely narrative: per-layer paragraphs in § *What fires* no longer enumerate decision values inline (the audit-log table already does), framing sentences in § *Override grammar* / *Env-var bridge* / *Escape hatch* tightened, gotcha lead-ins compressed. **Zero contract changes**: all 10 decision values, 5 `cmd_shape` names, 3 env vars, 12 gotcha bullets, both override example blocks, the verbatim stderr templates, `4b47a42` + V4 test refs, Lazarus context, issue #24327 reference, and the `flock` / `PIPE_BUF` / sticky-exec notes are all preserved. Verified by grep before commit.
 
 - **Validator now detects `bun.lock` alongside `bun.lockb` (commit `d7adf69`).** Bun 1.3+ emits text-based `bun.lock` by default; the old guard only checked `bun.lockb` (binary, Bun ≤1.2), forcing forks to commit a `bunfig.toml` purely as a detection marker. The fix is one-line in `.claude/validators/run.sh` (added `|| [ -f "bun.lock" ]` to the bun-stack OR-chain) plus a sentence in README step 2 listing all three accepted markers. Smoke tested in three fixture configurations (`bun.lock` alone → detect, `bun.lockb`+tsconfig → preserved with `bun tsc --noEmit`, empty dir → `no-stack-detected`). Reminder added by the dogfood and dismissed in the fix commit's diff.
+
+- **Validator python branch was effectively inert; now corrected (commit `f67b560`).** The pyshrnk dogfood revealed two bugs at once: (1) `python -m pytest -q && python -m mypy . || true` parses as `(pytest && mypy) || true` — the `|| true` covered the whole chain so any pytest failure (test fail, `ModuleNotFoundError`, etc.) collapsed to exit 0 and the validator returned `ok=true`. (2) The command always ran bare `python -m ...`, missing deps installed inside `uv`/`poetry`/`pdm`-managed `.venv/`. Both fixed in one commit: (a) wrap only the mypy step in a brace group so `|| true` is localised — `pytest && { mypy || true; }` — pytest is now a real gate, mypy stays non-blocking as originally intended; (b) detect `uv.lock` / `poetry.lock` / `pdm.lock` (with the matching tool on PATH) or just `.venv/` (uv) and prepend `uv run` / `poetry run` / `pdm run` accordingly. Smoke tested three fixture configs + the real pyshrnk project. README step 2 documents the new behavior. `.gitignore` also gained a commented stack-patterns block as a third tweak (`node_modules` / `.venv` / `__pycache__` / `target` / etc.) so forks don't have to rediscover them.
+
+- **The dogfood-fork pattern is firmly the harness-improvement engine.** Two passes in one session, six concrete fixes that wouldn't have been visible from rule-reading alone. Cost per pass: ~1.5h of focused work, ~4000 LOC of throwaway side projects (`/home/goat/shrnk`, `/home/goat/pyshrnk`). ROI: one bug found per ~660 LOC of new dogfood code. Worth normalising as a periodic cadence.
 
 - **The dogfood pattern is a real signal source.** `/home/goat/shrnk` produced six observable harness fires in one session (governance gate × 2 with overrides, preflight passthrough, native gitleaks allow, TDD red→green visible, BDD-scenario → test-name mapping) and surfaced two concrete improvements (validator drift, secrets-scan weight) that wouldn't have appeared from rule-reading alone. Keep the dogfood-fork sibling pattern as a deliberate "find harness friction" tool, not just a demo.
 

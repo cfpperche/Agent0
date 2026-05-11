@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tests/secrets-scan/05-fail-open.sh
+# .claude/tests/secrets-scan/05-fail-open.sh
 # V5 — Scenario: fail-open behavior when gitleaks is absent.
 #
 # APPROACH: The gitleaks binary must be invisible to the native pre-commit
@@ -21,7 +21,7 @@
 
 set -euo pipefail
 
-AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
+AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 AGENT0_GITHOOKS="$AGENT0_ROOT/.githooks"
 AGENT0_GITLEAKS_TOML="$AGENT0_ROOT/.gitleaks.toml"
 

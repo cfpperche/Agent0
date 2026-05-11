@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tests/secrets-scan/02-separated-blocks.sh
+# .claude/tests/secrets-scan/02-separated-blocks.sh
 # V2 — Scenario: separate `git add` then `git commit` still blocks on secret.
 #
 # When the agent runs git add in one Bash call and git commit in a separate
@@ -16,7 +16,7 @@
 
 set -euo pipefail
 
-AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
+AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 AGENT0_GITHOOKS="$AGENT0_ROOT/.githooks"
 AGENT0_GITLEAKS_TOML="$AGENT0_ROOT/.gitleaks.toml"
 

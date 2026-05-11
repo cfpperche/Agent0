@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tests/secrets-scan/01-compound-gated.sh
+# .claude/tests/secrets-scan/01-compound-gated.sh
 # V1 — Scenario: compound `git add && git commit` is gated correctly.
 #
 # The preflight hook (PreToolUse/Bash layer) receives the raw command string
@@ -16,7 +16,7 @@
 
 set -euo pipefail
 
-AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
+AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 AGENT0_GITHOOKS="$AGENT0_ROOT/.githooks"
 AGENT0_PREFLIGHT="$AGENT0_ROOT/.claude/hooks/secrets-scan.sh"
 

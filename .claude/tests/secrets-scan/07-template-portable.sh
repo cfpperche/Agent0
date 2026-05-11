@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tests/secrets-scan/07-template-portable.sh
+# .claude/tests/secrets-scan/07-template-portable.sh
 # V7 — Scenario: fix is template-portable.
 #
 # Clones the Agent0 repo fresh into a temp dir, follows the per-fork checklist
@@ -24,7 +24,7 @@
 
 set -euo pipefail
 
-AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
+AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 AGENT0_GITLEAKS_TOML="$AGENT0_ROOT/.gitleaks.toml"
 
 TMPDIR="$(mktemp -d -t spec-007-test-XXXXXX)"

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tests/secrets-scan/06-audit-distinguishes-incomplete.sh
+# .claude/tests/secrets-scan/06-audit-distinguishes-incomplete.sh
 # V6 — Scenario: audit distinguishes incomplete-scan from real-allow.
 #
 # The spec-006 buggy path produced decision="allow" + finding_count=0 for
@@ -19,7 +19,7 @@
 
 set -euo pipefail
 
-AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
+AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 AGENT0_GITHOOKS="$AGENT0_ROOT/.githooks"
 AGENT0_GITLEAKS_TOML="$AGENT0_ROOT/.gitleaks.toml"
 

@@ -20,7 +20,7 @@ No spec in flight. One open candidate if a future session wants more:
 
 - **Harvest more harness-improvement signals from another fork pass.** This dogfood surfaced three real issues (validator bun.lock drift, secrets-scan.md context weight, harness self-verification suite weight) in one session. A second pass against a different stack (Python, Rust) would likely surface more.
 
-The `tests/secrets-scan/` placement question was resolved by option (b): a step 7 added to README's per-fork checklist documenting that forks not modifying secrets-scan internals can drop the suite. The move-under-spec option was rejected for convention rupture (tests outside `tests/`) and fragmentation risk if more specs grow their own tests.
+The `tests/secrets-scan/` placement question initially resolved by step 7 (fork-optional delete) was reconsidered mid-session 2026-05-11 when the user pushed harder on "why are forks receiving these at all?". The revised resolution landed as option (A): the suite was relocated under `.claude/tests/secrets-scan/` (alongside hooks, rules, skills, validators) where it's semantically obvious as harness internal and pytest/bun-test/etc. don't auto-discover it. Step 7 stays in the per-fork checklist (text updated to point at the new path) for forks that want to delete the suite entirely. The move-under-spec option (b) — `docs/specs/007-secrets-scan-timing/tests/` — stays rejected; convention rupture and fragmentation risk are unchanged.
 
 ## Decisions & gotchas
 

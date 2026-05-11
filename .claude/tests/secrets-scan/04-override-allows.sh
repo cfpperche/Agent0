@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tests/secrets-scan/04-override-allows.sh
+# .claude/tests/secrets-scan/04-override-allows.sh
 # V4 — Scenario: override marker preserves spec 006 semantics, end-to-end.
 #
 # A two-line Bash command string — line 1 is the compound invocation,
@@ -31,7 +31,7 @@
 
 set -euo pipefail
 
-AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
+AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 AGENT0_GITHOOKS="$AGENT0_ROOT/.githooks"
 AGENT0_PREFLIGHT="$AGENT0_ROOT/.claude/hooks/secrets-scan.sh"
 AGENT0_GITLEAKS_TOML="$AGENT0_ROOT/.gitleaks.toml"

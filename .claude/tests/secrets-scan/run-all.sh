@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tests/secrets-scan/run-all.sh
+# .claude/tests/secrets-scan/run-all.sh
 # Orchestrator: runs all 7 spec-007 scenario scripts in order and prints a
 # summary table. Exits 0 if all pass, 1 if any fail.
 #
@@ -9,7 +9,7 @@
 
 set -euo pipefail
 
-AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
+AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 export AGENT0_ROOT
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"

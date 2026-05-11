@@ -55,7 +55,7 @@ The override marker `# OVERRIDE: <reason ≥10 chars>` is honored by the governa
 
 6. **Reset `SESSION.md`.** Replace the handoff content with a one-line "fresh project, nothing in flight" or your own starting state. The Stop hook will nag you to update it on commit-day sessions.
 
-7. **(Optional) Drop the harness self-verification suite.** `tests/secrets-scan/` ships 8 scenario scripts (~780 LOC) that verify spec 007's two-layer scan against gitleaks — useful when modifying `.githooks/pre-commit` or `.claude/hooks/secrets-scan.sh`, otherwise noise. Forks that won't touch the secrets-scan internals can `rm -rf tests/secrets-scan/` to drop ~19% of the initial commit weight; the harness keeps working without them.
+7. **(Optional) Drop the harness self-verification suite.** `.claude/tests/secrets-scan/` ships 8 scenario scripts (~780 LOC) that verify spec 007's two-layer scan against gitleaks — useful when modifying `.githooks/pre-commit` or `.claude/hooks/secrets-scan.sh`, otherwise unused. The suite lives under `.claude/` (not the project's `tests/`) because it tests *the harness*, not the fork's code; forks that won't touch the secrets-scan internals can delete the dir to drop ~780 LOC from their initial commit. The harness keeps working without it.
 
 ## Workflow
 
@@ -98,10 +98,9 @@ Future to-dos that don't belong in `SESSION.md` (in-flight) or memory (knowledge
 │   ├── validators/run.sh              # auto-detect typecheck+test
 │   ├── agents/                        # custom subagent definitions (empty)
 │   ├── presence/statusline.mjs        # status line
+│   ├── tests/secrets-scan/            # harness self-verification suite for spec 007 (run-all.sh + V1-V7; optional, see step 7)
 │   ├── delegation-audit.jsonl         # delegation audit log (gitignored)
 │   └── secrets-audit.jsonl            # secrets-scan audit log (gitignored)
-├── tests/
-│   └── secrets-scan/                  # scenario test suite for spec 007 (run-all.sh + V1-V7)
 └── docs/
     └── specs/NNN-<slug>/              # design memory, one dir per feature
         ├── spec.md                    # what + why

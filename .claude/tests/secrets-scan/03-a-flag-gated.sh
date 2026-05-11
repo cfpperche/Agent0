@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tests/secrets-scan/03-a-flag-gated.sh
+# .claude/tests/secrets-scan/03-a-flag-gated.sh
 # V3 — Scenario: `git commit -a` (auto-stage tracked) is gated by preflight.
 #
 # The preflight hook detects `-a` in `git commit -a -m "..."` as the
@@ -14,7 +14,7 @@
 
 set -euo pipefail
 
-AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
+AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 AGENT0_GITHOOKS="$AGENT0_ROOT/.githooks"
 AGENT0_PREFLIGHT="$AGENT0_ROOT/.claude/hooks/secrets-scan.sh"
 

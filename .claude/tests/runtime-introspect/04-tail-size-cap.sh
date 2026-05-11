@@ -88,19 +88,21 @@ if [ "$hook_exit" -ne 0 ] || [ ! -f "$state_file" ]; then
 fi
 
 small_truncated=$(jq -r '.stdout_truncated' "$state_file")
-small_head=$(jq -r '.stdout_head' "$state_file")
-small_tail=$(jq -r '.stdout_tail' "$state_file")
 
 if [ "$small_truncated" != "false" ]; then
   printf 'FAIL: small-stream stdout_truncated=%s, want false\n' "$small_truncated"
   exit 1
 fi
-if [ "$small_head" != "$small_stdout" ]; then
-  printf 'FAIL: small-stream head should hold whole stream\n'
+
+# Compare via jq (not bash command-sub, which strips trailing newlines).
+if [ "$(jq --arg expected "$small_stdout" -r '.stdout_head == $expected' "$state_file")" != "true" ]; then
+  printf 'FAIL: small-stream head should hold whole stream verbatim\n'
+  printf 'Got: %s\n' "$(jq -r '.stdout_head' "$state_file" | head -5)"
   exit 1
 fi
-if [ "$small_tail" != "" ]; then
-  printf 'FAIL: small-stream tail should be empty, got: %s\n' "$small_tail"
+
+if [ "$(jq -r '.stdout_tail == ""' "$state_file")" != "true" ]; then
+  printf 'FAIL: small-stream tail should be empty\n'
   exit 1
 fi
 

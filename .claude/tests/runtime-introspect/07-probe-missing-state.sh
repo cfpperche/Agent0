@@ -15,40 +15,46 @@ mkdir -p "$TMPDIR/.claude"
 export CLAUDE_PROJECT_DIR="$TMPDIR"
 
 # No state file exists.
-out="$(bash "$PROBE" last-run 2>&1)"
-probe_exit=$?
+probe_exit=0
+out_file="$TMPDIR/probe-out.txt"
+bash "$PROBE" last-run >"$out_file" 2>&1 || probe_exit=$?
 
 if [ "$probe_exit" -ne 0 ]; then
   printf 'FAIL: probe exit=%d, want 0 on missing state\n' "$probe_exit"
-  printf '%s\n' "$out"
+  cat "$out_file"
   exit 1
 fi
 
 # Friendly empty-state shape — must name at least one example invocation.
-if ! printf '%s' "$out" | grep -qE 'no-snapshot|no snapshot'; then
+if ! grep -qE 'no-snapshot|no snapshot' "$out_file"; then
   printf 'FAIL: probe output lacks no-snapshot indicator\n'
-  printf 'Got:\n%s\n' "$out"
+  printf 'Got:\n'
+  cat "$out_file"
   exit 1
 fi
 
-if ! printf '%s' "$out" | grep -qE 'bun test|pytest|run a recognised'; then
+if ! grep -qE 'bun test|pytest|run a recognised' "$out_file"; then
   printf 'FAIL: empty-state message lacks example invocation hint\n'
-  printf 'Got:\n%s\n' "$out"
+  printf 'Got:\n'
+  cat "$out_file"
   exit 1
 fi
 
 # Unknown subcommand → exit 2 with usage hint.
-unknown_out="$(bash "$PROBE" not-a-subcommand 2>&1)"
-unknown_exit=$?
+unknown_exit=0
+unknown_out_file="$TMPDIR/unknown-out.txt"
+bash "$PROBE" not-a-subcommand >"$unknown_out_file" 2>&1 || unknown_exit=$?
 
 if [ "$unknown_exit" -ne 2 ]; then
   printf 'FAIL: unknown subcommand exit=%d, want 2\n' "$unknown_exit"
+  cat "$unknown_out_file"
   exit 1
 fi
 
-if ! printf '%s' "$unknown_out" | grep -qi 'usage'; then
+if ! grep -qi 'usage' "$unknown_out_file"; then
   printf 'FAIL: unknown subcommand lacks usage hint\n'
-  printf 'Got:\n%s\n' "$unknown_out"
+  printf 'Got:\n'
+  cat "$unknown_out_file"
   exit 1
 fi
 

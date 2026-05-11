@@ -32,3 +32,13 @@ elif [[ -f "$SESSION_FILE" ]]; then
   cat "$SESSION_FILE"
   printf '\n=== end SESSION.md ===\n'
 fi
+
+# Runtime-introspect (spec 011): point the agent at the probe tool so it can
+# verify its own edits via cached test/build snapshots. Silent when the tool
+# is absent — the capacity isn't installed in every fork.
+PROBE_TOOL="$PROJECT_DIR/.claude/tools/probe.sh"
+if [[ -x "$PROBE_TOOL" ]]; then
+  printf '\n=== runtime-introspect ===\n'
+  printf 'Probe the latest captured test/build run with: bash .claude/tools/probe.sh last-run\n'
+  printf '=== end runtime-introspect ===\n'
+fi

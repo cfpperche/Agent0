@@ -5,6 +5,7 @@ CLAUDE.local.md
 
 # Ephemeral state under .claude/ — per-machine runtime, never commit
 .claude/.runtime/
+.claude/.runtime-state/
 .claude/.session-state/
 .claude/.delegation-state/
 .claude/COMPACT_NOTES.md

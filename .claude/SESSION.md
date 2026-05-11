@@ -8,12 +8,23 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ## Current state
 
-**Ten capacities on `main`, all green — spec 008 patched in flight via live-dogfood.** This session ran a live-dogfood pass of spec 008 (`supply-chain-scan`) against `/home/goat/pyshrnk` (real `uv add requests` + sub-agent edit of `pyproject.toml`). The dogfood surfaced two findings, both landed:
+**Eleven capacities on `main`, all green — spec 009 (`supply-chain-block`) delivered.** This session split into three phases:
 
-- `b730b63` fix(008): tokenizer stops at shell separators + skips value-taking flag args — hook + new test 07 + run-all
-- `6b0ea3e` docs(008): tokenizer + stderr-observability gotchas from live-dogfood — rule doc
+1. **Live-dogfood of spec 008 against `/home/goat/pyshrnk` (uv branch)** surfaced two findings, both landed:
+   - `b730b63` fix(008): tokenizer stops at shell separators + skips value-taking flag args
+   - `6b0ea3e` docs(008): tokenizer + stderr-observability gotchas
 
-Suite: 7/7 PASS via `bash .claude/tests/supply-chain/run-all.sh`. Pyshrnk reverted to clean state after the dogfood touched it (`git -C /home/goat/pyshrnk checkout pyproject.toml uv.lock && uv sync --directory /home/goat/pyshrnk`).
+2. **Live-dogfood of spec 008 against `/home/goat/shrnk` (bun branch)** yielded 0 new findings — tokenizer fix generalized across managers (scoped packages, multi-package, value-taking flags). Yield-decay signal that prompted the pivot to spec 009.
+
+3. **Spec 009 (`supply-chain-block`) delivered in 4 commits:**
+   - `2e52a8b` docs: spec 009 scaffold (intent + plan + tasks)
+   - `4b42d8e` tests(009): RED phase — block-mode scenarios + advisory-mode regression guards (T1-T7)
+   - `d9fac8e` feat(009): block mode in supply-chain Bash preflight (T8-T9)
+   - `5f4942e` docs(009): rule doc + CLAUDE.md + README updates (T10-T13)
+
+Suite: 11/11 PASS via `bash .claude/tests/supply-chain/run-all.sh`. Spec acceptance criteria all ticked. Three design questions resolved via AskUserQuestion: scope = Bash only, default = block-on, trigger = any dep-mutation.
+
+The Bash preflight now blocks dep-mutating commands by default with an exit-2 corrective stderr template. `CLAUDE_SUPPLY_CHAIN_BLOCK=0` falls back to spec-008 advisory mode; `CLAUDE_SKIP_SUPPLY_CHAIN_SCAN=1` still disables both layers. Edit/Write side unchanged (always advisory — basename match FP rate too high to block on).
 
 ---
 
@@ -45,14 +56,28 @@ None.
 
 No spec in flight. Candidates for a future session:
 
-- **Live-dogfood pass against `/home/goat/shrnk` (npm) or `/home/goat/rshrnk` (cargo)** — round out cross-manager coverage now that pyshrnk surfaced two findings on the uv side. Different ecosystem idioms (npm scopes `@org/pkg`, cargo features `--features`) may reveal further tokenizer gaps before any spec-009 blocking-gate decision.
-- **`supply-chain-block` follow-up spec (009)** — once the advisory has been used in real sessions for a while, decide whether to add a blocking gate. The override marker grammar is already wired up; the new layer would just need a shape-rejection branch that exits 2 with a corrective template (same shape as the secrets-scan preflight).
+- **Live-dogfood pass of spec 009 against a fresh fork** — first-fork friction is the load-bearing risk per `docs/specs/009-supply-chain-block/plan.md` § *Risks*. The block-template is well-documented (CLAUDE.md + README + stderr template all name the env-var opt-out), but real-session signal would confirm whether documentation density is sufficient or whether a more accommodating default is warranted. Best target: an existing dogfood sibling that wasn't already used in this session (e.g. `/home/goat/rshrnk` cargo branch).
 - **Go dogfood pass** — last unverified validator branch. Expected friction yield: low (1 or fewer findings). Defer until something specifically Go-shaped becomes interesting.
 - **Extend tokenizer allowlist if noise surfaces** — known unhandled cases: `--registry-mirror` and other manager-specific value-taking flags. Current allowlist is the small intersection of "common across managers AND value is not the supply-chain signal". Add narrowly if a fork's real session produces noisy `packages` arrays.
+- **Audit-log forensics tooling** — `jq` one-liners for common queries (block rate per session, top blocked packages, override-reason patterns) might be worth packaging as a small script under `.claude/tools/` if forensic analysis becomes a recurring task. Premature now; revisit if a session demands it.
 
 ## Decisions & gotchas
 
-Newly observed this session (live-dogfood pass 2026-05-11):
+Newly observed this session (spec 009 + two live-dogfood passes 2026-05-11):
+
+- **Yield-decay confirmed as the right pivot signal.** pyshrnk live-dogfood surfaced 2 findings; shrnk live-dogfood surfaced 0. After two passes in different ecosystems (uv and bun), the tokenizer fix generalized and further passes weren't producing new bugs. That's the moment to switch from "find more bugs" mode to "promote the capacity" mode — spec 009 was the natural successor. **Rule of thumb**: dogfood until two consecutive passes yield 0 findings, then graduate.
+
+- **Decision-value-as-mode-encoding worked better than a separate `mode` field.** Spec 009 considered adding `mode: "block"` / `mode: "advisory"` to each audit row but rejected it — the decision values (`block` / `block-override` ⇒ block mode, `advisory` / `advisory-override` ⇒ advisory mode) already encode the mode without redundancy. Avoided the trap of letting two fields disagree. `jq` discriminators stay clean: `select(.decision | startswith("block"))` filters all block-mode rows.
+
+- **`override_reason` is multi-modal under spec 009 — null vs populated discriminates "no marker" vs "rejected too-short".** A `block` row with `override_reason: null` means no marker at all; `override_reason: "skip"` means a marker was present but rejected by the ≥10-char floor. Forensic queries must use `(.override_reason | length // 0)` to discriminate. Documented in the rule doc + the hook docstring. Future audit consumers should NOT collapse the two cases — they represent different agent behaviours.
+
+- **TDD with all-RED-tests-first paid off mechanically.** Wrote 4 failing tests (08-11) before touching the hook, confirmed RED via `run-all.sh`, then patched the hook in a single edit pass. Result: 11/11 PASS on the first GREEN attempt with zero iteration. The discipline cost (~20 min to write 4 tests upfront) bought back the time it would have cost to debug a patch that broke an edge case. Generalises: for hook changes that have a clean spec, write the tests before the code.
+
+- **`# OVERRIDE: ...` heredoc inside the hook stderr template needs careful quoting.** When emitting the corrective stderr template via `cat <<EOF`, `$first_cmd_line` and `$override_reason` interpolate normally but a literal `$` inside the template body (none present here, but watch out in future templates) would need escaping. Current templates only interpolate the captured command + reason, so safe; documented as a maintenance note. The two-line corrected-form pattern (`<cmd>\n# OVERRIDE: <placeholder>`) at the END of the template is what the agent's pattern-match latches onto — that's the issue-#24327 contract.
+
+- **README per-fork checklist insertions need item-number bumps.** Added a new item 5 about `CLAUDE_SUPPLY_CHAIN_BLOCK=0` between the gitleaks item (4) and the native-hook activation (was 5, now 6); had to renumber items 6, 7, 8 manually. A future spec inserting checklist items will hit the same friction — there's no auto-renumbering. Acceptable cost for the simplicity of plain-markdown checklist.
+
+Newly observed earlier this session (live-dogfood pass on pyshrnk + shrnk):
 
 - **The dogfood pattern WORKS for supply-chain too — 2 real findings from one live pass.** The pyshrnk live-dogfood ran ~5 Bash hits + 1 sub-agent edit and surfaced (a) tokenizer leak past pipes/redirects/flag-values (`packages` field captured `/home/goat/pyshrnk`, `2>&1`, `|`, `tail` after `uv add requests --directory /home/goat/pyshrnk 2>&1 | tail -20`), (b) the stderr-observability gap (PreToolUse hook stderr surfaces to the agent's next-turn context, not as inline Bash output — confirmed by audit log showing the advisory row while no `supply-chain-advisory:` line appeared in the Bash tool's return). The smoke tests committed in the prior session would NEVER have caught either — they ran with clean fixture commands and trusted the audit log without comparing it against expected vs. inline-stderr behaviour. **Implication**: every advisory-capacity should have a live-dogfood pass before being considered "done", not just smoke tests.
 

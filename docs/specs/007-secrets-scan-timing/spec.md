@@ -24,9 +24,9 @@ The secrets-scan capacity from spec 006 has a fundamental timing issue: the `Pre
   - **Then** the gate detects the finding and blocks — `-a` auto-staging must not bypass the scan
 
 - [ ] **Scenario: override marker preserves spec 006 semantics**
-  - **Given** the compound scenario above with the marker `# OVERRIDE: documentation test vector for spec 007` appended
+  - **Given** the compound scenario above, written across two lines of the Bash command string so that line 2 holds the marker on its own: line 1 is `git add <file> && git commit -m "..."`, line 2 is `# OVERRIDE: documentation test vector for spec 007` (bash treats line 2 as a no-op comment; the preflight matches the marker via the start-of-line anchor — same regex spec 002 fix shipped, no inline-trailing fallback)
   - **When** the gate fires
-  - **Then** the scan still runs, the audit gets `decision: "override"` with the reason populated, and the commit is allowed — byte-identical to spec 006's V2 behavior
+  - **Then** the preflight emits `decision: "override-pass-through"` with the reason populated, rewrites the command to prepend `CLAUDE_SECRETS_OVERRIDE_REASON='<reason>' `, and the native hook audits `decision: "override"` with the same reason — commit is allowed
 
 - [ ] **Scenario: fail-open behavior is preserved when gitleaks is absent**
   - **Given** `gitleaks` is not on `PATH`

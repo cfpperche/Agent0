@@ -38,5 +38,5 @@ fi
 # Block once and re-prompt the model.
 touch "$NAGGED"
 cat <<'JSON'
-{"hookSpecificOutput":{"hookEventName":"Stop","decision":"block","additionalContext":"Before ending this session: the repo has uncommitted changes but SESSION.md was not updated this session. Update SESSION.md (Current state / WIP / Next steps / Decisions & gotchas) so the next session can pick up where this one left off. Then end your turn normally — this hook will not block again this session."}}
+{"decision":"block","reason":"Before ending this session: the repo has uncommitted changes but SESSION.md was not updated this session. Update SESSION.md (Current state / WIP / Next steps / Decisions & gotchas) so the next session can pick up where this one left off. Then end your turn normally — this hook will not block again this session."}
 JSON

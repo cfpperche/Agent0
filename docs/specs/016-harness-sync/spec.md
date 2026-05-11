@@ -28,6 +28,11 @@ Ship a one-way sync tool (`.claude/tools/sync-harness.sh <fork-path>`) that copi
   - **When** the user runs `bash .claude/tools/sync-harness.sh --apply --force ~/fork`
   - **Then** the customized file IS overwritten with the Agent0 version, with a `! overwritten: <path>` warning line, exit code 0
 
+- [ ] **Scenario: `--force-except=GLOB` preserves matching files under --force**
+  - **Given** a fork with two customized files (`hookA.sh` and `.gitignore`) and the user wants to force-adopt drift-only Agent0 updates but preserve `.gitignore`
+  - **When** the user runs `bash .claude/tools/sync-harness.sh --apply --force --force-except='.gitignore' ~/fork`
+  - **Then** `hookA.sh` IS overwritten (`! overwritten`) but `.gitignore` is preserved (`!! customized` line still fires, file unchanged); exit non-zero because at least one file remained refused
+
 - [ ] **Scenario: settings.json merge (additive, no replace)**
   - **Given** a fork's `.claude/settings.json` registers only specs 001-007 hooks (governance / delegation / secrets) and the user runs `--apply`
   - **When** the merge runs

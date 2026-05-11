@@ -8,30 +8,37 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ## Current state
 
-**Spec 011-runtime-introspect delivered and validated.** Twelve shipped capacities on `main`, all green. 10/10 scenario suite PASS; three consecutive 0-finding live-dogfood/validation passes (passes 2 + 3 on shrnk during impl, then a post-FP-fix re-validate). Six commits: `69099de` → `b0708a4`.
+**Spec 012-mcp-recipes delivered and validated.** Thirteen shipped capacities on `main`, all green. 6/6 scenario suite PASS first attempt; six 0-finding live-verify passes (Agent0 root silent / shrnk silent / Next+Prisma combined dedup / Vue+Vite browser-non-Next / monorepo blind spot gotcha / co-existence with 011) — yield-decay graduated. Commits: `7211855` → `9f70dd4`.
 
-Spec 010-audit-forensics still draft, untracked (carryover — `spec.md` filled prior session, `plan.md` / `tasks.md` placeholders, awaiting user review). This is the only uncommitted state on disk.
+Two specs still draft, untracked carryovers from earlier work:
+- **010-audit-forensics** — `spec.md` filled, awaiting user review.
+- **013-lint-validator-extension** — `spec.md` filled out-of-band (today, 2026-05-11), I did not author it; treat as someone else's WIP.
 
 ## WIP
 
-None on 011. The capacity ships as: `runtime-pre-mark.sh` + `runtime-capture.sh` (with leading-shape FP skip for `git commit` / `grep` / `rg` / `ag` / `egrep` / `fgrep`) + `probe.sh` + `runtime-introspect.md` rule doc + 10 test scenarios + CLAUDE.md § block + `.gitignore` entry + settings.json wiring. Agent reads its own latest verifier run via `bash .claude/tools/probe.sh last-run`.
+None on 012. The capacity ships as: `mcp-recipes-hint.sh` SessionStart hook + `.mcp.json.example` at repo root + `.claude/rules/mcp-recipes.md` full reference + 6 test scenarios + CLAUDE.md § block + settings.json wiring. Forks adopt Playwright / Chrome DevTools / DBHub / Next.js DevTools by copying `.mcp.json.example → .mcp.json` and uncommenting blocks.
 
 ## Next steps
 
-1. **Follow-up spec: `.mcp.json.example`** — opt-in MCP recipes for forks that want browser introspection (Playwright MCP, Chrome DevTools MCP) or DB introspection (DBHub). Spec 011 § Non-goals explicitly defers these. Single doc + commented example file, no new hooks.
-2. **010-audit-forensics** — still awaits user review of `spec.md`. Plan/tasks blocked until then.
+1. **010-audit-forensics** still awaits user review of `spec.md`. Plan/tasks blocked until then.
+2. **013-lint-validator-extension** out-of-band scaffold — needs context from whoever drafted it.
+3. Possible follow-ups (no spec yet):
+   - OpenTelemetry MCP, Grafana MCP, Filesystem MCP, Git MCP as additional recipes (spec 014?).
+   - Per-stack `.mcp.json.<stack>.example` variants if the single-file approach hits friction.
+   - Stack-detector v2: monorepo walk for `apps/*/` and `packages/*/` (deferred per spec 012 § Gotchas).
 
-Deferred (still queued):
-- Second cargo dogfood pass (graduation by yield-decay rule)
-- Go dogfood pass (low expected yield)
+Deferred (carryover queue):
+- Second cargo dogfood pass (graduation by yield-decay rule).
+- Go dogfood pass (low expected yield).
 
 ## Decisions & gotchas
 
-- **Claude Code's `tool_response.exit_code` does not exist for Bash.** Live-dogfood surfaced this — payload carries `{stdout, stderr, interrupted, isImage, noOutputExpected}` and a top-level `duration_ms`. Runtime-introspect handles it via per-detector stdout-pattern inference (`inferred_status` + `inference_basis` fields). The `exit` field remains in schema for forward-compat; probe falls back to inferred status when null. All detectors must have an inference branch — there's no "exit code as ground truth" path under Claude Code today.
-- **Probe inside the SAME Bash tool call sees the PRIOR snapshot, not the current.** PostToolUse fires after the underlying command returns, so `bun test && bash probe.sh last-run` reads the previous run. Agent must read in the NEXT Bash invocation. Documented in rule doc; surfaced during dogfood pass 1.
-- **`bun run <script>` detector emits sub-keyed suffixes** (`bun-run-test`, `bun-run-typecheck`, etc.) so inference can route to the right pattern table. Originally just `bun-run` — failed inference on `bun run typecheck`. Fixed during dogfood.
-- **Documented gotchas need DEFENDED counterparts.** I wrote the "commit-message FP" gotcha in the rule doc but did NOT add a tokeniser skip for it — the gotcha admitted the FP existed instead of preventing it. Validation pass surfaced it for real (a recent `git commit -m "$(cat <<EOF ... bun tsc ... EOF)"` captured a false bun-tsc snapshot). Fix landed in `b0708a4` — leading-shape skip for `git commit` / `git -C` / `grep` / `rg` / `ag` / `egrep` / `fgrep`. **Lesson:** when writing a Gotchas entry, decide if it's "accept the limitation" or "code the defense" — defaulting to documentation alone is how known-knowns become live regressions.
-- **Wedge stays generic; framework-specific introspection (laravel-boost, next-devtools-mcp, rails-mcp) lives in fork-side `.mcp.json`.** Spec 011 deliberately does not duplicate them. Playwright / Chrome DevTools / DBHub get a future `.mcp.json.example` doc, not a capacity.
-- **No audit log on the runtime side.** `last-run.json` is self-sufficient as "latest evidence". Supply-chain's per-Bash audit log volume (hundreds of `skip-not-install` rows per session) was the cautionary tale; revisit if forensic queries become a real need.
-- **TDD discipline held end-to-end:** 8 RED tests written before any hook code → 8/8 GREEN first attempt after impl (one impl bug: bash `$(jq -r)` strips trailing newlines; fixed via `jq -j + printf-x` sentinel). Then dogfood pass 1 surfaced 4 production-only findings → test 09 + fixes → 9/9 GREEN. Then validation surfaced the commit-message FP → test 10 + leading-shape skip → 10/10 GREEN. Confirms the pattern: spec → RED tests → impl → live-dogfood → adjustments + new RED → green. Three rounds of finding-driven tests in one spec; each round added permanent regression coverage.
+- **Spec 012 is pure recommendation, no audit log, no blocks.** Distinct shape from spec 011's runtime probe (which captures state). Recommendation capacities have a lower bar — they just suggest, the developer activates. No new gating primitives introduced.
+- **MCP package names verified via WebFetch before authoring recipes** (Playwright `@playwright/mcp`, Chrome DevTools `chrome-devtools-mcp`, DBHub `@bytebase/dbhub`, Next.js DevTools `next-devtools-mcp`). Recipes use `@latest`; gotcha documents pin-manually-if-churn-hurts. Same lesson as 011 dogfood: verify upstream-source-of-truth before committing.
+- **Stack-detector is shallow by design** (top-level files + `package.json` deps only). Monorepo blind spot is documented and ratified — fork developers symlink configs to root or point `CLAUDE_PROJECT_DIR` at the active workspace. v2 could walk depth-1 (`apps/*/`, `packages/*/`); deferred until real signal demands it.
+- **jq is optional in mcp-recipes-hint.sh.** Falls back to permissive grep on `package.json` regex when jq is absent. Same fail-open shape as all other hooks. Verified by `02-browser-non-next.sh` running in test env without jq dependence.
+- **`.mcp.json.example` is JSON-with-comments.** Strict JSON parsers reject `//` lines. The `.example` suffix is the universal "do not parse directly" signal; copy step is where the file becomes valid JSON. Documented prominently in the file's header AND in the rule doc gotchas.
+- **DBHub `DATABASE_URL` is secret-adjacent.** Recipe documents: never commit `.mcp.json` with a populated `DATABASE_URL`; use env-var indirection or shell-export-before-launch. Same hygiene posture as `.env` handling.
+- **TDD pattern held cleanly third time in a row** (specs 011, 012, plus the earlier secrets-scan and supply-chain rounds): RED tests written → impl → GREEN. Spec 012 was the cleanest run yet — 6/6 GREEN first attempt with no impl bugs surfacing. Indicates the spec quality + plan quality combo is paying off; the impl is mechanical when the RED tests are precise.
+- **SessionStart hook count is now 3** (`session-start.sh` + `reminders-readout.sh` + `mcp-recipes-hint.sh`). Each emits its own block, independent. Order in settings.json controls visual order in additional-context.
 - **SESSION.md auto-injection has a ~2KB preview budget.** Replace stale content rather than appending — `git log` is the audit trail.

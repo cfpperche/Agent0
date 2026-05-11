@@ -67,6 +67,33 @@ fi
 COMMAND="$(printf '%s' "$INPUT" | jq -r '.tool_input.command // ""' 2>/dev/null || true)"
 [ -z "$COMMAND" ] && exit 0
 
+# ---------------------------------------------------------------------------
+# Pre-tokeniser skip: known FP shapes that contain verifier-shaped tokens
+# inside non-verifier content (commit-message heredoc, grep with pattern, etc.)
+# ---------------------------------------------------------------------------
+# Surfaced by validation pass 2026-05-11 against spec 011 itself: a `git
+# commit -m "$(cat <<'EOF' ... bun tsc ... EOF)"` invocation tokenised the
+# commit body and matched "bun tsc" → false snapshot. Same family as the
+# supply-chain "commit messages mentioning compound syntax" gotcha but
+# higher prevalence here because verifier verbs ARE common prose. Detect
+# `git commit` as a leading-segment shape and skip.
+#
+# Tolerates: `git commit ...`, `git -C <path> commit ...`, `git  commit`
+# (double space). Whitespace + non-`#` non-newline content allowed between
+# `git` and `commit` (covers -C flags etc.).
+case "$COMMAND" in
+  git\ commit*|git\ \ *commit*|git\ -C\ *commit*|git\ -c\ *commit*)
+    exit 0 ;;
+esac
+# Same skip for `grep` (`grep -E 'bun test' file` would tokenise 'bun test').
+case "$COMMAND" in
+  grep\ *|*\ |\ grep\ *|*\ grep\ *) ;;  # let through — only skip leading grep, not piped greps
+esac
+case "$COMMAND" in
+  grep\ *|egrep\ *|fgrep\ *|rg\ *|ag\ *)
+    exit 0 ;;
+esac
+
 SESSION_ID="$(printf '%s' "$INPUT" | jq -r '.session_id // ""' 2>/dev/null || true)"
 AGENT_ID="$(printf '%s' "$INPUT" | jq -r '.agent_id // ""' 2>/dev/null || true)"
 TOOL_USE_ID="$(printf '%s' "$INPUT" | jq -r '.tool_use_id // ""' 2>/dev/null || true)"

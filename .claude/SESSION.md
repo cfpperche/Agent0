@@ -16,10 +16,11 @@ None.
 
 ## Next steps
 
-No spec in flight. Two open candidates if a future session wants more:
+No spec in flight. One open candidate if a future session wants more:
 
-- **`tests/secrets-scan/` placement reconsideration.** Those 8 scenario scripts (~780 LOC) are V1-V7 verification for spec 007 — they test *the harness*, not the fork's project. A fresh fork inherits them as 19% of its initial commit weight and never modifies them. Options: (a) move under `docs/specs/007-secrets-scan-timing/tests/` so they live with the spec that defines them, or (b) add a delete-this-if-you-don't-need-it line to the per-fork checklist. Refactor judgment call, not a spec.
-- **Harvest more harness-improvement signals from another fork pass.** This dogfood surfaced two real issues (validator bun.lock drift, secrets-scan.md context weight) in one session. A second pass against a different stack (Python, Rust) would likely surface more.
+- **Harvest more harness-improvement signals from another fork pass.** This dogfood surfaced three real issues (validator bun.lock drift, secrets-scan.md context weight, harness self-verification suite weight) in one session. A second pass against a different stack (Python, Rust) would likely surface more.
+
+The `tests/secrets-scan/` placement question was resolved by option (b): a step 7 added to README's per-fork checklist documenting that forks not modifying secrets-scan internals can drop the suite. The move-under-spec option was rejected for convention rupture (tests outside `tests/`) and fragmentation risk if more specs grow their own tests.
 
 ## Decisions & gotchas
 

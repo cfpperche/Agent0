@@ -62,7 +62,21 @@ else
   trap 'rmdir "$LOCKDIR" 2>/dev/null || true' EXIT
 fi
 
-VALIDATOR_OUT="$("$VALIDATOR" 2>&1 || true)"
+# Capture stdout (JSON contract) and stderr (advisory lines like
+# `lint-advisory:` from spec 013) separately. Pre-013 the validator was silent
+# on its own stderr so a `2>&1` merge did no harm; once it started emitting
+# advisories that merge would prepend non-JSON text and break `jq` parsing.
+VALIDATOR_STDERR_FILE="$(mktemp 2>/dev/null || mktemp -t validator-own-stderr)"
+VALIDATOR_OUT="$("$VALIDATOR" 2>"$VALIDATOR_STDERR_FILE" || true)"
+VALIDATOR_OWN_STDERR="$(cat "$VALIDATOR_STDERR_FILE" 2>/dev/null || true)"
+rm -f "$VALIDATOR_STDERR_FILE"
+
+# Surface validator-emitted stderr to the agent (next-turn context) regardless
+# of pass/fail. Advisory lines (`lint-advisory:`, etc.) reach the agent without
+# polluting the JSON parse below.
+if [ -n "$VALIDATOR_OWN_STDERR" ]; then
+  printf '%s\n' "$VALIDATOR_OWN_STDERR" >&2
+fi
 
 # `.ok // empty` would collapse `false` and missing into the same empty string;
 # use `has("ok")` to keep them distinguishable.

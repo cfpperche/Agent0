@@ -355,9 +355,18 @@ if [ "$override_valid" -eq 1 ]; then
   # NOT printf %q (bash-only, non-portable per constraints).
   escaped_reason="$(printf '%s' "$override_reason" | sed "s/'/'\\\\''/g")"
 
-  # Build the rewritten command: prepend env-var assignment.
-  # The env-var prefix uses single quotes around the (escaped) reason.
-  rewritten_cmd="CLAUDE_SECRETS_OVERRIDE_REASON='${escaped_reason}' ${COMMAND}"
+  # Build the rewritten command: prepend env-var assignment as a STANDALONE
+  # statement followed by `;`. The `export` makes the var inheritable; the `;`
+  # separates the assignment from the original command so the chain that
+  # follows sees the var.
+  #
+  # DO NOT use the `VAR=val cmd` prefix form here — in bash, that form scopes
+  # the assignment to the single command it prefixes, so the env var is NOT
+  # inherited by anything chained with `&&` or `;`. The override use case is
+  # explicitly about compound `git add ... && git commit ...` shapes (V4),
+  # which would otherwise lose the env var on the `git commit` half and
+  # block in the native hook.
+  rewritten_cmd="export CLAUDE_SECRETS_OVERRIDE_REASON='${escaped_reason}'; ${COMMAND}"
 
   # Emit JSON stdout for hookSpecificOutput.updatedInput.
   # Use jq to build the JSON safely (no manual quoting of the command string).

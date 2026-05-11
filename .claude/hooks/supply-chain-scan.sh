@@ -234,14 +234,22 @@ while [ "$i" -lt "$((n - 1))" ]; do
   fi
 
   # Found a manager+verb pair. Collect packages from tokens[i+2..].
+  # Stop at any shell separator (chain / pipe / redirect / background) or
+  # comment start. Skip BOTH a known value-taking flag and its value (so
+  # `--directory /path` doesn't leak the path into packages). `-r` and
+  # `--package` are deliberately NOT on the value-taking list — their values
+  # carry the supply-chain signal (requirements file, package name).
   j=$((i + 2))
   pkgs=""
   while [ "$j" -lt "$n" ]; do
     tok="${tokens[$j]}"
     case "$tok" in
-      -*)             j=$((j + 1)); continue ;;  # flag
-      '&&'|';'|'||')  break ;;                    # chain separator
-      '#'*)           break ;;                    # comment start
+      '&&'|'||'|';'|'|'|'>'|'>>'|'<'|'&'|'2>&1'|'2>'|'&>')
+                      break ;;
+      '#'*)           break ;;
+      --directory|--dir|--target|--target-dir|--prefix|--manifest-path|--project|--cwd|--workspace|--config|-c|--filter|--registry|--index|--index-url)
+                      j=$((j + 2)); continue ;;
+      -*)             j=$((j + 1)); continue ;;
       *)              pkgs="$pkgs $tok"; j=$((j + 1)) ;;
     esac
   done

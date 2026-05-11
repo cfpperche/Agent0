@@ -65,3 +65,7 @@ If the marker is present and valid → exit 0 (allow). If any pattern matches an
 ## Context
 
 User-supplied brief in conversation 2026-05-10. Brief originally specified top-level `hooks/`; aligned with project pattern under `.claude/hooks/` alongside session-start, session-stop, pre-compact for consistency and auditability.
+
+## Gotchas
+
+- **Heredoc / commit-message false-positive on destructive-op literals.** The gate's pattern detector is byte-level regex against `tool_input.command` and does NOT parse shell quoting. A commit message body containing a literal substring from any of the three families — `rm -rf`, `--no-verify`, `git add -A`, etc., even inside a `-m "..."` quoted argument or a heredoc — will match the family and reject the entire Bash command. Observed in conversation 2026-05-11 when a commit message body described step 7 of the per-fork checklist (the literal substring `rm -rf tests/secrets-scan/` in the message body, never actually executed). Mitigations: (a) reword the body to avoid the literal substring — "delete X" or "drop X" in place of the destructive form — which is the cheapest and most common fix; (b) use the `# OVERRIDE: <reason ≥10 chars>` marker when the literal is intentional (e.g. a commit documenting an actually-destructive op landing in the same diff). Same root cause and same mitigation shape as `.claude/rules/secrets-scan.md` § *Gotchas* documents for the preflight shape detector — regex without a shell-quoting parser is a deliberate trade-off (cheap false fires beat missed real fires), not a bug to fix.

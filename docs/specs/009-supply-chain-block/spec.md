@@ -12,51 +12,51 @@ This spec is the symmetric companion to specs 006/007 (secrets-scan blocking): s
 
 ## Acceptance criteria
 
-- [ ] **Scenario: Bash dep-install in default block mode without override**
+- [x] **Scenario: Bash dep-install in default block mode without override**
   - **Given** the Bash preflight runs in default (block) mode
   - **When** a recognised `(manager, verb, packages)` triple is detected without a valid override marker
   - **Then** the hook exits 2, emits a `supply-chain-block:` stderr template naming the manager/action/packages and showing the corrective override form, and audits one row with `decision: "block"`
 
-- [ ] **Scenario: Bash dep-install in default block mode WITH valid override marker**
+- [x] **Scenario: Bash dep-install in default block mode WITH valid override marker**
   - **Given** the Bash preflight runs in default (block) mode
   - **When** a recognised dep-install triple is detected AND the command contains a line matching `^[[:space:]]*# OVERRIDE: <reason ≥10 chars>`
   - **Then** the hook exits 0 silently (no stderr template), and audits one row with `decision: "block-override"`, `override_reason` populated from the marker
 
-- [ ] **Scenario: Bash dep-install in advisory opt-out mode**
+- [x] **Scenario: Bash dep-install in advisory opt-out mode**
   - **Given** `CLAUDE_SUPPLY_CHAIN_BLOCK=0` is set
   - **When** a recognised dep-install triple is detected without override
   - **Then** the hook behaves identically to spec 008: exits 0, emits the `supply-chain-advisory:` stderr line, audits `decision: "advisory"`. With override marker, audits `decision: "advisory-override"` (existing values preserved exactly)
 
-- [ ] **Scenario: Short override reason in block mode still blocks**
+- [x] **Scenario: Short override reason in block mode still blocks**
   - **Given** the Bash preflight runs in default (block) mode
   - **When** the command contains `# OVERRIDE: skip` (reason <10 chars after trim)
   - **Then** the hook exits 2 with the corrective template (same as no-override path), audits `decision: "block"`. Reason floor is NOT a soft-degrade in block mode — it must match secrets-scan's `override-too-short` behaviour, not 008's silent-fallback
 
-- [ ] **Scenario: Edit/Write on manifest stays advisory under block mode**
+- [x] **Scenario: Edit/Write on manifest stays advisory under block mode**
   - **Given** the Bash preflight runs in default (block) mode AND a sub-agent edits a manifest basename (e.g. `package.json`)
   - **When** the `PostToolUse(Edit|Write|MultiEdit)` hook fires
   - **Then** behaviour is unchanged from spec 008 — exits 0, emits `supply-chain-advisory: edit ...`, audits `decision: "advisory"`, `scope: "edit"`. The Edit/Write hook never blocks regardless of `CLAUDE_SUPPLY_CHAIN_BLOCK` value
 
-- [ ] **Scenario: `CLAUDE_SKIP_SUPPLY_CHAIN_SCAN=1` still silences both layers**
+- [x] **Scenario: `CLAUDE_SKIP_SUPPLY_CHAIN_SCAN=1` still silences both layers**
   - **Given** `CLAUDE_SKIP_SUPPLY_CHAIN_SCAN=1` is set
   - **When** any Bash invocation or sub-agent Edit/Write/MultiEdit fires
   - **Then** both hooks exit 0 silently with no scan and no audit row (existing throwaway-session escape preserved, takes precedence over `CLAUDE_SUPPLY_CHAIN_BLOCK`)
 
-- [ ] **Scenario: `skip-not-install` audit shape unchanged**
+- [x] **Scenario: `skip-not-install` audit shape unchanged**
   - **Given** a Bash command that is not a recognised dep-install (e.g. `ls -la`, `npm test`, `bun install` with no args)
   - **When** the preflight runs in either block or advisory mode
   - **Then** the audit row is `decision: "skip-not-install"` with the existing field shape — block mode does NOT add friction to non-mutating commands
 
-- [ ] **Scenario: Stderr template ends with verbatim corrected form**
+- [x] **Scenario: Stderr template ends with verbatim corrected form**
   - **Given** the preflight blocks a dep-install in block mode
   - **When** the agent reads the rejected stderr on its next turn (Claude Code issue #24327 mechanic)
   - **Then** the stderr ends with the EXACT two-line corrected shape — the original command on line 1, `# OVERRIDE: <reason>` placeholder on line 2 — so the agent can copy-paste without semantic reasoning. Template is a contract, not friendly UI
 
-- [ ] `.claude/hooks/supply-chain-scan.sh` updated with block-mode branch, ≥10-char enforcement in block mode, mode-gated stderr template
-- [ ] `.claude/rules/supply-chain.md` § *What fires, what advises* updated to describe block-mode-by-default semantics; new § *Block vs advisory mode* section; audit-log table extended with `block` and `block-override` decision values; gotchas updated for the new default
-- [ ] `.claude/tests/supply-chain/` extended with 4 new scenario scripts: block-default, block-override-valid, block-override-too-short, advisory-opt-out (preserve existing 7 scenarios as regression guards)
-- [ ] CLAUDE.md § *Supply chain* summary block updated to reflect block-by-default + new env var; ≤2 sentences of marginal text
-- [ ] README per-fork checklist gains one bullet describing the env var `CLAUDE_SUPPLY_CHAIN_BLOCK=0` for forks that want to keep advisory-only mode
+- [x] `.claude/hooks/supply-chain-scan.sh` updated with block-mode branch, ≥10-char enforcement in block mode, mode-gated stderr template
+- [x] `.claude/rules/supply-chain.md` § *What fires, what advises* updated to describe block-mode-by-default semantics; new § *Block vs advisory mode* section; audit-log table extended with `block` and `block-override` decision values; gotchas updated for the new default
+- [x] `.claude/tests/supply-chain/` extended with 4 new scenario scripts: block-default, block-override-valid, block-override-too-short, advisory-opt-out (preserve existing 7 scenarios as regression guards)
+- [x] CLAUDE.md § *Supply chain* summary block updated to reflect block-by-default + new env var; ≤2 sentences of marginal text
+- [x] README per-fork checklist gains one bullet describing the env var `CLAUDE_SUPPLY_CHAIN_BLOCK=0` for forks that want to keep advisory-only mode
 
 ## Non-goals
 

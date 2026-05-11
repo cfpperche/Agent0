@@ -71,8 +71,20 @@ SESSION_ID="$(printf '%s' "$INPUT" | jq -r '.session_id // ""' 2>/dev/null || tr
 AGENT_ID="$(printf '%s' "$INPUT" | jq -r '.agent_id // ""' 2>/dev/null || true)"
 TOOL_USE_ID="$(printf '%s' "$INPUT" | jq -r '.tool_use_id // ""' 2>/dev/null || true)"
 
-# tool_response shape: {stdout, stderr, exit_code} for Bash. All optional.
+# tool_response shape (Claude Code, 2026-05-11):
+#   {stdout, stderr, interrupted, isImage, noOutputExpected}
+# Notably absent: exit_code. Live-dogfood pass 1 against /home/goat/shrnk
+# confirmed Claude Code's Bash tool_response carries NO exit signal — only
+# the streams. We still read exit_code defensively in case the field appears
+# in a future harness release or another tool surface (tests still simulate
+# it). When absent, status is inferred from runner-specific stdout patterns.
 EXIT_CODE="$(printf '%s' "$INPUT" | jq -r '.tool_response.exit_code // empty' 2>/dev/null || true)"
+INTERRUPTED="$(printf '%s' "$INPUT" | jq -r '.tool_response.interrupted // false' 2>/dev/null || echo false)"
+
+# Top-level duration_ms is provided by the harness on PostToolUse (real wall
+# clock). Use it when present — more accurate than diffing date-second marks
+# from PreToolUse, which was the only fallback before this finding.
+HARNESS_DURATION_MS="$(printf '%s' "$INPUT" | jq -r '.duration_ms // empty' 2>/dev/null || true)"
 
 # Use jq -j (no separator newline) + printf-x sentinel to preserve trailing
 # newlines in stdout/stderr. $(jq -r) strips ONE trailing \n; without this
@@ -146,16 +158,21 @@ while [ "$i" -lt "$n" ]; do
     "yarn lint")   detector="yarn-lint"; break ;;
   esac
 
-  # run-script verifiers: bun run / npm run / pnpm run + script with keyword
+  # run-script verifiers: bun run / npm run / pnpm run + script with keyword.
+  # Suffix encodes which verifier shape the script ran (test/build/typecheck/lint)
+  # so inference can route to the right pattern table.
   case "$current $next" in
     "bun run"|"npm run"|"pnpm run"|"yarn run")
       if [ -n "$next2" ] && script_has_keyword "$next2"; then
-        case "$current" in
-          bun)   detector="bun-run"; break ;;
-          npm)   detector="npm-run"; break ;;
-          pnpm)  detector="pnpm-run"; break ;;
-          yarn)  detector="yarn-run"; break ;;
+        sub="run"
+        case "$next2" in
+          *test*)      sub="run-test" ;;
+          *typecheck*) sub="run-typecheck" ;;
+          *build*)     sub="run-build" ;;
+          *lint*)      sub="run-lint" ;;
         esac
+        detector="${current}-${sub}"
+        break
       fi
       ;;
   esac
@@ -188,6 +205,101 @@ fi
 debug "detector matched: $detector ($COMMAND)"
 
 # ---------------------------------------------------------------------------
+# Phase 3.5: Infer status from runner-specific stdout patterns
+# ---------------------------------------------------------------------------
+# Heuristic-only — driven by lived runner output. Updated when a real-world
+# runner output surfaces that the table misses. Tested in test 09.
+inferred_status="UNKNOWN"
+inference_basis=""
+
+infer_status() {
+  local det="$1"
+  local out="$2"
+  case "$det" in
+    # Test-style runners (and run-script with `*test*` keyword).
+    bun-test|npm-test|pnpm-test|yarn-test|*-run-test)
+      # bun test: ` 0 fail` / ` N fail` (any N>0 = FAIL)
+      # npm/pnpm/yarn test typically delegate to jest/vitest/etc. — same shape works
+      if printf '%s' "$out" | grep -qE '^[[:space:]]*0 fail[[:space:]]*$'; then
+        inferred_status="PASS"
+        inference_basis="$det: '0 fail' line"
+        return
+      fi
+      if printf '%s' "$out" | grep -qE '[1-9][0-9]* fail'; then
+        inferred_status="FAIL"
+        inference_basis="$det: 'N fail' with N>0"
+        return
+      fi
+      # vitest-style: "Test Files  X failed"
+      if printf '%s' "$out" | grep -qiE 'failed|✗|error'; then
+        inferred_status="FAIL"
+        inference_basis="$det: failed/error keyword"
+        return
+      fi
+      if printf '%s' "$out" | grep -qiE 'pass|✓|ok'; then
+        inferred_status="PASS"
+        inference_basis="$det: pass/ok keyword (weak heuristic)"
+        return
+      fi
+      ;;
+    pytest|python-pytest|python-unittest)
+      # pytest: "===== N failed" / "===== N passed"
+      if printf '%s' "$out" | grep -qE '[1-9][0-9]* (failed|error)'; then
+        inferred_status="FAIL"
+        inference_basis="$det: 'N failed/error' in summary"
+        return
+      fi
+      if printf '%s' "$out" | grep -qE '[0-9]+ passed' && ! printf '%s' "$out" | grep -qE 'failed|error'; then
+        inferred_status="PASS"
+        inference_basis="$det: 'N passed' without failed"
+        return
+      fi
+      # unittest: "OK" / "FAILED"
+      if printf '%s' "$out" | grep -qE '^FAILED'; then
+        inferred_status="FAIL"
+        inference_basis="$det: 'FAILED' header (unittest)"
+        return
+      fi
+      if printf '%s' "$out" | grep -qE '^OK'; then
+        inferred_status="PASS"
+        inference_basis="$det: 'OK' header (unittest)"
+        return
+      fi
+      ;;
+    # Typecheck / build / lint runners (and run-script with matching keyword).
+    bun-tsc|yarn-typecheck|yarn-build|yarn-lint|*-run-typecheck|*-run-build|*-run-lint)
+      # tsc emits "error TSXXXX:" lines on failure; absence = clean.
+      if printf '%s' "$out" | grep -qE 'error TS[0-9]+'; then
+        inferred_status="FAIL"
+        inference_basis="$det: TS error line"
+        return
+      fi
+      # Heuristic: if output is empty or short and no error keyword, treat
+      # as PASS. tsc --noEmit clean output is empty.
+      if [ "${#out}" -lt 500 ] && ! printf '%s' "$out" | grep -qiE 'error|fail'; then
+        inferred_status="PASS"
+        inference_basis="$det: clean (no error TS or fail keyword)"
+        return
+      fi
+      ;;
+  esac
+}
+
+# Combined stream for inference (stdout + stderr).
+combined_for_inference="$STDOUT_RAW
+$STDERR_RAW"
+
+infer_status "$detector" "$combined_for_inference"
+
+# Interruption trumps inference.
+if [ "$INTERRUPTED" = "true" ]; then
+  inferred_status="INTERRUPTED"
+  inference_basis="interrupted=true on tool_response"
+fi
+
+debug "inferred_status: $inferred_status ($inference_basis)"
+
+# ---------------------------------------------------------------------------
 # Phase 4: Compute started_at / ended_at / duration_ms
 # ---------------------------------------------------------------------------
 ended_at="$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || true)"
@@ -196,11 +308,20 @@ ended_at="$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || true)"
 started_at="$ended_at"
 duration_ms="null"
 
+# Prefer the harness's own top-level duration_ms (real wall clock, milliseconds).
+if [ -n "$HARNESS_DURATION_MS" ]; then
+  case "$HARNESS_DURATION_MS" in
+    ''|*[!0-9]*) : ;;
+    *)           duration_ms="$HARNESS_DURATION_MS" ;;
+  esac
+fi
+
 if [ -n "$TOOL_USE_ID" ] && [ -f "$IN_FLIGHT_DIR/${TOOL_USE_ID}.t" ]; then
   mark="$(cat "$IN_FLIGHT_DIR/${TOOL_USE_ID}.t" 2>/dev/null || true)"
   if [ -n "$mark" ]; then
     started_at="$mark"
-    if command -v date >/dev/null 2>&1; then
+    # Only fall back to date diff when the harness didn't supply duration.
+    if [ "$duration_ms" = "null" ] && command -v date >/dev/null 2>&1; then
       start_epoch="$(date -u -d "$started_at" +%s 2>/dev/null || date -u -j -f '%Y-%m-%dT%H:%M:%SZ' "$started_at" +%s 2>/dev/null || true)"
       end_epoch="$(date -u -d "$ended_at" +%s 2>/dev/null || date -u -j -f '%Y-%m-%dT%H:%M:%SZ' "$ended_at" +%s 2>/dev/null || true)"
       if [ -n "$start_epoch" ] && [ -n "$end_epoch" ]; then
@@ -284,10 +405,16 @@ case "$EXIT_CODE" in
   *)            exit_json="$EXIT_CODE" ;;
 esac
 
+interrupted_json="false"
+[ "$INTERRUPTED" = "true" ] && interrupted_json="true"
+
 payload="$(jq -n \
   --arg command "$COMMAND" \
   --arg detector "$detector" \
   --argjson exit "$exit_json" \
+  --argjson interrupted "$interrupted_json" \
+  --arg inferred_status "$inferred_status" \
+  --arg inference_basis "$inference_basis" \
   --arg started_at "$started_at" \
   --arg ended_at "$ended_at" \
   --argjson duration_ms "$duration_ms" \
@@ -303,6 +430,9 @@ payload="$(jq -n \
     command: $command,
     detector: $detector,
     exit: $exit,
+    interrupted: $interrupted,
+    inferred_status: $inferred_status,
+    inference_basis: $inference_basis,
     started_at: $started_at,
     ended_at: $ended_at,
     duration_ms: $duration_ms,

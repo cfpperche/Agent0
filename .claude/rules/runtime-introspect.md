@@ -36,20 +36,23 @@ The list is deliberately small. The supply-chain capacity proved that strict pai
 
 ## `last-run.json` schema
 
-Single snapshot, overwritten on every matched capture. JSON shape:
+Single snapshot, overwritten on every matched capture. JSON shape (post live-dogfood pass on /home/goat/shrnk, 2026-05-11):
 
 ```json
 {
   "command": "bun test src/server.test.ts",
   "detector": "bun-test",
-  "exit": 1,
-  "started_at": "2026-05-11T14:23:10Z",
-  "ended_at": "2026-05-11T14:23:12Z",
-  "duration_ms": 1830,
+  "exit": null,
+  "interrupted": false,
+  "inferred_status": "PASS",
+  "inference_basis": "bun-test: '0 fail' line",
+  "started_at": "2026-05-11T17:14:43Z",
+  "ended_at": "2026-05-11T17:14:44Z",
+  "duration_ms": 118,
   "session_id": "01HZX...",
   "agent_id": null,
-  "stdout_head": "bun test v1.2.0...",
-  "stdout_tail": "...3 fail, 2 pass\n",
+  "stdout_head": " 10 pass\n 0 fail\n 17 expect() calls...",
+  "stdout_tail": "",
   "stdout_truncated": false,
   "stderr_head": "",
   "stderr_tail": "",
@@ -58,35 +61,53 @@ Single snapshot, overwritten on every matched capture. JSON shape:
 ```
 
 - `command` — raw `tool_input.command` (no shell rewrite).
-- `detector` — pair-list key that matched (`bun-test`, `pytest`, `python-pytest`, `npm-run-build`, `extra:<glob>`, …).
-- `exit` — integer from `tool_response.exit_code`. `null` if absent.
-- `started_at` / `ended_at` — ISO-8601 UTC. `started_at` from the in-flight mark; `ended_at` is hook-write time.
-- `duration_ms` — integer or `null`.
+- `detector` — pair-list key that matched. Core: `bun-test`, `bun-tsc`, `bun-run-test`, `bun-run-typecheck`, `bun-run-build`, `bun-run-lint`, `npm-test`, `npm-run-test`, `pnpm-test`, `pnpm-run-typecheck`, `yarn-test`, `yarn-typecheck`, `yarn-build`, `yarn-lint`, `pytest`, `python-pytest`, `python-unittest`. Extension: `extra:<key>`.
+- `exit` — integer from `tool_response.exit_code` when the harness surfaces it; **`null` under Claude Code today** (the Bash tool_response carries `{stdout, stderr, interrupted, isImage, noOutputExpected}` and no exit field — confirmed by live-dogfood capture). Other harnesses may surface it; the field is read defensively.
+- `interrupted` — boolean from `tool_response.interrupted`. `true` overrides everything downstream to status `INTERRUPTED`.
+- `inferred_status` — `PASS` / `FAIL` / `UNKNOWN` / `INTERRUPTED`, computed from runner-specific stdout/stderr patterns (see below). Always set; the probe uses it as the canonical status when `exit` is `null`.
+- `inference_basis` — short string explaining which pattern matched (e.g. `bun-test: '0 fail' line`). Auditable.
+- `started_at` / `ended_at` — ISO-8601 UTC. `started_at` from the PreToolUse in-flight mark; `ended_at` is hook-write time.
+- `duration_ms` — integer or `null`. **Prefer the harness's top-level `duration_ms`** when present (real millisecond wall clock); fall back to date-second diff only when absent.
 - `session_id` / `agent_id` — pass-through from the hook payload (`agent_id` is `null` for parent edits).
 - `stdout_head` / `stdout_tail` — first 4096 bytes / last 4096 bytes of `tool_response.stdout`. When total length ≤ 8192 bytes, `stdout_head` holds the whole stream and `stdout_tail` is `""`.
 - `stdout_truncated` — `true` iff clamping engaged (`len > 8192`). Same shape for `stderr_*`.
+
+### Inference heuristics
+
+Per-detector pattern tables, run against combined `stdout + stderr` (since some runners emit summaries on stderr). Updated when a real-world runner output surfaces that the table misses.
+
+- **Test runners** (`bun-test`, `npm-test`, `pnpm-test`, `yarn-test`, `*-run-test`): `^[[:space:]]*0 fail[[:space:]]*$` → PASS; `[1-9][0-9]* fail` → FAIL; `failed|✗|error` → FAIL; `pass|✓|ok` → PASS (weak).
+- **pytest / unittest** (`pytest`, `python-pytest`, `python-unittest`): `[1-9][0-9]* (failed|error)` → FAIL; `[0-9]+ passed` (no `failed|error`) → PASS; `^FAILED` → FAIL; `^OK` → PASS.
+- **Typecheck / build / lint** (`bun-tsc`, `yarn-typecheck|build|lint`, `*-run-typecheck|build|lint`): `error TS[0-9]+` → FAIL; output < 500 chars and no `error|fail` keyword → PASS (clean-output heuristic).
+
+`interrupted=true` trumps any inference → status `INTERRUPTED`.
 
 ## Probe output shape
 
 `bash .claude/tools/probe.sh last-run` emits plain text:
 
 ```
-status: FAIL
-command: bun test src/server.test.ts
+status: PASS
+command: cd /home/goat/shrnk && bun test
 detector: bun-test
-exit: 1
-age: 47s
+exit: null
+inferred_status: PASS
+inference_basis: bun-test: '0 fail' line
+age: 1s
+duration_ms: 118
 stale: false
 
 --- stdout (head) ---
-bun test v1.2.0
-...
---- stdout (tail) ---
-...3 fail, 2 pass
+ 10 pass
+ 0 fail
+ 17 expect() calls
+Ran 10 tests across 2 files. [34.00ms]
 
 --- stderr ---
 (empty)
 ```
+
+The `status` header is the canonical outcome the agent reads. When `exit` is numeric (some non-Claude harness), `status` mirrors that (`0` → PASS, else FAIL). When `exit` is `null` (Claude Code today), `status` mirrors `inferred_status`. When `interrupted=true`, `status` is `INTERRUPTED` regardless. The `inference_basis` line is only emitted when inference is doing the work — it documents which pattern matched, so a failing inference can be audited and the table extended.
 
 When the state file is missing:
 
@@ -115,7 +136,10 @@ In-flight start marks live at `.claude/.runtime-state/in-flight/<tool_use_id>.t`
 
 ## Gotchas
 
-- **`tool_response` truncation risk.** PostToolUse(Bash) carries the captured stdout/stderr in `tool_response`, BUT the harness may truncate large outputs before the hook sees them. The hook's tail clamping happens against whatever reached it — if upstream truncation engages, the snapshot reflects the pre-truncated view, not the original. Mitigation: probe with a known-noisy `bun test` invocation before relying on this; the dogfood pass for spec 011 is partly designed to surface this risk. Long-term fallback (not in v1): read the last assistant message's `tool_result` block from `transcript_path`.
+- **Claude Code's `tool_response.exit_code` does NOT exist (live-dogfood 2026-05-11).** The Bash tool's PostToolUse `tool_response` carries `{stdout, stderr, interrupted, isImage, noOutputExpected}` only. No exit code, no error type. Status inference IS the canonical signal under Claude Code; the `exit` field is preserved in schema for forward-compat with other harnesses or future Claude Code releases. When introducing new detectors, the inference branch is mandatory.
+- **Top-level `duration_ms` IS in the payload.** Real wall-clock milliseconds, populated by Claude Code on PostToolUse. Use it; the PreToolUse in-flight mark + date-second diff is the (less accurate) fallback. The live-dogfood pass showed 118 ms harness-supplied vs 1000 ms second-rounded — order-of-magnitude noise removed.
+- **`tool_response` truncation risk.** PostToolUse(Bash) carries the captured stdout/stderr in `tool_response`, BUT the harness may truncate large outputs before the hook sees them. The hook's tail clamping happens against whatever reached it — if upstream truncation engages, the snapshot reflects the pre-truncated view, not the original. Mitigation: probe with a known-noisy `bun test` invocation before relying on this; the live-dogfood pass for spec 011 verified shrnk's ~150-byte test output survives end-to-end. Long-term fallback (not in v1): read the last assistant message's `tool_result` block from `transcript_path`.
+- **Probe inside the SAME Bash tool call does NOT see its own capture.** PostToolUse fires AFTER the underlying Bash command returns. A command of the shape `bun test && bash .claude/tools/probe.sh last-run` will probe the PREVIOUS snapshot, not the one being produced. To read the current run's snapshot, the probe must be in the agent's *next* Bash invocation. Discovered during dogfood pass 1 — documented so the agent doesn't construct false negatives.
 - **Tokeniser drift with supply-chain-scan.** Both hooks tokenise `tool_input.command` with the same separator/value-flag rules. They are currently DUPLICATED with a cross-reference comment, not extracted to `.claude/lib/`. If a third consumer arrives, extract to `tokenize.sh` then — see `.claude/rules/supply-chain.md` § Gotchas ("Package-collection terminators") for the rule set both must keep in sync.
 - **`bun run <script>` keyword filter is heuristic.** Captures only when the script name contains `test` / `build` / `typecheck` / `lint`. `bun run dev` (long-running server) is correctly skipped; `bun run frontend:test` is correctly captured; `bun run preflight` (a build-shaped script with a non-keyword name) is SKIPPED. The miss is acceptable — the user can extend via `CLAUDE_RUNTIME_INTROSPECT_EXTRA_DETECT` or rename the script.
 - **SessionStart hint is one line.** Agents may scan past it. The hint exists for discoverability, not for forced behaviour. Reinforce in `.claude/rules/tdd.md` and PR reviews that the probe is the canonical way for the agent to verify its own work; consider PostToolUse(Edit) nudge as a v2 if dogfood shows under-use.

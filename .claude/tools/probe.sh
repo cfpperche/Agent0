@@ -65,6 +65,9 @@ EOF
     command="$(jq -r '.command // ""' "$STATE_FILE")"
     detector="$(jq -r '.detector // ""' "$STATE_FILE")"
     exit_val="$(jq -r '.exit // "null"' "$STATE_FILE")"
+    interrupted="$(jq -r '.interrupted // false' "$STATE_FILE")"
+    inferred_status="$(jq -r '.inferred_status // "UNKNOWN"' "$STATE_FILE")"
+    inference_basis="$(jq -r '.inference_basis // ""' "$STATE_FILE")"
     started_at="$(jq -r '.started_at // ""' "$STATE_FILE")"
     duration_ms="$(jq -r '.duration_ms // "null"' "$STATE_FILE")"
     stdout_head="$(jq -r '.stdout_head // ""' "$STATE_FILE")"
@@ -74,12 +77,18 @@ EOF
     stderr_tail="$(jq -r '.stderr_tail // ""' "$STATE_FILE")"
     stderr_truncated="$(jq -r '.stderr_truncated // false' "$STATE_FILE")"
 
-    # Status mapping
-    case "$exit_val" in
-      0)      status="PASS" ;;
-      null|'') status="UNKNOWN" ;;
-      *)      status="FAIL" ;;
-    esac
+    # Status mapping — exit code if available (some harnesses surface it),
+    # otherwise fall back to inferred_status (output-pattern heuristic).
+    # interrupted=true overrides both to INTERRUPTED.
+    if [ "$interrupted" = "true" ]; then
+      status="INTERRUPTED"
+    else
+      case "$exit_val" in
+        0)       status="PASS" ;;
+        null|'') status="$inferred_status" ;;
+        *)       status="FAIL" ;;
+      esac
+    fi
 
     # Age computation
     age="?"
@@ -108,6 +117,15 @@ EOF
     printf 'command: %s\n' "$command"
     printf 'detector: %s\n' "$detector"
     printf 'exit: %s\n' "$exit_val"
+    if [ "$exit_val" = "null" ] || [ "$exit_val" = "" ]; then
+      printf 'inferred_status: %s\n' "$inferred_status"
+      if [ -n "$inference_basis" ]; then
+        printf 'inference_basis: %s\n' "$inference_basis"
+      fi
+    fi
+    if [ "$interrupted" = "true" ]; then
+      printf 'interrupted: true\n'
+    fi
     printf 'age: %s\n' "$age"
     if [ "$duration_ms" != "null" ]; then
       printf 'duration_ms: %s\n' "$duration_ms"

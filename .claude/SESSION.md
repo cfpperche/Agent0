@@ -8,40 +8,29 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ## Current state
 
-Two specs in flight, both draft, both untracked:
+**Spec 011-runtime-introspect delivered.** Twelve shipped capacities on `main`, all green. 9/9 scenario suite PASS; two consecutive 0-finding live-dogfood passes on `/home/goat/shrnk` (Bun + TypeScript link-shortener) — graduated per yield-decay rule.
 
-- **010-audit-forensics** — `spec.md` filled (prior session), awaiting user review. `plan.md` / `tasks.md` still template placeholders.
-- **011-runtime-introspect** — `spec.md` filled THIS session. Open questions block `/sdd plan`. `plan.md` / `tasks.md` still template placeholders.
-
-Eleven shipped capacities on `main` still green. No code changes this session — only spec + memory.
+Spec 010-audit-forensics still draft, untracked (carried over from prior session — `spec.md` filled, `plan.md` / `tasks.md` placeholders, awaiting user review).
 
 ## WIP
 
-`docs/specs/011-runtime-introspect/spec.md` — capacity that lets the agent close edit→verify loop on its own work without human ratification. v1 = `PostToolUse(Bash)` captures last test/build/run output to `.claude/.runtime-state/last-run.json`; agent reads it via `.claude/tools/probe.sh last-run`. Hook + shell tool grain (NOT MCP); v1 stacks Node + Python only.
-
-4 open questions in spec, all with proposals:
-1. Tail size cap (proposal: 4 KB head + 4 KB tail per stream)
-2. Detector allowlist boundary (proposal: strict + env-var `CLAUDE_RUNTIME_INTROSPECT_EXTRA_DETECT`)
-3. Audit log adicional? (proposal: only `last-run.json`, no per-Bash audit row — avoid the supply-chain skip-not-install noise pattern)
-4. Dogfood target (user said "encurtador de links" — pick rshrnk / pyshrnk / new Node fork)
-
-Next user turn: resolve the 4 questions → `/sdd plan`.
+None on 011. The capacity ships as: `runtime-pre-mark.sh` + `runtime-capture.sh` + `probe.sh` + `runtime-introspect.md` rule doc + 9 test scenarios + CLAUDE.md § block + `.gitignore` entry + settings.json wiring. Agent reads its own latest verifier run via `bash .claude/tools/probe.sh last-run`.
 
 ## Next steps
 
-1. User resolves 011 open questions → `/sdd plan` → `/sdd tasks` → RED-tests-first implementation
-2. 010-audit-forensics also still needs user confirmation (deferred during this session in favour of 011 conversation)
-3. Follow-up spec after 011 ships: `.mcp.json.example` documenting Playwright / Chrome DevTools / DBHub as opt-in MCPs forks install for browser/DB introspection (explicit non-goal of 011)
+1. **Follow-up spec: `.mcp.json.example`** — opt-in MCP recipes for forks that want browser introspection (Playwright MCP, Chrome DevTools MCP) or DB introspection (DBHub). Spec 011 § Non-goals explicitly defers these. Single doc + commented example file, no new hooks.
+2. **010-audit-forensics** — still awaits user review of `spec.md`. Plan/tasks blocked until then.
 
-Deferred (still queued from prior sessions):
+Deferred (still queued):
 - Second cargo dogfood pass (graduation by yield-decay rule)
 - Go dogfood pass (low expected yield)
 
 ## Decisions & gotchas
 
-- **Visibility wedge framed as agent-self-debug, NOT human dashboard.** User explicit 2026-05-11. Saved to memory `project_visibility_intent.md`. OTel / Grafana / Langfuse paths acknowledged as valuable but de-prioritised for this wedge. Future visibility specs should respect this scoping unless user signals otherwise.
-- **Scope split: build vs adopt.** 011 builds only what no mature MCP covers (generic local test/build capture). Playwright MCP (Microsoft 32k★), Chrome DevTools MCP (Google), DBHub (Bytebase), laravel-boost, next-devtools-mcp, rails-mcp-server already cover their slices — Agent0 must NOT duplicate; recommends them via `.mcp.json.example` in a follow-up.
-- **Hook + shell tool, not MCP server in v1.** Follows the grain of all existing capacities (governance, delegation, supply-chain, secrets — all hook-based, none MCP). Promotion to MCP only if shell-tool friction warrants follow-up; mirrors delegation-gate evolution.
-- **Detector allowlist mirrors supply-chain manager table.** Strict list of `<tool> <verb>` pairs (bun test / npm test / pnpm test / yarn test / npm run build / pytest / python -m pytest). Same FP-vs-FN tradeoff conversation as supply-chain. Extension via env var, not hardcode bloat.
-- **Two web-research delegations ran this session** (MCP introspection landscape + agent self-observability landscape). Citations live in `011/spec.md` § Context / references and in agent task results — not in SESSION.md (cache pressure).
-- **SESSION.md auto-injection has a ~2KB preview budget.** When SESSION.md exceeds it, only the preview reaches context; the full file lands at a persisted path on disk. Keep this file terse — replace stale content rather than appending (`git log` is the audit trail).
+- **Claude Code's `tool_response.exit_code` does not exist for Bash.** Live-dogfood surfaced this — payload carries `{stdout, stderr, interrupted, isImage, noOutputExpected}` and a top-level `duration_ms`. Runtime-introspect handles it via per-detector stdout-pattern inference (`inferred_status` + `inference_basis` fields). The `exit` field remains in schema for forward-compat; probe falls back to inferred status when null. All detectors must have an inference branch — there's no "exit code as ground truth" path under Claude Code today.
+- **Probe inside the SAME Bash tool call sees the PRIOR snapshot, not the current.** PostToolUse fires after the underlying command returns, so `bun test && bash probe.sh last-run` reads the previous run. Agent must read in the NEXT Bash invocation. Documented in rule doc; surfaced during dogfood pass 1.
+- **`bun run <script>` detector emits sub-keyed suffixes** (`bun-run-test`, `bun-run-typecheck`, etc.) so inference can route to the right pattern table. Originally just `bun-run` — failed inference on `bun run typecheck`. Fixed during dogfood.
+- **Wedge stays generic; framework-specific introspection (laravel-boost, next-devtools-mcp, rails-mcp) lives in fork-side `.mcp.json`.** Spec 011 deliberately does not duplicate them. Playwright / Chrome DevTools / DBHub get a future `.mcp.json.example` doc, not a capacity.
+- **No audit log on the runtime side.** `last-run.json` is self-sufficient as "latest evidence". Supply-chain's per-Bash audit log volume (hundreds of `skip-not-install` rows per session) was the cautionary tale; revisit if forensic queries become a real need.
+- **TDD discipline held: 4 RED tests written before any hook code; all PASS first attempt after impl** (one impl bug surfaced — bash `$(jq -r)` strips trailing newline; fixed via `jq -j + printf-x` sentinel). Then dogfood pass 1 surfaced 4 production-only findings → wrote test 09 + fixes → 9/9 GREEN. Confirms the pattern from prior sessions: spec → RED tests → impl → live-dogfood → adjustments.
+- **SESSION.md auto-injection has a ~2KB preview budget.** Replace stale content rather than appending — `git log` is the audit trail.

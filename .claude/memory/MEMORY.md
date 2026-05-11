@@ -1,0 +1,3 @@
+- [Agent0 base repo purpose](agent0-purpose.md) — /home/goat/Agent0 is the user's generic base/template repo for new projects; keep changes generic; template-forever posture (no own stack, no production deploy target)
+- [Visibility capacity intent](visibility-intent.md) — next visibility wedge is agent self-debugging via runtime introspection (laravel-boost style), NOT human dashboards/OTel — explicitly stated 2026-05-11
+- [Claude Code platform hooks](cc-platform-hooks.md) — canonical surface of 29 CC hook events + PostToolUse-on-success-only gotcha; consult before designing any hook-based capacity

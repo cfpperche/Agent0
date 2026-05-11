@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
-# Spec 019 — Scenario: project memory does NOT propagate to forks.
+# Spec 019 — Scenario: project memory CONTENT does NOT propagate to forks,
+# but the empty scaffold (.gitkeep) DOES so each fork can use its own bucket.
 # INVARIANT GUARD: protects sync-harness manifest from accidental inclusion
-# of .claude/memory/. Should pass trivially before AND after impl.
+# of memory content files.
 # Asserts:
-#   (a) Agent0 mock with .claude/memory/foo.md populated → after sync, fork has NO .claude/memory/foo.md
+#   (a) Agent0 mock with .claude/memory/{.gitkeep, MEMORY.md, foo.md} populated
+#   (b) After sync: fork has .claude/memory/.gitkeep (scaffold shipped)
+#   (c) After sync: fork has NO MEMORY.md (Agent0 content) and NO foo.md
 
 set -euo pipefail
 
@@ -17,23 +20,25 @@ SRC="$TMPDIR/agent0"
 FORK="$TMPDIR/fork"
 mkdir -p "$SRC/.claude/memory" "$SRC/.claude/hooks" "$FORK/.claude"
 
-# Mock Agent0 source — minimal but with memory files populated
+# Mock Agent0 source — minimal but with memory content populated
 printf '#!/usr/bin/env bash\necho test\n' > "$SRC/.claude/hooks/test-hook.sh"
 chmod +x "$SRC/.claude/hooks/test-hook.sh"
 printf '{"hooks":{}}\n' > "$SRC/.claude/settings.json"
 printf '# CLAUDE\n\n## Compact Instructions\n' > "$SRC/CLAUDE.md"
 
+# Scaffold marker + Agent0-internal content
+touch "$SRC/.claude/memory/.gitkeep"
 cat > "$SRC/.claude/memory/foo.md" <<'EOF'
 ---
 name: foo
-description: Agent0-only memory that should NEVER ship to forks
+description: Agent0-only memory content that should NEVER ship to forks
 metadata:
   type: project
 ---
 foo body
 EOF
 cat > "$SRC/.claude/memory/MEMORY.md" <<'EOF'
-- [Foo](foo.md) — should not appear in fork
+- [Foo](foo.md) — Agent0-internal entry that should NOT appear in fork
 EOF
 
 # Empty fork target
@@ -42,14 +47,20 @@ printf '# Fork CLAUDE\n\n## Compact Instructions\n' > "$FORK/CLAUDE.md"
 
 bash "$TOOL" --apply --agent0-path="$SRC" "$FORK" >/dev/null 2>&1 || true
 
-if [ -d "$FORK/.claude/memory" ] && [ -n "$(ls -A "$FORK/.claude/memory" 2>/dev/null)" ]; then
-  printf 'FAIL: fork received .claude/memory/ content from sync\n'
-  ls -la "$FORK/.claude/memory" 2>&1
+# Assert: empty scaffold shipped (fork has its own bucket to use)
+if [ ! -f "$FORK/.claude/memory/.gitkeep" ]; then
+  printf 'FAIL: .gitkeep scaffold did not ship to fork\n'
+  ls -la "$FORK/.claude/memory/" 2>&1
   exit 1
 fi
 
-if [ -f "$FORK/.claude/memory/foo.md" ] || [ -f "$FORK/.claude/memory/MEMORY.md" ]; then
-  printf 'FAIL: specific memory files leaked to fork\n'
+# Assert: content files did NOT ship
+if [ -f "$FORK/.claude/memory/foo.md" ]; then
+  printf 'FAIL: Agent0 content file foo.md leaked to fork\n'
+  exit 1
+fi
+if [ -f "$FORK/.claude/memory/MEMORY.md" ]; then
+  printf 'FAIL: Agent0 MEMORY.md leaked to fork (each fork must have its own)\n'
   exit 1
 fi
 

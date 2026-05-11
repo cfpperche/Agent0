@@ -6,6 +6,8 @@ _Drafted from `spec.md` on 2026-05-11. Update this file if implementation reveal
 
 Pure-additive. No new code (no hooks, no tools, no scripts) — the whole capacity is a directory convention plus an instruction layer. The agent consumes it via standard file reads driven by CLAUDE.md guidance and cross-references from existing rule docs. Scaling is bounded by disk only, not by context budget — discovery is on-demand.
 
+**Post-implementation amendment (2026-05-11):** the empty scaffold (`.claude/memory/.gitkeep`) IS shipped to forks via the sync-harness manifest, while memory CONTENT (`MEMORY.md` + `<topic>.md` files) stays project-local. The capacity is universal — every project that adopts Agent0 also gains its own project-memory bucket. The content is one-source per project, never cross-pollinated. Without the scaffold shipping, fork users would read the `## Memory` block in CLAUDE.md, find the rule, and then face an empty directory hunt — friction we can eliminate with one manifest entry.
+
 Four moving parts:
 
 1. **New directory `.claude/memory/`** at repo root. Contains one markdown file per memory topic + a hand-maintained `MEMORY.md` index. Files use the same frontmatter shape as Claude Code's per-user memory (`name`, `description`, `metadata.type`) so the mental model is identical — only the storage location differs. Type values are the same vocabulary the CC per-user system uses (`project`, `feedback`, `reference`, `user`) since the dimensions are stable, but project memory will skew toward `project` and `reference` (preferences stay per-user).

@@ -65,6 +65,16 @@ _Acceptance checks tied to `spec.md` acceptance criteria._
 - [x] **Full driver green** — `bash .claude/tests/project-memory/run-all.sh` exits 0.
 - [x] **Forks synced + committed** — pyshrnk, shrnk, rshrnk each have a sync commit; `--check` exits 0; `.claude/memory/` does NOT exist in any fork.
 
+### Phase 6 — post-impl amendment (scaffold ships)
+
+User-driven question post-Phase-5: "do forks gain the project-memory capacity?". The capacity (rule docs + CLAUDE.md instruction) shipped, but the empty scaffold did NOT — fork users would face an empty-dir hunt. Fix:
+
+- [x] 25. Add `.claude/memory/.gitkeep` to `COPY_CHECK_FILES` in `.claude/tools/sync-harness.sh`. Single literal-file entry. Empty scaffold ships; memory content (`MEMORY.md`, topic files) stays out of manifest.
+- [x] 26. Tighten test 02 — fixture now includes `.gitkeep` in SRC; asserts `.gitkeep` ships to fork AND that `foo.md`/`MEMORY.md` do NOT (precise semantic: scaffold yes, content no).
+- [x] 27. Update `.claude/rules/memory-placement.md` with explicit "for forks of Agent0: this rule applies in your own project too" guidance. Updated quick-reference table to show "empty scaffold only" for the ships-to-forks column.
+- [x] 28. Update `plan.md` with the amendment paragraph documenting the scope correction.
+- [x] 29. Re-sync 3 shrnks → each gets `.claude/memory/.gitkeep` empty scaffold; verify no Agent0 content leaked.
+
 ## Notes
 
 - This spec deliberately ships **no new code** (no hooks, no tools, no scripts). The whole capacity is convention + instruction. That's the design — auto-load mechanisms reintroduce the scaling problem the user explicitly rejected. Resist the temptation to add helpers later; cross-references from rule docs are the discoverability primitive.

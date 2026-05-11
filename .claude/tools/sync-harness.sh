@@ -136,6 +136,7 @@ COPY_CHECK_FILES=(
   ".gitleaks.toml"
   ".githooks/pre-commit"
   ".gitignore"
+  ".claude/memory/.gitkeep"
 )
 
 # Structured merge handled by dedicated functions below

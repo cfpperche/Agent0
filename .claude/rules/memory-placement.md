@@ -16,7 +16,9 @@ When saving a learning, fact, or rule, route it by **what kind of knowledge** it
 
 ### 2. Project memory — `.claude/memory/<topic>.md`
 
-**For:** factual cross-cutting knowledge about THE PROJECT — platform constraints, prior decisions and their reasoning, architectural gotchas discovered through dogfooding, references to canonical external sources. Git-tracked (propagates between Agent0 contributors via PR/clone) but **NOT shipped to forks** via sync-harness manifest (Agent0-internal design knowledge shouldn't pollute fork payloads).
+**For:** factual cross-cutting knowledge about THE PROJECT — platform constraints, prior decisions and their reasoning, architectural gotchas discovered through dogfooding, references to canonical external sources. Git-tracked, **propagates between contributors of THE SAME project via PR/clone** but **NOT shipped between projects** via sync-harness manifest. The empty scaffold (`.claude/memory/.gitkeep`) IS shipped so every fork gets its own bucket — but memory content is project-local, never cross-pollinated.
+
+**For forks of Agent0:** this same rule applies. Each fork has its own `.claude/memory/` that accumulates its own factual knowledge (e.g. pyshrnk might memorize "Starlette form parsing without python-multipart uses urllib.parse.parse_qs"). Agent0's memory entries (about CC platform internals, sync-harness design rationale, etc.) do NOT travel to forks — and reciprocally, fork-specific memories do NOT propagate back upstream. The sync tool is one-way for capacities; memory content is one-source.
 
 **Use when:** the knowledge is project-specific factual reference, not behavioral mandate. "Claude Code has 29 hook events", "we chose hash-compare because alternatives X/Y had problems Z", "spec 011 was shipped with a foundational gap because the designer had partial CC platform knowledge". The agent reads these on demand when starting relevant work — discovery is via the `## Memory` block in CLAUDE.md (lazy-read of `.claude/memory/MEMORY.md` index) and via cross-references from specific rule docs.
 
@@ -57,7 +59,7 @@ When in doubt, route to project memory (`.claude/memory/`). Demoting from rule �
 | Bucket | Path | Git-tracked? | Ships to forks? | Auto-loaded? | Best for |
 | --- | --- | --- | --- | --- | --- |
 | CC per-user memory | `~/.claude/projects/<path>/memory/` | No | No | Yes (MEMORY.md, capped) | Preferences only |
-| Project memory | `.claude/memory/<topic>.md` | **Yes** | **No** | No (lazy-read via CLAUDE.md `## Memory`) | Factual project knowledge |
+| Project memory | `.claude/memory/<topic>.md` | **Yes** | **Empty scaffold only** (`.gitkeep`); content stays project-local | No (lazy-read via CLAUDE.md `## Memory`) | Factual project knowledge — each project accumulates its own |
 | Project rules | `.claude/rules/<topic>.md` | **Yes** | **Yes** | On demand (CLAUDE.md mentions) | Behavioral mandates + capacity docs |
 
 ## Cross-cutting artifacts (not buckets, but related)

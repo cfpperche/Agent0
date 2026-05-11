@@ -4,7 +4,7 @@ _Generated from `plan.md` on 2026-05-11. Work top-to-bottom. Check boxes as task
 
 ## Implementation
 
-- [ ] 1. **Preserve regression-guard semantics on existing advisory-mode tests.** Prepend `export CLAUDE_SUPPLY_CHAIN_BLOCK=0` (after `set -euo pipefail` and the `AGENT0_ROOT` / `HOOK` / `TMPDIR` setup, before `run_case`/test invocations) to:
+- [x] 1. **Preserve regression-guard semantics on existing advisory-mode tests.** Prepend `export CLAUDE_SUPPLY_CHAIN_BLOCK=0` (after `set -euo pipefail` and the `AGENT0_ROOT` / `HOOK` / `TMPDIR` setup, before `run_case`/test invocations) to:
   - `.claude/tests/supply-chain/01-bash-install-advisory.sh` (asserts `decision: "advisory"`)
   - `.claude/tests/supply-chain/02-skip-not-install.sh` (mode-agnostic but `skip-not-install` is preserved by both modes; the explicit export documents intent and matches the suite's convention)
   - `.claude/tests/supply-chain/05-override-marker.sh` (asserts `advisory-override`)
@@ -12,31 +12,31 @@ _Generated from `plan.md` on 2026-05-11. Work top-to-bottom. Check boxes as task
   - Tests 03, 04, 06 don't depend on Bash-mode (Edit-side or env-disable paths) and are skipped.
   - Run `bash .claude/tests/supply-chain/run-all.sh` after; expect all 7 still PASS (no behavior change yet — the hook still treats unset as advisory).
 
-- [ ] 2. **Write `.claude/tests/supply-chain/08-block-default.sh`** — asserts block-mode-no-override behaviour. Setup: empty env (no `CLAUDE_SUPPLY_CHAIN_BLOCK` set; under the new default this means block mode). Input: `tool_input.command = "npm install axios"`. Assertions:
+- [x] 2. **Write `.claude/tests/supply-chain/08-block-default.sh`** — asserts block-mode-no-override behaviour. Setup: empty env (no `CLAUDE_SUPPLY_CHAIN_BLOCK` set; under the new default this means block mode). Input: `tool_input.command = "npm install axios"`. Assertions:
   - Hook exits 2 (not 0).
   - Stderr contains the verbatim string `supply-chain-block: npm install detected — packages: axios`.
   - Stderr ends with the two-line corrected form: original command on one line, `# OVERRIDE: <reason ≥10 chars — why this dep is being added>` on the next.
   - Audit log has one row with `decision: "block"`, `manager: "npm"`, `action: "install"`, `packages: ["axios"]`, `override_reason: null`.
 
-- [ ] 3. **Write `.claude/tests/supply-chain/09-block-override-valid.sh`** — block-mode + valid override. Setup: empty env. Input: `tool_input.command = "npm install axios\n# OVERRIDE: documented chart-library upgrade per spec-009 verification"`. Assertions:
+- [x] 3. **Write `.claude/tests/supply-chain/09-block-override-valid.sh`** — block-mode + valid override. Setup: empty env. Input: `tool_input.command = "npm install axios\n# OVERRIDE: documented chart-library upgrade per spec-009 verification"`. Assertions:
   - Hook exits 0.
   - Stderr is empty (no advisory line, no block template).
   - Audit row: `decision: "block-override"`, packages captured, `override_reason: "documented chart-library upgrade per spec-009 verification"`.
 
-- [ ] 4. **Write `.claude/tests/supply-chain/10-block-override-too-short.sh`** — block-mode + too-short override. Setup: empty env. Input: `tool_input.command = "npm install axios\n# OVERRIDE: skip"` (reason `skip` is 4 chars, below the 10-char floor). Assertions:
+- [x] 4. **Write `.claude/tests/supply-chain/10-block-override-too-short.sh`** — block-mode + too-short override. Setup: empty env. Input: `tool_input.command = "npm install axios\n# OVERRIDE: skip"` (reason `skip` is 4 chars, below the 10-char floor). Assertions:
   - Hook exits 2.
   - Stderr contains `supply-chain-block: override reason must be ≥10 characters, got "skip"`.
   - Stderr ends with the two-line corrected form (same shape as test 08).
   - Audit row: `decision: "block"`, `override_reason: "skip"` (populated — forensic preservation of the rejected string).
 
-- [ ] 5. **Write `.claude/tests/supply-chain/11-advisory-opt-out.sh`** — `CLAUDE_SUPPLY_CHAIN_BLOCK=0` falls back to spec-008 advisory mode. Two sub-cases via `run_case` helper:
+- [x] 5. **Write `.claude/tests/supply-chain/11-advisory-opt-out.sh`** — `CLAUDE_SUPPLY_CHAIN_BLOCK=0` falls back to spec-008 advisory mode. Two sub-cases via `run_case` helper:
   - (a) `CLAUDE_SUPPLY_CHAIN_BLOCK=0` + `npm install axios` → exits 0, stderr contains `supply-chain-advisory: npm install — axios`, audit `decision: "advisory"`.
   - (b) `CLAUDE_SUPPLY_CHAIN_BLOCK=0` + `npm install axios\n# OVERRIDE: documented advisory-mode opt-out for spec 009 test` → exits 0, no stderr, audit `decision: "advisory-override"`, `override_reason` populated.
   - This is the regression guard that the entire spec-008 contract still works when explicitly opted into.
 
-- [ ] 6. **Extend `.claude/tests/supply-chain/run-all.sh`** — change the iteration list from `01 02 03 04 05 06 07` to `01 02 03 04 05 06 07 08 09 10 11`. Mirror the previous extension pattern (single-character substitution in the `for n in` loop).
+- [x] 6. **Extend `.claude/tests/supply-chain/run-all.sh`** — change the iteration list from `01 02 03 04 05 06 07` to `01 02 03 04 05 06 07 08 09 10 11`. Mirror the previous extension pattern (single-character substitution in the `for n in` loop).
 
-- [ ] 7. **Run the test suite RED** — `bash .claude/tests/supply-chain/run-all.sh`. Expected: tests 01-07 PASS (regression-preserved by task 1), tests 08-11 FAIL (hook hasn't been patched yet). The exact failure shape on 08-10 will be that the hook returns exit 0 instead of 2 (current advisory behaviour). On 11 the hook will already pass because `CLAUDE_SUPPLY_CHAIN_BLOCK=0` doesn't change anything in the current hook. **This is the TDD red phase — confirms the new tests actually catch the new requirements.**
+- [x] 7. **Run the test suite RED** — `bash .claude/tests/supply-chain/run-all.sh`. Expected: tests 01-07 PASS (regression-preserved by task 1), tests 08-11 FAIL (hook hasn't been patched yet). The exact failure shape on 08-10 will be that the hook returns exit 0 instead of 2 (current advisory behaviour). On 11 the hook will already pass because `CLAUDE_SUPPLY_CHAIN_BLOCK=0` doesn't change anything in the current hook. **This is the TDD red phase — confirms the new tests actually catch the new requirements.**
 
 - [ ] 8. **Patch `.claude/hooks/supply-chain-scan.sh` with mode resolution and block branches.** Edits:
   - **Add mode resolver near top** (after the `CLAUDE_SKIP_SUPPLY_CHAIN_SCAN=1` check, before stdin capture): resolve `CLAUDE_SUPPLY_CHAIN_BLOCK` per plan.md § *Approach* (default OR `=1` OR any non-`0` value → block mode; `=0` → advisory mode). Set a `MODE` variable to `"block"` or `"advisory"`.

@@ -8,8 +8,9 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ## Current state
 
-Nine capacities on `main`, all green. This session ran **three dogfood-and-tune passes** against sibling projects (NOT inside this repo): `/home/goat/shrnk` (TS+Bun), `/home/goat/pyshrnk` (Python 3.14 + WSGI stdlib + uv), and `/home/goat/rshrnk` (Rust 1.94 + edition 2024, library-only scope). Together the passes surfaced eight harness improvements; all eight landed upstream:
+**Ten capacities on `main`, all green** — spec 008 (`supply-chain-scan`) landed this session. The earlier two-thirds of the session ran three dogfood-and-tune passes against sibling projects (NOT inside this repo): `/home/goat/shrnk` (TS+Bun), `/home/goat/pyshrnk` (Python 3.14 + WSGI stdlib + uv), and `/home/goat/rshrnk` (Rust 1.94 + edition 2024, library-only scope). The dogfood arc surfaced 8 harness improvements; supply-chain-scan was then chosen over a 4th dogfood pass when yield-per-pass appeared to be decaying. All work landed upstream:
 
+**Dogfood-driven fixes (8 commits):**
 - `d9929a5` chore: SESSION + reminder from shrnk dogfood
 - `d7adf69` fix: validator detects `bun.lock` (text) alongside `bun.lockb`
 - `eb41c5a` docs: trim `secrets-scan.md` (~1k tokens off the always-on context budget)
@@ -20,6 +21,11 @@ Nine capacities on `main`, all green. This session ran **three dogfood-and-tune 
 - `a4ed20d` fix: validator `now_ms()` emits milliseconds, not nanoseconds (`%3N` precision specifier silently ignored on some GNU coreutils)
 - `290c957` fix: `.gitignore` stack-pattern section — descriptions on separate lines (inline trailing comments are invalid in gitignore, broke when forks uncommented)
 
+**Spec 008 — supply-chain-scan (3 commits):**
+- `1123243` docs: spec 008 scaffold — design memory (intent + plan + tasks)
+- `f979283` feat(008): supply-chain-scan hooks + registration (phase 1) — Bash preflight + Edit/Write advisory + settings.json + .gitignore
+- `aaa96e0` feat(008): supply-chain docs + test suite (phase 2) — rule doc + CLAUDE.md + README + 6 scenario scripts + run-all.sh, all PASS
+
 Plus the housekeeping chore commits for SESSION refreshes.
 
 ## WIP
@@ -28,7 +34,11 @@ None.
 
 ## Next steps
 
-No spec in flight. Three of the six auto-detected branches in `.claude/validators/run.sh` have now been dogfooded (bun, python, rust). The remaining three are `pnpm` (probably indistinguishable from bun for friction purposes), `npm` (same), and `go`. A Go pass might surface `go.mod` / workspace / `target/`-equivalent artefact bloat patterns specific to compiled-language tooling. Not urgent — friction yield per pass is dropping as the obvious bugs are getting fixed.
+No spec in flight. Candidates for a future session:
+
+- **Live-dogfood spec 008 against `/home/goat/shrnk` or `/home/goat/pyshrnk`** — exercise the supply-chain hooks against a real `npm add foo` or `uv add foo` invocation and watch the audit log + stderr fire. Smoke tests passed in isolation; observation in a real session might surface fork-side friction.
+- **`supply-chain-block` follow-up spec** (009) — once the advisory has been used in real sessions for a while, decide whether to add a blocking gate. The override marker grammar is already wired up; the new layer would just need a shape-rejection branch that exits 2 with a corrective template (same shape as the secrets-scan preflight).
+- **Go dogfood pass** — last unverified validator branch. Expected friction yield: low (1 or fewer findings). Defer until something specifically Go-shaped becomes interesting.
 
 ## Decisions & gotchas
 

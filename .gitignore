@@ -18,11 +18,22 @@ CLAUDE.local.md
 
 # Stack-specific patterns — uncomment whichever applies to your fork.
 # Template is stack-agnostic by design; forks add their own.
-# node_modules/         # JS/TS (npm/pnpm/yarn/bun)
-# .venv/                # Python (uv/poetry/pdm/raw venv)
-# __pycache__/          # Python bytecode
-# .pytest_cache/        # pytest cache
-# .mypy_cache/          # mypy cache
-# .ruff_cache/          # ruff cache
-# target/               # Rust (cargo)
-# vendor/               # Go (legacy) / PHP / Ruby
+# (.gitignore does NOT support trailing inline comments — descriptions must
+# stay on their own lines above each pattern so uncommenting only the path
+# leaves a valid entry.)
+#
+# JS/TS (npm/pnpm/yarn/bun)
+# node_modules/
+#
+# Python (uv/poetry/pdm/raw venv)
+# .venv/
+# __pycache__/
+# .pytest_cache/
+# .mypy_cache/
+# .ruff_cache/
+#
+# Rust (cargo)
+# target/
+#
+# Go (legacy) / PHP / Ruby
+# vendor/

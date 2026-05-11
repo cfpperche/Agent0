@@ -8,36 +8,34 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ## Current state
 
-Nine capacities on `main`, all green from spec 007 close-out. This session was a **dogfood pass**: bifurcated the full harness into `/home/goat/shrnk` (a TS+Bun URL-shortener MVP, sibling directory — NOT inside this repo), exercised the per-fork checklist end-to-end, and measured harness weight against real product code. Working tree on Agent0 is dirty in exactly one path: `.claude/REMINDERS.md` (new bullet from the dogfood, see WIP).
+Nine capacities on `main`, all green. This session was a **dogfood-and-tune pass**: bifurcated the full harness into `/home/goat/shrnk` (a sibling TS+Bun URL-shortener MVP — NOT inside this repo), exercised the per-fork checklist end-to-end, measured harness weight along two axes (LOC on disk + tokens in agent context), surfaced one validator drift, fixed it, and trimmed the heaviest rule. Three commits landed and pushed (`d9929a5`, `d7adf69`, `eb41c5a`); working tree clean modulo this update.
 
 ## WIP
 
-- `.claude/REMINDERS.md` carries one uncommitted bullet: **the validator (`run.sh`) only detects `bun.lockb` (binary lockfile), but Bun 1.3+ emits text-based `bun.lock` by default** — forks have to ship a `bunfig.toml` purely as a detection marker, which is friction. One-line fix: add `bun.lock` to the bun-stack guard alongside `bun.lockb`. Not urgent but worth landing before another fork hits the same gotcha.
+None.
 
 ## Next steps
 
-Two reasonable continuations:
+No spec in flight. Two open candidates if a future session wants more:
 
-1. **Land the validator `bun.lock` fix.** Trivial one-line change in `.claude/validators/run.sh`, plus a sentence in `README.md` § *Per-fork checklist* step 2 noting both lockfile shapes are detected. Either a tiny commit on its own or bundled with the reminder dismissal in the same diff.
-2. **Walk through `/home/goat/shrnk` and harvest harness-improvement signals.** The session exposed three concrete frictions (cwd-reset forces `git -C` over `cd && git`, validator drift above, `tests/secrets-scan/` 780 LOC noise in a non-spec-007 fork). Each could become its own spec; none are urgent.
-
-No spec in flight on Agent0 itself.
+- **`tests/secrets-scan/` placement reconsideration.** Those 8 scenario scripts (~780 LOC) are V1-V7 verification for spec 007 — they test *the harness*, not the fork's project. A fresh fork inherits them as 19% of its initial commit weight and never modifies them. Options: (a) move under `docs/specs/007-secrets-scan-timing/tests/` so they live with the spec that defines them, or (b) add a delete-this-if-you-don't-need-it line to the per-fork checklist. Refactor judgment call, not a spec.
+- **Harvest more harness-improvement signals from another fork pass.** This dogfood surfaced two real issues (validator bun.lock drift, secrets-scan.md context weight) in one session. A second pass against a different stack (Python, Rust) would likely surface more.
 
 ## Decisions & gotchas
 
-Newly observed this session — load-bearing for understanding the dogfood result:
+Newly observed and load-bearing:
 
-- **The harness is heavy on commit zero and light forever after.** Initial commit on shrnk (`dee9e68`): 4,215 LOC across 57 files. Of that, 78% is harness mechanism + smoke tests + state; 22% is project code, tests, specs, config, meta. The ratio inverts fast — harness LOC is constant, product LOC grows linearly. By ~3–5k LOC of product code, harness fraction drops below 30%. Don't be alarmed by the initial dominance.
+- **The harness has two distinct "weight" dimensions, and the disk one is misleading.** Disk LOC (~3,388 of harness mechanism in a fresh fork, plus 780 in `tests/secrets-scan/`) is 78% of a commit-zero diff but constant — product LOC grows past it within ~5 specs of real work. The **context-budget** weight is the more honest measure: ~15,000 tokens always-on at session start (CLAUDE.md harness sections + 10 rules + skill triggers + SESSION.md + REMINDERS.md) = 1.5% of an Opus 1M window, 7.5% of a 200K window. Most of `.claude/` (hooks, validators, skill bodies, spec docs, smoke tests) is NEVER in context — only runs on fire or load-on-demand. Document this when explaining the harness to skeptics.
 
-- **Where the harness fired in real work** (from the shrnk session): governance gate caught `rm -rf` during prune and `git add -A` for initial commit (both overridden with audit reasons); preflight identified `git -C <path> commit` as a clean real-commit and passed through; native `gitleaks pre-commit` ran clean over the full 4.2k-LOC initial diff; TDD red→green was visible in each module (test failed with `Cannot find module`, then green after implementation); BDD scenarios in `spec.md` mapped 1:1 to `test('...')` names in `src/*.test.ts`. Six concrete moments in one session — the harness is hot, not theoretical.
+- **`secrets-scan.md` trimmed from 4,885 → 3,882 tokens (-20%) in commit `eb41c5a`.** Compression was purely narrative: per-layer paragraphs in § *What fires* no longer enumerate decision values inline (the audit-log table already does), framing sentences in § *Override grammar* / *Env-var bridge* / *Escape hatch* tightened, gotcha lead-ins compressed. **Zero contract changes**: all 10 decision values, 5 `cmd_shape` names, 3 env vars, 12 gotcha bullets, both override example blocks, the verbatim stderr templates, `4b47a42` + V4 test refs, Lazarus context, issue #24327 reference, and the `flock` / `PIPE_BUF` / sticky-exec notes are all preserved. Verified by grep before commit.
 
-- **The `cd ... && git commit` reflex is naturally suppressed by Claude Code's per-Bash-call cwd reset.** Each `Bash` tool invocation starts in `$CLAUDE_PROJECT_DIR`, so to commit in a sibling repo you reach for `git -C /path commit` instead of `cd /path && git commit`. That happens to dodge the preflight's `compound-and` reject — which would otherwise have been the canonical friction case. Worth knowing: the harness and the harness-host conspire to make the right shape the easy shape, not the override-eligible one.
+- **Validator now detects `bun.lock` alongside `bun.lockb` (commit `d7adf69`).** Bun 1.3+ emits text-based `bun.lock` by default; the old guard only checked `bun.lockb` (binary, Bun ≤1.2), forcing forks to commit a `bunfig.toml` purely as a detection marker. The fix is one-line in `.claude/validators/run.sh` (added `|| [ -f "bun.lock" ]` to the bun-stack OR-chain) plus a sentence in README step 2 listing all three accepted markers. Smoke tested in three fixture configurations (`bun.lock` alone → detect, `bun.lockb`+tsconfig → preserved with `bun tsc --noEmit`, empty dir → `no-stack-detected`). Reminder added by the dogfood and dismissed in the fix commit's diff.
 
-- **Validator drift on Bun 1.3+ (`bun.lockb` → `bun.lock`).** Already captured in the active reminder. Workaround in shrnk was to commit a `bunfig.toml`, which the validator also accepts as a stack marker. Fix is one-line in `.claude/validators/run.sh`.
+- **The dogfood pattern is a real signal source.** `/home/goat/shrnk` produced six observable harness fires in one session (governance gate × 2 with overrides, preflight passthrough, native gitleaks allow, TDD red→green visible, BDD-scenario → test-name mapping) and surfaced two concrete improvements (validator drift, secrets-scan weight) that wouldn't have appeared from rule-reading alone. Keep the dogfood-fork sibling pattern as a deliberate "find harness friction" tool, not just a demo.
 
-- **TypeScript `Server` type in `@types/bun` is now generic (`Server<WebSocketData>`).** Hit while typechecking shrnk; the clean fix is `ReturnType<typeof createServer>` instead of importing `Server` directly. Worth noting if a future template adds a Bun reference example or any Bun-stack project hits it again.
+- **Claude Code's per-Bash cwd reset cooperates with the preflight discipline.** Each `Bash` tool invocation resets to `$CLAUDE_PROJECT_DIR`, so to work in a sibling repo you reach for `git -C /path commit` instead of `cd /path && git commit`. That naturally dodges the preflight's `compound-and` reject — the harness and the harness-host conspire to make the right shape the easy shape, not the override-eligible one.
 
-- **`tests/secrets-scan/` arguably shouldn't ship to every fork.** Those are V1-V7 scenario tests for the harness's own spec 007 — they verify *the harness* works, not the fork's project. 8 files, 780 LOC. A fork that never touches secrets-scan internals inherits them as noise. Options: (a) move them under `docs/specs/007-secrets-scan-timing/tests/` so they live with the spec that defines them, or (b) add a delete-this-if-you-don't-need-it line to the per-fork checklist. Not a spec — a refactor judgment call for the next session.
+- **`@types/bun` `Server` type is now generic (`Server<WebSocketData>`).** Hit while typechecking shrnk. Clean fix: `ReturnType<typeof createServer>` instead of importing `Server` directly. Worth noting if a future Bun reference example lands in the template.
 
 Carried forward from prior sessions (still load-bearing — full list in `.claude/rules/*` and `docs/specs/*/`):
 

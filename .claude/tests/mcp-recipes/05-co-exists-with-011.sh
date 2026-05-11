@@ -21,13 +21,14 @@ MCP_HOOK="$AGENT0_ROOT/.claude/hooks/mcp-recipes-hint.sh"
 TMPDIR="$(mktemp -d -t spec-012-V5-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
-mkdir -p "$TMPDIR/.claude/tools" "$TMPDIR/.claude/.session-state"
+mkdir -p "$TMPDIR/.claude/tools" "$TMPDIR/.claude/.session-state/V5-test-session"
 # Stack signal: next.config.js
 touch "$TMPDIR/next.config.js"
 # Fake probe.sh (executable) so the runtime-introspect hint fires
 printf '#!/usr/bin/env bash\necho probe-stub\n' > "$TMPDIR/.claude/tools/probe.sh"
 chmod +x "$TMPDIR/.claude/tools/probe.sh"
-touch "$TMPDIR/.claude/.session-state/started-at"
+# Spec 017: session-state is per-session_id, so the marker lives in a subdir.
+touch "$TMPDIR/.claude/.session-state/V5-test-session/started-at"
 
 export CLAUDE_PROJECT_DIR="$TMPDIR"
 unset CLAUDE_SKIP_MCP_RECIPES

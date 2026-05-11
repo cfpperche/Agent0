@@ -14,12 +14,13 @@ PROBE="$AGENT0_ROOT/.claude/tools/probe.sh"
 TMPDIR="$(mktemp -d -t spec-011-V5-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
-mkdir -p "$TMPDIR/.claude/.runtime-state" "$TMPDIR/.claude/.session-state"
+mkdir -p "$TMPDIR/.claude/.runtime-state" "$TMPDIR/.claude/.session-state/V5-test-session"
 export CLAUDE_PROJECT_DIR="$TMPDIR"
 
 # Session started "now"; snapshot from a minute ago = stale.
+# Spec 017: session-state is per-session_id, so the marker lives in a subdir.
 session_now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-touch -d "$session_now" "$TMPDIR/.claude/.session-state/started-at"
+touch -d "$session_now" "$TMPDIR/.claude/.session-state/V5-test-session/started-at"
 
 # Snapshot started_at = 5 minutes BEFORE the session-state touch.
 snapshot_started_at="$(date -u -d "5 minutes ago" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null \

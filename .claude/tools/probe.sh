@@ -40,7 +40,7 @@ fi
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 STATE_FILE="$PROJECT_DIR/.claude/.runtime-state/last-run.json"
-SESSION_MARK="$PROJECT_DIR/.claude/.session-state/started-at"
+SESSION_STATE_DIR="$PROJECT_DIR/.claude/.session-state"
 
 case "$SUBCMD" in
   last-run)
@@ -100,15 +100,23 @@ EOF
       fi
     fi
 
-    # Stale comparison
+    # Stale comparison — spec 017: session-state is per-session_id, so the
+    # boundary signal is the MAX mtime across all <.session-state>/<id>/started-at
+    # markers. Sessão única: identical behavior to pre-017 (single subdir).
+    # Sessões paralelas: stale=true may trigger earlier in the older session
+    # (conservative false-positive — agent re-runs verifier, safe direction).
     stale="false"
-    if [ -f "$SESSION_MARK" ]; then
-      # session-mark mtime vs snapshot started_at
-      session_epoch="$(date -u -r "$SESSION_MARK" +%s 2>/dev/null || stat -c '%Y' "$SESSION_MARK" 2>/dev/null || true)"
-      if [ -n "$session_epoch" ] && [ -n "${start_epoch:-}" ]; then
-        if [ "$start_epoch" -lt "$session_epoch" ]; then
-          stale="true"
-        fi
+    session_epoch=""
+    for f in "$SESSION_STATE_DIR"/*/started-at; do
+      [ -f "$f" ] || continue
+      this_epoch="$(date -u -r "$f" +%s 2>/dev/null || stat -c '%Y' "$f" 2>/dev/null || true)"
+      if [ -n "$this_epoch" ] && { [ -z "$session_epoch" ] || [ "$this_epoch" -gt "$session_epoch" ]; }; then
+        session_epoch="$this_epoch"
+      fi
+    done
+    if [ -n "$session_epoch" ] && [ -n "${start_epoch:-}" ]; then
+      if [ "$start_epoch" -lt "$session_epoch" ]; then
+        stale="true"
       fi
     fi
 

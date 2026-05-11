@@ -2,6 +2,10 @@
 # Stop hook: block once per session if the repo has uncommitted changes but
 # SESSION.md was not updated during this session.
 #
+# Spec 017: state is isolated per-session_id at
+# `<.session-state>/<session_id>/{started-at,nagged}`. Parallel sessions
+# never reset each other's markers.
+#
 # Escape hatch: set CLAUDE_SKIP_SESSION_HOOKS=1 to disable.
 
 set -euo pipefail
@@ -9,8 +13,24 @@ set -euo pipefail
 [[ "${CLAUDE_SKIP_SESSION_HOOKS:-0}" == "1" ]] && exit 0
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
-STATE_DIR="$PROJECT_DIR/.claude/.session-state"
+SESSION_STATE_ROOT="$PROJECT_DIR/.claude/.session-state"
 SESSION_FILE="$PROJECT_DIR/.claude/SESSION.md"
+
+# Parse session_id from stdin payload — same sanitization shape as
+# session-start.sh. Inlined-duplicated (not extracted to a helper) because
+# the snippet is small and avoiding a `source` keeps both hooks self-contained.
+INPUT="$(cat 2>/dev/null || true)"
+SESSION_ID_RAW=""
+if [[ -n "$INPUT" ]] && command -v jq >/dev/null 2>&1; then
+  SESSION_ID_RAW="$(printf '%s' "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || true)"
+fi
+if [[ -n "$SESSION_ID_RAW" && "$SESSION_ID_RAW" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+  SESSION_ID="$SESSION_ID_RAW"
+else
+  SESSION_ID="unknown"
+fi
+
+STATE_DIR="$SESSION_STATE_ROOT/$SESSION_ID"
 STARTED_AT="$STATE_DIR/started-at"
 NAGGED="$STATE_DIR/nagged"
 
@@ -36,6 +56,7 @@ if [[ -f "$SESSION_FILE" && "$SESSION_FILE" -nt "$STARTED_AT" ]]; then
 fi
 
 # Block once and re-prompt the model.
+mkdir -p "$STATE_DIR"
 touch "$NAGGED"
 cat <<'JSON'
 {"decision":"block","reason":"Before ending this session: the repo has uncommitted changes but SESSION.md was not updated this session. Update SESSION.md (Current state / WIP / Next steps / Decisions & gotchas) so the next session can pick up where this one left off. Then end your turn normally — this hook will not block again this session."}

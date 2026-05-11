@@ -38,6 +38,10 @@ Sub-agent dispatches via the `Agent` tool are gated by `.claude/hooks/delegation
 
 TDD is a *cultural* discipline reinforced by the validator — not a blocking gate. Production code follows red → green → refactor; tests land in the same diff that introduces the behavior they cover. When a delegated sub-agent edits production files in a project with a detected test stack, the validator appends a non-blocking `warnings` entry that the post-edit hook surfaces to stderr with a `tdd-advisory:` prefix; the agent should add the missing test before declaring done unless the change is genuinely test-exempt (rename, comment, doc, dependency bump). The `# OVERRIDE: tdd-exempt: <reason ≥10 chars>` shape on a brief documents deliberate skips. BDD scenarios from `spec.md` map naturally to test names. See `.claude/rules/tdd.md`.
 
+## Secrets scan
+
+`git commit` invocations through the Bash tool are gated by `.claude/hooks/secrets-scan.sh`, which runs `gitleaks protect --staged` over the staged diff and blocks (`exit 2`) on any finding — detector class and `file:line` on stderr, one JSONL line per attempt in `.claude/secrets-audit.jsonl`. Same `# OVERRIDE: <reason ≥10 chars>` escape as the governance and delegation gates; `CLAUDE_SKIP_SECRETS_SCAN=1` disables the hook for throwaway sessions, and `CLAUDE_SECRETS_ADVISE_ON_EDIT=1` opts into a soft `secrets-advisory:` warning on sub-agent edits (parent edits exempt). The hook fails open when gitleaks is absent. See `.claude/rules/secrets-scan.md`.
+
 ## Compact Instructions
 
 When summarizing this conversation for context compaction, prioritize keeping:

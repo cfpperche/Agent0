@@ -9,3 +9,5 @@ CLAUDE.local.md
 .claude/.delegation-state/
 .claude/COMPACT_NOTES.md
 .claude/delegation-audit.jsonl
+.claude/secrets-audit.jsonl
+.claude/secrets-audit.jsonl.lock

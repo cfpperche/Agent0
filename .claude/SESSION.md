@@ -8,7 +8,7 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ## Current state
 
-Nine capacities on `main`, all green. This session ran **two dogfood-and-tune passes** against sibling projects (NOT inside this repo): `/home/goat/shrnk` (TS+Bun) first, then `/home/goat/pyshrnk` (Python 3.14 + WSGI stdlib + uv). Together the passes surfaced six harness improvements; all six landed upstream:
+Nine capacities on `main`, all green. This session ran **three dogfood-and-tune passes** against sibling projects (NOT inside this repo): `/home/goat/shrnk` (TS+Bun), `/home/goat/pyshrnk` (Python 3.14 + WSGI stdlib + uv), and `/home/goat/rshrnk` (Rust 1.94 + edition 2024, library-only scope). Together the passes surfaced eight harness improvements; all eight landed upstream:
 
 - `d9929a5` chore: SESSION + reminder from shrnk dogfood
 - `d7adf69` fix: validator detects `bun.lock` (text) alongside `bun.lockb`
@@ -17,6 +17,8 @@ Nine capacities on `main`, all green. This session ran **two dogfood-and-tune pa
 - `5608580` docs: spec 001 — Gotcha for byte-level regex false-positives in commit messages
 - `7ffacfe` refactor: relocate `tests/secrets-scan/` → `.claude/tests/secrets-scan/` (harness-internal; supersedes the step-7 band-aid)
 - `f67b560` fix: validator python branch — pytest blocks (was being swallowed by `|| true`), mypy non-blocking, venv-aware (`uv run` / `poetry run` / `pdm run` auto-detected)
+- `a4ed20d` fix: validator `now_ms()` emits milliseconds, not nanoseconds (`%3N` precision specifier silently ignored on some GNU coreutils)
+- `290c957` fix: `.gitignore` stack-pattern section — descriptions on separate lines (inline trailing comments are invalid in gitignore, broke when forks uncommented)
 
 Plus the housekeeping chore commits for SESSION refreshes.
 
@@ -26,7 +28,7 @@ None.
 
 ## Next steps
 
-No spec in flight. Two-stacks-tested cadence felt productive — a third pass against Rust (or Go) would test the remaining auto-detected branches in `.claude/validators/run.sh` and likely surface anything specific to compiled-language tooling (e.g. workspace member resolution, `target/` artefact bloat, cargo workspace vs. crate-only). Not urgent.
+No spec in flight. Three of the six auto-detected branches in `.claude/validators/run.sh` have now been dogfooded (bun, python, rust). The remaining three are `pnpm` (probably indistinguishable from bun for friction purposes), `npm` (same), and `go`. A Go pass might surface `go.mod` / workspace / `target/`-equivalent artefact bloat patterns specific to compiled-language tooling. Not urgent — friction yield per pass is dropping as the obvious bugs are getting fixed.
 
 ## Decisions & gotchas
 
@@ -40,7 +42,9 @@ Newly observed and load-bearing:
 
 - **Validator python branch was effectively inert; now corrected (commit `f67b560`).** The pyshrnk dogfood revealed two bugs at once: (1) `python -m pytest -q && python -m mypy . || true` parses as `(pytest && mypy) || true` — the `|| true` covered the whole chain so any pytest failure (test fail, `ModuleNotFoundError`, etc.) collapsed to exit 0 and the validator returned `ok=true`. (2) The command always ran bare `python -m ...`, missing deps installed inside `uv`/`poetry`/`pdm`-managed `.venv/`. Both fixed in one commit: (a) wrap only the mypy step in a brace group so `|| true` is localised — `pytest && { mypy || true; }` — pytest is now a real gate, mypy stays non-blocking as originally intended; (b) detect `uv.lock` / `poetry.lock` / `pdm.lock` (with the matching tool on PATH) or just `.venv/` (uv) and prepend `uv run` / `poetry run` / `pdm run` accordingly. Smoke tested three fixture configs + the real pyshrnk project. README step 2 documents the new behavior. `.gitignore` also gained a commented stack-patterns block as a third tweak (`node_modules` / `.venv` / `__pycache__` / `target` / etc.) so forks don't have to rediscover them.
 
-- **The dogfood-fork pattern is firmly the harness-improvement engine.** Two passes in one session, six concrete fixes that wouldn't have been visible from rule-reading alone. Cost per pass: ~1.5h of focused work, ~4000 LOC of throwaway side projects (`/home/goat/shrnk`, `/home/goat/pyshrnk`). ROI: one bug found per ~660 LOC of new dogfood code. Worth normalising as a periodic cadence.
+- **The dogfood-fork pattern is firmly the harness-improvement engine.** Three passes in one session, eight concrete fixes that wouldn't have been visible from rule-reading alone. Cumulative ~3,300 LOC of throwaway dogfood code (`/home/goat/{shrnk,pyshrnk,rshrnk}`) yielded 8 real bugs/improvements — roughly one finding per ~410 LOC, with friction yield dropping later as obvious bugs got fixed (shrnk surfaced 3, pyshrnk 3, rshrnk 2). Worth normalising as a periodic cadence, with the expectation that yield per pass decays.
+
+- **Rust pass surfaced two self-bugs from the previous fix attempts.** (1) The `.gitignore` commented stack-pattern section from `f67b560` used `# pattern    # description` inline-comment shape — invalid in gitignore, which has no inline comments. When the rshrnk fork uncommented `# target/`, the result was a literal pattern with spaces and `#` that never matched anything; cargo build artefacts leaked into the working tree. Fixed in `290c957`: descriptions moved to comment lines above each pattern. (2) The validator's `now_ms()` function used `date +%s%3N` with a regex check `[0-9]+$` — on systems where `%3N` is silently ignored, the output is full nanoseconds (19 digits) but the regex still matches. Result: `duration_ms` in audit logs was 10^6 too large. Fixed in `a4ed20d`: switched to `%s` + `%N` separately, computed `ms = nanos / 1_000_000` in shell arithmetic with `10#` base-10 forcing on the nanos value. Lesson: regex-only validation of `date` format output isn't enough — also gate on length or compute from primitives.
 
 - **The dogfood pattern is a real signal source.** `/home/goat/shrnk` produced six observable harness fires in one session (governance gate × 2 with overrides, preflight passthrough, native gitleaks allow, TDD red→green visible, BDD-scenario → test-name mapping) and surfaced two concrete improvements (validator drift, secrets-scan weight) that wouldn't have appeared from rule-reading alone. Keep the dogfood-fork sibling pattern as a deliberate "find harness friction" tool, not just a demo.
 

@@ -42,7 +42,20 @@ elif [ -f "package-lock.json" ] || [ -f "package.json" ]; then
   command_str='npm test --silent && npm run typecheck'
 elif [ -f "pyproject.toml" ] || [ -f "requirements.txt" ]; then
   stack="python"
-  command_str='python -m pytest -q && python -m mypy . || true'
+  # Detect venv-style project managers (first lockfile match wins). Falls back
+  # to bare `python` when no wrapper is found, preserving system-Python behavior.
+  py_prefix="python"
+  if { [ -f "uv.lock" ] || [ -d ".venv" ]; } && command -v uv >/dev/null 2>&1; then
+    py_prefix="uv run python"
+  elif [ -f "poetry.lock" ] && command -v poetry >/dev/null 2>&1; then
+    py_prefix="poetry run python"
+  elif [ -f "pdm.lock" ] && command -v pdm >/dev/null 2>&1; then
+    py_prefix="pdm run python"
+  fi
+  # Make mypy non-blocking (advisory only) while pytest stays a real gate.
+  # Brace group localises `|| true` to the mypy step; the prior shape
+  # (`pytest && mypy || true`) collapsed pytest failures into exit 0.
+  command_str="$py_prefix -m pytest -q && { $py_prefix -m mypy . || true; }"
 elif [ -f "go.mod" ]; then
   stack="go"
   command_str='go test ./... && go vet ./...'

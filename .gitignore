@@ -15,3 +15,14 @@ CLAUDE.local.md
 # Spec 007 scenario tests run in mktemp /tmp dirs by default, but reserve a
 # scratchpad path in case a future test variant needs in-repo state.
 .claude/tests/secrets-scan/.tmp/
+
+# Stack-specific patterns — uncomment whichever applies to your fork.
+# Template is stack-agnostic by design; forks add their own.
+# node_modules/         # JS/TS (npm/pnpm/yarn/bun)
+# .venv/                # Python (uv/poetry/pdm/raw venv)
+# __pycache__/          # Python bytecode
+# .pytest_cache/        # pytest cache
+# .mypy_cache/          # mypy cache
+# .ruff_cache/          # ruff cache
+# target/               # Rust (cargo)
+# vendor/               # Go (legacy) / PHP / Ruby

@@ -8,46 +8,44 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ## Current state
 
-Nine capacities on `main`. **Spec 007 (`secrets-scan-timing`) is COMPLETE** — all 11 implementation tasks delivered across five commits this session (`7eb6371` → `44cd1da`), all V1-V7 scenario tests pass via `bash tests/secrets-scan/run-all.sh`, decision-value split + env-var bridge fully documented end-to-end. No WIP carries forward.
-
-Spec order recap: 001 governance-gate · 002 delegation (+ prior session's model-discipline advisory) · 003 reminders · 004 BDD · 005 TDD · 006 secrets-scan · 007 secrets-scan-timing (DONE).
+Nine capacities on `main`, all green from spec 007 close-out. This session was a **dogfood pass**: bifurcated the full harness into `/home/goat/shrnk` (a TS+Bun URL-shortener MVP, sibling directory — NOT inside this repo), exercised the per-fork checklist end-to-end, and measured harness weight against real product code. Working tree on Agent0 is dirty in exactly one path: `.claude/REMINDERS.md` (new bullet from the dogfood, see WIP).
 
 ## WIP
 
-None. Working tree is clean modulo this handoff update.
+- `.claude/REMINDERS.md` carries one uncommitted bullet: **the validator (`run.sh`) only detects `bun.lockb` (binary lockfile), but Bun 1.3+ emits text-based `bun.lock` by default** — forks have to ship a `bunfig.toml` purely as a detection marker, which is friction. One-line fix: add `bun.lock` to the bun-stack guard alongside `bun.lockb`. Not urgent but worth landing before another fork hits the same gotcha.
 
 ## Next steps
 
-No spec in flight. Candidates if a future session wants more:
+Two reasonable continuations:
 
-- The two deferred spec-006 verification scenarios (V5 inline `gitleaks:allow`, V6 `.gitleaks.toml` paths) are still `[ ]` — gitleaks-native features that work iff the upstream behavior matches the docs. First real fork that uses fixtures will exercise these; not worth proactive verification in the base template.
-- The latent jq silent-failure observation from the spec-002 follow-up (audit lines were being written successfully despite a broken jq script with `$signals_json` instead of `$escalation_signals` — suggests jq may have been silent-failing in a way that still produced output). Worth a follow-up dig if anomalies appear in delegation audit log analysis.
-- An additional preflight gotcha self-observed this session is documented in `.claude/rules/secrets-scan.md` § *Gotchas* (regex shape detector false-positives on commit messages that literally include compound-and-then-git-commit prose inside heredocs). Mitigation is mechanical (reword body or use override marker); no spec needed unless real usage shows it as friction.
+1. **Land the validator `bun.lock` fix.** Trivial one-line change in `.claude/validators/run.sh`, plus a sentence in `README.md` § *Per-fork checklist* step 2 noting both lockfile shapes are detected. Either a tiny commit on its own or bundled with the reminder dismissal in the same diff.
+2. **Walk through `/home/goat/shrnk` and harvest harness-improvement signals.** The session exposed three concrete frictions (cwd-reset forces `git -C` over `cd && git`, validator drift above, `tests/secrets-scan/` 780 LOC noise in a non-spec-007 fork). Each could become its own spec; none are urgent.
+
+No spec in flight on Agent0 itself.
 
 ## Decisions & gotchas
 
-Newly resolved or load-bearing this session:
+Newly observed this session — load-bearing for understanding the dogfood result:
 
-- **Spec 007 is fully layered.** Native `.githooks/pre-commit` is the primary block (gitleaks runs at git's commit moment, after staging is finalised, so compound `git add && git commit` no longer scans an empty index). Preflight `.claude/hooks/secrets-scan.sh` is now a pure shape-gate that rejects compound `&& git commit`, `; git commit`, `git commit -a`, `--no-verify` (verbatim corrected-form stderr templates per issue #24327), parses the override marker, and bridges it across via `CLAUDE_SECRETS_OVERRIDE_REASON`. The env-var bridge **must** use the standalone-export-statement form (`export VAR='...'; <cmd>`), NOT the inline-prefix form (`VAR='...' <cmd>`); the prefix form scopes the assignment to the single command it prefixes, so compound chains lose the var on the chained half. The V4 test (`tests/secrets-scan/04-override-allows.sh`) asserts the rewriting starts with `export CLAUDE_SECRETS_OVERRIDE_REASON=` as a regression guard.
+- **The harness is heavy on commit zero and light forever after.** Initial commit on shrnk (`dee9e68`): 4,215 LOC across 57 files. Of that, 78% is harness mechanism + smoke tests + state; 22% is project code, tests, specs, config, meta. The ratio inverts fast — harness LOC is constant, product LOC grows linearly. By ~3–5k LOC of product code, harness fraction drops below 30%. Don't be alarmed by the initial dominance.
 
-- **Override marker is strict start-of-line anchored, no inline-trailing fallback.** Tried a two-pass implementation in Task 3 dispatch (start-of-line preferred, inline trailing fallback) — reverted because it re-opened the spec-002 false-positive where `# OVERRIDE:` inside a quoted string was matching. Legitimate single-shape override usage is now a two-line Bash command: line 1 is `git commit -m "..."`, line 2 is `# OVERRIDE: <reason ≥10 chars>` on its own. Bash treats line 2 as a no-op comment; the preflight matches it via the anchor.
+- **Where the harness fired in real work** (from the shrnk session): governance gate caught `rm -rf` during prune and `git add -A` for initial commit (both overridden with audit reasons); preflight identified `git -C <path> commit` as a clean real-commit and passed through; native `gitleaks pre-commit` ran clean over the full 4.2k-LOC initial diff; TDD red→green was visible in each module (test failed with `Cannot find module`, then green after implementation); BDD scenarios in `spec.md` mapped 1:1 to `test('...')` names in `src/*.test.ts`. Six concrete moments in one session — the harness is hot, not theoretical.
 
-- **Audit-log decision values split cleanly by layer.** Preflight emits ONLY `skip-not-commit` / `passthrough` / `reject-shape` (with `cmd_shape`) / `override-pass-through` (with `override_reason`) — `scan_mode: "preflight"`, `session_id` + `agent_id` populated. Native emits ONLY `allow` / `allow-empty` / `allow-parse-error` / `block` / `override` / `skip-no-engine` — `scan_mode: "native-pre-commit"`, `session_id` + `agent_id` `null`. The new `allow-parse-error` value (introduced when I refined Task 1 mid-session) preserves forensic signal when gitleaks JSON is unparseable; without it a parse failure would be indistinguishable from a clean scan in the audit log.
+- **The `cd ... && git commit` reflex is naturally suppressed by Claude Code's per-Bash-call cwd reset.** Each `Bash` tool invocation starts in `$CLAUDE_PROJECT_DIR`, so to commit in a sibling repo you reach for `git -C /path commit` instead of `cd /path && git commit`. That happens to dodge the preflight's `compound-and` reject — which would otherwise have been the canonical friction case. Worth knowing: the harness and the harness-host conspire to make the right shape the easy shape, not the override-eligible one.
 
-- **The preflight is hot, and false-positives are by design when in doubt.** Two friction modes worth knowing: (i) shape detection is grep-based and does not parse shell quoting — commit messages containing literal `&& git commit` inside heredocs trip `reject-shape` (mitigation: reword body, or multi-line override marker), (ii) the matcher fires on any Bash command containing `git`, so test scripts running `bash run-all.sh` from inside Claude Code pollute the Agent0 audit log with `skip-not-commit` rows even though the inner test runs are isolated to /tmp. Both are acceptable trade-offs — cheap false fires beat missed real commits.
+- **Validator drift on Bun 1.3+ (`bun.lockb` → `bun.lock`).** Already captured in the active reminder. Workaround in shrnk was to commit a `bunfig.toml`, which the validator also accepts as a stack marker. Fix is one-line in `.claude/validators/run.sh`.
 
-- **The user has a global Claude Code hook at `$HOME/.claude/hooks/pre-commit-secrets-scan.sh`** (separate from this project's hooks) that scans staged content via plain regex without honoring `gitleaks:allow` comments. Mitigation for the spec-007 test scripts: split AKIA literals at source level via adjacent string concatenation (`"AKIA""1234567890ABCDEF"` — bash concatenates at parse time, regex scanners see a non-matching source; runtime value unchanged). The bypass env var the global hook documents (`DOTCLAUDE_HOOK_SECRETS_SCAN=0`) reads from the harness process env, NOT from a bash-level prefix — useful to know if a future session needs to commit AKIA-literal content for legitimate reasons.
+- **TypeScript `Server` type in `@types/bun` is now generic (`Server<WebSocketData>`).** Hit while typechecking shrnk; the clean fix is `ReturnType<typeof createServer>` instead of importing `Server` directly. Worth noting if a future template adds a Bun reference example or any Bun-stack project hits it again.
 
-- **`core.hooksPath` is now active on this Agent0 repo** (`git config --get core.hooksPath` → `.githooks`). The native hook fires on every commit from this point forward. Per-fork install line is documented in `README.md` § *Per-fork checklist* step 5; the manual-by-design rationale (2025 Lazarus vector) is also there.
-
-- **Sub-agent dogfood continues to surface real bugs.** Task 3+4 dispatch (`model: "sonnet"`, 5-field brief) caught the env-var-prefix bug in its V4 test design — sub-agent worked around it by constructing an alternative test path (`export VAR=...; git add; git commit`), which revealed the latent design flaw when I read its judgment-calls section carefully. Pattern: subagent return summaries are part of the verification surface, not just status.
+- **`tests/secrets-scan/` arguably shouldn't ship to every fork.** Those are V1-V7 scenario tests for the harness's own spec 007 — they verify *the harness* works, not the fork's project. 8 files, 780 LOC. A fork that never touches secrets-scan internals inherits them as noise. Options: (a) move them under `docs/specs/007-secrets-scan-timing/tests/` so they live with the spec that defines them, or (b) add a delete-this-if-you-don't-need-it line to the per-fork checklist. Not a spec — a refactor judgment call for the next session.
 
 Carried forward from prior sessions (still load-bearing — full list in `.claude/rules/*` and `docs/specs/*/`):
 
-- `gitleaks protect --staged` was deprecated in 2025 in favor of `gitleaks git --pre-commit --staged`. Both layers in this repo use the current shape; minimum gitleaks version is 8.20.
-- AKIA test-vector reminder: spec 006 § *Notes* documents the canonical non-stopworded pattern-valid shape. The AWS-published `EXAMPLE`-suffix vector is stopworded by gitleaks 8.21.2 and silently does not trip — use the shape from spec 006's note instead.
-- Stop-hook fix from earlier session validated cross-event.
-- Path discipline: `.claude/` is harness, `docs/specs/` is project artifacts, `.githooks/` is versioned native git hooks (now active in this repo via core.hooksPath).
+- `gitleaks protect --staged` was deprecated in 2025 in favor of `gitleaks git --pre-commit --staged`. Both layers use the current shape; minimum gitleaks version 8.20.
+- AKIA test-vector reminder: spec 006 § *Notes* documents the canonical non-stopworded shape; the AWS-published `EXAMPLE`-suffix vector is stopworded by gitleaks 8.21.2 and silently does not trip.
+- The user's global Claude Code hook at `$HOME/.claude/hooks/pre-commit-secrets-scan.sh` scans staged content via plain regex without honoring `gitleaks:allow`; bypass var is `DOTCLAUDE_HOOK_SECRETS_SCAN=0` (process env, not bash prefix).
+- `core.hooksPath` is active on Agent0 (`.githooks`); the native hook fires on every commit. Per-fork install is manual by design (Lazarus 2025 vector).
+- Path discipline: `.claude/` is harness, `docs/specs/` is project artifacts, `.githooks/` is versioned native git hooks.
 - `agent_id` IS in the PostToolUse payload (undocumented but reliable); native git hooks do NOT have access.
-- Two bash traps to watch: (1) `jq '.field // empty'` collapses `false` and missing — use `has` shape when distinguishing matters; (2) `exec N>file 2>/dev/null` is sticky — probe writability in a subshell first.
-- Validator is inert in this base repo; activates per-fork when a stack lockfile is present.
+- Two bash traps: (1) `jq '.field // empty'` collapses `false` and missing — use `has` shape when distinguishing matters; (2) `exec N>file 2>/dev/null` is sticky — probe writability in a subshell first.
+- Validator is inert in this base repo (no stack lockfile present); activates per-fork.

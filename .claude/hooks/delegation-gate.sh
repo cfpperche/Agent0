@@ -193,12 +193,24 @@ if [ -n "$signals_list" ]; then
   signals_json="$(printf '%s' "$signals_list" | tr ' ' '\n' | grep -v '^$' | jq -R . | jq -s -c .)"
 fi
 
-# Advisory triggers iff score>=2 AND model_specified=false OR model!=opus
+# Two distinct advisories share the same advisory_emitted=true exit:
+#   "model-discipline" — model_specified=false AND any signal fires.
+#     Different from "escalation": the parent never made a conscious model
+#     choice, so the first step is to declare one (via the task-fit table)
+#     before deciding whether that choice was opus-worthy.
+#   "escalation" — score>=2 AND model_specified=true AND model!=opus.
+#     The parent picked a non-opus model for a task with multiple complexity
+#     signals; nudge toward opus.
+# The "unspecified" branch wins when both could fire — declaring a model is
+# the prerequisite to recommending opus.
 advisory_emitted="false"
-if [ "$score" -ge 2 ]; then
-  if [ "$MODEL_SPECIFIED" = "false" ] || [ "$MODEL" != "opus" ]; then
-    advisory_emitted="true"
-  fi
+advisory_kind="null"
+if [ "$MODEL_SPECIFIED" = "false" ] && [ "$score" -ge 1 ]; then
+  advisory_emitted="true"
+  advisory_kind="\"model-discipline\""
+elif [ "$score" -ge 2 ] && [ "$MODEL" != "opus" ]; then
+  advisory_emitted="true"
+  advisory_kind="\"escalation\""
 fi
 
 # Build override JSON value (string or null)
@@ -224,15 +236,28 @@ audit_line="$(jq -c -n \
   --argjson formatted "$formatted" \
   --argjson override "$override_field" \
   --argjson advisory_emitted "$advisory_emitted" \
+  --argjson advisory_kind "$advisory_kind" \
   --argjson escalation_signals "$signals_json" \
   --arg task_summary "$task_summary" \
-  '{ts:$ts, session_id:$session_id, subagent_type:$subagent_type, model:$model, model_specified:$model_specified, formatted:$formatted, override:$override, advisory_emitted:$advisory_emitted, escalation_signals:$escalation_signals, task_summary:$task_summary}')"
+  '{ts:$ts, session_id:$session_id, subagent_type:$subagent_type, model:$model, model_specified:$model_specified, formatted:$formatted, override:$override, advisory_emitted:$advisory_emitted, advisory_kind:$advisory_kind, escalation_signals:$escalation_signals, task_summary:$task_summary}')"
 
 printf '%s\n' "$audit_line" >> "$AUDIT_LOG"
 
 if [ "$advisory_emitted" = "true" ]; then
   signal_csv="$(printf '%s' "$signals_list" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/[[:space:]]\+/, /g')"
-  advisory_text="Delegation appears complex (signals: $signal_csv). Consider re-issuing with model: \"opus\" for stronger reasoning. This is advisory only — the call has been allowed."
+  if [ "$advisory_kind" = "\"model-discipline\"" ]; then
+    advisory_text="Delegation has no explicit \`model\` field. With complexity signal(s) firing (${signal_csv}), declare a model explicitly using the task-fit table:
+
+  Mechanical implementation (detailed brief, patterns to copy)        -> sonnet
+  Schema/protocol lookup, short research with an obvious source       -> haiku or sonnet
+  Multi-source comparative research with opinionated recommendation   -> opus if >=2 signals (cross-domain + security/schema), else sonnet
+  Architecture review, subtle trade-offs                              -> opus
+  Exploratory debugging without clear hypothesis                      -> opus
+
+Without an explicit model, the harness default for this subagent type runs — which may not match the task's actual reasoning needs. This is advisory only; the call has been allowed."
+  else
+    advisory_text="Delegation appears complex (signals: $signal_csv). Consider re-issuing with model: \"opus\" for stronger reasoning. This is advisory only — the call has been allowed."
+  fi
   jq -c -n \
     --arg msg "$advisory_text" \
     '{hookSpecificOutput:{hookEventName:"PreToolUse", permissionDecision:"allow", additionalContext:$msg}}'

@@ -52,11 +52,17 @@ The validator may also append a `warnings` array to its JSON output on stack-det
 
 ## Audit log
 
-`.claude/delegation-audit.jsonl` (gitignored, append-only). One JSON object per line, ten fields: `ts`, `session_id`, `subagent_type`, `model`, `model_specified`, `formatted`, `override`, `advisory_emitted`, `escalation_signals`, `task_summary`. Read with `jq -c .` or `tail -f`. Blocked calls are NOT logged — only allowed dispatches reach the audit phase.
+`.claude/delegation-audit.jsonl` (gitignored, append-only). One JSON object per line, eleven fields: `ts`, `session_id`, `subagent_type`, `model`, `model_specified`, `formatted`, `override`, `advisory_emitted`, `advisory_kind`, `escalation_signals`, `task_summary`. `advisory_kind` is one of `"model-discipline"`, `"escalation"`, or `null` when no advisory fired — the bool `advisory_emitted` answers "did anything fire", the string `advisory_kind` answers "which one". Read with `jq -c .` or `tail -f`. Blocked calls are NOT logged — only allowed dispatches reach the audit phase.
 
-## Escalation advisory
+## Advisories
 
-The gate scores 5 signals against the prompt: `large-fileset`, `multi-integration`, `cross-domain`, `schema-data`, `security`. If two or more fire AND the call is on a non-opus model (or no model was specified), an advisory is attached to the call's `additionalContext` suggesting `model: "opus"`. The advisory is informational — the call is always allowed. Treat it as a nudge to reconsider model choice, not a verdict.
+The gate scores 5 signals against the prompt: `large-fileset`, `multi-integration`, `cross-domain`, `schema-data`, `security`. Two distinct advisories may attach to the call's `additionalContext` — both are informational, the call is always allowed.
+
+**`model-discipline`** — fires when the parent did NOT pass an explicit `model` field AND at least one signal fires. Inlines the task-fit table so the parent can declare a model without re-deriving it: mechanical implementation → `sonnet`; schema/protocol lookup → `haiku`/`sonnet`; multi-source comparative research → `opus` if ≥2 signals (cross-domain + security/schema), else `sonnet`; architecture review or exploratory debugging → `opus`. The advisory exists because an unspecified model means the harness default runs, which may not match the task — declaring a model is the prerequisite for any subsequent escalation discussion.
+
+**`escalation`** — fires when ≥2 signals fire AND the parent specified a non-opus model. Suggests re-issuing with `model: "opus"` for stronger reasoning. Does NOT fire on `model_specified=false` — that branch is already covered by `model-discipline`, which takes priority.
+
+Treat either advisory as a nudge to reconsider, not a verdict. The audit log's `advisory_kind` field records which (if any) fired, so post-hoc analysis can distinguish discipline drift (parent kept dispatching without declaring a model) from undercommitment (parent picked a small model for a complex task).
 
 ## Gotchas (for hook maintainers)
 

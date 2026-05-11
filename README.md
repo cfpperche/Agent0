@@ -55,6 +55,8 @@ The override marker `# OVERRIDE: <reason ≥10 chars>` is honored by the governa
 
 6. **Reset `SESSION.md`.** Replace the handoff content with a one-line "fresh project, nothing in flight" or your own starting state. The Stop hook will nag you to update it on commit-day sessions.
 
+7. **(Optional) Drop the harness self-verification suite.** `tests/secrets-scan/` ships 8 scenario scripts (~780 LOC) that verify spec 007's two-layer scan against gitleaks — useful when modifying `.githooks/pre-commit` or `.claude/hooks/secrets-scan.sh`, otherwise noise. Forks that won't touch the secrets-scan internals can `rm -rf tests/secrets-scan/` to drop ~19% of the initial commit weight; the harness keeps working without them.
+
 ## Workflow
 
 Non-trivial work flows through the `/sdd` skill:

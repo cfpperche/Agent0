@@ -40,7 +40,7 @@ TDD is a *cultural* discipline reinforced by the validator — not a blocking ga
 
 ## Secrets scan
 
-`git commit` invocations through the Bash tool are gated by `.claude/hooks/secrets-scan.sh`, which runs `gitleaks protect --staged` over the staged diff and blocks (`exit 2`) on any finding — detector class and `file:line` on stderr, one JSONL line per attempt in `.claude/secrets-audit.jsonl`. Same `# OVERRIDE: <reason ≥10 chars>` escape as the governance and delegation gates; `CLAUDE_SKIP_SECRETS_SCAN=1` disables the hook for throwaway sessions, and `CLAUDE_SECRETS_ADVISE_ON_EDIT=1` opts into a soft `secrets-advisory:` warning on sub-agent edits (parent edits exempt). The hook fails open when gitleaks is absent. See `.claude/rules/secrets-scan.md`.
+Two layers (spec 007): the native `.githooks/pre-commit` runs gitleaks over the staged diff at git's actual commit moment and is the primary block; the Claude Code preflight `.claude/hooks/secrets-scan.sh` (PreToolUse Bash) gates dangerous command shapes (compound `git add && git commit`, `git commit -a`, `--no-verify`), parses the override marker, and bridges it across via `CLAUDE_SECRETS_OVERRIDE_REASON`. Activation per-fork: `git config core.hooksPath .githooks` after `git init` (manual on purpose — Lazarus vector). Same `# OVERRIDE: <reason ≥10 chars>` escape as the other gates (multi-line form: marker on its own line); `CLAUDE_SKIP_SECRETS_SCAN=1` disables both layers for throwaway sessions; `CLAUDE_SECRETS_ADVISE_ON_EDIT=1` opts into the soft `secrets-advisory:` on sub-agent edits. Both layers fail open when gitleaks is absent. See `.claude/rules/secrets-scan.md`.
 
 ## Compact Instructions
 

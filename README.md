@@ -31,7 +31,7 @@ Eight capacities are live on `main`. Each one is documented in its own rule file
 | Reminders | `/remind` skill writes `.claude/REMINDERS.md`, auto-read at session start | `reminders.md` | `003-reminders/` |
 | BDD acceptance scenarios | `/sdd` template scaffolds Given/When/Then scenarios in `spec.md` | `spec-driven.md` § *Acceptance scenarios* | `004-bdd/` |
 | TDD working agreement | Cultural red→green→refactor + non-blocking validator advisory when prod files move without tests | `tdd.md` | `005-tdd/` |
-| Secrets scan | `PreToolUse(Bash)` on `git commit` runs gitleaks over the staged diff and blocks findings; opt-in `secrets-advisory:` on sub-agent edits | `secrets-scan.md` | `006-secrets-scan/` |
+| Secrets scan | Layered: native `.githooks/pre-commit` runs gitleaks over the staged diff (primary block); `PreToolUse(Bash)` preflight gates command shape + parses override marker + bridges the override via env var to the native layer | `secrets-scan.md` | `006-secrets-scan/`, `007-secrets-scan-timing/` |
 
 The override marker `# OVERRIDE: <reason ≥10 chars>` is honored by the governance, delegation, TDD, and secrets-scan gates. The reason is recorded in the audit log — `"skip"` / `"bypass"` are rejected.
 
@@ -45,7 +45,15 @@ The override marker `# OVERRIDE: <reason ≥10 chars>` is honored by the governa
 
 4. **Install gitleaks (optional but recommended).** The secrets-scan hook degrades open when `gitleaks` is missing from `PATH` — commits proceed with a one-line warning. To activate the protection, install gitleaks v8.x (single static Go binary, MIT, no runtime deps: see https://github.com/gitleaks/gitleaks#installing). Customize detector exemptions in `.gitleaks.toml` at repo root, or use inline `# gitleaks:allow` on a single line. `CLAUDE_SKIP_SECRETS_SCAN=1` disables the hook entirely for throwaway sessions; `CLAUDE_SECRETS_ADVISE_ON_EDIT=1` opts into the soft per-edit advisory.
 
-5. **Reset `SESSION.md`.** Replace the handoff content with a one-line "fresh project, nothing in flight" or your own starting state. The Stop hook will nag you to update it on commit-day sessions.
+5. **Activate the native pre-commit hook.** Run once, after `git init`:
+
+   ```bash
+   git config core.hooksPath .githooks
+   ```
+
+   This points git at the versioned `.githooks/` directory and activates `.githooks/pre-commit`, which is the primary layer of the secrets-scan capacity (spec 007). The step is manual on purpose — automating it via a post-checkout hook would replicate the 2025 Lazarus Group "Contagious Interview" attack pattern, where a poisoned repo's hook runs on clone. Verify with `git config --get core.hooksPath` returning `.githooks`.
+
+6. **Reset `SESSION.md`.** Replace the handoff content with a one-line "fresh project, nothing in flight" or your own starting state. The Stop hook will nag you to update it on commit-day sessions.
 
 ## Workflow
 
@@ -76,6 +84,8 @@ Future to-dos that don't belong in `SESSION.md` (in-flight) or memory (knowledge
 ├── CLAUDE.md                          # project instructions (placeholders + template-stable rules)
 ├── README.md                          # this file
 ├── .gitleaks.toml                     # starter secrets-scan config (allowlists + builtin detectors)
+├── .githooks/                         # versioned native git hooks (activate per-fork via core.hooksPath)
+│   └── pre-commit                     # primary secrets-scan layer (gitleaks over staged diff)
 ├── .claude/
 │   ├── settings.json                  # hooks + permissions
 │   ├── SESSION.md                     # cross-session handoff (git-tracked)
@@ -88,6 +98,8 @@ Future to-dos that don't belong in `SESSION.md` (in-flight) or memory (knowledge
 │   ├── presence/statusline.mjs        # status line
 │   ├── delegation-audit.jsonl         # delegation audit log (gitignored)
 │   └── secrets-audit.jsonl            # secrets-scan audit log (gitignored)
+├── tests/
+│   └── secrets-scan/                  # scenario test suite for spec 007 (run-all.sh + V1-V7)
 └── docs/
     └── specs/NNN-<slug>/              # design memory, one dir per feature
         ├── spec.md                    # what + why

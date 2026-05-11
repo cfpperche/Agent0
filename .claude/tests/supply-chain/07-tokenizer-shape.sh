@@ -17,6 +17,10 @@
 #       removing detection entirely would lose the supply-chain signal)
 #   (d) regression guard: `cargo update --package tokio` keeps `tokio` as the
 #       package (the value of --package IS the package)
+#   (e) cargo --features / -F values are NOT packages (feature names, not
+#       supply-chain signal) — added after the rshrnk live-dogfood pass
+#       (2026-05-11) surfaced `cargo add tokio --features full` capturing
+#       `["tokio","full"]`. Symmetric short form `-F derive` covered too.
 
 set -euo pipefail
 
@@ -99,6 +103,16 @@ run_case "pip install -r requirements.txt still fires" \
 run_case "cargo update --package keeps the package name" \
   "cargo update --package tokio" \
   '["tokio"]' "cargo" "update"
+
+# (e) --features / -F values are feature names, NOT packages or supply-chain
+# signal. The flag IS value-taking; both forms should skip their value.
+run_case "cargo add with --features (long form)" \
+  "cargo add tokio --features full --manifest-path /workspace/sub/Cargo.toml" \
+  '["tokio"]' "cargo" "add"
+
+run_case "cargo add with -F (short form)" \
+  "cargo add serde -F derive" \
+  '["serde"]' "cargo" "add"
 
 printf 'PASS\n'
 exit 0

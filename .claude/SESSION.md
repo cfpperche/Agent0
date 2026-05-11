@@ -8,37 +8,44 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ## Current state
 
-**Spec 012-mcp-recipes delivered and validated.** Thirteen shipped capacities on `main`, all green. 6/6 scenario suite PASS first attempt; six 0-finding live-verify passes (Agent0 root silent / shrnk silent / Next+Prisma combined dedup / Vue+Vite browser-non-Next / monorepo blind spot gotcha / co-existence with 011) — yield-decay graduated. Commits: `7211855` → `9f70dd4`.
+Spec 012 delivered + validated (commit `df31a1a`). Specs 014 (mcp-recipes-extras) and 015 (monorepo-stack-detect) filled and committed (`554c8f8`). Dogfood roteiros committed in each shrnk repo (`fdd317c` pyshrnk / `8f1f52b` shrnk / `bba06f1` rshrnk).
 
-Two specs still draft, untracked carryovers from earlier work:
-- **010-audit-forensics** — `spec.md` filled, awaiting user review.
-- **013-lint-validator-extension** — `spec.md` filled out-of-band (today, 2026-05-11), I did not author it; treat as someone else's WIP.
+**Drift discovered late session:** all three shrnks (pyshrnk / shrnk / rshrnk) are at Agent0's spec 001-007 state — they MISS specs 008-012 entirely (hooks, rules, tools, settings entries, CLAUDE.md sections, `.mcp.json.example`). Dogfood for spec 011+012 blocked until shrnks sync.
+
+User chose to resolve via **spec 016 — harness-sync**: ship a `.claude/tools/sync-harness.sh` one-way sync tool (Agent0 → fork). Spec.md filled and **awaits user ratification of the 4 open questions + 10 design decisions before `/sdd plan`**. Three specs untracked: 010 (carryover prior session), 013 (out-of-band scaffold, unknown author), 016 (this session, awaiting ratification).
 
 ## WIP
 
-None on 012. The capacity ships as: `mcp-recipes-hint.sh` SessionStart hook + `.mcp.json.example` at repo root + `.claude/rules/mcp-recipes.md` full reference + 6 test scenarios + CLAUDE.md § block + settings.json wiring. Forks adopt Playwright / Chrome DevTools / DBHub / Next.js DevTools by copying `.mcp.json.example → .mcp.json` and uncommenting blocks.
+`docs/specs/016-harness-sync/spec.md` — 11 acceptance scenarios + 9 non-goals + 4 open questions. Key decisions awaiting user OK before `/sdd plan`:
+
+- Customization detected by **hash-compare** (file differs from Agent0 + already existed = customized → refuse without `--force`).
+- `settings.json` merged structurally-additive (append hook entries, no replace).
+- `CLAUDE.md` capacity sections appended before `## Compact Instructions` anchor.
+- Scope: only `.claude/*` + a few top-level (`.mcp.json.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.gitignore`); NEVER touches `src/`, `tests/`, `docs/`, `.mcp.json`, package manifests.
+- `--check` is default mode (read-only); `--apply` explicit; `--dry-run` separate.
+- Spec 016 v1 syncs `.claude/tests/` too (they ARE part of the harness, the RED→GREEN scenarios travel with the capacity).
+
+Next user turn: ratify (or amend) → `/sdd plan` → `/sdd tasks` → impl → use spec 016 to bring all 3 shrnks up to date → THEN run the dogfood B1/B2/B3 sequence with everything actually active.
 
 ## Next steps
 
-1. **010-audit-forensics** still awaits user review of `spec.md`. Plan/tasks blocked until then.
-2. **013-lint-validator-extension** out-of-band scaffold — needs context from whoever drafted it.
-3. Possible follow-ups (no spec yet):
-   - OpenTelemetry MCP, Grafana MCP, Filesystem MCP, Git MCP as additional recipes (spec 014?).
-   - Per-stack `.mcp.json.<stack>.example` variants if the single-file approach hits friction.
-   - Stack-detector v2: monorepo walk for `apps/*/` and `packages/*/` (deferred per spec 012 § Gotchas).
+1. User ratifies 016 design → `/sdd plan` → `/sdd tasks` → RED tests → impl
+2. Sync each shrnk via `bash .claude/tools/sync-harness.sh --apply ~/pyshrnk` (etc.); commit in each fork
+3. Begin dogfood B1 (pyshrnk) per its `docs/dogfood-plan.md`. Frontend addition + spec 011 pytest validation + spec 012 hint observation + Playwright MCP visual validation
+4. Dogfood B2 (shrnk), B3 (rshrnk) — gap-finding pass on rshrnk per its plan
+5. Apply dogfood findings as follow-up specs (e.g. cargo detector for spec 011 if rshrnk surfaces it)
+6. Specs 014 + 015 can land at any point (independent of dogfood)
 
-Deferred (carryover queue):
-- Second cargo dogfood pass (graduation by yield-decay rule).
-- Go dogfood pass (low expected yield).
+Untracked carryovers:
+- `docs/specs/010-audit-forensics/` (prior session)
+- `docs/specs/013-lint-validator-extension/` (out-of-band scaffold, unknown author)
 
 ## Decisions & gotchas
 
-- **Spec 012 is pure recommendation, no audit log, no blocks.** Distinct shape from spec 011's runtime probe (which captures state). Recommendation capacities have a lower bar — they just suggest, the developer activates. No new gating primitives introduced.
-- **MCP package names verified via WebFetch before authoring recipes** (Playwright `@playwright/mcp`, Chrome DevTools `chrome-devtools-mcp`, DBHub `@bytebase/dbhub`, Next.js DevTools `next-devtools-mcp`). Recipes use `@latest`; gotcha documents pin-manually-if-churn-hurts. Same lesson as 011 dogfood: verify upstream-source-of-truth before committing.
-- **Stack-detector is shallow by design** (top-level files + `package.json` deps only). Monorepo blind spot is documented and ratified — fork developers symlink configs to root or point `CLAUDE_PROJECT_DIR` at the active workspace. v2 could walk depth-1 (`apps/*/`, `packages/*/`); deferred until real signal demands it.
-- **jq is optional in mcp-recipes-hint.sh.** Falls back to permissive grep on `package.json` regex when jq is absent. Same fail-open shape as all other hooks. Verified by `02-browser-non-next.sh` running in test env without jq dependence.
-- **`.mcp.json.example` is JSON-with-comments.** Strict JSON parsers reject `//` lines. The `.example` suffix is the universal "do not parse directly" signal; copy step is where the file becomes valid JSON. Documented prominently in the file's header AND in the rule doc gotchas.
-- **DBHub `DATABASE_URL` is secret-adjacent.** Recipe documents: never commit `.mcp.json` with a populated `DATABASE_URL`; use env-var indirection or shell-export-before-launch. Same hygiene posture as `.env` handling.
-- **TDD pattern held cleanly third time in a row** (specs 011, 012, plus the earlier secrets-scan and supply-chain rounds): RED tests written → impl → GREEN. Spec 012 was the cleanest run yet — 6/6 GREEN first attempt with no impl bugs surfacing. Indicates the spec quality + plan quality combo is paying off; the impl is mechanical when the RED tests are precise.
-- **SessionStart hook count is now 3** (`session-start.sh` + `reminders-readout.sh` + `mcp-recipes-hint.sh`). Each emits its own block, independent. Order in settings.json controls visual order in additional-context.
+- **Shrnks were forked at Agent0 spec 007 state.** All three (pyshrnk / shrnk / rshrnk) identical defect: no supply-chain (008/009), no runtime-introspect (011), no mcp-recipes (012). Drift recurs every Agent0 spec; manual propagation doesn't scale. Spec 016 closes the gap permanently.
+- **Dogfood plans assume synced state.** The 3 dogfood-plan.md files committed in each shrnk reference Agent0 capacities (probe.sh, mcp-recipes-hint.sh) that DON'T EXIST in those forks today. The plans are correct as future-state docs but cannot be executed until 016 ships and a sync runs. Document this dependency explicitly.
+- **Sync tool is one-way (Agent0 → fork) and conservative.** Hash-compare detects customizations; default mode is read-only (`--check`); apply refuses to overwrite without `--force`. NEVER touches product code (`src/`, fork's `tests/`, package manifests). NEVER auto-commits — developer reviews diff.
+- **`core.hooksPath` activation stays manual in synced forks.** Same Lazarus reasoning as everywhere else. Sync writes `.githooks/pre-commit` but does not `git config core.hooksPath .githooks` — developer types that command consciously.
+- **Spec 016 takes priority over dogfood execution.** Without 016, dogfood is theatre. After 016, dogfood is real validation. Sequence: 016 ship → sync all 3 shrnks → dogfood B1/B2/B3.
+- **Specs 014 + 015 independent of this sequencing.** Can land before or after 016. The detect_at refactor (015) is a clean target after 014's OTel/Grafana branches land, but order is flexible.
 - **SESSION.md auto-injection has a ~2KB preview budget.** Replace stale content rather than appending — `git log` is the audit trail.

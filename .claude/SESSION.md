@@ -8,41 +8,46 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ## Current state
 
-Spec 016 (harness-sync) **delivered**. All 12 acceptance scenarios green; sync tool applied to all 3 shrnks; each is now at zero drift vs Agent0.
+Specs 016 (harness-sync), 017 (session-state-isolation) e 018 (githooks-activation-hint) **delivered + propagated**. Todas committed em Agent0 e nos 3 shrnks.
 
-- pyshrnk `92c7013` — adopts specs 008-012 + 016
-- shrnk `c10927a` — same
-- rshrnk `a1a14e8` — same
+Agent0:
+- `549965e` feat(githooks-activation) — spec 018
+- `f33ffa8` fix(session-handoff) — spec 017
+- `373ece9` feat(harness-sync) — spec 016
 
-The drift that blocked dogfood is closed. Specs 011 (probe.sh) and 012 (mcp-recipes-hint.sh) now exist in each fork — dogfood B1/B2/B3 are unblocked.
+Shrnks (zero drift em todos, 110 files up-to-date):
+- pyshrnk `e963ff0` (specs 017+018), `92c7013` (specs 008-012+016)
+- shrnk `94912c9`, `c10927a`
+- rshrnk `f672358`, `a1a14e8`
+
+Agent0 ativou `core.hooksPath .githooks` localmente como auto-verificação do hint silenciar. Cada shrnk precisa ativar manualmente — o hint do spec 018 vai aparecer no SessionStart do próximo `claude` em cada fork até a ativação rodar.
 
 ## WIP
 
-Spec 016 not yet committed in Agent0. The implementation files (`.claude/tools/sync-harness.sh`, `.claude/rules/harness-sync.md`, `.claude/tests/harness-sync/`, CLAUDE.md addition, spec/plan/tasks updates) are all in working tree.
+**Spec 013 (lint-validator-extension)** — SDD cycle committed `0626642`. Design fully resolved across two sessions de iteração: manifest-as-intent (single-signal — manifesto declara linter = "fork quer"), 3-state operation (declared+installed roda; declared+missing emite advisory acionável com manager-specific install cmd; not declared skip silencioso), single-stack v1 com spec 015 como prerequisite pra multi-stack monorepo. **Impl pendente** — pickup point é task 1 em `docs/specs/013-lint-validator-extension/tasks.md` (auditoria pre-impl), depois 8 RED tests → 4 impl tasks → 7 validation/docs/dogfood.
 
-**Scope expansion landed during Phase 4 dry-run:** `--force-except=GLOB[,GLOB...]` flag (scenario 12) — chosen over global-force-only after dry-runs showed `.gitignore` had real fork-specific patterns while other customized files were drift-only. Canonical use: `--apply --force --force-except='.gitignore'`.
-
-**Plan divergence captured:** CLAUDE.md uses heading-set comparison (not full-file hash), because fork-authored body always differs from Agent0. Documented in plan.md.
-
-**Order-preservation fix during apply:** initial CLAUDE.md merge sorted missing headings alphabetically, scrambling the section order in the fork. Fixed via `grep -Fxv` walk that preserves Agent0's natural order.
+Nada mais em flight.
 
 ## Next steps
 
-1. Commit spec 016 in Agent0 (single commit covering impl + spec + tests).
-2. Begin dogfood B1 (pyshrnk) per its `docs/dogfood-plan.md` — frontend addition + pytest validation + Playwright MCP visual check.
-3. Dogfood B2 (shrnk), B3 (rshrnk) — gap-finding pass on rshrnk.
-4. Apply dogfood findings as follow-up specs (cargo detector for spec 011 likely from rshrnk).
-5. Specs 014 + 015 land at any point (independent of dogfood).
+1. **Spec 013 impl em sessão fresca** (sessão atual chama-se "retomar-013" mas ficará no 2 da sequência commit→finalize→fresh-session). Tasks 1-20 prontas pra execução TDD-pure.
+2. Dogfood B1 (pyshrnk) per `~/pyshrnk/docs/dogfood-plan.md` — frontend HTTP/HTML + pytest validation + spec 011 probe + spec 012 hint observation + Playwright MCP visual.
+3. Dogfood B2 (shrnk).
+4. Dogfood B3 (rshrnk) — gap-finding pass (cargo NÃO está em spec 011 detector list).
+5. Follow-up specs das findings (provavelmente cargo detector para spec 011 vindo de rshrnk).
+6. Spec 014 pode entrar em qualquer ponto.
 
-Untracked carryovers (prior sessions, awaiting review):
+Untracked carryovers (prior sessions, ainda sem review):
 - `docs/specs/010-audit-forensics/`
-- `docs/specs/013-lint-validator-extension/`
 
 ## Decisions & gotchas
 
-- **`--force-except=GLOB` is the per-file safety hatch** for forks where some customized files are drift-only (`session-start.sh`, `secrets-scan.md`, `validators/run.sh`) but others are real customization (`.gitignore` with stack patterns). Without it, the user had to choose between leaving drift OR clobbering customization — neither tenable. Glob list is comma-separated; matched via Bash `case` patterns against the relative path.
-- **`.gitignore` is always real customization.** Forks add stack-specific lines (Python: `.venv/`, `__pycache__/`; JS: `node_modules/`; Rust: `target/`) that Agent0 (stack-agnostic template) never has. Hand-merge in the same commit as the sync is fine — keeps the audit trail clean.
-- **CLAUDE.md merge preserves Agent0's section order.** Initial impl sorted alphabetically (bug); fixed before any commit landed. The order matters for readability: `Spec-driven development` → `Delegation` → capacities → `Compact Instructions`.
-- **`core.hooksPath` activation stays manual in each synced fork.** Sync wrote `.githooks/pre-commit` but does NOT run `git config core.hooksPath .githooks` — Lazarus-vector reasoning per `.claude/rules/secrets-scan.md`. Each fork developer activates consciously, once.
-- **Dogfood plans assumed pre-sync state.** Those `docs/dogfood-plan.md` files in each shrnk reference Agent0 capacities (probe.sh, mcp-recipes-hint.sh) that NOW EXIST in the synced forks. The plans are accurate and executable.
-- **SESSION.md auto-injection has a ~2KB preview budget.** Replace stale content rather than appending — `git log` is the audit trail.
+- **`--force-except=GLOB` é o per-file safety hatch.** Forks onde alguns customized são drift-only (`session-start.sh`, `secrets-scan.md`, `validators/run.sh`) e outros são real customization (`.gitignore` com stack patterns). Sem ele, escolha era entre deixar drift OU clobbar customization — neither tenable.
+- **`.gitignore` é sempre real customization.** Forks têm `.venv/`, `node_modules/`, `target/` etc. que Agent0 (template) não tem. Hand-merge no mesmo commit do sync.
+- **CLAUDE.md merge preserves Agent0 section order** (fix do `grep -Fxv` que substituiu `comm -23 ... sort`).
+- **`core.hooksPath` activation continua MANUAL por design** (Lazarus 2025). Spec 018 SessionStart hint surfaces o comando passivamente — discoverable sem cruzar a linha pra automation. `CLAUDE_SKIP_GITHOOKS_HINT=1` opta-out.
+- **Spec 018 advisory fires NO Agent0 também antes da ativação.** Esperado: foi exatamente o sinal que motivou o spec; primeira validação foi rodar `git config core.hooksPath .githooks` em Agent0 e ver o block silenciar.
+- **Dogfood plans estão atualizados** — referenciam capacities (probe.sh, mcp-recipes-hint.sh, githooks-activation hint) que AGORA EXISTEM nos shrnks. Executáveis de verdade.
+- **Spec 013 design pivot importante:** primeira sessão propôs "config + manifest" como gate duplo. Pivot pra "manifest-as-intent" (single signal) veio do usuário questionar "por que não ler o manifesto direto?". Config files (biome.json/[tool.ruff]) deixaram de ser sinal de intent — viraram apenas customização opcional. Implicação: forks que tinham biome.json mas NÃO declararam @biomejs/biome em devDeps NÃO acionam lint até declararem. Trade-off ratificado pra coerência domain-agnostic + intent-via-ecosystem-native-signal.
+- **Spec 013 single-stack v1 (Opção A):** validator hoje detecta 1 stack (primeiro if/elif vence). 013 herda essa limitação — multi-stack monorepo lint é problema de stack-detect (spec 015), não de 013. Spec 015 é prerequisite soft; quando land, 013 herda multi-stack automaticamente. Sem duplicar walk em 013.
+- **SESSION.md auto-injection ~2KB preview budget** — replace stale content; `git log` é o audit trail.

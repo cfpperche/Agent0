@@ -8,7 +8,16 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ## Current state
 
-**Ten capacities on `main`, all green** — spec 008 (`supply-chain-scan`) landed this session. The earlier two-thirds of the session ran three dogfood-and-tune passes against sibling projects (NOT inside this repo): `/home/goat/shrnk` (TS+Bun), `/home/goat/pyshrnk` (Python 3.14 + WSGI stdlib + uv), and `/home/goat/rshrnk` (Rust 1.94 + edition 2024, library-only scope). The dogfood arc surfaced 8 harness improvements; supply-chain-scan was then chosen over a 4th dogfood pass when yield-per-pass appeared to be decaying. All work landed upstream:
+**Ten capacities on `main`, all green — spec 008 patched in flight via live-dogfood.** This session ran a live-dogfood pass of spec 008 (`supply-chain-scan`) against `/home/goat/pyshrnk` (real `uv add requests` + sub-agent edit of `pyproject.toml`). The dogfood surfaced two findings, both landed:
+
+- `b730b63` fix(008): tokenizer stops at shell separators + skips value-taking flag args — hook + new test 07 + run-all
+- `6b0ea3e` docs(008): tokenizer + stderr-observability gotchas from live-dogfood — rule doc
+
+Suite: 7/7 PASS via `bash .claude/tests/supply-chain/run-all.sh`. Pyshrnk reverted to clean state after the dogfood touched it (`git -C /home/goat/pyshrnk checkout pyproject.toml uv.lock && uv sync --directory /home/goat/pyshrnk`).
+
+---
+
+**Prior session state (still `main`):** Ten capacities on `main`, all green — spec 008 (`supply-chain-scan`) landed in the previous session. The earlier two-thirds of that session ran three dogfood-and-tune passes against sibling projects (NOT inside this repo): `/home/goat/shrnk` (TS+Bun), `/home/goat/pyshrnk` (Python 3.14 + WSGI stdlib + uv), and `/home/goat/rshrnk` (Rust 1.94 + edition 2024, library-only scope). The dogfood arc surfaced 8 harness improvements; supply-chain-scan was then chosen over a 4th dogfood pass when yield-per-pass appeared to be decaying. All prior work landed upstream:
 
 **Dogfood-driven fixes (8 commits):**
 - `d9929a5` chore: SESSION + reminder from shrnk dogfood
@@ -36,13 +45,28 @@ None.
 
 No spec in flight. Candidates for a future session:
 
-- **Live-dogfood spec 008 against `/home/goat/shrnk` or `/home/goat/pyshrnk`** — exercise the supply-chain hooks against a real `npm add foo` or `uv add foo` invocation and watch the audit log + stderr fire. Smoke tests passed in isolation; observation in a real session might surface fork-side friction.
-- **`supply-chain-block` follow-up spec** (009) — once the advisory has been used in real sessions for a while, decide whether to add a blocking gate. The override marker grammar is already wired up; the new layer would just need a shape-rejection branch that exits 2 with a corrective template (same shape as the secrets-scan preflight).
+- **Live-dogfood pass against `/home/goat/shrnk` (npm) or `/home/goat/rshrnk` (cargo)** — round out cross-manager coverage now that pyshrnk surfaced two findings on the uv side. Different ecosystem idioms (npm scopes `@org/pkg`, cargo features `--features`) may reveal further tokenizer gaps before any spec-009 blocking-gate decision.
+- **`supply-chain-block` follow-up spec (009)** — once the advisory has been used in real sessions for a while, decide whether to add a blocking gate. The override marker grammar is already wired up; the new layer would just need a shape-rejection branch that exits 2 with a corrective template (same shape as the secrets-scan preflight).
 - **Go dogfood pass** — last unverified validator branch. Expected friction yield: low (1 or fewer findings). Defer until something specifically Go-shaped becomes interesting.
+- **Extend tokenizer allowlist if noise surfaces** — known unhandled cases: `--registry-mirror` and other manager-specific value-taking flags. Current allowlist is the small intersection of "common across managers AND value is not the supply-chain signal". Add narrowly if a fork's real session produces noisy `packages` arrays.
 
 ## Decisions & gotchas
 
-Newly observed and load-bearing:
+Newly observed this session (live-dogfood pass 2026-05-11):
+
+- **The dogfood pattern WORKS for supply-chain too — 2 real findings from one live pass.** The pyshrnk live-dogfood ran ~5 Bash hits + 1 sub-agent edit and surfaced (a) tokenizer leak past pipes/redirects/flag-values (`packages` field captured `/home/goat/pyshrnk`, `2>&1`, `|`, `tail` after `uv add requests --directory /home/goat/pyshrnk 2>&1 | tail -20`), (b) the stderr-observability gap (PreToolUse hook stderr surfaces to the agent's next-turn context, not as inline Bash output — confirmed by audit log showing the advisory row while no `supply-chain-advisory:` line appeared in the Bash tool's return). The smoke tests committed in the prior session would NEVER have caught either — they ran with clean fixture commands and trusted the audit log without comparing it against expected vs. inline-stderr behaviour. **Implication**: every advisory-capacity should have a live-dogfood pass before being considered "done", not just smoke tests.
+
+- **Tokenizer fix kept allowlist deliberately small.** The value-taking flag allowlist (`--directory`, `--dir`, `--target`, `--target-dir`, `--prefix`, `--manifest-path`, `--project`, `--cwd`, `--workspace`, `--config`, `-c`, `--filter`, `--registry`, `--index`, `--index-url`) is the intersection of "common across managers" AND "value is NOT a supply-chain signal". Deliberate exclusions:
+  - `-r` / `--requirements` (pip): the file path IS the signal; skipping it would silently lose the advisory for `pip install -r requirements.txt`. The existing gotcha (file captured as "package") is the lesser evil.
+  - `--package` / `-p` (cargo): the value IS the package being acted on; e.g., `cargo update --package tokio` MUST keep `tokio` as the captured package.
+  
+  Both exclusions have regression-guard sub-cases in `07-tokenizer-shape.sh`. Future allowlist additions should follow the same rationale (signal-preserving) — adding a flag whose value carries supply-chain meaning would create a silent-skip vulnerability.
+
+- **Shell separator coverage has a known gap: fused redirects (`2>>file`, `>file`, etc.) without whitespace.** Bash word-split on the unquoted `$COMMAND` doesn't split inside a token, so `2>>err.log` is one token starting with `2`, falls through to the `*` arm, and gets captured as a package. Acceptable noise — the advisory still fires correctly on the manager+verb match, and forensics can disambiguate. Document'd in the new "Package-collection terminators" gotcha. Not worth fixing until a real fork report makes the gap material.
+
+- **Claude Code per-Bash `cwd` reset behaviour cooperates with `uv --directory <path>`.** `cd /home/goat/pyshrnk && uv add foo` would (a) reset CWD on the next Bash call anyway, and (b) trip the secrets-scan compound-and reject if combined with a commit. The clean shape is `uv add foo --directory /home/goat/pyshrnk` (single-command, no chain). Generalises to other managers: `cargo --manifest-path /path/Cargo.toml`, `npm --prefix /path`. The harness and the cross-manager flag idiom conspire to make path-targeting the natural shape.
+
+Newly observed in the prior session (still load-bearing):
 
 - **The harness has two distinct "weight" dimensions, and the disk one is misleading.** Disk LOC (~3,388 of harness mechanism in a fresh fork, plus 780 in `tests/secrets-scan/`) is 78% of a commit-zero diff but constant — product LOC grows past it within ~5 specs of real work. The **context-budget** weight is the more honest measure: ~15,000 tokens always-on at session start (CLAUDE.md harness sections + 10 rules + skill triggers + SESSION.md + REMINDERS.md) = 1.5% of an Opus 1M window, 7.5% of a 200K window. Most of `.claude/` (hooks, validators, skill bodies, spec docs, smoke tests) is NEVER in context — only runs on fire or load-on-demand. Document this when explaining the harness to skeptics.
 

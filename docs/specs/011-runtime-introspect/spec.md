@@ -61,12 +61,14 @@ Give the agent runtime evidence about its own work so it can close the edit→ve
 - **PII collection** — capture mirrors stdout/stderr already on the agent's terminal; introduces no new sink. Tails are size-capped (see open questions).
 - **MCP server in v1** — promotion to MCP is a follow-up spec if shell-tool friction warrants it; mirrors the delegation-gate evolution path.
 
-## Open questions
+## Resolved decisions
 
-- [ ] **Tail size cap** — proposal: 4 KB head + 4 KB tail of each stream (`stdout`, `stderr`), preserves first/last signal slices and bounds context cost. Confirm shape or adjust.
-- [ ] **Detector allowlist boundary** — strict list (only verbs in the table above) or generous fallback (anything matching `*test*` / `*build*` / `*run*`)? Strict avoids false-positive captures cluttering state; generous catches custom scripts. Proposal: strict + env-var `CLAUDE_RUNTIME_INTROSPECT_EXTRA_DETECT="<glob>"` for forks that need more.
-- [ ] **Audit log?** — Should every capture (and every skip) write a row to `.claude/runtime-audit.jsonl` like other capacities, or is `last-run.json` self-sufficient? Proposal: only the skip-budget cases audit (forensics); successful captures live in the state file. Avoids per-Bash noise the supply-chain audit log already produces.
-- [ ] **Dogfood target** — user mentioned "encurtador de links" (link-shortener project). Which existing fork — `rshrnk` (Rust), `pyshrnk` (Python), or a new TS/Node one? Affects which detector is exercised first.
+Captured here for plan-phase traceability; previously the open-questions block.
+
+- **Tail size cap** — 4 KB head + 4 KB tail per stream (`stdout`, `stderr`). Preserves first/last signal slices and bounds next-turn context cost (max ~16 KB per snapshot). When either stream is ≤8 KB total, store verbatim.
+- **Detector allowlist** — strict pair list (`<tool> <verb>` from the v1 table above), with env-var extension `CLAUDE_RUNTIME_INTROSPECT_EXTRA_DETECT="<space-separated globs>"` for forks that need custom runners. Matches the supply-chain manager-table grain.
+- **Audit log shape** — NO per-Bash audit JSONL. `last-run.json` is self-sufficient. Rationale: avoids the per-Bash noise volume the supply-chain `skip-not-install` rows already produce. If forensic queries surface as a real need, follow-up spec adds it.
+- **Dogfood target** — `/home/goat/shrnk` (Bun + TypeScript link-shortener). `bun test`, `bun tsc --noEmit`, `bun run start` exercise the Node-side detector. First 0-finding live-dogfood pass on shrnk graduates v1 toward "delivered"; second pass per yield-decay rule confirms.
 
 ## Context / references
 

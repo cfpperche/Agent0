@@ -225,7 +225,7 @@ fi
 #   uv     add
 #   poetry add
 #   pdm    add
-#   cargo  add update
+#   cargo  add update install
 #   go     get
 #
 # Loop walks tokens, looks for (manager, verb) pair, then collects subsequent
@@ -254,7 +254,7 @@ while [ "$i" -lt "$((n - 1))" ]; do
     uv)     verbs="add" ;;
     poetry) verbs="add" ;;
     pdm)    verbs="add" ;;
-    cargo)  verbs="add update" ;;
+    cargo)  verbs="add update install" ;;
     go)     verbs="get" ;;
     *)      i=$((i + 1)); continue ;;
   esac
@@ -287,7 +287,7 @@ while [ "$i" -lt "$((n - 1))" ]; do
       '&&'|'||'|';'|'|'|'>'|'>>'|'<'|'&'|'2>&1'|'2>'|'&>')
                       break ;;
       '#'*)           break ;;
-      --directory|--dir|--target|--target-dir|--prefix|--manifest-path|--project|--cwd|--workspace|--config|-c|--filter|--registry|--index|--index-url)
+      --directory|--dir|--target|--target-dir|--prefix|--manifest-path|--project|--cwd|--workspace|--config|-c|--filter|--registry|--index|--index-url|--features|-F)
                       j=$((j + 2)); continue ;;
       -*)             j=$((j + 1)); continue ;;
       *)              pkgs="$pkgs $tok"; j=$((j + 1)) ;;

@@ -1,6 +1,6 @@
 # 013 — lint-validator-extension
 
-_Created 2026-05-11. Status: draft._
+_Created 2026-05-11. Status: delivered 2026-05-11 (`3677807`); dogfooded 2026-05-12 (pyshrnk `f2d002c` + shrnk `542d55c`); amended 2026-05-12 with uv auto-sync caveat — see `dogfood-findings.md` § F1._
 
 ## Intent
 
@@ -41,6 +41,7 @@ Escopo v1: **single-stack** apenas — espelha o stack-detect monolítico do val
   - **Given** projeto Python + manifesto declara ruff + binário ausente (`-m ruff --version` retorna 127 ou error)
   - **When** validator dispara
   - **Then** stderr inclui `lint-advisory: ruff declared but not installed — run \`<install-cmd>\`` (uv: `uv sync`; poetry: `poetry install`; pdm: `pdm install`; pip: `pip install ruff`); validator NÃO falha
+  - **Note (amendment 2026-05-12, dogfood F1):** sob `py_prefix = "uv run python"`, o probe `uv run python -m ruff --version` triggers uv's auto-resolve a partir do manifesto antes de invocar python, instalando ruff transparentemente. Resultado: em projetos uv-managed sob uso default de `uv run`, a precondição "binário ausente" deixa de ser alcançável imediatamente após declarar ruff no manifesto — state-b colapsa em state-a dentro de um único `uv run`. Cenário permanece válido (e empiricamente verificado) em poetry, pdm, pip-only flows, e CI sem uv no PATH. Comportamento sob uv considerado *desejável* pra ergonomia de adoção (declarar = instalar = rodar em uma operação); a verificabilidade do advisory neste caso é o trade-off.
 
 - [ ] **Scenario: Falha do linter (quando roda) bloqueia sub-agent**
   - **Given** qualquer stack onde linter está rodando (estado a) AND um edit de sub-agent introduz erro de lint
@@ -69,6 +70,7 @@ Escopo v1: **single-stack** apenas — espelha o stack-detect monolítico do val
 - **Auto-install do linter quando declarado mas ausente.** Agent0 nunca muta o host env silenciosamente — viola supply-chain (spec 009). Advisory acionável é o caminho.
 - **Granularidade fina de opt-out** (per-tool env vars). Single `CLAUDE_VALIDATOR_SKIP_LINT=1` é suficiente.
 - **`peerDependencies` em package.json.** Linters em peerDeps é raríssimo e idiomaticamente errado. Não escaneamos essa seção.
+- **State-b advisory observability em projetos uv-managed sob default `uv run`.** Amendment 2026-05-12. `uv run` faz auto-sync do manifesto antes de invocar o subcomando, então o probe `uv run python -m ruff --version` faz uv instalar ruff antes do probe completar — state-b colapsa em state-a transparentemente. Não é um bug da impl: é uma propriedade de uv's auto-resolve semantics interagindo com a probe shape escolhida (runtime check via `<py_prefix> -m ruff --version`). Alternativa filesystem-only (`[ -f .venv/lib/python*/site-packages/ruff/__init__.py ]`) foi rejeitada no design pivot pra evitar config-file noise. Advisory continua observable em poetry/pdm/pip-only/PATH-isolated-CI flows. Documentado em `.claude/rules/lint-validator.md` § Gotchas + `dogfood-findings.md` F1.
 - **Promover TDD/SDD de cultural pra blocking.** Fora do escopo.
 
 ## Open questions

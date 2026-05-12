@@ -26,7 +26,7 @@ Prior context: spec 013 dogfood closed 7/7; specs 022/020/011 B-series complete;
 
 ## WIP
 
-Awaiting parallel session in `/home/goat/shrnk-mono/` (`dogfood-mono`) to apply Side B of validator-hang fix: uncomment `node_modules/` in shrnk-mono `.gitignore` (5-step roteiro sent). When done, read `~/.claude/projects/-home-goat-shrnk-mono/<sessionId>.jsonl` to validate the audit-after-fix shows zero `node_modules/` paths in `git ls-files --others`, validator completes <1s, no warnings.files leak.
+Nothing in flight. Side B of validator-hang fix landed in shrnk-mono session `e25c9deb` 2026-05-12 22:25 UTC: `.gitignore` 1-line edit (uncomment `node_modules/`); audit reduction **15669 → 12** (99.92%); validator now `ok=true, command="bun test", exit=0, duration_ms=191, warnings=[]`; typecheck-advisory still fires correctly on stderr (apps/api lacks tsconfig — expected). Working tree in shrnk-mono carries 3 distinct uncommitted bundles (Side-B `.gitignore`, Side-A capacity sync from this Agent0 session, format-bytes carryover from earlier dogfood-mono session) — agent paused before committing per user instruction; next session there decides bundling.
 
 ## Next steps
 

@@ -44,6 +44,37 @@ The "block at most once per session" guarantee is keyed on `session_id`. `sessio
 
 `session_id` is regenerated (fresh UUID) only on `source=startup` (new conversation) and after `/clear` (lifecycle reset). Those are the right moments for a fresh nag cycle.
 
+## Parallel WIP coordination
+
+When you intentionally open a second Claude Code session on the same project to work in parallel (e.g. spec curation in one session while another runs dogfood passes), use a `## Parallel WIP` block in `SESSION.md` to signal what each session owns. The block is the lightest possible coordination layer: zero new tooling, zero hooks, zero state files. SESSION.md is already auto-injected at SessionStart of every new session, so the signal reaches the next agent for free.
+
+Shape:
+
+```markdown
+## Parallel WIP
+
+- session opened 2026-05-12 11:00 — curating spec 021 browser-auth-workflow
+  (touching `.claude/rules/mcp-recipes.md`, `.claude/rules/secrets-scan.md`,
+  `docs/specs/021-*/`). Other sessions: defer these paths until this block
+  is removed.
+```
+
+Conventions:
+
+- **One bullet per active parallel session.** ISO date + short intent + path list + clear "defer" instruction.
+- **The session opening parallel work writes the bullet.** Then commits SESSION.md immediately so the change is visible to the next session that starts. If the opener forgets, the user can do it themselves — same shape.
+- **The session removes its bullet when work is committed and merged.** The bullet is a live claim, not a journal. Stale bullets are noise.
+- **The block disappears entirely when no parallel work is in flight.** Don't keep an empty `## Parallel WIP` section as scaffolding.
+- **Other sessions read SESSION.md (always auto-injected) and respect the block.** If you must edit a deferred path anyway (e.g. fixing a typo unrelated to the spec), say so in your commit message so the parallel-session owner can reconcile on merge.
+
+When the convention is enough vs when it isn't:
+
+- Two concurrent sessions, each on a different spec / different file area → convention covers it.
+- Two concurrent sessions racing on the SAME file → convention is advisory; coordinate via the user or pause one session.
+- More than two concurrent sessions → still works but the bullet count grows; if this becomes routine, that's the empirical signal to consider richer machinery (a follow-up spec). Don't pre-build.
+
+This is deliberately a behavioural convention rather than a code-enforced one. Spec 017 (`session-state-isolation`) gave each session its own state directory; this convention closes the remaining gap (cross-session intent visibility) at zero code cost. If real-world use surfaces collisions the convention can't catch — recurring forgotten bullets, fixed-on-merge surprises, sessions that genuinely need to touch the same paths — that's the trigger to revisit; until then, keep the surface tiny.
+
 ## Cross-capacity dependency
 
 `.claude/tools/probe.sh` (spec 011 runtime-introspect) reads `started-at` as the "session boundary" signal to detect stale snapshots. Post-017 it does NOT read a specific subdir — instead it scans `.claude/.session-state/*/started-at` and takes the maximum mtime as the conservative boundary. Single-session use: identical behavior to pre-017. Parallel sessions: `stale=true` may trigger earlier in the older session (a conservative false positive — agent re-runs the verifier, safe direction).

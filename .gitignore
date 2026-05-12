@@ -20,6 +20,9 @@ CLAUDE.local.md
 # Playwright MCP runtime artifacts (snapshots, console logs)
 .playwright-mcp/
 
+# Exploratory prototypes (not yet promoted to docs/specs/ or src/)
+prototypes/
+
 # Spec 007 scenario tests run in mktemp /tmp dirs by default, but reserve a
 # scratchpad path in case a future test variant needs in-repo state.
 .claude/tests/secrets-scan/.tmp/

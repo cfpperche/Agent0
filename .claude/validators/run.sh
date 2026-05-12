@@ -259,7 +259,12 @@ if git rev-parse --git-dir >/dev/null 2>&1; then
 
   prod_files=""
   test_count=0
-  excluded_globs='*.md *.txt *.json *.yml *.yaml *.toml LICENSE *.gitignore .gitkeep'
+  # *.lock / *.lockb / go.sum cover supply-chain lockfiles across all 10 managers
+  # (bun.lock, bun.lockb, yarn.lock, Cargo.lock, poetry.lock, uv.lock, pdm.lock,
+  # go.sum; package-lock.json + pnpm-lock.yaml fall through *.json / *.yaml).
+  # Surfaced via shrnk-mono spec 013 dogfood 2026-05-12: `bun install` modified
+  # bun.lock, validator misclassified it as prod-without-test → false-positive.
+  excluded_globs='*.md *.txt *.json *.yml *.yaml *.toml *.lock *.lockb LICENSE *.gitignore .gitkeep go.sum */go.sum'
 
   old_ifs="$IFS"
   IFS='

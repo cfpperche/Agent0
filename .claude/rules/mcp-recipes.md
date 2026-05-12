@@ -180,7 +180,22 @@ For a fork:
 
 ## Authenticated workflow
 
-Many sites require a logged-in session to return meaningful content. `WebFetch` hits HTTP 401, 402, or 403, or the page silently redirects to a login wall. This section documents the standard workflow for reading auth-gated content using Playwright MCP, the signaling convention that bridges the human login step, and the X/Twitter shortcut that avoids the full auth path for a common case.
+Many sites require a logged-in session to return meaningful content. `WebFetch` hits HTTP 401, 402, 403, or 999 (LinkedIn-style anti-bot), or the page silently redirects to a login wall. This section documents the standard workflow for reading auth-gated content using Playwright MCP, the signaling convention that bridges the human login step, and the X/Twitter shortcut that avoids the full auth path for a common case.
+
+### Prerequisites — activating Playwright MCP
+
+The Playwright MCP recipe (spec 012) ships as `.mcp.json.example` — opt-in by design. Forks that have never enabled it will see the agent emit `BROWSER_AUTH_REQUIRED: <host>` correctly, but the suggested next step ("open Playwright MCP in headed mode") cannot run until the MCP is wired up. One-time setup per fork:
+
+```bash
+cp .mcp.json.example .mcp.json
+# edit .mcp.json — remove the leading `//` markers from the `playwright` block
+# (keep the other blocks commented unless you need them)
+# then RESTART the Claude Code session — MCPs are loaded at session start, not hot-reloaded
+```
+
+After restart, the agent has `mcp__playwright__*` tools available and can drive the headed-login flow described below. The state files produced by `browser_storage_state` persist across sessions; activation is a one-time cost per fork.
+
+Diagnostic: if a session shows `BROWSER_AUTH_REQUIRED` but the agent has no `mcp__playwright__*` tools listed, the prerequisite is incomplete — complete activation first, then re-issue the request in a fresh session.
 
 ### X/Twitter shortcut (try first)
 

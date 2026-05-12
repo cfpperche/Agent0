@@ -1,0 +1,25 @@
+---
+import { STRINGS } from "../i18n/strings";
+import type { Locale } from "../i18n/locales";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = STRINGS[locale].whyBuilt;
+---
+
+<section id="why" class="border-t border-[var(--color-line)]">
+  <div class="mx-auto max-w-4xl px-5 py-20 md:px-8 md:py-28">
+    <p class="mb-3 font-mono text-xs uppercase tracking-[0.18em] text-[var(--color-accent)]">
+      {t.eyebrow}
+    </p>
+    <h2 class="mb-10 font-sans text-3xl font-semibold tracking-tight text-[var(--color-ink)] md:text-4xl">
+      {t.title}
+    </h2>
+    <div class="space-y-6 text-base leading-relaxed text-[var(--color-ink-soft)] md:text-lg">
+      {t.paragraphs.map((p) => <p>{p}</p>)}
+    </div>
+  </div>
+</section>

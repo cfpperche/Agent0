@@ -1,0 +1,24 @@
+---
+interface Props {
+  code: string;
+  filename?: string;
+}
+
+const { code, filename } = Astro.props;
+---
+
+<div class="overflow-hidden rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)]">
+  {
+    filename && (
+      <div class="flex items-center justify-between border-b border-[var(--color-line)] bg-[var(--color-bg)] px-4 py-2 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--color-ink-muted)]">
+        <span>{filename}</span>
+        <span class="flex gap-1.5" aria-hidden="true">
+          <span class="block h-2 w-2 rounded-full bg-[var(--color-line-strong)]" />
+          <span class="block h-2 w-2 rounded-full bg-[var(--color-line-strong)]" />
+          <span class="block h-2 w-2 rounded-full bg-[var(--color-line-strong)]" />
+        </span>
+      </div>
+    )
+  }
+  <pre class="overflow-x-auto px-5 py-4 text-[13px] leading-relaxed text-[var(--color-ink)]"><code set:html={code} /></pre>
+</div>

@@ -1,5 +1,7 @@
 # Agent0
 
+→ **Landing page:** [cfpperche.github.io/Agent0](https://cfpperche.github.io/Agent0/) (en · pt · es)
+
 A reusable base/template repository for starting new software projects with [Claude Code](https://docs.claude.com/en/docs/claude-code). Ships a working harness — hooks, rules, skills, and spec-driven workflow — so each new project starts with the discipline already wired up, not from a blank `.claude/`.
 
 Agent0 itself has no application code and no stack. It is *only* a template. The fork chooses the language, fills in the placeholders, and inherits the harness.

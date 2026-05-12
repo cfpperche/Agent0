@@ -1,0 +1,33 @@
+---
+import { LOCALES, LOCALE_SHORT, type Locale } from "../i18n/locales";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+---
+
+<nav aria-label="Language" class="flex items-center gap-1 text-xs font-mono">
+  {
+    LOCALES.map((loc) => {
+      const isCurrent = loc === locale;
+      const href = `${base}/${loc}/`;
+      return (
+        <a
+          href={href}
+          aria-current={isCurrent ? "page" : undefined}
+          class:list={[
+            "px-2 py-1 rounded-sm transition-colors",
+            isCurrent
+              ? "bg-[var(--color-ink)] text-[var(--color-bg)]"
+              : "text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-line)]",
+          ]}
+        >
+          {LOCALE_SHORT[loc]}
+        </a>
+      );
+    })
+  }
+</nav>

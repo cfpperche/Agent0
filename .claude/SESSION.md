@@ -18,7 +18,16 @@ Prior context (unchanged): B-series complete per spec 022/020/011 stack; spec 02
 
 ## WIP
 
-Nothing in flight. Spec 015 delivered + live-verified.
+Spec 015 dogfood in flight against synthetic mixed-stack monorepo at `/home/goat/shrnk-mono/` (root-commit `49fe1fd`, Agent0 harness synced via `sync-harness.sh`). Standalone hook sanity already PASS: 7 signals across 4 default workspace dirs, 4 recipes deduplicated. Awaiting full SessionStart end-to-end evidence from a parallel CC session in shrnk-mono.
+
+Expected hint contents (from sanity run):
+- `apps/dashboard/package.json:vue` apps/web/next.config.ts packages/db-drizzle/drizzle.config.ts packages/db-prisma/schema.prisma packages/ui/package.json:react services/worker/alembic.ini workspaces/legacy/.env.example:DATABASE_URL`
+- Recipes: next-devtools-mcp, playwright-mcp, chrome-devtools-mcp, dbhub
+- Silent controls: apps/api (elysia), packages/utils (no deps)
+
+## Parallel WIP
+
+- session opened 2026-05-12 — Agent0 (this session) is curating spec 015 dogfood setup at `/home/goat/shrnk-mono/`. Owner of this session sets up the fixture and reads JSONL evidence; the **parallel session in shrnk-mono** exercises SessionStart end-to-end. Other Agent0 sessions: leave `/home/goat/shrnk-mono/` untouched until this bullet is removed. The Agent0 working tree itself has only spec-015-related changes (hook + tests + docs + SESSION refresh); safe to read.
 
 ## Next steps
 

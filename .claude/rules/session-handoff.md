@@ -28,11 +28,19 @@ Set `CLAUDE_SKIP_SESSION_HOOKS=1` in the environment to disable Stop-hook enforc
 
 ## State files
 
-`.claude/.session-state/<session_id>/` holds two ephemeral markers per Claude Code session: `started-at` (touched by `SessionStart`) and `nagged` (touched by `Stop` when it blocks). Gitignored — do not commit. Spec 017 introduced the per-`session_id` subdir layout to isolate parallel sessions; before that, both markers lived directly under `.claude/.session-state/` and any SessionStart fire from any session would `rm -f` the shared `nagged` marker, leading to spurious re-blocks of unrelated sessions.
+`.claude/.session-state/<session_id>/` holds three ephemeral artifacts per Claude Code session: `started-at` (touched by `SessionStart`), `nagged` (touched by `Stop` when it blocks), and `start-porcelain.txt` (a snapshot of `git status --porcelain` captured by `SessionStart` — spec 023). Gitignored — do not commit. Spec 017 introduced the per-`session_id` subdir layout to isolate parallel sessions; before that, both markers lived directly under `.claude/.session-state/` and any SessionStart fire from any session would `rm -f` the shared `nagged` marker, leading to spurious re-blocks of unrelated sessions.
 
 `session_id` comes from the stdin payload Claude Code passes to every hook (`$.session_id`). When absent (older payload shapes, future variants, manual fixtures), or when it contains characters outside `^[a-zA-Z0-9_-]+$`, both hooks fall to the literal subdir `unknown` — predictable degradation, no path traversal possible.
 
-`SessionStart` also runs a best-effort cleanup at the end: `find .claude/.session-state -mindepth 1 -maxdepth 1 -type d -mtime +7 -exec rm -rf {} +`. Crashed sessions leave orphan subdirs; this sweep removes them within a week without manual intervention. Cleanup failures are silenced — never block the hook.
+`SessionStart` also runs a best-effort cleanup at the end: `find .claude/.session-state -mindepth 1 -maxdepth 1 -type d -mtime +7 -exec rm -rf {} +`. Crashed sessions leave orphan subdirs; this sweep removes them within a week without manual intervention. Cleanup failures are silenced — never block the hook. The porcelain snapshot rides inside the same subdir, so the 7-day sweep removes it atomically with the rest of the state — no separate TTL.
+
+### Carryover discrimination (spec 023)
+
+Pre-023 the Stop hook treated `git status --porcelain` returning non-empty as "this session has WIP that needs a SESSION.md handoff" — but the signal conflates three cases: real WIP, pre-existing carryover from prior sessions (already documented), and pure no-op sessions (greeting / Q&A / read-only Bash). Spec 023 closes the false-positive on cases (2)/(3): SessionStart writes `start-porcelain.txt` (best-effort — guarded by `git rev-parse --git-dir` plus `|| true` on the redirect; absent if git is unavailable or the filesystem is read-only); Stop compares the current porcelain against the snapshot via bash string equality before applying the SESSION.md mtime check. Byte-identical → nothing changed this session → exit 0 silently. Different → fall through to today's block-unless-SESSION-updated path.
+
+Missing snapshot (older session that started before 023 landed, or git/fs failure at SessionStart) is the safe-fallback case: Stop skips the comparison and the original mtime-only logic runs. Same conservative posture as the rest of the session-state machinery.
+
+`/compact` and `/resume` both fire `SessionStart` with the same `session_id`, so the snapshot is **overwritten** at compaction-resume time — the porcelain at that moment becomes the new baseline. Correct: pre-compact work should already be committed or noted in SESSION.md by then. `CLAUDE_SKIP_SESSION_HOOKS=1` short-circuits both hooks; no snapshot is written; the next session without the env var sees no snapshot → fallback.
 
 ## Parallel sessions and other start triggers
 

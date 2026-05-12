@@ -46,8 +46,20 @@ fi
 git -C "$PROJECT_DIR" rev-parse --git-dir >/dev/null 2>&1 || exit 0
 
 # No uncommitted changes → no work to log.
-if [[ -z "$(git -C "$PROJECT_DIR" status --porcelain 2>/dev/null)" ]]; then
+CURRENT_PORCELAIN="$(git -C "$PROJECT_DIR" status --porcelain 2>/dev/null || true)"
+if [[ -z "$CURRENT_PORCELAIN" ]]; then
   exit 0
+fi
+
+# Spec 023: if the porcelain is byte-identical to the SessionStart snapshot,
+# nothing changed during this session — carryover from prior sessions or pure
+# no-op. Skip the block. Missing snapshot (older session, git unavailable at
+# SessionStart, or read-only fs) falls through to today's mtime-only logic.
+START_PORCELAIN="$STATE_DIR/start-porcelain.txt"
+if [[ -f "$START_PORCELAIN" ]]; then
+  if [[ "$CURRENT_PORCELAIN" == "$(cat "$START_PORCELAIN")" ]]; then
+    exit 0
+  fi
 fi
 
 # SESSION.md updated during this session → all good.

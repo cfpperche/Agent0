@@ -39,6 +39,14 @@ mkdir -p "$STATE_DIR"
 touch "$STATE_DIR/started-at"
 rm -f "$STATE_DIR/nagged"
 
+# Spec 023: snapshot `git status --porcelain` so Stop can discriminate
+# "this session changed nothing" (carryover or no-op) from "this session
+# has uncommitted WIP that needs a SESSION.md handoff". Best-effort —
+# absence triggers Stop's fallback to today's mtime-only logic.
+if git -C "$PROJECT_DIR" rev-parse --git-dir >/dev/null 2>&1; then
+  git -C "$PROJECT_DIR" status --porcelain >"$STATE_DIR/start-porcelain.txt" 2>/dev/null || true
+fi
+
 if [[ "$SOURCE" == "compact" && -f "$NOTES_FILE" ]]; then
   printf '=== COMPACT_NOTES.md (pre-compact snapshot — raw signal /compact would have lost) ===\n'
   cat "$NOTES_FILE"

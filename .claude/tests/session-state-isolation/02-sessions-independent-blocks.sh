@@ -37,6 +37,13 @@ sleep 1
 printf '{"source":"startup","session_id":"sess-B"}' | bash "$START_HOOK" >/dev/null 2>&1
 sleep 1
 
+# Spec 023 — both SessionStarts captured a porcelain snapshot of the same
+# carryover state. To test the nag-isolation contract (each session must
+# block once independently), this scenario needs *real* WIP during the
+# sessions, otherwise 023's snapshot-match early-exit kicks in (correctly:
+# no porcelain delta → no handoff needed) and the test premise dies.
+echo "real-session-work" > "$TMPDIR/in-session.txt"
+
 run_stop() {
   local sid="$1"
   printf '{"session_id":"%s"}' "$sid" | bash "$STOP_HOOK" 2>&1

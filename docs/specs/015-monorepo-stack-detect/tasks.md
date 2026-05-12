@@ -68,11 +68,33 @@ _Acceptance checks tied to `spec.md` acceptance criteria._
 
 ### Live-verify findings
 
-Three live-verify passes on 2026-05-12, 0 findings each → graduates.
+Three /tmp synthetic passes on 2026-05-12, 0 findings each → unit graduates.
 
-- **Pass 1** — `apps/web/next.config.ts` + `apps/api/schema.prisma` + `packages/ui/package.json` (react). Hint surfaced 4 recipes (next-devtools-mcp, playwright-mcp, chrome-devtools-mcp, dbhub) with all three workspace-prefixed signal labels. Confirms walk + dedup + per-workspace browser detection (packages/ui flipped have_browser even though apps/web set have_next).
-- **Pass 2** — same fixture + `CLAUDE_MCP_RECIPES_WORKSPACE_DIRS=""`. Hint completely silent. Confirms empty-env semantics (walk disabled; root has no signals → silent).
-- **Pass 3** — `modules/foo/next.config.js` + decoy `apps/decoy/next.config.js` + `CLAUDE_MCP_RECIPES_WORKSPACE_DIRS="modules"`. Hint shows `modules/foo/next.config.js` only; `apps/decoy` correctly suppressed. Confirms env var REPLACES (not merges with) default set.
+- **Pass 1** — `apps/web/next.config.ts` + `apps/api/schema.prisma` + `packages/ui/package.json` (react). Hint surfaced 4 recipes (next-devtools-mcp, playwright-mcp, chrome-devtools-mcp, dbhub) with all three workspace-prefixed signal labels. Confirms walk + dedup + per-workspace browser detection.
+- **Pass 2** — same fixture + `CLAUDE_MCP_RECIPES_WORKSPACE_DIRS=""`. Hint completely silent. Confirms empty-env semantics.
+- **Pass 3** — `modules/foo/next.config.js` + decoy `apps/decoy/next.config.js` + `CLAUDE_MCP_RECIPES_WORKSPACE_DIRS="modules"`. Confirms env var REPLACES default set.
+
+### Real-world dogfood
+
+**workout (real fork, 2026-05-12).** `/home/goat/workout/` happens to have `apps/web/next.config.ts` + `drizzle.config.ts` at root + `apps/backend/.env.example` with `DATABASE_URL`. Pre-015 emitted only `drizzle.config.ts → dbhub`. Post-015 emits 3 signals (drizzle root + Next workspace + backend env) and 3 recipes (dbhub + next-devtools-mcp + playwright-mcp). **Bonus finding:** detect_at applies ALL DB heuristics per path, so apps/backend's per-service `.env.example` fires even when root already established dbhub. Dedup correctly suppresses the duplicate recipe.
+
+**shrnk-mono (synthetic full-matrix fork, 2026-05-12 — root commit `49fe1fd`).** Fresh `/home/goat/shrnk-mono/` populates all 4 default workspace dirs with maximum detector coverage: Next via config (apps/web), browser-non-Next via Vue dep (apps/dashboard), browser via React dep only (packages/ui), Prisma (packages/db-prisma), Drizzle (packages/db-drizzle), Python alembic (services/worker), .env.example DATABASE_URL (workspaces/legacy), plus 2 silent controls (apps/api elysia, packages/utils bare).
+
+End-to-end SessionStart evidence (`~/.claude/projects/-home-goat-shrnk-mono/c8e71530-*.jsonl`):
+
+| Hook | Exit | Duration | Output |
+| --- | --- | --- | --- |
+| reminders-readout.sh | 0 | 105 ms | `(no pending reminders)` |
+| session-start.sh | 0 | 107 ms | runtime-introspect probe hint + githooks-activation reminder |
+| mcp-recipes-hint.sh | 0 | **251 ms** | 7 signals + 4 recipes (full matrix) |
+
+Hint output byte-identical to standalone sanity run. Stop hook fired clean (spec 023 cross-validation): `preventedContinuation: false`, `hasOutput: false`, 41 ms — no false-positive on the trivial "Oi" → reply session. Parallel WIP convention worked.
+
+**Real-world findings:**
+- **R1:** `detect_at` aggregates all heuristics per path — multi-signal workspaces (e.g. backend with its own .env.example) get full coverage without spec changes.
+- **R2:** mcp-recipes-hint at 251 ms is ~2.4× the trivial-hook baseline (105 ms) on a 9-workspace fixture. Empirically fine. **Validates open question #3 (no perf instrumentation in v1)** — ~100 syscalls per SessionStart is order-of-ms, well below context-budget concerns. Revisit only if a fork with 50+ workspaces emerges.
+- **R3:** No collateral noise from other Agent0 hooks (session-start.sh, reminders-readout.sh). Walk additive to existing SessionStart chain.
+- **R4:** Workout's `apps/backend/.env.example:DATABASE_URL` was an unforeseen-but-correct surface — the detector matrix is broader than the spec test cases anticipated (per-workspace DB env vars). Worth adding a regression test (`10-workspace-with-env-database-url.sh`) when the test suite next gets touched; deferred as low priority since detection is correct, just under-tested.
 
 ### Delivery commits
 

@@ -8,7 +8,7 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ## Current state
 
-**Spec 015 (monorepo-stack-detect) delivered 2026-05-12.** Stack-detector hook (`.claude/hooks/mcp-recipes-hint.sh`) now walks depth-1 into common monorepo workspace dirs (default set: `apps packages services workspaces`) after the root scan, closing the monorepo blind spot documented in spec 012 § Gotchas. Override via `CLAUDE_MCP_RECIPES_WORKSPACE_DIRS` (space-separated; replaces default; empty string disables walk → root-only behaviour equivalent to spec 012 pre-015). Workspace-detected signals carry path prefix (e.g. `apps/web/next.config.js`); root signals stay bare. Per-call `local_have_next` ensures a non-Next workspace still flips `have_browser` even when another workspace already set `have_next`. **15/15 tests green** (9 spec 015 + 6 spec 012 regression-free). 3 live-verify passes graduated (full monorepo / empty env disables / custom env replaces default). 4 commits: `63953cb refactor`, `f62aa16 tests RED`, `052c9d8 feat walk`, `e5c3ba4 docs`.
+**Spec 015 (monorepo-stack-detect) delivered + dogfood graduated 2026-05-12.** Stack-detector hook (`.claude/hooks/mcp-recipes-hint.sh`) now walks depth-1 into common monorepo workspace dirs (default set: `apps packages services workspaces`) after the root scan, closing the monorepo blind spot documented in spec 012 § Gotchas. Override via `CLAUDE_MCP_RECIPES_WORKSPACE_DIRS` (space-separated; replaces default; empty string disables walk → root-only behaviour equivalent to spec 012 pre-015). Workspace-detected signals carry path prefix; root signals stay bare. Per-call `local_have_next` ensures a non-Next workspace still flips `have_browser`. **15/15 tests green** + **2 real-world dogfoods graduated**: (a) `/home/goat/workout/` surfaced 3 signals where pre-015 saw 1, plus bonus per-workspace `.env.example` detection; (b) synthetic `/home/goat/shrnk-mono/` (full-matrix fixture, root commit `49fe1fd`) exercised all 4 default workspace dirs with 7 signals + 4 recipes — end-to-end SessionStart fired clean (hook 251 ms, no collateral noise), Stop hook PASS no-op (spec 023 cross-validated). Open question #3 (perf instrumentation) **validated as unneeded** — ~100 syscalls in ~150 ms walk overhead. 4 commits: `63953cb refactor`, `f62aa16 tests RED`, `052c9d8 feat walk`, `e5c3ba4 docs`.
 
 **Spec 023 (session-stop-noop-aware) delivered + dogfood graduated 2026-05-12.** Stop hook snapshots `git status --porcelain` at SessionStart and exits 0 silently when end-of-session porcelain is byte-identical — closes false-positive on no-op or carryover-only sessions. Commit `d696135`.
 
@@ -18,21 +18,12 @@ Prior context (unchanged): B-series complete per spec 022/020/011 stack; spec 02
 
 ## WIP
 
-Spec 015 dogfood in flight against synthetic mixed-stack monorepo at `/home/goat/shrnk-mono/` (root-commit `49fe1fd`, Agent0 harness synced via `sync-harness.sh`). Standalone hook sanity already PASS: 7 signals across 4 default workspace dirs, 4 recipes deduplicated. Awaiting full SessionStart end-to-end evidence from a parallel CC session in shrnk-mono.
-
-Expected hint contents (from sanity run):
-- `apps/dashboard/package.json:vue` apps/web/next.config.ts packages/db-drizzle/drizzle.config.ts packages/db-prisma/schema.prisma packages/ui/package.json:react services/worker/alembic.ini workspaces/legacy/.env.example:DATABASE_URL`
-- Recipes: next-devtools-mcp, playwright-mcp, chrome-devtools-mcp, dbhub
-- Silent controls: apps/api (elysia), packages/utils (no deps)
-
-## Parallel WIP
-
-- session opened 2026-05-12 — Agent0 (this session) is curating spec 015 dogfood setup at `/home/goat/shrnk-mono/`. Owner of this session sets up the fixture and reads JSONL evidence; the **parallel session in shrnk-mono** exercises SessionStart end-to-end. Other Agent0 sessions: leave `/home/goat/shrnk-mono/` untouched until this bullet is removed. The Agent0 working tree itself has only spec-015-related changes (hook + tests + docs + SESSION refresh); safe to read.
+Nothing in flight. Spec 015 delivered + 3 synthetic live-verify + 2 real-world dogfoods (workout + shrnk-mono) graduated. Findings appended to `docs/specs/015-monorepo-stack-detect/tasks.md` § Real-world dogfood.
 
 ## Next steps
 
-1. **Spec 014 (mcp-recipes-extras)** — sibling to 015, now that the `detect_at` refactor is in place. 4 new recipes (OpenTelemetry, Grafana, Filesystem, Git). Inherits the path-parameterised function for free. Needs WebFetch research pass on 4 open questions (Git MCP authoritative source, Grafana install path, OTel signal, universal-recipes divider) before plan execution.
-2. **Spec 015 in-fork dogfood** — exercise the walk against a real fork. Candidate: any fork that grew an `apps/`-style monorepo. None of the current Agent0 forks (pyshrnk/shrnk/rshrnk) are monorepos, so dogfood may need a synthetic fixture or new fork. Low priority unless 015 sees real first-fork friction.
+1. **Spec 014 (mcp-recipes-extras)** — sibling to 015, now that the `detect_at` refactor is in place + dogfooded. 4 new recipes (OpenTelemetry, Grafana, Filesystem, Git). Inherits the path-parameterised function for free; **the shrnk-mono fixture is the ready-made target** to exercise the new branches against (already has OTel deps in apps/api candidate territory + alembic that could surface OTel etc.). Needs WebFetch research pass on 4 open questions (Git MCP authoritative source, Grafana install path, OTel signal, universal-recipes divider) before plan execution.
+2. **shrnk-mono as recurring dogfood target.** `/home/goat/shrnk-mono/` (root commit `49fe1fd` in that repo) is a full-matrix synthetic fork — 9 workspaces across all 4 default dirs, Agent0 harness installed but NOT auto-tracked as a fork. Reuse for spec 014, future monorepo-related capacity tests, or as a baseline to compare against single-stack forks (shrnk/pyshrnk/rshrnk). Native git hooks NOT activated (Lazarus design) — activate manually before any real commit there.
 3. **Spec 0YY runtime-introspect-extra-detect-injection (deferred).** Finding #6 from rshrnk B3. Revisit when new undetected stack appears (gleam, deno, hatch, bazel).
 4. **Spec 021 in-fork dogfood** — low priority; Agent0-host runs validated end-to-end.
 5. **Pyshrnk CLAUDE.md reconciliation** — Starlette adoption vs "no frameworks" rule conflict.

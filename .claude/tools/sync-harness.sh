@@ -134,6 +134,7 @@ COPY_CHECK_GLOBS=(
   ".claude/rules|*.md"
   ".claude/tools|*.sh"
   ".claude/validators|*.sh"
+  ".claude/presence|*.mjs"
 )
 
 # Literal files

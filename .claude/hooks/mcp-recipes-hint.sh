@@ -6,6 +6,11 @@
 # CLAUDE_SKIP_MCP_RECIPES=1 to suppress regardless of stack signals. Silent
 # when no signals match (Agent0 base case).
 #
+# Detection runs at $CLAUDE_PROJECT_DIR root AND (spec 015) one level deep into
+# common monorepo workspace dirs (apps/*, packages/*, services/*, workspaces/*).
+# Override the workspace set via CLAUDE_MCP_RECIPES_WORKSPACE_DIRS (space-
+# separated; replaces default; empty string disables walk entirely).
+#
 # Signal table (see .claude/rules/mcp-recipes.md for full reference):
 #   Next.js   next.config.{js,ts,mjs,cjs} OR package.json next dep
 #             -> next-devtools-mcp + playwright-mcp
@@ -17,7 +22,8 @@
 #
 # Reference:
 #   .claude/rules/mcp-recipes.md          — full recipes + workflow
-#   docs/specs/012-mcp-recipes/           — spec
+#   docs/specs/012-mcp-recipes/           — base spec
+#   docs/specs/015-monorepo-stack-detect/ — workspace-walk extension
 
 set -uo pipefail
 
@@ -38,89 +44,113 @@ have_next=0
 have_browser=0         # react/vue/svelte/vite/astro
 have_db=0
 
-# --- Next.js signal: config files ---
-for f in next.config.js next.config.ts next.config.mjs next.config.cjs; do
-  if [ -f "$PROJECT_DIR/$f" ]; then
-    have_next=1
-    signals="$signals $f"
-    break
-  fi
-done
+# detect_at <abs_path> [<label_prefix>]
+#
+# Scans a single directory for stack signals and mutates the globals
+# `signals`, `have_next`, `have_browser`, `have_db`. The `<label_prefix>` is
+# prepended to each emitted signal label (e.g. "apps/web/" so the user can
+# see which workspace fired). Empty prefix → bare labels (root case).
+#
+# Per-call locality: the "is this dir Next?" check is local so a non-Next
+# workspace (e.g. `apps/api/` with just react) still flips `have_browser`
+# globally even when another workspace already set `have_next` to 1.
+detect_at() {
+  local path="$1"
+  local prefix="${2:-}"
+  local local_have_next=0
+  local f d dep next_dep match
 
-# --- package.json dep checks (jq-free for portability) ---
-pkg="$PROJECT_DIR/package.json"
-if [ -f "$pkg" ]; then
-  # Check next, react, vue, svelte, vite, astro in dependencies + devDependencies.
-  # Use grep on the raw file with a forgiving regex; jq is optional.
-  if command -v jq >/dev/null 2>&1; then
-    next_dep="$(jq -r '(.dependencies // {} | keys[]?), (.devDependencies // {} | keys[]?)' "$pkg" 2>/dev/null | grep -Fx 'next' | head -1)"
-    if [ -n "$next_dep" ]; then
+  # --- Next.js signal: config files ---
+  for f in next.config.js next.config.ts next.config.mjs next.config.cjs; do
+    if [ -f "$path/$f" ]; then
       have_next=1
-      signals="$signals package.json:next"
-    fi
-    if [ "$have_next" -eq 0 ]; then
-      for dep in react vue svelte vite astro; do
-        match="$(jq -r '(.dependencies // {} | keys[]?), (.devDependencies // {} | keys[]?)' "$pkg" 2>/dev/null | grep -Fx "$dep" | head -1)"
-        if [ -n "$match" ]; then
-          have_browser=1
-          signals="$signals package.json:$dep"
-          break
-        fi
-      done
-    fi
-  else
-    # jq absent — fall back to permissive regex on the raw JSON.
-    if grep -qE '"next"[[:space:]]*:' "$pkg"; then
-      have_next=1
-      signals="$signals package.json:next"
-    fi
-    if [ "$have_next" -eq 0 ]; then
-      for dep in react vue svelte vite astro; do
-        if grep -qE "\"$dep\"[[:space:]]*:" "$pkg"; then
-          have_browser=1
-          signals="$signals package.json:$dep"
-          break
-        fi
-      done
-    fi
-  fi
-fi
-
-# --- DB signal: prisma / drizzle / alembic / migrations dirs / env DATABASE_URL ---
-for f in schema.prisma alembic.ini; do
-  if [ -f "$PROJECT_DIR/$f" ]; then
-    have_db=1
-    signals="$signals $f"
-    break
-  fi
-done
-
-if [ "$have_db" -eq 0 ]; then
-  for f in drizzle.config.js drizzle.config.ts drizzle.config.mjs; do
-    if [ -f "$PROJECT_DIR/$f" ]; then
-      have_db=1
-      signals="$signals $f"
+      local_have_next=1
+      signals="$signals ${prefix}$f"
       break
     fi
   done
-fi
 
-if [ "$have_db" -eq 0 ]; then
-  for d in database/migrations db/migrate; do
-    if [ -d "$PROJECT_DIR/$d" ]; then
+  # --- package.json dep checks (jq-free fallback) ---
+  local pkg="$path/package.json"
+  if [ -f "$pkg" ]; then
+    if command -v jq >/dev/null 2>&1; then
+      next_dep="$(jq -r '(.dependencies // {} | keys[]?), (.devDependencies // {} | keys[]?)' "$pkg" 2>/dev/null | grep -Fx 'next' | head -1)"
+      if [ -n "$next_dep" ] && [ "$local_have_next" -eq 0 ]; then
+        have_next=1
+        local_have_next=1
+        signals="$signals ${prefix}package.json:next"
+      fi
+      if [ "$local_have_next" -eq 0 ]; then
+        for dep in react vue svelte vite astro; do
+          match="$(jq -r '(.dependencies // {} | keys[]?), (.devDependencies // {} | keys[]?)' "$pkg" 2>/dev/null | grep -Fx "$dep" | head -1)"
+          if [ -n "$match" ]; then
+            have_browser=1
+            signals="$signals ${prefix}package.json:$dep"
+            break
+          fi
+        done
+      fi
+    else
+      if [ "$local_have_next" -eq 0 ] && grep -qE '"next"[[:space:]]*:' "$pkg"; then
+        have_next=1
+        local_have_next=1
+        signals="$signals ${prefix}package.json:next"
+      fi
+      if [ "$local_have_next" -eq 0 ]; then
+        for dep in react vue svelte vite astro; do
+          if grep -qE "\"$dep\"[[:space:]]*:" "$pkg"; then
+            have_browser=1
+            signals="$signals ${prefix}package.json:$dep"
+            break
+          fi
+        done
+      fi
+    fi
+  fi
+
+  # --- DB signal: prisma / drizzle / alembic / migrations dirs / env DATABASE_URL ---
+  local local_have_db=0
+  for f in schema.prisma alembic.ini; do
+    if [ -f "$path/$f" ]; then
       have_db=1
-      signals="$signals $d/"
+      local_have_db=1
+      signals="$signals ${prefix}$f"
       break
     fi
   done
-fi
 
-if [ "$have_db" -eq 0 ] && [ -f "$PROJECT_DIR/.env.example" ]; then
-  if grep -qE '^DATABASE_URL=' "$PROJECT_DIR/.env.example"; then
-    have_db=1
-    signals="$signals .env.example:DATABASE_URL"
+  if [ "$local_have_db" -eq 0 ]; then
+    for f in drizzle.config.js drizzle.config.ts drizzle.config.mjs; do
+      if [ -f "$path/$f" ]; then
+        have_db=1
+        local_have_db=1
+        signals="$signals ${prefix}$f"
+        break
+      fi
+    done
   fi
-fi
+
+  if [ "$local_have_db" -eq 0 ]; then
+    for d in database/migrations db/migrate; do
+      if [ -d "$path/$d" ]; then
+        have_db=1
+        local_have_db=1
+        signals="$signals ${prefix}$d/"
+        break
+      fi
+    done
+  fi
+
+  if [ "$local_have_db" -eq 0 ] && [ -f "$path/.env.example" ]; then
+    if grep -qE '^DATABASE_URL=' "$path/.env.example"; then
+      have_db=1
+      signals="$signals ${prefix}.env.example:DATABASE_URL"
+    fi
+  fi
+}
+
+# Root scan — preserves spec 012 behaviour (bare signal labels, no prefix).
+detect_at "$PROJECT_DIR" ""
 
 # ---------------------------------------------------------------------------
 # Phase 3: Build the suggested-recipes list (deduplicated union)
@@ -129,7 +159,6 @@ recipes=""
 
 add_recipe() {
   local name="$1"
-  # Avoid dup if already in the list.
   case " $recipes " in
     *" $name "*) return ;;
   esac

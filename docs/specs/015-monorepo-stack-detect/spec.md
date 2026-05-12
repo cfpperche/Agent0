@@ -68,10 +68,12 @@ Extend spec 012's stack-detector hook to walk one level deep into common monorep
 
 ## Open questions
 
-- [ ] **Default workspace dir set** — proposal: `apps packages services workspaces`. Should `crates` (Cargo workspaces) be included even though spec 011's detector doesn't yet handle cargo? Argument for: monorepo Cargo projects might have a Next.js or Python sub-project alongside; suggesting their recipes is still correct. Argument against: scope creep; defer until cargo detector lands. Proposal: **omit `crates` in v1**, revisit when cargo detector lands.
-- [ ] **Multiple matches in same workspace** — if `apps/web/` has `next.config.js` AND `apps/web/schema.prisma`, the signal list reads `apps/web/next.config.js, apps/web/schema.prisma` — two separate signals from the same workspace. Confirm shape vs. proposed alternative (`apps/web/{next.config.js, schema.prisma}`). Proposal: **keep separate**, easier to grep, no extra parsing.
-- [ ] **Performance ceiling** — walking 10 workspace dirs × 10 stat calls = 100 syscalls per SessionStart. Fine on local SSDs, might be slow on network FS or in CI containers with cold caches. Worth instrumenting? Proposal: **no, defer until real signal**; the hook is already silent if `CLAUDE_PROJECT_DIR` is bare.
-- [ ] **Interaction with spec 014 (extras)** — if 014 lands first and adds OTel + Grafana detection, those branches must also be workspace-walked. Proposal: **make the walk pass refactor the per-signal detection into a small function called with `<path>` as arg**; both root and workspace-walk reuse it. Saves on drift between root logic and walk logic.
+_Resolved 2026-05-12 before implementation:_
+
+- [x] **Default workspace dir set** — `apps packages services workspaces`. `crates` omitted in v1; revisit when/if cargo monorepo signal surfaces alongside JS/Python sub-projects.
+- [x] **Multiple matches in same workspace** — keep separate (`apps/web/next.config.js, apps/web/schema.prisma`). Greppable, no special parsing.
+- [x] **Performance ceiling** — defer instrumentation. ~100 syscalls per SessionStart is trivial on local SSD; add timing only if CI/network-FS signal surfaces.
+- [x] **Interaction with spec 014 (extras)** — refactor first into `detect_at <path>` function; both root and walk call it. Spec 014's future branches inherit the abstraction regardless of land order.
 
 ## Context / references
 

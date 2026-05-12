@@ -24,26 +24,55 @@ fi
 command_str=""
 stack=""
 stack_subtype=""
+typecheck_advisory_msg=""
+
+# Manifest-as-intent typecheck dispatch (mirrors spec 013 lint-validator):
+#   (a) tsconfig.json exists                 → use direct tsc invocation
+#   (b) package.json `.scripts.typecheck`    → use `<runner> run typecheck`
+#   (c) neither                              → omit typecheck step + advisory
+# State (c) replaces the pre-fix hard-failure path where `<runner> run typecheck`
+# always landed in the pipeline, breaking validators on early-stage forks
+# without typecheck infrastructure (surfaced by shrnk-mono dogfood 2026-05-12).
+has_typecheck_script() {
+  [ -f "package.json" ] && jq -e '.scripts.typecheck // empty' package.json >/dev/null 2>&1
+}
+
 if [ -f "bun.lockb" ] || [ -f "bun.lock" ] || [ -f "bunfig.toml" ]; then
   stack="js"
   stack_subtype="bun"
   if [ -f "tsconfig.json" ]; then
     command_str='bun test && bun tsc --noEmit'
-  else
+  elif has_typecheck_script; then
     command_str='bun test && bun run typecheck'
+  else
+    command_str='bun test'
+    typecheck_advisory_msg="typecheck-advisory: no tsconfig.json or 'typecheck' script in package.json — typecheck step skipped (add a tsconfig.json or declare \`bun run typecheck\` to enable)"
   fi
 elif [ -f "pnpm-lock.yaml" ]; then
   stack="js"
   stack_subtype="pnpm"
   if [ -f "tsconfig.json" ]; then
     command_str='pnpm test && pnpm tsc --noEmit'
-  else
+  elif has_typecheck_script; then
     command_str='pnpm test && pnpm typecheck'
+  else
+    command_str='pnpm test'
+    typecheck_advisory_msg="typecheck-advisory: no tsconfig.json or 'typecheck' script in package.json — typecheck step skipped (add a tsconfig.json or declare \`pnpm typecheck\` to enable)"
   fi
 elif [ -f "package-lock.json" ] || [ -f "package.json" ]; then
   stack="js"
   stack_subtype="npm"
-  command_str='npm test --silent && npm run typecheck'
+  # npm path is conservative: rely on declared `typecheck` script rather than
+  # `npx tsc` (npx is a separate binary from npm and adds resolution surprises
+  # when TypeScript isn't installed locally). Forks on npm declare typecheck
+  # in scripts; bun/pnpm get the tsconfig fast-path because their runners
+  # invoke local node_modules/.bin/tsc directly.
+  if has_typecheck_script; then
+    command_str='npm test --silent && npm run typecheck'
+  else
+    command_str='npm test --silent'
+    typecheck_advisory_msg="typecheck-advisory: no 'typecheck' script in package.json — typecheck step skipped (declare \`npm run typecheck\` to enable)"
+  fi
 elif [ -f "pyproject.toml" ] || [ -f "requirements.txt" ]; then
   stack="python"
   # Detect venv-style project managers (first lockfile match wins). Falls back
@@ -142,11 +171,16 @@ if [ "${CLAUDE_VALIDATOR_SKIP_LINT:-0}" != "1" ]; then
   fi
 fi
 
-# Surface the advisory on stderr BEFORE running the pipeline. Captured by the
-# post-edit hook (which now redirects validator stderr separately from stdout
-# so JSON parsing stays clean) and ingested into the agent's next-turn context.
+# Surface advisories on stderr BEFORE running the pipeline. Captured by the
+# post-edit hook (which redirects validator stderr separately from stdout so
+# JSON parsing stays clean) and ingested into the agent's next-turn context.
+# Multiple advisories can fire in the same run (e.g. lint declared+missing
+# AND no typecheck primitive); each emits its own line, agent reads all.
 if [ -n "$lint_advisory_msg" ]; then
   printf '%s\n' "$lint_advisory_msg" >&2
+fi
+if [ -n "$typecheck_advisory_msg" ]; then
+  printf '%s\n' "$typecheck_advisory_msg" >&2
 fi
 
 stdout_file="$(mktemp 2>/dev/null || mktemp -t validator-stdout)"

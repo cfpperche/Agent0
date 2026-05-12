@@ -1,16 +1,16 @@
 # 013 — lint-validator-extension — dogfood findings
 
-_Recorded 2026-05-12 across pyshrnk (Python/ruff) and shrnk (JS/TS/biome). Rshrnk parked — busy with spec 020 dogfood. Three states verified per fork: (c) silent skip, (b) declared+missing advisory, (a) declared+installed runs._
+_Recorded 2026-05-12 across pyshrnk (Python/ruff), shrnk (JS/TS/biome), and rshrnk (Rust — state-c only, out of 013 scope by design). Three states verified per fork where applicable: (c) silent skip, (b) declared+missing advisory, (a) declared+installed runs._
 
 ## Coverage matrix
 
-| State | Pyshrnk (Python/uv) | Shrnk (JS/TS/bun) | Method |
-| --- | --- | --- | --- |
-| (c) silent skip | PASS — hook exit 0, stderr empty, counter 0 | PASS — hook exit 0, stderr empty, counter 0 | Initial state (no manifest declaration). Via real `post-edit-validate.sh` with `agent_id`. |
-| (b) declared+missing advisory | PASS (forced) — required hiding `uv` from PATH to bypass auto-sync | PASS (natural) — `bun test` does NOT auto-install; advisory fires directly | Validator direct + via real hook. |
-| (a) declared+installed runs | PASS — `uv run python -m ruff check .` composes, finds real bug, blocks; bug fixed → ok=true | PASS — `bunx biome check` composes, finds 15 real bugs, blocks (ok=true happy path observed in lint-validator test suite, not re-run here) | Validator direct + via real hook. |
+| State | Pyshrnk (Python/uv) | Shrnk (JS/TS/bun) | Rshrnk (Rust) | Method |
+| --- | --- | --- | --- | --- |
+| (c) silent skip | PASS — hook exit 0, stderr empty, counter 0 | PASS — hook exit 0, stderr empty, counter 0 | PASS — `command` is pure `cargo test && cargo clippy`, no biome/ruff | Initial state (no manifest declaration). Via real `post-edit-validate.sh` with `agent_id`. |
+| (b) declared+missing advisory | PASS (forced) — required hiding `uv` from PATH to bypass auto-sync | PASS (natural) — `bun test` does NOT auto-install; advisory fires directly | N/A — Rust isn't in 013 scope (cargo clippy already in validator base) | Validator direct + via real hook. |
+| (a) declared+installed runs | PASS — `uv run python -m ruff check .` composes, finds real bug, blocks; bug fixed → ok=true | PASS — `bunx biome check` composes, finds 15 real bugs, blocks (ok=true happy path observed in lint-validator test suite, not re-run here) | N/A | Validator direct + via real hook. |
 
-All 6 checkpoints PASS — spec 013 behaves as defined.
+All 7 applicable checkpoints PASS — spec 013 behaves as defined. Rshrnk verification 2026-05-12 post spec 020 B3 dogfood graduation.
 
 ## Findings
 

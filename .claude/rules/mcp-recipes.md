@@ -204,7 +204,9 @@ Before invoking the full auth workflow for an X/Twitter URL of the form `x.com/<
 1. **Primary:** `https://unrollnow.com/status/<id>` — fetch via `WebFetch`. If the response body is non-empty and contains the thread text, the read succeeds without any auth step.
 2. **Backup:** `https://threadreaderapp.com/thread/<id>.html` — same `WebFetch` approach. Use when unrollnow returns empty or an error.
 
-Only if both fail (empty body, HTTP error, or no thread content) fall back to the `BROWSER_AUTH_REQUIRED` signal below. The shortcut covers public posts; locked accounts and DM-only content require the full workflow regardless.
+Only if both fail (empty body, HTTP error, or no thread content) fall back to the `BROWSER_AUTH_REQUIRED` signal below. **The shortcut covers the original-poster's thread continuation only** — it does NOT include replies from other users, quote-tweets, or any sub-thread by a different author. If the request needs replies (e.g. "ler post AND replies"), the shortcut is insufficient and the auth flow is required even for public posts. Other paths the shortcut does NOT cover: locked accounts, DM-only content, threadreaderapp returning login page for threads it has not indexed yet (verified empirically 2026-05).
+
+**Reply-set virtualization gotcha (auth flow path).** Once authenticated, X.com renders the reply list with virtualized scrolling — `browser_snapshot` captures only the ~10 replies in the current viewport, NOT the full reply set (a post with `37 replies` shown in the metric may surface only 8-10 in a single snapshot). To collect all replies, drive `browser_press_key("PageDown")` (or `browser_evaluate("() => window.scrollBy(0, 2000)")`) in a loop and snapshot between scrolls until no new article refs appear. Same shape applies to Twitter's quote-tweet feed.
 
 ### Signaling convention — `BROWSER_AUTH_REQUIRED: <host>`
 

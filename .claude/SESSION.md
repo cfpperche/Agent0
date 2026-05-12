@@ -8,59 +8,45 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ## Current state
 
-**Specs delivered nesta sessão:** 016 (harness-sync) recap, 017 (session-state-isolation), 018 (githooks-activation-hint), 019 (project-memory) + amendment (memory scaffold ships), 013 (lint-validator) recap. Tudo commitado em Agent0 e propagado para os 3 shrnks.
+**Spec 020 (runtime-capture-on-failure) delivered.** Agent0 `462fb15` + propagated to all 3 forks (`pyshrnk 0a16fa0`, `shrnk ebae994`, `rshrnk c8d6dba`). All 4 repos: 12/12 tests GREEN, zero drift.
 
-**Spec 020 (runtime-capture-on-failure) — scaffold pronto, impl pendente.** Spec/plan/tasks completos. Próxima sessão começa direto na Phase 1 (RED tests).
-
-**Pyshrnk dogfood pass 1 deliverable:** Starlette ASGI app + 16 tests (commit `d19212b`). Surfacearia o finding crítico que motivou specs 019+020.
+**Plan-phase assumption broke + got fixed in-session.** Phase 3 dump-probe surfaced that `PostToolUseFailure(Bash)` payload DIVERGES from `PostToolUse(Bash)`. Spec/plan/tasks all updated to reflect the empirical truth; hook gained a ~15-line branch keyed on `hook_event_name`. End-to-end verification works (failing `bun test` → `status: FAIL` with failure body in `--- stderr ---`).
 
 Agent0 recentes:
+- `462fb15` spec 020 runtime-capture-on-failure
+- `94a9726` spec 020 scaffold (prior session)
 - `e1a7182` spec 019 amendment (memory scaffold ships)
 - `1eb3803` spec 019 project-memory
 - `3677807` spec 013 lint-validator
-- `91525b6` pyshrnk dogfood pass 1 findings
-- `549965e` spec 018 githooks-activation
-- `f33ffa8` spec 017 session-state-isolation
-- `373ece9` spec 016 harness-sync
 
-Shrnks (todos com `.claude/memory/.gitkeep` empty scaffold + zero drift):
-- pyshrnk `0751c6a` (spec 019 amendment), `e963ff0`, `92c7013`, `d19212b` (Starlette dogfood)
-- shrnk `8a2de8c`, `7374d1d`, `c10927a`
-- rshrnk `c0feba2`, `79637a0`, `a1a14e8`
-
-Agent0 ativou `core.hooksPath .githooks` localmente; hint do spec 018 silencia. Cada shrnk continua precisando ativar manualmente — hint vai aparecer no SessionStart deles até rodar `git config core.hooksPath .githooks`.
+Forks (all drift-free against Agent0 `462fb15`):
+- pyshrnk `0a16fa0` (spec 020), `0751c6a` (spec 019 amendment), `d19212b` (Starlette dogfood)
+- shrnk `ebae994` (spec 020), `8a2de8c`
+- rshrnk `c8d6dba` (spec 020), `c0feba2`
 
 ## WIP
 
-**Spec 020 (runtime-capture-on-failure)** — pickup point é Phase 1 task 1 em `docs/specs/020-runtime-capture-on-failure/tasks.md`.
-
-Resumo do design:
-- Smallest viable patch: 1 entrada nova em `.claude/settings.json` `hooks.PostToolUseFailure` (mirror do PostToolUse(Bash) shape). **Zero code change** em `runtime-capture.sh` — inferência já trata exit≠0 via `inferred_status`.
-- 2 RED tests novos: `11-failure-path-capture.sh` (synthesize PostToolUseFailure payload, assert snapshot FAIL) + `12-settings-registration.sh` (jq parse settings).
-- Empirical verification em Phase 3: deliberate failure injection em Agent0 (descobre se settings reload mid-session OU rely em pyshrnk dogfood pass 2).
-- Docs: rule update + memory cc-platform-hooks.md update de "forthcoming" → past tense.
-- Sync 3 shrnks + update pyshrnk dogfood-plan.md com pass-2 checkpoint.
-
-Open assumption sob incerteza: PostToolUseFailure payload shape assumido idêntico ao PostToolUse (docs canônica truncada para esse evento). Plan documenta a assumption + observable signal se quebrar (snapshot com body vazio + UNKNOWN inference).
+None — spec 020 is closed loop in Agent0.
 
 ## Next steps
 
-1. **Spec 020 impl em sessão fresca.** Phase 1 → 5 sequencial. Validar empiricamente em Phase 3 — se settings reload mid-session, fechar loop em Agent0; senão, deferir prova para pyshrnk dogfood pass 2.
-2. Pyshrnk dogfood pass 2 — primeiro pass post-fix; deve confirmar `status: FAIL` capturado para pytest falhando, fechando o finding pass-1 do spec 011.
-3. Pyshrnk pass 3 (graduação por yield-decay — 2 consecutive 0-finding).
-4. Dogfood B2 (shrnk) e B3 (rshrnk gap-finding pass).
-5. Specs 014 + 015 podem entrar em qualquer ponto.
+1. **Pyshrnk dogfood pass 2** — failure-path verification per `~/pyshrnk/docs/dogfood-plan.md § checkpoint 7`. Write a deliberately failing pytest, run `uv run pytest`, probe in a separate Bash call, assert `status: FAIL` with body. Should be the first 0-finding candidate for pyshrnk (post spec 011+020 fix).
+2. **Pyshrnk pass 3** if pass 2 is clean — second consecutive 0-finding triggers yield-decay graduation.
+3. **Dogfood B2 (shrnk)** and **B3 (rshrnk gap-finding pass)** — same shape, different forks.
+4. **Specs 014 + 015** can enter at any point.
+5. **Pyshrnk CLAUDE.md reconciliation** — Starlette adoption documented with spec-009 OVERRIDE marker but the "no frameworks" rule still says otherwise. Decide: amend rule to allow framework or revert Starlette.
 
 Untracked carryovers:
 - `docs/specs/010-audit-forensics/` (sessão prévia, sem review)
 
 ## Decisions & gotchas
 
-- **Sistema de memória do projeto agora tem 3 buckets (não 2).** CC per-user para preferências apenas. `.claude/memory/<topic>.md` para conhecimento factual do projeto (git-tracked, NÃO shipa para forks via sync-harness — exceto o `.gitkeep` empty scaffold). `.claude/rules/<topic>.md` para mandatos behavior + capacity docs (git-tracked, SHIPA para forks). Spec 019 + amendment formalizou isso.
-- **Cada fork ganha capacity de project memory.** Empty `.claude/memory/.gitkeep` shipa via sync-harness manifest; conteúdo é one-source-per-project (Agent0's memories ficam Agent0-only; pyshrnk acumula as suas, etc).
-- **Claude Code expõe 29 hook events, não 9.** Documentado em `.claude/memory/cc-platform-hooks.md` com payload shape, exit-code semantics, e a meta-lesson sobre como o spec 011 foi shipado com gap. Cross-referenced de `.claude/rules/runtime-introspect.md`.
-- **`PostToolUse` fires só em exit-zero.** `PostToolUseFailure` existe para o caminho FAIL — spec 020 vai registrar `runtime-capture.sh` em ambos. Empiricamente confirmado nesta sessão (mtime test).
-- **Pyshrnk adotou Starlette/uvicorn** durante dogfood B1 — desvia de CLAUDE.md "no frameworks". Documentado com OVERRIDE marker do spec 009. CLAUDE.md de pyshrnk precisará reconciliar próxima sessão (manter Starlette + atualizar regra OU reverter).
-- **`--force-except=GLOB`** é per-file safety hatch para `--apply --force` (canonical case: `.gitignore` que tem fork-specific stack patterns).
-- **`core.hooksPath` activation continua MANUAL por design** (Lazarus). Spec 018 SessionStart hint surfaces o comando passivamente.
-- **SESSION.md auto-injection ~2KB preview budget** — replace stale; `git log` é audit trail.
+- **PostToolUseFailure payload shape DIVERGES from PostToolUse.** Verified empirically by dump-probe on a failing `bun test`: no `tool_response` field; failure body at top-level `.error` (single string, harness-merged); `is_interrupt` replaces `tool_response.interrupted`; `hook_event_name: "PostToolUseFailure"` IS present and usable for dispatch. Full payload shape documented in `.claude/memory/cc-platform-hooks.md`.
+- **Lesson from spec 020:** when integrating with an unfamiliar hook event, write a dump-probe first (~5 min). Cheaper than shipping on an assumed-parity shape and finding out via downstream dogfood. Recorded as second-order meta-lesson in `cc-platform-hooks.md`.
+- **Mid-session settings.json reload works.** Edits to `.claude/settings.json` are picked up by the harness within the same conversation — no need to wait for a fresh session to verify a newly-registered hook. Confirmed by spec 020 Phase 3.
+- **PostToolUse fires only on exit-zero** (spec 011 silent-drop gap). Spec 020 fixed via dual registration AND payload-shape branch. `runtime-capture.sh` now keys on `hook_event_name`.
+- **`status: FAIL` default for PostToolUseFailure UNKNOWN cases.** Even when the per-detector inference table misses the failure pattern, the event itself signals failure — hook overrides `inferred_status` to FAIL with basis `"PostToolUseFailure event (pattern table missed)"`.
+- **Memory bucket model (3 buckets) remains stable.** Spec 020 added content to `.claude/memory/cc-platform-hooks.md` (Agent0-only — doesn't ship to forks via sync-harness). Forks gained the `runtime-capture.sh` payload-shape branch (capacity, ships) but NOT the documented payload-shape memory content.
+- **`--force-except=GLOB`** preserved its canonical use (`.gitignore` per-fork stack patterns) during spec 020 sync.
+- **`core.hooksPath` activation continues MANUAL by design** (Lazarus). Spec 018 hint silences once activated.
+- **SESSION.md auto-injection ~2KB preview budget** — replace stale; `git log` is audit trail.

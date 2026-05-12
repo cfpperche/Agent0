@@ -11,9 +11,11 @@ Canonical source: <https://code.claude.com/docs/en/hooks> (verified 2026-05-11 v
 
 ## Meta-lesson — why this memory exists
 
-**Agent0 spec 011 (runtime-introspect) was shipped with a foundational gap.** The capacity registered `runtime-capture.sh` on `PostToolUse(Bash)` assuming this would capture every Bash invocation. It does NOT: `PostToolUse` fires only on **tool success** (exit 0). For Bash, that means commands exiting non-zero — exactly the FAIL cases the agent most needs evidence for — are silently dropped by spec 011's design. The pyshrnk dogfood (2026-05-11) surfaced this empirically; the fix is to additionally register on `PostToolUseFailure(Bash)`.
+**Agent0 spec 011 (runtime-introspect) was shipped with a foundational gap.** The capacity registered `runtime-capture.sh` on `PostToolUse(Bash)` assuming this would capture every Bash invocation. It does NOT: `PostToolUse` fires only on **tool success** (exit 0). For Bash, that means commands exiting non-zero — exactly the FAIL cases the agent most needs evidence for — are silently dropped by spec 011's design. The pyshrnk dogfood (2026-05-11) surfaced this empirically. **Spec 020 fixed it** by additionally registering `runtime-capture.sh` on `PostToolUseFailure(Bash)` AND teaching the hook the divergent payload shape that event uses (see § "Payload shape" below).
 
 The deeper lesson: before designing a new capacity that uses hooks, **read the canonical event list verbatim**. The author of spec 011 was operating with a partial mental model (~9 events) and never validated it against docs. Every future hook-based capacity in Agent0 (and forks) must do better.
+
+Second-order lesson from spec 020 itself: even with the right event registered, **payload shape across related events is NOT guaranteed to be identical**. Spec 020's plan-phase assumption ("`PostToolUseFailure` shape parity with `PostToolUse` — no documented reason to invent a different schema") was wrong. The dump-probe in Phase 3 was the cheap way to surface the divergence; the alternative (assume parity, ship, wait for downstream dogfood to break) would have wasted a fork-sync cycle. **When integrating with an unfamiliar event, write a dump-probe first.** Cost: ~5 min. Value: removes a class of "test passes locally, breaks in production" surprises.
 
 ## The 29 events
 
@@ -51,7 +53,7 @@ Quoted from the docs Hook lifecycle table:
 | `ElicitationResult` | An elicitation completes |
 | `SessionEnd` | The session ends |
 
-Agent0 currently uses **8 of these 29**: `PreToolUse`, `PostToolUse`, `SessionStart`, `Stop`, `PreCompact`. Spec 020 will add `PostToolUseFailure`. The remaining 21 are unused capacity surfaces.
+Agent0 currently uses **9 of these 29**: `PreToolUse`, `PostToolUse`, `PostToolUseFailure` (added by spec 020), `SessionStart`, `Stop`, `PreCompact`. The remaining 20 are unused capacity surfaces.
 
 ## Exit-code semantics for PostToolUse / PostToolUseFailure
 
@@ -83,6 +85,32 @@ For all PreToolUse/PostToolUse/PostToolUseFailure events, stdin JSON includes:
 ```
 
 **Note:** Claude Code's Bash `tool_response` does NOT include an `exit_code` field. Status inference is required (see `.claude/rules/runtime-introspect.md` § Inference heuristics and `.claude/hooks/runtime-capture.sh`).
+
+**PostToolUseFailure(Bash) payload diverges (verified empirically 2026-05-11 by spec 020 dump-probe).** Under tool failure, the stdin payload to the hook script does NOT contain a `tool_response` field at all. Instead:
+
+```json
+{
+  "session_id": "...",
+  "transcript_path": "...",
+  "cwd": "...",
+  "permission_mode": "...",
+  "hook_event_name": "PostToolUseFailure",
+  "tool_name": "Bash",
+  "tool_input": {"command": "...", "description": "..."},
+  "tool_use_id": "...",
+  "error": "<entire failure output as a single string — harness has already merged stdout+stderr+exit-code-line>",
+  "is_interrupt": false,
+  "duration_ms": 78
+}
+```
+
+Key differences from `PostToolUse`:
+- `tool_response` is **absent**
+- Failure body is at top-level `.error` (single string, harness-merged)
+- `is_interrupt` (boolean) replaces `tool_response.interrupted`
+- `hook_event_name: "PostToolUseFailure"` is present — used by shared hook scripts to dispatch on event identity
+
+`session_id`, `transcript_path`, `cwd`, `tool_name`, `tool_input`, `tool_use_id`, `duration_ms` carry over unchanged. `tool_use_id` correlates with the corresponding `PreToolUse` stamp — `runtime-pre-mark.sh`'s in-flight mark is read and removed correctly.
 
 ## Cross-references
 

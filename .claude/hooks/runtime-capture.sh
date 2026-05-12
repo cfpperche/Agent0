@@ -97,29 +97,45 @@ esac
 SESSION_ID="$(printf '%s' "$INPUT" | jq -r '.session_id // ""' 2>/dev/null || true)"
 AGENT_ID="$(printf '%s' "$INPUT" | jq -r '.agent_id // ""' 2>/dev/null || true)"
 TOOL_USE_ID="$(printf '%s' "$INPUT" | jq -r '.tool_use_id // ""' 2>/dev/null || true)"
+HOOK_EVENT_NAME="$(printf '%s' "$INPUT" | jq -r '.hook_event_name // ""' 2>/dev/null || true)"
 
-# tool_response shape (Claude Code, 2026-05-11):
+# PostToolUse tool_response shape (Claude Code, 2026-05-11):
 #   {stdout, stderr, interrupted, isImage, noOutputExpected}
 # Notably absent: exit_code. Live-dogfood pass 1 against /home/goat/shrnk
 # confirmed Claude Code's Bash tool_response carries NO exit signal — only
 # the streams. We still read exit_code defensively in case the field appears
 # in a future harness release or another tool surface (tests still simulate
 # it). When absent, status is inferred from runner-specific stdout patterns.
+#
+# PostToolUseFailure shape DIVERGES (spec 020, empirically verified
+# 2026-05-11): tool_response is ABSENT. Failure body is at top-level
+# `.error` as a single string; `is_interrupt` replaces
+# `tool_response.interrupted`. We route `.error` → STDERR_RAW so the
+# existing inference table (and tail-clamp logic) treats the failure body
+# as stderr — semantically correct (it's the failing tool's error stream
+# from the agent's perspective) and zero-churn for downstream code.
 EXIT_CODE="$(printf '%s' "$INPUT" | jq -r '.tool_response.exit_code // empty' 2>/dev/null || true)"
-INTERRUPTED="$(printf '%s' "$INPUT" | jq -r '.tool_response.interrupted // false' 2>/dev/null || echo false)"
 
 # Top-level duration_ms is provided by the harness on PostToolUse (real wall
 # clock). Use it when present — more accurate than diffing date-second marks
 # from PreToolUse, which was the only fallback before this finding.
 HARNESS_DURATION_MS="$(printf '%s' "$INPUT" | jq -r '.duration_ms // empty' 2>/dev/null || true)"
 
-# Use jq -j (no separator newline) + printf-x sentinel to preserve trailing
-# newlines in stdout/stderr. $(jq -r) strips ONE trailing \n; without this
-# trick, "foo\n" round-trips to "foo".
-STDOUT_RAW="$(printf '%s' "$INPUT" | jq -j '.tool_response.stdout // ""' 2>/dev/null; printf x)"
-STDOUT_RAW="${STDOUT_RAW%x}"
-STDERR_RAW="$(printf '%s' "$INPUT" | jq -j '.tool_response.stderr // ""' 2>/dev/null; printf x)"
-STDERR_RAW="${STDERR_RAW%x}"
+if [ "$HOOK_EVENT_NAME" = "PostToolUseFailure" ]; then
+  INTERRUPTED="$(printf '%s' "$INPUT" | jq -r '.is_interrupt // false' 2>/dev/null || echo false)"
+  STDOUT_RAW=""
+  STDERR_RAW="$(printf '%s' "$INPUT" | jq -j '.error // ""' 2>/dev/null; printf x)"
+  STDERR_RAW="${STDERR_RAW%x}"
+else
+  INTERRUPTED="$(printf '%s' "$INPUT" | jq -r '.tool_response.interrupted // false' 2>/dev/null || echo false)"
+  # Use jq -j (no separator newline) + printf-x sentinel to preserve trailing
+  # newlines in stdout/stderr. $(jq -r) strips ONE trailing \n; without this
+  # trick, "foo\n" round-trips to "foo".
+  STDOUT_RAW="$(printf '%s' "$INPUT" | jq -j '.tool_response.stdout // ""' 2>/dev/null; printf x)"
+  STDOUT_RAW="${STDOUT_RAW%x}"
+  STDERR_RAW="$(printf '%s' "$INPUT" | jq -j '.tool_response.stderr // ""' 2>/dev/null; printf x)"
+  STDERR_RAW="${STDERR_RAW%x}"
+fi
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 STATE_DIR="$PROJECT_DIR/.claude/.runtime-state"
@@ -317,6 +333,14 @@ combined_for_inference="$STDOUT_RAW
 $STDERR_RAW"
 
 infer_status "$detector" "$combined_for_inference"
+
+# PostToolUseFailure event implies the tool failed even when pattern-table
+# inference missed (e.g. failure body shape unknown to the table). Default
+# to FAIL — caller-event is authoritative signal that the verifier failed.
+if [ "$HOOK_EVENT_NAME" = "PostToolUseFailure" ] && [ "$inferred_status" = "UNKNOWN" ]; then
+  inferred_status="FAIL"
+  inference_basis="PostToolUseFailure event (pattern table missed)"
+fi
 
 # Interruption trumps inference.
 if [ "$INTERRUPTED" = "true" ]; then

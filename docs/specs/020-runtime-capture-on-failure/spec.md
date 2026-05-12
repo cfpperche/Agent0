@@ -41,7 +41,7 @@ The fix is small and clean: register `runtime-capture.sh` ALSO on `PostToolUseFa
   - **Then** `bash .claude/tools/probe.sh last-run` returns `status: FAIL` with the failing pytest output visible in the `--- stderr ---` block
 
 - [ ] `.claude/settings.json` `hooks.PostToolUseFailure` array contains a Bash matcher invoking `.claude/hooks/runtime-capture.sh`.
-- [ ] No code change in `.claude/hooks/runtime-capture.sh` (inference logic already handles non-zero exits; payload shape compatible).
+- [ ] `.claude/hooks/runtime-capture.sh` carries a small (~15-line) PostToolUseFailure branch keyed on `hook_event_name`. Empirically required: Phase 3 dump-probe surfaced that PostToolUseFailure(Bash) payload diverges from PostToolUse(Bash) — no `tool_response`; failure body at top-level `.error`; `is_interrupt` replaces `tool_response.interrupted`. Else-branch preserves PostToolUse logic byte-for-byte. Also: inferred_status defaults to `FAIL` when `hook_event_name == "PostToolUseFailure"` AND pattern table missed — event itself is authoritative signal of verifier failure. See `plan.md § Risks` and `tasks.md § Phase 3 finding`.
 - [ ] `.claude/rules/runtime-introspect.md` updated: existing "Capture — PostToolUse(Bash)" paragraph extended to mention PostToolUseFailure; the gotcha bullet about exit-zero-only behavior gets a "FIXED in spec 020" sentence.
 - [ ] `.claude/memory/cc-platform-hooks.md` § "Meta-lesson" updated: the lesson now cites spec 020 as the resolution, not just a future fix.
 - [ ] Tests under `.claude/tests/runtime-introspect/` extended with a failure-path scenario (or new directory `.claude/tests/runtime-capture-on-failure/` if the existing tests fixture doesn't fit).

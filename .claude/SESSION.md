@@ -28,8 +28,9 @@ Nada em flight. Spec 013 totalmente fechado: design (`0626642`) → impl (`36778
 4. **Pyshrnk CLAUDE.md reconciliation** (carryover do SESSION anterior) — Starlette adoption documentado com spec-009 OVERRIDE marker mas regra "no frameworks" ainda diz o oposto. Amend rule ou revert Starlette.
 5. **rshrnk Cargo.{lock,toml} dirty** (carryover) — pre-existing WIP. Decidir destino.
 
-Untracked carryovers:
-- `docs/specs/010-audit-forensics/`
+## Parallel WIP
+
+- **paused (since 2026-05-11) — spec 010 audit-forensics scaffolded but never committed.** Paths: `docs/specs/010-audit-forensics/` (`spec.md` + `plan.md` + `tasks.md` stub). Owner-session ended in joint abandonment ("demanda real é zero — speculative observability, não 'preciso responder X e não consigo'"). Left untracked pending decision. **Other sessions: leave untouched.** Revisit only if a concrete forensic question against `.claude/*-audit.jsonl` surfaces; otherwise the next cleanup pass can delete the scaffold.
 
 ## Decisions & gotchas
 

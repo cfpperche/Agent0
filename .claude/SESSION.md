@@ -8,29 +8,29 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ## Current state
 
-**Spec 022 (runtime-introspect-cargo) delivered.** Closes rshrnk B3 findings #1-5 (cargo test/build/check/clippy all returning `no-snapshot`). Hook now detects the 4 verifier cargo verbs and infers PASS/FAIL via canonical cargo output patterns (`test result: ok/FAILED` for cargo-test; `error[E\d+]:` / `^error:` / `Finished` line for cargo-check/build/clippy). Empirically verified end-to-end against rshrnk's real cargo output — Phase 3 findings in `docs/specs/022-runtime-introspect-cargo/tasks.md`. 15/15 runtime-introspect tests GREEN; synced to all 3 forks with `--force --force-except='.gitignore'`.
+**B-series complete — pyshrnk + shrnk + rshrnk all graduated under yield-decay rule.** rshrnk closed today via B3.2 (`86797b5`, 0 findings) + B3.3 (`ced0389`, 0 findings) post spec 022. End-to-end empirical proof of spec 011/020/022 stack across Python (pytest), JS/TS (bun test), and Rust (cargo test/check/clippy).
 
-Commits this cycle:
-- Agent0: `8e92c97 feat(runtime-introspect): spec 022 — cargo detector + Rust inference (closes rshrnk B3 findings #1-5)`
-- rshrnk: `fb05ccc chore(harness-sync): adopt Agent0 spec 022 (cargo detector + Rust inference)`
-- pyshrnk: `46eff1b chore(harness-sync): adopt Agent0 spec 022 (cargo detector + Rust inference)`
-- shrnk: `ac13ea8 chore(harness-sync): adopt Agent0 spec 022 (cargo detector + Rust inference)`
+This cycle's deliveries:
+- **Spec 022 (runtime-introspect-cargo)** — Agent0 `8e92c97` + sync triplet `fb05ccc`/`46eff1b`/`ac13ea8`. Hook detects 4 cargo verifiers; Rust inference via `test result: ok/FAILED` and `[[:space:]]+Finished` anchor. 15/15 runtime-introspect tests GREEN.
+- **Doc fix: EXTRA_DETECT human-only-pre-launch** (`44ebdb2` + sync `7d4f3c4`/`e57864e`/`1a5e9d3`) — clarifies the env var doesn't propagate to mid-session hooks (hooks are harness-siblings, not Bash children).
+- **Parallel WIP convention** (`f0be6b3`) — registered as `.claude/rules/session-handoff.md § Parallel WIP coordination`. Validated empirically during this session (spec 021 + 3 dogfoods running in parallel, zero collision).
+- **Spec 010 paused in Parallel WIP block** (`5e513d1`) — audit-forensics scaffold abandoned 2026-05-11, registered with defer instruction.
 
-Prior context: spec 013 dogfooded in pyshrnk + shrnk (commits `f2d002c` + `542d55c`); spec 021 delivered + 2 dogfoods (Agent0 host); spec 020 delivered + 3 dogfood passes (pyshrnk graduated, shrnk B2.2 graduated, rshrnk in progress now unblocked by 022); spec 019 scaffold in all forks.
+Prior context: spec 013 dogfooded in pyshrnk + shrnk; spec 021 delivered + 2 dogfoods (Agent0 host); spec 020 delivered; spec 019 scaffold in all forks.
 
 ## WIP
 
-Nothing in flight. Spec 022 closed: design → impl → tests → docs → sync → 4 commits.
+Nothing in flight. B-series closed.
 
 ## Next steps
 
-1. **rshrnk dogfood B3.2 (separate session in rshrnk).** First candidate 0-finding pass post-fix. Expected: cargo invocations now capture correctly, no detector gaps. ~30min.
-2. **rshrnk dogfood B3.3 (separate session in rshrnk).** Second consecutive 0-finding pass → yield-decay graduation. ~20min.
-3. **Spec 0YY runtime-introspect-extra-detect-injection (deferred).** Rshrnk finding #6 (EXTRA_DETECT mid-session inaccessibility) was the original trigger for proposing this spec — but spec 022 absorbed the immediate need (cargo) by extending the native detector list. 0YY still useful for the NEXT undetected stack (gleam, deno, hatch, bazel) but not blocking until a concrete real-world fork demand surfaces. Leave queued.
-4. **Spec 021 in-fork dogfood** (LinkedIn/X dogfood was Agent0 host; in-fork pending). Low priority.
-5. **Pyshrnk CLAUDE.md reconciliation** (carryover from prior session) — Starlette adoption was documented with spec-009 OVERRIDE marker but the "no frameworks" rule still says the opposite. Amend rule or revert Starlette.
-6. **rshrnk Cargo.{lock,toml} carryover** (from prior session) — verified clean post-spec-022 sync; carryover resolved naturally.
-7. **Specs 014 + 015** still in queue.
+1. **Spec 0YY runtime-introspect-extra-detect-injection (deferred).** Finding #6 from rshrnk B3 (EXTRA_DETECT mid-session inaccessibility) remains. Not blocking — spec 022 absorbed the immediate cargo need. Revisit when a NEW undetected stack appears (gleam, deno, hatch, bazel).
+2. **Spec 021 in-fork dogfood** (LinkedIn/X dogfood was Agent0 host; in-fork pending). Low priority.
+3. **Pyshrnk CLAUDE.md reconciliation** — Starlette adoption documented with spec-009 OVERRIDE; rule "no frameworks" still says opposite. Amend rule or revert Starlette.
+4. **Specs 014 + 015** still in queue (mcp-recipes-extras + monorepo-stack-detect).
+5. **Spec 010 (paused in Parallel WIP)** — decide eventually: delete scaffold or revive on real demand.
+
+End-of-session carryover: unstaged `.gitignore` addition (`prototypes/` ignore) — not from this session's work; left for owner-session to commit or revert.
 
 ## Parallel WIP
 

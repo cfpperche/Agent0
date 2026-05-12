@@ -8,25 +8,29 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ## Current state
 
-**Spec 013 (lint-validator-extension) dogfooded em pyshrnk + shrnk — 6/6 state checkpoints PASS.** 7 findings documentadas em `docs/specs/013-lint-validator-extension/dogfood-findings.md`; 4 viraram amendments em `.claude/rules/lint-validator.md` § Gotchas.
+**Spec 022 (runtime-introspect-cargo) delivered.** Closes rshrnk B3 findings #1-5 (cargo test/build/check/clippy all returning `no-snapshot`). Hook now detects the 4 verifier cargo verbs and infers PASS/FAIL via canonical cargo output patterns (`test result: ok/FAILED` for cargo-test; `error[E\d+]:` / `^error:` / `Finished` line for cargo-check/build/clippy). Empirically verified end-to-end against rshrnk's real cargo output — Phase 3 findings in `docs/specs/022-runtime-introspect-cargo/tasks.md`. 15/15 runtime-introspect tests GREEN; synced to all 3 forks with `--force --force-except='.gitignore'`.
 
-Fork commits:
-- pyshrnk `f2d002c chore(dogfood-013): adopt ruff via uv + fix unused import`
-- shrnk `542d55c chore(dogfood-013): adopt biome via bun`
+Commits this cycle:
+- Agent0: `8e92c97 feat(runtime-introspect): spec 022 — cargo detector + Rust inference (closes rshrnk B3 findings #1-5)`
+- rshrnk: `fb05ccc chore(harness-sync): adopt Agent0 spec 022 (cargo detector + Rust inference)`
+- pyshrnk: `46eff1b chore(harness-sync): adopt Agent0 spec 022 (cargo detector + Rust inference)`
+- shrnk: `ac13ea8 chore(harness-sync): adopt Agent0 spec 022 (cargo detector + Rust inference)`
 
-Specs antes deste ciclo (sem mudança): 021 delivered + 2 dogfoods (Agent0 host), 020 delivered + 3 dogfood passes (pyshrnk graduado, shrnk B2.2 graduado, rshrnk em andamento), 019 scaffold em todos forks.
+Prior context: spec 013 dogfooded in pyshrnk + shrnk (commits `f2d002c` + `542d55c`); spec 021 delivered + 2 dogfoods (Agent0 host); spec 020 delivered + 3 dogfood passes (pyshrnk graduated, shrnk B2.2 graduated, rshrnk in progress now unblocked by 022); spec 019 scaffold in all forks.
 
 ## WIP
 
-Nada em flight. Spec 013 totalmente fechado: design (`0626642`) → impl (`3677807`) → dogfood (`f2d002c` + `542d55c`) → rule amendments + findings doc (este ciclo).
+Nothing in flight. Spec 022 closed: design → impl → tests → docs → sync → 4 commits.
 
 ## Next steps
 
-1. **Aguardar rshrnk completar dogfood spec 020.** Quando libertar, rodar dogfood spec 013 em rshrnk — note: rshrnk é Rust, NÃO entra em scope de 013 (lint-validator-extension cobre JS/TS+Python; clippy já está no validator base). Spec 013 dogfood em rshrnk = confirmar state-c silent-skip para Rust stack + ler dogfood-findings.md pra contexto sobre `.claude/` ignore se rshrnk adicionar lint scripts custom.
-2. **Spec 021 in-fork dogfood** (LinkedIn/X dogfood foi em Agent0 host; in-fork pendente). Baixa prioridade — workflow funciona, só falta validar fork-grade activation cycle.
-3. **Spec 022+ (a definir).** Spec 014 + 015 ainda em queue.
-4. **Pyshrnk CLAUDE.md reconciliation** (carryover do SESSION anterior) — Starlette adoption documentado com spec-009 OVERRIDE marker mas regra "no frameworks" ainda diz o oposto. Amend rule ou revert Starlette.
-5. **rshrnk Cargo.{lock,toml} dirty** (carryover) — pre-existing WIP. Decidir destino.
+1. **rshrnk dogfood B3.2 (separate session in rshrnk).** First candidate 0-finding pass post-fix. Expected: cargo invocations now capture correctly, no detector gaps. ~30min.
+2. **rshrnk dogfood B3.3 (separate session in rshrnk).** Second consecutive 0-finding pass → yield-decay graduation. ~20min.
+3. **Spec 0YY runtime-introspect-extra-detect-injection (deferred).** Rshrnk finding #6 (EXTRA_DETECT mid-session inaccessibility) was the original trigger for proposing this spec — but spec 022 absorbed the immediate need (cargo) by extending the native detector list. 0YY still useful for the NEXT undetected stack (gleam, deno, hatch, bazel) but not blocking until a concrete real-world fork demand surfaces. Leave queued.
+4. **Spec 021 in-fork dogfood** (LinkedIn/X dogfood was Agent0 host; in-fork pending). Low priority.
+5. **Pyshrnk CLAUDE.md reconciliation** (carryover from prior session) — Starlette adoption was documented with spec-009 OVERRIDE marker but the "no frameworks" rule still says the opposite. Amend rule or revert Starlette.
+6. **rshrnk Cargo.{lock,toml} carryover** (from prior session) — verified clean post-spec-022 sync; carryover resolved naturally.
+7. **Specs 014 + 015** still in queue.
 
 ## Parallel WIP
 
@@ -34,12 +38,14 @@ Nada em flight. Spec 013 totalmente fechado: design (`0626642`) → impl (`36778
 
 ## Decisions & gotchas
 
-- **Spec 013 dogfood finding F1 — uv auto-sync collapses state-b.** Sob `<py_prefix> = "uv run python"`, o probe `uv run python -m ruff --version` triggers uv's auto-resolve antes de invocar python. Adicionar ruff em `[dependency-groups]` faz uv instalar transparentemente no próximo run, bypass da state-b advisory. Comportamento desejável pra ergonomia de adoção em projetos uv. Advisory ainda fire em poetry/pdm/pip-only/PATH-isolated CI. Documentado em `.claude/rules/lint-validator.md` § Gotchas.
-- **Spec 013 dogfood finding F4 — `.claude/` deve ser linter-ignored.** Biome scan default inclui `.claude/`; `biome check --write` reformata harness files que sync-harness depois flag como customized hash drift. Forks adotando biome precisam shippar `biome.json` ignorando `.claude/**`. Documentado em rule doc com snippet pronto.
-- **Spec 013 dogfood finding F5 — biome defaults são opinionados (tabs).** Primeira `biome check --write` reformatou 11 arquivos em shrnk. Forks devem configurar `formatter.indentStyle` no `biome.json` se quiserem preservar convenções. Documentado.
-- **Spec 013 dogfood finding F6 — supply-chain composição com state-a.** Advisory diz "run `bun install`", agente acha bate em spec 009 block, precisa de OVERRIDE marker multi-line. Inter-spec composition validada (spec 013 dogfood respeita spec 009).
-- **Spec 013 dogfood F2+F3 — lint debt real surfacado imediatamente.** Pyshrnk: 1 unused import em `tests/test_server.py` (corrigido no commit). Shrnk: 15 erros (3 reais + 12 formatting). Valor delivered no day-one da adoção.
-- **`browser_storage_state` / `browser_set_storage_state` NÃO existem em `@playwright/mcp@latest`** (carryover spec 021). Save path: `browser_run_code_unsafe` chamando `await page.context().storageState({ path })`. Reuse: `--storage-state=<file>` startup flag.
-- **Sandbox do Playwright MCP bloqueia `require('fs')` / `await import('fs/promises')`** com `ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING`. `--storage-state` startup é a via canônica.
-- **`core.hooksPath` activation continua MANUAL por design** (Lazarus 2025). Spec 018 SessionStart hint surfaces o comando passivamente.
-- **SESSION.md ~2KB preview budget** — replace stale; `git log` is audit trail.
+- **Spec 022 design: native detector extension beats EXTRA_DETECT workaround.** Rshrnk finding #6 exposed that EXTRA_DETECT can only be set by the human pre-launch (harness spawns hooks as siblings to the bash child, env doesn't propagate). The canonical fix is extending the native pair list. Spec 022 does this cleanly for cargo; spec 0YY remains an option for future stacks but is no longer urgent.
+- **Cargo PASS heuristic: `Finished` line, NOT 500-char cap.** Cargo output frequently exceeds 500 chars in multi-crate projects due to per-crate `Compiling ...` lines. The `[[:space:]]+Finished` anchor is more robust than the bun-tsc-style character count.
+- **Spec 022 composes with spec 020.** Failing `cargo test` (exit 101) routes through PostToolUseFailure; spec 020's branch reads `.error` → `stderr_head`, then spec 022's `test result: FAILED` pattern matches in `combined_for_inference`. Composition verified empirically (Phase 3 case 4 — `cargo check --bin nonexistent_xyz`).
+- **Tokenizer handles `--color=never` and other trailing flags correctly.** `cargo test --color=never` tokenizes as `[cargo, test, --color=never]`; the `cargo test` pair matches at i=0 before any flag inspection. Same for `cargo clippy --all-targets -- -D warnings`.
+- **Spec 013 dogfood finding F1 — uv auto-sync collapses state-b.** Under `<py_prefix> = "uv run python"`, the probe `uv run python -m ruff --version` triggers uv's auto-resolve before invoking python. Adding ruff to `[dependency-groups]` causes uv to install transparently on the next run, bypassing the state-b advisory. Desirable ergonomics for uv-managed projects. Advisory still fires in poetry/pdm/pip-only/PATH-isolated CI.
+- **Spec 013 dogfood finding F4 — `.claude/` must be linter-ignored.** Biome scan default includes `.claude/`; `biome check --write` reformats harness files that sync-harness later flags as customized hash drift. Forks adopting biome must ship a `biome.json` ignoring `.claude/**`. Documented in rule doc with snippet ready.
+- **Spec 013 dogfood finding F5 — biome defaults are opinionated (tabs).** First `biome check --write` reformatted 11 files in shrnk. Forks should configure `formatter.indentStyle` in `biome.json` if they want to preserve conventions.
+- **`browser_storage_state` / `browser_set_storage_state` do NOT exist in `@playwright/mcp@latest`** (carryover from spec 021). Save path: `browser_run_code_unsafe` calling `await page.context().storageState({ path })`. Reuse: `--storage-state=<file>` startup flag.
+- **Playwright MCP sandbox blocks `require('fs')` / `await import('fs/promises')`** with `ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING`. `--storage-state` startup is the canonical path.
+- **`core.hooksPath` activation remains MANUAL by design** (Lazarus 2025). Spec 018 SessionStart hint surfaces the command passively.
+- **SESSION.md ~2KB preview budget** — replace stale; `git log` is the audit trail.

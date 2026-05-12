@@ -4,31 +4,31 @@ _Generated from `plan.md` on 2026-05-12. Work top-to-bottom. Check boxes as task
 
 ## Implementation
 
-- [ ] 1. Scaffold `site/` directory with `package.json`, `astro.config.mjs`, `tsconfig.json`, `.gitignore`.
-- [ ] 2. Install Astro 5 + Tailwind v4 + fontsource packages via `bun install` (with supply-chain `# OVERRIDE` marker — this is a deliberate new-dep introduction).
-- [ ] 3. Configure i18n in `astro.config.mjs` (locales=[en,pt,es], defaultLocale=en, prefixDefaultLocale=true, redirectToDefaultLocale=true) + `site`+`base` for GH Pages.
-- [ ] 4. Create `src/styles/global.css` with Tailwind v4 import + `@theme` design tokens (off-white bg, warm grays, blue-violet accent, Inter/JBMono fonts).
-- [ ] 5. Author `src/i18n/strings.ts` — Strings type + `strings: Record<Locale, Strings>` with all section copy (hero, why, capacities-intro, quickstart, extend, faq, footer) in en/pt/es.
-- [ ] 6. Author `src/i18n/capacities.ts` — full capacity catalog (15+ capacities) with name, rule-doc link, per-locale description.
-- [ ] 7. Build `src/components/{Hero,CapacityGrid,LanguageSwitcher,Footer,CodeBlock}.astro` — section components, all locale-driven via props.
-- [ ] 8. Build `src/layouts/Landing.astro` — full page layout, takes `locale` prop, renders all sections with `<html lang>` + hreflang `<link>` tags.
-- [ ] 9. Create per-locale page stubs `src/pages/en/index.astro`, `pt/index.astro`, `es/index.astro` and root `src/pages/index.astro` redirect.
-- [ ] 10. Add `public/favicon.svg` — minimal `a0` monogram in accent color.
-- [ ] 11. Run `bun run build` from `site/`, confirm zero errors, inspect `dist/` for `en/index.html`, `pt/index.html`, `es/index.html`.
-- [ ] 12. Add `.github/workflows/deploy-pages.yml` with `withastro/action@v6` + `path: ./site` + `package-manager: bun@latest`.
-- [ ] 13. Add top-of-file landing link to `README.md`.
-- [ ] 14. Commit everything in one logical commit (spec + plan + tasks + site/ + workflow + README link).
-- [ ] 15. Push to `main` (with user's explicit ok) and verify the workflow run succeeds + the page renders at `https://cfpperche.github.io/Agent0/`.
+- [x] 1. Scaffold `site/` directory with `package.json`, `astro.config.mjs`, `tsconfig.json`, `.gitignore`.
+- [x] 2. Install Astro 5 + Tailwind v4 + fontsource packages via `bun install` (with supply-chain `# OVERRIDE` marker — this is a deliberate new-dep introduction).
+- [x] 3. Configure i18n in `astro.config.mjs` (locales=[en,pt,es], defaultLocale=en, prefixDefaultLocale=true, redirectToDefaultLocale=true) + `site`+`base` for GH Pages.
+- [x] 4. Create `src/styles/global.css` with Tailwind v4 import + `@theme` design tokens (off-white bg, warm grays, blue-violet accent, Inter/JBMono fonts).
+- [x] 5. Author `src/i18n/strings.ts` — Strings type + `strings: Record<Locale, Strings>` with all section copy (hero, why, capacities-intro, quickstart, extend, faq, footer) in en/pt/es.
+- [x] 6. Author `src/i18n/capacities.ts` — full capacity catalog (15+ capacities) with name, rule-doc link, per-locale description.
+- [x] 7. Build `src/components/{Hero,CapacityGrid,LanguageSwitcher,Footer,CodeBlock}.astro` — section components, all locale-driven via props.
+- [x] 8. Build `src/layouts/Landing.astro` — full page layout, takes `locale` prop, renders all sections with `<html lang>` + hreflang `<link>` tags.
+- [x] 9. Create per-locale page stubs `src/pages/en/index.astro`, `pt/index.astro`, `es/index.astro` and root `src/pages/index.astro` redirect.
+- [x] 10. Add `public/favicon.svg` — minimal `a0` monogram in accent color.
+- [x] 11. Run `bun run build` from `site/`, confirm zero errors, inspect `dist/` for `en/index.html`, `pt/index.html`, `es/index.html`.
+- [x] 12. Add `.github/workflows/deploy-pages.yml` with `withastro/action@v6` + `path: ./site` + `package-manager: bun@latest`.
+- [x] 13. Add top-of-file landing link to `README.md`.
+- [x] 14. Commit everything in one logical commit (spec + plan + tasks + site/ + workflow + README link).
+- [x] 15. Push to `main` (with user's explicit ok) and verify the workflow run succeeds + the page renders at `https://cfpperche.github.io/Agent0/`.
 
 ## Verification
 
-- [ ] **A.C. scenario 1** — `bun run build` exits 0 and produces dist with all 3 locale index.html files (task 11 satisfies).
-- [ ] **A.C. scenario 2** — `bun run preview` (or static-serve `dist/`) and load `/en/`, `/pt/`, `/es/` in browser; all sections render in matching language with no `{{TODO}}` markers (Playwright MCP verification, task 11 follow-up).
-- [ ] **A.C. scenario 3** — Click language switcher on `/en/` → navigates to `/pt/`, content changes accordingly.
-- [ ] **A.C. scenario 4** — GH Action run succeeds (task 15); page is live at the project Pages URL.
-- [ ] **A.C. scenario 5** — Capacity catalog matches Agent0's current state (15+ capacities, links resolve to GitHub blob URLs).
-- [ ] **A.C. scenario 6** — Visual inspection: Inter font in prose, JBMono in code blocks, off-white bg, warm grays, blue-violet accent, hairline borders.
-- [ ] **A.C. scenario 7** — Resize browser to 375px width via Playwright; verify no horizontal overflow, language switcher accessible, CTAs ≥44px.
+- [x] **A.C. scenario 1** — `bun run build` exits 0 and produces dist with all 3 locale index.html files (task 11 satisfies).
+- [x] **A.C. scenario 2** — `bun run preview` (or static-serve `dist/`) and load `/en/`, `/pt/`, `/es/` in browser; all sections render in matching language with no `{{TODO}}` markers (Playwright MCP verification, task 11 follow-up).
+- [x] **A.C. scenario 3** — Click language switcher on `/en/` → navigates to `/pt/`, content changes accordingly.
+- [x] **A.C. scenario 4** — GH Action run succeeds (task 15); page is live at the project Pages URL.
+- [x] **A.C. scenario 5** — Capacity catalog matches Agent0's current state (15+ capacities, links resolve to GitHub blob URLs).
+- [x] **A.C. scenario 6** — Visual inspection: Inter font in prose, JBMono in code blocks, off-white bg, warm grays, blue-violet accent, hairline borders.
+- [x] **A.C. scenario 7** — Resize browser to 375px width via Playwright; verify no horizontal overflow, language switcher accessible, CTAs ≥44px.
 
 ## Notes
 

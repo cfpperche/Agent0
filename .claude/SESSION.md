@@ -8,7 +8,7 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ## Current state
 
-**Spec 024 (public-landing) implemented 2026-05-12 — pending push + deploy verification.** New `site/` subtree at repo root: Astro 5.18 + Tailwind v4 + i18n routing (en/pt/es), editorial Vercel-Resend design language, deployed via `.github/workflows/deploy-pages.yml` (withastro/action@v3 + actions/deploy-pages@v4, `path: ./site`, bun package manager). All 3 locales build clean (`bun run build` → 0 errors, ~640ms, 3 page(s)). Mobile (375px) verified zero horizontal overflow after `min-w-0` fixes in `QuickStart`/`HowToExtend` grids + `overflow-x-clip` on body. Capacity catalog covers 16 capacities sourced from `.claude/rules/` + spec dirs with links to GitHub blob refs. README updated with top-of-file landing link. **Pending: push to origin/main + verify GH Action run succeeds + confirm `https://cfpperche.github.io/Agent0/` is live.**
+**Spec 024 (public-landing) DELIVERED + LIVE 2026-05-12.** New `site/` subtree (Astro 5.18 + Tailwind v4 + i18n en/pt/es, editorial Vercel-Resend design). Deploy via `.github/workflows/deploy-pages.yml` (withastro/action@v3 + actions/deploy-pages@v4, `path: ./site`, bun pkg manager). Workflow run `25753105230` PASS (build 12s + deploy 11s). Pages source set to `workflow` via `gh api -X POST .../pages -f build_type=workflow`. Live URL serves 200: **https://cfpperche.github.io/Agent0/** redirects to `/en/`, all 3 locales return correct titles. Mobile 375px verified `docW=360 ≤ winW=375` after `min-w-0` fixes in grid items + `overflow-x-clip` on body. Capacity catalog covers 16 capacities with links to `.claude/rules/` / spec dirs. README updated with top-of-file landing link. Commit `34d2bf1`. Tasks 1-15 all PASS; acceptance criteria 1-7 all PASS.
 
 **Spec 015 (monorepo-stack-detect) delivered + dogfood graduated 2026-05-12.** Stack-detector hook walks depth-1 into common monorepo workspace dirs (default `apps packages services workspaces`); override via `CLAUDE_MCP_RECIPES_WORKSPACE_DIRS`. 15/15 tests green + 2 real-world dogfoods (workout, shrnk-mono).
 
@@ -18,12 +18,11 @@ Prior context: spec 013 dogfood closed 7/7; specs 022/020/011 B-series complete;
 
 ## WIP
 
-Spec 024 implementation done — awaits push. Local preview verified end-to-end on `127.0.0.1:4321/Agent0/{en,pt,es}/`. Bun lockfile committed. CSS layer hierarchy fix (move custom base rules into `@layer base`) was the only non-trivial gotcha.
+Nothing in flight. Spec 024 closed: live at `https://cfpperche.github.io/Agent0/`.
 
 ## Next steps
 
-1. **Push spec 024 + verify GH Pages deploy.** Once the user confirms push, watch the Actions run via `gh run watch` and confirm the URL is live. Update spec 024 tasks.md scenario 4 + 5 as PASS post-deploy. Repo Pages settings must be set to "GitHub Actions" source (manual config in Settings → Pages, one-time).
-2. **Spec 014 (mcp-recipes-extras)** — sibling to 015. 4 new recipes (OpenTelemetry, Grafana, Filesystem, Git). Inherits `detect_at` refactor; shrnk-mono is the ready dogfood target.
+1. **Spec 014 (mcp-recipes-extras)** — sibling to 015. 4 new recipes (OpenTelemetry, Grafana, Filesystem, Git). Inherits `detect_at` refactor; shrnk-mono is the ready dogfood target.
 3. **shrnk-mono as recurring dogfood target.** Full-matrix synthetic fork at `/home/goat/shrnk-mono/`. Reuse for spec 014 + future monorepo capacity tests.
 4. **Spec 0YY runtime-introspect-extra-detect-injection (deferred).** Revisit when undetected stack appears.
 5. **Pyshrnk CLAUDE.md reconciliation** — Starlette adoption vs "no frameworks" rule conflict.

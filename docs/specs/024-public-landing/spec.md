@@ -8,47 +8,26 @@ Agent0 is a public open-source harness for Claude Code with 23 shipped specs and
 
 ## Acceptance criteria
 
-- [ ] **Scenario: site builds locally**
-  - **Given** the `site/` directory is scaffolded with Astro 5 + Tailwind v4 + i18n config (en/pt/es)
-  - **When** the developer runs `bun install && bun run build` from `site/`
-  - **Then** the build succeeds with exit 0 and produces `site/dist/` containing `en/index.html`, `pt/index.html`, `es/index.html`
+- [x] **Scenario: site builds locally** — `bun run build` from `site/` exits 0 in ~640 ms, emits `dist/en/index.html`, `dist/pt/index.html`, `dist/es/index.html`, plus a meta-refresh `dist/index.html`. Verified `2026-05-12`.
 
-- [ ] **Scenario: three locales render full content**
-  - **Given** the built site is served locally (`bun run preview` or static server on `site/dist/`)
-  - **When** the user navigates to `/en/`, `/pt/`, and `/es/` paths
-  - **Then** each locale renders the full page (hero, why-built, capacity catalog, quick start, how-to-extend, FAQ, CTA) in the corresponding language, with no untranslated placeholder strings
+- [x] **Scenario: three locales render full content** — Local preview + live URL both serve full sections per locale. Live titles: `Agent0 — the harness for AI coding agents` / `Agent0 — o harness para agentes de código IA` / `Agent0 — el harness para agentes de código IA`.
 
-- [ ] **Scenario: language switcher works**
-  - **Given** the user is on `/en/`
-  - **When** they click the language switcher and select Português
-  - **Then** they navigate to `/pt/` with the equivalent content rendered
+- [x] **Scenario: language switcher works** — `LanguageSwitcher` renders `/Agent0/{en,pt,es}/` anchors with `aria-current="page"` on the active locale; verified via DOM snapshot at the three live URLs.
 
-- [ ] **Scenario: GitHub Pages deploy succeeds**
-  - **Given** the workflow `.github/workflows/deploy-pages.yml` is committed to `main`
-  - **When** a push to `main` triggers the workflow
-  - **Then** the site deploys successfully to `https://cfpperche.github.io/Agent0/` and the root URL redirects to the default locale `/en/`
+- [x] **Scenario: GitHub Pages deploy succeeds** — Workflow run `25753105230` PASS (build 12 s + deploy 11 s). `https://cfpperche.github.io/Agent0/` returns 200 with Astro's meta-refresh to `/Agent0/en/`. Pages source = `workflow` (set via `gh api -X POST repos/cfpperche/Agent0/pages -f build_type=workflow`).
 
-- [ ] **Scenario: capacity catalog reflects current state**
-  - **Given** Agent0 has 14+ documented capacities (compaction continuity, SDD, governance gate, delegation+post-edit validator, reminders, BDD, TDD, secrets scan, supply chain scan, runtime introspect, MCP recipes, harness sync, lint validator, memory, browser auth, session handoff)
-  - **When** the user lands on the page
-  - **Then** the capacity grid lists each capacity with name + one-line description + link to its rule doc on GitHub
+- [x] **Scenario: capacity catalog reflects current state** — `site/src/i18n/capacities.ts` lists 16 capacities (SDD, governance, delegation, reminders, BDD, TDD, secrets-scan, supply-chain, runtime-introspect, mcp-recipes, lint-validator, harness-sync, session-handoff, compaction-continuity, memory, browser-auth) with per-locale descriptions and GitHub blob links to `.claude/rules/` or `docs/specs/`.
 
-- [ ] **Scenario: design language matches reference**
-  - **Given** the editorial / Vercel-Resend visual direction was chosen
-  - **When** the user views any locale
-  - **Then** the page uses Inter (or system-ui fallback) for prose, JetBrains Mono (or fallback) for code, off-white background, warm gray hierarchy, hairline borders, and a single accent color (blue-violet family); no dark theme in v1
+- [x] **Scenario: design language matches reference** — Inter Variable (self-hosted via `@fontsource-variable/inter`) for prose, JetBrains Mono Variable for code, `--color-bg: #fafaf9`, `--color-ink: #1c1917 → #78716c` hierarchy, `--color-line: #e7e5e4` hairlines, `--color-accent: #6366f1` single accent. No dark theme.
 
-- [ ] **Scenario: page is responsive at 375px**
-  - **Given** the built site
-  - **When** viewed at 375px viewport width
-  - **Then** all sections reflow without horizontal overflow; the language switcher remains accessible; the hero CTA is tappable (≥44px)
+- [x] **Scenario: page is responsive at 375px** — `docW=360, winW=375` after `min-w-0` fixes in `QuickStart` + `HowToExtend` grids and `overflow-x-clip` on body. Primary CTA bounding rect 134×44 px.
 
-- [ ] `site/` is git-tracked and committed alongside the spec
-- [ ] `site/package.json` declares Astro 5.x + Tailwind v4 (Vite plugin) + dev/build scripts
-- [ ] `.github/workflows/deploy-pages.yml` exists with GitHub Pages permissions and uses Astro's official `withastro/action` (or equivalent)
-- [ ] Astro config sets `base: '/Agent0/'` and `site: 'https://cfpperche.github.io'`
-- [ ] `<html lang="...">` is set per-locale; `<link rel="alternate" hreflang="...">` tags link the three locales together
-- [ ] All site source code stays in English (per `.claude/rules/language.md`) — only the rendered content has pt/es localizations
+- [x] `site/` is git-tracked and committed alongside the spec (commit `34d2bf1`)
+- [x] `site/package.json` declares Astro 5.18 + Tailwind v4 (Vite plugin) + dev/build/preview scripts
+- [x] `.github/workflows/deploy-pages.yml` exists, uses `withastro/action@v3` + `actions/deploy-pages@v4`
+- [x] Astro config sets `base: '/Agent0/'` and `site: 'https://cfpperche.github.io'`
+- [x] `<html lang="...">` is set per-locale; `<link rel="alternate" hreflang="...">` tags link en/pt/es + `x-default → en`
+- [x] All site source code stays in English (per `.claude/rules/language.md`) — only rendered content has pt/es localizations
 
 ## Non-goals
 

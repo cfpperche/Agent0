@@ -24,6 +24,20 @@ The hint hook fires when any signal matches. Multiple signals can fire; the sugg
 
 The list is deliberately small. Same lesson as spec 011's detector allowlist and spec 008's supply-chain manager table: ship a strict shape, extend on real-world signal.
 
+### Walk scope (spec 015)
+
+Detection runs at `$CLAUDE_PROJECT_DIR` root AND one level deep into common monorepo workspace dirs. Default set: `apps packages services workspaces` (covers pnpm workspaces, Turborepo, Nx apps, Yarn workspaces — the dominant JS/TS monorepo conventions). For each workspace dir that exists, the hook walks its direct children (depth-1) and runs the same signal table at each. Workspace-detected signals carry a path prefix (e.g. `apps/web/next.config.js`) so the agent can see which workspace fired; root-detected signals stay bare (e.g. `next.config.js`). Recipe set is the deduplicated union across all walked paths.
+
+Override via `CLAUDE_MCP_RECIPES_WORKSPACE_DIRS` (space-separated, **replaces** the default — does not merge):
+
+| Value | Effect |
+| --- | --- |
+| Unset | Default set: `apps packages services workspaces` |
+| `"modules subprojects"` | Walks `modules/*` and `subprojects/*` only; default set NOT scanned |
+| `""` (set, empty) | Walk disabled entirely; root-only detection (equivalent to spec 012's pre-015 behaviour) |
+
+The walk is strictly depth-1: `apps/web/next.config.js` fires; `apps/web/nested/deep/next.config.js` does NOT (forks with deeper nesting point the env var directly at the workspace root). Cargo `crates/` is omitted from the default set in v1; revisit if a real-world Cargo monorepo with JS/Python sub-projects surfaces.
+
 ## Recipes
 
 ### Playwright MCP
@@ -150,7 +164,7 @@ When ≥1 stack signal matches and `CLAUDE_SKIP_MCP_RECIPES` is unset, the Sessi
 
 ```
 === mcp-recipes ===
-Stack signals detected: next.config.js, package.json:next, schema.prisma
+Stack signals detected: next.config.js apps/web/next.config.js apps/api/schema.prisma
 Suggested MCP recipes (copy + uncomment from .mcp.json.example):
   - next-devtools-mcp  Next.js framework introspection (build errors, routes, server actions)
   - playwright-mcp     browser observation (DOM, console, network, screenshots)
@@ -159,7 +173,7 @@ See .claude/rules/mcp-recipes.md for full recipes (install commands, runtime req
 === end mcp-recipes ===
 ```
 
-When no signals match, the block is NOT emitted (silent).
+Signal labels are bare for root-detected files (`next.config.js`) and workspace-prefixed for files found under the depth-1 walk (`apps/web/next.config.js`, `apps/api/schema.prisma`). When no signals match, the block is NOT emitted (silent).
 
 ## Escape hatch
 
@@ -330,7 +344,8 @@ Chrome DevTools MCP is the right choice when you need **observation**, not **dri
 
 - **`.mcp.json.example` is JSON-with-comments.** Strict JSON parsers reject `//` line comments. The `.example` suffix is the universal "this is a template, do not parse directly" signal. The header comment in the file explicitly says: copy, rename, remove `//` markers before activation. Do NOT just `mv .mcp.json.example .mcp.json` — the result wouldn't parse.
 - **Package-name drift.** MCP packages are early-stage (most v0.x). A package can rename or restructure across minor releases. Each recipe section links to the upstream's source-of-truth README; if your `.mcp.json` block stops working after `@latest` resolves to a newer version, **check the upstream README first**, then update the recipe block. v1 of this spec uses `@latest` throughout; forks that hit churn pain can pin manually (e.g. `@playwright/mcp@0.0.30`) — Agent0 does not maintain a version manifest.
-- **Monorepo blind spot.** The stack detector scans `CLAUDE_PROJECT_DIR` at the top level only. A monorepo with `apps/web/next.config.js` and `apps/api/schema.prisma` but a bare root won't trigger the hint. Workarounds: (a) symlink the relevant config to root, (b) point `CLAUDE_PROJECT_DIR` at the workspace you're actively working in, (c) read this rule doc directly and copy the recipes you need.
+- **Monorepo walk is depth-1 only (spec 015).** The stack detector scans `CLAUDE_PROJECT_DIR` at the top level AND walks depth-1 into the workspace dirs listed in § Walk scope (default `apps packages services workspaces`). A file at depth-2+ — e.g. `apps/web/nested/deep/next.config.js` — does NOT trigger the hint. Workarounds for deeply nested setups: (a) symlink the relevant config up to a depth-1 child, (b) point `CLAUDE_PROJECT_DIR` at the workspace you're actively working in, (c) `CLAUDE_MCP_RECIPES_WORKSPACE_DIRS="<deeper-roots>"` if the deep parent is a stable convention. The depth cap is intentional — arbitrary tree walks scale poorly on large repos.
+- **Workspace-walk default set is JS/TS-flavored.** Default `apps packages services workspaces` covers pnpm/Turborepo/Nx/Yarn conventions but not Cargo (`crates/`), Python `src/<pkg>/` layouts, or Bazel `//...` paths. Forks with non-JS monorepos point `CLAUDE_MCP_RECIPES_WORKSPACE_DIRS` at their convention. Revisit the default set when/if a Cargo monorepo with embedded JS/Python sub-projects surfaces — until then, scope creep deferred.
 - **Bring-your-own-bundler blind spot.** A fork using esbuild / rollup / parcel / swc without React / Vue / Svelte / Vite / Astro deps in `package.json` won't trigger the "browser-stack non-Next" branch. Acceptable — the recipe doc is one click away. The hint is a convenience, not a contract.
 - **Chrome DevTools MCP needs Chrome installed.** Headless CI runners and minimal Linux containers usually lack it. The hint blindly suggests the recipe based on stack; if your environment can't run Chrome, ignore the suggestion and stick with Playwright (which manages its own binaries).
 - **DBHub `DATABASE_URL` false-positive.** A fork with `DATABASE_URL=` only in `.env.example` for documentation purposes may not actually use a database yet. The hint will still suggest DBHub. Acceptable since the hint is *suggestion*, not auto-activation — you decide whether to copy the block.

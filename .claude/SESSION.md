@@ -8,34 +8,35 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ## Current state
 
-**Spec 021 (browser-auth-workflow) delivered + propagated.** Agent0 `8e07e1f` (spec) + `1da9437` (manifest fix: ship `.browser-state/.gitkeep` to forks). All 3 forks adopted at: pyshrnk `b665795`, shrnk `9bc0c44`, rshrnk `42fdb12`. Drift-zero (only `.gitignore` "customized" by design — fork-specific stack patterns). 4 doc edits + 1 scaffold + 1 gitignore line; pure documentation + convention, zero new hooks/MCPs/env-vars/audit logs.
+**Spec 021 delivered + propagated + dogfood passed end-to-end + v2 fix shipped.** Agent0 HEAD `3c26870`. Forks: pyshrnk `8903b88`, shrnk `55d143f`, rshrnk `fbcdb09` — all drift-zero (só `.gitignore` "customized" por design).
 
-Direction implemented as agreed: Playwright MCP default for auth-gated reads (`headed → save → reuse`); Chrome DevTools MCP debug-only with `--user-data-dir` profile (NOT `--autoConnect` default); human-in-the-loop is chat-only via `BROWSER_AUTH_REQUIRED: <host>` phrase; X/Twitter shortcut via `unrollnow.com/status/<id>` documented as first-try before falling back to auth flow.
+Live dogfood lendo `linkedin.com/in/cfpperche` foi end-to-end success: WebFetch detectou 999 → signal emitido → user logou headed → 48 cookies + 3 origins (incluindo `li_at` httpOnly) salvos em `.claude/.browser-state/linkedin.com.json` (24 KB, gitignored) → navegação autenticada → perfil extraído via snapshot. Findings do dogfood já corrigidos no spec 021 v2 (commit `3c26870`).
 
 ## WIP
 
-None — spec 021 closed loop in Agent0 + 3 forks.
+None — spec 021 v2 closed loop em Agent0 + 3 forks. `.mcp.json` ativo localmente no Agent0 (não commit, gitignored).
 
 ## Next steps
 
-1. **Pyshrnk dogfood pass 2** — failure-path verification per `~/pyshrnk/docs/dogfood-plan.md § checkpoint 7`. Primeiro candidato a 0-finding pós spec 011+020.
-2. **Pyshrnk pass 3** se pass 2 limpa → yield-decay graduation.
-3. **Dogfood B2 (shrnk)** e **B3 (rshrnk gap-finding)** — mesmo formato.
-4. **Specs 014 + 015** podem entrar a qualquer ponto.
-5. **Pyshrnk CLAUDE.md reconciliation** — Starlette adoption documentado com spec-009 OVERRIDE marker mas regra "no frameworks" ainda diz o oposto. Amend rule ou revert Starlette.
-6. **rshrnk Cargo.{lock,toml} dirty** — pre-existing WIP, unrelated to spec 021, deixado sem stage no commit `42fdb12`. Decidir destino.
+1. **Decidir destino do `.mcp.json` local em Agent0.** Ativo com bloco `playwright`-only. Opções: (a) deixar como está (gitignored, dev-local) — útil pra futuros dogfoods; (b) `rm .mcp.json` pra voltar ao base puro "fork opta in". `.gitignore` agora protege ambos os destinos contra commit acidental.
+2. **Pyshrnk dogfood pass 2** — failure-path verification per `~/pyshrnk/docs/dogfood-plan.md § checkpoint 7`. Primeiro candidato a 0-finding pós spec 011+020.
+3. **Pyshrnk pass 3** se pass 2 limpa → yield-decay graduation.
+4. **Dogfood B2 (shrnk)** e **B3 (rshrnk gap-finding)** — mesmo formato.
+5. **Specs 014 + 015** podem entrar a qualquer ponto.
+6. **Pyshrnk CLAUDE.md reconciliation** — Starlette adoption documentado com spec-009 OVERRIDE marker mas regra "no frameworks" ainda diz o oposto. Amend rule ou revert Starlette.
+7. **rshrnk Cargo.{lock,toml} dirty** — pre-existing WIP, não staged em `42fdb12` nem `fbcdb09`. Decidir destino.
 
 Untracked carryovers:
 - `docs/specs/010-audit-forensics/` (sessão prévia, sem review)
 
 ## Decisions & gotchas
 
-- **Spec 021 added a guard comment in `sync-harness.sh` naming `.browser-state/` AND `memory/` as project-local, but the sub-agent that wrote the comment forgot to add `.claude/.browser-state/.gitkeep` to `COPY_CHECK_FILES`.** Fixed in `1da9437` mirroring the existing `.claude/memory/.gitkeep` manifest entry. Caught during fork propagation — forks would have received everything else but the empty bucket. Lesson: manifest entries and guard comments are linked; review both together when adding a new project-local bucket.
-- **`.gitignore` permanently "customized" in forks by design.** Each fork has stack-specific patterns (Python: `.venv/`, Node: `node_modules/`, Rust: `target/`). Canonical sync flag: `--apply --force --force-except='.gitignore'` (then manually patch each fork's gitignore for new Agent0 ephemeral entries).
-- **X/Twitter readability em 2026: Nitter morto, ThreadReader exige sua própria URL, `unrollnow.com/status/<id>` funcionou direto.** Documentado como atalho no rule doc; agent tenta antes do auth flow.
-- **MCPs maduros para auth: Playwright (`storage-state.json`) default e Chrome DevTools (`--user-data-dir` profile) debug-only.** Ambos recipes já existiam (spec 012); spec 021 fechou o gap operacional (workflow doc + bucket + sinalização).
-- **`storage-state.json` é credencial.** `.claude/.browser-state/*.json` gitignored, cross-referenced em `.claude/rules/secrets-scan.md § Gotchas`.
-- **PostToolUseFailure payload DIVERGES from PostToolUse.** (spec 020.) `runtime-capture.sh` keys on `hook_event_name`. Doc em `.claude/memory/cc-platform-hooks.md`.
-- **Mid-session settings.json reload works** (spec 020 Phase 3).
-- **`core.hooksPath` activation MANUAL by design** (Lazarus). Spec 018 hint silences once activated.
+- **`browser_storage_state` / `browser_set_storage_state` NÃO existem em `@playwright/mcp@latest` (2026-05).** Save path validado: `browser_run_code_unsafe` chamando `await page.context().storageState({ path })` — Playwright native, captura httpOnly cookies. Reuse: `--storage-state=<file>` no startup do Playwright MCP (single-host) OR `context.addCookies` mid-session (caveat: sandbox bloqueia `node:fs` import; veja rule doc).
+- **`browser_run_code_unsafe` é RCE-equivalent.** Usar SÓ com o shape narrow `storageState({ path })`; nunca com string user/web-derived.
+- **Sandbox do Playwright MCP bloqueia `require('fs')` E `await import('fs/promises')`** com `ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING`. Confirmado empiricamente. Por isso o `--storage-state` startup flag é a via canônica de reuse multi-host (ou merge prévio dos state files num só).
+- **`.mcp.json` agora gitignored** (Agent0 + 3 forks, commit `3c26870` + propagação).
+- **`.playwright-mcp/` runtime artifacts gitignored** (Agent0 + 3 forks, mesma commit). Snapshots/console logs do MCP acumulam ali; nunca commit.
+- **Pattern: lint pass externo pode tocar `.gitignore` enquanto agente trabalha** — Edit falhou com "file modified since read"; remediated by re-reading. Não-bloqueante mas vale lembrar em edits long-running.
+- **Spec 021 dogfood validou os 5 passos do workflow ponta-a-ponta.** signal → ativação → headed login → save state → reuse autenticado. Patches v2 atualizam o doc pra refletir API real.
+- Demais decisões/gotchas preservadas em git log: `8e07e1f`, `1da9437`, `191c5f9`, `3c26870`.
 - **SESSION.md ~2KB preview budget** — replace stale; `git log` is audit trail.

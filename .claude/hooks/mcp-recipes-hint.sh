@@ -152,6 +152,30 @@ detect_at() {
 # Root scan — preserves spec 012 behaviour (bare signal labels, no prefix).
 detect_at "$PROJECT_DIR" ""
 
+# Workspace walk (spec 015) — depth-1 scan into common monorepo layouts.
+# Default set: apps packages services workspaces.
+# CLAUDE_MCP_RECIPES_WORKSPACE_DIRS overrides (space-separated; empty string
+# disables walk entirely so root-only detection mirrors spec 012's pre-015
+# behaviour).
+if [ -n "${CLAUDE_MCP_RECIPES_WORKSPACE_DIRS+set}" ]; then
+  workspace_dirs="$CLAUDE_MCP_RECIPES_WORKSPACE_DIRS"
+else
+  workspace_dirs="apps packages services workspaces"
+fi
+
+if [ -n "$workspace_dirs" ]; then
+  for ws in $workspace_dirs; do
+    ws_root="$PROJECT_DIR/$ws"
+    [ -d "$ws_root" ] || continue
+    for child in "$ws_root"/*/; do
+      [ -d "$child" ] || continue
+      child_abs="${child%/}"
+      child_name="$(basename "$child_abs")"
+      detect_at "$child_abs" "$ws/$child_name/"
+    done
+  done
+fi
+
 # ---------------------------------------------------------------------------
 # Phase 3: Build the suggested-recipes list (deduplicated union)
 # ---------------------------------------------------------------------------

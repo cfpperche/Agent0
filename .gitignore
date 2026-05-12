@@ -2,6 +2,7 @@
 .claude/settings.local.json
 CLAUDE.local.md
 .claude/projects/
+.mcp.json
 
 # Ephemeral state under .claude/ — per-machine runtime, never commit
 .claude/.runtime/
@@ -15,6 +16,9 @@ CLAUDE.local.md
 .claude/supply-chain-audit.jsonl
 .claude/supply-chain-audit.jsonl.lock
 .claude/.browser-state/*.json
+
+# Playwright MCP runtime artifacts (snapshots, console logs)
+.playwright-mcp/
 
 # Spec 007 scenario tests run in mktemp /tmp dirs by default, but reserve a
 # scratchpad path in case a future test variant needs in-repo state.

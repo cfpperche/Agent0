@@ -219,7 +219,8 @@ where `<host>` is the bare hostname (e.g. `x.com`, `linkedin.com`). The agent fo
 ```
 BROWSER_AUTH_REQUIRED: x.com
 Next step: open Playwright MCP in headed mode, log in at x.com, then run
-  browser_storage_state → save output to .claude/.browser-state/x.com.json
+  browser_run_code_unsafe with `page.context().storageState({ path: '...' })`
+  to save state to .claude/.browser-state/x.com.json.
 See .claude/rules/mcp-recipes.md § Authenticated workflow.
 ```
 
@@ -256,19 +257,58 @@ Navigate to the target site, complete the login flow in the browser window. The 
 
 **Step 2 — save state**
 
-Once the human is logged in, ask the agent to call the Playwright MCP tool `browser_storage_state`. Save the returned JSON to the per-host path:
+Once the human is logged in, ask the agent to capture the Playwright context's storage state. `@playwright/mcp@latest` (verified 2026-05) does NOT expose a dedicated `browser_storage_state` tool — the only access path is `browser_run_code_unsafe`, which runs an arbitrary `async (page) => ...` function in the Playwright server process and gives access to `page.context()`. Playwright's `context.storageState({ path })` writes the full state (including `httpOnly` cookies like `li_at` / `JSESSIONID`) to disk natively:
 
-```
-browser_storage_state → .claude/.browser-state/<host>.json
+```js
+async (page) => {
+  const state = await page.context().storageState({
+    path: '/absolute/path/.claude/.browser-state/<host>.json'
+  });
+  return { cookies: state.cookies.length, origins: state.origins.length };
+}
 ```
 
-(The tool name may evolve; verify against the [Playwright MCP tool reference](https://playwright.dev/mcp/tools/storage) if the command is rejected.)
+Pass that as the `code` argument to `mcp__playwright__browser_run_code_unsafe`. Use the ABSOLUTE path (Playwright MCP's sandbox restricts file paths to allowed roots and rejects `/tmp/*` etc; the project root is allowed). Verify by checking the file size (~10-30 KB typical) and grepping for the auth cookie (`li_at` for LinkedIn, `auth_token` for X, etc.).
+
+**`browser_run_code_unsafe` is RCE-equivalent** — the description warns it executes arbitrary JavaScript in the Playwright server process. The save step is one of the legitimate uses; do NOT pass user-supplied or web-derived strings as code. The narrow, single-purpose `storageState({ path })` invocation above is the only shape recommended for routine use.
 
 **Step 3 — headless reuse**
 
-Subsequent agent reads against the same host load the state file silently — no human interaction needed. The agent calls `browser_set_storage_state` with the file contents before navigating, or passes `--storage-state=.claude/.browser-state/<host>.json` to Playwright MCP at startup when using a persistent configuration. The page loads as authenticated.
+Two reuse paths, depending on whether the fork wants a static one-host setup or dynamic multi-host:
 
-The reuse step is silent: when `.claude/.browser-state/<host>.json` exists, the agent loads it and proceeds. `BROWSER_AUTH_REQUIRED: <host>` is NOT emitted when valid state is on disk.
+*Single-host static reuse:* add `--storage-state=<absolute path>` to the Playwright MCP startup args in `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--storage-state=/abs/.claude/.browser-state/<host>.json"]
+    }
+  }
+}
+```
+
+This loads the state at MCP boot; subsequent `browser_navigate` calls reach the host already authenticated. Restart the session after editing `.mcp.json` — MCPs load at SessionStart, not hot-reloaded.
+
+*Dynamic multi-host reuse:* use `browser_run_code_unsafe` to load state mid-session:
+
+```js
+async (page) => {
+  // Note: addCookies + localStorage hydration via context; for httpOnly cookies
+  // the --storage-state startup flag remains the more reliable path because
+  // re-attaching httpOnly cookies on an already-running context requires
+  // navigation to the target origin to bind them.
+  const fs = await import('node:fs/promises'); // may be blocked by sandbox
+  const state = JSON.parse(await fs.readFile('/abs/.claude/.browser-state/<host>.json', 'utf8'));
+  await page.context().addCookies(state.cookies);
+  return 'cookies loaded';
+}
+```
+
+Caveat: the Playwright MCP sandbox may block `node:fs` imports (verified empirically — both `require('fs/promises')` and `await import('fs/promises')` failed in this dogfood pass on 2026-05). When `fs` is unavailable, the only viable reuse path is the `--storage-state` startup flag. The multi-host workflow then needs to either (a) merge multiple `<host>.json` files into one combined storage-state JSON at fork-prep time, or (b) restart the session each time a different host is needed.
+
+The reuse step is silent: when `.claude/.browser-state/<host>.json` exists and is loaded (either via `--storage-state` or via mid-session injection), the agent navigates as authenticated and `BROWSER_AUTH_REQUIRED: <host>` is NOT emitted.
 
 ### Expired-state recovery
 

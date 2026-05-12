@@ -8,38 +8,37 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ## Current state
 
-**Spec 021 delivered + 2 dogfoods passed end-to-end + 3 patch rounds shipped.** Agent0 HEAD `02e9507`. Forks: pyshrnk `25be721`, shrnk `ee3a175`, rshrnk `8126cea` — all drift-zero (só `.gitignore` "customized" por design).
+**Spec 013 (lint-validator-extension) dogfooded em pyshrnk + shrnk — 6/6 state checkpoints PASS.** 7 findings documentadas em `docs/specs/013-lint-validator-extension/dogfood-findings.md`; 4 viraram amendments em `.claude/rules/lint-validator.md` § Gotchas.
 
-Dogfood 1 (`linkedin.com/in/cfpperche`): WebFetch 999 → signal → headed login → 48 cookies + `li_at` httpOnly salvos → perfil extraído.
+Fork commits:
+- pyshrnk `f2d002c chore(dogfood-013): adopt ruff via uv + fix unused import`
+- shrnk `542d55c chore(dogfood-013): adopt biome via bun`
 
-Dogfood 2 (`x.com/ClaudeCodeLog/status/2053913625983692979`): unrollnow cobriu OP thread mas NÃO replies → signal → headed login → 60 cookies + `auth_token` httpOnly salvos → OP (4 tweets) + 9 replies extraídos (de 37 totais; X virtualiza scroll).
+Specs antes deste ciclo (sem mudança): 021 delivered + 2 dogfoods (Agent0 host), 020 delivered + 3 dogfood passes (pyshrnk graduado, shrnk B2.2 graduado, rshrnk em andamento), 019 scaffold em todos forks.
 
 ## WIP
 
-None — spec 021 fechado em 3 rodadas de patch (v1 base, v2 storage-state correção + gitignore mcp/playwright runtime, v3 X/Twitter shortcut limits + virtualization gotcha). `.mcp.json` ativo localmente no Agent0 (gitignored).
+Nada em flight. Spec 013 totalmente fechado: design (`0626642`) → impl (`3677807`) → dogfood (`f2d002c` + `542d55c`) → rule amendments + findings doc (este ciclo).
 
 ## Next steps
 
-1. **Pyshrnk dogfood pass 2** — failure-path verification per `~/pyshrnk/docs/dogfood-plan.md § checkpoint 7`. Primeiro candidato a 0-finding pós spec 011+020.
-2. **Pyshrnk pass 3** se pass 2 limpa → yield-decay graduation.
-3. **Dogfood B2 (shrnk)** e **B3 (rshrnk gap-finding)** — mesmo formato.
-4. **Specs 014 + 015** podem entrar a qualquer ponto.
-5. **Pyshrnk CLAUDE.md reconciliation** — Starlette adoption documentado com spec-009 OVERRIDE marker mas regra "no frameworks" ainda diz o oposto. Amend rule ou revert Starlette.
-6. **rshrnk Cargo.{lock,toml} dirty** — pre-existing WIP, não staged nas 3 commits de sync deste ciclo. Decidir destino.
-7. **Optional spec 021 dogfood passo 5 (reuse end-to-end)** — adicionar `--storage-state=<file>` em `.mcp.json`, restart, verificar que perfil/post carrega sem human-in-the-loop. State files (`linkedin.com.json`, `x.com.json`) prontos em disco.
+1. **Aguardar rshrnk completar dogfood spec 020.** Quando libertar, rodar dogfood spec 013 em rshrnk — note: rshrnk é Rust, NÃO entra em scope de 013 (lint-validator-extension cobre JS/TS+Python; clippy já está no validator base). Spec 013 dogfood em rshrnk = confirmar state-c silent-skip para Rust stack + ler dogfood-findings.md pra contexto sobre `.claude/` ignore se rshrnk adicionar lint scripts custom.
+2. **Spec 021 in-fork dogfood** (LinkedIn/X dogfood foi em Agent0 host; in-fork pendente). Baixa prioridade — workflow funciona, só falta validar fork-grade activation cycle.
+3. **Spec 022+ (a definir).** Spec 014 + 015 ainda em queue.
+4. **Pyshrnk CLAUDE.md reconciliation** (carryover do SESSION anterior) — Starlette adoption documentado com spec-009 OVERRIDE marker mas regra "no frameworks" ainda diz o oposto. Amend rule ou revert Starlette.
+5. **rshrnk Cargo.{lock,toml} dirty** (carryover) — pre-existing WIP. Decidir destino.
 
 Untracked carryovers:
-- `docs/specs/010-audit-forensics/` (sessão prévia, sem review)
+- `docs/specs/010-audit-forensics/`
 
 ## Decisions & gotchas
 
-- **`browser_storage_state` / `browser_set_storage_state` NÃO existem em `@playwright/mcp@latest` (2026-05).** Save path validado: `browser_run_code_unsafe` chamando `await page.context().storageState({ path })` — Playwright native, captura httpOnly cookies. Reuse: `--storage-state=<file>` no startup (single-host) OR `context.addCookies` mid-session (caveat: sandbox bloqueia `node:fs`).
-- **`browser_run_code_unsafe` é RCE-equivalent.** Usar SÓ com shape narrow `storageState({ path })`; nunca com string user/web-derived.
-- **Sandbox do Playwright MCP bloqueia `require('fs')` E `await import('fs/promises')`** com `ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING`. Confirmado empiricamente. `--storage-state` startup flag é a via canônica de reuse.
-- **unrollnow/threadreaderapp shortcut cobre só thread do OP** — replies de outros, quote-tweets, sub-threads requerem auth flow mesmo pra posts públicos. Caveat documentado em `mcp-recipes.md § X/Twitter shortcut` (commit `02e9507`).
-- **X.com vira reply list com virtualização** — single `browser_snapshot` pega ~10 replies por viewport; pra coletar todas usar `browser_press_key("PageDown")` ou `browser_evaluate(window.scrollBy)` em loop. Documentado mesma commit.
-- **`.mcp.json` + `.playwright-mcp/` gitignored** (Agent0 + 3 forks, commit `3c26870`).
-- **Lint pass externo pode tocar arquivos durante edição** — Edit falhou com "file modified since read"; remediated by re-reading. Não-bloqueante.
-- **Spec 021 validou ponta-a-ponta**: signal → ativação → headed login → save state via `browser_run_code_unsafe` → reuse autenticado. 5 passos do workflow funcionam empiricamente.
-- Demais decisões em git log: `8e07e1f`, `1da9437`, `191c5f9`, `3c26870`, `02e9507`.
+- **Spec 013 dogfood finding F1 — uv auto-sync collapses state-b.** Sob `<py_prefix> = "uv run python"`, o probe `uv run python -m ruff --version` triggers uv's auto-resolve antes de invocar python. Adicionar ruff em `[dependency-groups]` faz uv instalar transparentemente no próximo run, bypass da state-b advisory. Comportamento desejável pra ergonomia de adoção em projetos uv. Advisory ainda fire em poetry/pdm/pip-only/PATH-isolated CI. Documentado em `.claude/rules/lint-validator.md` § Gotchas.
+- **Spec 013 dogfood finding F4 — `.claude/` deve ser linter-ignored.** Biome scan default inclui `.claude/`; `biome check --write` reformata harness files que sync-harness depois flag como customized hash drift. Forks adotando biome precisam shippar `biome.json` ignorando `.claude/**`. Documentado em rule doc com snippet pronto.
+- **Spec 013 dogfood finding F5 — biome defaults são opinionados (tabs).** Primeira `biome check --write` reformatou 11 arquivos em shrnk. Forks devem configurar `formatter.indentStyle` no `biome.json` se quiserem preservar convenções. Documentado.
+- **Spec 013 dogfood finding F6 — supply-chain composição com state-a.** Advisory diz "run `bun install`", agente acha bate em spec 009 block, precisa de OVERRIDE marker multi-line. Inter-spec composition validada (spec 013 dogfood respeita spec 009).
+- **Spec 013 dogfood F2+F3 — lint debt real surfacado imediatamente.** Pyshrnk: 1 unused import em `tests/test_server.py` (corrigido no commit). Shrnk: 15 erros (3 reais + 12 formatting). Valor delivered no day-one da adoção.
+- **`browser_storage_state` / `browser_set_storage_state` NÃO existem em `@playwright/mcp@latest`** (carryover spec 021). Save path: `browser_run_code_unsafe` chamando `await page.context().storageState({ path })`. Reuse: `--storage-state=<file>` startup flag.
+- **Sandbox do Playwright MCP bloqueia `require('fs')` / `await import('fs/promises')`** com `ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING`. `--storage-state` startup é a via canônica.
+- **`core.hooksPath` activation continua MANUAL por design** (Lazarus 2025). Spec 018 SessionStart hint surfaces o comando passivamente.
 - **SESSION.md ~2KB preview budget** — replace stale; `git log` is audit trail.

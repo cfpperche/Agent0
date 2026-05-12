@@ -80,6 +80,8 @@ The list is deliberately small. Same lesson as spec 011's detector allowlist and
 
 **Security:** Chrome DevTools Protocol (CDP) is a debugging interface; treat the MCP's exposure to agent prompts the same as opening DevTools in an untrusted session. See upstream's [README](https://github.com/ChromeDevTools/chrome-devtools-mcp#readme) for connection policies.
 
+**Positioning (debug-only complement to Playwright):** Chrome DevTools MCP is the right tool when you need low-level observation of a running browser session — network bodies, console logs, Lighthouse audits, heap snapshots. It is NOT the default for authenticated content access. For routine auth-gated reads, use Playwright MCP's `headed → save → reuse` pattern documented in `## Authenticated workflow` below. When pairing the two, the recommended setup is a **dedicated `--user-data-dir` Chrome profile** containing only the accounts you need — not `--autoConnect`, which attaches to every open tab in your main Chrome and exposes Gmail, banking, and other active sessions to the agent. `--autoConnect` is opt-in for forks that consciously accept that surface; it should NOT appear in a default `.mcp.json` block. See `## Authenticated workflow` for the per-host state directory convention (`.claude/.browser-state/<host>.json`) that applies to both Playwright state files and Chrome profile directories.
+
 ---
 
 ### DBHub
@@ -175,6 +177,97 @@ For a fork:
 4. For DBHub: also set `DATABASE_URL` in your shell or `.env` (never commit it).
 5. For Chrome DevTools: confirm Chrome is installed (`which google-chrome` or `which chrome`).
 6. Restart the Claude Code session — `.mcp.json` is loaded at session start.
+
+## Authenticated workflow
+
+Many sites require a logged-in session to return meaningful content. `WebFetch` hits HTTP 401, 402, or 403, or the page silently redirects to a login wall. This section documents the standard workflow for reading auth-gated content using Playwright MCP, the signaling convention that bridges the human login step, and the X/Twitter shortcut that avoids the full auth path for a common case.
+
+### X/Twitter shortcut (try first)
+
+Before invoking the full auth workflow for an X/Twitter URL of the form `x.com/<user>/status/<id>` or `twitter.com/<user>/status/<id>`, try the public thread-reader services first. Nitter is dead in 2026; use:
+
+1. **Primary:** `https://unrollnow.com/status/<id>` — fetch via `WebFetch`. If the response body is non-empty and contains the thread text, the read succeeds without any auth step.
+2. **Backup:** `https://threadreaderapp.com/thread/<id>.html` — same `WebFetch` approach. Use when unrollnow returns empty or an error.
+
+Only if both fail (empty body, HTTP error, or no thread content) fall back to the `BROWSER_AUTH_REQUIRED` signal below. The shortcut covers public posts; locked accounts and DM-only content require the full workflow regardless.
+
+### Signaling convention — `BROWSER_AUTH_REQUIRED: <host>`
+
+When the agent encounters a URL that requires authentication and no saved state exists for that host, it emits the following phrase to the chat:
+
+```
+BROWSER_AUTH_REQUIRED: <host>
+```
+
+where `<host>` is the bare hostname (e.g. `x.com`, `linkedin.com`). The agent follows the phrase with a one-line next step pointing the human at this section and naming the exact save command. Example:
+
+```
+BROWSER_AUTH_REQUIRED: x.com
+Next step: open Playwright MCP in headed mode, log in at x.com, then run
+  browser_storage_state → save output to .claude/.browser-state/x.com.json
+See .claude/rules/mcp-recipes.md § Authenticated workflow.
+```
+
+The phrase is all-caps with a colon-space separator — agents and humans alike can grep for it. The agent does NOT retry the same host until the human signals the state was saved (e.g. by replying "done" or by the agent detecting the state file exists on disk).
+
+### Storage state — `.claude/.browser-state/<host>.json`
+
+Session state is stored one file per host under `.claude/.browser-state/`. The directory ships as an empty scaffold (`.gitkeep` sentinel committed); individual state files are gitignored because they contain session cookies and localStorage — equivalent blast radius to a leaked password. Convention:
+
+- Filename: lowercase hostname, `.json` extension. Examples: `x.com.json`, `linkedin.com.json`, `github.com.json`.
+- Path: `.claude/.browser-state/<host>.json` relative to the project root.
+- Never commit these files. The `.gitignore` entry `.claude/.browser-state/*.json` excludes the state files while leaving the `.gitkeep` sentinel tracked (the sentinel does not match `*.json`, so no `!`-exclusion is needed). See `.claude/rules/secrets-scan.md` for the credential-class framing.
+
+### Playwright MCP — headed login, then headless reuse
+
+The full auth lifecycle with Playwright MCP is three steps:
+
+**Step 1 — headed login (human action required)**
+
+Launch Playwright in headed mode so the human can interact with the login form. The MCP block does not need modification; headed vs headless is a per-invocation argument:
+
+```json
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--headed"]
+    }
+  }
+}
+```
+
+Navigate to the target site, complete the login flow in the browser window. The agent waits for the human to signal completion.
+
+**Step 2 — save state**
+
+Once the human is logged in, ask the agent to call the Playwright MCP tool `browser_storage_state`. Save the returned JSON to the per-host path:
+
+```
+browser_storage_state → .claude/.browser-state/<host>.json
+```
+
+(The tool name may evolve; verify against the [Playwright MCP tool reference](https://playwright.dev/mcp/tools/storage) if the command is rejected.)
+
+**Step 3 — headless reuse**
+
+Subsequent agent reads against the same host load the state file silently — no human interaction needed. The agent calls `browser_set_storage_state` with the file contents before navigating, or passes `--storage-state=.claude/.browser-state/<host>.json` to Playwright MCP at startup when using a persistent configuration. The page loads as authenticated.
+
+The reuse step is silent: when `.claude/.browser-state/<host>.json` exists, the agent loads it and proceeds. `BROWSER_AUTH_REQUIRED: <host>` is NOT emitted when valid state is on disk.
+
+### Expired-state recovery
+
+Storage state expires when the site rotates session tokens — typically within days to weeks depending on the site. The agent recognises expiry when a navigation that previously succeeded now returns 401, 403, or redirects to a login page. On detection:
+
+1. Delete or archive the stale state file: `rm .claude/.browser-state/<host>.json`.
+2. Re-emit `BROWSER_AUTH_REQUIRED: <host>` to the chat.
+3. Repeat the headed-login → save cycle.
+
+The agent does NOT retry silently or guess at token refresh; re-authentication requires the human. This is by design — session cookies are credentials, not config.
+
+### When to reach for Chrome DevTools MCP instead
+
+Chrome DevTools MCP is the right choice when you need **observation**, not **driving**: watching network requests during a Playwright-driven session, capturing console logs, running Lighthouse audits, or taking heap snapshots. It is NOT the default for authenticated content reads. When you need both (drive + observe), run Playwright MCP as the driver and Chrome DevTools MCP as the observer, using a **dedicated `--user-data-dir` Chrome profile** that contains only the accounts relevant to the task. Avoid `--autoConnect` — see the positioning note in `### Chrome DevTools MCP` above.
 
 ## Gotchas
 

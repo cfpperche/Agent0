@@ -115,6 +115,12 @@ fi
 # manifest
 # ---------------------------------------------------------------------------
 
+# Project-local paths — MUST NOT be added to any COPY_CHECK array below.
+# .claude/.browser-state/  session credentials (cookies/localStorage); project-specific,
+#                           gitignored *.json, only .gitkeep sentinel travels via git.
+# .claude/memory/           project knowledge; content is project-local (spec 019).
+#                           The empty .gitkeep IS in COPY_CHECK_FILES — content is not.
+
 # Recursive globs (find -type f under base dir) — encoded as "base/**"
 COPY_CHECK_RECURSIVE=(
   ".claude/skills"

@@ -137,6 +137,23 @@ else
   STDERR_RAW="${STDERR_RAW%x}"
 fi
 
+# Strip ANSI escape sequences (SGR colors, cursor moves, clear, etc.) from
+# both streams before downstream use. Bun's test runner and many other
+# modern verifiers emit colored output (e.g. `\e[32m 0 fail\e[0m`) which
+# prefixes line-anchored inference patterns like `^[[:space:]]*0 fail$` and
+# forces the inference to fall through to the weak `pass/ok` heuristic
+# (surfaced by shrnk-mono dogfood 2026-05-12). LLM agents reading the
+# snapshot don't render colors anyway, so the codes are pure noise.
+# Pattern covers ESC + `[` + optional parameters + final letter; matches
+# SGR (`m`), cursor positioning, clear, and most CSI sequences.
+# Reuse the `printf x` sentinel trick so command substitution preserves
+# any trailing newline in the original stream (test 04 asserts verbatim).
+ANSI_ESC="$(printf '\033')"
+STDOUT_RAW="$(printf '%s' "$STDOUT_RAW" | sed "s/${ANSI_ESC}\[[0-9;]*[a-zA-Z]//g"; printf x)"
+STDOUT_RAW="${STDOUT_RAW%x}"
+STDERR_RAW="$(printf '%s' "$STDERR_RAW" | sed "s/${ANSI_ESC}\[[0-9;]*[a-zA-Z]//g"; printf x)"
+STDERR_RAW="${STDERR_RAW%x}"
+
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 STATE_DIR="$PROJECT_DIR/.claude/.runtime-state"
 IN_FLIGHT_DIR="$STATE_DIR/in-flight"

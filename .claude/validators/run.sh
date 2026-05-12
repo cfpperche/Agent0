@@ -243,10 +243,18 @@ if git rev-parse --git-dir >/dev/null 2>&1; then
   # the Write tool to create a new test file leaves it untracked, so plain
   # `git diff` would miss it and the warning would falsely fire. Including
   # `ls-files --others --exclude-standard` closes that gap.
+  #
+  # Belt-and-suspenders noise filter — defends against forks with
+  # mis-configured .gitignore (e.g. Agent0 ships a stack-agnostic gitignore
+  # template with `# node_modules/` commented; forks must uncomment per
+  # stack). Without this filter, an un-ignored node_modules can dump 15k+
+  # paths into the per-file shell loop, hanging the validator for minutes.
+  # Surfaced via shrnk-mono dogfood 2026-05-12.
   changed_files="$(
     ( git diff --name-only 2>/dev/null
       git ls-files --others --exclude-standard 2>/dev/null
-    ) | sort -u || true
+    ) | grep -vE '^(node_modules/|\.venv/|venv/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|target/|dist/|build/|out/|coverage/|\.next/|\.nuxt/|\.svelte-kit/|\.cache/|\.turbo/)' \
+      | sort -u || true
   )"
 
   prod_files=""

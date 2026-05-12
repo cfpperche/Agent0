@@ -143,6 +143,7 @@ COPY_CHECK_FILES=(
   ".githooks/pre-commit"
   ".gitignore"
   ".claude/memory/.gitkeep"
+  ".claude/.browser-state/.gitkeep"
 )
 
 # Structured merge handled by dedicated functions below

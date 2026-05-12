@@ -199,6 +199,10 @@ while [ "$i" -lt "$n" ]; do
     "yarn build")  detector="yarn-build"; break ;;
     "yarn typecheck") detector="yarn-typecheck"; break ;;
     "yarn lint")   detector="yarn-lint"; break ;;
+    "cargo test")    detector="cargo-test"; break ;;
+    "cargo build")   detector="cargo-build"; break ;;
+    "cargo check")   detector="cargo-check"; break ;;
+    "cargo clippy")  detector="cargo-clippy"; break ;;
   esac
 
   # run-script verifiers: bun run / npm run / pnpm run + script with keyword.
@@ -322,6 +326,44 @@ infer_status() {
       if [ "${#out}" -lt 500 ] && ! printf '%s' "$out" | grep -qiE 'error|fail'; then
         inferred_status="PASS"
         inference_basis="$det: clean (no error TS or fail keyword)"
+        return
+      fi
+      ;;
+    # Cargo test runner — canonical "test result:" line.
+    cargo-test)
+      if printf '%s' "$out" | grep -qE '^test result: ok'; then
+        inferred_status="PASS"
+        inference_basis="$det: 'test result: ok' line"
+        return
+      fi
+      if printf '%s' "$out" | grep -qE '^test result: FAILED'; then
+        inferred_status="FAIL"
+        inference_basis="$det: 'test result: FAILED' line"
+        return
+      fi
+      ;;
+    # Cargo typecheck / build / lint — rustc compiler errors + clippy
+    # promoted-warning lines, with cargo's Finished line as positive PASS.
+    cargo-check|cargo-build|cargo-clippy)
+      # rustc compiler error codes — most specific match first.
+      if printf '%s' "$out" | grep -qE 'error\[E[0-9]+\]'; then
+        inferred_status="FAIL"
+        inference_basis="$det: 'error[E...]' line"
+        return
+      fi
+      # `^error:` covers clippy -D warnings (promoted warnings) and rustc
+      # summary "could not compile" lines.
+      if printf '%s' "$out" | grep -qE '^error:'; then
+        inferred_status="FAIL"
+        inference_basis="$det: '^error:' line"
+        return
+      fi
+      # Cargo emits `    Finished ...` on clean completion; canonical PASS
+      # signal that's more robust than character-count heuristics (cargo
+      # output frequently exceeds 500 chars with per-crate Compiling lines).
+      if printf '%s' "$out" | grep -qE '[[:space:]]+Finished'; then
+        inferred_status="PASS"
+        inference_basis="$det: 'Finished' line, no errors"
         return
       fi
       ;;

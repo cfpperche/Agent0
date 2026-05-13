@@ -39,14 +39,32 @@ export interface PipelineState {
   validation_mode?: "tested" | "intuition" | "not-applicable";
 }
 
-/** Read state file. Returns null if missing; throws on parse error. */
+/** Read state file. Returns null if missing; throws a structured error on parse failure. */
 export async function readState(): Promise<PipelineState | null> {
+  let raw: string;
   try {
-    const raw = await readFile(stateFile(), "utf8");
-    return JSON.parse(raw) as PipelineState;
+    raw = await readFile(stateFile(), "utf8");
   } catch (err: unknown) {
     if ((err as NodeJS.ErrnoException)?.code === "ENOENT") return null;
     throw err;
+  }
+  try {
+    return JSON.parse(raw) as PipelineState;
+  } catch (parseErr: unknown) {
+    // Surface a structured payload via Error.message so the MCP SDK's
+    // default error-serializer produces an agent-actionable response.
+    // Adversarial probe H1 (2026-05-13) caught the pre-fix raw "JSON
+    // Parse error: Expected '}'" leaking through unmodified.
+    throw new Error(
+      JSON.stringify({
+        code: "state-corrupt",
+        path: stateFile(),
+        parse_error: (parseErr as Error).message,
+        hint:
+          "the state file is not valid JSON — either manually fix the syntax error, " +
+          "or remove docs/product/.state.json and restart the pipeline with product_start",
+      }),
+    );
   }
 }
 

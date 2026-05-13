@@ -186,6 +186,29 @@ describe("setValidationMode", () => {
   });
 });
 
+describe("corrupted state file", () => {
+  test("throws a structured state-corrupt error when JSON is malformed", async () => {
+    const { mkdir, writeFile } = await import("node:fs/promises");
+    await mkdir(join(tmpRoot, "docs/product"), { recursive: true });
+    await writeFile(join(tmpRoot, "docs/product/.state.json"), "{not valid json", "utf8");
+    try {
+      await readState();
+      throw new Error("expected readState to throw");
+    } catch (e: unknown) {
+      const payload = JSON.parse((e as Error).message) as {
+        code: string;
+        path: string;
+        parse_error: string;
+        hint: string;
+      };
+      expect(payload.code).toBe("state-corrupt");
+      expect(payload.path).toContain("docs/product/.state.json");
+      expect(payload.parse_error).toBeTruthy();
+      expect(payload.hint).toContain("docs/product/.state.json");
+    }
+  });
+});
+
 describe("atomic write — no torn writes under concurrent calls", () => {
   test("ten parallel completes leave a valid JSON state", async () => {
     await initState("foo");

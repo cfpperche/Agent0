@@ -1,3 +1,14 @@
+---
+paths:
+  - ".claude/validators/run.sh"
+  - "biome.json"
+  - "**/biome.json"
+  - "**/pyproject.toml"
+  - "**/package.json"
+  - "**/requirements*.txt"
+  - "docs/specs/013-*/**"
+---
+
 # Lint validator
 
 The post-edit validator (`.claude/validators/run.sh`) extends to lint enforcement when the fork's manifest declares the linter idiomatic to the detected stack. JS/TS uses [Biome](https://biomejs.dev) (`@biomejs/biome` in `devDependencies` or `dependencies`); Python uses [Ruff](https://docs.astral.sh/ruff) (declared in `pyproject.toml` or `requirements*.txt`). Three states keep the discipline tight without prescribing tooling Agent0 doesn't ship: (a) declared + installed → linter runs and contributes to `ok`; (b) declared + missing → actionable advisory on stderr, no block; (c) not declared → silent skip. Spec: `docs/specs/013-lint-validator-extension/`.

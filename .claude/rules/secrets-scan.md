@@ -1,3 +1,13 @@
+---
+paths:
+  - ".claude/hooks/secrets-*.sh"
+  - ".claude/secrets-audit.jsonl"
+  - ".githooks/**"
+  - ".gitleaks.toml"
+  - "docs/specs/006-*/**"
+  - "docs/specs/007-*/**"
+---
+
 # Secrets scan
 
 Two layers keep credentials out of the repo, plus a soft-advisory hook on edits. Same primitives as the governance and delegation gates — stdin JSON, `# OVERRIDE:` escape, JSONL audit log. Specs: `docs/specs/006-secrets-scan/` and `docs/specs/007-secrets-scan-timing/`.

@@ -1,3 +1,14 @@
+---
+paths:
+  - ".mcp.json"
+  - ".mcp.json.example"
+  - ".claude/hooks/mcp-recipes-hint.sh"
+  - ".claude/.browser-state/**"
+  - "docs/specs/012-*/**"
+  - "docs/specs/015-*/**"
+  - "docs/specs/021-*/**"
+---
+
 # MCP recipes
 
 A curated, opt-in set of `.mcp.json` server blocks for four mature external MCPs that complement spec 011's runtime-introspect. The recipes are documentation + a copy-paste example file at repo root; a `SessionStart` companion hook detects the fork's stack and emits a one-block hint naming the applicable recipes when matches exist. Pure recommendation capacity — no auto-installs, no audit log, no blocks. Spec: `docs/specs/012-mcp-recipes/`.

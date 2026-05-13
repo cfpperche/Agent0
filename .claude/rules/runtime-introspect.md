@@ -1,3 +1,13 @@
+---
+paths:
+  - ".claude/hooks/runtime-*.sh"
+  - ".claude/tools/probe.sh"
+  - ".claude/.runtime-state/**"
+  - "docs/specs/011-*/**"
+  - "docs/specs/020-*/**"
+  - "docs/specs/022-*/**"
+---
+
 # Runtime introspect
 
 A capacity that gives the agent runtime evidence about its own work so it can close edit→verify loops without depending on human ratification or static-code reading alone. A `PostToolUse(Bash)` hook captures the last test/build/typecheck command output to a single state file; a shell tool reads it back in a shape the agent can pattern-match. Spec: `docs/specs/011-runtime-introspect/`.

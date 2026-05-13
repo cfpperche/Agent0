@@ -1,3 +1,16 @@
+---
+paths:
+  - ".claude/hooks/supply-chain-*.sh"
+  - ".claude/supply-chain-audit.jsonl"
+  - "**/package.json"
+  - "**/pyproject.toml"
+  - "**/Cargo.toml"
+  - "**/go.mod"
+  - "**/requirements*.txt"
+  - "docs/specs/008-*/**"
+  - "docs/specs/009-*/**"
+---
+
 # Supply chain
 
 A two-layer capacity that surfaces dependency-manifest mutations as a privileged action so they leave an audit trail and a friction point. Specs: `docs/specs/008-supply-chain-scan/` (base advisory) + `docs/specs/009-supply-chain-block/` (block-by-default promotion).

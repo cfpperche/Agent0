@@ -1,3 +1,9 @@
+---
+paths:
+  - ".claude/tools/sync-harness.sh"
+  - "docs/specs/016-*/**"
+---
+
 # Harness sync
 
 A one-way sync tool (`.claude/tools/sync-harness.sh <fork-path>`) that brings a fork's harness state up to date with this Agent0 repo. Hooks, rules, tools, validators, skills, tests, `.mcp.json.example` plus structured merges of `.claude/settings.json` and `CLAUDE.md`. Conservative by design: `--check` is the default (read-only), customized files are detected via hash-compare and refused without `--force`, product code (`src/`, fork's `tests/`, package manifests, `.mcp.json`) is never touched. Spec: `docs/specs/016-harness-sync/`.

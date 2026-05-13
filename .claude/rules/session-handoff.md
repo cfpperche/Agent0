@@ -1,3 +1,13 @@
+---
+paths:
+  - ".claude/SESSION.md"
+  - ".claude/hooks/session-start.sh"
+  - ".claude/hooks/session-stop.sh"
+  - ".claude/.session-state/**"
+  - "docs/specs/017-*/**"
+  - "docs/specs/023-*/**"
+---
+
 # Session handoff
 
 `.claude/SESSION.md` is the working handoff between Claude Code sessions. The harness enforces it via hooks in `.claude/settings.json`:

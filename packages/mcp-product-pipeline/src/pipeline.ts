@@ -1,12 +1,15 @@
 /**
- * Canonical 12-step pipeline registry — single source of truth for ordering,
- * phase boundaries, gate placement, and directory naming. Lifted from
- * /home/goat/anthill/.anthill/config/pipeline.yaml entries 1-12.
+ * Canonical 13-step pipeline registry — single source of truth for ordering,
+ * phase boundaries, gate placement, and directory naming. Steps 1-12 lifted
+ * from /home/goat/anthill/.anthill/config/pipeline.yaml entries 1-12. Step 13
+ * (prototype-v3) is Agent0-original — synthesis from anthill-prototype +
+ * anthill-prd + anthill-design-system patterns; closes the planning pipeline
+ * with a comprehensive screen atlas as the visual contract handed to /sdd.
  *
  * The per-step execution mode + delegation hint live in template frontmatter
  * (src/templates/<NN-name>/prompt.md), not here — this file holds the
  * structural facts only. See docs/specs/025-mcp-product-pipeline/plan.md
- * § Files for the mode assignment table.
+ * § Files for the mode assignment table; spec 026 extends with step 13.
  */
 
 export type Phase = "discovery" | "identity" | "specification";
@@ -16,7 +19,7 @@ export type ExecutionMode = "interactive" | "draft-after-input" | "synthesis";
 export type DelegableLevel = "true" | "partial" | "false";
 
 export interface StepDef {
-  /** 1-based step number (1..12). */
+  /** 1-based step number (1..13). */
   n: number;
   /** Short kebab-case name (e.g. "ideation"). Stable identifier. */
   name: string;
@@ -35,7 +38,11 @@ export const PHASES: readonly Phase[] = ["discovery", "identity", "specification
  *
  *   Step 4 closes discovery  → gate before step 5 (identity)
  *   Step 7 closes identity   → gate before step 8 (specification)
- *   Step 12 closes specification → pipeline complete, handoff to /sdd
+ *   Step 12 closes specification → gate before step 13 (visual contract)
+ *
+ * Step 13 (prototype-v3) does NOT close a phase — it's the in-phase final
+ * deliverable of specification. product_advance after step 13 fires
+ * product_done (pipeline-complete) and surfaces the /sdd handoff.
  */
 export const GATE_AFTER: readonly number[] = [4, 7, 12] as const;
 
@@ -57,10 +64,11 @@ export const STEPS: readonly StepDef[] = [
   { n: 10, name: "cost-estimate", dir: "10-cost-estimate", phase: "specification" },
   { n: 11, name: "roadmap", dir: "11-roadmap", phase: "specification" },
   { n: 12, name: "legal", dir: "12-legal", phase: "specification" },
+  { n: 13, name: "prototype-v3", dir: "13-prototype-v3", phase: "specification" },
 ] as const;
 
 export const FIRST_STEP = 1 as const;
-export const LAST_STEP = 12 as const;
+export const LAST_STEP = 13 as const;
 
 export function stepByN(n: number): StepDef {
   const step = STEPS.find((s) => s.n === n);

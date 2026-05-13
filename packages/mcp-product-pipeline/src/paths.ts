@@ -54,6 +54,11 @@ export function templateFile(n: number, filename: string): string {
   return join(templateDir(n), filename);
 }
 
+/** packages/mcp-product-pipeline/src/templates/<NN-name>/references/ — optional. */
+export function templateReferencesDir(n: number): string {
+  return join(templateDir(n), "references");
+}
+
 /** packages/mcp-product-pipeline/ — package root (one level above src). */
 export function packageRoot(): string {
   return PACKAGE_ROOT;

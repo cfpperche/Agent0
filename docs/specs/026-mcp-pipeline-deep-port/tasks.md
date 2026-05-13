@@ -6,13 +6,13 @@ _Generated from `plan.md` on 2026-05-13. Work top-to-bottom. Check boxes as task
 
 Foundation. Must land + ship green tests BEFORE Phase B starts (content port can't be persisted/validated without these)._
 
-- [ ] 1. **Extend `STEPS` array in `src/pipeline.ts`** — add 13th entry `{ n: 13, slug: "prototype-v3", phase: "specification" }`. Confirm `GATE_AFTER` stays `[4, 7, 12]`. Helper functions (`stepByN`, `isGateAfter`, `gateClosingPhase`) auto-cover because they operate on the array — no manual case-by-case edit. Smoke test: `stepByN(13)` returns the new entry; `isGateAfter(13)` returns false.
+- [x] 1. **Extend `STEPS` array in `src/pipeline.ts`** — add 13th entry `{ n: 13, slug: "prototype-v3", phase: "specification" }`. Confirm `GATE_AFTER` stays `[4, 7, 12]`. Helper functions (`stepByN`, `isGateAfter`, `gateClosingPhase`) auto-cover because they operate on the array — no manual case-by-case edit. Smoke test: `stepByN(13)` returns the new entry; `isGateAfter(13)` returns false.
 
-- [ ] 2. **Extend `getTemplate(n)` in `src/templates.ts`** — load `references/*.md` siblings into a `Record<string, string>` map keyed by basename-without-extension. References subdir is optional per step; missing dir → empty map. Add `parseRequiredFiles(schemaBody)` helper that extracts a YAML fenced block declaring either `required_files: [{path, min_size, contains[]}]` (exact-path mode) OR `required_glob: {pattern, min_count, per_match_min_size, per_match_contains[]}` (glob mode for step 13's `screens/*.html`). Both fields can appear together. Return `null` when no fenced block is present.
+- [x] 2. **Extend `getTemplate(n)` in `src/templates.ts`** — load `references/*.md` siblings into a `Record<string, string>` map keyed by basename-without-extension. References subdir is optional per step; missing dir → empty map. Add `parseRequiredFiles(schemaBody)` helper that extracts a YAML fenced block declaring either `required_files: [{path, min_size, contains[]}]` (exact-path mode) OR `required_glob: {pattern, min_count, per_match_min_size, per_match_contains[]}` (glob mode for step 13's `screens/*.html`). Both fields can appear together. Return `null` when no fenced block is present.
 
-- [ ] 3. **Extend `product_step_get(N)` response payload in `src/tools.ts`** — return `{ prompt, schema, mode, references, required_files }`. Backwards-compat: agents reading the old shape (`{prompt, schema}`) get the new fields as additive extension. Run existing 31 tests; only `templates.test.ts` should need to learn the new keys.
+- [x] 3. **Extend `product_step_get(N)` response payload in `src/tools.ts`** — return `{ prompt, schema, mode, references, required_files }`. Backwards-compat: agents reading the old shape (`{prompt, schema}`) get the new fields as additive extension. Run existing 31 tests; only `templates.test.ts` should need to learn the new keys.
 
-- [ ] 4. **Extend `product_step_submit(N, content, extra_files?)` in `src/tools.ts`** — add optional `extra_files: Array<{path: string, content: string}>` param (default `[]`). Validation pipeline:
+- [x] 4. **Extend `product_step_submit(N, content, extra_files?)` in `src/tools.ts`** — add optional `extra_files: Array<{path: string, content: string}>` param (default `[]`). Validation pipeline:
    1. Read `required_files` + `required_glob` from step's schema.md (via `parseRequiredFiles`)
    2. Collect all paths: primary output filename + every `extra_files[].path`
    3. Layer 1 checks per file: path matches a required entry (exact or glob), `content.length >= min_size`, every `contains[]` substring present
@@ -20,29 +20,29 @@ Foundation. Must land + ship green tests BEFORE Phase B starts (content port can
    5. If all pass: write each file via `mktemp + rename` (existing atomic pattern from `state.ts`); mark state.completed only after all writes succeed
    Single-file submits (no `extra_files`) continue working identically to today.
 
-- [ ] 5. **Update `product_done` message in `src/tools.ts`** — when pipeline completes after step 13, the message names `13-prototype-v3/<slug>/screen-atlas.md` as the visual contract handed to engineering; the canonical handoff command stays `/sdd new <slug>` but the message body now emphasizes screen-atlas as primary reference. Drop the per-phase deliverable inventory shape from spec 025; replace with phase-grouped one-liner + "visual contract: screen-atlas.md".
+- [x] 5. **Update `product_done` message in `src/tools.ts`** — when pipeline completes after step 13, the message names `13-prototype-v3/<slug>/screen-atlas.md` as the visual contract handed to engineering; the canonical handoff command stays `/sdd new <slug>` but the message body now emphasizes screen-atlas as primary reference. Drop the per-phase deliverable inventory shape from spec 025; replace with phase-grouped one-liner + "visual contract: screen-atlas.md".
 
-- [ ] 6. **Write `tests/extra-files.test.ts`** — coverage:
+- [x] 6. **Write `tests/extra-files.test.ts`** — coverage:
    - atomic-write: 5 extra_files succeed together
    - rollback: 1 of 5 fails Layer 1 → 0 files written
    - validates against required_files exact-path entries
    - validates against required_glob with min_count
    - empty extra_files array = backwards-compat single-file flow
 
-- [ ] 7. **Write `tests/required-files-schema.test.ts`** — coverage:
+- [x] 7. **Write `tests/required-files-schema.test.ts`** — coverage:
    - YAML fenced block parsing happy-path
    - missing fenced block → `null` (no validation; backwards-compat for steps that don't declare required_files)
    - edge cases in `contains`: special chars (`</style>`, `--color-`), single-quote required
    - glob matching: `screens/[0-9]+-*.html` with `min_count: 8`
    - per_match_min_size + per_match_contains applied per glob hit
 
-- [ ] 8. **Write `tests/step13.test.ts`** — coverage:
+- [x] 8. **Write `tests/step13.test.ts`** — coverage:
    - `product_step_get(13)` returns step 13 template
    - `product_advance` after step 13 submit fires `product_done`
    - `STEPS.length === 13`
    - state.test.ts existing fixtures extended (or fork-fixture for step-13 case)
 
-- [ ] 9. **Confirm Phase A green** — run full test suite (existing 31 + new ~15-20); ALL must pass. Compile via `bun build` clean (no TS errors). Smoke-test the `product_*` tools via stdio JSON-RPC against a scratch dir; verify `product_step_get(13)` returns the (still placeholder) template, `product_step_submit(2, body, extra_files=[...])` accepts shape.
+- [x] 9. **Confirm Phase A green** — run full test suite (existing 31 + new ~15-20); ALL must pass. Compile via `bun build` clean (no TS errors). Smoke-test the `product_*` tools via stdio JSON-RPC against a scratch dir; verify `product_step_get(13)` returns the (still placeholder) template, `product_step_submit(2, body, extra_files=[...])` accepts shape.
 
 ## Phase B — Content port (13 templates)
 

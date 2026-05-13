@@ -17,6 +17,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import {
   FIRST_STEP,
+  LAST_STEP,
   type Phase,
   stepByN,
 } from "./pipeline.js";
@@ -25,7 +26,7 @@ import { productRoot, stateFile } from "./paths.js";
 export interface PipelineState {
   /** kebab-case product slug, e.g. "tiktok-clone". Immutable for the lifetime of the pipeline. */
   slug: string;
-  /** 1-based step the agent is currently working on (1..12). */
+  /** 1-based step the agent is currently working on (1..LAST_STEP). */
   current_step: number;
   /** Cached phase for current_step (denormalised; matches stepByN(current_step).phase). */
   phase: Phase;
@@ -146,7 +147,7 @@ export async function advanceStep(): Promise<PipelineState> {
     throw new Error("advanceStep: no state file. Call initState(slug) first.");
   }
   const next_n = state.current_step + 1;
-  const nextPhase = next_n <= 12 ? stepByN(next_n).phase : state.phase;
+  const nextPhase = next_n <= LAST_STEP ? stepByN(next_n).phase : state.phase;
   const next: PipelineState = {
     ...state,
     current_step: next_n,

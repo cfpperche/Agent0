@@ -16,17 +16,44 @@
  * docs/specs/025-mcp-product-pipeline/plan.md § Alternatives.
  */
 
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
+import { basename, extname, join } from "node:path";
 import {
   type DelegableLevel,
   type ExecutionMode,
 } from "./pipeline.js";
-import { templateFile } from "./paths.js";
+import { templateFile, templateReferencesDir } from "./paths.js";
 
 export interface TemplateFrontmatter {
   mode: ExecutionMode;
   delegable: DelegableLevel;
   delegation_hint: string;
+}
+
+/** One exact-path artifact requirement. */
+export interface RequiredFileExact {
+  path: string;
+  min_size?: number;
+  contains?: string[];
+}
+
+/** One glob-shaped artifact requirement (for product-dependent screen counts, etc.). */
+export interface RequiredFileGlob {
+  pattern: string;
+  min_count?: number;
+  per_match_min_size?: number;
+  per_match_contains?: string[];
+}
+
+/**
+ * Schema-declared artifact requirements parsed from a `required_files` fenced
+ * JSON block in schema.md. Either / both fields may appear; null is returned
+ * when no fenced block exists (single-file step — Layer 1 skipped, backwards
+ * compat with spec 025 templates).
+ */
+export interface RequiredFilesSpec {
+  required_files?: RequiredFileExact[];
+  required_glob?: RequiredFileGlob[];
 }
 
 export interface Template {
@@ -35,6 +62,20 @@ export interface Template {
   body: string;
   /** Full contents of schema.md (no parsing). */
   schema: string;
+  /**
+   * Per-step references: basename-without-extension → file content. Loaded
+   * from `templates/<NN-name>/references/*.md` if the dir exists. Empty map
+   * when the dir is absent (most single-artifact steps). Surfaced inline in
+   * `product_step_get` response so the agent never needs to know the package
+   * filesystem path. See spec 026 Q1 resolution.
+   */
+  references: Record<string, string>;
+  /**
+   * Schema-declared `required_files` / `required_glob` parsed from a
+   * ```required_files fenced block in schema.md. Null when absent. Drives
+   * Layer 1 validation in product_step_submit. See spec 026 Q2 + Q4.
+   */
+  required_files: RequiredFilesSpec | null;
 }
 
 const VALID_MODES: readonly ExecutionMode[] = [
@@ -139,18 +180,186 @@ export function parseFrontmatter(source: string): { frontmatter: TemplateFrontma
 }
 
 /**
+ * Extract a fenced JSON block tagged `required_files` from schema.md. Shape:
+ *
+ *   ```required_files
+ *   {
+ *     "required_files": [ {"path": "x.html", "min_size": 8192, "contains": ["<html"]} ],
+ *     "required_glob":  [ {"pattern": "screens/[0-9]+-*.html", "min_count": 8, ...} ]
+ *   }
+ *   ```
+ *
+ * Returns null when no fenced block is present (backwards-compat: single-
+ * artifact steps without explicit Layer 1 specs). Throws when the block
+ * exists but is malformed (loud failure at template authoring time).
+ *
+ * JSON is chosen over YAML for parser zero-risk + zero deps. The fence tag
+ * `required_files` (rather than `json`) acts as a discriminator so the
+ * template author can include other unrelated JSON examples in the schema
+ * body without false-positives.
+ */
+export function parseRequiredFiles(schemaBody: string): RequiredFilesSpec | null {
+  const fenceOpen = /^```required_files\s*$/m;
+  const fenceClose = /^```\s*$/m;
+  const openMatch = fenceOpen.exec(schemaBody);
+  if (!openMatch) return null;
+  const afterOpen = schemaBody.slice(openMatch.index + openMatch[0].length);
+  const closeMatch = fenceClose.exec(afterOpen);
+  if (!closeMatch) {
+    throw new Error(
+      "schema parse: 'required_files' fence opened but no closing '```' fence found",
+    );
+  }
+  const block = afterOpen.slice(0, closeMatch.index).trim();
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(block);
+  } catch (parseErr) {
+    throw new Error(
+      `schema parse: required_files fenced block is not valid JSON — ${(parseErr as Error).message}`,
+    );
+  }
+  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error("schema parse: required_files must be a JSON object");
+  }
+  const obj = parsed as Record<string, unknown>;
+  const result: RequiredFilesSpec = {};
+
+  if ("required_files" in obj) {
+    if (!Array.isArray(obj.required_files)) {
+      throw new Error("schema parse: required_files must be an array");
+    }
+    result.required_files = obj.required_files.map((entry, i) => {
+      if (typeof entry !== "object" || entry === null || Array.isArray(entry)) {
+        throw new Error(
+          `schema parse: required_files[${i}] must be an object`,
+        );
+      }
+      const e = entry as Record<string, unknown>;
+      if (typeof e.path !== "string" || e.path.length === 0) {
+        throw new Error(
+          `schema parse: required_files[${i}].path must be a non-empty string`,
+        );
+      }
+      const out: RequiredFileExact = { path: e.path };
+      if (e.min_size !== undefined) {
+        if (typeof e.min_size !== "number" || e.min_size < 0) {
+          throw new Error(
+            `schema parse: required_files[${i}].min_size must be a non-negative number`,
+          );
+        }
+        out.min_size = e.min_size;
+      }
+      if (e.contains !== undefined) {
+        if (
+          !Array.isArray(e.contains) ||
+          !e.contains.every((s) => typeof s === "string")
+        ) {
+          throw new Error(
+            `schema parse: required_files[${i}].contains must be an array of strings`,
+          );
+        }
+        out.contains = e.contains as string[];
+      }
+      return out;
+    });
+  }
+
+  if ("required_glob" in obj) {
+    if (!Array.isArray(obj.required_glob)) {
+      throw new Error("schema parse: required_glob must be an array");
+    }
+    result.required_glob = obj.required_glob.map((entry, i) => {
+      if (typeof entry !== "object" || entry === null || Array.isArray(entry)) {
+        throw new Error(
+          `schema parse: required_glob[${i}] must be an object`,
+        );
+      }
+      const e = entry as Record<string, unknown>;
+      if (typeof e.pattern !== "string" || e.pattern.length === 0) {
+        throw new Error(
+          `schema parse: required_glob[${i}].pattern must be a non-empty string`,
+        );
+      }
+      const out: RequiredFileGlob = { pattern: e.pattern };
+      if (e.min_count !== undefined) {
+        if (typeof e.min_count !== "number" || e.min_count < 0) {
+          throw new Error(
+            `schema parse: required_glob[${i}].min_count must be a non-negative number`,
+          );
+        }
+        out.min_count = e.min_count;
+      }
+      if (e.per_match_min_size !== undefined) {
+        if (typeof e.per_match_min_size !== "number" || e.per_match_min_size < 0) {
+          throw new Error(
+            `schema parse: required_glob[${i}].per_match_min_size must be a non-negative number`,
+          );
+        }
+        out.per_match_min_size = e.per_match_min_size;
+      }
+      if (e.per_match_contains !== undefined) {
+        if (
+          !Array.isArray(e.per_match_contains) ||
+          !e.per_match_contains.every((s) => typeof s === "string")
+        ) {
+          throw new Error(
+            `schema parse: required_glob[${i}].per_match_contains must be an array of strings`,
+          );
+        }
+        out.per_match_contains = e.per_match_contains as string[];
+      }
+      return out;
+    });
+  }
+
+  return result;
+}
+
+/**
+ * Load `templates/<NN-name>/references/*.md` into a basename-keyed map.
+ * Returns empty `{}` when the references dir does not exist — references
+ * are optional per step. Non-`.md` files in the dir are ignored.
+ */
+export async function loadReferences(n: number): Promise<Record<string, string>> {
+  const dir = templateReferencesDir(n);
+  let entries: string[];
+  try {
+    entries = await readdir(dir);
+  } catch (err) {
+    // ENOENT is expected for steps without a references subdir.
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") return {};
+    throw err;
+  }
+  const out: Record<string, string> = {};
+  await Promise.all(
+    entries
+      .filter((name) => extname(name) === ".md")
+      .map(async (name) => {
+        const content = await readFile(join(dir, name), "utf8");
+        const key = basename(name, ".md");
+        out[key] = content;
+      }),
+  );
+  return out;
+}
+
+/**
  * Read templates/<NN-name>/prompt.md AND schema.md, parse the prompt's
- * frontmatter, return the structured template. Throws on parse error,
- * missing file, etc — designed to fail loudly at first call so authoring
- * mistakes don't propagate.
+ * frontmatter, load any references/*.md siblings, parse schema.md's
+ * required_files fenced block (if any). Throws on parse error or missing
+ * file — designed to fail loudly at first call so authoring mistakes don't
+ * propagate.
  */
 export async function getTemplate(n: number): Promise<Template> {
   const promptPath = templateFile(n, "prompt.md");
   const schemaPath = templateFile(n, "schema.md");
-  const [promptRaw, schemaRaw] = await Promise.all([
+  const [promptRaw, schemaRaw, references] = await Promise.all([
     readFile(promptPath, "utf8"),
     readFile(schemaPath, "utf8"),
+    loadReferences(n),
   ]);
   const { frontmatter, body } = parseFrontmatter(promptRaw);
-  return { frontmatter, body, schema: schemaRaw };
+  const required_files = parseRequiredFiles(schemaRaw);
+  return { frontmatter, body, schema: schemaRaw, references, required_files };
 }

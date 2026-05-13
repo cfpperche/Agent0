@@ -82,12 +82,12 @@ Read `references/mechanics-catalog.md` (concept generation patterns) and `refere
 
 Score each concept on 5 axes, 1-5 each, 25 max:
 1. **Market.** Size, growth rate, timing.
-2. **Feasibility.** Can 1 person validate the core loop in 4 weeks?
+2. **Feasibility.** Can 1 person validate the core loop in 4 weeks? **The Feasibility axis is where the founder's stated constraints (budget, team, timeline, AI-deferred, no-PII, etc.) live as scoring weights.** If a challenger relies on a capability the v1 envelope explicitly excludes (e.g. an AI-agent core when the fixture says "AI deferred to v2"), that concept's Feasibility score drops — not just its Risk. Make the constraint visible inside the score, not as an afterthought.
 3. **Differentiation.** Is there a 10x angle that a competitor can't replicate in 6 months?
 4. **Moat.** What compounds over time — data, network, integrations, brand?
 5. **Monetization.** Clear path to revenue; willingness-to-pay validated by competitor pricing?
 
-Present as a table with total scores + brief rationale per axis. In critique mode add a `delta_vs_pinned` column (challenger_total − pinned_total; pinned row shows `—`) and a Verdict block:
+Present as a table with total scores + brief rationale per axis. Per-axis rationale is REQUIRED — a bare score with no reasoning blocks the next ranking pass. Use phrasing like "Honest score: 3, not 4 — [reason]" when calibration is non-obvious; the judge reading this brief should be able to audit your scoring math. In critique mode add a `delta_vs_pinned` column (challenger_total − pinned_total; pinned row shows `—`) and a Verdict block:
 
 - **Pinned wins by ≥3:** "PINNED WINS. Decision holds. Proceed."
 - **Pinned wins by 1-2:** "PINNED WINS NARROWLY. Review challenger's strongest axis."

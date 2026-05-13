@@ -85,3 +85,35 @@ JTBD: Help businesses manage invoices better.
 ```
 
 **Why this is bad:** No citations — "many companies report" is fabricated confidence. "Industry analysts note" requires a source or it is noise. Frequency ("regular") is meaningless without a trigger. Persona ("business users") describes no one specifically. White space is a tautology. An opportunity map entry without real quotes and real citations should be discarded, not polished.
+
+---
+
+## Mechanics Breakdown — Core Value statement
+
+The Core Value section is where the brief states *what the product fundamentally IS* — the structural opinion that engineering can build a state machine around. Weak Core Value statements list features; strong ones name a primitive.
+
+### Good — "primitive as first-class workflow state"
+
+```
+**Layer 1 — Core Value:** Triage as a first-class workflow state, not a filter on the backlog.
+
+Existing tools treat triage as something you do TO a backlog (filter the queue, batch-update, archive noise). The product treats triage as its own state: every new issue lands in a dedicated keyboard-navigable queue, and the team's job is to drain that queue to zero each morning. Three keystrokes per issue (T to open, P to set priority, A to assign) clear noise in 60 seconds.
+
+The state machine is opinionated:
+  New → Triaged → Backlog → Cycle → Done
+                                    ↘ Cancelled
+                                    ↘ Snoozed
+No custom statuses on the free tier — the discipline is part of the product.
+```
+
+**Why this is good:** It names a structural primitive (Triage = its own state) that engineering can encode as a database enum + screen + state-transition diagram on day one. The contrast vs. existing tools is concrete (filter vs. state). The Hook (3-keystroke drain) flows naturally from the primitive. Engineering reads this and knows what to build.
+
+### Bad — feature list
+
+```
+**Layer 1 — Core Value:** Fast keyboard-driven workflow with command palette, smart filters, AI-suggested priorities, GitHub integration, and analytics dashboards.
+```
+
+**Why this is bad:** Feature list, not a primitive. "Fast keyboard-driven workflow" is a quality, not a state-machine opinion. Engineering reading this doesn't know what to BUILD — they just know what to make fast. Anti-pattern Pattern 2 (Feature List Without Value Loop). Fix: pick the *one* primitive the workflow centers on, and let other features serve it.
+
+The rule of thumb: if you remove a feature from the list, does the product still work? If yes, that feature isn't core. The Core Value section names what cannot be removed.

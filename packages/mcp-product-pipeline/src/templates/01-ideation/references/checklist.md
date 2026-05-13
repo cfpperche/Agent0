@@ -71,11 +71,11 @@ Score the brief before submitting. Aim ≥ 70/100.
 | Category | Weight | What earns full points |
 |---|---|---|
 | Market signal strength | 25 | 15+ sources, multiple tracks, recent data, named players |
-| Concept originality | 20 | Genuine recombination of mechanics; not an "Uber for X" |
+| Concept originality | 20 | Genuine recombination of mechanics; not an "Uber for X"; Core Value names a primitive (workflow state, ownership unit, etc.), not a feature list |
 | Hook-Retain-Refer clarity | 15 | All three are concrete, with month 1-12 progression |
-| Unit economics plausibility | 15 | ARPU + CAC + LTV with assumption per row; LTV:CAC ≥ 3:1 |
-| Honest risk assessment | 15 | Specific risks (not "market may not exist") with mitigations |
-| Source coverage | 10 | Every factual claim cited; estimates marked "Estimated" |
+| Unit economics plausibility | 15 | ARPU + CAC + LTV with assumption per row; LTV:CAC ≥ 3:1; every line of math is reproducible from the stated inputs (a reader can audit step-by-step without a hidden number) |
+| Honest risk assessment | 15 | Specific risks (not "market may not exist") with mitigations; at least one risk pushes back on the fixture's own assumptions when warranted (e.g. "your $100K MRR target is a stretch; $30-50K is the realistic plan") |
+| Source coverage | 10 | Every factual claim cited; estimates marked "Estimated"; estimate count target ≥ 10 explicit markers per brief — being conservative about what counts as fact vs. estimate beats hedging |
 
 ---
 

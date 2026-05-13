@@ -21,13 +21,23 @@ set -uo pipefail
 
 usage() {
   cat <<'EOF' >&2
-Usage: bash .claude/tools/probe.sh <subcommand>
+Usage: bash .claude/tools/probe.sh <subcommand> [flags]
 
 Subcommands:
-  last-run    Show the latest captured test/build/typecheck run.
+  last-run                Show the latest captured test/build/typecheck run.
+  rule-loads [flags]      Show recent InstructionsLoaded events. Requires
+                          CLAUDE_RULE_LOAD_DEBUG=1 during the session that
+                          produced the loads.
+    --json                Emit raw JSONL instead of human-readable table.
+    --session <id>        Filter to a single session_id.
+    --reason <r>          Filter by load_reason (session_start, path_glob_match,
+                          nested_traversal, include, compact).
 
 Examples:
   bash .claude/tools/probe.sh last-run
+  bash .claude/tools/probe.sh rule-loads
+  bash .claude/tools/probe.sh rule-loads --reason path_glob_match
+  bash .claude/tools/probe.sh rule-loads --session abc123 --json
 EOF
 }
 
@@ -163,6 +173,66 @@ EOF
         printf -- '--- stderr (tail) ---\n'
         printf '%s\n' "$stderr_tail"
       fi
+    fi
+
+    exit 0
+    ;;
+
+  rule-loads)
+    LOG="$PROJECT_DIR/.claude/.rule-load-debug.jsonl"
+
+    if ! command -v jq >/dev/null 2>&1; then
+      printf 'probe: jq not found — rule-loads probe disabled\n'
+      exit 0
+    fi
+
+    if [ ! -f "$LOG" ]; then
+      cat <<'EOF'
+status: no-snapshot
+hint: enable with `export CLAUDE_RULE_LOAD_DEBUG=1` before starting a session, then re-query.
+EOF
+      exit 0
+    fi
+
+    fmt="text"
+    filter_field=""
+    filter_val=""
+    shift  # past "rule-loads"
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --json) fmt="json"; shift ;;
+        --session) filter_field="session_id"; filter_val="${2:-}"; shift 2 ;;
+        --reason)  filter_field="load_reason"; filter_val="${2:-}"; shift 2 ;;
+        *) printf 'probe: unknown flag "%s"\n\n' "$1" >&2; usage; exit 2 ;;
+      esac
+    done
+
+    if [ -n "$filter_field" ]; then
+      rows="$(jq -c --arg field "$filter_field" --arg val "$filter_val" 'select(.[$field] == $val)' "$LOG")"
+    else
+      rows="$(cat "$LOG")"
+    fi
+
+    if [ -z "$rows" ]; then
+      printf 'status: no-matches\n'
+      exit 0
+    fi
+
+    if [ "$fmt" = "json" ]; then
+      printf '%s\n' "$rows"
+    else
+      printf '%s\n' "$rows" | tail -20 | while IFS= read -r line; do
+        [ -n "$line" ] || continue
+        ts="$(printf '%s' "$line" | jq -r '.ts // "?"')"
+        reason="$(printf '%s' "$line" | jq -r '.load_reason // "?"')"
+        file="$(printf '%s' "$line" | jq -r '.file // "?"')"
+        trigger="$(printf '%s' "$line" | jq -r '.trigger_file // ""')"
+        if [ -n "$trigger" ] && [ "$trigger" != "null" ]; then
+          printf '%s  %-18s  %s  ← %s\n' "$ts" "$reason" "$file" "$trigger"
+        else
+          printf '%s  %-18s  %s\n' "$ts" "$reason" "$file"
+        fi
+      done
     fi
 
     exit 0

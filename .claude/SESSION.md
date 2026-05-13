@@ -8,29 +8,85 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ## Current state
 
-**Dogfood→fix→validate-in-fork loop closed end-to-end 2026-05-13.** 3 Agent0-side fixes derived from shrnk-mono dogfood pass `a6c0585e`, each validated in a follow-up dogfood pass in the same fork:
+Rule-infra modernization committed across 3 commits (prior session, 2026-05-13). Validation pending — this session's job.
 
-- `02364e4 fix(validator)` — exclude supply-chain lockfile basenames (`*.lock *.lockb go.sum */go.sum`) from TDD warning loop. Closes false-positive `no_test_change_for_prod_edit` on `bun.lock` mutations.
-- `e9b7f53 feat(supply-chain)` — detect bare lockfile-resolve install (`{npm,pnpm,bun}.{install,i}`) with dirty manifest (`package.json` / `pyproject.toml` / `Cargo.toml` / `go.mod` via `git -C $PROJECT_DIR status --porcelain`). New audit values `advisory-bare-install` + `advisory-bare-install-override`. Closes parent-edit + bare-install coverage gap (Edit advisory was sub-agent-only; bare install audited `skip-not-install`).
-- `f716452 fix(validator)` — `set -f` around classification loop. Closes pathname-expansion bug where unquoted `$excluded_globs` got pathname-expanded against cwd before the case stmt (root match → literal compare → nested workspace manifests leaked). Surfaced during validation of `02364e4` in commit `d4eada2` (shrnk-mono). Test 08 sanity-checked: revert reproduces leak, restore fixes.
+- **`docs(memory)`** — skill-eval-pattern observation memo + index.
+- **`feat(rules)`** — `paths:` frontmatter on 8 capacity-operational rules (`mcp-recipes`, `supply-chain`, `runtime-introspect`, `secrets-scan`, `lint-validator`, `harness-sync`, `typecheck-advisory`, `session-handoff`).
+- **`feat(observability)`** — `rule-load-debug` capacity: hook on native `InstructionsLoaded` event, JSONL audit log gated by `CLAUDE_RULE_LOAD_DEBUG=1`, probe subcommand `rule-loads` with `--json` / `--session` / `--reason` flags.
 
-Validation cycle in shrnk-mono (same session_id `a6c0585e`): `e424bda` → `d4eada2` → `adf6217` → `42a3593` → `dba0bd5` → `508e95f`. Final pass status: "cleanest dogfood pass yet" — zero new reminders accumulated. Supply-chain audit confirmed `advisory-bare-install`/`override` shapes match design; meta-gotcha "commit message FP on supply-chain prose" hit twice and recovered with documented OVERRIDE workaround.
+Smoke-tested in-session at the unit level (synthetic payloads through hook+probe, all 5 `load_reason` types, all filter combinations). Real harness→hook plumbing NOT yet validated — requires session restart with env var pre-set in shell.
 
-## WIP
+Parallel-session WIP (NOT this work's): `packages/mcp-product-pipeline/src/state.ts` modified, untracked template dirs under `packages/mcp-product-pipeline/src/templates/02-prototype/`, `03-spec/`, `04-ux-testing/`, `05-brand/`. Spec 025 lane.
 
-**Spec 025 (mcp-product-pipeline) DRAFT in working tree — uncommitted, 35 tasks pending.** `docs/specs/025-mcp-product-pipeline/{spec,plan,tasks}.md` drafted 2026-05-12 17:21-17:24 in a prior session, never committed. Proof-of-concept of "Agent0 stays a thin harness core; capability extensions ship as opt-in MCP servers in `packages/`". 12-step product-planning pipeline (Discovery 1-4 / Identity 5-7 / Specification 8-12) lifted from anthill SDLC. Activation = single `.mcp.json` block, zero hooks/rules/CLAUDE.md mutations in forks. Handoff to `/sdd` at step 12. Next session: commit drafts as baseline OR revise first, then walk tasks.md Phase A→D.
+## WIP — validation playbook
+
+**Step 0: launch with env var in shell (NOT mid-session — hooks are harness siblings, not Bash children; see `.claude/rules/runtime-introspect.md` § Gotchas for the canonical statement):**
+
+```bash
+CLAUDE_RULE_LOAD_DEBUG=1 claude
+```
+
+**Step 1 — startup load shape (level 2):** within first minute,
+
+```bash
+bash .claude/tools/probe.sh rule-loads --reason session_start
+```
+
+Expected ~9 rows (CLAUDE.md + 8 unconditionals): `delegation.md`, `tdd.md`, `spec-driven.md`, `memory-placement.md`, `language.md`, `research-before-proposing.md`, `reminders.md`, `compaction-continuity.md`.
+
+Should NOT appear in `session_start`: any of `mcp-recipes`, `supply-chain`, `runtime-introspect`, `secrets-scan`, `lint-validator`, `harness-sync`, `typecheck-advisory`, `session-handoff`, `rule-load-debug` (all 9 are path-scoped). If any DO appear → frontmatter is being parsed incorrectly or ignored entirely. **This is the primary regression signal.**
+
+**Step 2 — path_glob_match triggers (level 2):** read files that match each rule's globs, then query `--reason path_glob_match`. Suggested triggers:
+
+| Read | Should load |
+| --- | --- |
+| `.claude/hooks/secrets-scan.sh` | `secrets-scan` |
+| `.claude/hooks/supply-chain-scan.sh` | `supply-chain` |
+| `.claude/hooks/runtime-pre-mark.sh` | `runtime-introspect` |
+| `.claude/validators/run.sh` | `lint-validator` AND `typecheck-advisory` (both globs match) |
+| `.claude/hooks/session-stop.sh` | `session-handoff` |
+| `.claude/tools/sync-harness.sh` | `harness-sync` |
+| `.mcp.json.example` | `mcp-recipes` |
+| `.claude/tools/probe.sh` | `rule-load-debug` AND `runtime-introspect` (probe.sh is in both globs) |
+
+For each: confirm `file_path` matches, `globs` array matches frontmatter, `trigger_file` is what you just read.
+
+If a rule does NOT load despite path match → glob is wrong, frontmatter parser issue, or CC version pre-dates `InstructionsLoaded` event (hook silently inert). Cross-check: `bash .claude/tools/probe.sh rule-loads --json` shows the raw stream — if NO rows have `load_reason: "path_glob_match"` for any trigger, the path-scoping mechanism is broken; if SOME do and SOME don't, individual globs need review.
+
+**Step 3 — sanity check via system-reminder:** even with `CLAUDE_RULE_LOAD_DEBUG=0` unset, reading a path-scoped trigger file should produce a `<system-reminder>` block in the agent's context containing the rule body. The user observed this 2026-05-13 for `secrets-scan` (prior session). This is independent of the hook firing — it's the LOAD mechanism itself. If the system-reminder doesn't appear, the path-scoping ISN'T working regardless of what the hook says.
+
+**Step 4 — fork dogfood (level 3):** after level 2 passes, sync into shrnk-mono:
+
+```bash
+bash .claude/tools/sync-harness.sh --check ~/shrnk-mono       # see drift
+bash .claude/tools/sync-harness.sh --apply ~/shrnk-mono       # apply
+cd ~/shrnk-mono && CLAUDE_RULE_LOAD_DEBUG=1 claude            # validate
+```
+
+Real-work probes to exercise capacity recovery:
+- **Supply-chain:** attempt `bun add some-pkg` → expect block-by-default + corrective stderr template. Override with `# OVERRIDE: <reason>` two-line form → expect pass. Check whether agent recovers without the deep `supply-chain.md` rule loaded (it should NOT load because the trigger is a Bash invocation, not a file edit; CLAUDE.md `## Supply chain` summary must be sufficient).
+- **Secrets-scan:** stage a fake test-fixture credential, attempt `git commit` → expect native pre-commit block. Check agent's recovery (uses correct override marker shape from CLAUDE.md summary alone? or fumbles?).
+- **Runtime-introspect:** `bun test` (or stack-equivalent) → `bash .claude/tools/probe.sh last-run` → expect snapshot. Confirms spec 011 still works.
+- **Path-scoped rule:** edit `package.json` → `supply-chain.md` should now load (Edit on a manifest IS a path-glob trigger, distinct from the Bash gate above). Confirm via `probe.sh rule-loads --reason path_glob_match`.
+
+The level 3 question is **NOT** "does the hook fire" — that's level 2. Level 3 is "does agent BEHAVIOR degrade because deep rules aren't loaded by default". If CLAUDE.md `## Section` summaries are insufficient, the agent will recover slower/wrongly. Document any case where the agent had to read the deep rule to do something it used to do from default context.
 
 ## Next steps
 
-1. **Spec 025 decision** — commit drafts as baseline (`docs(specs): add 025 mcp-product-pipeline draft`) and then walk implementation, OR revise spec/plan first.
-2. **CC hooks underused reminder** (due 2026-05-13, only remaining bullet) — inventory the 29 events from `.claude/memory/cc-platform-hooks.md` vs `.claude/settings.json` registered, identify 1-2 gaps worth prototyping. `UserPromptSubmit` (detect ambiguous prompts) is the named candidate.
-3. **shrnk-mono future dogfood candidates** (if appetite): MCP recipes activation, browser-auth signal, secrets-scan compound forms, validator multi-stack monorepo lint walk.
-4. **Pyshrnk CLAUDE.md reconciliation** — Starlette adoption vs "no frameworks" rule conflict (carryover, no progress this session).
+1. **Run validation playbook above.** Report findings in updated SESSION.md and/or new memo under `.claude/memory/`.
+2. If level 2 fails: revert `feat(rules)` commit and re-investigate; the `feat(observability)` commit can stay (still useful even if path-scoping itself is wrong).
+3. If level 3 surfaces real behavioral degradation: identify which CLAUDE.md `## Section` summaries need beefing up; the rules themselves stay path-scoped, the orientation gets denser.
+4. **Spec 025 continuation** — separate lane; `packages/mcp-product-pipeline/src/state.ts` modification + untracked template dirs need provenance check before any commit there.
+5. **CC hooks underused reminder** (due 2026-05-13, already past-due) — partial progress: `InstructionsLoaded` adopted = 10 of 29 events now used (was 9). Original target (`UserPromptSubmit` for ambiguous-prompt detection) untouched. Consider dismissing/rewriting the reminder.
+6. **Pyshrnk CLAUDE.md reconciliation** — long carryover.
 
 ## Decisions & gotchas
 
-- **Validator's TDD classification loop needs `set -f` discipline.** Unquoted globs in `for g in $glob_str` pathname-expand BEFORE the case stmt sees them. In populated repos this collapses `*.json` to literal root matches → case becomes literal compare → nested workspace paths leak. The `set -f` guard restores proper case-pattern glob matching against `/`-containing paths. Closed by `f716452`.
-- **Supply-chain block fires on commit-message PROSE mentioning manager+verb pairs.** Documented gotcha confirmed twice in shrnk-mono session `a6c0585e` (2026-05-12T00:30:35Z, 00:33:17Z). Recovery: multi-line `# OVERRIDE: <reason>` marker on its own line outside the heredoc. Tokenizer doesn't differentiate prose from real commands.
-- **`bun install` (bare) IS a supply-chain signal when manifest is dirty.** Pre-`e9b7f53` design treated all bare installs as `skip-not-install` (lockfile resolve). Post-fix, the dirty-manifest predicate via `git status --porcelain` flips it to `advisory-bare-install`. OVERRIDE marker silences with audit trail.
-- **`sync-harness.sh --force --force-except='<glob>'`** preserves fork-side stack-specific files (notably `.gitignore` with uncommented stack patterns) while accepting drift on everything else. Used by shrnk-mono in `42a3593`.
-- **SESSION.md ~2KB preview budget** — replace stale content; `git log` is the audit trail. This file is currently the actively-load-bearing handoff, NOT a journal of completed work.
+- **Smoke test in-session has a ceiling.** `settings.json` registration changes do NOT hot-reload mid-session (empirical: bypass-marker hook didn't fire when reading a path-scoped trigger file mid-session). The unit-level smoke test passed (synthetic payloads through hook+probe), but the integration is "trust the docs" until next session restart confirms. Same constraint applied to `runtime-introspect` adoption originally; standard CC behavior.
+- **Hooks are harness siblings, not Bash children.** `CLAUDE_RULE_LOAD_DEBUG=1` MUST be exported in the shell before `claude` launches. Setting it via a Bash tool call mid-session is invisible to the hook. Documented identically in `.claude/rules/runtime-introspect.md` § Gotchas (`CLAUDE_RUNTIME_INTROSPECT_EXTRA_DETECT` case).
+- **System-reminder injection ≠ hook firing.** The user observed `secrets-scan.md` re-injected as `<system-reminder>` after reading the matching hook file. That's the LOAD mechanism, not the InstructionsLoaded hook. Both should work; they're separate channels with the same trigger. If level 2 shows hook silence but system-reminder injection works, path-scoping is fine and the hook integration is the issue.
+- **Probe text view drops `parent_file` on `include` loads.** Visible via `--json` only. Small gap; can extend probe if it becomes pain.
+- **CLAUDE.md `## Section` summaries are LOAD-BEARING.** Each path-scoped rule's operational essentials (override marker, env vars, command templates) MUST remain in CLAUDE.md because the deep rule won't load when the capacity gate fires on a Bash invocation (not file edit). Audit done; flag any future migration of essentials OUT of CLAUDE.md.
+- **`InstructionsLoaded` is non-blocking, no decision control.** Per CC docs: stdout/stderr ignored by harness, runs async. The audit log + probe is the ONLY signal path from this hook. Any future attempt to "talk back" via this hook will silently fail.
+- **Docs migration:** `docs.claude.com/en/docs/claude-code/*` → 301 → `code.claude.com/docs/en/*`. Old URLs in older memos redirect but should be updated when touched.
+- **Skill-eval framework NOT adopted (2026-05-13).** Industry pattern observed across 5 posts; deferred per `feedback_speculative_observability`. Reference: `.claude/memory/skill-eval-pattern.md`. Trigger to revisit: third silent regression in a skill dogfood missed.

@@ -4,3 +4,4 @@
 - [Skill-eval pattern (observed externally)](skill-eval-pattern.md) — 5 early-2026 posts converged on success-criteria → test set → deterministic+LLM-judge → iterate; NOT adopted yet; pull when third silent-regression case lands
 - [User-global hooks shadow project hooks](user-global-hooks-shadow.md) — `~/.claude/hooks/*` fire BEFORE project hooks; can mask project-layer end-to-end behavior in dogfood; first diagnostic is `ls ~/.claude/hooks/`
 - [Anthill archived](anthill-archived.md) — /home/goat/anthill is frozen as of 2026-05-13; quality benchmark for content ports into packages/mcp-*, not a moving upstream; no drift-detection tooling needed
+- [OD vendor port plan](od-vendor-port-plan.md) — Open Design bundle (~3.1 MB, Apache-2.0, 73 design systems + 33 skill bundles) proved high-value in anthill step 2; needs port to packages/mcp-product-pipeline; 5 open architectural questions captured

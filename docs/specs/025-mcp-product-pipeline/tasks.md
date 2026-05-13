@@ -51,7 +51,7 @@ _Each line maps to a `spec.md` acceptance criterion. Tick after observing the be
 
 - [x] **AC: plug-and-play activation** — validated post-restart: `mcp__product-pipeline__*` tools appeared at SessionStart, `.claude/` is untouched (only `.mcp.json` itself changed — which is gitignored).
 - [x] **AC: pipeline cold-start and first-step orientation** — observed during task 15 tmp-dir smoke.
-- [x] **AC: linear progression through all 12 steps** — partial walk (4/12) executed end-to-end during Phase H comprehensive smoke: steps 1→4 with submits + advances + gate-required block + gate_pass + advance into step 5 (Identity phase) all behaved as designed. Same advance+gate mechanic at steps 7 and 12 by construction. Full 12-step walk against a real product slug is the natural Phase-H+1 dogfood — design-validated here.
+- [x] **AC: linear progression through all 12 steps** — validated end-to-end via the dogfood walk on `/home/goat/linear-clone-poc/` (Linear-clone synthetic product, 2026-05-13). All 12 steps submitted + advanced; all 3 phase gates fired and cleared (`gate_pass` for discovery, identity, specification); final `product_advance` returned `{code: "pipeline-complete", message: "Product planning complete. Engineering execution starts via /sdd new <feature-slug> populating docs/specs/NNN-*/"}`; `product_done` returned the canonical handoff summary naming all 12 deliverable dirs grouped per phase + the literal `/sdd new linear-clone` command. Final `.state.json` shows `completed: [1..12]`, `gates_passed: ["discovery","identity","specification"]`, `validation_mode: "intuition"`.
 - [x] **AC: resumability across sessions** — validated by booting two separate MCP server processes against the same `docs/product/` dir. Process 1 ran start + step1 submit + advance; process 2 (fresh boot) called `product_status` and read `current_step: 2, completed: [1]` from disk. Cross-process state survival = cross-Claude-Code-session resumability.
 - [x] **AC: phase-gate enforcement** — Phase H smoke: after step 4 submit + advance, `product_advance` returned `{code: "gate-required", phase: "discovery", next_phase: "identity"}` with state unchanged. After `product_gate_pass("discovery")` + retry `product_advance`, transitioned cleanly to step 5 (identity phase).
 - [x] **AC: step submission validates required shape** — Phase E smoke: submitted step 1 content missing `[differentiation, risks, sources]` → rejected with `{code: "schema-incomplete", missing: [...]}` and no file written.
@@ -80,11 +80,37 @@ Two dogfood passes ran after Phase H:
 
 **Pass 1 — Adversarial probes.** 22 stress cases (invalid slugs, no-pipeline guards, idempotency, multi-product rejection, filename validation including path traversal + absolute-path attempts, advance-without-artifact, bogus phase/step values, done-before-complete, corrupted state.json, extreme content). 21/22 probes returned structured actionable errors as designed. 1 gap found and fixed: H1 (corrupted state.json) leaked raw `JSON Parse error: Expected '}'` instead of a structured `state-corrupt` payload. Patched in `state.ts` via labeled-error throw; unit test added (`tests/state.test.ts` now 31 tests, was 30); commit `75a51ae`.
 
-**Pass 2 — Real-product clone walk in fork-equivalent project.** Created `/home/goat/linear-clone-poc/` outside Agent0's repo with a `.mcp.json` pointing at an absolute path to Agent0's MCP server binary. Walked Discovery (steps 1-4 + discovery gate) producing 4 substantive markdown artifacts:
+**Pass 2 — Real-product clone walk in fork-equivalent project (FULL 12 steps).** Created `/home/goat/linear-clone-poc/` outside Agent0's repo with a `.mcp.json` pointing at an absolute path to Agent0's MCP server binary. Walked ALL 12 steps + all 3 gates through to `product_done`, producing 12 substantive markdown artifacts (~57 KB of content; total dir ~152 KB with subdirs):
 
-  - `01-ideation/04-concept-brief.md` (5706 B) — concept, target audience, differentiation vs Linear/Jira/Asana, risks (switching cost, pricing pressure, AI commodity), sources
+  Discovery (Phase 1 — closed via `gate_pass("discovery")`):
+  - `01-ideation/04-concept-brief.md` (5706 B) — concept, target audience, differentiation vs Linear/Jira/Asana, risks, sources
   - `02-prototype/prototype-spec.md` (4990 B) — entry surface, killer flow (triage view), 12-screen list, user flow, complexity budget
   - `03-spec/functional-spec.md` (8248 B) — 10 features, cross-cutting concerns, success criteria as BDD, edge cases, non-goals
-  - `04-ux-testing/validation-report.md` (4886 B) — `validation_mode: intuition`, evidence (segment + comparables + defensibility), verdict, 5 post-launch signals as the contract
+  - `04-ux-testing/validation-report.md` (4886 B) — `validation_mode: intuition`, evidence, verdict, 5 post-launch signals
 
-Validates end-to-end that: (a) path resolution splits correctly (cwd for artifacts, `import.meta.url` for templates) when MCP runs from a non-Agent0 cwd via absolute-path reference, (b) state survives across MCP server process boundaries (each bash invocation spins a fresh process), (c) gate enforcement fires at the discovery→identity boundary and clears cleanly via gate_pass, (d) validation_mode regex extraction works in real content, (e) the activation pattern that the spec promises (clone Agent0, point `.mcp.json` at its server, walk a product) holds for a genuinely separate project. The 23 KB of resulting markdown is substantive content a real founder could iterate from.
+  Identity (Phase 2 — closed via `gate_pass("identity")`):
+  - `05-brand/brand-book.md` (4001 B) — name (Cycle), voice, 6 voice samples, visual direction, anti-patterns
+  - `06-design-system/design-system.md` (4949 B) — 10 semantic color tokens, type scale, spacing/radius/motion, 7 components, 5 patterns, WCAG AA contrast measurements
+  - `07-prototype-v2/prototype-v2-spec.md` (5256 B) — screens with token refs, copy with brand voice, state coverage, patterns applied
+
+  Specification (Phase 3 — closed via `gate_pass("specification")`):
+  - `08-prd/prd.md` (5330 B) — 10 must-have features, success metric (activation rate ≥40%), BDD acceptance criteria, non-goals, open questions
+  - `09-system-design/system-design.md` (6758 B) — Next.js 16 + Bun + Postgres + Drizzle stack, modular monolith, full data model, deployment shape, perf budgets
+  - `10-cost-estimate/cost-estimate.md` (4702 B) — freemium $4/seat pricing, $200-240k build, $807/mo run cost, break-even at 7 paying teams
+  - `11-roadmap/roadmap.md` (4749 B) — 4 phases × 14-week horizon, 4 milestones, 4 risks, v2 vision sketch
+  - `12-legal/legal-posture.md` (7452 B) — escape clause, ToS posture, GDPR/CCPA/LGPD privacy posture, sub-processor list, data handling, OSS licensing audit
+
+Terminal `product_done` emitted the canonical handoff message:
+> Product planning complete for slug "linear-clone".
+>
+> Deliverables:
+>   - discovery: 4 dir(s) — [paths]
+>   - identity: 3 dir(s) — [paths]
+>   - specification: 5 dir(s) — [paths]
+>
+> Next phase: engineering execution starts via:
+>   /sdd new linear-clone
+>
+> Once the spec is scaffolded, /sdd plan and /sdd tasks decompose it for implementation. The MCP can be deactivated by commenting the product-pipeline block in .mcp.json (artifacts in docs/product/ remain).
+
+Validates end-to-end: (a) path resolution split (cwd for artifacts, `import.meta.url` for templates) when MCP runs from a non-Agent0 cwd via absolute-path reference, (b) state survives across MCP server process boundaries (each bash invocation = fresh process), (c) ALL 3 gates fire at the correct boundaries (after steps 4, 7, 12) and clear cleanly via `gate_pass`, (d) `validation_mode` regex extraction works in real content + persists in state across the entire pipeline lifetime, (e) `product_done` produces the canonical `/sdd new <slug>` handoff message correctly, (f) the activation pattern that the spec promises (clone Agent0, point `.mcp.json` at its server, walk a product) holds end-to-end for a genuinely separate project. The 57 KB of resulting markdown is substantive content a real founder could iterate from — not minimal-pass-the-schema stub artifacts.

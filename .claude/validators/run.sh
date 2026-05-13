@@ -269,6 +269,17 @@ if git rev-parse --git-dir >/dev/null 2>&1; then
   old_ifs="$IFS"
   IFS='
 '
+  # Disable pathname (glob) expansion for the classification loop. Without
+  # `set -f`, the unquoted `$excluded_globs` / `$patterns_str` expansions
+  # below get pathname-expanded against cwd: e.g. in a populated repo `*.json`
+  # expands to the literal root-level matches (`package.json` alone), and the
+  # subsequent `case "$f" in $g)` becomes a literal compare that misses
+  # nested workspace manifests (`apps/api/package.json`) entirely. The case
+  # pattern matcher correctly handles globs against `/`-containing paths once
+  # the unexpanded pattern reaches it. Surfaced via shrnk-mono dogfood
+  # validation pass 2026-05-12, commit `d4eada2`.
+  case "$-" in *f*) prev_f_set=1 ;; *) prev_f_set=0 ;; esac
+  set -f
   for f in $changed_files; do
     [ -z "$f" ] && continue
 
@@ -303,6 +314,7 @@ $f"
       fi
     fi
   done
+  [ "$prev_f_set" = "0" ] && set +f
   IFS="$old_ifs"
 
   if [ -n "$prod_files" ] && [ "$test_count" -eq 0 ]; then

@@ -1,4 +1,6 @@
 - [Agent0 base repo purpose](agent0-purpose.md) — /home/goat/Agent0 is the user's generic base/template repo for new projects; keep changes generic; template-forever posture (no own stack, no production deploy target)
 - [Visibility capacity intent](visibility-intent.md) — next visibility wedge is agent self-debugging via runtime introspection (laravel-boost style), NOT human dashboards/OTel — explicitly stated 2026-05-11
-- [Claude Code platform hooks](cc-platform-hooks.md) — canonical surface of 29 CC hook events + PostToolUse-on-success-only gotcha; consult before designing any hook-based capacity
+- [Claude Code platform hooks](cc-platform-hooks.md) — canonical surface of 29 CC hook events + empirical gotchas (PostToolUse-on-success-only, InstructionsLoaded intra-session dedup); consult before designing any hook-based capacity
 - [Skill-eval pattern (observed externally)](skill-eval-pattern.md) — 5 early-2026 posts converged on success-criteria → test set → deterministic+LLM-judge → iterate; NOT adopted yet; pull when third silent-regression case lands
+- [User-global hooks shadow project hooks](user-global-hooks-shadow.md) — `~/.claude/hooks/*` fire BEFORE project hooks; can mask project-layer end-to-end behavior in dogfood; first diagnostic is `ls ~/.claude/hooks/`
+- [Anthill archived](anthill-archived.md) — /home/goat/anthill is frozen as of 2026-05-13; quality benchmark for content ports into packages/mcp-*, not a moving upstream; no drift-detection tooling needed

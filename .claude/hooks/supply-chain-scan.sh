@@ -235,6 +235,16 @@ detected_manager=""
 detected_action=""
 detected_packages=""
 
+# Bare lockfile-resolve install tracking (closes parent-edit + bare-install
+# coverage gap surfaced via shrnk-mono spec 013 dogfood 2026-05-12; sibling to
+# spec 008/009 detection). When a manager+verb pair matches but no packages are
+# collected AND the verb is a lockfile-resolve shape (npm/pnpm/bun `install` |
+# `i`), record it for the post-scan dirty-manifest advisory below. Defaults
+# stay empty so the existing skip-not-install path is unchanged when no bare
+# install was seen.
+bare_install_manager=""
+bare_install_action=""
+
 # shellcheck disable=SC2206  # intentional word-splitting on COMMAND
 tokens=( $COMMAND )
 n=${#tokens[@]}
@@ -305,6 +315,22 @@ while [ "$i" -lt "$((n - 1))" ]; do
   # Manager+verb matched but no packages collected (e.g. `npm install` alone,
   # or `pip install --help`). Treat as not-a-mutation and keep scanning in
   # case the command chains another install later.
+  #
+  # Bare-install sub-path: lockfile-resolve verbs (npm/pnpm/bun install|i) with
+  # no args resolve from the manifest+lockfile pair — semantically "apply
+  # pending dep declarations". Record the first such match so the post-scan
+  # branch can check for an uncommitted manifest and emit an advisory. Other
+  # empty matches (pip install --help, cargo install with no positional) are
+  # NOT recorded — they're genuine no-ops, not lockfile resolves.
+  if [ -z "$bare_install_manager" ]; then
+    case "$current.$verb_match" in
+      npm.install|npm.i|pnpm.install|pnpm.i|bun.install|bun.i)
+        bare_install_manager="$current"
+        bare_install_action="$verb_match"
+        ;;
+    esac
+  fi
+
   i=$((i + 1))
 done
 
@@ -312,8 +338,62 @@ done
 # Phase 5: Decision (mode-aware — spec 009)
 # ---------------------------------------------------------------------------
 if [ -z "$detected_manager" ]; then
-  # No install pattern matched → skip-not-install audit + silent exit.
-  # Same in both modes.
+  # Bare lockfile-resolve install + uncommitted manifest → advisory.
+  # Closes the parent-edit + bare-install coverage gap caught via shrnk-mono
+  # spec 013 dogfood 2026-05-12 (parent edits package.json, runs `bun install`,
+  # both layers silent; dep enters lockfile with zero audit signal). Extends
+  # spec 008/009 detection; not a separate capacity.
+  #
+  # Predicate: a manager+verb pair like `bun install` matched WITHOUT packages
+  # AND a recognised manifest basename (package.json / pyproject.toml /
+  # Cargo.toml / go.mod) is modified-uncommitted at hook time. Honors the
+  # OVERRIDE marker (silences stderr, records reason). Mode-agnostic — always
+  # advisory, never block; the intent was already declared via the manifest
+  # edit, blocking the resolve would be late.
+  if [ -n "$bare_install_manager" ] && git -C "$PROJECT_DIR" rev-parse --git-dir >/dev/null 2>&1; then
+    manifests_dirty=""
+    while IFS= read -r line; do
+      # Porcelain format: `XY<space>path` (2-char status + space + path).
+      # For renames `XY old -> new` take the destination name.
+      path="${line:3}"
+      case "$path" in
+        *' -> '*) path="${path##* -> }" ;;
+      esac
+      base="$(basename "$path")"
+      case "$base" in
+        package.json|pyproject.toml|Cargo.toml|go.mod)
+          # Dedup across multiple matches (monorepo with both apps/web/package.json
+          # and apps/api/package.json dirty → list `package.json` once).
+          case " $manifests_dirty " in
+            *" $base "*) ;;
+            *)
+              if [ -z "$manifests_dirty" ]; then
+                manifests_dirty="$base"
+              else
+                manifests_dirty="$manifests_dirty $base"
+              fi
+              ;;
+          esac
+          ;;
+      esac
+    done < <(git -C "$PROJECT_DIR" status --porcelain 2>/dev/null)
+
+    if [ -n "$manifests_dirty" ]; then
+      if [ "$override_valid" -eq 1 ]; then
+        append_audit "advisory-bare-install-override" \
+          "$bare_install_manager" "$bare_install_action" "[]" "$override_reason"
+      else
+        printf 'supply-chain-advisory: bare `%s %s` with uncommitted manifest(s): %s — installing newly-declared dep(s); add `# OVERRIDE: <reason ≥10 chars>` on its own line to silence\n' \
+          "$bare_install_manager" "$bare_install_action" "$manifests_dirty" >&2
+        append_audit "advisory-bare-install" \
+          "$bare_install_manager" "$bare_install_action" "[]" ""
+      fi
+      exit 0
+    fi
+  fi
+
+  # No install pattern matched (or bare-install without dirty manifest) →
+  # skip-not-install audit + silent exit. Same in both modes.
   append_audit "skip-not-install"
   exit 0
 fi

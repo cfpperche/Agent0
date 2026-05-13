@@ -1,0 +1,24 @@
+{
+  "name": "agent0-mcp-product-pipeline",
+  "version": "0.1.0",
+  "description": "MCP server owning the 12-step product-planning pipeline (Discovery + Identity + Specification) — Agent0's first capability extension. See docs/specs/025-mcp-product-pipeline/.",
+  "private": true,
+  "type": "module",
+  "main": "src/server.ts",
+  "scripts": {
+    "start": "bun run src/server.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  }
+}

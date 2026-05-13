@@ -1,4 +1,4 @@
-// Agent0 — MCP recipes (spec 012)
+// Agent0 — MCP recipes (specs 012 + 025)
 //
 // This file is a TEMPLATE. Workflow:
 //   1. cp .mcp.json.example .mcp.json
@@ -11,10 +11,16 @@
 //      claude. NEVER commit a populated DATABASE_URL to git.
 //   5. For Chrome DevTools MCP: confirm Chrome/Chrome-for-Testing is
 //      installed on the host (`which google-chrome`).
-//   6. Restart the Claude Code session — .mcp.json is loaded at start.
+//   6. For product-pipeline (spec 025): runs locally from this repo's
+//      packages/ subtree — only works WITHIN the Agent0 repo (or a fork
+//      that has cloned packages/mcp-product-pipeline/). Forks without
+//      packages/ wait for the v2 npm publish. Full activation docs:
+//      packages/mcp-product-pipeline/README.md
+//   7. Restart the Claude Code session — .mcp.json is loaded at start.
 //
 // Full per-recipe documentation (capabilities, when to enable, runtime
-// requirements, security): .claude/rules/mcp-recipes.md
+// requirements, security): .claude/rules/mcp-recipes.md (external MCPs)
+// and packages/mcp-product-pipeline/README.md (in-repo MCP).
 {
   "mcpServers": {
 //    "playwright": {
@@ -35,6 +41,10 @@
 //    "next-devtools": {
 //      "command": "npx",
 //      "args": ["-y", "next-devtools-mcp@latest"]
+//    },
+//    "product-pipeline": {
+//      "command": "bun",
+//      "args": ["run", "packages/mcp-product-pipeline/src/server.ts"]
 //    }
   }
 }

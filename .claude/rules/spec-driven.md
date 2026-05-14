@@ -36,7 +36,8 @@ Specs are **git-tracked** — they are the project's design memory. Don't gitign
 
 ## Workflow
 
-1. **Spec** — `/sdd new <slug>` scaffolds the three files. Fill `spec.md` first, alone. Don't plan how until you've nailed what.
+0. **Refine** *(optional)* — `/sdd refine` runs a discovery interview that turns a vague idea into a filled `spec.md`. Opt-in, and especially suited to the "vague request" trigger in § *When SDD applies* — when the *what* itself is unclear, refine before you scaffold. Skip it when the intent is already sharp; go straight to step 1.
+1. **Spec** — `/sdd new <slug>` scaffolds the three files. Fill `spec.md` first, alone (or let step 0 fill it). Don't plan how until you've nailed what.
 2. **Plan** — `/sdd plan` drafts `plan.md` from `spec.md`. Review and edit. Stop here if assumptions need user confirmation.
 3. **Tasks** — `/sdd tasks` drafts `tasks.md` from `plan.md`. Each task should be small enough that completing it is unambiguous.
 4. **Implement** — work `tasks.md` top-to-bottom. Check off as you go. If a task reveals the plan is wrong, update `plan.md` *before* continuing.

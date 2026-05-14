@@ -60,21 +60,85 @@ Screenshots at `/home/goat/Agent0/.playwright-mcp/step2-bench/step2-{1,2}-{compa
 
 Local server still running on `127.0.0.1:8765` (bash ID `b434meu0u`) serving `/tmp/bench/`. Can be killed when no longer needed.
 
-## Next step — Phase B task 12 (step 3 spec port)
+## Next step — STUDY the OD vendor before step 3 (user decision 2026-05-13)
 
-Source: anthill `anthill-spec` skill. Step 3 produces the visual spec — stakeholder-readable blueprint of the prototype's pages/components/interactions. Less ambitious visually than step 2 (no HTML mood boards), more rigorous on functional/interaction surface.
+User pause request: "antes do step3 vamos estudar o vendor open-design do anthill, escreva o handoff pra próxima sessão fresca". Step 3 (anthill-spec port) is BACKLOGGED behind a deep-dive study of the OD vendor bundle so the port plan can be informed by actual file inventory, manifest schema, and design decisions in the upstream — not just the snapshot summary in the existing memo.
 
-**Methodology to reuse for step 3:** the iteration cadence (refine templates → single producer → user opens in browser → verdict → refine) worked well; less need for blind judge once templates exist + user is reviewing visually. Step 3 may not have a benchmark-vs-anthill phase at all since output is markdown, not HTML.
+### Goal for the next fresh session
+
+Produce an OD vendor study document that takes the open architectural questions in `.claude/memory/od-vendor-port-plan.md` § "Open architectural questions" from "5 questions to resolve when scheduled" → "5 questions with concrete proposals + recommendation per question". This isn't yet the port itself — it's the spec material that the port will draw from.
+
+### Concrete sub-questions to answer in the study
+
+1. **Vendor location (memo Q1):** if we ship under `packages/mcp-product-pipeline/vendor/open-design/`, what's the npm tarball impact? Does Bun's package layout permit `include` of binary assets / large markdown trees? Are there precedents in our codebase (no — pure greenfield), how do shadcn/Cline ship vendored bundles?
+2. **Sync mechanism (memo Q2):** what does anthill's actual sync tool look like? Read `/home/goat/anthill/.anthill/vendor/open-design/MANIFEST.json` history entries — what triggered each "bump"? Is there a sync script in anthill (e.g., `.anthill/tools/sync-od.sh` or similar)? Should we replicate (cost vs benefit) or do manual re-vendor on bump?
+3. **License attribution surface (memo Q3):** Apache-2.0 means LICENSE + NOTICE must ship with the bundle. If we go path (a) bundled-in-package, npm `files` field needs explicit inclusion. Verify the `.LICENSE.provenance` shape and where it lives relative to LICENSE.
+4. **DESIGN.md selection UX (memo Q4):** propose the manifest shape — single `ds-index.json` at vendor root with `{ name, palette_summary, mood, schools[] }` per system, OR per-system `summary.md` head metadata, OR raw `ls` of `.vendor/design-systems/`. Each has tradeoffs on per-turn token cost vs flexibility. Recommend with justification.
+5. **Step 2 retrofit path (memo Q5):** when OD lands, exactly what changes in our current `packages/mcp-product-pipeline/src/templates/02-prototype/`? Quantify the LOC reduction in `references/pipeline.md` (the 5 canonical schools inline → 1-line "read .vendor/open-design/prompts/directions.ts"). Make the retrofit a concrete diff target.
+
+### Files to read deeply (priority order)
+
+1. `/home/goat/anthill/.anthill/vendor/open-design/MANIFEST.json` — full file (only ~3 KB; we read 80 lines earlier but the `history` section continues). Look at every `event` in history to understand the sync cadence.
+2. `/home/goat/anthill/.anthill/vendor/open-design/prompts/{system.ts, discovery.ts, directions.ts}` — these are the canonical Open Design prompts. What's in `system.ts` is THE foundational system prompt our future port either inlines OR reads as a vendored source. Critical to read.
+3. `/home/goat/anthill/.anthill/vendor/open-design/skills/web-prototype/SKILL.md` + `assets/template.html` + `references/{layouts.md, checklist.md}` — the canonical Web Prototype skill. Step 2's prototype methodology should ideally read from this seed rather than describe the 5 schools inline.
+4. `/home/goat/anthill/.anthill/vendor/open-design/skills/saas-landing/SKILL.md` — the SaaS Landing variant; may matter for step 5/8 ports later.
+5. `/home/goat/anthill/.anthill/design-systems/README.md` + 3-5 sample `DESIGN.md` files (e.g., linear-app, notion, stripe) to understand the structure agents would consume from.
+6. `/home/goat/anthill/.anthill/vendor/open-design/frames/{iphone-15-pro,macbook,browser-chrome}.html` — the device chrome shells; understand the API for embedding direction/screen renders inside them.
+7. `/home/goat/anthill/.anthill/vendor/open-design/templates/deck-framework.html` — pitch deck template; may matter for later port steps.
+8. Does anthill have a `.anthill/tools/sync-od-vendor.sh` or equivalent? `ls /home/goat/anthill/.anthill/tools/` to find out.
+
+### Output target
+
+Write a study document at `docs/specs/NNN-od-vendor-port/spec.md` (use `/sdd new od-vendor-port` to scaffold). The spec answers the 5 sub-questions concretely + names a recommended path. Plan.md + tasks.md follow once spec is approved.
+
+If during the study new questions surface, update `.claude/memory/od-vendor-port-plan.md` rather than overwriting the existing memo (keep it as the durable knowledge index; spec dir is the working plan).
+
+### What NOT to do in the next session
+
+- Don't start the actual port (writing code, copying files). Study only.
+- Don't proceed to step 3 (spec) until the OD study lands. Step 3 is paused pending the OD planning outcome — the question "should step 3 wait for OD vendor before porting" is itself one of the open questions.
+- Don't modify `packages/mcp-product-pipeline/src/templates/02-prototype/` — it's user-approved final form (commits 018478f + f32f42a).
 
 ### Anchoring file paths
 
-- spec 026 docs: `/home/goat/Agent0/docs/specs/026-mcp-pipeline-deep-port/{spec,plan,tasks}.md`
-- step 2 port (just-shipped reference for shape conventions): `/home/goat/Agent0/packages/mcp-product-pipeline/src/templates/02-prototype/`
-- step 1 port (reference for less visual steps): `/home/goat/Agent0/packages/mcp-product-pipeline/src/templates/01-ideation/`
-- anthill source for step 3: `/home/goat/anthill/.claude/skills/anthill-spec/` (verify exact dir on first read)
-- anthill output reference: `/home/goat/anthill/docs/sdlc/03-spec/<slug>-spec.md` (single file)
-- step 2 bench artifacts (kept for methodology reference): `/tmp/bench/step2-*`
-- OD vendor port memo: `/home/goat/Agent0/.claude/memory/od-vendor-port-plan.md`
+- OD vendor at anthill: `/home/goat/anthill/.anthill/vendor/open-design/`
+- Anthill design systems (73 systems): `/home/goat/anthill/.anthill/design-systems/`
+- Existing OD vendor port memo: `/home/goat/Agent0/.claude/memory/od-vendor-port-plan.md`
+- spec 026 docs (parent project, pause point): `/home/goat/Agent0/docs/specs/026-mcp-pipeline-deep-port/{spec,plan,tasks}.md`
+- step 2 port (just-shipped, approved): `/home/goat/Agent0/packages/mcp-product-pipeline/src/templates/02-prototype/`
+- step 1 port (reference for less visual steps, will inform step 3 when it resumes): `/home/goat/Agent0/packages/mcp-product-pipeline/src/templates/01-ideation/`
+- anthill source for step 3 (BACKLOGGED): `/home/goat/anthill/.claude/skills/anthill-spec/`
+- step 2 bench artifacts: `/tmp/bench/step2-*`
+
+### Carryover system state
+
+- HTTP server running on `127.0.0.1:8765` from this session (bash ID `b434meu0u`) serving `/tmp/bench/`. Survives this session as a background process. Kill with `pkill -f "http.server 8765"` when no longer needed.
+- `.playwright-mcp/step2-bench/*.png` (8 PNGs from step 2 bench) — gitignored, project-local.
+- `/tmp/bench/step2-{A,B,1,2,refined,refined-v2,refined-v3,refined-v4}/` directories all preserved on disk — methodological reference, can be wiped when starting fresh.
+
+### Phase B remaining tasks (tasks.md numbering — step 3 PAUSED)
+
+- [x] 10 step 1 ideation
+- [x] **11 step 2 prototype** ← SHIPPED (4 iterations approved)
+- [ ] **OD vendor study** ← INSERTED before step 3 (user direction 2026-05-13)
+- [ ] **OD vendor port** ← after study lands
+- [ ] 12 step 3 spec ← BACKLOGGED behind OD study/port
+- [ ] 13 step 4 ux-testing
+- [ ] 14 step 5 brand
+- [ ] 15 step 6 design-system (visual + tokens.css consumed by 7+13)
+- [ ] 16 step 7 prototype-v2 (visual)
+- [ ] 17 step 8 PRD (establish user-story ID convention)
+- [ ] 18 step 9 system-design (multi-artifact)
+- [ ] 19 step 10 cost-estimate
+- [ ] 20 step 11 roadmap
+- [ ] 21 step 12 legal
+- [ ] 22 step 13 prototype-v3 (NEW; synthesis; depends on 5/6/8)
+
+### Why pause before step 3
+
+User intuition: each port step that touches visual surfaces (step 2 just landed, step 5 brand, step 6 design-system, step 7 prototype-v2, step 13 prototype-v3) would benefit from the OD vendor's vendored design-system library (73 DESIGN.md files) being available. Step 2 ships without OD as interim — the methodology relies on agent training-data knowledge of named systems. For steps 5/6/13 that's a weaker grounding. Better to do the OD port FIRST (or at least decide its scope), then the visual lane of step 5/6/7/13 can build on it.
+
+Step 3 (spec — markdown-only, no visual surface) is less load-bearing on OD but pauses too — both for sequencing simplicity and because the user explicitly asked for the pause.
 
 ### Phase B remaining tasks (tasks.md numbering)
 

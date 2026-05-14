@@ -5,11 +5,21 @@
   "private": true,
   "type": "module",
   "main": "src/server.ts",
+  "files": [
+    "src/",
+    "vendor/",
+    "design-systems/",
+    "schemas/",
+    "scripts/",
+    "README.md"
+  ],
   "scripts": {
     "start": "bun run src/server.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "bun test"
+    "test": "bun test",
+    "sync": "bun scripts/sync-open-design.ts",
+    "prepublishOnly": "bun scripts/sync-open-design.ts --verify"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0"

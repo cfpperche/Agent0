@@ -1,31 +1,20 @@
 # Pipeline — html-mockup direction generation
 
-The operational playbook for step 2's Turn 1: discovery → 3 direction families → build → 5-dim critique → emit. Replaces anthill's `.anthill/vendor/open-design/` (OD) bundle inline. When the OD vendor ports to this repo (see `.claude/memory/od-vendor-port-plan.md`), this file shrinks dramatically and gains explicit DESIGN.md-citation grounding.
+The operational playbook for step 2's Turn 1: discovery → 3 direction families → build → 5-dim critique → emit.
 
-## 5 canonical schools (starting families)
+## OD vendor grounding — read `od-bridge.md` first
 
-These are the 5 visual schools from OD's `directions.extracted.md`. Each direction the agent emits should map to ONE of these, OR explicitly justify a blend (e.g., "Notion × Stripe — warm-soft × tech-utility hybrid for fintech-clean aesthetic").
+The Open Design (OD) vendor bundle ships **inside** the `agent0-mcp-product-pipeline` package (spec 027): 72 named `DESIGN.md` design systems + 33 skill bundles + the canonical 5-school direction library, all pinned and checksum-verified.
 
-| id | Label | Mood | Palette family | Type | Named references | School-specific tells |
-|----|-------|------|----------------|------|------------------|----------------------|
-| `editorial-monocle` | Editorial — Monocle / FT magazine | Print-magazine feel, content-led, calm | Off-white + ink + warm rust | Serif display + system body | Monocle, FT, NYT Cooking, The New Yorker | `font-feature-settings: "smcp"` for small-caps eyebrows; rule-line dividers (`border-top: 1px solid`); pull-quote with rust `border-left` |
-| `modern-minimal` | Modern minimal — Linear / Vercel | Dark or near-white, restrained, tech-product | Near-black or near-white + cobalt accent | System sans throughout | Linear, Vercel, Raycast, Arc browser | **Linear OpenType:** `font-feature-settings: "cv01", "ss03"` on body (activates Linear's actual variant alternates — insider tell); hairline borders 1px no shadow; tight letter-spacing `-0.03 to -0.04em`; weight-300 display |
-| `warm-soft` | Warm soft — Stripe pre-2020 / Headspace | Approachable, fintech-friendly, human | Cream bg + terracotta or moss-green accent | Serif display + system body | Stripe (pre-2020), Headspace, Notion (pre-AI), Calm | Soft shadow stack (multi-layer low-opacity); generous radius (`8-16px`); warm neutral grays (not pure gray) |
-| `tech-utility` | Tech / utility — Datadog / GitHub | Data-dense, ops-focused, functional | Dark or light + grid + monospace accents | Mono headings + system body | Datadog, GitHub, Grafana, Sentry | Monospace display: `font-feature-settings: "kern", "liga"` on JetBrains/IBM Plex Mono; square corners `3px max radius`; grid-paper background pattern allowed |
-| `brutalist-experimental` | Brutalist / experimental — Are.na / Yale | Loud type, visible grid, statement | Hot-red / electric-yellow + black + white | Display sans (large), tight letter-spacing | Are.na, Yale School of Art, MSCHF, KFC Studios | Display sans at 6-9rem; visible 12-column grid overlay; one decisive flourish (rotated heading, oversized punctuation, baseline shift) |
+**The grounded path is `references/od-bridge.md`.** It teaches the two MCP tools (`product_design_systems_index`, `product_design_system_path`), the pre-flight read sequence, and the mandatory DS-citation rule. Each direction is composed from 1-4 named vendored design systems and cites them by name in `REPORT.md` — replacing "agent invents palette/typography from training data" with "agent reads a vendored, pinned `DESIGN.md`".
 
-**Picking 3 distinct directions:**
-
-- The 3 directions MUST come from different palette families. Two "modern-minimal" picks with different greens are NOT distinct — pick one and replace the other with a contrasting school
-- A direction can blend 2 schools (e.g., `tech-utility` × `warm-soft`) when the brief justifies it. Cite both in REPORT.md ("custom — Notion × Stripe blend, justified by brief's explicit Notion-meets-Stripe example")
-- Match a brief-stated preference verbatim. Brief says "brutalist with hot red"? → `brutalist-experimental` is one of the 3, not optional
-- Brief silent on tone → pick 3 contrasting schools that cover different product personalities (e.g., `modern-minimal` + `warm-soft` + `tech-utility` is a safe diverse triple)
+Read `od-bridge.md` before the discovery turn. The discovery / build / critique guidance below is the playbook `od-bridge.md` feeds into; the **Manual escape** section at the bottom of this file is the fallback when the vendor is genuinely unavailable.
 
 ## Discovery — what to elicit before picking directions
 
 The brief from step 1 already carries audience + JTBD + scale + AI-nativity. Discovery fills the 3 gaps the brief usually doesn't cover at this depth:
 
-1. **Visual tone preference** — 2-3 adjectives. If brief is silent, ask. Adjectives point at schools above
+1. **Visual tone preference** — 2-3 adjectives. If brief is silent, ask. Adjectives point at the OD schools (see `directions.extracted.md` via `od-bridge.md`)
 2. **Brand context** — existing brand spec? Reference site to match? Or "pick for me"? A named reference (e.g., "match Linear's vibe") becomes a direction anchor — one of the 3 must be Linear-anchored
 3. **Hard constraints** — explicit "no" patterns ("no dark mode default", "no serif", "must be PT-BR + Pix-first"). These disqualify schools that would violate them
 
@@ -72,6 +61,8 @@ Each `direction-{a,b,c}.html` is a self-contained file (no external deps). Canon
 </html>
 ```
 
+When the OD vendor is available, seed from `<vendor_paths.skills>/web-prototype/assets/template.html` instead of the bare scaffold above — see `od-bridge.md` § *Build phase*. The scaffold above is the shape; the vendored template is the pre-baked token system + class inventory.
+
 ### Build phase rules (hard — any failure = fix pass before emit)
 
 1. All 6 palette tokens declared in `:root` (`--background` / `--foreground` / `--primary` / `--accent` / `--border` / `--muted`)
@@ -86,7 +77,7 @@ Each `direction-{a,b,c}.html` is a self-contained file (no external deps). Canon
 3. All colors in `hsl()` or `oklch()` syntax — no bare hex literals, no `rgb()`. `hsl()` is the safe default for browser compat; `oklch()` is preferred when the palette is being tuned for perceptual uniformity (warm-soft, editorial directions especially benefit)
 4. **All 8 required surfaces present** per prompt.md § 4: header, palette strip, type sample, hero sample, dashboard sample, **charts & sparklines sample (≥ 2 data-viz instances — one brief-grounded chart + one flex second)**, **pricing tile grid (3 tiers, "Most Popular" emphasis on Pro)**, personality footer / DS lineage. Pricing-as-product-UI gives the founder a second product surface beyond the dashboard; charts validate the direction's data-viz token vocabulary (line colors, axis style, sparkline density) which the palette strip alone can't reveal
 5. **Section rhythm: 4-layer pattern per content section** — every content section uses eyebrow + title + lead + body (see prompt.md § 4 for the canonical HTML pattern). Headings alone produce "loose sections"; the eyebrow + title + lead trio produces landing-page narrative cohesion. The header and palette strip sections may use a lighter variant (no lead) but sections #3-#6 require all 4 layers
-6. **School-specific OpenType applied** per the table above — the Linear-anchored direction MUST carry `font-feature-settings: "cv01", "ss03"` on body; other schools apply their school tells when applicable
+6. **School-specific OpenType applied** — per the school spec in `directions.extracted.md` (vendored; via `od-bridge.md`) or the Manual escape table below. The Linear-anchored direction MUST carry `font-feature-settings: "cv01", "ss03"` on body; other schools apply their school tells when applicable
 7. Maximum 3 heading levels per file (page title / section title / card title)
 8. No fixed widths on containers — use `max-width` + percentage/auto + flex/grid for layout
 9. Skip-to-content link as first focusable element (a11y floor)
@@ -111,6 +102,8 @@ Read `references/anti-patterns.md` for the full rationale per rule. Quick refere
 - **PT-BR products:** Pix QR Code prominent if fintech/payment-adjacent; LGPD footer link mandatory; PT-BR copy throughout (currency `R$ 19,90` not `$19.90`)
 - **Token-economy products:** cost badge on action buttons (`Otimizar CV · 3🪙`); saldo visible in header; double-confirm for ≥ 5 tokens
 
+When the OD vendor is available, also run the vendored `checklist.md` (`<vendor_paths.skills>/web-prototype/references/checklist.md`) — it carries the OD project's own P0/P1/P2 list.
+
 ## 5-dim critique (pre-emit gate)
 
 Score each direction 1-5 on each dimension. Any dimension < 3/5 requires a fix pass. Read `references/checklist.md` for the full rubric.
@@ -125,13 +118,29 @@ Score each direction 1-5 on each dimension. Any dimension < 3/5 requires a fix p
 
 Two fix passes is normal. Do NOT emit with a failing dimension.
 
-## When the OD vendor lands
+## Manual escape — OD vendor unavailable
 
-This document is the interim. When the OD vendor ports (`.claude/memory/od-vendor-port-plan.md`):
+**Use this section ONLY when `product_design_systems_index` returns `code: "od-vendor-missing"`** — i.e. a broken install where the vendored bundle did not ship. This is not a legitimate steady-state path; the grounded path (`od-bridge.md` + the two MCP tools) produces measurably better output because each direction carries a real DESIGN.md citation chain. The escape exists so an operator hitting the fail-loud error can *consciously choose* to proceed without grounding — degradation stays explicit, never silent.
 
-1. Replace the 5-school table with `read .vendor/open-design/prompts/directions.ts` (canonical schools live there)
-2. Replace the build-phase HTML scaffold with `copy .vendor/open-design/skills/web-prototype/assets/template.html` as seed (token system + class inventory pre-baked)
-3. Add a mandatory "Design Systems Consulted" entry that grounds each direction in a vendored `.vendor/design-systems/<system>/DESIGN.md` file path (not just a name-drop). REPORT.md gains a Citation Chain section enforced via schema
-4. Frames (`.vendor/open-design/frames/{iphone-15-pro,macbook,browser-chrome}.html`) become optional device-chrome wrappers for screen mocks in Turn 2
+In manual-escape mode the agent grounds directions in training-data knowledge of named design systems, using the 5-school table below as the direction library (the same library `directions.extracted.md` carries in vendored form).
 
-Until then, the agent grounds directions in training-data knowledge of named design systems. Quality target: anthill's pivota-level citation chain in REPORT.md, even without vendored DS files.
+### 5 canonical schools (starting families)
+
+Each direction the agent emits should map to ONE of these, OR explicitly justify a blend (e.g., "Notion × Stripe — warm-soft × tech-utility hybrid for fintech-clean aesthetic").
+
+| id | Label | Mood | Palette family | Type | Named references | School-specific tells |
+|----|-------|------|----------------|------|------------------|----------------------|
+| `editorial-monocle` | Editorial — Monocle / FT magazine | Print-magazine feel, content-led, calm | Off-white + ink + warm rust | Serif display + system body | Monocle, FT, NYT Cooking, The New Yorker | `font-feature-settings: "smcp"` for small-caps eyebrows; rule-line dividers (`border-top: 1px solid`); pull-quote with rust `border-left` |
+| `modern-minimal` | Modern minimal — Linear / Vercel | Dark or near-white, restrained, tech-product | Near-black or near-white + cobalt accent | System sans throughout | Linear, Vercel, Raycast, Arc browser | **Linear OpenType:** `font-feature-settings: "cv01", "ss03"` on body (activates Linear's actual variant alternates — insider tell); hairline borders 1px no shadow; tight letter-spacing `-0.03 to -0.04em`; weight-300 display |
+| `warm-soft` | Warm soft — Stripe pre-2020 / Headspace | Approachable, fintech-friendly, human | Cream bg + terracotta or moss-green accent | Serif display + system body | Stripe (pre-2020), Headspace, Notion (pre-AI), Calm | Soft shadow stack (multi-layer low-opacity); generous radius (`8-16px`); warm neutral grays (not pure gray) |
+| `tech-utility` | Tech / utility — Datadog / GitHub | Data-dense, ops-focused, functional | Dark or light + grid + monospace accents | Mono headings + system body | Datadog, GitHub, Grafana, Sentry | Monospace display: `font-feature-settings: "kern", "liga"` on JetBrains/IBM Plex Mono; square corners `3px max radius`; grid-paper background pattern allowed |
+| `brutalist-experimental` | Brutalist / experimental — Are.na / Yale | Loud type, visible grid, statement | Hot-red / electric-yellow + black + white | Display sans (large), tight letter-spacing | Are.na, Yale School of Art, MSCHF, KFC Studios | Display sans at 6-9rem; visible 12-column grid overlay; one decisive flourish (rotated heading, oversized punctuation, baseline shift) |
+
+### Picking 3 distinct directions
+
+- The 3 directions MUST come from different palette families. Two "modern-minimal" picks with different greens are NOT distinct — pick one and replace the other with a contrasting school
+- A direction can blend 2 schools (e.g., `tech-utility` × `warm-soft`) when the brief justifies it. Cite both in REPORT.md ("custom — Notion × Stripe blend, justified by brief's explicit Notion-meets-Stripe example")
+- Match a brief-stated preference verbatim. Brief says "brutalist with hot red"? → `brutalist-experimental` is one of the 3, not optional
+- Brief silent on tone → pick 3 contrasting schools that cover different product personalities (e.g., `modern-minimal` + `warm-soft` + `tech-utility` is a safe diverse triple)
+
+Even in manual-escape mode, `REPORT.md` still cites the named design systems each direction draws from — the citation chain is the quality wedge, vendored or not.

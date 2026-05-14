@@ -56,7 +56,8 @@ The Identity block (codename, palette tokens, type stack, citation chain per dir
         "Hierarchy",
         "Execution",
         "Specificity",
-        "Restraint"
+        "Restraint",
+        "design-systems/"
       ]
     }
   ],
@@ -87,7 +88,7 @@ The Identity block (codename, palette tokens, type stack, citation chain per dir
 The schema enforces presence and floors; *depth* is the agent's responsibility. Quality cues per section:
 
 - **Run Summary** — discovery answers (or "brief pre-answered direction count"); mode (`html-mockup` always at this step); output paths surfaced as `file://` URLs
-- **Design Systems Consulted** — table: System / DS reference / Used in Direction. Cite ≥ 3 distinct named systems across the 3 directions. If a direction blends 2 systems (e.g., Notion × Stripe), list both rows. This is the citation chain that grounds direction picks in real product references rather than invented vibes
+- **Design Systems Consulted** — table: System / **vendored `DESIGN.md` path** / Used in Direction. Cite ≥ 3 distinct vendored systems across the 3 directions, **each with its `design-systems/<system>/DESIGN.md` path** (the path resolved via `product_design_system_path` — name-drop without the path is not a citation). If a direction blends 2 systems (e.g., Notion × Stripe), list both rows. This is the citation chain that grounds direction picks in real, vendored product references rather than invented vibes. The Layer 1 `contains` check on `design-systems/` enforces that at least one such path is present
 - **3 Direction Summaries** — per direction, in this order: codename, file path, visual DNA (palette + type + layout posture), DS composite, direction-library match (one of the 5 schools or "custom — justified by [reason]"), personality blurb, key brief-compliance highlights, key anti-slop checks passed
 - **5-Dim Critique** — table: Direction | Philosophy | Hierarchy | Execution | Specificity | Restraint | Min. The `Min` column carries the gate-pass indicator (✓ if ≥ 3). Any score < 3 should have been fixed in a pre-emit pass — if it lands in the final report, the agent has a discipline failure to explain in the next "Critique notes" subsection
 - **Anti-AI-Slop Audit** — table of all P0 rules × A/B/C with ✓ or specific note. PT-BR / Pix / LGPD rows only when product is Brazilian
@@ -97,4 +98,8 @@ The schema enforces presence and floors; *depth* is the agent's responsibility. 
 
 ## Citations and named systems
 
-When citing a named design system, the citation should be specific enough that a reader holding the brief and the cited system's homepage can verify the visual claim. "Composed from Linear" is acceptable; "Composed from Linear's hairline borders + tight letter-spacing + near-black canvas with cobalt accent" is better and reads as a real reference rather than a name-drop. The 5-dim Specificity score is partially derived from how concrete these citations are.
+DS-by-name citation is **mandatory**: every direction names the vendored design systems it composes from, and `REPORT.md` § "Design Systems Consulted" cites each one with its `design-systems/<system>/DESIGN.md` path (resolved via `product_design_system_path`). The Layer 1 `contains` check on the substring `design-systems/` is the machine-enforced floor — a REPORT with zero vendored-path citations trips `schema-incomplete`.
+
+Beyond presence, the citation should be specific enough that a reader holding the brief and the vendored `DESIGN.md` can verify the visual claim. "Composed from `design-systems/linear-app/DESIGN.md`" is the floor; "Composed from Linear's hairline borders + tight letter-spacing + near-black canvas with cobalt accent — `design-systems/linear-app/DESIGN.md`" is better and reads as a real reference rather than a name-drop. The 5-dim Specificity score is partially derived from how concrete these citations are.
+
+When the OD vendor is genuinely unavailable (`product_design_systems_index` → `code: "od-vendor-missing"`, a broken install), the manual-escape path still cites named systems — but without vendored paths the `design-systems/` Layer 1 check cannot pass. In that case the agent includes the substring `design-systems/` in a comment documenting the escape (`<!-- od-vendor-missing: directions grounded in training-data knowledge of design-systems/; see pipeline.md § Manual escape -->`) so the discipline failure is visible rather than silent.

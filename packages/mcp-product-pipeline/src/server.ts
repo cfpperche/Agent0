@@ -7,9 +7,11 @@
  * "product-pipeline" block in .mcp.json (copy from .mcp.json.example).
  *
  * Spec: docs/specs/025-mcp-product-pipeline/. Tool surface defined in
- * tools.ts (8 tools: product_status, product_start, product_step_get,
+ * tools.ts (10 tools: product_status, product_start, product_step_get,
  * product_step_submit, product_advance, product_gate_pass, product_done,
- * product_get_delegation_brief).
+ * product_get_delegation_brief, plus the Open Design vendor tools
+ * product_design_systems_index + product_design_system_path — spec 027).
+ * registerAllTools(server) wires the full surface.
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";

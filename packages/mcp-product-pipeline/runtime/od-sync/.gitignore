@@ -1,0 +1,5 @@
+# OD sync runtime artifacts.
+# Daily --check reports (*.md) are committed as the audit trail.
+# Tarball cache and extraction scratch dirs are not.
+tarball-*.tar.gz
+extracted-*/

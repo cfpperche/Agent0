@@ -189,3 +189,5 @@ See [`docs/specs/025-mcp-product-pipeline/spec.md`](../../docs/specs/025-mcp-pro
 ## License
 
 Same as Agent0. Apache 2.0 (when Agent0 publishes) — see repo root `LICENSE` once present.
+
+The vendored Open Design bundle under `vendor/open-design/` and `design-systems/` (spec 027) carries its own Apache-2.0 license and attribution — see [`vendor/open-design/LICENSE`](vendor/open-design/LICENSE), [`vendor/open-design/NOTICE`](vendor/open-design/NOTICE), and `vendor/open-design/MANIFEST.json` (`license_attribution[]`).

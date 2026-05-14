@@ -78,21 +78,23 @@ The brief usually answered most of these. Only ask what's genuinely missing. One
 
 ### 3. Pick 3 direction families (genuinely distinct)
 
-Read `references/pipeline.md` § "5 canonical schools" before proceeding. The 5 schools (editorial-monocle / modern-minimal / warm-soft / tech-utility / brutalist-experimental) are starting families — directions can blend or deviate when the brief justifies it.
+**OD vendor pre-flight — do this first.** Read `references/od-bridge.md`, then call `product_design_systems_index`. It returns the 72-system catalogue (`{name, mood, palette_summary}` each) plus a `vendor_paths` map of absolute roots. For each direction, shortlist 1-4 vendored design systems, call `product_design_system_path("<system>")` for each, and `Read` the returned `DESIGN.md` — that vendored, pinned file is the compositional source (palette roles, typography rules, component stylings, layout principles) for the direction, replacing training-data guesswork. Also read `<vendor_paths.prompts>/directions.extracted.md` for the 5 canonical schools' full specs. If `product_design_systems_index` returns `code: "od-vendor-missing"`, surface the error and fall back to `references/pipeline.md` § "Manual escape — OD vendor unavailable".
+
+The 5 schools (editorial-monocle / modern-minimal / warm-soft / tech-utility / brutalist-experimental) are starting families — each direction maps to one, or a justified blend.
 
 **Hard rule:** the 3 directions must come from genuinely different angles — different palette family, different typographic personality, different layout posture. NOT three takes on the same green. If two directions land in the same school, drop one and pick a contrasting school.
 
 Per direction, pin in chat BEFORE writing HTML:
 - **Codename** (e.g., "Operador Silencioso", "Calma Estratégica") — visual DNA reference, not marketing label
-- **Palette** — 6 tokens (background / foreground / primary / accent / border / muted) with exact `hsl()` / `oklch()` values
+- **Palette** — 6 tokens (background / foreground / primary / accent / border / muted) with exact `hsl()` / `oklch()` values, taken from the consulted `DESIGN.md` files (verbatim, not improvised)
 - **Type** — heading font family + body font family + signature weight
 - **Layout posture** — density level + container max-width + signature shape (e.g., "hairline borders, near-zero radius, dark canvas")
 - **Mood blurb** — one sentence in product voice (PT-BR if Brazilian) — why this direction
-- **Citation chain** — 1-3 named design systems composed (Linear, Notion, Stripe, Wise, etc.). Cited by name in REPORT.md
+- **Citation chain** — 1-4 vendored design systems composed, each cited in REPORT.md by name **and** `DESIGN.md` path (`design-systems/<system>/DESIGN.md`). Name-drop without the path is not a citation
 
 ### 4. Build the 3 mood-board HTMLs
 
-Read `references/visual-constraints.md` + `references/a11y-checklist.md` + `references/anti-patterns.md` BEFORE writing. Each `direction-{a,b,c}.html` is a **MOOD BOARD** — a sequence of labeled DEMONSTRATION sections each showing one UI surface (hero / dashboard / pricing / etc.) rendered in the direction's tokens. Read as a cohesive document with landing-page narrative flow (eyebrow + title + lead + body rhythm), but the framing is "here's how X looks in this design system" — NOT "marketing landing page that happens to use these tokens".
+Read `references/visual-constraints.md` + `references/a11y-checklist.md` + `references/anti-patterns.md` BEFORE writing. When the OD vendor is available, seed each file from `<vendor_paths.skills>/web-prototype/assets/template.html` (pre-baked token system + class inventory) rather than the bare scaffold — see `references/od-bridge.md` § *Build phase*. Each `direction-{a,b,c}.html` is a **MOOD BOARD** — a sequence of labeled DEMONSTRATION sections each showing one UI surface (hero / dashboard / pricing / etc.) rendered in the direction's tokens. Read as a cohesive document with landing-page narrative flow (eyebrow + title + lead + body rhythm), but the framing is "here's how X looks in this design system" — NOT "marketing landing page that happens to use these tokens".
 
 **Critical distinction:** sections are SAMPLES of UI surfaces, not the surfaces themselves in production framing. A "hero sample" section presents the hero design pattern; it is NOT the product's marketing landing-page hero with codename badge above it. A "dashboard sample" section presents the dashboard design pattern; it is NOT the user's actual triage view.
 
@@ -292,4 +294,4 @@ Call `product_advance` to move to step 3 (spec). Step 2 carries a Layer 3 checkp
 
 Anthill's `anthill-prototype` skill (402 LOC SKILL.md + 10 references = 2311 LOC total) in `html-mockup` mode. The `stack-native` half (full-product / mobile-native / shadcn-bootstrap = 1382 LOC across 3 references) is OUT OF SCOPE per spec 026 — those reappear when step 13 (prototype-v3) gets the framework-synthesis port.
 
-The OD vendor bundle (`.anthill/vendor/open-design/` + `.anthill/design-systems/`) that anthill references at every direction-picking step is **not yet ported** — see `.claude/memory/od-vendor-port-plan.md`. While OD is unported, this step relies on the agent's training-data knowledge of named design systems (Linear, Notion, Stripe, Wise, etc.) rather than vendored DESIGN.md files. When OD ports, `references/pipeline.md` will shrink dramatically and DESIGN.md citation becomes mandatory.
+The OD vendor bundle (anthill's `.anthill/vendor/open-design/` + `.anthill/design-systems/`) is **ported and ships inside this package** (spec 027): 72 vendored `DESIGN.md` design systems + 33 skill bundles + the 5-school direction library, pinned and checksum-verified. The agent grounds each direction in a vendored `DESIGN.md` via `product_design_systems_index` + `product_design_system_path` — see `references/od-bridge.md` for the pre-flight read sequence. DESIGN.md citation by name + path is mandatory (`schema.md` enforces it). The pre-OD inline 5-school description is retained in `references/pipeline.md` § "Manual escape — OD vendor unavailable" as a documented fallback for broken installs.

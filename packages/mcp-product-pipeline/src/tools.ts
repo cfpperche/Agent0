@@ -52,6 +52,12 @@ import {
   type RequiredFileGlob,
   type RequiredFilesSpec,
 } from "./templates.js";
+import {
+  VendorMissingError,
+  designSystemPath,
+  loadDsIndex,
+  vendorAnchors,
+} from "./od.js";
 
 // ─── helpers ─────────────────────────────────────────────────────
 
@@ -634,6 +640,67 @@ async function handleGetDelegationBrief({ step_n }: { step_n: number }) {
   return ok(brief);
 }
 
+// ─── tool: product_design_systems_index ──────────────────────────
+
+/**
+ * Return the parsed `ds-index.json` — all 72 vendored design systems, one
+ * `{name, mood, palette_summary}` line each. Reads the generated index file;
+ * does NOT walk the design-systems/ tree per call. Fail-loud (od-vendor-missing)
+ * when the vendor bundle is absent.
+ */
+async function handleDesignSystemsIndex() {
+  try {
+    const index = loadDsIndex();
+    return ok(
+      JSON.stringify(
+        {
+          ...index,
+          // Absolute roots for the vendored subtrees the agent reads directly.
+          // The agent builds paths into the installed package from these without
+          // knowing where npm placed it (od-bridge.md teaches the read sequence).
+          vendor_paths: vendorAnchors(),
+        },
+        null,
+        2,
+      ),
+    );
+  } catch (e: unknown) {
+    if (e instanceof VendorMissingError) {
+      return err({ code: e.code, missing: e.missing, message: e.message });
+    }
+    return err({ code: "ds-index-error", message: (e as Error).message });
+  }
+}
+
+// ─── tool: product_design_system_path ────────────────────────────
+
+/**
+ * Resolve a design system name to the absolute path of its `DESIGN.md` so the
+ * agent can Read it directly. The MCP resolves paths; it does not stream file
+ * content. Fail-loud on an unknown name or a missing vendor tree.
+ */
+async function handleDesignSystemPath({ name }: { name: string }) {
+  try {
+    const path = designSystemPath(name);
+    return ok(
+      JSON.stringify(
+        {
+          name,
+          path,
+          read_hint: "use your Read tool on `path` — the MCP resolves paths, it does not stream content",
+        },
+        null,
+        2,
+      ),
+    );
+  } catch (e: unknown) {
+    if (e instanceof VendorMissingError) {
+      return err({ code: e.code, missing: e.missing, message: e.message });
+    }
+    return err({ code: "unknown-design-system", name, message: (e as Error).message });
+  }
+}
+
 // ─── registration ────────────────────────────────────────────────
 
 export function registerAllTools(server: McpServer): void {
@@ -721,5 +788,24 @@ export function registerAllTools(server: McpServer): void {
       },
     },
     handleGetDelegationBrief,
+  );
+
+  server.registerTool(
+    "product_design_systems_index",
+    {
+      description: "Return the index of all 72 vendored Open Design systems (Linear, Notion, Stripe, Wise, …) as {name, mood, palette_summary} entries, sourced from the generated vendor/open-design/.cache/ds-index.json. Use this during prototype steps to pick 1-4 design systems to ground each visual direction; cite the chosen systems by name in the step REPORT. Errors with od-vendor-missing if the vendor bundle is absent (broken install).",
+    },
+    handleDesignSystemsIndex,
+  );
+
+  server.registerTool(
+    "product_design_system_path",
+    {
+      description: "Resolve a design system name (from product_design_systems_index) to the absolute path of its DESIGN.md. Read the returned path with your own Read tool — the MCP resolves paths, it does not stream content. Errors with unknown-design-system on an unknown name, od-vendor-missing if the vendor bundle is absent.",
+      inputSchema: {
+        name: z.string().describe("kebab-case design system name, e.g. \"linear-app\" or \"stripe\". Must match a directory under the vendored design-systems/ tree."),
+      },
+    },
+    handleDesignSystemPath,
   );
 }

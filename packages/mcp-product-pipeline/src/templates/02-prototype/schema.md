@@ -24,23 +24,23 @@ The Identity block (codename, palette tokens, type stack, citation chain per dir
   "required_files": [
     {
       "path": "direction-a.html",
-      "min_size": 8192,
-      "contains": ["<!DOCTYPE html", "<style", ":root", "--background", "--foreground", "--primary", "Most Popular"]
+      "min_size": 10240,
+      "contains": ["<!DOCTYPE html", "<style", ":root", "--background", "--foreground", "--primary", "Most Popular", "<svg"]
     },
     {
       "path": "direction-b.html",
-      "min_size": 8192,
-      "contains": ["<!DOCTYPE html", "<style", ":root", "--background", "--foreground", "--primary", "Most Popular"]
+      "min_size": 10240,
+      "contains": ["<!DOCTYPE html", "<style", ":root", "--background", "--foreground", "--primary", "Most Popular", "<svg"]
     },
     {
       "path": "direction-c.html",
-      "min_size": 8192,
-      "contains": ["<!DOCTYPE html", "<style", ":root", "--background", "--foreground", "--primary", "Most Popular"]
+      "min_size": 10240,
+      "contains": ["<!DOCTYPE html", "<style", ":root", "--background", "--foreground", "--primary", "Most Popular", "<svg"]
     },
     {
       "path": "compare.html",
       "min_size": 4096,
-      "contains": ["<!DOCTYPE html", "direction-a", "direction-b", "direction-c", "Palette", "School"]
+      "contains": ["<!DOCTYPE html", "direction-a", "direction-b", "direction-c", "Palette", "School", "Anti-AI-slop", "PASS"]
     },
     {
       "path": "REPORT.md",
@@ -73,10 +73,11 @@ The Identity block (codename, palette tokens, type stack, citation chain per dir
 
 ### Notes on the floors
 
-- **`direction-{a,b,c}.html` min_size 8192** — pivota's anthill reference landed at 17-20 KB. Step 2 benchmark (2026-05-13) showed both producers landing at 36-47 KB. An 8 KB floor catches stubs while allowing terser direction variants to pass
+- **`direction-{a,b,c}.html` min_size 10240** (10 KB) — bumped from 8 KB after adding the charts & sparklines section in refinement v4. Pivota's anthill reference landed at 17-20 KB; benchmark runs land at 33-47 KB. A 10 KB floor catches stubs while allowing terse variants
 - Each direction file's `contains` enforces:
   - The `:root` token system + 3 canonical token names (`--background` / `--foreground` / `--primary`) — agents that forget the token system trip Layer 1 immediately
-  - The substring `Most Popular` — proxy for the required **pricing tile grid** surface (see prompt.md § 4 section #6). The "Most Popular" badge convention is universal across SaaS pricing surfaces; if a product's tier structure uses a different highlight word (e.g., "Recommended", "Featured", or "Free Forever" for a free-only product), the agent should include the literal substring `Most Popular` in a comment (`<!-- Most Popular tier: rendered as "Recommended" because <reason> -->`) or as the emphasis label, to pass the check
+  - The substring `Most Popular` — proxy for the required **pricing tile grid** surface (see prompt.md § 4 section #7). The "Most Popular" badge convention is universal across SaaS pricing surfaces; if a product's tier structure uses a different highlight word (e.g., "Recommended", "Featured", or "Free Forever" for a free-only product), the agent should include the literal substring `Most Popular` in a comment (`<!-- Most Popular tier: rendered as "Recommended" because <reason> -->`) or as the emphasis label, to pass the check
+  - The substring `<svg` — proxy for the required **charts & sparklines sample** surface (see prompt.md § 4 section #6). Inline SVG is the canonical way to render charts in self-contained HTML; agents that skip the charts section trip Layer 1 immediately. CSS-only chart treatments (e.g., a `<div>` height-grid bar chart) that don't use `<svg` should include the substring `<svg` in a comment (`<!-- chart rendered as CSS grid; no SVG used -->`) to pass
 - **`compare.html` min_size 4096** + substrings `direction-a` / `direction-b` / `direction-c` + `Palette` + `School` — bumped from 2 KB after step 2 benchmark showed both producers landing at 25-32 KB on a real compare surface. Substrings now enforce both the at-a-glance hero (palette swatches present) and the deeper comparison table (school property row)
 - **`REPORT.md` min_size 6144** (6 KB) — covers Turn 1 sections at honest depth. Turn 2 section grows the file further on resubmit; pivota's REPORT landed at ~16 KB after Turn 2; step 2 bench showed producers landing 21-27 KB on Turn 1 alone
 - **`screens/[0-9][0-9]-*.html` glob** — exactly the `01-`, `02-`, ..., `08-` shape. `min_count: 8` is a hard floor (per spec 026 plan); `per_match_min_size: 4096` filters stubs. Each screen MUST carry `:root` declaration (verbatim copy of picked direction's tokens) — `per_match_contains` enforces

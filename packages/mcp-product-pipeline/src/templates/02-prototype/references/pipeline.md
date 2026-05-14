@@ -75,17 +75,26 @@ Each `direction-{a,b,c}.html` is a self-contained file (no external deps). Canon
 ### Build phase rules (hard — any failure = fix pass before emit)
 
 1. All 6 palette tokens declared in `:root` (`--background` / `--foreground` / `--primary` / `--accent` / `--border` / `--muted`)
-2. All colors in `hsl()` or `oklch()` syntax — no bare hex literals, no `rgb()`. `hsl()` is the safe default for browser compat; `oklch()` is preferred when the palette is being tuned for perceptual uniformity (warm-soft, editorial directions especially benefit)
-3. **All 7 required surfaces present** per prompt.md § 4: header, palette strip, type sample, hero sample, dashboard sample, **pricing tile grid (3 tiers, "Most Popular" emphasis on Pro)**, personality footer / DS lineage. Pricing-as-product-UI is what gives the founder a second product surface beyond the dashboard — omitting it weakens product mental model at D4
-4. **School-specific OpenType applied** per the table above — the Linear-anchored direction MUST carry `font-feature-settings: "cv01", "ss03"` on body; other schools apply their school tells when applicable
-5. Maximum 3 heading levels per file (page title / section title / card title)
-6. No fixed widths on containers — use `max-width` + percentage/auto + flex/grid for layout
-7. Skip-to-content link as first focusable element (a11y floor)
-8. `:focus-visible` outline on all interactive elements
-9. Tabular numerics on prices / counts / dates: `font-variant-numeric: tabular-nums`
-10. No external resources (no `<link rel="stylesheet">`, no remote `<script src>`, no Google Fonts unless the system fallback works alone)
-11. Renders without horizontal overflow at 375px AND 1440px viewports
-12. Dashboard / metric / pricing / table content uses REAL data from the brief-identifier extraction table pinned in prompt.md § 1 — product name, issue ID prefix, persona slugs, sprint label, metric values, pricing tiers — all verbatim. Substituting plausible variants ("Maya Chen" when the brief says "@mara.ic") weakens Specificity at D7
+2. **Recommended: enrich the token system beyond the 6 base palette tokens** for landing-page cohesion. Anthill's reference directions declare ~18 tokens; this richness is what makes sections feel like one designed product rather than independent fragments. Suggested extensions:
+   - **Surface elevation:** `--surface-1` / `--surface-2` / `--surface-3` (progressively elevated card / panel / hover surfaces)
+   - **Border weight:** `--border-subtle` (5-8% opacity) / `--border-std` (12-15% opacity) — semi-transparent variants of foreground
+   - **Typography scale:** `--fs-display` (`clamp(36px, 5vw, 56px)` for fluid hero), `--fs-h2`, `--fs-h3`, `--fs-body` (15-16px), `--fs-meta` (12px)
+   - **Spacing scale:** `--gap-xs` (4px) through `--gap-2xl` (72px) on an 8-point grid
+   - **Layout:** `--container` (1200-1280px) + `--gutter` (16-24px) + `--radius` / `--radius-lg`
+   - **Font stacks:** `--font-body` and `--font-mono` as full fallback stacks
+   Directions that legitimately reject this richness (brutalist-experimental rejecting "scale" for "one big size") may use simpler systems — but justify in REPORT.md
+3. All colors in `hsl()` or `oklch()` syntax — no bare hex literals, no `rgb()`. `hsl()` is the safe default for browser compat; `oklch()` is preferred when the palette is being tuned for perceptual uniformity (warm-soft, editorial directions especially benefit)
+4. **All 8 required surfaces present** per prompt.md § 4: header, palette strip, type sample, hero sample, dashboard sample, **charts & sparklines sample (≥ 2 data-viz instances — one brief-grounded chart + one flex second)**, **pricing tile grid (3 tiers, "Most Popular" emphasis on Pro)**, personality footer / DS lineage. Pricing-as-product-UI gives the founder a second product surface beyond the dashboard; charts validate the direction's data-viz token vocabulary (line colors, axis style, sparkline density) which the palette strip alone can't reveal
+5. **Section rhythm: 4-layer pattern per content section** — every content section uses eyebrow + title + lead + body (see prompt.md § 4 for the canonical HTML pattern). Headings alone produce "loose sections"; the eyebrow + title + lead trio produces landing-page narrative cohesion. The header and palette strip sections may use a lighter variant (no lead) but sections #3-#6 require all 4 layers
+6. **School-specific OpenType applied** per the table above — the Linear-anchored direction MUST carry `font-feature-settings: "cv01", "ss03"` on body; other schools apply their school tells when applicable
+7. Maximum 3 heading levels per file (page title / section title / card title)
+8. No fixed widths on containers — use `max-width` + percentage/auto + flex/grid for layout
+9. Skip-to-content link as first focusable element (a11y floor)
+10. `:focus-visible` outline on all interactive elements
+11. Tabular numerics on prices / counts / dates: `font-variant-numeric: tabular-nums`
+12. No external resources (no `<link rel="stylesheet">`, no remote `<script src>`, no Google Fonts unless the system fallback works alone)
+13. Renders without horizontal overflow at 375px AND 1440px viewports
+14. Dashboard / metric / pricing / table content uses REAL data from the brief-identifier extraction table pinned in prompt.md § 1 — product name, issue ID prefix, persona slugs, sprint label, metric values, pricing tiers — all verbatim. Substituting plausible variants ("Maya Chen" when the brief says "@mara.ic") weakens Specificity at D7
 
 ## Anti-AI-slop hard rules (P0 gate — block emit)
 

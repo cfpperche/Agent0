@@ -6,63 +6,80 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ---
 
-## Current state — spec 026 Phase B task 11 (step 2 prototype) — SHIPPED + benchmark validated + refined
+## Current state — spec 026 Phase B task 11 (step 2 prototype) — SHIPPED + 4 iterations approved
 
-This session ported step 2 (prototype) end-to-end: read anthill source, scoped + decided architecture, wrote 9 template files (1098 LOC), ran A/B/J benchmark (port wins 31/28 over anthill baseline, Δ=+3, medium confidence), applied 4 refinement insights from judge (1141 LOC final). 78 tests green throughout, tsc clean. Bundled commit: templates + benchmark refinements in one commit per user direction.
+Step 2 port + 4 rounds of refinements applied, validated, and user-approved across iterative visual review. Final approved form: v4 templates at `packages/mcp-product-pipeline/src/templates/02-prototype/` (1220 LOC). 78 tests green, tsc clean.
 
-### Phase B task 11 — DONE (single bundled commit + this session handoff)
+**Two commits on step 2:**
+- `018478f` — Initial port + A/B/J benchmark refinements v1 (4 insights from Output Judge C: pricing-tile + compare-2zone + Linear OpenType + brief-extraction preflight)
+- (this session's commit) — Refinements v2-v4 from user visual review: section rhythm 4-layer + anti-slop audit table in compare + brief-extraction Part 1/Part 2 split + explicit Hero/Dashboard eyebrows + charts & sparklines section #6
 
-**Step 2 port produces** 5 root files + 8 hi-fi screens (Turn 2):
-- `direction-a/b/c.html` (≥8 KB each, all 7 required surfaces: header / palette strip / type sample / hero / dashboard sample / **pricing tile grid** / personality footer-DS-lineage)
-- `compare.html` (≥4 KB, 2-zone: 3-column at-a-glance hero + deeper property table)
-- `REPORT.md` (≥6 KB, all required sections + 5-dim crit + anti-slop audit + brief compliance + Turn 2 plan)
-- `screens/<NN-name>.html` × 8 (≥4 KB each, Turn 2 after user direction pick)
+### Methodology cadence established for visual steps
 
-**Bundle stats:** 1141 LOC across 9 files. Anthill html-mockup-relevant source was ~1100 LOC → ~104% volume (depth justified by 4 refinements). Stripped: full-product-blueprint, mobile-native-blueprint, shadcn-bootstrap (all stack-native, out of scope).
+Each round had: refine templates → dispatch single Producer (opus, sonnet timed out on v2) → user opens in browser via local HTTP server (`python3 -m http.server 8765` on `/tmp/bench/`) → user gives verbatim verdict → I refine templates. No judge needed after the initial bench — user's eye is the rubric. v2 sonnet timed out at reads → switched to opus for v3+v4. Producer cost ~$5/run.
 
-### A/B/J benchmark — DONE (Option C hybrid, parent-rendered Playwright)
+### 4 iteration verbatim history
 
-Setup: brief_B.md as shared input, fixture pre-answered SwiftBoard Linear-clone direction, both producers sonnet/≤60min/web-search-allowed, parent rendered 8 PNGs at 1440×900 via Playwright MCP, Judge C opus single-turn non-blind (REPORTs leak methodology).
+- **v1 → v2:** "compare page Anti-AI-slop da versão anthill continua muito melhor temos que igualar" + "conteúdo e estrutura da página da direction da versão refinada está boa porém anthill continua superior na forma como apresenta temos a impressão que estamos em uma landing page e não apenas seções soltas". Fix: 4-layer section rhythm (eyebrow + h2 + lead + body) on sections #3-#8 + full anti-slop audit table in compare.html Zone 2 (per-cell evidence, not summary).
+- **v2 → v3:** "agente não produziu uma seção hero sample nem dashboard sample" (the page-hero with hero-pill was treated as marketing hero, triage view labeled "TRIAGE VIEW" without explicit "DASHBOARD" eyebrow) + "corrigir agora nessa v3" on brief-extraction discrimination. Fix: explicit `Hero Sample` / `Dashboard Sample` eyebrow content required + brief-extraction TWO-PART table (Part 1 brief-verbatim with source quotes, Part 2 invented placeholders explicitly marked).
+- **v3 → v4:** "protótipo ter nas direções uma seção dedicada gráficos/sparks o que acha?" Fix: new required section #6 between dashboard and pricing — `CHARTS & SPARKLINES` eyebrow + 4-layer rhythm + ≥ 2 SVG charts (one brief-grounded primary chart of cycle-time, one flex secondary viz of different type). Schema enforces `<svg` substring + min_size 10240. 7 → 8 required surfaces total.
 
-**Verdict (Judge C):** step2-1 (Agent0 port) **31/35** vs step2-2 (anthill) **28/35**, Δ=+3, medium confidence.
+### Final 8-section structure per direction file
 
-Dimension breakdown:
-- TIE: D1 Visual execution, D2 Direction distinctness, D3 Authorial voice
-- Anthill wins: D4 Page structure (pricing-tile-UI as dedicated surface per direction)
-- Port wins: D5 REPORT substance (deeper citations + score-gap mitigation prose), D6 compare.html shape (3-column at-a-glance), D7 Brief fidelity (verbatim identifiers vs plausible substitutes)
+1. Header / topnav — page chrome, anchors to all 8 sections
+2. Palette strip — eyebrow `PALETTE` + 6 swatches
+3. Type sample — eyebrow `TYPOGRAPHY` + H1/H2/body/mono/caption
+4. Hero sample — eyebrow `HERO SAMPLE` / `HERO` / `THE HOOK` (explicit, NOT hero-pill badge)
+5. Dashboard sample — eyebrow `DASHBOARD SAMPLE` / `DASHBOARD` / `TRIAGE VIEW`
+6. **Charts & sparklines** — eyebrow `CHARTS & SPARKLINES` / `DATA VIZ` / `CHARTS` (mandatory brief-grounded primary chart + flex secondary)
+7. Pricing tile grid — eyebrow `PRICING` (3 tiers + "Most Popular" emphasis)
+8. Personality footer / DS lineage — eyebrow `DESIGN SYSTEM LINEAGE` / `INFLUENCES`
 
-**User visual analysis (2026-05-13, before judge):** "estrutura do compare A venceu, B parece mais autoral... qualidade gráfica de A venceu porém criou-se landing pages, estrutura das páginas de B foi mais completa... ideal é mix". Saved at `/tmp/bench/step2-user-impressions.md` (pre-judge, uncontaminated).
+Sections #3-#8 ALL use the 4-layer rhythm (eyebrow + h2 title + lead + body).
 
-User re-review after judge: "D4 — A vence no geral porém B tem coisas indispensáveis (Hero/Dashboard/DS Lineage). D6 — A vence com certeza, página completa só perde na forma de apresentar lado a lado onde B é superior."
+### Schema floors final
 
-### 4 refinements applied to templates
+- `direction-{a,b,c}.html`: min_size 10240, contains: `<!DOCTYPE html` / `<style` / `:root` / `--background` / `--foreground` / `--primary` / `Most Popular` / `<svg`
+- `compare.html`: min_size 4096, contains: `<!DOCTYPE html` / `direction-a` / `direction-b` / `direction-c` / `Palette` / `School` / `Anti-AI-slop` / `PASS`
+- `REPORT.md`: min_size 6144, contains: all 7 required section headings + 5 dim names
+- `screens/[0-9][0-9]-*.html`: glob with min_count 8, per_match_min_size 4096
 
-1. **Pricing-tile UI as required surface** (insight from judge D4 + user re-review) — prompt.md § 4 list now has 7 required sections (was 6); section #6 is "Pricing tile grid (3 tiers, Most Popular emphasis)". schema.md adds "Most Popular" to direction-{a,b,c} contains check. pipeline.md build phase rules add #3.
-2. **compare.html 2-zone shape** (insight from judge D6 + user "A's complete page + B's at-a-glance form") — prompt.md § 5 rewrites compare requirement: Zone 1 (3-column at-a-glance hero visible at 1440×900) + Zone 2 (property table below). schema.md adds "Palette" + "School" + bumps min_size 2 KB → 4 KB.
-3. **Linear OpenType cv01/ss03** (insight from judge D3) — pipeline.md § "5 canonical schools" table gains "School-specific tells" column; modern-minimal row carries `font-feature-settings: "cv01", "ss03"` for Linear-anchored direction. Build phase rule #4 enforces.
-4. **Brief-extraction preflight table** (insight from judge D7) — prompt.md § 1 expanded: agent MUST pin a brief-identifier extraction table in chat BEFORE writing HTML, enumerating product name, issue ID prefix, persona slugs, sprint label, north-star metric, pricing tier values. Refuses to substitute plausible variants.
+### Bench artifacts produced this session
 
-### OD vendor port plan registered as deferred architectural commitment
+All under `/tmp/bench/`:
+- `step2-A/` — anthill methodology baseline (Producer A from initial bench)
+- `step2-B/` — Agent0 port v0 (Producer B from initial bench, pre-refinements)
+- `step2-refined/` — v1 (4 judge insights applied)
+- `step2-refined-v2/` — v2 (section rhythm + audit table)
+- `step2-refined-v3/` — v3 (Hero/Dashboard eyebrows + brief-extraction split)
+- `step2-refined-v4/` — v4 (charts/sparks section) ← FINAL APPROVED
+- `step2-fixture.md`, `step2-user-impressions.md`, `step2-scorecard.md`, `step2-judge-randomization.txt`
+- `step2-1` / `step2-2` symlinks (judge blind mapping)
 
-Memory at `.claude/memory/od-vendor-port-plan.md`. Anthill's OD vendor bundle (3.1 MB, Apache-2.0, 73 design systems + 33 skill bundles + prompts + frames at github.com/nexu-io/open-design) proved high-value in pivota (DS citation chain in REPORT). Memo captures 5 open architectural questions (vendor location, sync, license, DESIGN.md UX, step 2 interim gap). Step 2 port ships WITHOUT OD vendor; `pipeline.md` describes 5 canonical schools inline + leans on agent's training-data knowledge of named DS. When OD ports, pipeline.md simplifies + DESIGN.md citation becomes mandatory. Reminder added to `.claude/REMINDERS.md`.
+Screenshots at `/home/goat/Agent0/.playwright-mcp/step2-bench/step2-{1,2}-{compare,direction-a,direction-b,direction-c}.png` (8 PNGs from the initial blind judge).
+
+Local server still running on `127.0.0.1:8765` (bash ID `b434meu0u`) serving `/tmp/bench/`. Can be killed when no longer needed.
 
 ## Next step — Phase B task 12 (step 3 spec port)
 
-Source: anthill `anthill-spec` skill. Step 3 produces the visual spec — a stakeholder-readable blueprint of the prototype's pages/components/interactions. Less ambitious visually than step 2 (no HTML mood boards), more rigorous on functional/interaction surface.
+Source: anthill `anthill-spec` skill. Step 3 produces the visual spec — stakeholder-readable blueprint of the prototype's pages/components/interactions. Less ambitious visually than step 2 (no HTML mood boards), more rigorous on functional/interaction surface.
+
+**Methodology to reuse for step 3:** the iteration cadence (refine templates → single producer → user opens in browser → verdict → refine) worked well; less need for blind judge once templates exist + user is reviewing visually. Step 3 may not have a benchmark-vs-anthill phase at all since output is markdown, not HTML.
 
 ### Anchoring file paths
 
 - spec 026 docs: `/home/goat/Agent0/docs/specs/026-mcp-pipeline-deep-port/{spec,plan,tasks}.md`
-- step 2 port (just-shipped reference): `/home/goat/Agent0/packages/mcp-product-pipeline/src/templates/02-prototype/`
-- anthill source for step 3: `/home/goat/anthill/.claude/skills/anthill-spec/` (verify exact dir name on first read)
-- anthill output reference: `/home/goat/anthill/docs/sdlc/03-spec/<slug>-spec.md` (single file, not directory)
-- step 2 benchmark artifacts (reuse methodology): `/tmp/bench/step2-{fixture,scorecard,user-impressions}.md` + `/tmp/bench/step2-{1,2}/` + `/home/goat/Agent0/.playwright-mcp/step2-bench/*.png`
+- step 2 port (just-shipped reference for shape conventions): `/home/goat/Agent0/packages/mcp-product-pipeline/src/templates/02-prototype/`
+- step 1 port (reference for less visual steps): `/home/goat/Agent0/packages/mcp-product-pipeline/src/templates/01-ideation/`
+- anthill source for step 3: `/home/goat/anthill/.claude/skills/anthill-spec/` (verify exact dir on first read)
+- anthill output reference: `/home/goat/anthill/docs/sdlc/03-spec/<slug>-spec.md` (single file)
+- step 2 bench artifacts (kept for methodology reference): `/tmp/bench/step2-*`
 - OD vendor port memo: `/home/goat/Agent0/.claude/memory/od-vendor-port-plan.md`
 
 ### Phase B remaining tasks (tasks.md numbering)
 
 - [x] 10 step 1 ideation
-- [x] **11 step 2 prototype** ← JUST SHIPPED
+- [x] **11 step 2 prototype** ← SHIPPED (4 iterations approved)
 - [ ] **12 step 3 spec** ← next
 - [ ] 13 step 4 ux-testing
 - [ ] 14 step 5 brand
@@ -77,15 +94,17 @@ Source: anthill `anthill-spec` skill. Step 3 produces the visual spec — a stak
 
 ## Decisions & gotchas (cumulative)
 
-- **Benchmark methodology adapted for visual steps** (2026-05-13 step 2 trial succeeded): Option C hybrid — parent renders Playwright PNGs at 1440×900 desktop, Judge C opus single-turn non-blind (because REPORTs self-describe methodology — different from step 1 where briefs didn't). Worked well; medium-confidence verdict is the expected ceiling for non-blind output judging. Cost ~$5.
-- **Step 2 is the only multi-turn step** — Turn 1 (3 directions + compare + REPORT) gates a Layer 3 user-direction pick, then Turn 2 (8 hi-fi screens) generates. Other steps are single-turn. Layer 3 checkpoint mechanic established here may inform step 7 (prototype-v2) future port.
-- **Pricing-tile-UI is a Turn 1 mood-board surface, not a Turn 2 detail.** This was the judge insight that surprised: pricing as PRODUCT UI in the direction file gives founders a second product surface (beyond dashboard) for direction comparison. Embedded into prompt.md § 4 as required.
-- **Brief-extraction table is the discipline that separates brief-grounded mockups from plausible-but-substituted ones.** Step 2's biggest factor on D7 (port won 5/5 vs anthill 4/5) was using "@mara.ic" verbatim instead of "Maya Chen" plausible. The new prompt.md § 1 extraction table enforces this for all future steps generating HTML.
-- **OD vendor is a real architectural commitment.** Step 2 ships without it as interim — pipeline.md describes 5 canonical schools inline. When OD ports, pipeline.md shrinks + DESIGN.md citation becomes mandatory. See `.claude/memory/od-vendor-port-plan.md` for 5 open questions.
-- **Benchmark methodology established (step 1 + step 2 trials succeeded)** — Output Judge C blind on step 1 (briefs don't self-describe), non-blind on step 2 (REPORTs do). Both reached medium-high confidence verdict. Use opus for judges, sonnet for producers, single trial per side unless ambiguous. Cost ~$2-5/step.
+- **Iterative visual-review cadence beats one-shot judge for visual steps.** Step 2 had an initial bench (validated direction) + 4 user-eyeballed iterations (got the spec right). For steps with markdown-only output, a single judge run suffices. For visual steps, expect 3-5 visual iterations after the initial bench.
+- **Producer model choice:** sonnet for cheap producers in initial bench (~$1-2 each). For follow-up refinement runs with heavy templates (8 sections + token enrichment + chart SVG requirements), opus is more reliable (sonnet timed out reading the v2 templates). Cost ~$5/run for opus.
+- **Section rhythm: 4-layer (eyebrow + h2 + lead + body) is the discipline that distinguishes "mood board" from "marketing landing page".** Without explicit eyebrows, sections feel loose. With eyebrows but no h2+lead trio, sections look templated. All 4 layers required.
+- **Brief-identifier extraction must split brief-verbatim from invented-placeholder.** Conflating them (claiming "@mara.ic" was brief-sourced when brief only said "Senior IC" abstractly) misleads downstream readers and weakens REPORT.md trust. Part 1 (verbatim with source quote) + Part 2 (invented placeholder with justification) is the canonical shape.
+- **Hero and Dashboard sections need EXPLICIT eyebrow labels** — not "hero-pill" badges or "TRIAGE VIEW" without "DASHBOARD". A creative eyebrow that describes content rather than section type breaks the mood-board framing.
+- **Charts/sparks as a dedicated section validates data-viz tokens** that palette + type sections can't reveal. Required: ≥ 2 SVG instances per direction (one brief-grounded primary + one flex secondary). Schema enforces `<svg` substring + 10240 min_size.
+- **compare.html anti-slop audit must be a per-cell evidence TABLE, not a one-line summary** — 8 rules × 3 directions grid with specific evidence in each cell. Schema enforces "Anti-AI-slop" + "PASS" substrings.
+- **OD vendor port still deferred.** Step 2 ships without it; pipeline.md describes 5 canonical schools inline. See `.claude/memory/od-vendor-port-plan.md` for 5 open architectural questions to resolve when scheduling the port.
+- **Benchmark methodology adapted for visual steps** (Option C hybrid established 2026-05-13): parent renders Playwright PNGs at 1440×900, Judge C opus single-turn non-blind (REPORTs leak methodology). Medium confidence verdict is the expected ceiling. Useful for initial validation, less useful for iterative refinement after that.
 - **Schema fenced block deviation:** spec/plan/tasks said "YAML fenced block", implementation uses **JSON** for zero-risk parsing. JSDoc explains. Functionally equivalent.
-- **Anthill archived 2026-05-13** — `.claude/memory/anthill-archived.md`. No drift tracking; ports are one-way + final.
-- **`required_glob` is fully supported by the schema parser** (`pattern` + `min_count` + `per_match_min_size` + `per_match_contains`) — used for the screens/ subfolder; useful pattern for future multi-artifact steps.
+- **Anthill archived 2026-05-13** — `.claude/memory/anthill-archived.md`. No drift tracking; ports are one-way + final. Reference baseline for "the form" we're matching.
 
 ## Carryover from prior session-stretches (NOT in active lane)
 

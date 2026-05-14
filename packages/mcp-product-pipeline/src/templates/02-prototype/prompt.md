@@ -28,22 +28,39 @@ Sub-agent delegation is `partial`: Turn 2 (screen rendering from a locked direct
 
 Call `product_step_get(1)` and read `04-concept-brief.md`. Extract: product name + tagline + audience + JTBD + identity (scale / model / AI-nativity), key competitors, and any brief-stated brand preferences (PT-BR? dark-first? brutalist? specific accent color? Pix-first?). The brief is the authoritative source — directions reference IT, not invented context.
 
-**Pin a brief-identifier extraction table in chat BEFORE writing any HTML.** This is the discipline that separates brief-grounded mockups from plausible-but-substituted ones. The table enumerates the identifiers that MUST appear verbatim in dashboard / hero / metric content; the agent then refuses to substitute close-but-different variants in the HTML phase.
+**Pin a TWO-PART identifier extraction in chat BEFORE writing any HTML.** This is the discipline that separates brief-grounded mockups from plausible-but-substituted ones. **CRITICAL:** real concept briefs rarely contain every concrete identifier a mood board needs (e.g., persona handles, issue ID prefixes, specific sprint numbers are usually abstract in the brief). Treating an invented placeholder as "brief-sourced" is the failure mode this section prevents.
 
-Required rows (omit a row when the brief is silent on it):
+**Part 1 — Brief-sourced identifiers (verbatim with source quote)**
 
-| Identifier type | Source quote (brief section) | Verbatim value to use |
+Enumerate ONLY values that appear literally in the brief. Each row needs a source quote so a reader can verify.
+
+| Identifier type | Source quote (exact text from brief) | Verbatim value |
 |---|---|---|
-| Product name | Identity block | `<value>` |
-| Issue/record ID prefix | Mechanics or User Flow | `<value>` (e.g., "SWF-" not "SB-") |
-| Persona slug(s) / handle(s) | Target Persona table | `<value>` (e.g., "@mara.ic" not "Maya Chen") |
-| Sprint / cycle / period label | Mechanics or User Flow | `<value>` (e.g., "Sprint 19") |
-| North-star metric name + value | Business Model § Key Metrics | `<value>` (e.g., "87% issues touched") |
-| Pricing tier values | Monetization Sketch table | `<value>` (e.g., "$0 / $4 / $7" with tier labels) |
-| Currency format | Identity (PT-BR products) | `<value>` (e.g., "R$ 19,90" not "$19.90") |
-| Any other named system / loop / mechanic | Mechanics Breakdown | `<value>` |
+| Product name | "<exact quote>" (Identity block) | `<value>` |
+| Pricing tier values | "<exact quote>" (Monetization Sketch table) | `<value>` (e.g., "$0 / $4 / $7") |
+| North-star metric name + value | "<exact quote>" (Business Model § Key Metrics) | `<value>` |
+| Currency format | "<exact quote>" (Identity for PT-BR products) | `<value>` |
+| Persona TYPE labels | "<exact quote>" (Target Persona table) | `<value>` (e.g., "Senior IC", "Engineering Manager" — abstract types) |
+| Performance claims | "<exact quote>" (Hook or Mechanics) | `<value>` (e.g., "100 ms load", "20 issues") |
+| Any named system / loop / mechanic | "<exact quote>" (Mechanics Breakdown) | `<value>` |
 
-After pinning, treat the table as a non-negotiable name list — every dashboard row / metric / hero / pricing tile MUST use these values exactly. "Plausible engineering names" or "close-enough variants" weaken brief traceability and trip Specificity in the 5-dim critique.
+If a row has no source quote, it does NOT belong in Part 1. Move it to Part 2.
+
+**Part 2 — Plausible-invented placeholders (clearly marked as invented)**
+
+Enumerate placeholders the brief did NOT provide concretely but the mood board needs (issue ID prefixes, persona slugs/handles, specific sprint numbers, dashboard row content). Mark each one as invented and lock it for consistency across all 3 directions.
+
+| Identifier type | Why brief didn't provide | Locked invented value | Note |
+|---|---|---|---|
+| Issue ID prefix | Brief describes abstractly, no concrete prefix | `<value>` (e.g., "SWF-" — chosen) | Consistent across all 3 directions |
+| Persona slug / handle | Brief gives persona TYPES, not slugs | `<value>` (e.g., "@senior.ic") | Mark as placeholder in REPORT |
+| Specific sprint number | Brief gives "sprint" abstractly | `<value>` (e.g., "Sprint 19") | Plausible placeholder |
+| Specific cycle time | Brief might give range or absent | `<value>` (e.g., "3.2d") | Mark as plausible |
+| Dashboard issue titles | Always invented | `<value>` × 5-7 | Realistic to brief domain |
+
+After pinning BOTH parts, treat them as the **complete name list for the HTML phase**. Every dashboard row / metric / hero / pricing tile uses Part 1 values for verifiable brief grounding AND Part 2 values for consistency across directions. The REPORT.md § "Brief Compliance Check" must distinguish which is which — "Pricing $0/$4/$7 (verbatim from brief)" vs "Issue IDs SWF-247/248 (invented placeholder, plausible to brief domain)".
+
+Conflating the two — claiming an invented "@mara.ic" persona handle was "brief-sourced" — weakens Specificity at D7 AND misleads the next reader. Score honesty starts here.
 
 ### 2. Discovery (5-7 questions in chat, prose)
 
@@ -75,15 +92,63 @@ Per direction, pin in chat BEFORE writing HTML:
 
 ### 4. Build the 3 mood-board HTMLs
 
-Read `references/visual-constraints.md` + `references/a11y-checklist.md` + `references/anti-patterns.md` BEFORE writing. Each `direction-{a,b,c}.html` is a self-contained file (no external deps) with embedded CSS. Required sections per file (all 7 mandatory, visible at 1440px + 375px without horizontal overflow):
+Read `references/visual-constraints.md` + `references/a11y-checklist.md` + `references/anti-patterns.md` BEFORE writing. Each `direction-{a,b,c}.html` is a **MOOD BOARD** — a sequence of labeled DEMONSTRATION sections each showing one UI surface (hero / dashboard / pricing / etc.) rendered in the direction's tokens. Read as a cohesive document with landing-page narrative flow (eyebrow + title + lead + body rhythm), but the framing is "here's how X looks in this design system" — NOT "marketing landing page that happens to use these tokens".
 
-1. **Header** — codename + tagline + one-sentence personality blurb
-2. **Palette strip** — 6 swatches with name + value
-3. **Type sample** — H1 / H2 / body / mono / caption at signature weights
-4. **Hero sample** — title + subtitle + CTA matching the product's actual JTBD
-5. **Dashboard sample** — at least one realistic product surface (kanban / metric cards / data table / form). Use REAL data from the brief (verbatim from the identifier table pinned in § 1) — never lorem ipsum
-6. **Pricing tile grid** — 3 tier cards ($0 free / paid Pro / higher tier) using the brief's pricing values verbatim. The Pro tier carries a "Most Popular" emphasis (badge, border highlight, or scale). Each tile lists 3-5 feature bullets and a CTA. This is a dedicated UI surface block, NOT inline hero copy. Even free-tier-only products surface a "Free forever" tile + roadmap-tier preview tiles. Token-economy products use pacote tiers instead (`Otimizar CV · 3🪙`, `Pacote · 8🪙`, `Pacote · 20🪙`).
-7. **Personality footer / Design System Lineage** — DS citation chain (1-3 named systems with concrete reference details — not just "modern minimal") + one paragraph on what kind of product this direction signals
+**Critical distinction:** sections are SAMPLES of UI surfaces, not the surfaces themselves in production framing. A "hero sample" section presents the hero design pattern; it is NOT the product's marketing landing-page hero with codename badge above it. A "dashboard sample" section presents the dashboard design pattern; it is NOT the user's actual triage view.
+
+**Section rhythm (mandatory for every content section)** — use a 4-layer pattern that gives the direction a landing-page narrative flow:
+
+```html
+<section class="section" aria-labelledby="section-<n>-title">
+  <p class="section-eyebrow">SHORT LABEL CAPS</p>                   <!-- 1. eyebrow: small uppercase tracking label -->
+  <h2 class="section-title" id="section-<n>-title">                  <!-- 2. title: headline that makes the point -->
+    Headline that makes the point about this surface.
+  </h2>
+  <p class="section-lead">                                            <!-- 3. lead: one-sentence intro framing the content -->
+    One sentence that frames what the reader is about to see and why it matters for this direction.
+  </p>
+  <div class="section-body">                                          <!-- 4. body: the actual surface (kanban, pricing tiles, etc.) -->
+    <!-- pricing tile grid / kanban / metric cards / etc. -->
+  </div>
+</section>
+```
+
+This is the **discipline that separates landing-page cohesion from loose sections**. Headings alone are not enough; the eyebrow + title + lead trio gives every section narrative entry. Anthill's reference output uses this rhythm consistently across every content section — adopt it. The header (#1) and palette strip (#2) sections may use a lighter variant (no lead) but content sections #3-#6 must carry all 4 layers.
+
+Eyebrow content — use these EXACT labels (or close variants that explicitly name the section type — NOT the section content):
+
+| Section | Required eyebrow content | Examples that DON'T pass |
+|---|---|---|
+| Type sample | `TYPOGRAPHY` or `TYPE SAMPLE` | `THE LETTERFORM` (content, not section type) |
+| Hero sample | `HERO SAMPLE` or `HERO` or `THE HOOK` | `hero-pill` badge with codename — replaces eyebrow, fails the section-rhythm check |
+| Dashboard sample | `DASHBOARD SAMPLE` or `DASHBOARD` or `TRIAGE VIEW` | `KEYBOARD-FIRST` (that's a feature theme, not section type) |
+| Charts & sparklines | `CHARTS & SPARKLINES` or `DATA VIZ` or `CHARTS` | `CYCLE TIME` (that's the chart subject, not section type) |
+| Pricing tile grid | `PRICING` or `PRICING TILES` | `PLANS & TIERS` is fine; `HALF THE PRICE` is the h2 title, not eyebrow |
+| Personality footer | `DESIGN SYSTEM LINEAGE` or `INFLUENCES` or `DS LINEAGE` | `BUILT ON` (too vague) |
+
+The eyebrow labels the **section type**; the h2 below it makes the point. Conflating the two — putting a codename badge or a content-theme phrase where the eyebrow should be — is the failure mode that produces "marketing landing page" feel instead of "mood board demonstration".
+
+Title examples (one sentence, makes the point, NOT just the section name):
+- Pricing → "Half the price. All the speed." (NOT "Pricing tiers")
+- Dashboard → "Sprint health, instant triage." (NOT "Dashboard sample")
+- Hero → "Five keystrokes to triage your sprint." (NOT "Hero sample")
+- DS lineage → "Built on hairline restraint." (NOT "Design system lineage")
+
+Required sections per file (all 8 mandatory, in this order, visible at 1440px + 375px without horizontal overflow). Sections #3-#8 ALL use the 4-layer rhythm with the eyebrow content from the table above:
+
+1. **Header / topnav** — product name + section anchors (palette / type / hero / dashboard / charts / pricing / lineage). Lighter rhythm (no lead). This is the page chrome, not a content section. Anchors verify that all 8 sections exist and are scrollable from the topnav.
+2. **Palette strip** — 6 swatches with name + value. Eyebrow `PALETTE` + h2 title + 6 swatches; lead optional.
+3. **Type sample** — eyebrow `TYPOGRAPHY` + h2 + lead + body showing H1 / H2 / body / mono / caption at signature weights.
+4. **Hero sample** — eyebrow `HERO SAMPLE` (or `HERO` / `THE HOOK`) + h2 + lead + body. Body contains the demonstration: title + subtitle + CTA + visual mockup (terminal demo, command palette UI, kanban preview — pick one anchored to the brief's hook). The eyebrow is REQUIRED; a `hero-pill` codename badge above the h1 is NOT a substitute. The hero sample is a DEMONSTRATION of how the hero pattern looks in this direction's tokens — it is NOT the product's actual marketing landing-page hero.
+5. **Dashboard sample** — eyebrow `DASHBOARD SAMPLE` (or `DASHBOARD` / `TRIAGE VIEW`) + h2 + lead + body. Body contains the demonstration: a realistic product surface (kanban / metric cards / data table / triage view) rendered in this direction's tokens. Use REAL data — Part 1 (brief-verbatim) for verifiable numbers, Part 2 (locked invented placeholders) for content like issue titles and persona handles. Never lorem ipsum. The dashboard sample is a DEMONSTRATION of how the dashboard pattern looks in this direction — it is NOT the user's actual triage workspace.
+6. **Charts & sparklines sample** — eyebrow `CHARTS & SPARKLINES` (or `DATA VIZ` / `CHARTS`) + h2 + lead + body. Body contains AT LEAST TWO data-viz instances:
+   - **One brief-grounded chart (mandatory)** — render the brief's named north-star or hero metric as a primary chart (line, bar, or area). For SwiftBoard the brief names cycle-time / triage velocity / sprint health — pick whichever maps to a real chart treatment (line chart of cycle-time over 30 days is the canonical pick). Render inline SVG using direction's tokens; no external libs. Include axes, axis labels with `font-variant-numeric: tabular-nums`, and 7-30 data points.
+   - **One flexible second chart (mandatory but type-flex)** — your pick: 2-3 inline sparklines next to metrics, a small bar chart, a donut, a heatmap row, an area chart. Whichever exercises a DIFFERENT data-viz pattern than the primary chart so the direction's full data-viz token vocabulary is visible.
+   - Use direction tokens for chart strokes/fills/axes (`var(--primary)` for primary line, `var(--accent)` for highlights, `var(--border)` for axes, `var(--muted)` for axis labels)
+   - Tabular numerics on all axis labels and inline values (`font-variant-numeric: tabular-nums`)
+   - The chart `<figure>` carries a `<figcaption>` prose summary per a11y rule #4
+7. **Pricing tile grid** — eyebrow `PRICING` + h2 + lead + body. Body contains 3 tier cards using the brief's pricing values verbatim (Part 1 of the extraction table). The Pro tier carries a "Most Popular" emphasis (badge, border highlight, or scale). Each tile lists 3-5 feature bullets and a CTA. Dedicated UI surface block, NOT inline hero copy. Free-tier-only products surface a "Free forever" tile + roadmap-tier preview tiles. Token-economy products use pacote tiers (`Otimizar CV · 3🪙`, `Pacote · 8🪙`, `Pacote · 20🪙`).
+8. **Personality footer / Design System Lineage** — eyebrow `DESIGN SYSTEM LINEAGE` (or `INFLUENCES`) + h2 + lead + body. Body contains the DS citation chain (1-3 named systems with concrete reference details — "Linear's hairline borders + cv01/ss03 OpenType + tight letter-spacing", NOT just "modern minimal") + one paragraph on what kind of product this direction signals.
 
 For the **Linear-anchored direction specifically** (when the brief positions the product against Linear or the modern-minimal school is one of the 3 picks): activate Linear's actual OpenType features in `:root` with `font-feature-settings: "cv01", "ss03";` on the body — this is the Linear-insider tell that elevates authorial voice on D3. Other directions may pick their own school-specific feature settings (IBM Plex Mono → `"kern", "liga"`; Iowan/Charter serif → `"smcp"` for any small-caps run).
 
@@ -114,8 +179,12 @@ The 3-column zone is what the founder sees first. It must FIT one viewport at 14
 
 **Zone 2 — Deeper comparison** (below the fold):
 
-- Property comparison table: rows for School / Canvas / Display font / Body font / Accent / DS composite / Mood — columns are A/B/C
-- Anti-slop summary (one-line per direction confirming P0 pass)
+- **Property comparison table:** rows for School / Canvas / Display font / Body font / Accent / DS composite / Mood — columns are A/B/C
+- **Anti-AI-slop P0 audit table** — full 8-rule × 3-direction grid (NOT a one-line summary). Each row is one P0 rule; each cell carries `✓ PASS` plus a SPECIFIC evidence note in parentheses where evidence varies by direction. Example cell content:
+  - `✓ PASS (Inter as body; no display use)` (rule: "Inter/Roboto/Arial as body only")
+  - `✓ PASS (23 issues, 3.2d cycle, $4/seat — all from brief)` (rule: "No invented metrics")
+  - `✓ PASS` (when evidence is uniformly the absence of the anti-pattern across all 3, e.g., "No purple gradient")
+  This audit table is the AUDIT discipline made visible to the founder; a single-line summary is not enough — the per-cell evidence proves the discipline ran. Conditional rules (PT-BR Pix/LGPD, token economy) appear only when applicable; otherwise omit the rows.
 - "Open each direction at full fidelity" anchor links (NOT iframes — iframes force one-at-a-time viewing which defeats the at-a-glance purpose)
 - Optional: per-direction full-page preview tiles or screenshot thumbs
 

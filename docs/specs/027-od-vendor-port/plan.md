@@ -99,3 +99,15 @@ Rejected (open question 6). A silent fallback produces measurably worse output �
 - Anthill injection — `~/anthill/scripts/inject.sh` L304-305 — symlink distribution model; documented as *not* applicable to our npm model.
 - Spec — `docs/specs/027-od-vendor-port/spec.md` — acceptance criteria, § Findings, 6 open questions.
 - Project memory — `.claude/memory/od-vendor-port-plan.md` (informal port plan) and `~/.claude/projects/-home-goat-Agent0/memory/feedback_mcp_package_self_contained.md` (the in-package constraint).
+
+## Follow-up — `PRODUCT_PIPELINE_OD` on/off toggle (post-dogfood, 2026-05-14)
+
+The step-2 OD dogfood (artifacts `/tmp/bench/step2-OD/`, blind visual judge verdict captured in `.claude/memory/od-grounding-dogfood.md`) surfaced the need for an *easy, deliberate* switch between the OD-grounded path and the pre-OD inline 5-school method — for honest A/B'ing and as a clean operator escape hatch.
+
+**Design.** A `PRODUCT_PIPELINE_OD` env var, read by the MCP server. Off-values `off`/`0`/`false`/`no`/`disabled` (case-insensitive); unset or anything else = on (default). When off, `assertVendorPresent` throws `OdDisabledError` (code `od-disabled`) — a **subclass of `VendorMissingError`**, so `tools.ts`'s existing `instanceof VendorMissingError` catch and the step-2 templates' "Manual escape" routing pick it up with no extra wiring; only the `code` differs so the agent can tell "deliberately off" from "broken install".
+
+**Why this was cheap.** Spec 027's open-question-6 fail-loud design already built the entire escape route — the 4 templates already route around `od-vendor-missing` to `pipeline.md` § "Manual escape". The toggle just adds a *deliberate* trigger alongside the broken-install one.
+
+**Why a distinct `od-disabled` code (not reusing `od-vendor-missing`).** `pipeline.md` § "Manual escape" documents that section as "a broken install where the vendored bundle did not ship" — an intentional toggle hitting that exact path would contradict the doc. A distinct code keeps the docs honest and lets the audit/agent distinguish the two.
+
+Rejected: a `.mcp.json` block-comment toggle (too coarse — kills the whole pipeline, not just OD); template variants (not "easy"); a state-file flag / config tool (heavier than an env var, and `.mcp.json` already needs a restart to reload anyway).

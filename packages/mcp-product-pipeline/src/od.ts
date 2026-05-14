@@ -15,6 +15,13 @@
  * Fail-loud posture (spec 027 open question 6): a missing/partial vendor tree is
  * a broken install, not a runtime condition. `assertVendorPresent` throws
  * `VendorMissingError` with an actionable message rather than degrading silently.
+ *
+ * Deliberate opt-out (spec 027 follow-up): `PRODUCT_PIPELINE_OD=off` in the MCP
+ * server's env makes `assertVendorPresent` throw `OdDisabledError` (code
+ * `od-disabled`) — a subclass of `VendorMissingError`, so the existing
+ * tools.ts catch + the step-2 templates' "Manual escape" routing handle it with
+ * no extra wiring. This is the easy on/off switch for A/B'ing OD-grounded vs the
+ * pre-OD inline 5-school method.
  */
 
 import { existsSync, readFileSync } from "node:fs";
@@ -58,7 +65,8 @@ export function vendorAnchors(pkgRoot?: string): Record<string, string> {
 
 /** Thrown when the vendored OD tree is missing or partial — a broken install. */
 export class VendorMissingError extends Error {
-  readonly code = "od-vendor-missing";
+  // Widened to `string` so OdDisabledError can override with a distinct code.
+  readonly code: string = "od-vendor-missing";
   readonly missing: string[];
   constructor(missing: string[]) {
     super(
@@ -72,8 +80,43 @@ export class VendorMissingError extends Error {
   }
 }
 
-/** Throw VendorMissingError unless the key vendor anchors all exist. */
+/**
+ * Thrown when OD grounding is deliberately switched off via `PRODUCT_PIPELINE_OD`.
+ * Subclasses `VendorMissingError` so the tools.ts catch and the step-2 templates'
+ * "Manual escape" routing pick it up unchanged — only the `code` differs, so the
+ * agent (and the audit) can tell "deliberately off" apart from "broken install".
+ */
+export class OdDisabledError extends VendorMissingError {
+  override readonly code = "od-disabled";
+  constructor() {
+    super([]);
+    this.name = "OdDisabledError";
+    this.message =
+      `OD grounding is disabled (PRODUCT_PIPELINE_OD is set off). The step-2 templates ` +
+      `route through references/pipeline.md § "Manual escape — OD vendor unavailable" — ` +
+      `the pre-OD inline 5-school method. Unset PRODUCT_PIPELINE_OD (or set it "on") and ` +
+      `restart the MCP server to re-enable vendored DESIGN.md grounding.`;
+  }
+}
+
+/**
+ * Is OD grounding deliberately switched off? Reads `PRODUCT_PIPELINE_OD` from the
+ * env; truthy-off values are `off` / `0` / `false` / `no` / `disabled`
+ * (case-insensitive). Unset, or any other value, means OD is on (the default).
+ */
+export function odDisabled(): boolean {
+  const v = (process.env.PRODUCT_PIPELINE_OD ?? "").trim().toLowerCase();
+  return v === "off" || v === "0" || v === "false" || v === "no" || v === "disabled";
+}
+
+/**
+ * Throw if OD grounding is unavailable — either deliberately off
+ * (`OdDisabledError`) or because the vendor anchors are absent
+ * (`VendorMissingError`, a broken install). Both subclasses share a shape so
+ * callers catch one type.
+ */
 export function assertVendorPresent(pkgRoot?: string): void {
+  if (odDisabled()) throw new OdDisabledError();
   const p = odPaths(pkgRoot);
   const anchors: [string, string][] = [
     ["MANIFEST.json", p.manifestPath],

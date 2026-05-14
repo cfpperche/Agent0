@@ -45,6 +45,11 @@
 //    "product-pipeline": {
 //      "command": "bun",
 //      "args": ["run", "packages/mcp-product-pipeline/src/server.ts"]
+//      // Optional: disable Open Design grounding in step 2. The two OD MCP
+//      // tools then return code "od-disabled" and the step-2 templates fall
+//      // back to the pre-OD inline 5-school method — use to A/B the paths.
+//      // To enable: add a comma after the args line above, then this line:
+//      // "env": { "PRODUCT_PIPELINE_OD": "off" }
 //    }
   }
 }

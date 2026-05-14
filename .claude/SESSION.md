@@ -16,23 +16,19 @@ What landed: `vendor/open-design/` skeleton + `MANIFEST.json`; `scripts/sync-ope
 
 `/sdd refine` discovery-interview subcommand, ported from anthill's archived feature-refiner. All 5 tasks + 5 verifications done. New: `.claude/skills/sdd/references/{question-bank,checklist}.md`. Modified: `.claude/skills/sdd/SKILL.md` (`## Subcommand: refine` — 5-step process with 🔒/🔓/🟢 freedom annotations, 3 entry shapes, inline quality-score table) + `.claude/rules/spec-driven.md` (§ Workflow gains optional Step 0 "Refine"). Method-only port — anthill's output paths, 12-section template, ecosystem handoffs, and markdown-writer dependency not carried. Committed staging only the 028 paths; 027 + parallel lanes left untouched.
 
-## WIP — spec 027 dogfood (resume here after session restart)
+## Spec 027 dogfood — DONE; `PRODUCT_PIPELINE_OD` toggle added (UNCOMMITTED)
 
-027 was dogfooded at the **surface level this session**: MCP stdio handshake + 10-tool list + both OD tools live (happy + fail-loud); template wiring (`od-bridge` surfaces in `product_step_get(2)` references); `--check` against live upstream (detected drift vs pin, wrote report, `gh api compare` worked — artifacts then reverted, dogfood-only). `runtime/od-sync/.gitignore` gained `staging-*/`.
+The full step-2 OD-grounded dogfood ran this session. Findings + the durable nugget are in `.claude/memory/od-grounding-dogfood.md`. Short version: 027 is mechanically sound (citation-by-path real, `validateLayer1` passes, MCP tools live over stdio); a blind opus judge scored the single-pass OD run 3.87 vs the 4×-refined pre-OD baseline 4.73 — **but that's confounded** (1 pass vs 4 iterations), do NOT read it as "OD is worse". Confound-independent findings: grounding ≠ visual quality (iteration-bound); the Producer clustered 2 of 3 directions on dark-canvas composites despite the fixture asking for contrast (possible `od-bridge.md`/`prompt.md` guidance gap); a first-pass `--primary`==`--accent` token bug.
 
-**Pending: the full step-2 OD-grounded dogfood.** User chose "restart first" so `.mcp.json` reloads the 10-tool server and the Producer sub-agent can call the real OD tools. **Plan (resume post-restart):**
-1. Reuse `/tmp/bench/step2-fixture.md` + `/tmp/bench/brief_B.md` (SwiftBoard) **verbatim** — same input as the pre-OD bench, so OD grounding is the only variable. Output → `/tmp/bench/step2-OD/`.
-2. Dispatch **1 opus Producer** (5-field brief): produce 3 OD-grounded directions + `compare.html` + `REPORT.md`. CONTEXT = fixture + brief + step-2 template set (`prompt.md`/`pipeline.md`/`od-bridge.md`/`schema.md`); the Producer calls `product_design_systems_index` + `product_design_system_path` for real. CONSTRAINTS = cite ≥3 vendored `DESIGN.md` **by path**, real brief data only.
-3. Verify mechanically: `validateLayer1` against `schema.md` (the new `design-systems/` contains-floor must pass); confirm real `design-systems/<x>/DESIGN.md` paths in REPORT.
-4. Serve `/tmp/bench/step2-OD/` via http.server → user visual review.
-5. Compare vs pre-OD baseline `/tmp/bench/step2-refined-v4/` — is the citation chain now verifiable-by-path? Are the 3 directions more distinct for being grounded in distinct vendored sources?
-   - Pre-OD baseline gotcha: v4's REPORT cites design systems from **training-data recollection** ("Linear · hairline 1px · hsl(220 17% 7%)…") — the 027 wedge is replacing that with a pinned vendored `DESIGN.md` path. That contrast IS the dogfood verdict.
+**Follow-up shipped this session — `PRODUCT_PIPELINE_OD` on/off toggle (UNCOMMITTED, 12 files + 1 new):** env var on the MCP server; off-values `off`/`0`/`false`/`no`/`disabled` make the OD tools return `code: "od-disabled"` (via `OdDisabledError extends VendorMissingError`), routing step 2 to the pre-OD "Manual escape" path. Touches `src/od.ts`, `src/tools.ts` (descriptions only), 4 step-2 templates, `.mcp.json.example`, `README.md`, `tests/od.test.ts` (+5 tests → 109 pass), `docs/specs/027-od-vendor-port/{plan,tasks}.md` (§ Follow-up / Phase 7), `.claude/memory/{MEMORY.md,od-grounding-dogfood.md}`. `bun tsc --noEmit` clean. **Not committed — user was asked, answer pending.**
 
-## Next steps (after the dogfood)
+## Next steps
 
-1. **Spec 026 Phase B step 3 (markdown spec port)** — BACKLOGGED, now unblocked. Step 3 output is markdown-only so it likely doesn't need OD grounding.
-2. **reminder/memory cleanup** — the `od-vendor-port-plan` reminder in `.claude/REMINDERS.md` and `.claude/memory/od-vendor-port-plan.md` are now satisfied by shipped 027. Dismiss the reminder, mark the memory superseded.
-3. **Future OD bump** — first real `--bump`/`--apply` against upstream is untested (network-bound). `--apply` is built + unit-covered but not run against live upstream; `--check` IS now dogfooded (upstream HEAD `75498838…` ≠ pin `d25a7aaf…`).
+1. **Commit the toggle work** — user was asked "quer que eu commite?" at session end; if yes, stage the 13 paths (all 027-related: `packages/mcp-product-pipeline/`, `docs/specs/027-od-vendor-port/`, `.mcp.json.example`, `.claude/memory/`) and commit. On `main` — branch-first rule applies unless user says otherwise.
+2. **Fair OD re-match** (optional) — the blind-judge result was confounded. To measure 027 honestly: either iterate the OD run to 4 passes, or re-judge it against the *first-pass* baseline (not `refined-v4`). See `.claude/memory/od-grounding-dogfood.md` § Pointers.
+3. **Spec 026 Phase B step 3 (markdown spec port)** — BACKLOGGED, unblocked. Markdown-only output, likely doesn't need OD grounding.
+4. **reminder cleanup** — the `od-vendor-port-plan` reminder in `.claude/REMINDERS.md` is satisfied by shipped 027; `.claude/memory/od-vendor-port-plan.md` already marked SUPERSEDED in the MEMORY.md index. Dismiss the reminder.
+5. **Future OD bump** — first real `--bump`/`--apply` against upstream still untested (network-bound); `--check` IS dogfooded (upstream HEAD `75498838…` ≠ pin `d25a7aaf…`).
 
 ## Decisions & gotchas (cumulative)
 

@@ -19,6 +19,8 @@ import {
   loadDsIndex,
   designSystemPath,
   VendorMissingError,
+  OdDisabledError,
+  odDisabled,
   _resetDsIndexCache,
 } from "../src/od.js";
 import { packageRoot } from "../src/paths.js";
@@ -159,5 +161,60 @@ describe("designSystemPath", () => {
   test("resolves real vendored systems from the package root", () => {
     const p = designSystemPath("linear-app", packageRoot());
     expect(p).toBe(join(packageRoot(), "design-systems/linear-app/DESIGN.md"));
+  });
+});
+
+describe("PRODUCT_PIPELINE_OD toggle", () => {
+  const ENV_KEY = "PRODUCT_PIPELINE_OD";
+  let saved: string | undefined;
+
+  beforeEach(() => {
+    saved = process.env[ENV_KEY];
+  });
+  afterEach(() => {
+    if (saved === undefined) delete process.env[ENV_KEY];
+    else process.env[ENV_KEY] = saved;
+  });
+
+  test("odDisabled() reads the env var — off-values disable, others don't", () => {
+    for (const v of ["off", "0", "false", "no", "disabled", "OFF", " Off "]) {
+      process.env[ENV_KEY] = v;
+      expect(odDisabled()).toBe(true);
+    }
+    for (const v of ["on", "1", "true", "", "yes", "anything"]) {
+      process.env[ENV_KEY] = v;
+      expect(odDisabled()).toBe(false);
+    }
+    delete process.env[ENV_KEY];
+    expect(odDisabled()).toBe(false); // unset = on (the default)
+  });
+
+  test("assertVendorPresent throws OdDisabledError when switched off — even with a complete tree", async () => {
+    await stageVendor(tmpRoot);
+    process.env[ENV_KEY] = "off";
+    expect(() => assertVendorPresent(tmpRoot)).toThrow(OdDisabledError);
+  });
+
+  test("loadDsIndex and designSystemPath both fail-loud with OdDisabledError when off", async () => {
+    await stageVendor(tmpRoot);
+    process.env[ENV_KEY] = "off";
+    expect(() => loadDsIndex(tmpRoot)).toThrow(OdDisabledError);
+    expect(() => designSystemPath("linear-app", tmpRoot)).toThrow(OdDisabledError);
+  });
+
+  test("OdDisabledError is a VendorMissingError subclass with code 'od-disabled'", () => {
+    const e = new OdDisabledError();
+    // subclass relationship is what lets tools.ts catch it with no extra wiring
+    expect(e).toBeInstanceOf(VendorMissingError);
+    expect(e.code).toBe("od-disabled");
+    expect(e.missing).toEqual([]);
+    expect(e.message).toMatch(/PRODUCT_PIPELINE_OD/);
+  });
+
+  test("unset env var leaves OD on — normal resolution still works", async () => {
+    delete process.env[ENV_KEY];
+    await stageVendor(tmpRoot);
+    expect(() => assertVendorPresent(tmpRoot)).not.toThrow();
+    expect(loadDsIndex(tmpRoot).count).toBe(2);
   });
 });

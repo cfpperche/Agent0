@@ -120,7 +120,7 @@ Two fix passes is normal. Do NOT emit with a failing dimension.
 
 ## Manual escape — OD vendor unavailable
 
-**Use this section ONLY when `product_design_systems_index` returns `code: "od-vendor-missing"`** — i.e. a broken install where the vendored bundle did not ship. This is not a legitimate steady-state path; the grounded path (`od-bridge.md` + the two MCP tools) produces measurably better output because each direction carries a real DESIGN.md citation chain. The escape exists so an operator hitting the fail-loud error can *consciously choose* to proceed without grounding — degradation stays explicit, never silent.
+**Use this section when `product_design_systems_index` returns `code: "od-vendor-missing"`** (a broken install where the vendored bundle did not ship) **or `code: "od-disabled"`** (OD grounding deliberately switched off via the `PRODUCT_PIPELINE_OD=off` env var — the operator's on/off switch for A/B'ing OD-grounded vs the pre-OD method). The grounded path (`od-bridge.md` + the two MCP tools) produces measurably better output because each direction carries a real DESIGN.md citation chain — so `od-vendor-missing` is not a legitimate steady-state path, and `od-disabled` is a deliberate operator choice. Either way, degradation stays explicit, never silent.
 
 In manual-escape mode the agent grounds directions in training-data knowledge of named design systems, using the 5-school table below as the direction library (the same library `directions.extracted.md` carries in vendored form).
 

@@ -11,7 +11,7 @@ Ported from anthill's `anthill-prototype/references/od-bridge.md`. Anthill injec
 | `product_design_systems_index` | The full 72-system index (`{name, mood, palette_summary}` each) **plus** a `vendor_paths` map of absolute roots (`design_systems`, `skills`, `prompts`, `frames`, `templates`) | Once, at the start of step 2 — to pick which systems ground which direction, and to learn where the vendor tree lives |
 | `product_design_system_path` | `{name, path}` — the absolute path to one system's `DESIGN.md` | Per chosen system — feed `path` straight to your `Read` tool |
 
-If either tool returns `code: "od-vendor-missing"`, the vendor bundle is absent (broken install). Do **not** silently fall back — surface the error, then consult the "Manual escape" section of `pipeline.md` if the user chooses to proceed without grounding.
+If either tool returns `code: "od-vendor-missing"`, the vendor bundle is absent (broken install); if it returns `code: "od-disabled"`, OD grounding was deliberately switched off via `PRODUCT_PIPELINE_OD=off`. In both cases: do **not** silently fall back — surface the error, then consult the "Manual escape" section of `pipeline.md` (the pre-OD inline 5-school method).
 
 ## Pre-flight reads (do once, before writing any HTML)
 

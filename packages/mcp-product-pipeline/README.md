@@ -27,6 +27,20 @@ After restart, the 8 `mcp__product-pipeline__product_*` tools appear in the agen
 
 **Compatibility note.** This is a local-path POC — the `args` reference `packages/mcp-product-pipeline/src/server.ts` relative to the project's cwd. It works ONLY when the host project has the `packages/mcp-product-pipeline/` subtree on disk — i.e. within the Agent0 repo itself, or a fork that has cloned it. Forks without `packages/` wait for the v2 publish path (see spec.md § non-goals). The activation pattern is the long-term contract; only the distribution mechanism shifts.
 
+### Toggling Open Design grounding — `PRODUCT_PIPELINE_OD`
+
+Step 2 (prototype) grounds its visual directions in the vendored Open Design bundle (spec 027) via `product_design_systems_index` + `product_design_system_path`. To switch that off — e.g. to A/B the OD-grounded path against the pre-OD inline 5-school method — set `PRODUCT_PIPELINE_OD=off` in the server's `env` block in `.mcp.json`:
+
+```jsonc
+"product-pipeline": {
+  "command": "bun",
+  "args": ["run", "packages/mcp-product-pipeline/src/server.ts"],
+  "env": { "PRODUCT_PIPELINE_OD": "off" }
+}
+```
+
+When off, the two OD tools return `code: "od-disabled"` and the step-2 templates route to `references/pipeline.md` § "Manual escape — OD vendor unavailable". Off-values: `off` / `0` / `false` / `no` / `disabled` (case-insensitive); unset or anything else means OD is on (the default). Restart the session after editing `.mcp.json` — it is loaded at session start, not hot-reloaded.
+
 ## Tool reference (8 tools)
 
 | Tool | Input | Returns |

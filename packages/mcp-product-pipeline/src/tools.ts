@@ -793,7 +793,7 @@ export function registerAllTools(server: McpServer): void {
   server.registerTool(
     "product_design_systems_index",
     {
-      description: "Return the index of all 72 vendored Open Design systems (Linear, Notion, Stripe, Wise, …) as {name, mood, palette_summary} entries, sourced from the generated vendor/open-design/.cache/ds-index.json. Use this during prototype steps to pick 1-4 design systems to ground each visual direction; cite the chosen systems by name in the step REPORT. Errors with od-vendor-missing if the vendor bundle is absent (broken install).",
+      description: "Return the index of all 72 vendored Open Design systems (Linear, Notion, Stripe, Wise, …) as {name, mood, palette_summary} entries, sourced from the generated vendor/open-design/.cache/ds-index.json. Use this during prototype steps to pick 1-4 design systems to ground each visual direction; cite the chosen systems by name in the step REPORT. Errors with od-vendor-missing if the vendor bundle is absent (broken install), or od-disabled if OD grounding was deliberately switched off via PRODUCT_PIPELINE_OD — in both cases the step-2 templates route to the pipeline.md 'Manual escape' section.",
     },
     handleDesignSystemsIndex,
   );
@@ -801,7 +801,7 @@ export function registerAllTools(server: McpServer): void {
   server.registerTool(
     "product_design_system_path",
     {
-      description: "Resolve a design system name (from product_design_systems_index) to the absolute path of its DESIGN.md. Read the returned path with your own Read tool — the MCP resolves paths, it does not stream content. Errors with unknown-design-system on an unknown name, od-vendor-missing if the vendor bundle is absent.",
+      description: "Resolve a design system name (from product_design_systems_index) to the absolute path of its DESIGN.md. Read the returned path with your own Read tool — the MCP resolves paths, it does not stream content. Errors with unknown-design-system on an unknown name, od-vendor-missing if the vendor bundle is absent, or od-disabled if OD grounding was switched off via PRODUCT_PIPELINE_OD.",
       inputSchema: {
         name: z.string().describe("kebab-case design system name, e.g. \"linear-app\" or \"stripe\". Must match a directory under the vendored design-systems/ tree."),
       },

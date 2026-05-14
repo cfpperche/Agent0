@@ -78,3 +78,13 @@ _Anything that came up during execution that doesn't belong in plan.md but is us
 - **`--gen-ds-index` subcommand added** beyond the plan's 3 subcommands — needed to run `generateDsIndex` standalone for the Phase-3 bootstrap (the plan only specified wiring it into `--apply`). Harmless addition; `--apply` calls `generateDsIndex` too.
 - **`product_design_systems_index` also returns `vendor_paths`** (absolute roots for skills/prompts/frames/templates/design-systems) — needed so `od-bridge.md` can teach the agent to reach SKILL.md/template.html/etc. without a path-resolver tool per subtree. Additive to the spec's `{name, mood, palette_summary}` index shape.
 - **Task 19 "wire into server.ts":** the existing codebase registers all tools via `registerAllTools` in `tools.ts` (which `server.ts` already invokes) — no separate server.ts registration path exists. Followed the existing pattern; server.ts docstring updated to the 10-tool surface.
+
+## Phase 7 — `PRODUCT_PIPELINE_OD` on/off toggle (follow-up, 2026-05-14)
+
+Added after the step-2 OD dogfood (see `plan.md` § Follow-up). All done in one diff.
+
+- [x] 33. `src/od.ts` — add `odDisabled()` (reads `PRODUCT_PIPELINE_OD`, off-values `off`/`0`/`false`/`no`/`disabled`) + `OdDisabledError extends VendorMissingError` (code `od-disabled`, `override readonly code`); gate `assertVendorPresent` to throw `OdDisabledError` first. Widened `VendorMissingError.code` to `string` so the subclass can override.
+- [x] 34. `src/tools.ts` — no logic change needed (the `instanceof VendorMissingError` catch already covers the subclass); updated both OD tool descriptions to name `od-disabled`.
+- [x] 35. Templates — one-line edits to `prompt.md`, `references/od-bridge.md`, `references/pipeline.md`, `schema.md` so the "Manual escape" trigger covers `od-disabled` alongside `od-vendor-missing`.
+- [x] 36. Docs — `.mcp.json.example` product-pipeline block gains a commented `env` example; `README.md` § Activation gains a "Toggling Open Design grounding" subsection.
+- [x] 37. `tests/od.test.ts` — `describe("PRODUCT_PIPELINE_OD toggle")`: `odDisabled()` value table, `assertVendorPresent`/`loadDsIndex`/`designSystemPath` all throw `OdDisabledError` when off (even with a complete tree), subclass+code assertions, unset = on. 5 tests; env var saved/restored per test. Full suite 109 pass, `bun tsc --noEmit` clean.

@@ -27,6 +27,12 @@ Canonical template (verbatim from `delegation-gate.sh` stderr):
   DONE_WHEN: <verifiable condition — tests pass, file exists, etc.>
 ```
 
+## Why DONE_WHEN exists (the /goal connection)
+
+DONE_WHEN is the local materialization of the same primitive that Codex CLI and Claude Code (v2.1.139+, May 2026) ship as `/goal` — a done-state declared up front so the agent works toward a contract instead of a sequence of prompts. The frame is **contract, not promise**: a goal statement without a verifier is just a fancier prompt.
+
+The verifier in this project is `.claude/hooks/post-edit-validate.sh` plus the runtime-introspect probe (`bash .claude/tools/probe.sh last-run`, see `.claude/rules/runtime-introspect.md`). A sub-agent's self-report — "tests pass", "build succeeded" — is never the final signal. The validator running the actual command and emitting the real exit code is. Same discipline `/goal` enforces upstream via its evaluator model; here it runs through hooks instead of a separate judge, but the contract semantics are the same — and they compose. A parent that submits `/goal` to itself can still dispatch `Agent` calls during the loop, and each of those still passes through the 5-field handoff and the post-edit validator. The two primitives layer rather than compete.
+
 ## Override marker
 
 Same shape as the governance gate (see `docs/specs/001-governance-gate/`): a line `# OVERRIDE: <reason ≥10 chars>`, case-sensitive, terminated by end-of-line. The reason is the audit trail — write something a future maintainer can grep for. "skip", "bypass", "n/a" are not reasons. A reason shorter than 10 chars after trimming is rejected and the gate blocks as if no marker were present (with a hint that the reason is too short).

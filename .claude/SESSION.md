@@ -12,11 +12,11 @@ Spec 026 Phase B tasks 12 (`4050de9`) and 13 + dogfood-driven Gap fixes A/B/C/D 
 
 Cool Brutalist HTML bundle for Linear-Clone produced as the empirical input for the next-session re-dogfood — `/tmp/bench/026-dogfood-step2/` (3 mood-boards + compare + REPORT + 8 hi-fi screens, ~370 KB, all Layer 1 gates pass). HTTP server: `127.0.0.1:8765` may still be up (kill: `pkill -f "http.server 8765"`).
 
-Durable lessons from this session live in memory, not here:
+Durable lessons from this session live in memory and rules, not here:
 
-- `~/.claude/projects/-home-goat-Agent0/memory/feedback_anthill_port_smart_not_rigid.md` — the 4-smell port-audit pattern (magic numbers, single-orchestrator, undynamic defaults, one-mode-templates) with the canonical Gap C/D examples + Phase B audit targets
-- `~/.claude/projects/-home-goat-Agent0/memory/feedback_hook_truncation_read_source.md` — when an injected block shows truncation markers, Read the source file before answering
-- `.claude/memory/mcp-pipeline-quirks.md` — `required_glob` "one of" pattern, `extractRequiredSections` greedy bullet trap, opus-required for step-2 Producer
+- `~/.claude/projects/-home-goat-Agent0/memory/feedback_anthill_port_smart_not_rigid.md` — the 4-smell port-audit pattern (magic numbers, single-orchestrator, undynamic defaults, one-mode-templates) with the canonical Gap C/D examples + Phase B audit targets. **Agent0-specific** (forks don't port from anthill).
+- `.claude/rules/session-handoff.md` § "Size discipline" + § "Reader-side defence — Read the source when injected output is truncated" — the universal pair (writer-side prevention + reader-side defense). **Ships to forks** via harness-sync.
+- `.claude/memory/mcp-pipeline-quirks.md` — `required_glob` "one of" pattern, `extractRequiredSections` greedy bullet trap, opus-required for step-2 Producer. **Project-factual, doesn't ship**.
 
 ## Next steps
 

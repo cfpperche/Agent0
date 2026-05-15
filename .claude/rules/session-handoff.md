@@ -44,7 +44,40 @@ The cap is enforced behaviourally at session-end, not by tooling. **Prune before
 3. **Replace, don't append.** The previous session's "Next steps" gets replaced by this session's, never doubled. The previous session's "Current state" is overwritten, not extended. A second `## Next steps` block or a `(cumulative)` suffix on a section header is the signal that pruning was skipped.
 4. **Carryover stays a parking lot.** Items in `## Carryover` that got resolved during the session drop out at session-end — they don't earn a "✓ done" badge, they just disappear.
 
-If at session-end the file is past 4 KB, the prune was insufficient — make another pass. The Stop hook does NOT enforce the size cap today (deliberate: behavioural discipline first, automation second — promote to a hook check if the discipline empirically fails). The companion behavioural memory for the read-side defence is at `~/.claude/projects/<path>/memory/feedback_hook_truncation_read_source.md` (Read the source file when the injected block shows a truncation marker — defense in depth against future growth).
+If at session-end the file is past 4 KB, the prune was insufficient — make another pass. The Stop hook does NOT enforce the size cap today (deliberate: behavioural discipline first, automation second — promote to a hook check if the discipline empirically fails).
+
+## Reader-side defence — Read the source when injected output is truncated
+
+Defense in depth, paired with the size discipline above. When the Claude Code harness truncates a large hook output, it preserves the full output to a sidecar file and shows only a preview in the agent's context. **The agent must scan for truncation markers and Read the source file before answering anything that depends on the injected block** — otherwise key information past the preview cutoff is silently lost.
+
+### Markers to scan for
+
+Telltale signs that an injected block is partial, not the full content:
+
+- `Output too large (N KB).` literal
+- `Full output saved to: <path>` literal
+- `<persisted-output>` opening tag
+- `Preview (first N KB):` literal
+- A block that ends with `...` and no closing delimiter
+- A `=== <SOURCE> ===` block that opens but never closes with `=== end <SOURCE> ===`
+
+Any one of those = partial content. The persisted-output path (when shown) is the full content; the SOURCE file referenced by the hook is the canonical content.
+
+### What to do
+
+Before responding to anything that touched the truncated block:
+
+1. **Identify the source file** the hook was meant to inject — e.g., `.claude/SESSION.md`, `.claude/COMPACT_NOTES.md`, `.claude/REMINDERS.md`.
+2. **Read it directly** via the Read tool, full file.
+3. **Then answer.** Reasoning from the partial preview is the failure mode this rule exists to prevent.
+
+If multiple injected blocks are truncated, Read each source file. Truncation is silent past the marker — the harness does not warn beyond the literal, so the agent must catch it.
+
+### Why this matters
+
+The failure mode it prevents (canonical example, 2026-05-15 in this very project): SessionStart resume hook injected SESSION.md but the file had grown to 12 KB, exceeded the harness's ~2 KB preview cap, and the truncation marker was clearly visible — but the agent processed the 2 KB preview as if it were the whole file, summarised it for the user, and missed the immediate "next step" (which lived past the cutoff). The user had to ask why the next step was missing. The injected block had ALL the information needed to know it was partial: `Output too large (12KB). Full output saved to: …`. Reading the source file would have caught it.
+
+This is a behavioural failure, not a tooling failure — even when the size discipline of the source file is improved (see § Size discipline above), the agent must still defend against future growth. Both defences are required: size discipline on the writer side (here) AND truncation-marker scanning on the reader side (here). One alone is fragile.
 
 ## Escape hatch
 

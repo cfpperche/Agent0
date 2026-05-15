@@ -8,26 +8,25 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-Single small uncommitted change: `.claude/rules/delegation.md` (+6 lines) — new `## Why DONE_WHEN exists (the /goal connection)` section that frames DONE_WHEN as the local materialization of upstream Claude Code `/goal` (shipped v2.1.139, 2026-05-12, docs at `code.claude.com/docs/en/goal`). The framing is "contract, not promise" — a goal statement without a verifier is just a fancier prompt; the post-edit-validator + runtime-introspect are the verifier that makes the contract real. Rule-bucket (not memory) so the framing propagates to forks via sync-harness.
+Spec 026 Phase B tasks 11/12/13 dogfooded end-to-end (commits up through `b8af3cf`); task 14 (step 5 brand port) shipped + dogfooded same-session (commits `e4f6361` + `d13263d`). Working tree clean. 109 tests pass, `bun tsc --noEmit` clean. 4 commits ahead of origin.
 
-Trigger was studying Saboo Shubham's "ultimate guide to /goal" tweet (x.com/Saboo_Shubham_/status/2054988166541770782) — he describes the convergence between Codex CLI, Claude Code, and his Hermes orchestrator. Verified `/goal` is a real built-in CC slash command via claude-code-guide (autonomous main-agent loop using a Stop hook + evaluator model — NOT a subagent dispatch).
+This session also produced a substantive **anthill-vs-MCP comparison** for steps 3 + 4 (artifact: `/tmp/bench/026-comparison-anthill/COMPARISON.md`, 8 KB). Verdict: volume parity (~130 KB vs ~130 KB step 3; ~46 vs ~41 KB step 4); MCP wins on tier-depth license + machine-readable architecture + format-enforced measurable a11y axis + validation_mode posture; loses on per-feature anti-goals + per-feature engineering decisions + YAML frontmatter source-of-truth + inline delegation routing (`fix_skill_hint` + `priority_fixes` agrupados). Honest credit: Gap B in step 4 is structural enforcement of rigor anthill's `evidence` field already invited, not a port-introduced improvement.
 
-`bun tsc --noEmit` and tests not re-run this session (single-rule-doc edit, no code touched). Prior session's spec-026 Phase B tasks 11/12/13 dogfood already landed in commits up through `492d6ee`.
+3 of the 4 port-improvements identified by the comparison shipped in `b8af3cf` (per-feature anti-goals + architecture-seed + Priority Recommendations named-batches discipline). 2 deferred: YAML frontmatter on step 4 + per-finding `fix_skill_hint`. Both fold into the step 6 PR (the consumer that defines what fields the structured layer needs).
+
+Linear-clone-poc was promoted: pre-port artifacts archived to `.pre-port-archive/`; step 2/3/4 outputs now live at `linear-clone-poc/docs/product/{02-prototype,03-spec,04-ux-testing}/` with `/tmp/bench/...` paths rewritten to `../02-prototype/...`. 404 KB step 2 + 136 KB step 3 + 52 KB step 4. Steps 5-12 still placeholders.
+
+Step 5 dogfood (sharp-vision founder branch, 6 exchanges, opus sub-agent synthesis) confirmed the calibrated-interview design works: "almost exactly the right shape, a 7th probe on sharp-vision would have produced thinner signal." Surfaced one real prompt-language ambiguity (posture-numbers vs scale-tokens) — fixed in `d13263d`.
 
 ## Next steps
 
-1. **Decide commit on the `delegation.md` /goal-framing edit.** User was offered "commit já / ler diff antes" — left pending when this turn closed. Suggested message: `docs(rules/delegation): frame DONE_WHEN as the /goal primitive (contract not promise)`. One-file commit, no test impact.
-2. **Spec 026 Phase B — tasks 14-22**: step 5 brand, **step 6 design-system (HIGH priority — tokens feed 7 + 13)**, 7 prototype-v2, 8 PRD, 9 system-design, 10 cost, 11 roadmap, 12 legal, 13 prototype-v3 NEW. Apply `feedback_anthill_port_smart_not_rigid` to each port.
+1. **Spec 026 Phase B — step 6 design-system (task 15, HIGH priority).** Tokens feed steps 7 + 13. The two deferred port-improvements from the anthill comparison (YAML frontmatter on step 4 + per-finding `fix_skill_hint`) naturally fold here — design-system is the downstream consumer that defines the structured fields. Apply `feedback_anthill_port_smart_not_rigid` to the port (read source end-to-end → audit 4 smells → propose calibration → dogfood inline → fix same-session).
+2. **Spec 026 Phase B — remaining tasks 16-22**: step 7 prototype-v2, 8 PRD, 9 system-design, 10 cost, 11 roadmap, 12 legal, 13 prototype-v3 NEW.
 3. **Fair OD re-match + future OD `--bump`/`--apply`** — both still pending in `.claude/REMINDERS.md`, deferred-style not urgent.
-
-## Decisions & gotchas
-
-- **`/goal` is upstream-real, not just Saboo-wrapper.** Built-in CC slash command at v2.1.139+. Mechanism: prompt-based Stop hook + evaluator model (Haiku default) that judges done/not-done each turn within the same session. Not a subagent dispatch. `/goal` and `Agent` compose (you can dispatch sub-agents from within a `/goal` loop, and each dispatch still passes through the 5-field delegation gate).
-- **Recurring drift caught this session:** I proposed saving the `/goal` framing as a memory; user reminded that memory content does NOT ship to forks (only `.gitkeep` scaffold via sync-harness). Saved `feedback_agent0_changes_ship_via_rules_not_memory.md` to CC per-user memory so I stop drifting.
 
 ## Carryover (orthogonal lanes, not active)
 
 - Pyshrnk CLAUDE.md reconciliation — long-standing parking lot.
 - Shrnk-mono harness-sync commit pending (13 modified + 2 untracked there).
 - Praxis-prototype lane (consultancy-site, separate repo): deployed at https://cfpperche.github.io/praxis-prototype/. Possible `section-line-grid` opacity bump 0.045 → 0.07.
-- Bench artifacts: `/tmp/bench/026-dogfood-step2/` (~370 KB) + `/tmp/bench/026-dogfood-step3-4/` (~157 KB) — wipe-able unless promoted to spec dogfood/.
+- Bench artifacts (wipe-able): `/tmp/bench/026-dogfood-step2/` (~370 KB; promoted to linear-clone-poc but kept as bench reference) + `/tmp/bench/026-dogfood-step3-4/` (~157 KB) + `/tmp/bench/026-comparison-anthill/` (~140 KB) + `/tmp/bench/026-dogfood-step5/` (~14 KB).

@@ -1,24 +1,24 @@
 ---
 mode: interactive
 delegable: partial
-delegation_hint: "render Turn 2 hi-fi screens from a locked direction + concept brief (sub-agent gets direction tokens + brief via context; cannot conduct user discovery interview)"
+delegation_hint: "render one HTML artifact for step 2 — either one of three Turn-1 mood-board directions (parent pre-attributes the angle in CONSTRAINTS; sub-agent does NOT pick) OR one of N Turn-2 hi-fi screens from a locked direction (N is product-calibrated per § 9, typically 3-15); in both shapes the specific assignment is in the brief, not the sub-agent's discretion"
 ---
 
 # Step 2 — Prototype (HTML mood boards + hi-fi screens)
 
-**Goal:** produce 3 genuinely distinct HTML mood boards proposing visual directions, plus a REPORT.md self-critique, plus 8 hi-fi screens of whichever direction the user picks. The output materializes the central thesis of this pipeline — HTML you can open in a browser is the artifact, NOT a markdown spec describing one.
+**Goal:** produce 3 genuinely distinct HTML mood boards proposing visual directions, plus a REPORT.md self-critique, plus a product-calibrated set of hi-fi screens (N typically 3-15, see § 9) of whichever direction the user picks. The output materializes the central thesis of this pipeline — HTML you can open in a browser is the artifact, NOT a markdown spec describing one.
 
 **Mode:** `interactive`. Two turns separated by a user checkpoint:
-- **Turn 1** (discovery → 3 directions → REPORT) — agent runs discovery, generates 3 mood boards as standalone HTML files (each with palette swatches, type sample, hero sample, dashboard sample, mood blurb), writes `compare.html` side-by-side + `REPORT.md` with 5-dim critique and anti-AI-slop audit
-- **Turn 2** (8 hi-fi screens of picked direction) — gated by a Layer 3 checkpoint where the user picks one direction. Agent then renders 8 product screens at high fidelity using picked direction's tokens
+- **Turn 1** (discovery → 3 directions → REPORT) — parent runs the discovery interview with the user (§ 2), attributes one categorically distinct angle per direction (§ 3 + § 3.5), and **dispatches 3 sub-agents in parallel** — one direction each, angle locked in CONSTRAINTS, following the per-direction build rules in § 4. When the 3 sub-agents return, parent composes `compare.html` (§ 5) and `REPORT.md` (§ 6) cross-cutting the 3 outputs.
+- **Turn 2** (N hi-fi screens of picked direction, N calibrated per product) — gated by a Layer 3 checkpoint where the user picks one direction. Parent then derives N from the brief + Turn-1 Plan (§ 9's calibration table) and dispatches N sub-agents in parallel (or fewer, batched) to render the screens at high fidelity using the picked direction's tokens. Schema floor is `min_count: 3` (universal sanity); typical ranges 3-5 (micro / CLI tool), 6-10 (SMB SaaS), 10-15 (marketplace / multi-persona).
 
-Sub-agent delegation is `partial`: Turn 2 (screen rendering from a locked direction + brief) can be delegated; Turn 1 cannot — it requires the user channel for discovery and direction pick.
+Sub-agent delegation is `partial`: the **discovery interview** (§ 2), the **angle attribution** (§ 3 + § 3.5), the **cross-cutting artifacts** (§ 5 compare.html + § 6 REPORT.md — both need view of all 3 directions to compose), and the **user checkpoint** at end of Turn 1 stay with the parent. The **per-direction build** (§ 4) and the **per-screen Turn-2 render** (§ 9) are delegable — and SHOULD be delegated, in parallel. The single-Producer pattern that earlier versions implied is empirically suboptimal: a single agent making the angle choice and the 3 builds in sequence converges all 3 directions on the same aesthetic axis (the "2 of 3 dark-canvas" finding from the spec 027 dogfood — `.claude/memory/od-grounding-dogfood.md`). Pre-attributed angles + parallel sub-agents make that convergence structurally impossible — see § 3.5.
 
 **Output files** (all under `docs/product/02-prototype/`):
 - `direction-a.html`, `direction-b.html`, `direction-c.html` — 3 mood boards, ≥ 8 KB each
 - `compare.html` — side-by-side comparison surface, ≥ 2 KB
 - `REPORT.md` — primary artifact submitted to `product_step_submit`, ≥ 6 KB
-- `screens/<NN-name>.html` × 8 — Turn 2 hi-fi screens, ≥ 4 KB each
+- `screens/<NN-name>.html` × N — Turn 2 hi-fi screens, ≥ 4 KB each. N is product-calibrated per § 9 (typically 3-15); schema floor is 3.
 
 ---
 
@@ -92,7 +92,33 @@ Per direction, pin in chat BEFORE writing HTML:
 - **Mood blurb** — one sentence in product voice (PT-BR if Brazilian) — why this direction
 - **Citation chain** — 1-4 vendored design systems composed, each cited in REPORT.md by name **and** `DESIGN.md` path (`design-systems/<system>/DESIGN.md`). Name-drop without the path is not a citation
 
+### 3.5 Fan-out — 3 parallel sub-agents, one direction each
+
+With the 3 angles pinned (§ 3), the parent does **not** produce the directions itself. The parent composes **3 sub-agent briefs** (5-field handoff per `.claude/rules/delegation.md`) and **dispatches them in the same response** so they run concurrently. Each brief locks ONE pre-attributed angle into CONSTRAINTS — the sub-agent does not pick its own angle, does not hedge across angles, does not compare itself to the other two.
+
+Brief shape per direction (composed by the parent — `product_get_delegation_brief(2)` returns one generic brief, not three direction-specific ones; the parent specialises it three times):
+
+- **TASK** — "produce one HTML mood-board direction for `<product>` — '`<Direction X: codename>`' — saved to `docs/product/02-prototype/direction-<x>.html`".
+- **CONTEXT** — paths to the concept brief (`docs/product/01-ideation/04-concept-brief.md`), the step-2 template files (this `prompt.md`, `schema.md`, all `references/*.md` — especially `od-bridge.md`, `visual-constraints.md`, `anti-patterns.md`), and explicit confirmation that the OD MCP tools (`product_design_systems_index`, `product_design_system_path`) are available in sub-agent context. State that two sibling sub-agents are producing the other two directions concurrently, and instruct the sub-agent NOT to coordinate with or hedge against them.
+- **CONSTRAINTS** — the LOCKED angle (one paragraph: mood line, palette family + the explicit forbidden zones for *this* direction, type stack, layout posture), the design-system shortlist the parent already pulled from the OD catalogue for this angle (or "shortlist from the catalogue yourself, anchored to school `<X>`"), the schema-required `contains` substrings (`<!DOCTYPE html`, `<style`, `:root`, `--background`, `--foreground`, `--primary`, `Most Popular`, `<svg`), the 8-section build rhythm from § 4, the file path, the size floor (≥ 10 KB), the boundary rules (no writes outside the step-2 dir, no comparison to other directions in this file, no second-guessing the assigned angle).
+- **DELIVERABLE** — the written HTML file at the named path. In the final message back to the parent: file path, the 1-3 OD design systems chosen with their vendored `design-systems/<system>/DESIGN.md` paths, a 2-3 sentence summary of the specific design choices, and any honest tension with the OD catalogue (partial fits disclosed by name, accents that were brief-specified rather than DS-inherited).
+- **DONE_WHEN** — file exists at the path, size ≥ 10 KB, every required `contains` substring literally present, OD design system paths cited in an HTML comment header at the top of the file, and the final message reports all four items above.
+
+Use `model: opus` for each sub-agent — sonnet times out on heavy step-2 templates (SESSION.md captures this empirically). Dispatch all 3 in the **same response** so they run concurrently rather than sequentially.
+
+**Why this pattern** — not just parallelism for speed:
+
+- **Anti-convergence** — pre-attributing the angle makes "2 of 3 directions land on the same dark-canvas vibe" structurally impossible. The spec 027 dogfood documented the convergence failure of the single-Producer pattern; this fan-out is the durable fix. Without pre-attribution, the brief's centre of gravity (here typically "dark-mode-leaning + Linear-grade speed") pulls every direction toward the same axis.
+- **Honest DS-fit grading** — isolation makes each sub-agent grade its own DS-catalogue fit against ITS angle, not against an internal multi-direction comparison. The dogfood found this as an emergent property: sub-agents disclose partial fits by name ("Warp is a stretch citation for Cool Brutalist — I borrowed only the terminal-block layout DNA; native warm-parchment palette was swapped") and disclose when an accent is brief-specified rather than DS-inherited (Direction C's oxblood). **Promote this discipline explicitly** in CONSTRAINTS: instruct the sub-agent to disclose partial fits and brief-specified-not-DS choices, both inline in the HTML's lineage section and back to the parent in its DELIVERABLE message.
+- **Context-budget hygiene** — three sub-agents materialise their HTML in their own contexts; the parent's context stays fresh for the cross-cutting work (compare.html + REPORT.md) and for the user-checkpoint dialogue.
+
+**What stays with the parent** — the discovery interview (the user is the parent's interface), the angle attribution (3 categorically distinct angles, NOT 3 takes on the same vibe — see § 3 hard rule), the **cross-cutting artifacts** (compare.html and REPORT.md — both need a view of all 3 directions, by construction), and the user-checkpoint dialogue between Turn 1 and Turn 2.
+
+**Fallback when fan-out is impossible** — single-machine constraint with no `Agent` tool surface, or `delegation-gate.sh` configured to block: the same agent applies § 4's rules to all 3 directions sequentially, but expect the convergence failure mode this fan-out is designed to prevent and audit the 3 outputs for axis-clustering before submitting.
+
 ### 4. Build the 3 mood-board HTMLs
+
+This section's rules apply **per direction** — under the fan-out pattern (§ 3.5), each of the 3 sub-agents follows them for the one direction its CONSTRAINTS locked. The parent does NOT execute this section under fan-out. Treat every "the file" / "this direction" reference below as scoped to the sub-agent's assigned direction. If fan-out is impossible (see § 3.5 fallback), the same agent applies these rules to each of the 3 directions in turn.
 
 Read `references/visual-constraints.md` + `references/a11y-checklist.md` + `references/anti-patterns.md` BEFORE writing. When the OD vendor is available, seed each file from `<vendor_paths.skills>/web-prototype/assets/template.html` (pre-baked token system + class inventory) rather than the bare scaffold — see `references/od-bridge.md` § *Build phase*. Each `direction-{a,b,c}.html` is a **MOOD BOARD** — a sequence of labeled DEMONSTRATION sections each showing one UI surface (hero / dashboard / pricing / etc.) rendered in the direction's tokens. Read as a cohesive document with landing-page narrative flow (eyebrow + title + lead + body rhythm), but the framing is "here's how X looks in this design system" — NOT "marketing landing page that happens to use these tokens".
 
@@ -218,7 +244,7 @@ Read `references/examples.md` § "REPORT walkthrough" for the canonical shape. R
 - `## 5-Dim Critique Pre-Emit Scores` — table with all 5 dims × A/B/C + minimum
 - `## Anti-AI-Slop Audit` — table of all P0 rules × A/B/C
 - `## Brief Compliance Check` — table: Brief requirement / Addressed
-- `## Turn 2 Plan` — list 8 screens that would render for the picked direction; map to brief's mechanics-breakdown
+- `## Turn 2 Plan` — list N screens that would render for the picked direction, where N is product-calibrated per § 9. Open the section with a one-line rationale for the chosen N ("SMB SaaS class · 8 screens covering killer flow + onboarding + 2 supporting + settings + empty-error"). Then list the screens, each mapped to a mechanic from the brief's mechanics-breakdown or a user-flow phase
 
 ### 8. Surface for user pick (Layer 3 checkpoint)
 
@@ -234,17 +260,48 @@ After REPORT.md drafts, do NOT call `product_step_submit` yet. Surface to user:
 
   REPORT summary: all 3 cleared 5-dim ≥ 3/5; anti-slop clean.
 
-  Pick a direction (a / b / c) to proceed to Turn 2 (8 hi-fi screens).
+  Pick a direction (a / b / c) to proceed to Turn 2 (N hi-fi screens — see the count + list in the REPORT.md § Turn 2 Plan).
   Or refine — which direction needs which adjustment before we proceed?
 ```
 
 Wait for user. Do NOT advance.
 
-### 9. Turn 2 — 8 hi-fi screens of picked direction
+### 9. Turn 2 — N hi-fi screens of picked direction (N is product-calibrated)
 
-Once user picks (e.g., "C"), generate 8 product screens in `screens/01-<name>.html` through `screens/08-<name>.html`. Each screen ≥ 4 KB, uses the picked direction's palette + type tokens verbatim (copy `:root` from the direction file). Each screen exercises a real product surface from the brief's mechanics + user-flow sections.
+Once user picks (e.g., "C"), generate **N product screens** in `screens/01-<name>.html` through `screens/NN-<name>.html`. **N is NOT a fixed 8** — it is calibrated to the product class. Each screen ≥ 4 KB, uses the picked direction's palette + type tokens verbatim (copy `:root` from the direction file). Each screen exercises a real product surface from the brief's mechanics + user-flow sections.
 
-Default 8-screen set (adapt to brief's mechanics-breakdown when possible):
+**Schema floor:** `min_count: 3` (universal sanity — below 3 is "I didn't try"). Calibration ABOVE the floor is the parent's job, ancored in the brief, justified in REPORT.md § Turn 2 Plan.
+
+#### Calibration table — product class → typical screen count
+
+Pull the **Scale** field from the concept brief's identity block. Map it:
+
+| Product class (concept brief § Identity · Scale) | Typical N | Anchor surfaces |
+|---|:---:|---|
+| Micro-Product / single-purpose tool / CLI helper | **3-5** | Primary action surface · settings · empty-error. CLI: `--help` / primary command / error output. |
+| Mobile App (focused, 1-persona) | **4-7** | Onboarding · main view · detail · settings · (1-2 mechanic surfaces) |
+| Developer Tool / API-first | **4-8** | Landing · dashboard · integration / quickstart · key-state · error / empty |
+| SMB SaaS (the spec 026 default) | **6-10** | Landing · onboarding · dashboard · 2 core CRUD/workflow · settings · empty-error |
+| Venture-Scale / Marketplace / multi-persona | **10-15** | Multi-persona surfaces (consumer-side + provider-side) increase the count linearly |
+
+Brief field is missing or ambiguous → ask the user during discovery (§ 2) or default to **SMB SaaS** (6-10).
+
+#### Procedure — how to pick N for THIS product
+
+1. **Enumerate every distinct surface** from the brief's mechanics-breakdown + user-flow + (if step 3 has run) functional-spec.md § Pages & Surfaces. Cap the raw list at 20; if it exceeds 20, the brief is over-scoped — flag back to the user.
+2. **Triage each surface into 3 buckets:**
+   - **Killer-flow surfaces** — the demo screens; the persona's daily-use surfaces; the 1-3 "if these don't feel sub-100ms the bet is broken" screens. Must all render at hi-fi.
+   - **Supporting surfaces** — onboarding, auth, settings, dashboard. Render at hi-fi the ones load-bearing for the persona's first session.
+   - **Edge-state surfaces** — empty-first-run, permission-denied, offline, generic 404. Can be **combined into 1 multi-state screen** for terse products, or rendered as separate screens for richer ones.
+3. **Sum the buckets, cross-check against the calibration table.** A 12-surface SMB SaaS spec triaged as 3 killer-flow + 6 supporting + 3 edge-state lands at 6 hi-fi screens (3 killer + 2-3 of the supporting + 1 combined edge-state) — inside the 6-10 SMB SaaS range. ✓
+4. **Decide N.** If your triage lands inside the calibration-table range for the product's Scale, use that N. If it lands outside, **justify the deviation in REPORT.md § Turn 2 Plan**: "12 screens — venture-scale marketplace with 4 distinct personas; the table's 10-15 range fits".
+5. **Confirm the list with the user BEFORE writing** if N or the surface choices are ambiguous. The Layer 3 user checkpoint at § 8 is the right place for this confirmation.
+
+#### Example default lists (NOT prescriptive)
+
+Use as starting points, not as the answer. Each line is one HTML file.
+
+**SMB SaaS, N=8 (the spec 026 default — was hardcoded, now derived):**
 1. `01-landing.html` — full marketing landing (hero, value sections, pricing, FAQ)
 2. `02-onboarding.html` — first-run wizard (3-5 steps)
 3. `03-dashboard.html` — primary in-product workspace
@@ -254,9 +311,17 @@ Default 8-screen set (adapt to brief's mechanics-breakdown when possible):
 7. `07-settings.html` — account / preferences / billing
 8. `08-empty-error.html` — empty + error + loading states combined
 
-Confirm the 8-screen list with the user BEFORE writing if the brief is ambiguous about which mechanics deserve dedicated screens.
+**Micro-Product / CLI helper, N=4 (contrast — low end of the range):**
+1. `01-landing.html` — short marketing one-pager OR `--help` rendering for a CLI
+2. `02-primary-action.html` — the single main surface (the product's one job)
+3. `03-settings.html` — preferences, account, or `config` command output
+4. `04-empty-error.html` — combined empty + error + loading states
 
-Append `## Turn 2 — 8 Screens Hi-Fi` section to REPORT.md with: per-screen one-line summary, 5-dim scores per screen, anti-slop re-run, deviations from brief.
+For other classes (Mobile App, Developer Tool, Marketplace), derive from the calibration table + the procedure above. The numbered file prefixes (`01-` through `NN-`) match the schema's glob pattern; the schema enforces only the floor (`min_count: 3`), so any N ≥ 3 with sequential `01-..NN-` prefixes passes.
+
+**Confirm the N + the screen list with the user BEFORE writing** if N or the surface choices are ambiguous. The Layer 3 user checkpoint at § 8 is the natural place to do this — surface "I plan N = `<N>` screens covering `<list>` (rationale: `<one line>`). Confirm or adjust before I render."
+
+Append `## Turn 2 — Hi-Fi Screens` section to REPORT.md with: the chosen N + one-line rationale, per-screen one-line summary, 5-dim scores per screen, anti-slop re-run, deviations from brief.
 
 ### 10. Submit
 
@@ -264,7 +329,7 @@ Call `product_step_submit` with:
 - `step: 2`
 - `filename: "REPORT.md"`
 - `content: <full report including Turn 2 section>`
-- `extra_files`: array of `{ path, content }` for `direction-a/b/c.html` + `compare.html` + 8 screens (`screens/01-...html` through `screens/08-...html`)
+- `extra_files`: array of `{ path, content }` for `direction-a/b/c.html` + `compare.html` + the N hi-fi screens (`screens/01-...html` through `screens/NN-...html`, N chosen per § 9)
 
 Schema enforces presence + min_size + contains for all listed files; missing/undersized produces `code: "schema-incomplete"` with the failure list.
 

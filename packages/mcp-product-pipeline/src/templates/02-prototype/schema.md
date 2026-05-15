@@ -13,7 +13,7 @@ Section names slugify by lowercasing + dashing — `## 3 Direction Summaries` �
 - `anti-ai-slop-audit` (accepts `anti-slop-audit`)
 - `brief-compliance` (accepts `brief-compliance-check`)
 - `turn-2-plan` (required after Turn 1 emit)
-- `turn-2-8-screens-hi-fi` (REQUIRED on final submit — added after user picks direction and Turn 2 completes)
+- `turn-2-hi-fi-screens` (REQUIRED on final submit — added after user picks direction and Turn 2 completes; section heading is `## Turn 2 — Hi-Fi Screens`, count-agnostic since N is product-calibrated per prompt.md § 9. Accepts the historical `turn-2-8-screens-hi-fi` slug for backwards-compat with pre-Gap-D submissions.)
 
 The Identity block (codename, palette tokens, type stack, citation chain per direction) lives inside `3-direction-summaries` — it is enforced via the `contains` substrings in the Layer 1 fenced block below, not as separate headings.
 
@@ -64,7 +64,7 @@ The Identity block (codename, palette tokens, type stack, citation chain per dir
   "required_glob": [
     {
       "pattern": "screens/[0-9][0-9]-*.html",
-      "min_count": 8,
+      "min_count": 3,
       "per_match_min_size": 4096,
       "per_match_contains": ["<!DOCTYPE html", "<style", ":root"]
     }
@@ -81,7 +81,7 @@ The Identity block (codename, palette tokens, type stack, citation chain per dir
   - The substring `<svg` — proxy for the required **charts & sparklines sample** surface (see prompt.md § 4 section #6). Inline SVG is the canonical way to render charts in self-contained HTML; agents that skip the charts section trip Layer 1 immediately. CSS-only chart treatments (e.g., a `<div>` height-grid bar chart) that don't use `<svg` should include the substring `<svg` in a comment (`<!-- chart rendered as CSS grid; no SVG used -->`) to pass
 - **`compare.html` min_size 4096** + substrings `direction-a` / `direction-b` / `direction-c` + `Palette` + `School` — bumped from 2 KB after step 2 benchmark showed both producers landing at 25-32 KB on a real compare surface. Substrings now enforce both the at-a-glance hero (palette swatches present) and the deeper comparison table (school property row)
 - **`REPORT.md` min_size 6144** (6 KB) — covers Turn 1 sections at honest depth. Turn 2 section grows the file further on resubmit; pivota's REPORT landed at ~16 KB after Turn 2; step 2 bench showed producers landing 21-27 KB on Turn 1 alone
-- **`screens/[0-9][0-9]-*.html` glob** — exactly the `01-`, `02-`, ..., `08-` shape. `min_count: 8` is a hard floor (per spec 026 plan); `per_match_min_size: 4096` filters stubs. Each screen MUST carry `:root` declaration (verbatim copy of picked direction's tokens) — `per_match_contains` enforces
+- **`screens/[0-9][0-9]-*.html` glob** — `01-`, `02-`, ..., `NN-` shape, where N is calibrated per product (see `prompt.md` § 9). `min_count: 3` is the **universal sanity floor** — below 3 is "I didn't try" (1 screen is a stub, 2 is barely a flow). Product-class calibration (how many screens are *right* for THIS product) lives in `prompt.md` § 9's calibration table — a SMB SaaS lands at 6-10, a micro-product at 3-5, a marketplace at 10-15. The schema enforces the floor; the prompt enforces the calibration. `per_match_min_size: 4096` filters stubs. Each screen MUST carry `:root` declaration (verbatim copy of picked direction's tokens) — `per_match_contains` enforces
 
 ## Section content guidance (depth, not just presence)
 

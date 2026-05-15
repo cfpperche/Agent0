@@ -1,3 +1,4 @@
 # Reminders
 
-- Plan & schedule the OD vendor port into packages/mcp-product-pipeline — see .claude/memory/od-vendor-port-plan.md for substance + 5 open architectural questions. Trigger to act: after spec 026 Phase B completes, or sooner if a port step needs DESIGN.md grounding to ship credibly.
+- Fair OD re-match for spec 027 — the blind-judge result (3.87 vs 4.73) is confounded (1 OD pass vs 4 refined iterations). To measure 027 honestly: either iterate the OD run to 4 passes, or re-judge it against the first-pass baseline. See .claude/memory/od-grounding-dogfood.md § Pointers.
+- Test the first real OD --bump/--apply against upstream — network-bound, still untested. --check already confirms drift (upstream HEAD 75498838 ≠ pin d25a7aaf). See scripts/sync-open-design.ts + docs/specs/027-od-vendor-port/.

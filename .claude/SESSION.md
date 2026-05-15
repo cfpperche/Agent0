@@ -6,38 +6,37 @@ See `.claude/rules/session-handoff.md` for the protocol.
 
 ---
 
-## Current state — spec 027 OD vendor port SHIPPED + committed (`99b3612`)
+## Current state — spec 026 Phase B task 12 (step 3 spec port) SHIPPED, UNCOMMITTED
 
-All 32 tasks done, 104 tests pass (78 existing + 26 new), `bun tsc --noEmit` clean. The Open Design vendor bundle (72 design systems + 31 skill bundles + prompts/frames/templates) now ships inside `packages/mcp-product-pipeline/`, pinned at SHA `d25a7aaf…`, checksum-verified. Committed staging only the 027 paths — spec 028's uncommitted files were left untouched.
+Specs 027 (OD vendor port + `PRODUCT_PIPELINE_OD` toggle) and 028 (`/sdd refine`) are both shipped + committed — 027's toggle landed in `12dd6e4` (the prior session's "commit the toggle" next-step is done). Working tree was clean at session start.
 
-What landed: `vendor/open-design/` skeleton + `MANIFEST.json`; `scripts/sync-open-design.ts` (bun-native port of anthill's engine, `--check`/`--bump`/`--apply`/`--verify`/`--gen-ds-index`); content bootstrapped by copy; `src/od.ts` fail-loud resolver; 2 MCP tools (`product_design_systems_index`, `product_design_system_path` → 10 tools total); `prepublishOnly` drift gate; step-2 retrofit (`od-bridge.md` + `pipeline.md`/`prompt.md`/`schema.md` route through the MCP tools, DS-by-path citation schema-enforced).
+This session shipped **spec 026 Phase B task 12 — step 3 spec port** (`anthill-spec` + `anthill-feature-refiner` → `templates/03-spec/`). UNCOMMITTED, 7 files:
 
-## Spec 028 sdd-refine-interview — SHIPPED + committed (`60e8a03`)
+- `templates/03-spec/prompt.md` — rewritten. Synthesis of `anthill-spec` (pages→components→interactions→states→nav-map + `## Decisions Pending` handoff table) and `anthill-feature-refiner` (per-feature depth + architecture section + Gherkin acceptance scenarios). `mode: synthesis`, `delegable: true`.
+- `templates/03-spec/schema.md` — rewritten. `required_files` block: 3-artifact bundle — `functional-spec.md` (≥15 KB, primary `content`) + `architecture.md` (≥4 KB, extra_file) + one of `architecture.html`/`.json` (extra_file, via `required_glob`). 9 required H2 sections for `functional-spec.md`.
+- `templates/03-spec/references/` — 5 new files: `functional-spec-template.md`, `architecture-shape.md`, `anti-patterns.md`, `checklist.md`, `examples.md`. (Plan named only the first two; added the other 3 to match the 01-ideation port shape.)
 
-`/sdd refine` discovery-interview subcommand, ported from anthill's archived feature-refiner. All 5 tasks + 5 verifications done. New: `.claude/skills/sdd/references/{question-bank,checklist}.md`. Modified: `.claude/skills/sdd/SKILL.md` (`## Subcommand: refine` — 5-step process with 🔒/🔓/🟢 freedom annotations, 3 entry shapes, inline quality-score table) + `.claude/rules/spec-driven.md` (§ Workflow gains optional Step 0 "Refine"). Method-only port — anthill's output paths, 12-section template, ecosystem handoffs, and markdown-writer dependency not carried. Committed staging only the 028 paths; 027 + parallel lanes left untouched.
+Verified: `bun tsc --noEmit` clean, 109 tests pass, `getTemplate(3)` + `validateLayer1` smoke-tested (valid bundle / json variant / missing-diagram / undersized-spec all behave correctly).
 
-## Spec 027 dogfood — DONE; `PRODUCT_PIPELINE_OD` toggle added (UNCOMMITTED)
-
-The full step-2 OD-grounded dogfood ran this session. Findings + the durable nugget are in `.claude/memory/od-grounding-dogfood.md`. Short version: 027 is mechanically sound (citation-by-path real, `validateLayer1` passes, MCP tools live over stdio); a blind opus judge scored the single-pass OD run 3.87 vs the 4×-refined pre-OD baseline 4.73 — **but that's confounded** (1 pass vs 4 iterations), do NOT read it as "OD is worse". Confound-independent findings: grounding ≠ visual quality (iteration-bound); the Producer clustered 2 of 3 directions on dark-canvas composites despite the fixture asking for contrast (possible `od-bridge.md`/`prompt.md` guidance gap); a first-pass `--primary`==`--accent` token bug.
-
-**Follow-up shipped this session — `PRODUCT_PIPELINE_OD` on/off toggle (UNCOMMITTED, 12 files + 1 new):** env var on the MCP server; off-values `off`/`0`/`false`/`no`/`disabled` make the OD tools return `code: "od-disabled"` (via `OdDisabledError extends VendorMissingError`), routing step 2 to the pre-OD "Manual escape" path. Touches `src/od.ts`, `src/tools.ts` (descriptions only), 4 step-2 templates, `.mcp.json.example`, `README.md`, `tests/od.test.ts` (+5 tests → 109 pass), `docs/specs/027-od-vendor-port/{plan,tasks}.md` (§ Follow-up / Phase 7), `.claude/memory/{MEMORY.md,od-grounding-dogfood.md}`. `bun tsc --noEmit` clean. **Not committed — user was asked, answer pending.**
+Also this session: `.claude/REMINDERS.md` — dismissed the satisfied `od-vendor-port-plan` reminder, added 2 (fair OD re-match; first real OD `--bump/--apply`). `docs/specs/026-*/tasks.md` — task 12 checked + Notes filled. Both UNCOMMITTED.
 
 ## Next steps
 
-1. **Commit the toggle work** — user was asked "quer que eu commite?" at session end; if yes, stage the 13 paths (all 027-related: `packages/mcp-product-pipeline/`, `docs/specs/027-od-vendor-port/`, `.mcp.json.example`, `.claude/memory/`) and commit. On `main` — branch-first rule applies unless user says otherwise.
-2. **Fair OD re-match** (optional) — the blind-judge result was confounded. To measure 027 honestly: either iterate the OD run to 4 passes, or re-judge it against the *first-pass* baseline (not `refined-v4`). See `.claude/memory/od-grounding-dogfood.md` § Pointers.
-3. **Spec 026 Phase B step 3 (markdown spec port)** — BACKLOGGED, unblocked. Markdown-only output, likely doesn't need OD grounding.
-4. **reminder cleanup** — the `od-vendor-port-plan` reminder in `.claude/REMINDERS.md` is satisfied by shipped 027; `.claude/memory/od-vendor-port-plan.md` already marked SUPERSEDED in the MEMORY.md index. Dismiss the reminder.
-5. **Future OD bump** — first real `--bump`/`--apply` against upstream still untested (network-bound); `--check` IS dogfooded (upstream HEAD `75498838…` ≠ pin `d25a7aaf…`).
+1. **Commit task 12 + reminders** — user was asked "quer que eu commite?" at session end; answer pending. If yes, stage the 7 task-12 paths + `.claude/REMINDERS.md` + `docs/specs/026-mcp-pipeline-deep-port/tasks.md`. On `main` — branch-first rule applies unless user says otherwise.
+2. **Spec 026 Phase B — remaining steps** (tasks 13-22): step 4 ux-testing, 5 brand, 6 design-system (HIGH PRIORITY — tokens feed 7+13), 7 prototype-v2, 8 PRD, 9 system-design, 10 cost, 11 roadmap, 12 legal, 13 prototype-v3 NEW. Then Phase C (docs) + Phase D (end-to-end dogfood). Anthill sources at `/home/goat/anthill/.claude/skills/anthill-*`.
+3. **Fair OD re-match** (optional) — the spec-027 blind-judge result was confounded. See `.claude/memory/od-grounding-dogfood.md` § Pointers + reminder list.
+4. **Future OD bump** — first real `--bump`/`--apply` against upstream still untested (network-bound). See reminder list.
 
 ## Decisions & gotchas (cumulative)
 
-- **Spec 027 deviations** (in `docs/specs/027-od-vendor-port/{plan,tasks}.md`): (a) real counts are **72 design systems / 31 skill bundles**, not the spec's 73/33 — anthill reality; (b) anthill's `MANIFEST.json` had **stale recursive-tree checksums** that didn't match its own on-disk content — recomputed the 3 tree checksums from the vendored content so `--verify` passes; (c) provenance headers reference `454e8373…` not the pin `d25a7aaf…` — anthill bumped the pin without re-applying. A future `--apply` reconciles (c).
-- **`product_design_systems_index` returns `vendor_paths`** (absolute roots for skills/prompts/frames/templates) beyond the `{name,mood,palette_summary}` index — so `od-bridge.md` can teach the agent to reach SKILL.md/template.html without a per-subtree resolver tool.
-- **MCP-package self-contained rule** (2026-05-13). New capacities for `packages/mcp-product-pipeline/` live INSIDE the package — never under Agent0's `.claude/`. Anthill's vendor-edit-block hook became a package-internal `prepublishOnly` verifier. See [[feedback_mcp_package_self_contained]].
+- **Task 12 step-3/step-9 boundary** — step 3's `architecture.md` is the *preliminary* skeleton (module decomposition / data model / key flows / integration points, names not technologies); step 9 (system-design) deepens it. The `## Open Architecture Questions` section in `architecture.md` is the explicit step-9 handoff. Boundary tabled in `references/architecture-shape.md` + the prompt's "What this step does NOT do". Architecture artifacts are *derived from* `functional-spec.md` (derivation chain, not parallel authoring).
+- **`required_glob` "one of" gotcha** — to express "one of `architecture.html`/`.json`", use `architecture.[hj][a-z]*`, NOT `architecture.[hj]*`. `globToRegExp` treats a `*` immediately after `]` as a char-class quantifier (the `[0-9]+` feature), so `[hj]*` compiles to `[hj]*` (zero+ of h/j) — matches nothing useful. The trailing `[a-z]*` is the actual wildcard. Documented inline in `schema.md`.
+- **`extractRequiredSections` is greedy** — it treats ANY schema.md line of shape `- <lowercase-kebab-token>` as a required section. When authoring a schema.md, keep non-required bullets multi-word or `**bold**`-prefixed so they don't get picked up. (The pre-port 03-spec schema.md had a latent bug here — bare `- data-model` etc. under "Recommended" were silently required; the rewrite fixed it.)
+- **Spec 026 Phase B task 11 (step 2)** — SHIPPED + 4 iterations (8 sections/direction, 4-layer rhythm, charts/sparks mandatory, brief-extraction Part1/Part2 split). Methodology: refine → single opus Producer → user visual review → iterate. Note: tasks.md checkbox for task 11 is still `[ ]` (stale) — full closure arguably Phase-D-gated like the other visual steps.
+- **MCP-package self-contained rule** (2026-05-13) — new capacities for `packages/mcp-product-pipeline/` live INSIDE the package, never under Agent0's `.claude/`. See [[feedback_mcp_package_self_contained]].
 - **Anthill archived 2026-05-13** — `.claude/memory/anthill-archived.md`. One-way port reference; filesystem readable at `/home/goat/anthill/`.
-- **Spec 026 Phase B task 11 (step 2)** — SHIPPED + 4 iterations. 8 sections per direction file, 4-layer section rhythm, charts/sparks section mandatory, brief-extraction Part 1/Part 2 split. Methodology: refine → single opus Producer → user visual review → iterate.
 - **Producer model for visual steps** — sonnet times out on heavy templates; opus is the reliable choice (~$5/run).
+- **Spec 027 deviations** (in `docs/specs/027-od-vendor-port/{plan,tasks}.md`): real counts 72 DS / 31 skill bundles (not 73/33); anthill `MANIFEST.json` had stale tree checksums (recomputed); provenance headers reference `454e8373…` not pin `d25a7aaf…` — a future `--apply` reconciles.
 
 ## Carryover from prior session-stretches (NOT in active lane)
 

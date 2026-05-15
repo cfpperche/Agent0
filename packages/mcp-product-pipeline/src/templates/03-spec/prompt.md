@@ -45,7 +45,14 @@ List every distinct page/screen/surface the user sees — including the ones eas
 
 ### 3. Decompose into features
 
-Each page surfaces 1–N features. A feature is "user can do X in context Y producing outcome Z". Be exhaustive *within the prototype's complexity budget* — don't invent features outside what steps 1+2 established. Per feature capture: **what it does** (one sentence), **happy-path behavior** (user actions + system responses, in sequence), **edge cases** (the ones that actually apply — empty, validation failure, network failure, race, permission denial, large input — not a generic list), **success criterion** (observable evidence it works; this feeds step 4 testing and step 8 PRD acceptance criteria).
+Each page surfaces 1–N features. A feature is "user can do X in context Y producing outcome Z". Be exhaustive *within the prototype's complexity budget* — don't invent features outside what steps 1+2 established. Per feature capture:
+
+- **what it does** (one sentence)
+- **happy-path behavior** (user actions + system responses, in sequence)
+- **edge cases** (the ones that actually apply — empty, validation failure, network failure, race, permission denial, large input — not a generic list)
+- **success criterion** (observable evidence it works; this feeds step 4 testing and step 8 PRD acceptance criteria)
+- **anti-goals** — 1–3 bullets stating *what this feature must NOT become*. Different from the spec-level `## Non-Goals` block (which excludes whole features); these guard against scope creep *inside* the feature once it ships. Examples that catch real failure modes: "NOT a bulk-edit surface — bulk lives in Backlog" (keeps the killer flow per-issue), "NOT a mouse-friendly version of the same flow — keyboard primary, mouse secondary" (preserves the persona's core promise), "NOT a search interface — list-and-filter only, full search is a separate feature". Without these, a single feature drifts toward category-killer over a few iterations and the original sharpness is lost.
+- **architecture seed** — 1–3 sentences naming the *module placement* + *key entities involved* + *integration touchpoints*. Module names only (e.g. "lives in `triage/` module, reads from `Issue` + `User`, fires the `issue-updated` event"); **no SQL DDL, no API endpoint shapes, no background-job specs** — those are step 9 (system-design) deliverables. The seed exists so an engineer reading step 3 has a non-zero pointer to where the work lands; step 9 takes the seed and deepens it (schema, contracts, scale, deployment).
 
 ### 4. Write acceptance scenarios (Gherkin)
 

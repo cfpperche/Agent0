@@ -99,12 +99,14 @@ A non-zero count of severity-4 findings makes PROCEED hard to justify — addres
 
 ## Priority Recommendations
 
-Severity × effort batches — what to fix before crossing the Discovery gate, what can wait.
+Group findings into **named batches** by shared cause. Batch label = the handoff unit a downstream step (6 design-system, 7 prototype-v2) consumes; rationale = the one-line reason these findings group (single token edit, focus rule copy-paste, semantic-element pass, etc). Real effort estimates only — `TBD` is not an estimate.
 
-| Batch | Finding IDs | Severity | Rough effort | When |
-|-------|-------------|----------|--------------|------|
-| {a11y-critical} | F-02, F-05 | 3–4 | {estimate} | before gate |
-| {polish} | F-08, F-09 | 1–2 | {estimate} | backlog |
+| Batch | Finding IDs | Severity | Effort | When | Rationale |
+|-------|-------------|----------|--------|------|-----------|
+| `a11y-contrast-token-tune` | F-07, F-09 | 3 | ~30 min | before gate | single `--foreground-3` token edit cascades to all 8 screens |
+| `keyboard-focus-restore` | F-01 | 4 | ~15 min | before gate | copy-paste `:focus-visible` rule from 6 working screens to the 2 missing ones |
+| `semantic-html-pass` | F-12, F-13 | 3 | ~half-day | step 7 | replace `<span>`-as-input with real `<input>` / `<textarea>` across all interactive surfaces |
+| `polish` | F-15, F-16 | 1 | ~15 min | backlog | reduced-motion wrap + hero meta dot color reduction |
 
 ## Post-Launch Signal
 

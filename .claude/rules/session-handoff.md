@@ -31,6 +31,20 @@ Keep it short and scan-able. The goal is a brief for the next session, not a jou
 - Code snippets that belong in actual source files
 - Long narratives — keep entries terse
 - Anything already captured in commit messages or CLAUDE.md
+- A "cumulative" anything — gotchas / decisions / lessons that accumulate across sessions are not what SESSION.md is for. Migrate them to `.claude/memory/<topic>.md` (project knowledge) or `~/.claude/projects/<path>/memory/feedback_<topic>.md` (behavioural feedback), then drop from SESSION.md. The pointer in the index is the handoff; the body lives in the memory file.
+
+## Size discipline
+
+**Target: SESSION.md ≤ 4 KB.** The SessionStart hook serves the file verbatim via `cat`; the Claude Code harness truncates injected hook outputs past roughly 2-3 KB into a preview + a sidecar persisted-output file. When SESSION.md grows past the cap, the next session's agent receives a partial preview — the immediate "next step" may live past the cutoff and get silently dropped from the handoff context.
+
+The cap is enforced behaviourally at session-end, not by tooling. **Prune before write** when closing a session:
+
+1. **Migrate durable entries out.** Anything that survives this session as "future-me will want to know this" belongs in a memory file, not SESSION.md. Project-factual knowledge (capacity quirks, prior decisions and their reasoning, platform constraints discovered through dogfooding) goes to `.claude/memory/<topic>.md`. Behavioural guidance ("when X, do Y") goes to `~/.claude/projects/<path>/memory/feedback_<topic>.md`. The SESSION.md entry then becomes a `[[memory-slug]]` pointer at most.
+2. **Drop entries already in commit messages or specs.** `git log --oneline` + `docs/specs/NNN-*/` are the audit trail. Repeating their contents in SESSION.md is the journaling anti-pattern.
+3. **Replace, don't append.** The previous session's "Next steps" gets replaced by this session's, never doubled. The previous session's "Current state" is overwritten, not extended. A second `## Next steps` block or a `(cumulative)` suffix on a section header is the signal that pruning was skipped.
+4. **Carryover stays a parking lot.** Items in `## Carryover` that got resolved during the session drop out at session-end — they don't earn a "✓ done" badge, they just disappear.
+
+If at session-end the file is past 4 KB, the prune was insufficient — make another pass. The Stop hook does NOT enforce the size cap today (deliberate: behavioural discipline first, automation second — promote to a hook check if the discipline empirically fails). The companion behavioural memory for the read-side defence is at `~/.claude/projects/<path>/memory/feedback_hook_truncation_read_source.md` (Read the source file when the injected block shows a truncation marker — defense in depth against future growth).
 
 ## Escape hatch
 

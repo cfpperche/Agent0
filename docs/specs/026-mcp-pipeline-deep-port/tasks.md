@@ -62,7 +62,7 @@ Each task: read anthill source skill(s) + references → rewrite `templates/<NN-
 
 - [x] 16. **Step 7 — prototype-v2 port** (`anthill-prototype` re-invoked + step 6 token mapping). **VISUAL STEP.** Required_files: `direction-final.html` + `screens/*.html` (4-8 screens of killer flow; brand+tokens applied). References: `token-mapping.md` (how step 6 tokens land in HTML), `design-fidelity-checklist.md` (Layer 2 scoring rubric vs. step 6). Layer 2: REPORT contains `design-fidelity score` per screen. Layer 3: same as step 2 (file:// URLs + user confirmation).
 
-- [ ] 17. **Step 8 — PRD port** (`anthill-prd`). **Must establish user-story ID convention** (consumed by step 13's PRD-coverage scoring). Single-artifact `prd.md` with sections: user stories (each with stable ID `US-NN`), scope cuts, success metrics, must-haves vs. nice-to-haves. References: prd-format.md (user-story ID convention), scope-cut-discipline.md.
+- [x] 17. **Step 8 — PRD port** (`anthill-prd`). **Must establish user-story ID convention** (consumed by step 13's PRD-coverage scoring). Single-artifact `prd.md` with sections: user stories (each with stable ID `US-NN`), scope cuts, success metrics, must-haves vs. nice-to-haves. References: prd-format.md (user-story ID convention), scope-cut-discipline.md.
 
 - [ ] 18. **Step 9 — system-design port** (`anthill-system-design-bridge` + `anthill-principal-engineer`). Required_files: `system-design.md` (min 20 KB), one of `architecture.json` / `architecture.html`, `security.md` (or security block in system-design with OWASP/threat-model). References: `architecture-shape.md`, `security-section.md`, `scale-assumptions.md`.
 

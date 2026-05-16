@@ -8,38 +8,30 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Spec 031 brainstorm: SHIPPED.** Full SDD pipeline run end-to-end this session (`/sdd new` → spec → plan → tasks → impl → validation → status flip). 14/14 acceptance criteria checked, 5/5 Open Questions resolved, status `draft` → `shipped`.
+Spec 026 Phase B tasks 18 + 19 SHIPPED with **port → judge → calibrate** loop validated twice. Working tree clean. 120 tests pass; `bun tsc --noEmit` clean. Origin up to date (4 commits pushed this session: `0002aef` step-9 port · `e21720f` step-9 calibration · `7458853` step-10 port · `b282c21` step-10 calibration).
 
-New `/brainstorm` skill sits before `/sdd refine` in the ideation→spec pipeline. Free-form by default; 4 lenses available on demand (SCAMPER, Six Thinking Hats, Reverse, Crazy 8s). Output: self-contained HTML at `.claude/.brainstorm-state/<slug>-<ts>.html` with markmap mindmap + tag-kanban + open questions + lens tabs + mermaid timeline + Copy-as-markdown footer button.
+**Pattern observed (loop ran 2x consecutively):** port anthill skill → dogfood Octant PRD → side-by-side judge vs anthill canonical → apply KEEPs/CUTs → re-dogfood → re-judge confirms. Both calibrations landed at 30/30 (anthill at 22 and 26 respectively).
 
-**Validation this session**: synthetic state → Python renderer → Playwright (tab nav, lens panel, timeline SVG, clipboard write) → sync-harness `--check` (skill files in scope, `.brainstorm-state/` excluded). Behavioural scenarios (start / capture / checkpoint / lens / resume / list) defined in SKILL.md; full end-to-end run in a fresh CC session is the user's last step.
-
-Files ready to commit:
-- New: `.claude/skills/brainstorm/{SKILL.md,templates/render.html.tmpl,references/techniques.md}`, `docs/specs/031-brainstorm/{spec,plan,tasks}.md`
-- Modified: `.gitignore` (+`.claude/.brainstorm-state/`), `.claude/SESSION.md`
-- Wipe-able: `spec-031-brainstorm-exploration.png` (smoke screenshot), `.claude/.brainstorm-state/spec-031-smoke-*.{json,html}` (gitignored)
-
-Untouched sibling work in tree (`site/src/components/Header.astro`, `site/src/i18n/strings.ts`, `site/src/pages/cheatsheet/`) — do NOT stage; parallel session owns those.
+- **Step 9 system-design (task 18):** 3-artifact bundle (system-design.md ≥20 KB + architecture.json + sibling security.md). 11 required H2 sections. Calibration: +biggest-eng-risk + cost-ceiling pointer + modular-monolith disclaimer + Trade-off Triggers digest H3; −meta-commentary − Locked sub-section. Final: MCP 30 vs anthill 22.
+- **Step 10 cost-estimate (task 19):** single artifact (cost-estimate.md ≥10 KB). 8 required + 4 conditional H2 sections. Calibration: +§ Projections monthly cadence + § Recommendations 3-5 decisões com `*Flip if:*` + Probability column 25/50/25 on Scenarios. Step-9 CUTs carried pre-emptively. Final: MCP 30 vs anthill 26.
 
 ## Next steps
 
-1. **Real `/brainstorm start` in a fresh CC session** — validate behavioural scenarios that this session could only check statically (start, capture, checkpoint cadence, lens application, maturation heuristic, resume, list). Drift goes into `plan.md` § Risks before purging the synthetic smoke artefacts.
-2. **Commit the spec 031 ship** once approved (skill + spec/plan/tasks + .gitignore line).
-3. **Spec 026 Phase B remaining tasks 19-22** (step 10/11/12/13) still pending from earlier work.
-4. **REMINDERS.md** unchanged — fair OD re-match, OD `--bump/--apply` upstream test, spec 029 adoption check (due 2026-05-30).
-
-## Decisions & gotchas
-
-- **Brainstorm is divergent, `/sdd refine` is convergent — adjacent, NOT nested.** Brainstorm outputs HTML; spec promotion is manual via `/sdd new <slug>` + paste from Copy-as-markdown.
-- **No hooks.** Divergence discipline encoded in SKILL.md prose, not enforced via `UserPromptSubmit` (rejected the [MadeByTokens hook approach](https://github.com/MadeByTokens/claude-brainstorm) — alt 1 in plan.md).
-- **markmap > mermaid for mindmaps at 50+ nodes.** Both kept; markmap for mindmap, mermaid for timeline. Two CDN scripts, pinned: `markmap-autoloader@0.18`, `mermaid@11.4.0`.
-- **Clipboard API needs localhost or https origin.** `file://` triggers textarea fallback. `done` output recommends `python3 -m http.server 8765 -d .claude/.brainstorm-state`.
-- **Tab label gotcha caught + fixed mid-validation**: initial draft had inline lens badge in tab text → "SCAMPERSCAMPER". Resolved by moving the badge to the panel header; SKILL.md `{{LENS_TABS_HTML}}` / `{{LENS_PANELS_HTML}}` updated.
+1. **Spec 026 Phase B — remaining tasks 20-22**: step 11 roadmap (next; `anthill-roadmap` + `anthill-roadmap-bridge`) · step 12 legal (closes Specification gate — fires) · step 13 prototype-v3 NEW (visual step, depends on steps 5/6/8). Expected same port→judge→calibrate loop per task.
+2. **Step-10 nits surfaced by judge (NOT blocking, pick up next iteration):** cash-vs-GAAP reconciliation paragraph + explicit headcount-plan callout. Sub-paragraph additions, not architectural.
+3. **REMINDERS unchanged** — fair OD re-match, OD `--bump/--apply` upstream test, spec 029 adoption check (due 2026-05-30).
 
 ## Carryover (orthogonal lanes, not active)
 
-- Pyshrnk CLAUDE.md reconciliation — long-standing parking lot.
-- Shrnk-mono harness-sync commit pending.
-- Praxis-prototype (separate repo): deployed at https://cfpperche.github.io/praxis-prototype/.
-- Bench artifacts (wipe-able, ~1.5 MB): `/tmp/bench/026-dogfood-step{2,3-4,5,6,7,8}/` + `/tmp/bench/026-comparison-anthill/`.
-- 10 `step7-*.png` + 1 `spec-031-brainstorm-exploration.png` screenshots at repo root — wipe-able, not source.
+- **Spec 030 session-edit-attribution** — already shipped per parallel hermes-agent session; verify via `/sdd list` if needed.
+- **Memorialize port→judge→calibrate loop**: ran 2x → worth updating `.claude/memory/anthill-port-workflow.md` (exists from prior session) with the post-judge calibration phase as observed-8th-phase. Deferred to next session.
+- **Architecture HTML rendering deferred** (step-9 open Q1) — vendor Cocoon-AI renderer into `packages/mcp-product-pipeline/scripts/`. Not blocking spec 026 acceptance.
+- **Pyshrnk CLAUDE.md reconciliation** — long-standing parking lot.
+- **Praxis-prototype** (separate repo): deployed at https://cfpperche.github.io/praxis-prototype/.
+- **Bench artifacts (~2 MB, wipe-able):** `/tmp/bench/026-dogfood-step{2,3-4,5,6,7,8,9,10}/` — output-a0, output-a0-v2, output-anthill per step.
+
+## Decisions & gotchas
+
+- **Port→judge→calibrate is now THE workflow** for spec 026 Phase B. Each task ships in 2 commits (port + calibration). Token cost ~150-200k per loop (sub-agents parallel) — well-bounded.
+- **Step-9 CUTs propagate forward.** Step 10 absorbed both step-9 CUTs (no meta-commentary, no Locked sub-section) without judge prompting — both judges agreed they were anti-patterns. Each future step inherits.
+- **Anthill judge bundle for step 10 sits at 26/30** (vs step-9 anthill at 22). FPA skill is more decision-shaped than principal-engineer — closer to recommendations. The MCP-vs-anthill gap narrows when the anthill source is already decision-shaped.

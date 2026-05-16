@@ -112,9 +112,23 @@ The sub-agent writes `cost-estimate.md` against this 7-required + 3-conditional 
    | ... | | | | |
    ```
 
+8. **Recommendations** — the load-bearing **decision** surface (3-5 founder/engineering actions, NOT a summary of sections above). Each recommendation is a verb-shaped call the founder makes Monday morning, with a deciding signal that would flip the recommendation. This section closes the artifact with decisions, not analysis. Format (one of two styles, pick the cleaner one for the product):
+   ```markdown
+   ## Recommendations
+
+   1. **Hold per-seat price at $4/mo.** Pricing wedge is load-bearing for the PRD's competitive positioning; absorbing $50/mo Stripe-fee ramp via annual-prepay incentive (R1) preserves the wedge without re-pricing. *Flip if:* paid-conversion below 1% at week-4 of closed-beta forces revenue scrutiny.
+   2. **Defer EU region + SOC 2 audit spend.** Both are 4-figure budget lines (DPA legal review ~$3k, SOC 2 Type 1 pre-audit ~$15k). v1 cost ceiling holds without them. *Flip if:* first 5 EU prospects in pipeline OR enterprise prospect requires SOC 2.
+   3. **Pause public-launch acquisition spend until week-1 retention clears 40%.** PRD § Success Metrics row 1 names retention as the v1-worked signal; acquisition spend on a leaky bucket compounds CAC waste. *Flip if:* week-1 retention ≥ 40% in closed-beta for 2 consecutive weeks.
+   4. **Reconcile bottom-up build estimate against top-down 6-month runway constraint pre-Phase-2.** Build-cost $84k-120k (range) sits inside $200k cash runway; sensitivity row 3 (week-overrun) is the watch — every 2 weeks over collapses runway headroom. *Flip if:* Phase-2 milestone slips > 2 weeks; rescope or extend.
+   5. **Re-run this cost-estimate at week-6 of closed-beta** with measured paid-conversion + churn + Stripe-fee data. Pre-v1 numbers are placeholders; week-6 is the first point of real data.
+   ```
+   - 3-5 rows; pick the load-bearing decisions, not exhaustive coverage. The deciding signal ("Flip if:") is the discipline anchor — every recommendation either holds OR flips on a measurable signal.
+   - Anti-pattern: "Recommendations: continue current approach" (no decision); "Recommendations: monitor metrics carefully" (no action). Both are sloppy and the section's job is to prevent them.
+   - This section mirrors step-9's `## Trade-off Triggers (digest)` discipline — the 30-second-scan that a busy founder reads first. Treat the table above (§ 5 § Sensitivity) as the WHY and the recommendations as the WHAT.
+
 **Conditional sections (revenue-generating products — skip for free / not-for-profit / internal):**
 
-8. **Unit Economics** — CAC / LTV / LTV:CAC / payback period / gross margin / contribution margin. Format:
+9. **Unit Economics** — CAC / LTV / LTV:CAC / payback period / gross margin / contribution margin. Format:
    ```markdown
    | Metric | Value | Calculation |
    |---|---|---|
@@ -127,17 +141,37 @@ The sub-agent writes `cost-estimate.md` against this 7-required + 3-conditional 
    ```
    Skip when: free-only, not-for-profit, internal tool (no revenue → no unit economics; just say so).
 
-9. **Scenarios** — bear / base / bull (anthill-FPA discipline). Per scenario: name the 1-3 key variable changes + impact on ARR + impact on runway / break-even.
-   ```markdown
-   | Scenario | New paid teams/mo | Churn | ARR EOY | Runway (assume $X cash) |
-   |---|---|---|---|---|
-   | Bear | 5 | 18% | $1.4k MRR EOY | 9 mo |
-   | Base | 15 | 12% | $4.2k MRR EOY | 16 mo |
-   | Bull | 30 | 8% | $9.1k MRR EOY | 22 mo |
-   ```
-   Skip when: free-only or not-for-profit (scenarios degenerate to cost-only — handle as a run-cost sensitivity range in § Sensitivity instead).
+10. **Projections** — month-by-month cadence for the **base** scenario (this is NOT the scenario variance table — that's § 11 next). 8-12 monthly rows from launch through year-1. Format:
+    ```markdown
+    | Period | Active workspaces | Paid workspaces | MRR | Infra cost | Total cost | Profit | Growth MoM |
+    |---|---|---|---|---|---|---|---|
+    | Mo 1 (launch) | 50 | 0 (free trial) | $0 | $156 | $156 + amort. build | -$156 | — |
+    | Mo 2 | 120 | 3 | $60 | $178 | $178 + amort. | -$118 | +140% workspaces |
+    | Mo 3 | 250 | 8 | $160 | $200 | $200 + amort. | -$40 | +108% workspaces |
+    | Mo 4 | 380 | 15 | $300 | $222 | $222 + amort. | +$78 | +52% workspaces |
+    | Mo 5 | 500 | 24 | $480 | $245 | $245 + amort. | +$235 | +32% workspaces |
+    | Mo 6 | 600 | 32 | $640 | $268 | $268 + amort. | +$372 | +20% workspaces |
+    | ... | | | | | | | |
+    ```
+    - **Cadence:** monthly is the default; bi-weekly for very-early stage (first 2-3 months), quarterly for steadier products (year 2+). v1 cost estimate should land at monthly.
+    - **The Projections section answers a different question than § Scenarios.** Scenarios answer "what's the variance band?" — Projections answer "what does the base-scenario monthly cash burn look like for runway planning?". A founder doing burn-rate math wants Projections; a founder doing fundraise prep wants Scenarios.
+    - **Growth MoM column is honest, not extrapolated.** Early-stage growth percentages are typically very high (Mo 1 → Mo 2 commonly +100-200%) because the denominator is small. Don't smooth the curve; the curve IS the data.
+    - Amortised build-cost column: divide the build-cost RANGE (§ 4 Build Cost) over a chosen period (commonly 12 or 24 months) and surface the per-month allocation. Mark `[Estimated]`. This is the load-bearing column for founder runway-math.
+    - Skip when: free-only or not-for-profit (no MRR → projections degenerate to "monthly run cost only" — replace with a 6-row burn-only table in § Run Cost instead).
 
-10. **Break-Even** — at what user count revenue covers run cost. State the assumption (paid conversion rate, ARPU) used.
+11. **Scenarios** — bear / base / bull (anthill-FPA discipline). Per scenario: probability weight + 1-3 key variable changes + impact on ARR + impact on runway / break-even.
+   ```markdown
+   | Scenario | Probability | New paid teams/mo | Churn | ARR EOY | Runway (assume $200k cash) |
+   |---|---|---|---|---|---|
+   | Bear | 25% | 5 | 18% | $1.4k MRR EOY → $17k ARR | 9 mo |
+   | Base | 50% | 15 | 12% | $4.2k MRR EOY → $50k ARR | 16 mo |
+   | Bull | 25% | 30 | 8% | $9.1k MRR EOY → $109k ARR | 22 mo |
+   ```
+   - **Probability column is required** (not just decorative). Forces honest calibration vs hedging. The probabilities sum to 100%; common shapes are 25/50/25 (default for SMB SaaS), 30/40/30 (heavier tails for unproven wedge), 20/60/20 (tight base for proven category). Pick a shape that reflects how confident the founder actually is.
+   - The probability values are themselves a Confidence-Low assumption. Mark them so in § Assumptions table; revise post-closed-beta when real data lands.
+   - Skip when: free-only or not-for-profit (scenarios degenerate to cost-only — handle as a run-cost sensitivity range in § Sensitivity instead).
+
+12. **Break-Even** — at what user count revenue covers run cost. State the assumption (paid conversion rate, ARPU) used.
     ```markdown
     Break-even: 9 paid teams ($136 run-cost / ($20 ARPU × 78% gross margin) = 8.7 → 9 teams).
     At 3% paid conversion: 300 weekly-active teams produces 9 paid teams → break-even at 60% of v1 target scale.
@@ -150,15 +184,15 @@ Mirrors step-9's product-class calibration ladder:
 
 | Product class | cost-estimate.md depth | Sections to keep / adapt |
 |---|---|---|
-| **Micro-Product / CLI helper / single-purpose tool** | Compact (~5 KB) | Full structure but Build-Cost is 1-2 weeks, Run-Cost is 1-3 line items, Scenarios may degenerate to bear/base only |
-| **Mobile App** | Standard (~8 KB) | Full structure; § Run Cost adds app-store revenue-share line (15-30% Apple/Google cut); § Scenarios accounts for review-cycle delay impact on launch |
-| **Developer Tool / API-first** | Standard (~10 KB) | Full structure; § Pricing Model often usage-based (per-API-call / per-seat-with-API-rate-limits); § Unit Economics emphasises token cost / per-call infra cost |
-| **SMB SaaS (the spec 026 default)** | Full (~10-15 KB) | Full structure; § Pricing Model typically per-seat subscription; § Scenarios carry 3 paid-conversion bands |
-| **Venture-Scale / Marketplace / multi-persona** | Expanded (~15-20 KB) | Full structure; § Unit Economics expanded to per-persona ARPU/CAC; § Scenarios add upside/downside on take-rate (marketplaces) or per-persona conversion (multi-persona) |
+| **Micro-Product / CLI helper / single-purpose tool** | Compact (~7 KB) | Full structure but Build-Cost is 1-2 weeks, Run-Cost is 1-3 line items, Projections may collapse to 4-6 rows, Scenarios may degenerate to bear/base only |
+| **Mobile App** | Standard (~10 KB) | Full structure; § Run Cost adds app-store revenue-share line (15-30% Apple/Google cut); § Scenarios accounts for review-cycle delay impact on launch; § Projections handles app-store gating delays in early months |
+| **Developer Tool / API-first** | Standard-Expanded (~12 KB) | Full structure; § Pricing Model often usage-based (per-API-call / per-seat-with-API-rate-limits); § Unit Economics emphasises token cost / per-call infra cost; § Projections per-call-volume tracking |
+| **SMB SaaS (the spec 026 default)** | Full (~13-18 KB) | Full structure; § Pricing Model typically per-seat subscription; § Scenarios carry 3 paid-conversion bands; § Projections 8-12 monthly rows through year-1 |
+| **Venture-Scale / Marketplace / multi-persona** | Expanded (~18-25 KB) | Full structure; § Unit Economics expanded to per-persona ARPU/CAC; § Scenarios add upside/downside on take-rate (marketplaces) or per-persona conversion (multi-persona); § Projections may need cohort overlay or per-persona breakdown |
 
 Brief field missing or ambiguous → default to **SMB SaaS (Full)**. Mark the chosen depth in `## Overview` opening sentence (`v1 cost estimate for an SMB SaaS — full template depth applied.`).
 
-For free / not-for-profit / internal tools: full structure minus § Unit Economics + § Scenarios + § Break-Even (which degenerate); document the skip in `## Pricing Model` (`Pricing model: not-for-profit / internal — § Unit Economics, § Scenarios, § Break-Even intentionally absent.`).
+For free / not-for-profit / internal tools: full structure minus § Unit Economics + § Scenarios + § Projections + § Break-Even (which degenerate); document the skip in `## Pricing Model` (`Pricing model: not-for-profit / internal — § Unit Economics, § Scenarios, § Projections, § Break-Even intentionally absent.`). Free/NFP products still keep § Recommendations — even non-revenue products have founder/eng decisions to make (vendor lock-in posture, scaling triggers, audit budget).
 
 ### 6. Submit + advance
 
@@ -183,7 +217,10 @@ Schema enforces section presence + Layer 1 contains/size floors (assumption-tabl
 - **The assumption table IS the audit trail.** Every number downstream cites a row in § Assumptions. No room for floating numbers.
 - **Bear / base / bull are not optional for revenue products.** Single-point projections are the regression mode. Skip ONLY for free / not-for-profit (where they degenerate).
 - **Build-cost overruns are systemic.** Every project goes over. Bake 30% buffer into the range high-end; the buffer isn't pessimism, it's calibration.
-- **Sensitivity is the load-bearing scan.** A reader who has 30 seconds with the cost estimate reads § Overview + § Sensitivity. Make sure those two sections work standalone.
+- **Sensitivity + Recommendations are the load-bearing scans.** A reader who has 30 seconds reads § Overview + § Sensitivity (the WHY) + § Recommendations (the WHAT). § Sensitivity names the 2-3 assumptions that drive the variance; § Recommendations names the 3-5 actions to take Monday morning. Both work standalone.
+- **§ Projections answers monthly burn math; § Scenarios answers variance bands.** Different questions, different consumers (founder doing runway math vs founder doing fundraise prep). Don't conflate them. Projections is the base-scenario monthly cadence; Scenarios is the bear/base/bull variance.
+- **§ Scenarios carries probability weights (25%/50%/25% or similar).** Sums to 100%. Forces honest calibration vs hedging. Mark the probabilities themselves as Confidence-Low in § Assumptions; revise post-closed-beta when real data lands.
+- **§ Recommendations are DECISIONS, not summaries.** Verb-shaped ("Hold per-seat price", "Defer EU spend", "Pause acquisition until retention clears"). Each carries a deciding signal that flips it. Anti-pattern: "Continue current approach" / "Monitor metrics carefully" — both are non-decisions; the section's job is to prevent them.
 - **PRD `US-NN` cross-references where useful.** § Build Cost may scope per-user-story (e.g. "US-07 keyboard-first triage: 3 weeks; US-19 bulk-action: 1 week"); § Run Cost may scope per-integration (e.g. "Stripe drives US-25 + US-28; Resend drives US-23"). Not mandatory at the row level — but useful when the trace is non-obvious.
 - **No meta-commentary about the document's own discipline.** Do NOT write a `## Notes on this cost model's assumption traceability` H2 or any equivalent. The assumption table + the Source columns + the `[Estimated]` flags ARE the discipline; a section *about* them is noise. Spec 026 Phase B step-9 judge-feedback (2026-05-16) flagged this anti-pattern across the pipeline; the rule applies here pre-emptively.
 - **No "locked decisions" sub-section.** Pricing model, price point, and rate-placeholder are locked in the running prose of § Pricing Model + § Assumptions table. Re-tabling them as a separate Locked H2 duplicates the running commitment. Carries the step-9 calibration discipline.

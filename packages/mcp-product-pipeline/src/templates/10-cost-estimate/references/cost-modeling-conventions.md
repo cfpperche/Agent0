@@ -39,19 +39,30 @@ Every input the model depends on lands in the `## Assumptions` table with **valu
 
 ## Scenarios — bear / base / bull (anthill-FPA non-negotiable for revenue products)
 
-Single-point projections are the regression mode. Three scenarios with 1-3 key variable changes per row, NOT three estimates of the same number.
+Single-point projections are the regression mode. Three scenarios with **probability weights** + 1-3 key variable changes per row, NOT three estimates of the same number.
 
-### Canonical shape
+### Canonical shape (post step-10 calibration — probability column required)
 
 ```markdown
 ## Scenarios
 
-| Scenario | New paid teams/mo | Churn | ARR EOY | Runway (assume $200k cash) |
-|---|---|---|---|---|
-| Bear | 5 | 18% | $1.4k MRR / $17k ARR | 9 mo |
-| Base | 15 | 12% | $4.2k MRR / $50k ARR | 16 mo |
-| Bull | 30 | 8% | $9.1k MRR / $109k ARR | 22 mo |
+| Scenario | Probability | New paid teams/mo | Churn | ARR EOY | Runway (assume $200k cash) |
+|---|---|---|---|---|---|
+| Bear | 25% | 5 | 18% | $1.4k MRR / $17k ARR | 9 mo |
+| Base | 50% | 15 | 12% | $4.2k MRR / $50k ARR | 16 mo |
+| Bull | 25% | 30 | 8% | $9.1k MRR / $109k ARR | 22 mo |
 ```
+
+### Probability column discipline
+
+The probability column is the calibration anchor — sums to 100%, picked to reflect actual founder confidence not aspirational balance. Common shapes:
+
+- **25/50/25 (default for SMB SaaS)** — tight base, symmetric tails. Use when the founder has moderate confidence in the base scenario and the bear/bull are honest stress-tests.
+- **30/40/30 (heavier tails for unproven wedge)** — looser base, wider variance. Use when the product wedge is competitive-untested (no analog reference) OR persona signal is mixed.
+- **20/60/20 (tight base for proven category)** — narrow tails, high base confidence. Use when the founder is in a category with strong analogs (e.g. Linear-clone in project management; benchmarks exist).
+- **40/40/20 or 20/40/40 (skewed)** — pessimistic or optimistic; only use with explicit founder rationale in § Assumptions. Asymmetric defaults read as hedging if unexplained.
+
+The probability values are themselves a Confidence-Low assumption — mark them so in § Assumptions table. Revise post-closed-beta when real data lands.
 
 ### Scenario discipline
 
@@ -63,6 +74,97 @@ Single-point projections are the regression mode. Three scenarios with 1-3 key v
 ### When to skip § Scenarios
 
 Skip for: free / not-for-profit / internal tools where revenue is degenerate (zero or operationally fixed). For these, replace § Scenarios with a single-paragraph run-cost sensitivity range in § Sensitivity ("Run cost varies $X-$Y depending on scale assumption Z; no revenue scenarios because pricing is free / NFP / internal").
+
+## Projections — monthly cadence for the base scenario
+
+The Projections table answers a DIFFERENT question than § Scenarios. Scenarios answer "what's the variance band?". Projections answer "what does the base-scenario monthly cash burn look like for runway planning?". Different consumer:
+
+- **Founder doing burn-rate math:** reads Projections. Wants to see month-1 burn, month-3 break-even, month-6 cash position.
+- **Founder doing fundraise prep / board prep:** reads Scenarios. Wants to see the bear/base/bull arc for the next 24 months.
+
+Both sections matter for revenue-generating products at v1. Anthill-FPA's canonical Step 2 template carries both (§ Projections + § Scenarios as separate sections); the MCP port absorbed Projections in the post-step-10 calibration (2026-05-16) to close the gap with anthill-FPA's runway-math story.
+
+### Canonical shape
+
+```markdown
+## Projections
+
+Base-scenario monthly cadence through year-1. Bear/Bull variance bands in § Scenarios; this table is the single-line "what does the base look like month-by-month".
+
+| Period | Active workspaces | Paid workspaces | MRR | Infra cost | Total cost (incl. build amort.) | Profit | Growth MoM |
+|---|---|---|---|---|---|---|---|
+| Mo 1 (launch) | 50 | 0 (free trial) | $0 | $156 | $7,156 [Estimated] | -$7,156 | — |
+| Mo 2 | 120 | 3 | $60 | $178 | $7,178 | -$7,118 | +140% workspaces |
+| Mo 3 | 250 | 8 | $160 | $200 | $7,200 | -$7,040 | +108% workspaces |
+| Mo 4 | 380 | 15 | $300 | $222 | $7,222 | -$6,922 | +52% workspaces |
+| Mo 5 | 500 | 24 | $480 | $245 | $7,245 | -$6,765 | +32% workspaces |
+| Mo 6 | 600 | 32 | $640 | $268 | $7,268 | -$6,628 | +20% workspaces |
+| Mo 9 | 850 | 51 | $1,020 | $315 | $7,315 | -$6,295 | +14% workspaces / mo |
+| Mo 12 | 1,100 | 77 | $1,540 | $385 | $7,385 | -$5,845 | +9% workspaces / mo |
+```
+
+### Cadence rules
+
+- **Monthly is the default** for v1 cost estimates (founder needs month-by-month burn-math granularity).
+- **Bi-weekly for very-early stage** (first 2-3 months when growth swings widely).
+- **Quarterly for steadier products** (year 2+; not v1 territory).
+- **8-12 rows is the SMB SaaS target.** Micro-products may collapse to 4-6; venture-scale may need 18-24 with cohort overlay.
+- **The first 4-6 months are the load-bearing rows** — that's the founder's runway-math watch window. Mo 9 + Mo 12 are scaling-trajectory snapshots; not every monthly row needs full fidelity.
+
+### Amortised build-cost column
+
+Divide the build-cost range (§ Build Cost) over a chosen amortisation period (commonly 12 or 24 months) and surface the per-month allocation in the Total cost column. Format: `$X infra + $Y amort. = $Z total`. Mark `[Estimated]` on the amortised line. The Total column is the load-bearing column for runway math; without it the founder has to compute the burn-rate themselves.
+
+### Growth MoM honest, not extrapolated
+
+Early-stage growth percentages are typically very high (Mo 1 → Mo 2 commonly +100-200%) because the denominator is small. Don't smooth the curve to look healthier; the curve IS the data. The honest curve also surfaces the "scale becomes hard around Mo 4-6" inflection point that flat-extrapolation would hide.
+
+### Anti-patterns the section catches
+
+- **Single-row "Year 1 EOY: $X MRR"** — defeats the purpose. The whole point is the monthly cadence for runway planning.
+- **Smoothed-curve projection** — fits a linear or exponential to the actual stair-step. Misleading.
+- **Profit column with no Total cost** — half the math, useless for burn-rate planning.
+
+### When to skip § Projections
+
+Skip for: free / not-for-profit / internal tools (no MRR → projections degenerate to monthly burn only). Collapse to a 4-6 row monthly burn table in § Run Cost instead.
+
+## Recommendations — decisions, not summaries
+
+The load-bearing decision-surface closer (3-5 founder/engineering actions, NOT a summary of sections above). Each recommendation is verb-shaped and carries a deciding signal that would flip it. This is the WHAT to do Monday morning; § Sensitivity is the WHY.
+
+### Canonical shape
+
+```markdown
+## Recommendations
+
+1. **Hold per-seat price at $4/mo.** Pricing wedge is load-bearing for the PRD's competitive positioning; absorbing $50/mo Stripe-fee ramp via annual-prepay incentive (R1) preserves the wedge without re-pricing. *Flip if:* paid-conversion below 1% at week-4 of closed-beta forces revenue scrutiny.
+
+2. **Defer EU region + SOC 2 audit spend.** Both are 4-figure budget lines (DPA legal review ~$3k, SOC 2 Type 1 pre-audit ~$15k). v1 cost ceiling holds without them. *Flip if:* first 5 EU prospects in pipeline OR enterprise prospect requires SOC 2.
+
+3. **Pause public-launch acquisition spend until week-1 retention clears 40%.** PRD § Success Metrics row 1 names retention as the v1-worked signal; acquisition spend on a leaky bucket compounds CAC waste. *Flip if:* week-1 retention ≥ 40% in closed-beta for 2 consecutive weeks.
+
+4. **Reconcile bottom-up build estimate against top-down 6-month runway constraint pre-Phase-2.** Build-cost $84k-120k (range) sits inside $200k cash runway; sensitivity row 3 (week-overrun) is the watch — every 2 weeks over collapses runway headroom. *Flip if:* Phase-2 milestone slips > 2 weeks; rescope or extend.
+
+5. **Re-run this cost-estimate at week-6 of closed-beta** with measured paid-conversion + churn + Stripe-fee data. Pre-v1 numbers are placeholders; week-6 is the first point of real data.
+```
+
+### Format discipline
+
+- **Verb-shaped first word** — `Hold`, `Defer`, `Pause`, `Reconcile`, `Re-run`. Not noun-shaped (`Pricing strategy: ...`) or hedge-shaped (`Consider whether to...`). The verb forces a decision.
+- **One-paragraph rationale** — tie to a prior section (Risks row N, Sensitivity row M, PRD § X). The rationale is the audit trail; the action is the decision.
+- **`*Flip if:* <measurable condition>`** — every recommendation either HOLDS or FLIPS on a measurable signal. The Layer-1 `Flip if:` anchor enforces this at file-shape level.
+- **3-5 rows is the target.** Fewer than 3 reads as under-prescribed; more than 5 reads as scattered. Pick the load-bearing decisions, not exhaustive coverage.
+
+### Anti-patterns the section catches
+
+- **Summary-shaped:** "Continue to track expenses carefully and monitor key metrics." Non-action. Section's job is to PREVENT this.
+- **Non-decision:** "Recommendations: revisit pricing in Q2." A decision-deferral without a deciding signal is a hedge.
+- **Decision without deciding signal:** "Defer EU region." OK, but for how long? Under what condition would we revisit? `*Flip if:* first 5 EU prospects in pipeline` closes the deferral.
+
+### When to skip § Recommendations
+
+NEVER skip § Recommendations. Even free / not-for-profit / internal products have founder/eng decisions to make (vendor lock-in posture, scaling triggers, audit budget, sunset criteria). The decision surface is the section that exists in every cost-estimate.
 
 ## Sensitivity — the 2-3 drivers of 80% of variance
 

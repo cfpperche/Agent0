@@ -82,7 +82,11 @@ Also document **at least 3 strengths** — what works well and must NOT be chang
 - **Priority recommendations** — group findings into **named batches** (e.g. `a11y-contrast-token-tune (F-07, F-09)`, `keyboard-focus-restore (F-01)`, `semantic-html-pass (F-12, F-13)`) with a real effort estimate per batch (`~30 min`, `~1 h 30`, `~half-day` — not `TBD`) and a one-line rationale per batch (the shared cause that justifies grouping these findings, e.g. "single token edit cascades to all occurrences"). The batch label is the handoff unit downstream steps consume: a step-6 (design-system) consumer reads `a11y-contrast-token-tune` and knows to act; reading 17 individual finding rows forces them to re-group. This shape mirrors the audit-as-delegation-manifest discipline anthill's `priority_fixes[]` enforced — same intent, markdown-shaped instead of structured-data-shaped (the structured layer arrives with step 6 design's frontmatter pass).
 - **Post-launch signal** — the observable metric/behaviour that will retroactively confirm or refute the validation choice. Required for all three modes. Concrete: "DAU > 100 in week 4", "PyPI downloads > 200 in month 1", "5 unsolicited inbound demo requests".
 
-### 7. Submit + gate
+### 7. (Recommended for measurable mode) Emit YAML frontmatter
+
+When the audit ran in branch (i) **measurable** (HTML inputs, real numbers in the accessibility table), emit a YAML frontmatter block at the top of the report carrying `findings[]` + `priority_fixes[]` as structured data — see `schema.md` § "Optional YAML frontmatter — structured findings handoff" for the exact field shape. Step 6 (design-system) and step 7 (prototype-v2) read this block to consume the audit programmatically: step 6 picks up findings tagged `fix_skill_hint: "design-system"` and applies token tunes; step 7 picks up `fix_skill_hint: "prototype-v2"` as acceptance criteria for the re-render. The markdown body remains the human-readable view; the frontmatter is the machine-parseable mirror. Skip the frontmatter when the audit ran in branch (ii) projected mode — there's nothing measurable to hand off.
+
+### 8. Submit + gate
 
 The artifact MUST include the `validation_mode:` line on its own line near the top — the MCP regex-extracts it into `.state.json.validation_mode`, and Layer 1 rejects the submission if it's missing. Call `product_step_submit` with `filename: "validation-report.md"`.
 

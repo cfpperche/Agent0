@@ -3,6 +3,42 @@
 The full shape for the step-4 artifact. The H2 titles slugify to the required-sections list in `schema.md`, and several are Layer-1 `contains` anchors — keep the casing exactly as written. The `validation_mode:` line is regex-extracted by the MCP *and* enforced by Layer 1.
 
 ```markdown
+---
+# Optional YAML frontmatter — ONLY emit when audit ran in measurable mode (HTML inputs).
+# Skip this entire block when audit ran in projected mode (markdown spec inputs).
+# Step 6 (design-system) and step 7 (prototype-v2) read this block to consume findings
+# programmatically. The markdown body below is the derived human-readable view.
+findings:
+  - id: F-01
+    severity: 4
+    heuristic: "A11y 2.4.7 Focus visible"
+    location: "screens/05-triage-view.html, screens/07-command-palette.html"
+    issue: "Inline <style> omits the :focus-visible rule on triage + palette"
+    recommendation: "Add the global :focus-visible { outline: 2px solid var(--primary); ... } rule"
+    wcag: "2.4.7"
+    fix_skill_hint: "prototype-v2"
+    complexity_estimate: "~15 min"
+  - id: F-07
+    severity: 3
+    heuristic: "A11y 1.4.3 Contrast"
+    location: "All 8 screens — every use of --foreground-3 on --surface"
+    issue: "Tertiary text token measures 3.89:1 — fails the 4.5:1 body floor"
+    recommendation: "Brighten --foreground-3 from oklch(0.50 0.010 240) to oklch(0.55 0.010 240)"
+    wcag: "1.4.3"
+    fix_skill_hint: "design-system"
+    complexity_estimate: "~30 min"
+priority_fixes:
+  - batch: "a11y-contrast-token-tune"
+    finding_ids: [F-07, F-09]
+    rationale: "single token edit cascades to all 8 screens"
+    complexity_estimate: "~30 min"
+    when: "before gate"
+  - batch: "keyboard-focus-restore"
+    finding_ids: [F-01]
+    rationale: "copy-paste :focus-visible rule from 6 working screens to the 2 missing ones"
+    complexity_estimate: "~15 min"
+    when: "before gate"
+---
 # {Product Name} — UX Validation Report
 
 **Generated:** {date} | **Pipeline step:** 4 (ux-testing) | **Auditor:** product-pipeline step 4

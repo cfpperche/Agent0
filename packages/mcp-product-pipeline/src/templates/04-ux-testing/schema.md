@@ -32,6 +32,45 @@ validation_mode: <tested|intuition|not-applicable>
 
 Case-insensitive on the key, case-sensitive on the value. Place it near the top of the document (inside or just below `## Validation Mode`) so the MCP's regex finds it reliably. `product_step_submit` extracts the value and stores it in `.state.json.validation_mode` for downstream steps. Layer 1 (`contains: "validation_mode:"`) rejects the submission if the line is absent — the pre-port template only *extracted* the line without enforcing it.
 
+## Optional YAML frontmatter — structured findings handoff
+
+The report MAY open with a YAML frontmatter block (`---` ... `---`) carrying a structured `findings[]` field that downstream steps (step 6 design-system, step 7 prototype-v2) read programmatically. This is the audit-as-delegation-manifest pattern restored from the anthill comparison (the original `anthill-ux-audit` schema-validated its frontmatter; the pre-prepare port had pure markdown). Optional, not required by Layer 1 — but **strongly recommended** when `validation_mode: intuition` or `tested` AND the audit branch is `(i) measurable` (HTML inputs), because that's when the findings have the concrete data downstream consumers can act on.
+
+Frontmatter shape:
+
+```yaml
+---
+findings:
+  - id: F-01
+    severity: 4               # integer 1-4
+    heuristic: "A11y 2.4.7 Focus visible"
+    location: "screens/05-triage-view.html, screens/07-command-palette.html"
+    issue: "<one-line concrete description>"
+    recommendation: "<specific actionable fix>"
+    wcag: "2.4.7"             # optional, only for a11y findings
+    fix_skill_hint: "design-system"   # one of: design-system | prototype-v2 | deferred
+    complexity_estimate: "~30 min"     # rough effort, free-form
+priority_fixes:
+  - batch: "a11y-contrast-token-tune"
+    finding_ids: [F-07, F-09]
+    rationale: "single token edit cascades to all 8 screens"
+    complexity_estimate: "~30 min"
+    when: "before gate"
+---
+```
+
+**Field meanings (consumer-facing):**
+
+- `findings[].fix_skill_hint` — names which downstream MCP step naturally owns the fix:
+  - `"design-system"` — the fix is a token tune (contrast, lightness, semantic-color rebalance). Step 6 reads these and applies them in `tokens.css`, documenting each in `## Audit Response` of `design-system.md`.
+  - `"prototype-v2"` — the fix requires re-rendering screens (semantic HTML pass, focus-indicator restore, missing input elements). Step 7 reads these as acceptance criteria.
+  - `"deferred"` — the fix is real but not blocking the v1 pipeline (cosmetic polish, WCAG 2.2 readiness, `prefers-reduced-motion` wraps). Surfaced for backlog grooming, not consumed mid-pipeline.
+- `priority_fixes[]` — the same named-batch grouping the markdown `## Priority Recommendations` section already requires, mirrored as structured data so consumers can iterate without re-parsing markdown tables. Each batch's `finding_ids` reference the `findings[].id` values; the `batch` slug is the handoff unit.
+
+The markdown body is the human-readable view; the frontmatter is the machine-parseable view. They MUST agree (same finding IDs, same severities, same recommendations) — the `## Findings` table in the body is a derived view of the frontmatter when present. If they diverge, that's a defect.
+
+When the audit is in branch (ii) `projected` mode (markdown-spec input, no measurable findings to hand off), frontmatter is optional and typically omitted — there's nothing structured to consume.
+
 ## Layer 1 — file-level floor
 
 ```required_files

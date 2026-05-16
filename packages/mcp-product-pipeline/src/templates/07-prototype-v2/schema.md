@@ -26,7 +26,7 @@ Section names slugify by lowercasing + dashing — `## Audit Response` → `audi
     {
       "path": "direction-final.html",
       "min_size": 10240,
-      "contains": ["<!DOCTYPE html", "<style", ":root", "--color", "var(--", "<svg"]
+      "contains": ["<!DOCTYPE html", "<style", ":root", "--color-", "var(--", "<svg"]
     },
     {
       "path": "REPORT.md",
@@ -57,7 +57,7 @@ Section names slugify by lowercasing + dashing — `## Audit Response` → `audi
 
 - **`direction-final.html` min_size 10240** (10 KB) — same floor as step 2's direction files. `direction-final.html` is the **token-coverage showcase** (see `prompt.md` § 4), not a re-rendered screen — it must exercise the full token vocabulary at section-rhythm depth, which lands well past 10 KB on a real port. Pivota's anthill v2 reference landed around 18-25 KB.
 - `direction-final.html`'s `contains` enforces:
-  - The `:root` token system + the `--color` family name (token-naming inherited from step 6 — semantic prefix `--color-*`; step 2's primitive `--background`/`--foreground` are accepted as aliases per `prompt.md` § 5.2)
+  - The `:root` token system + the `--color-` family prefix (token-naming inherited from step 6 — semantic namespace `--color-*`; step 2's primitive `--background`/`--foreground` are accepted as aliases per `prompt.md` § 5.2). **Note the trailing dash:** `--color-` (not `--color`) means a file declaring a single `--color: red` variable does NOT pass — the check requires a namespaced semantic token like `--color-canvas` / `--color-foreground` / `--color-accent`. Dogfood v2 (2026-05-16) surfaced this gap; v1 used `--color` (no dash) which was permissive.
   - The substring `var(--` — proxy for "tokens are actually consumed", not just declared in `:root`. A direction-final that declares all tokens but uses raw `#hex` literals everywhere trips this check
   - The substring `<svg` — proxy for the required charts/data-viz section (inherits step 2's data-viz discipline; the design-system showcase must exercise inline SVG token coverage just like step 2 does)
 - **`screens/[0-9][0-9]-*.html` glob** — the `01-`, `02-`, ..., `NN-` shape inherited verbatim from step 2 Turn 2 (see `prompt.md` § 2 — inheritance discipline). `min_count: 3` is the **universal sanity floor** matching step 2; the actual N is inherited from step 2 (no re-pick).

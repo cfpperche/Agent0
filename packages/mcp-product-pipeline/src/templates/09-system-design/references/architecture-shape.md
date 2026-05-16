@@ -95,7 +95,11 @@ v1 is a **modular monolith**. Two logical modules with shared deployment:
 Communication: shared Postgres database (no service-to-service network calls at v1). Worker reads/writes the same schema as Web; reliability comes from short transactions + idempotency keys on event-driven rows.
 
 **Why not microservices?** PRD scale target is 500 weekly-active teams at v1 (success-metric § 1). A 2-service decomposition is overkill at that scale; the cost of service-boundary ceremony (deployment coordination, inter-service contracts, distributed tracing) is paid before the scale demands it. v2 may carve out an `ml-service` if US-23 (sentiment analysis backlog) lands.
+
+**The 2 modules above are behavioural boundaries within a single deploy unit — not service boundaries.** Junior engineers reading the step-3 architecture skeleton may misread named-module decomposition as a service map; the v1 monolith ships as one deploy.
 ```
+
+Always include the disclaimer-sentence above when v1 is a monolith named with multiple internal modules. The single sentence prevents a high-frequency reading regression — step-3 skeletons routinely name 10-20 modules to capture *behavioural* decomposition, which gets misread as a service map without the explicit "single deploy unit" framing. Skip the disclaimer ONLY when v1 truly is multi-service.
 
 ### `## Data Model`
 
@@ -296,32 +300,42 @@ Per major choice (stack, DB, deployment, auth, payment), 1-2 alternatives reject
 - **Rejected: NextAuth.js.** No managed posture; the self-hosted maintenance overhead at v1 isn't worth the cost savings.
 ```
 
-### `## Decisions Locked & Open`
+### `## Trade-off Triggers & Open Decisions`
 
-H2 with two H3 children. The decisions-locked table is the bridge-floor's role (extracts from PRD); open-decisions names the deciding signal.
+H2 with two H3 children. The triggers-digest sub-section is the 30-second-scan; the Open Decisions table is the audit-trail receipt.
 
 ```markdown
-## Decisions Locked & Open
+## Trade-off Triggers & Open Decisions
 
-### Locked
+### Trade-off Triggers (digest)
 
-| # | Decision | Choice | Source |
-|---|---|---|---|
-| 1 | Auth provider | Supabase Auth | PRD § Technical Considerations |
-| 2 | Payment processor | Stripe | PRD § 3 Goals row 4 (price floor) |
-| 3 | Primary success metric | week-1 activation rate | PRD § Success Metrics row 1 |
-| 4 | EU region at v1 | No (US-east only) | PRD § Open Questions Q3 resolved by founder · 2026-05-16 |
-| 5 | Pricing model | per-seat ($4/seat/mo) | PRD § 3 Goals row 4 |
+Recommendation changes if:
+- **Stripe Checkout conversion drops below 70%** — switch to Stripe Elements for in-context flow (Open #4)
+- **First 10 EU customers materialise pre-public-launch** — fra1 region work moves before US-east hardening (Open #3)
+- **Postgres CPU breaches 70% sustained for 1h** — read-replica work pulls forward to v1.1 (Open #2)
+- **First enterprise prospect raises RLS in security review** — RLS migration becomes P0 (Open #6)
 
-### Open
+### Open Decisions (table)
 
 | # | Question | Deciding signal | Closes by |
 |---|---|---|---|
 | 1 | Background job queue (BullMQ vs SQS vs Inngest) | Actual job volume in week 2 of beta | Pre-launch + 2 weeks |
 | 2 | Read replica posture | Postgres CPU >70% sustained for 1h | Triggers v1.1 architecture review |
 | 3 | Region expansion to fra1 | First 10 EU customers signed | Quarterly check post-launch |
-| 4 | Migration to Drizzle | Prisma migration ergonomics painpoint reaches 1d/sprint | Quarterly review |
+| 4 | Stripe Checkout vs Elements | Checkout conversion <70% in first 4 weeks of beta | 4 weeks post closed-beta |
+| 5 | Migration to Drizzle | Prisma migration ergonomics painpoint reaches 1d/sprint | Quarterly review |
+| 6 | Postgres RLS migration | First enterprise prospect raises RLS in security review OR SOC 2 audit recommends it | Pre-Series-A |
 ```
+
+The digest sub-section is the load-bearing scan; pick the 3-4 highest-stakes triggers from the Open table (NOT every row — just the ones most likely to fire in the first 3 months or that have the biggest blast radius). The table is the audit-trail receipt where every deferred decision gets a row with a deciding signal.
+
+**Locked decisions are intentionally NOT a sub-section.** The bridge-skill's PRD-decision extraction lands NATURALLY in:
+- `## Stack` (auth provider, framework, language all named once and committed)
+- `## Integrations` (payment processor, transactional email all named once and committed)
+- `## Deployment` (host platform, CI/CD all named once and committed)
+- `## Non-Functional` (uptime target, perf budgets all named once and committed)
+
+Re-tabling these as a separate Locked sub-section duplicates the running commitment; a Source-column on running prose entries (`Source: PRD § Technical Considerations`) carries the same audit trail at lower meta-table cost. Spec 026 Phase B judge-feedback (2026-05-16) against the anthill source confirmed the running-prose pattern; the Locked-table sub-section was cut as part of the post-task-18 calibration. See `## Voice & anti-patterns` below for the meta-commentary discipline.
 
 Open decisions without a deciding signal are red flags — the design owes the founder a trigger.
 
@@ -341,3 +355,4 @@ Spec 026 ships `architecture.json` only. The anthill source (`anthill-principal-
 - **Concern levels are HONEST.** A single-instance Postgres with PITR is `Reliability: Medium`, not aspirational `Low`.
 - **Name uncertainty explicitly.** "Background job queue: TBD between BullMQ and SQS — decide when actual job volume is known" is honest; pretending the queue choice is locked when it isn't is the regression mode.
 - **PRD `US-NN` IDs cross-reference the design.** Every entity, API, integration cites the user story that needs it. This makes step 13 (prototype-v3) PRD-coverage scoring honest.
+- **No meta-commentary about the document's own discipline.** Do NOT write a section like `## Notes on this design's audit-trail discipline` or `## How to read this document` explaining how `Source` columns / `US-NN` refs / deciding-signal columns work. The discipline IS the artifact (Source columns + US-NN refs + deciding-signal columns); a section *about* the discipline is meta noise. A reader who needs the audit trail explained doesn't need the explanation — they need the audit trail to work. Spec 026 Phase B judge-feedback (2026-05-16) flagged this anti-pattern in the first dogfood run; the rule exists to prevent recurrence.

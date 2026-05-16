@@ -21,7 +21,7 @@ Section names slugify by lowercasing + dashing the H2 title — `## Data Model` 
 - `non-functional`
 - `evaluation`
 - `alternatives-considered`
-- `decisions-locked-open` (carries the bridge-floor decisions-locked table + the open-decisions handoff in one H2 with two H3 children)
+- `trade-off-triggers-open-decisions` (one H2 with two H3 children: `### Trade-off triggers (digest)` prose digest + `### Open decisions (table)`; Locked-decisions tables are intentionally NOT a sub-section — locked choices live in the running prose of § Stack / § Integrations / § Deployment / § Non-Functional)
 
 ## Optional sections (not enforced, produced when applicable)
 
@@ -48,9 +48,12 @@ Section names slugify by lowercasing + dashing the H2 title — `## Data Model` 
         "## Non-Functional",
         "## Evaluation",
         "## Alternatives Considered",
-        "## Decisions Locked",
+        "## Trade-off Triggers & Open Decisions",
+        "### Trade-off Triggers",
+        "### Open Decisions",
         "| Dimension | Assessment | Concern Level |",
-        "| Method | Path |"
+        "| Method | Path |",
+        "| # | Question | Deciding signal |"
       ],
       "any_of_contains": [
         "Low",
@@ -85,11 +88,15 @@ Section names slugify by lowercasing + dashing the H2 title — `## Data Model` 
 
 ### Notes on the floors
 
-- **`system-design.md` `min_size: 20480` (20 KB)** — anchored against the 11 required sections at honest depth. Step 3's `architecture.md` floor is 4 KB for 4 sections (the *skeleton*); step 9 deepens those 4 sections AND adds 7 new ones (services, APIs, deployment, non-functional, evaluation, alternatives, decisions). A 5x multiplier on section count + design rigor (evaluation table, trade-offs, alternatives with reason) lands at 20 KB minimum. SMB SaaS and venture-scale typically 22-28 KB; micro-products may legitimately land under (use the `# OVERRIDE: compact-product: <class>` shape in the prompt's submit context).
+- **`system-design.md` `min_size: 20480` (20 KB)** — anchored against the 11 required sections at honest depth. Step 3's `architecture.md` floor is 4 KB for 4 sections (the *skeleton*); step 9 deepens those 4 sections AND adds 7 new ones (services, APIs, deployment, non-functional, evaluation, alternatives, triggers-and-open-decisions). A 5x multiplier on section count + design rigor (evaluation table, trade-offs, alternatives with reason, decision-triggers digest) lands at 20 KB minimum. SMB SaaS and venture-scale typically 22-28 KB; micro-products may legitimately land under (use the `# OVERRIDE: compact-product: <class>` shape in the prompt's submit context).
 
 - **The literal pipe-delimited row `| Dimension | Assessment | Concern Level |`** — proves the evaluation table carries the canonical 3-column shape from `anthill-principal-engineer § Step 3`. A system-design that ships evaluation as prose bullets (anti-pattern: "**Simplicity**: medium" line-items) trips Layer 1 — the table is the visual contract and forces the agent to put a concern level on every dimension. The literal row only appears as a real markdown table header.
 
 - **The literal `| Method | Path |` substring** — proves the APIs section carries a structured endpoint catalog (markdown table with `Method | Path | Contract intent | Source`), not paragraph prose. Without this floor, the section silently degrades into "the app has CRUD endpoints" — useless to engineering. The `Source` column is what cross-references PRD user-story IDs (`US-NN`); a row without a `Source` is a discipline failure caught at the prompt-rigor layer.
+
+- **The literal `| # | Question | Deciding signal |` substring** — proves the Open Decisions sub-section carries the canonical 4-column table shape (`# | Question | Deciding signal | Closes by`) and not loose prose bullets. Open decisions without a `Deciding signal` column are the regression mode this anchor catches — see prompt § 11 for the discipline (every deferred decision names what closes it; rows without a deciding signal are red flags).
+
+- **The H3 anchors `### Trade-off Triggers` and `### Open Decisions`** — prove the digest+table layout for § 11 is honored: the prose Trade-off Triggers digest (4-bullet load-bearing scan) precedes the Open Decisions table (audit-trail receipt). Spec 026 Phase B post-task-18 calibration (2026-05-16) introduced this layout in response to anthill-judge feedback that the MCP's deferral list lacked a scannable digest; the schema enforces presence of both children so the layout doesn't silently regress into "Open table only" (loses the digest) or "Triggers prose only" (loses the audit trail).
 
 - **`any_of_contains: ["Low", "Medium", "High"]`** — at least one concern level must appear in the file (cheap presence check for the evaluation table's third column). If the agent ships the table headers without filling the Concern Level cells, this fires.
 
@@ -117,7 +124,10 @@ The schema enforces presence + floor; *depth* is the agent's responsibility, rei
 - **Non-Functional** — perf budgets (p95 latency target, p99 ceiling). Scale assumptions (target concurrent users for v1) derived from PRD success metric. Reliability posture (uptime target, RTO/RPO if data is precious). Accessibility floor (inherited from step 4 audit). See `references/scale-assumptions.md` for the derivation rules.
 - **Evaluation** — the 5×3 assessment table. Honest concern levels, not aspirational. Per-row Assessment is ONE specific sentence, not abstract praise.
 - **Alternatives Considered** — per major choice (stack, DB, deployment, auth, payment), 1-2 rejected alternatives with one-line reason. Catches resume-driven design.
-- **Decisions Locked & Open** — H2 with two H3 children. `### Locked` lists decisions resolved in the PRD with `# | Decision | Choice | Source (PRD §)`. `### Open` lists decisions this step deferred with the deciding signal that will close them. Open decisions without a deciding signal are red flags.
+- **Trade-off Triggers & Open Decisions** — H2 with two H3 children.
+  - `### Trade-off Triggers (digest)` — ONE prose paragraph (3-5 bullets max) naming the 3-4 highest-stakes triggers from § Open below. The load-bearing "Recommendation changes if (a)(b)(c)(d)" framing in a form a reader scans in 30 seconds. NOT every row from the Open table — just the load-bearing few.
+  - `### Open Decisions (table)` — markdown table `# | Question | Deciding signal | Closes by`. Things this step deferred to implementation OR genuinely unresolved. Rows without a Deciding signal are red flags.
+  - **Locked decisions are intentionally NOT a sub-section** — the bridge-skill's PRD-decision extraction lands NATURALLY in § Stack (auth provider, framework), § Integrations (payment processor), § Deployment (host platform), § Non-Functional (uptime target). Re-tabling them as a separate Locked sub-section duplicates the running commitment; spec 026 Phase B judge-feedback (2026-05-16) confirmed the running-prose pattern carries the audit trail without the meta-table.
 
 ### `architecture.json`
 

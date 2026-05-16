@@ -66,7 +66,7 @@ Each task: read anthill source skill(s) + references → rewrite `templates/<NN-
 
 - [x] 18. **Step 9 — system-design port** (`anthill-system-design-bridge` + `anthill-principal-engineer`). Required_files: `system-design.md` (min 20 KB), one of `architecture.json` / `architecture.html`, `security.md` (or security block in system-design with OWASP/threat-model). References: `architecture-shape.md`, `security-section.md`, `scale-assumptions.md`.
 
-- [ ] 19. **Step 10 — cost-estimate port** (`anthill-fpa` or `anthill-bizops-analyst` — pick richer one during port). Single-artifact `cost-estimate.md` with build cost + run cost + unit economics + sensitivity analysis. References: if anthill skill is light, skip references subdir.
+- [x] 19. **Step 10 — cost-estimate port** (`anthill-fpa` or `anthill-bizops-analyst` — pick richer one during port). Single-artifact `cost-estimate.md` with build cost + run cost + unit economics + sensitivity analysis. References: if anthill skill is light, skip references subdir.
 
 - [ ] 20. **Step 11 — roadmap port** (`anthill-roadmap` + `anthill-roadmap-bridge`). Single-artifact `roadmap.md` with phases, milestones, dependencies, risks, buffer. References: phasing-discipline.md, milestone-format.md.
 

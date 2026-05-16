@@ -1,55 +1,213 @@
 ---
 mode: draft-after-input
 delegable: partial
-delegation_hint: "draft the cost model from system-design — infrastructure, third-party services, team allocation — business model already confirmed with user"
+delegation_hint: "draft step-10 cost-estimate.md from step-8 PRD + step-9 system-design — single-artifact financial model (build + run cost, scenarios, sensitivity, risks) with documented assumption table; parent collects 2 inputs first (pricing model + ballpark price point); sub-agent does the math"
 ---
 
 # Step 10 — Cost Estimate
 
-**Goal:** financial model for v1 — build cost (one-time / first 3 months) and run cost (per-month at expected scale). Plus the pricing/business model the product uses to monetise (if revenue-generating). Sub-agent does most of the math after the user locks the business model.
+**Goal:** the one-page-ish financial model for v1 — build cost (one-time / first 3 months), run cost per month at v1 scale, unit economics if revenue-generating, scenario analysis (bear / base / bull), sensitivity (the 2-3 assumptions that drive 80% of variance), and the top 5 financial risks. The artifact step 11 (roadmap) reads to phase v1 spend and step 12 (legal) reads to size the compliance budget.
 
-**Mode:** `draft-after-input`. Parent must confirm with user: pricing model (free / freemium / one-time / subscription / usage-based / hybrid / not-for-profit). Once locked, the model derivation is mechanical from system-design inputs.
+**Mode:** `draft-after-input` with `delegable: partial`. The parent must extract two pieces of input that no prior artifact pinned down — **pricing model** (free / freemium / one-time / subscription / usage-based / hybrid / not-for-profit) and **ballpark price point** (order of magnitude; $10/mo vs $100/mo vs $1k/mo — not exact). Once locked, the model derivation is mechanical from step-9 system-design + step-8 PRD inputs.
 
-**Output file (suggested):** `cost-estimate.md` in `docs/product/10-cost-estimate/`.
+**Output file:** `cost-estimate.md` in `docs/product/10-cost-estimate/`. Single-artifact — no `extra_files`.
 
 ---
 
 ## How to conduct this step
 
-1. **Read system-design.** Stack drives infra cost (managed Postgres vs self-hosted, Vercel vs Fly, etc); integrations drive third-party cost (Stripe fees, OpenAI tokens, etc); scale assumptions drive volume.
+Read `references/cost-modeling-conventions.md` for the assumption-table shape (the load-bearing anthill-FPA discipline: every input has source + confidence), the scenario discipline (bear / base / bull NOT single-point estimates), the sensitivity heuristic (find the 2-3 assumptions that drive 80% of variance), and the product-class calibration ladder (compact micro-product → ~5 KB; SMB SaaS Full → ~10-15 KB).
 
-2. **Parent locks the business model (1-2 questions):**
+### 1. Read everything prior
 
-   - "Pricing model: free, freemium, one-time purchase, subscription, usage-based, hybrid, or not-for-profit?"
-   - "If revenue-generating: ballpark target price point? (Order of magnitude — $10/mo, $100/mo, $1k/mo, $10k/mo — not exact)"
+- **System design** — `docs/product/09-system-design/system-design.md` — § Stack drives infrastructure cost (managed Postgres vs self-hosted, Vercel vs Fly), § Integrations drives third-party cost (Stripe fees, OpenAI tokens, Auth0 vs Supabase), § Non-Functional § Scale Assumptions drives volume.
+- **Architecture JSON** — `docs/product/09-system-design/architecture.json` — quick scan of the components surface confirms the line-item count for run-cost.
+- **Security** — `docs/product/09-system-design/security.md` — compliance posture (LGPD / GDPR / SOC 2) drives line items step 12 will expand (DPA cost, audit fees if SOC 2 pre-work).
+- **PRD** — `docs/product/08-prd/prd.md` — § Goals drives the target price point (e.g. "<50% of competitor X" anchors the pricing-model conversation); § Success Metrics row 1 drives the scale-assumption to use; § User Stories drives build-cost surface; § Audit Response drives step-4 audit-driven cost items.
+- **Cost-ceiling pointer** from step-9 system-design § Overview — the v1 infra cost ceiling target (e.g. `<$200/month at closed-beta scale`) is the anchor this step REFINES with concrete line items; do not silently revise it without naming why.
 
-   If not-for-profit / internal tool, skip the pricing portion; cost model still applies.
+### 2. Parent collects pricing model + price point (2 questions, ~2 min)
 
-3. **Drafting delegates.** With model locked, the sub-agent:
-   - **Build cost** — estimate dev time (in weeks or person-months) for v1 scope from the PRD + system-design. Convert to dollars using a sensible rate placeholder. Acknowledge it's an estimate.
-   - **Run cost / month at expected scale** — infrastructure line items (hosting, database, CDN, storage, monitoring), third-party SaaS (auth provider, payment provider, email, AI APIs if used). Per-line: vendor name, pricing tier, expected monthly cost at the v1 scale-assumption.
-   - **Revenue model** (if applicable) — pricing tiers, projected ARR at 100/1000/10000 users at conservative paid conversion rates. Unit economics: CAC placeholder, payback period back-of-envelope.
-   - **Break-even** — at what user count does revenue cover run cost.
+The parent MUST conduct this exchange directly — not delegate. Two questions, sometimes a third:
 
-4. **Mark estimates clearly.** Every number that's not a current vendor price gets `[Estimated]`. The PRD's success-metric should inform the scale-assumption used.
+1. **Pricing model.** *"Pricing model for v1 — free / freemium / one-time purchase / subscription / usage-based / hybrid / not-for-profit?"* If the PRD already named the model (it often does — competitive positioning in § Goals usually pins this), confirm rather than re-ask. Push back gently if the model conflicts with the PRD's audience (e.g. enterprise persona + free-only model = mismatch).
 
-5. **Sensitivity callouts.** Where small assumption changes blow up the cost — name them. ("If OpenAI tokens hit 10x the projection, monthly cost moves from $400 to $4000 — usage cap recommended in implementation.")
+2. **Ballpark price point** *(skip if free / not-for-profit / internal):* *"Order of magnitude price target — $10/mo, $100/mo, $1k/mo, $10k/mo? Not exact; just the magnitude."* PRD § Goals usually names this too (e.g. "<$4/seat" anchors $1-10/user/mo magnitude). Confirm rather than re-ask when the PRD is clear.
 
-6. **Submit + advance.** Mid-Specification, no gate. After submit, advance moves to step 11 (roadmap).
+3. **(Optional) Hourly rate placeholder** *(when build-cost needs anchoring):* *"Hourly rate for build-cost math? Default is $150/hr blended."* Skip when the founder already named a rate; default to $150/hr blended otherwise (a typical Bay-Area-ish dev rate; flag explicitly as a placeholder, mark `[Estimated]`).
+
+### 3. Drafting delegates to a sub-agent
+
+Once pricing + price point are locked, the parent dispatches an `Agent` sub-agent with the 5-field brief. CONTEXT includes:
+
+- All prior artifact paths (step 8 PRD, step 9 system-design, step 9 architecture.json, step 9 security.md)
+- The captured pricing model (verbatim)
+- The captured ballpark price point (verbatim)
+- The captured rate (or "default $150/hr")
+- The step-9 cost-ceiling target sentence (verbatim)
+
+The sub-agent's job is structural synthesis — fill the canonical cost-estimate template using the captured inputs + the prior-artifact reads. No more user questions; the parent's interview was the last input needing the founder.
+
+Use `model: opus` for the sub-agent — sonnet sometimes drops the assumption-table discipline (source + confidence columns get omitted, which is the anthill-FPA regression mode the discipline catches).
+
+### 4. The canonical cost-estimate structure
+
+The sub-agent writes `cost-estimate.md` against this 7-required + 3-conditional spine (full shape with depth conventions lives in `references/cost-modeling-conventions.md`):
+
+1. **Overview** — short paragraph PLUS two load-bearing one-liners (mirrors step-9 § Overview shape):
+   - **Paragraph:** what's being modelled (v1 build + run), which scale assumption applies (from step-9 § Non-Functional), which pricing model + price point the founder locked. Names the product class (micro / mobile / dev-tool / SMB-SaaS / venture-scale) so depth calibration is visible.
+   - **Biggest cost risk:** one sentence naming THE assumption most likely to break the model. Anti-pattern: even-keeled risk distribution. A SaaS with usage-based AI calls has ONE risk that dominates (token-cost-per-user); say it. Example: *"Biggest cost risk: Stripe fees + Postgres scaling are bounded; the wild card is paid-conversion rate — if conversion lands at 1% instead of 3% projected, run-cost-per-paying-user crosses break-even into negative."*
+   - **v1 cost ceiling restate:** repeat the step-9 § Overview cost-ceiling target verbatim, then flag whether the line-item math supports or revises it. If revising upward, name why (which assumption changed). Example: *"v1 cost ceiling target was <$200/month closed-beta (per step 9 § Overview). Concrete line items below land at $178/month — within target."*
+
+2. **Pricing Model** — declared model (free / freemium / one-time / subscription / usage-based / hybrid / not-for-profit) + one-paragraph rationale anchored to the PRD's persona + audience + § Goals. If subscription/freemium, name the tier structure here (free tier limits + paid tier features) — don't defer to a separate section. If usage-based, name the metering unit and the per-unit price. If free / not-for-profit, declare explicitly and note that § Unit Economics + § Scenarios + § Break-even will skip (or carry a degenerate "no revenue" form).
+
+3. **Assumptions** — the load-bearing anthill-FPA table. Every input the model depends on lands in this table with **value + source + confidence**. Format:
+   ```markdown
+   | # | Assumption | Value | Source | Confidence |
+   |---|---|---|---|---|
+   | 1 | Hourly rate (blended) | $150/hr | placeholder · founder · 2026-05-16 | Low (rate is illustrative) |
+   | 2 | v1 build estimate | 14 weeks (10 weeks engineering + 4 weeks polish) | step 8 PRD § User Stories scope + step 9 system-design § Stack complexity | Medium |
+   | 3 | Target scale (month-3) | 500 weekly-active teams | step 8 PRD § Success Metrics row 1 | High (founder-locked) |
+   | 4 | Avg users per team | 5 | step 8 PRD § Target Users (5-30 person squads, conservative) | Medium |
+   | 5 | Paid conversion (freemium) | 3% | benchmark · SaaS industry median 2-5% | Low (no product data yet) |
+   ...
+   ```
+   Aim for 8-15 rows depending on product class. EVERY downstream number traces back to a row in this table — the assumption table IS the audit trail.
+
+4. **Build Cost** — range estimate for v1 scope.
+   - Format: `weeks × $/hr × hours-per-week = $-range`. Always a range, never a single point (the anthill-FPA scenario discipline applied to build-cost).
+   - Breakdown by phase (Foundation / Killer flow / Surrounding features / Polish — mirroring step 11's roadmap shape).
+   - Mark every number `[Estimated]` unless it traces to a vendor invoice or a signed contract.
+   - Acknowledge the range. v1 build estimates are wrong by 30-50% routinely; bake it in.
+
+5. **Run Cost** — per-month line items at v1 scale assumption. Format:
+   ```markdown
+   | Vendor | Tier | Monthly cost | Source |
+   |---|---|---|---|
+   | Vercel | Pro | $20 | vendor pricing page · 2026-05-16 |
+   | Supabase | Pro | $25 | vendor pricing page · 2026-05-16 |
+   | Stripe | per-transaction | est $40 at v1 vol | 0.029 × 30 paid teams × $20 ARPU = $17.4; rounded with churn refunds | Medium |
+   | Sentry | Team | $26 | vendor pricing page · 2026-05-16 |
+   | Resend | Pro | $20 | vendor pricing page · 2026-05-16 |
+   | Cloudflare R2 | per-GB | est $5 | usage projection | Low |
+   | **Total** | | **$136/mo** | |
+   ```
+   Use current vendor pricing where available (mark `Source: vendor pricing page · YYYY-MM-DD`); mark scale-extrapolated numbers `[Estimated]` with confidence column. The total goes at the bottom of the table.
+
+6. **Sensitivity** — the 2-3 assumptions that drive 80% of variance in the model. Per-assumption: name the assumption + the variance band + the model impact + the deciding signal that flips the design.
+   - Format (single paragraph or short table — pick what scans best):
+     ```markdown
+     - **Paid conversion rate** (assumption 5 above): 3% projected, 1-5% plausible band. At 1%, run-cost-per-paying-user crosses break-even into negative ($136 / (500 × 0.01 × $20) = -$22/paying-team/mo); at 5%, gross margin clears 80% comfortably. **Deciding signal:** week-4 closed-beta paid conversion rate.
+     - **Token-cost-per-user** (assumption 8 above): $0.20/mo placeholder, $0.05-$0.80 plausible band based on usage patterns. At $0.80, AI features turn from break-even helpers to loss leaders. **Deciding signal:** week-2 closed-beta AI-feature usage rate.
+     - **Build-cost overrun** (assumption 2 above): 14 weeks projected, 14-22 weeks plausible. Each week over adds $6k at $150/hr × 40 hr/week. **Deciding signal:** end-of-Phase-2 milestone slip > 2 weeks.
+     ```
+   - This is the load-bearing FPA-discipline section. Treat it like step-9's `## Trade-off Triggers` — the 2-3 highest-stakes drivers that flip the recommendation. A cost-estimate without sensitivity is a single-point projection in disguise.
+
+7. **Risks** — top 5 financial risks (NOT every financial risk; just the 5 most-likely-or-impactful). Per row: probability + financial impact + mitigation.
+   ```markdown
+   | # | Risk | Probability | Impact (1-month) | Mitigation |
+   |---|---|---|---|---|
+   | 1 | Stripe fees ramp faster than projected (high-volume small-ticket pattern) | Medium | +$50/mo at 100 paid teams | Switch to annual prepay; reduces fee % from 2.9% to 1.5% effective |
+   | 2 | Postgres tier upgrade triggers (>500 weekly-active teams) | Medium | +$80/mo | Caps headroom at 5000 WAT; v1.1 carves out read-replica |
+   | ... | | | | |
+   ```
+
+**Conditional sections (revenue-generating products — skip for free / not-for-profit / internal):**
+
+8. **Unit Economics** — CAC / LTV / LTV:CAC / payback period / gross margin / contribution margin. Format:
+   ```markdown
+   | Metric | Value | Calculation |
+   |---|---|---|
+   | ARPU | $20/mo | $4/seat × 5 users/team avg |
+   | Gross margin | 78% | (ARPU − variable-run-cost-per-team) / ARPU = ($20 − $4.36) / $20 |
+   | CAC | $80 | placeholder · founder estimate (sales-led, ~2 hrs founder time per close × $40/hr cost-basis) |
+   | LTV (24mo churn-adj) | $360 | $20 × 24mo × 0.75 (NRR after 25% gross churn) |
+   | LTV:CAC | 4.5:1 | $360 / $80 — healthy band is >3:1 |
+   | Payback period | 4 months | $80 / ($20 × 0.78 gross margin × 1 paying team) |
+   ```
+   Skip when: free-only, not-for-profit, internal tool (no revenue → no unit economics; just say so).
+
+9. **Scenarios** — bear / base / bull (anthill-FPA discipline). Per scenario: name the 1-3 key variable changes + impact on ARR + impact on runway / break-even.
+   ```markdown
+   | Scenario | New paid teams/mo | Churn | ARR EOY | Runway (assume $X cash) |
+   |---|---|---|---|---|
+   | Bear | 5 | 18% | $1.4k MRR EOY | 9 mo |
+   | Base | 15 | 12% | $4.2k MRR EOY | 16 mo |
+   | Bull | 30 | 8% | $9.1k MRR EOY | 22 mo |
+   ```
+   Skip when: free-only or not-for-profit (scenarios degenerate to cost-only — handle as a run-cost sensitivity range in § Sensitivity instead).
+
+10. **Break-Even** — at what user count revenue covers run cost. State the assumption (paid conversion rate, ARPU) used.
+    ```markdown
+    Break-even: 9 paid teams ($136 run-cost / ($20 ARPU × 78% gross margin) = 8.7 → 9 teams).
+    At 3% paid conversion: 300 weekly-active teams produces 9 paid teams → break-even at 60% of v1 target scale.
+    ```
+    Skip when: free-only or not-for-profit (no break-even concept — frame as "monthly burn at v1 scale" instead, which is just § Run Cost total).
+
+### 5. Calibrate by product class (smart, not rigid)
+
+Mirrors step-9's product-class calibration ladder:
+
+| Product class | cost-estimate.md depth | Sections to keep / adapt |
+|---|---|---|
+| **Micro-Product / CLI helper / single-purpose tool** | Compact (~5 KB) | Full structure but Build-Cost is 1-2 weeks, Run-Cost is 1-3 line items, Scenarios may degenerate to bear/base only |
+| **Mobile App** | Standard (~8 KB) | Full structure; § Run Cost adds app-store revenue-share line (15-30% Apple/Google cut); § Scenarios accounts for review-cycle delay impact on launch |
+| **Developer Tool / API-first** | Standard (~10 KB) | Full structure; § Pricing Model often usage-based (per-API-call / per-seat-with-API-rate-limits); § Unit Economics emphasises token cost / per-call infra cost |
+| **SMB SaaS (the spec 026 default)** | Full (~10-15 KB) | Full structure; § Pricing Model typically per-seat subscription; § Scenarios carry 3 paid-conversion bands |
+| **Venture-Scale / Marketplace / multi-persona** | Expanded (~15-20 KB) | Full structure; § Unit Economics expanded to per-persona ARPU/CAC; § Scenarios add upside/downside on take-rate (marketplaces) or per-persona conversion (multi-persona) |
+
+Brief field missing or ambiguous → default to **SMB SaaS (Full)**. Mark the chosen depth in `## Overview` opening sentence (`v1 cost estimate for an SMB SaaS — full template depth applied.`).
+
+For free / not-for-profit / internal tools: full structure minus § Unit Economics + § Scenarios + § Break-Even (which degenerate); document the skip in `## Pricing Model` (`Pricing model: not-for-profit / internal — § Unit Economics, § Scenarios, § Break-Even intentionally absent.`).
+
+### 6. Submit + advance
+
+Call `product_step_submit` with:
+- `step: 10`
+- `filename: "cost-estimate.md"`
+- `content: <full cost estimate>`
+
+No `extra_files` — single-artifact step.
+
+Schema enforces section presence + Layer 1 contains/size floors (assumption-table header, run-cost vendor-table header, total-line literal). On success, `product_advance` moves to step 11 (roadmap — reads PRD + system-design + cost-estimate to sequence v1 build).
+
+**No gate at step 10.** Step 12 (legal-posture) closes the Specification phase gate. Steps 8 → 12 advance fluidly through Specification.
 
 ---
 
 ## Voice & rigor
 
-- Estimates marked `[Estimated]` are fine; numbers presented as facts when they aren't are not. Vendor pricing pages are factual; user-count projections are estimates.
-- Order of magnitude is what matters. "$2k/mo at 1000 users" is useful; "$2,143/mo at 1000 users" is false precision.
-- Build cost is the most-likely-wrong number. Use a range, not a point. ("12-20 weeks at $150/hr = $72k-120k").
-- If unit economics don't work (run-cost-per-user > price), surface this loudly. Don't bury it.
-- For not-for-profit / internal tools, the cost model is still useful — it justifies budget asks and surfaces vendor lock-in cost.
+- **Mark every number `[Estimated]` that isn't a current vendor invoice / signed contract / pricing-page snapshot with date.** Vendor pricing pages are factual (`Source: vendor pricing page · 2026-05-16`); user-count projections are estimates; build-cost is the most-likely-wrong number, always a range never a point.
+- **Order of magnitude is what matters.** `$2k/mo at 1000 users` is useful; `$2,143/mo at 1000 users` is false precision — three significant figures is the upper limit at v1 (you don't know enough to claim more).
+- **If unit economics don't work (run-cost-per-user > price × gross margin), surface loudly.** Don't bury in § Sensitivity. The PRD's pricing target may be wrong; the founder needs to see this.
+- **The assumption table IS the audit trail.** Every number downstream cites a row in § Assumptions. No room for floating numbers.
+- **Bear / base / bull are not optional for revenue products.** Single-point projections are the regression mode. Skip ONLY for free / not-for-profit (where they degenerate).
+- **Build-cost overruns are systemic.** Every project goes over. Bake 30% buffer into the range high-end; the buffer isn't pessimism, it's calibration.
+- **Sensitivity is the load-bearing scan.** A reader who has 30 seconds with the cost estimate reads § Overview + § Sensitivity. Make sure those two sections work standalone.
+- **PRD `US-NN` cross-references where useful.** § Build Cost may scope per-user-story (e.g. "US-07 keyboard-first triage: 3 weeks; US-19 bulk-action: 1 week"); § Run Cost may scope per-integration (e.g. "Stripe drives US-25 + US-28; Resend drives US-23"). Not mandatory at the row level — but useful when the trace is non-obvious.
+- **No meta-commentary about the document's own discipline.** Do NOT write a `## Notes on this cost model's assumption traceability` H2 or any equivalent. The assumption table + the Source columns + the `[Estimated]` flags ARE the discipline; a section *about* them is noise. Spec 026 Phase B step-9 judge-feedback (2026-05-16) flagged this anti-pattern across the pipeline; the rule applies here pre-emptively.
+- **No "locked decisions" sub-section.** Pricing model, price point, and rate-placeholder are locked in the running prose of § Pricing Model + § Assumptions table. Re-tabling them as a separate Locked H2 duplicates the running commitment. Carries the step-9 calibration discipline.
 
 ## What this step does NOT do
 
-- Detailed financial planning. This is a one-page-ish artifact for the product spec, not a CFO model.
-- Pricing decisions. Pricing tier values are an estimate / starting point; real pricing comes from market test.
-- Fundraising deck inputs. Step 17 GTM (future MCP).
-- Capacity planning under viral growth. v1 scale assumption.
+- **Detailed financial planning.** This is a one-page-ish artifact for the product spec, not a CFO model. 10-15 KB is the full-template upper bound for SMB SaaS; if it grows past 25 KB, the agent is over-prescribing.
+- **Pricing decisions.** Pricing tier values are an estimate / starting point; real pricing comes from market test post-launch. The founder's locked ballpark is the anchor.
+- **Fundraising deck inputs.** Step 17 GTM (future MCP) absorbs that work.
+- **Capacity planning under viral growth.** v1 scale assumption only; viral-growth modeling is post-v1 cost-revision work.
+- **Detailed forecast accuracy backtesting.** This is a one-shot model; revision happens in subsequent product cycles.
+- **Roadmap phasing.** Step 11 reads this artifact to phase v1 build by cost-pressure; build-cost ranges land here, sequencing lands there.
+- **Compliance budget.** Step 12 (legal-posture) absorbs DPA cost, audit fees if SOC 2, sub-processor budget. § Run Cost may flag "compliance line items deferred to step 12" with a pointer.
+
+## What this step replaces
+
+Step 10 ports `anthill-fpa` (112 LOC SKILL + 59 LOC references — anti-patterns + checklist + examples). The MCP port keeps anthill's load-bearing discipline (documented assumption table with source + confidence; bear / base / bull scenarios; sensitivity for the 2-3 drivers of 80% variance; top-5 financial risks register; unit economics for revenue products) and inherits its anti-patterns catalog (undocumented assumptions, single-point estimates, no sensitivity).
+
+The MCP port diverges from anthill on three points worth naming:
+
+1. **`anthill-bizops-analyst` is NOT ported into step 10.** anthill-bizops is the operational-metrics / process-mapping / efficiency-analysis sibling — that's ops-monitoring territory, not product-spec cost modeling. The MCP port keeps bizops separate; if a future pipeline step models operational efficiency (capacity planning, headcount-to-revenue ratio, process throughput), it lands there, not in step 10. Spec 026 task 19 explicitly named the FPA-vs-bizops decision; FPA wins for cost-estimate.
+
+2. **Anthill's `.anthill/budget.md` ingestion is not ported.** The MCP analog is the parent's § 2 interview (pricing model + price point + rate) which captures the budget inputs at synthesis time, not from a fork-level config file. The MCP doesn't model fork-level financial state.
+
+3. **Cost-ceiling cross-reference to step 9.** Anthill's principal-engineer doesn't carry a cost-ceiling pointer; the MCP step-9 calibration (post-task-18 judge-feedback) added it. Step 10 § Overview restates the step-9 ceiling and flags whether line-item math supports or revises it — closes the cross-step loop. Anthill has no equivalent because anthill's pipeline doesn't enforce step-to-step contract symmetry the same way.
+
+Anthill's calls-for-action (`Save the analysis to docs/sdlc/10-cost-estimate/<slug>-cost.md`) translate to the MCP's `product_step_submit` path discipline. Resumability is `product_status` + `.state.json`; the halt protocol is the `schema-incomplete` validation error.

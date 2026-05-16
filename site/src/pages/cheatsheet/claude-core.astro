@@ -461,6 +461,13 @@ body…`}</code></pre>
           <p class="mini">
             <code>/memory</code> edits → next turn · <code>/clear</code> / <code>/compact</code> → <code>SessionStart</code> fires · fresh session → discovery walks ancestors again.
           </p>
+          <p class="card-sub" style="margin-top:8px">best practices</p>
+          <ul class="builtins">
+            <li><b>≤ 200 lines</b> — longer ones are silently truncated / ignored</li>
+            <li><b>precision</b> — "use Zod for validation" beats "be clean"</li>
+            <li><b>module boundaries</b> — each subfolder owns its <code>CLAUDE.md</code> slice</li>
+            <li><b>verification commands</b> — list <code>build · test · lint</code> verbatim</li>
+          </ul>
         </article>
 
         <!-- MCP -->
@@ -702,6 +709,50 @@ You are an X agent. Your job is …`}</code></pre>
           </div>
         </article>
 
+        <!-- COST & TOKENS -->
+        <article class="card card-cyan wide" style="grid-area: cost">
+          <h2 class="card-h" data-myth-icon="💰" data-myth-name="The Ledger">▸ COST &amp; TOKENS — bills you can see</h2>
+          <p class="card-sub">monitor · cache · swap · cap · the four habits that drop bills 60–70%</p>
+          <div class="cmd-cols">
+            <div class="cmd-col">
+              <span class="cmd-h">monitor</span>
+              <ul class="cmd-list">
+                <li><code>/usage</code> token stats this session</li>
+                <li><code>/status</code> model · acct · plan limits</li>
+                <li><code>/cost</code> (alt) live spend tracker</li>
+                <li><code>--max-budget-usd</code> hard cap (--print)</li>
+              </ul>
+            </div>
+            <div class="cmd-col">
+              <span class="cmd-h">caching (automatic)</span>
+              <ul class="cmd-list">
+                <li>Sonnet: 5-min TTL · 10% cost on hit</li>
+                <li>Haiku: 1-hour TTL · longer reuse</li>
+                <li>Static prefix first (sysprompt · CLAUDE.md · tool defs)</li>
+                <li>Dynamic content last (user msg · history)</li>
+              </ul>
+            </div>
+            <div class="cmd-col">
+              <span class="cmd-h">model swap (per Mtok)</span>
+              <ul class="cmd-list">
+                <li><code>haiku</code> $0.25 / $1.25 — formatting, docs</li>
+                <li><code>sonnet</code> $3 / $15 — default coding</li>
+                <li><code>opus</code> $15 / $75 — architecture, deep</li>
+                <li class="hot"><code>--fallback-model</code> if primary overloaded</li>
+              </ul>
+            </div>
+            <div class="cmd-col">
+              <span class="cmd-h">context hygiene</span>
+              <ul class="cmd-list">
+                <li><code>/compact</code> summarize on ctx fill</li>
+                <li><code>/clear</code> fresh ctx, keep CLAUDE.md</li>
+                <li><code>DISABLE_NON_ESSENTIAL_MODEL_CALLS=1</code></li>
+                <li><code>MAX_THINKING_TOKENS</code> cap reasoning</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
         <!-- OUTPUT STYLES -->
         <article class="card card-orange" style="grid-area: output">
           <h2 class="card-h" data-myth-icon="🎭" data-myth-name="The Personas">▸ OUTPUT STYLES</h2>
@@ -748,6 +799,66 @@ You are an X agent. Your job is …`}</code></pre>
             <dt><code>/plugin</code></dt>
             <dd>install · list · update · remove</dd>
           </dl>
+        </article>
+
+        <!-- WORKFLOW PATTERNS -->
+        <article class="card card-magenta wide" style="grid-area: workflow">
+          <h2 class="card-h" data-myth-icon="🎯" data-myth-name="The Tactics">▸ WORKFLOW PATTERNS — 5 shapes Claude takes</h2>
+          <p class="card-sub">pick by stakes · parallelism · specification level</p>
+          <div class="cmd-cols">
+            <div class="cmd-col">
+              <span class="cmd-h">sequential</span>
+              <ul class="cmd-list">
+                <li>one task → next, predictable</li>
+                <li>refactor walk, code review</li>
+                <li>slow but auditable</li>
+                <li>default for fresh territory</li>
+              </ul>
+            </div>
+            <div class="cmd-col">
+              <span class="cmd-h">operator</span>
+              <ul class="cmd-list">
+                <li>human approves every action</li>
+                <li><code>permission-mode: default</code></li>
+                <li>high-stakes / unfamiliar code</li>
+                <li>slowest, safest</li>
+              </ul>
+            </div>
+            <div class="cmd-col">
+              <span class="cmd-h">split-and-merge</span>
+              <ul class="cmd-list">
+                <li>parallel independent subtasks</li>
+                <li><code>/batch</code> up to 50 agents</li>
+                <li>codebase-wide refactors</li>
+                <li>test-gen · dep updates</li>
+              </ul>
+            </div>
+            <div class="cmd-col">
+              <span class="cmd-h">agent teams</span>
+              <ul class="cmd-list">
+                <li>parallel + git coordination</li>
+                <li>auto claim · merge · resolve</li>
+                <li><code>/agents</code> to orchestrate</li>
+                <li>multi-day features</li>
+              </ul>
+            </div>
+            <div class="cmd-col">
+              <span class="cmd-h">headless / autonomous</span>
+              <ul class="cmd-list">
+                <li>no human in loop</li>
+                <li><code>claude -p</code> in CI</li>
+                <li><code>/loop</code> run-until-condition</li>
+                <li><code>/schedule</code> cron triggers</li>
+                <li>requires full spec</li>
+              </ul>
+            </div>
+          </div>
+          <p class="mini" style="margin-top:8px">
+            <b>decision aid:</b>
+            unclear scope → <span class="kv">sequential</span> or <span class="kv">operator</span> ·
+            parallel work → <span class="kv">split-merge</span> or <span class="kv">agent-teams</span> ·
+            fully specced → <span class="kv">headless</span>.
+          </p>
         </article>
 
         <!-- COMMANDS -->
@@ -1173,6 +1284,20 @@ You are an X agent. Your job is …`}</code></pre>
               <span class="recipe-h"># debug MCP in isolation</span>
               <pre><code>claude --strict-mcp-config --mcp-config ./test-mcp.json --debug mcp</code></pre>
             </div>
+            <div class="recipe-block">
+              <span class="recipe-h"># headless PR review in GitHub Actions</span>
+              <pre><code>claude -p --permission-mode bypassPermissions --output-format json --max-turns 6 \
+  "review this PR for security issues, return findings as JSON"</code></pre>
+            </div>
+            <div class="recipe-block">
+              <span class="recipe-h"># autonomous test-fix loop with hard budget cap</span>
+              <pre><code>claude -p --max-turns 12 --max-budget-usd 1.00 \
+  "run tests, fix failures, repeat until green"</code></pre>
+            </div>
+            <div class="recipe-block">
+              <span class="recipe-h"># cheap mode: Haiku for formatting / docs</span>
+              <pre><code>claude --model haiku --effort low "reformat all .md files to consistent style"</code></pre>
+            </div>
           </div>
         </article>
       </section>
@@ -1580,7 +1705,9 @@ You are an X agent. Your job is …`}</code></pre>
           "skills   agents   rules"
           "tools    tools    tools"
           "auth     auth     auth"
+          "cost     cost     cost"
           "output   output   plugin"
+          "workflow workflow workflow"
           "commands commands commands"
           "envvars  envvars  envvars";
       }
@@ -1594,7 +1721,9 @@ You are an X agent. Your job is …`}</code></pre>
             "rules    rules"
             "tools    tools"
             "auth     auth"
+            "cost     cost"
             "output   plugin"
+            "workflow workflow"
             "commands commands"
             "envvars  envvars";
         }
@@ -1608,7 +1737,9 @@ You are an X agent. Your job is …`}</code></pre>
             "skills" "agents" "rules"
             "tools"
             "auth"
+            "cost"
             "output" "plugin"
+            "workflow"
             "commands"
             "envvars";
         }

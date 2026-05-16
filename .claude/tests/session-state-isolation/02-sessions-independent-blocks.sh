@@ -11,6 +11,7 @@ set -euo pipefail
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 START_HOOK="$AGENT0_ROOT/.claude/hooks/session-start.sh"
 STOP_HOOK="$AGENT0_ROOT/.claude/hooks/session-stop.sh"
+TRACK_HOOK="$AGENT0_ROOT/.claude/hooks/session-track-edits.sh"
 
 TMPDIR="$(mktemp -d -t spec-017-V2-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
@@ -42,7 +43,13 @@ sleep 1
 # block once independently), this scenario needs *real* WIP during the
 # sessions, otherwise 023's snapshot-match early-exit kicks in (correctly:
 # no porcelain delta → no handoff needed) and the test premise dies.
+# Spec 030 — both sessions also need a tracker entry for the file so the
+# primary edit-attribution path recognises the work; without a tracker entry
+# the new spec-030 layer would silently exit on "empty tracker" before
+# spec-023 has any chance to run.
 echo "real-session-work" > "$TMPDIR/in-session.txt"
+printf '%s' '{"session_id":"sess-A","tool_input":{"file_path":"in-session.txt"}}' | bash "$TRACK_HOOK"
+printf '%s' '{"session_id":"sess-B","tool_input":{"file_path":"in-session.txt"}}' | bash "$TRACK_HOOK"
 
 run_stop() {
   local sid="$1"

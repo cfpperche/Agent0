@@ -51,14 +51,52 @@ if [[ -z "$CURRENT_PORCELAIN" ]]; then
   exit 0
 fi
 
-# Spec 023: if the porcelain is byte-identical to the SessionStart snapshot,
-# nothing changed during this session — carryover from prior sessions or pure
-# no-op. Skip the block. Missing snapshot (older session, git unavailable at
-# SessionStart, or read-only fs) falls through to today's mtime-only logic.
-START_PORCELAIN="$STATE_DIR/start-porcelain.txt"
-if [[ -f "$START_PORCELAIN" ]]; then
-  if [[ "$CURRENT_PORCELAIN" == "$(cat "$START_PORCELAIN")" ]]; then
+# Spec 030: per-session edit attribution via the PostToolUse tracker hook.
+# The tracker (`.claude/hooks/session-track-edits.sh`) appends each Edit /
+# Write / MultiEdit `file_path` to `edited-files.txt`. Reading that file is
+# the primary signal — it tells us what THIS session actually touched,
+# independent of what other sessions or out-of-band processes did to the
+# worktree during our lifetime. Absent file → legacy session (pre-030 deploy)
+# or tracker disabled → fall through to spec-023 porcelain-compare.
+TRACK_FILE="$STATE_DIR/edited-files.txt"
+USE_TRACKER=0
+OWN_DIRTY_WIP=0
+if [[ -f "$TRACK_FILE" ]]; then
+  USE_TRACKER=1
+  if [[ ! -s "$TRACK_FILE" ]]; then
+    # Empty file → this session has tracker enabled but edited nothing.
+    # Any porcelain noise is from sibling sessions or out-of-band edits.
     exit 0
+  fi
+  # For each tracked path, check whether it still appears as dirty in the
+  # current porcelain. Porcelain lines are shaped `XY <path>` (two status
+  # columns, then space, then the path); a fixed-string suffix match on
+  # ` <path>` is enough to detect "still dirty" without parsing the status.
+  while IFS= read -r tracked_path; do
+    [[ -n "$tracked_path" ]] || continue
+    if printf '%s\n' "$CURRENT_PORCELAIN" | grep -Fq -- " $tracked_path"; then
+      OWN_DIRTY_WIP=1
+      break
+    fi
+  done <"$TRACK_FILE"
+  if [[ "$OWN_DIRTY_WIP" -eq 0 ]]; then
+    # All tracked paths are clean (committed or reverted). Worktree may
+    # still be dirty from siblings — not our concern.
+    exit 0
+  fi
+fi
+
+# Spec 023 fallback: when the tracker is absent (legacy session, disabled, or
+# fork hasn't synced 030), discriminate carryover from real WIP via the
+# SessionStart porcelain snapshot. Skipped when the tracker has already
+# decided we have own WIP (OWN_DIRTY_WIP=1) — the spec-023 path would just
+# duplicate the decision.
+if [[ "$USE_TRACKER" -eq 0 ]]; then
+  START_PORCELAIN="$STATE_DIR/start-porcelain.txt"
+  if [[ -f "$START_PORCELAIN" ]]; then
+    if [[ "$CURRENT_PORCELAIN" == "$(cat "$START_PORCELAIN")" ]]; then
+      exit 0
+    fi
   fi
 fi
 

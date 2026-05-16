@@ -11,6 +11,7 @@ set -euo pipefail
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 START_HOOK="$AGENT0_ROOT/.claude/hooks/session-start.sh"
 STOP_HOOK="$AGENT0_ROOT/.claude/hooks/session-stop.sh"
+TRACK_HOOK="$AGENT0_ROOT/.claude/hooks/session-track-edits.sh"
 
 TMPDIR="$(mktemp -d -t spec-023-04-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
@@ -36,8 +37,10 @@ printf '%s' "$stdin_json" | bash "$START_HOOK" >/dev/null 2>&1
 
 sleep 1
 
-# Mid-session: create a new untracked file — porcelain differs from snapshot
+# Mid-session: create a new untracked file via the Write tool (simulated by
+# echo + tracker payload — Write would have triggered PostToolUse).
 echo "new-artifact" >new-file.txt
+printf '%s' "{\"session_id\":\"$SESSION_ID\",\"tool_input\":{\"file_path\":\"new-file.txt\"}}" | bash "$TRACK_HOOK"
 
 stop_output="$(printf '%s' "$stdin_json" | bash "$STOP_HOOK" 2>&1 || true)"
 

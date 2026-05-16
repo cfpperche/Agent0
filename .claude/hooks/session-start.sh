@@ -39,6 +39,13 @@ mkdir -p "$STATE_DIR"
 touch "$STATE_DIR/started-at"
 rm -f "$STATE_DIR/nagged"
 
+# Spec 030: create an empty edited-files.txt marker so Stop can distinguish
+# "tracker is installed and this session edited nothing" (bystander → exit 0)
+# from "tracker is not installed at all" (legacy session → fall to spec 023).
+# The tracker hook only fires on Edit/Write/MultiEdit, so without this seed a
+# real bystander session would have no file and fall to the legacy path.
+touch "$STATE_DIR/edited-files.txt"
+
 # Spec 023: snapshot `git status --porcelain` so Stop can discriminate
 # "this session changed nothing" (carryover or no-op) from "this session
 # has uncommitted WIP that needs a SESSION.md handoff". Best-effort —

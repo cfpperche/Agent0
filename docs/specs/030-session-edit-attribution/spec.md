@@ -2,7 +2,7 @@
 
 _Created 2026-05-16._
 
-**Status:** draft
+**Status:** shipped
 
 ## Intent
 
@@ -34,15 +34,15 @@ Fix: attribute edits directly via `session_id` (which Claude Code passes in ever
   - **When** A reaches Stop
   - **Then** the nag does NOT fire (path no longer in porcelain)
 
-- [ ] **Scenario: Bash-driven edit (fallback path)**
-  - **Given** session A modified `bar.md` via `sed -i` (not via Edit/Write/MultiEdit)
+- [ ] **Scenario: Bash-driven edit in a tracker-enabled session (documented silent-miss)**
+  - **Given** session A is tracker-enabled (SessionStart created empty `edited-files.txt`) and modified `bar.md` via `sed -i` (not via Edit/Write/MultiEdit)
   - **When** A reaches Stop
-  - **Then** spec 023 fallback fires the nag (porcelain differs from start-porcelain, edited-files.txt empty but fallback wins)
+  - **Then** the block does NOT fire. The empty tracker file says "session edited nothing the tracker could see"; spec-023 fallback is bypassed (tracker present = primary path wins). This is the deliberate trade documented in § Non-goals: bystander quiet beats Bash-edit nag — users who edit via Bash must remember to update SESSION.md themselves.
 
 - [ ] **Scenario: legacy session (pre-030)**
-  - **Given** a session whose state-dir has no `edited-files.txt` (started before 030 deployed)
+  - **Given** a session whose state-dir has no `edited-files.txt` at all (started before 030 deployed; SessionStart predates the touch line)
   - **When** Stop fires
-  - **Then** behavior is byte-identical to spec 023 (porcelain-compare → mtime fallback)
+  - **Then** behavior is byte-identical to spec 023 (porcelain-compare → mtime fallback). This is the only path that consults spec 023.
 
 - [ ] **Scenario: block-once invariant preserved**
   - **Given** session A's nag has already fired once and `<state-dir>/nagged` exists
@@ -57,7 +57,7 @@ Fix: attribute edits directly via `session_id` (which Claude Code passes in ever
 
 ## Non-goals
 
-- **Track Bash-driven file edits.** `sed -i`, `cat > file`, `python -c "open(...)"`, IDE saves, and other non-Edit/Write/MultiEdit paths remain attribution-blind. Spec 023's porcelain-compare absorbs them as fallback. Trying to parse Bash arguments for file paths is fragility this spec deliberately avoids.
+- **Track Bash-driven file edits.** `sed -i`, `cat > file`, `python -c "open(...)"`, IDE saves, and other non-Edit/Write/MultiEdit paths remain attribution-blind. In a tracker-enabled session they become **silent misses** (empty tracker → exit 0; spec-023 fallback is bypassed because the tracker is present). The user-facing cost: a session that edits exclusively via Bash and forgets SESSION.md exits silently. We accepted this trade because: (a) bystander quiet was the primary goal; (b) most agent file mutations go through Edit/Write/MultiEdit and DO get tracked; (c) Bash-arg parsing for file paths is unsafe (fragile regex on `sed -i`, redirections via `eval`, `find -exec`). Spec 023 only fires for legacy sessions (state dir without `edited-files.txt` at all).
 - **Reduce hook firing frequency.** Stop still runs on every assistant turn. This spec changes the *accuracy* of the block decision, not the cardinality — block remains capped at 1 per `session_id`, same as today (`session-stop.sh:40-43`).
 - **Sibling-session exclusion via `start-porcelain.txt` cross-reads.** Considered and rejected during planning: imprecise when 2 sessions touch the same file, still inferential rather than attributive. Per-session edit tracking is the direct primitive; nothing to add on top.
 - **Per-edit audit log or analytics.** `edited-files.txt` is a per-session ephemeral signal under the existing 7-day cleanup, not a forensic trail.

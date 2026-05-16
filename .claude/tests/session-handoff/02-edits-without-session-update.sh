@@ -10,6 +10,7 @@ set -euo pipefail
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 START_HOOK="$AGENT0_ROOT/.claude/hooks/session-start.sh"
 STOP_HOOK="$AGENT0_ROOT/.claude/hooks/session-stop.sh"
+TRACK_HOOK="$AGENT0_ROOT/.claude/hooks/session-track-edits.sh"
 
 TMPDIR="$(mktemp -d -t spec-023-02-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
@@ -34,11 +35,14 @@ stdin_json="{\"source\":\"startup\",\"session_id\":\"$SESSION_ID\"}"
 # SessionStart captures clean porcelain snapshot (empty file)
 printf '%s' "$stdin_json" | bash "$START_HOOK" >/dev/null 2>&1
 
-# Mid-session edit — porcelain now differs from empty snapshot
+# Mid-session edit — porcelain now differs from empty snapshot.
+# Spec 030: record the edit via the tracker so the primary path sees it
+# (replaces pre-030 reliance on raw porcelain-delta).
 sleep 1
 echo "edited-mid-session" >tracked.txt
+printf '%s' "{\"session_id\":\"$SESSION_ID\",\"tool_input\":{\"file_path\":\"tracked.txt\"}}" | bash "$TRACK_HOOK"
 
-# SESSION.md NOT bumped — fallback path should block
+# SESSION.md NOT bumped — primary path (spec 030) should block
 stop_output="$(printf '%s' "$stdin_json" | bash "$STOP_HOOK" 2>&1 || true)"
 
 if ! printf '%s' "$stop_output" | grep -q '"decision":"block"'; then

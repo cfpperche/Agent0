@@ -8,7 +8,7 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-This session refactored the public landing page (`site/`) to match repo reality + opened a new **MCPs by Agent0** catalog section. Site refactor still uncommitted. Parallel SDD lane shipped specs 028 (`/sdd refine`, `60e8a03`) + 029 (`/sdd list --in-flight` + `**Status:**` field, `e1df0a7`) — **now 10 commits ahead of origin** (push pending) + site refactor on top.
+This session refactored the public landing page (`site/`) to match repo reality + opened a new **MCPs by Agent0** catalog section. Site refactor still uncommitted. Parallel SDD lane shipped specs 028 (`/sdd refine`, `60e8a03`) + 029 (`/sdd list --in-flight` + `**Status:**` field, `e1df0a7`) — **pushed to `origin/main` at `7bd5132`**. Site refactor on top of pushed `main`, uncommitted.
 
 Uncommitted in `site/` (4 M + 2 ??): `Header.astro` (+#mcps nav), `i18n/capacities.ts` (+typecheck-advisory + rule-load-debug → 18), `i18n/strings.ts` (count copy + new `mcps` block en/pt/es), `layouts/Landing.astro` (+`<McpGrid>` between Capacities and Why), `components/McpGrid.astro` NEW (2-col cards, status badge, placeholder slot), `i18n/mcps.ts` NEW (`MCPS[]` seeded with product-pipeline live/8 tools/spec 025-027).
 
@@ -18,11 +18,10 @@ Untracked at repo root NOT from this session: 7 `step7-*.png` from prior spec-02
 
 ## Next steps
 
-1. **Decide commit shape for site refactor** — single commit "feat(site): MCPs section + 18-capacity catalog sync" vs split (site copy fix / MCPs section). The MCPs section is the load-bearing addition.
-2. **Push 11 commits when ready** — current 10 + site refactor. No force-push concerns.
-3. **Spec 026 Phase B — remaining tasks 17-22**: step 8 PRD (next, opens Specification phase), 9 system-design, 10 cost, 11 roadmap, 12 legal, 13 prototype-v3 NEW.
-4. **Fair OD re-match + future OD `--bump`/`--apply`** — both still pending in `.claude/REMINDERS.md`, deferred-style not urgent.
-5. **Adoption check for spec 029** — 14d revert window per Open Q1, tracked in REMINDERS.md (due 2026-05-30).
+1. **Decide commit shape for site refactor** — single commit "feat(site): MCPs section + 18-capacity catalog sync" vs split (site copy fix / MCPs section). The MCPs section is the load-bearing addition. Push when committed.
+2. **Spec 026 Phase B — remaining tasks 17-22**: step 8 PRD (next, opens Specification phase), 9 system-design, 10 cost, 11 roadmap, 12 legal, 13 prototype-v3 NEW.
+3. **Fair OD re-match + future OD `--bump`/`--apply`** — both still pending in `.claude/REMINDERS.md`, deferred-style not urgent.
+4. **Adoption check for spec 029** — 14d revert window per Open Q1, tracked in REMINDERS.md (due 2026-05-30).
 
 ## Decisions & gotchas
 

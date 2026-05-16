@@ -134,16 +134,77 @@ Generate `tasks.md` from `plan.md`. Same target-selection rule as `plan`.
 
 ## Subcommand: `list`
 
-List all specs in the repo with a one-line status each.
+List all specs in the repo with a one-line status each. Supports two opt-in flags: `--in-flight` (filter to active work) and `--json` (machine-readable output, agent-friendly). Both are independent; any combination is legal.
 
 1. Scan `docs/specs/` for `NNN-*/` dirs (sorted by NNN ascending).
-2. For each, emit one line: `NNN-<slug>  [status]  — <h1 of spec.md, or "(no spec)" if empty>`.
-3. Status heuristic:
-   - `spec` — `spec.md` has content but `plan.md` still has placeholders
-   - `plan` — `plan.md` filled but `tasks.md` still has placeholders
-   - `tasks` — `tasks.md` filled, some unchecked boxes remain
-   - `done` — all checkboxes in `tasks.md` are checked (`- [x]`)
-   - `empty` — `spec.md` still has `{{` placeholders
+2. For each, emit one line (default text output): `NNN-<slug>  [status]  — <h1 of spec.md, or "(no spec)" if empty>`.
+3. Resolve status using **declared truth first, derived heuristic as fallback**:
+   - **Declared (preferred):** read `spec.md` for a `^\*\*Status:\*\* (draft|in-progress|shipped|superseded)` line. If present, that value is the status — overrides the derived heuristic everywhere (bare output and `--in-flight` alike).
+   - **Derived (fallback when no `**Status:**` line is present):**
+     - `spec` — `spec.md` has content but `plan.md` still has placeholders
+     - `plan` — `plan.md` filled but `tasks.md` still has placeholders
+     - `tasks` — `tasks.md` filled, some unchecked boxes remain
+     - `done` — all checkboxes in `tasks.md` are checked (`- [x]`)
+     - `empty` — `spec.md` still has `{{` placeholders
+
+### Status semantics
+
+Nine total states reachable: four declared (`draft`, `in-progress`, `shipped`, `superseded`) and five derived (`spec`, `plan`, `tasks`, `done`, `empty`). The declared set carries author intent; the derived set is the safety-net inference for specs that pre-date this convention or whose author skipped setting `**Status:**`. `superseded` is reserved for specs replaced by a later one — write `**Status:** superseded by 0NN-<slug>` so the inline slug names the replacement.
+
+### Flag: `--in-flight`
+
+Filter the output to active work. A spec is in flight iff:
+
+- Declared `Status ∈ {draft, in-progress}` — OR
+- Declared `Status` is absent AND derived state ∈ {`spec`, `plan`, `tasks`} AND last git activity on the dir is within the recency window
+
+The recency window defaults to **14 days** (matches typical session-stretch length). Override with `CLAUDE_SDD_IN_FLIGHT_RECENCY_DAYS=<integer>` env var.
+
+Specs with declared `shipped` or `superseded`, derived `done`, or derived `empty` are excluded. Derived `tasks` older than the recency window is also excluded — this is the false-positive case (`tasks.md` carries residual unchecked boxes from a long-shipped capacity).
+
+`--in-flight` row shape, one line per spec:
+
+```
+NNN-<slug>  [status]  N/M acceptance unchecked  last activity Yd ago  — <h1>
+```
+
+Where:
+
+- `[status]` is the resolved value (declared or derived)
+- `N` = count of `- [ ]` bullets directly under `## Acceptance criteria` in `spec.md`, all nesting depths included (scenario sub-bullets AND plain static-fact bullets both count)
+- `M` = total count under that section (`N` unchecked + checked)
+- `last activity Yd ago` from `git log -1 --format=%ar -- docs/specs/NNN-<slug>/`
+
+If the `## Acceptance criteria` section is missing or malformed, render `N/M` as `?/?` (text mode) and emit `null` for both counts in JSON — distinguishable from zero.
+
+### Flag: `--json`
+
+Emit a JSON array on stdout, one object per spec. Shape:
+
+```json
+[
+  {
+    "nnn": "029",
+    "slug": "sdd-list-in-flight",
+    "status": "in-progress",
+    "acceptance_unchecked": 5,
+    "acceptance_total": 8,
+    "last_activity_iso": "2026-05-16T14:32:11+00:00",
+    "h1": "029 — sdd-list-in-flight"
+  }
+]
+```
+
+Keys: `nnn` (string, zero-padded 3-digit), `slug` (string), `status` (string — one of the 9 reachable states), `acceptance_unchecked` (integer or `null`), `acceptance_total` (integer or `null`), `last_activity_iso` (string, ISO-8601 from `git log -1 --format=%aI -- <dir>`), `h1` (string — first `# ` line of `spec.md`).
+
+`--json` is **shape-only convenience** for ad-hoc agent reads. It is **NOT a versioned wire contract** — the field set may evolve. Consumers that hard-depend on this shape do so at their own risk; no schema-version key is emitted, deliberately.
+
+Flag combinations:
+
+- `/sdd list` — bare text output, all specs, default behaviour (declared status now honoured)
+- `/sdd list --in-flight` — text output, in-flight subset only, enriched row shape
+- `/sdd list --json` — JSON array, all specs
+- `/sdd list --in-flight --json` — JSON array, in-flight subset only
 
 ## Unknown subcommand
 

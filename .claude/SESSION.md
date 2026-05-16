@@ -8,23 +8,33 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-Spec 026 Phase B tasks 11-16 dogfooded end-to-end. Working tree clean. 109 tests pass, `bun tsc --noEmit` clean. **8 commits ahead of origin** (push pending user decision).
+This session refactored the public landing page (`site/`) to match repo reality + opened a new **MCPs by Agent0** catalog section. No new commits — **still 8 commits ahead of origin** (push pending) + site refactor now sitting uncommitted on top.
 
-This session shipped **step 7 prototype-v2** (commit `75119df`) — the Identity-phase closing artifact. Port + dogfood + 7 same-session prompt-fixes folded into one commit (mirrors the step-5/6 pattern). Step 7 inherits N + filenames from step 2 Turn 2 (no re-pick), reads step 6's `tokens.css` verbatim into screen `:root`, applies brand+tokens to the picked direction, AND inlines step-4 `fix_skill_hint: "prototype-v2"` audit findings with `<!-- fix(F-NN) -->` annotations. Closes the Identity-phase audit→render loop symmetric to step 6's audit→token loop.
+Uncommitted in `site/` (4 M + 2 ??): `Header.astro` (+#mcps nav), `i18n/capacities.ts` (+typecheck-advisory + rule-load-debug → 18), `i18n/strings.ts` (count copy + new `mcps` block en/pt/es), `layouts/Landing.astro` (+`<McpGrid>` between Capacities and Why), `components/McpGrid.astro` NEW (2-col cards, status badge, placeholder slot), `i18n/mcps.ts` NEW (`MCPS[]` seeded with product-pipeline live/8 tools/spec 025-027).
 
-Step-7 dogfood (opus, 8 screens, Cool Brutalist Linear-Clone→Octant rename) produced 10 files at honest sizes (direction-final 30 KB + 8 screens 23-40 KB + REPORT 30 KB) with all Layer 1 floors passing on first pass. Surfaced **7 template gaps** — most load-bearing was Gap 5: the schema's REPORT.md `contains` substrings (`Token`, `Voice`, etc) were silently fakeable from prose, so a malformed scoring table would still pass Layer 1. Fixed by tightening to the literal pipe-delimited table-header row. Gap 1 (prose-routed audit case missing from § 3) and Gap 7 (brand-rename surface undocumented) were the next-most-real silent failures. All 7 folded inline.
+Build clean (`bun run build`, 4 pages, 599ms). Playwright verified 3 locales render, 18 capacity cards, 0 console errors, mobile 390px OK.
 
-Step 7 ported with 3 references (vs step 6's 6) — re-render is narrower than from-scratch design; smart-not-rigid works in both directions.
+Untracked NOT from this session: `docs/specs/029-sdd-list-in-flight/` (parallel session or pre-existing carryover — investigate before blanket commit); 7 `step7-*.png` at repo root from prior spec-026 dogfood.
 
 ## Next steps
 
-1. **Spec 026 Phase B — remaining tasks 17-22**: step 8 PRD (next, opens Specification phase), 9 system-design, 10 cost, 11 roadmap, 12 legal, 13 prototype-v3 NEW.
-2. **Push 8 commits when ready** — `b8af3cf` through `75119df`. SESSION.md handoff commits + port commits + dogfood-driven fixes. No force-push concerns.
-3. **Fair OD re-match + future OD `--bump`/`--apply`** — both still pending in `.claude/REMINDERS.md`, deferred-style not urgent.
+1. **Decide commit shape for site refactor** — single commit "feat(site): MCPs section + 18-capacity catalog sync" vs split (site copy fix / MCPs section). The MCPs section is the load-bearing addition.
+2. **Investigate `docs/specs/029-sdd-list-in-flight/`** before any commit that might inadvertently pick it up.
+3. **Push 9 commits when ready** — current 8 + site refactor. No force-push concerns.
+4. **Spec 026 Phase B — remaining tasks 17-22**: step 8 PRD (next, opens Specification phase), 9 system-design, 10 cost, 11 roadmap, 12 legal, 13 prototype-v3 NEW.
+5. **Fair OD re-match + future OD `--bump`/`--apply`** — both still pending in `.claude/REMINDERS.md`, deferred-style not urgent.
+
+## Decisions & gotchas
+
+- **MCPs section placement: after Capacities, before Why** (confirmed via AskUserQuestion). Native capacities → derived products → motivation.
+- **"MCP recipes" capacity ≠ "MCPs by Agent0" section.** Recipes = adoption of third-party MCPs (Playwright/DBHub). Section = MCPs we author in-repo (currently product-pipeline). The closing distinction paragraph guards against future conflation.
+- **Capacity count drift was real**: `rule-load-debug` + `typecheck-advisory` were in CLAUDE.md and `.claude/rules/` but missing from site. A future "harness vs site count" check could `/loop`-verify.
+- **Adding future MCPs = `MCPS[].push(...)` in `src/i18n/mcps.ts`.** Grid has dashed placeholder card already.
+- **No `.claude/`, hooks, or rules touched this session.** Memory `feedback_mcp_package_self_contained` + `feedback_agent0_changes_ship_via_rules_not_memory` both honored.
 
 ## Carryover (orthogonal lanes, not active)
 
 - Pyshrnk CLAUDE.md reconciliation — long-standing parking lot.
 - Shrnk-mono harness-sync commit pending (13 modified + 2 untracked there).
 - Praxis-prototype lane (consultancy-site, separate repo): deployed at https://cfpperche.github.io/praxis-prototype/. Possible `section-line-grid` opacity bump 0.045 → 0.07.
-- Bench artifacts (wipe-able): `/tmp/bench/026-dogfood-step2/` (~370 KB) + `/tmp/bench/026-dogfood-step3-4/` (~157 KB) + `/tmp/bench/026-comparison-anthill/` (~140 KB) + `/tmp/bench/026-dogfood-step5/` (~14 KB) + `/tmp/bench/026-dogfood-step6/` (~80 KB output + ~21 KB inputs) + `/tmp/bench/026-dogfood-step7/` (~280 KB output + ~190 KB inputs).
+- Bench artifacts (wipe-able): `/tmp/bench/026-dogfood-step{2..7}/` (~1 MB combined) + `/tmp/bench/026-comparison-anthill/` (~140 KB).

@@ -7,6 +7,7 @@ export type Strings = {
   };
   nav: {
     capacities: string;
+    mcps: string;
     whyBuilt: string;
     quickStart: string;
     howToExtend: string;
@@ -29,6 +30,15 @@ export type Strings = {
     cardLabel: string;
     specLabel: string;
     ruleDocLink: string;
+  };
+  mcps: {
+    eyebrow: string;
+    title: string;
+    sub: string;
+    toolsSuffix: string;
+    readmeLink: string;
+    placeholder: string;
+    distinction: string;
   };
   whyBuilt: {
     eyebrow: string;
@@ -88,6 +98,7 @@ export const STRINGS: Record<Locale, Strings> = {
     },
     nav: {
       capacities: "Capacities",
+      mcps: "MCPs",
       whyBuilt: "Why",
       quickStart: "Quick start",
       howToExtend: "Extend",
@@ -106,11 +117,20 @@ export const STRINGS: Record<Locale, Strings> = {
     },
     whatYouGet: {
       eyebrow: "Capacities",
-      title: "Sixteen capacities, all opt-in.",
+      title: "Eighteen capacities, all opt-in.",
       sub: "Each one is documented in its own rule under .claude/rules/, and the non-trivial ones have a spec under docs/specs/. Every override marker (# OVERRIDE: <reason ≥10 chars>) is recorded — there is no silent bypass.",
       cardLabel: "Capacity",
       specLabel: "spec",
       ruleDocLink: "Read the rule →",
+    },
+    mcps: {
+      eyebrow: "MCPs by Agent0",
+      title: "Custom MCP servers we built for the harness.",
+      sub: "Distinct from the MCP recipes capacity above, which adopts existing third-party MCPs (Playwright, DBHub, …). These are MCP servers we author and ship in this repo to extend Agent0's tool surface itself. Each one is opt-in via `.mcp.json`, plug-and-play, and leaves no footprint on the host harness when deactivated.",
+      toolsSuffix: "tools",
+      readmeLink: "Read the package →",
+      placeholder: "Next MCP slot — open a discussion in the repo if you have a capability worth lifting into the catalog.",
+      distinction: "Why this matters: the harness ships discipline (capacities), and the MCP catalog ships verbs (tools the agent can invoke). Both are versioned, both stay in-repo, both are auditable.",
     },
     whyBuilt: {
       eyebrow: "Why it was built",
@@ -217,6 +237,7 @@ export const STRINGS: Record<Locale, Strings> = {
     },
     nav: {
       capacities: "Capacidades",
+      mcps: "MCPs",
       whyBuilt: "Por quê",
       quickStart: "Início rápido",
       howToExtend: "Estender",
@@ -235,11 +256,20 @@ export const STRINGS: Record<Locale, Strings> = {
     },
     whatYouGet: {
       eyebrow: "Capacidades",
-      title: "Dezesseis capacidades, todas opt-in.",
+      title: "Dezoito capacidades, todas opt-in.",
       sub: "Cada uma documentada em sua própria regra em .claude/rules/, e as não-triviais têm spec em docs/specs/. Todo marcador de override (# OVERRIDE: <razão ≥10 chars>) é registrado — não existe bypass silencioso.",
       cardLabel: "Capacidade",
       specLabel: "spec",
       ruleDocLink: "Ler a regra →",
+    },
+    mcps: {
+      eyebrow: "MCPs do Agent0",
+      title: "Servidores MCP que escrevemos para o harness.",
+      sub: "Distinto da capacidade \"MCP recipes\" acima, que adota MCPs de terceiros prontos (Playwright, DBHub, …). Estes são servidores MCP que nós mesmos publicamos neste repo para estender a superfície de tools do Agent0. Cada um é opt-in via `.mcp.json`, plug-and-play, e não deixa rastro no harness host quando desativado.",
+      toolsSuffix: "tools",
+      readmeLink: "Ler o pacote →",
+      placeholder: "Próximo slot de MCP — abra uma discussão no repo se tiver uma capability digna de entrar no catálogo.",
+      distinction: "Por que importa: o harness entrega disciplina (capacidades), e o catálogo de MCPs entrega verbos (tools que o agente pode invocar). Ambos são versionados, ambos vivem no repo, ambos são auditáveis.",
     },
     whyBuilt: {
       eyebrow: "Por que foi construído",
@@ -346,6 +376,7 @@ export const STRINGS: Record<Locale, Strings> = {
     },
     nav: {
       capacities: "Capacidades",
+      mcps: "MCPs",
       whyBuilt: "Por qué",
       quickStart: "Inicio rápido",
       howToExtend: "Extender",
@@ -364,11 +395,20 @@ export const STRINGS: Record<Locale, Strings> = {
     },
     whatYouGet: {
       eyebrow: "Capacidades",
-      title: "Dieciséis capacidades, todas opt-in.",
+      title: "Dieciocho capacidades, todas opt-in.",
       sub: "Cada una documentada en su propia regla en .claude/rules/, y las no-triviales tienen spec en docs/specs/. Todo marcador de override (# OVERRIDE: <razón ≥10 chars>) es registrado — no existe bypass silencioso.",
       cardLabel: "Capacidad",
       specLabel: "spec",
       ruleDocLink: "Leer la regla →",
+    },
+    mcps: {
+      eyebrow: "MCPs de Agent0",
+      title: "Servidores MCP que construimos para el harness.",
+      sub: "Distinto de la capacidad \"MCP recipes\" arriba, que adopta MCPs de terceros existentes (Playwright, DBHub, …). Estos son servidores MCP que escribimos y publicamos en este repo para extender la superficie de tools de Agent0. Cada uno es opt-in vía `.mcp.json`, plug-and-play, y no deja huella en el harness host cuando se desactiva.",
+      toolsSuffix: "tools",
+      readmeLink: "Leer el paquete →",
+      placeholder: "Próximo slot de MCP — abre una discusión en el repo si tienes una capability que merezca entrar al catálogo.",
+      distinction: "Por qué importa: el harness entrega disciplina (capacidades), y el catálogo de MCPs entrega verbos (tools que el agente puede invocar). Ambos versionados, ambos en el repo, ambos auditables.",
     },
     whyBuilt: {
       eyebrow: "Por qué se construyó",

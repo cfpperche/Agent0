@@ -131,6 +131,16 @@ export const CAPACITIES: Capacity[] = [
     },
   },
   {
+    id: "typecheck-advisory",
+    name: "Typecheck advisory",
+    ruleDoc: `${REPO_TREE}/.claude/rules/typecheck-advisory.md`,
+    desc: {
+      en: "Validator detects typecheck primitives per JS branch (tsconfig.json on bun/pnpm, `typecheck` script on npm). Missing both → omit the step + emit a non-blocking advisory pointing at the declaration that would re-enable it.",
+      pt: "Validator detecta primitivos de typecheck por branch JS (tsconfig.json em bun/pnpm, script `typecheck` em npm). Sem ambos → omite o passo + emite advisory não-bloqueante apontando para a declaração que reativa.",
+      es: "El validator detecta primitivos de typecheck por rama JS (tsconfig.json en bun/pnpm, script `typecheck` en npm). Sin ambos → omite el paso + emite advisory no-bloqueante apuntando a la declaración que lo reactivaría.",
+    },
+  },
+  {
     id: "harness-sync",
     name: "Harness sync",
     ruleDoc: `${REPO_TREE}/.claude/rules/harness-sync.md`,
@@ -160,6 +170,16 @@ export const CAPACITIES: Capacity[] = [
       en: "PreCompact snapshots the last 12 user turns to .claude/COMPACT_NOTES.md; SessionStart(source=compact) re-injects the snapshot post-compaction so raw signal survives summarization.",
       pt: "PreCompact captura os últimos 12 turnos do usuário em .claude/COMPACT_NOTES.md; SessionStart(source=compact) re-injeta o snapshot pós-compactação para o sinal cru sobreviver à sumarização.",
       es: "PreCompact captura los últimos 12 turnos del usuario en .claude/COMPACT_NOTES.md; SessionStart(source=compact) re-inyecta el snapshot tras la compactación para que la señal cruda sobreviva.",
+    },
+  },
+  {
+    id: "rule-load-debug",
+    name: "Rule load debug",
+    ruleDoc: `${REPO_TREE}/.claude/rules/rule-load-debug.md`,
+    desc: {
+      en: "Opt-in observability for the InstructionsLoaded hook. CLAUDE_RULE_LOAD_DEBUG=1 appends a JSONL row per rule load (file, load_reason, globs, trigger_file, session_id) — verify path-scoped rules fire on the right triggers without disturbing the default path.",
+      pt: "Observabilidade opt-in para o hook InstructionsLoaded. CLAUDE_RULE_LOAD_DEBUG=1 anexa uma linha JSONL por carregamento de regra (file, load_reason, globs, trigger_file, session_id) — verifica que regras path-scoped disparam nos triggers certos sem afetar o caminho padrão.",
+      es: "Observabilidad opt-in para el hook InstructionsLoaded. CLAUDE_RULE_LOAD_DEBUG=1 anexa una línea JSONL por carga de regla (file, load_reason, globs, trigger_file, session_id) — verifica que las reglas path-scoped disparan en los triggers correctos sin tocar el camino por defecto.",
     },
   },
   {

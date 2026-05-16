@@ -1,0 +1,114 @@
+---
+import { STRINGS } from "../i18n/strings";
+import { MCPS, STATUS_LABELS } from "../i18n/mcps";
+import type { Locale } from "../i18n/locales";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = STRINGS[locale].mcps;
+---
+
+<section id="mcps" class="border-t border-[var(--color-line)]">
+  <div class="mx-auto max-w-6xl px-5 py-20 md:px-8 md:py-28">
+    <div class="mb-12 max-w-3xl">
+      <p class="mb-3 font-mono text-xs uppercase tracking-[0.18em] text-[var(--color-accent)]">
+        {t.eyebrow}
+      </p>
+      <h2 class="font-sans text-3xl font-semibold tracking-tight text-[var(--color-ink)] md:text-4xl">
+        {t.title}
+      </h2>
+      <p class="mt-4 text-base leading-relaxed text-[var(--color-ink-soft)]">
+        {t.sub}
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      {
+        MCPS.map((mcp, idx) => (
+          <article class="flex flex-col gap-4 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-7 transition hover:border-[var(--color-line-strong)]">
+            <header class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-3">
+                <span class="font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--color-ink-muted)]">
+                  mcp/{String(idx + 1).padStart(2, "0")}
+                </span>
+                <span
+                  class:list={[
+                    "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em]",
+                    mcp.status === "live" &&
+                      "border-[var(--color-accent)] text-[var(--color-accent)]",
+                    mcp.status === "in-progress" &&
+                      "border-[var(--color-line-strong)] text-[var(--color-ink-soft)]",
+                    mcp.status === "planned" &&
+                      "border-[var(--color-line)] text-[var(--color-ink-muted)]",
+                  ]}
+                >
+                  <span
+                    class:list={[
+                      "block h-1.5 w-1.5 rounded-full",
+                      mcp.status === "live" && "bg-[var(--color-accent)]",
+                      mcp.status === "in-progress" && "bg-[var(--color-ink-soft)]",
+                      mcp.status === "planned" && "bg-[var(--color-ink-muted)]",
+                    ]}
+                    aria-hidden="true"
+                  />
+                  {STATUS_LABELS[mcp.status][locale]}
+                </span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="rounded-sm bg-[var(--color-accent-soft)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--color-accent-ink)]">
+                  {mcp.toolCount} {t.toolsSuffix}
+                </span>
+                {mcp.spec && (
+                  <span class="rounded-sm bg-[var(--color-accent-soft)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--color-accent-ink)]">
+                    spec {mcp.spec}
+                  </span>
+                )}
+              </div>
+            </header>
+
+            <h3 class="font-sans text-xl font-semibold leading-tight text-[var(--color-ink)]">
+              {mcp.name}
+            </h3>
+
+            <p class="font-mono text-xs text-[var(--color-ink-muted)]">
+              {mcp.packagePath}
+            </p>
+
+            <p class="text-base font-medium leading-relaxed text-[var(--color-ink)]">
+              {mcp.summary[locale]}
+            </p>
+
+            <p class="flex-1 text-sm leading-relaxed text-[var(--color-ink-soft)]">
+              {mcp.desc[locale]}
+            </p>
+
+            <a
+              href={mcp.readme}
+              target="_blank"
+              rel="noopener"
+              class="mt-1 inline-flex items-center gap-1 font-mono text-xs text-[var(--color-accent)] transition hover:text-[var(--color-accent-ink)]"
+            >
+              {t.readmeLink}
+            </a>
+          </article>
+        ))
+      }
+
+      <article class="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-[var(--color-line)] bg-transparent p-7 text-center">
+        <span class="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-muted)]">
+          mcp/{String(MCPS.length + 1).padStart(2, "0")}
+        </span>
+        <p class="text-sm leading-relaxed text-[var(--color-ink-muted)]">
+          {t.placeholder}
+        </p>
+      </article>
+    </div>
+
+    <p class="mt-10 max-w-3xl text-sm leading-relaxed text-[var(--color-ink-muted)]">
+      {t.distinction}
+    </p>
+  </div>
+</section>

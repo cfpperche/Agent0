@@ -18,6 +18,7 @@ CLAUDE.local.md
 .claude/.rule-load-debug.jsonl
 .claude/.rule-load-debug.jsonl.lock
 .claude/.browser-state/*.json
+.claude/.brainstorm-state/
 
 # Playwright MCP runtime artifacts (snapshots, console logs)
 .playwright-mcp/

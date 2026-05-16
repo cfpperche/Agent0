@@ -105,9 +105,16 @@ const pageDesc = `One-page poster reference for Claude Code v${CC_VERSION}: CLI 
             <dd>
               <span class="kv">default</span> ask ·
               <span class="kv">acceptEdits</span> auto-edit ·
-              <span class="kv">auto</span> auto-most ·
+              <span class="kv">auto</span> classifier-gated all ·
               <span class="kv">plan</span> plan mode ·
               <span class="kv">dontAsk</span> · <span class="kv warn">bypassPermissions</span>
+            </dd>
+            <dt class="hot">⇧ <code>Shift+Tab</code></dt>
+            <dd>Cycle permission mode in-session. The one shortcut every user uses every day.</dd>
+            <dt>protected paths</dt>
+            <dd>
+              <code>.git</code> · <code>.vscode</code> · <code>.claude</code> · <code>.mcp.json</code> · <code>.claude.json</code> never auto-approved
+              (only <span class="kv warn">bypassPermissions</span> overrides).
             </dd>
             <dt><code>--allowedTools</code> <span class="arg">&lt;list&gt;</span></dt>
             <dd>Whitelist. Ex: <code>"Bash(git *) Edit"</code></dd>
@@ -277,11 +284,13 @@ const pageDesc = `One-page poster reference for Claude Code v${CC_VERSION}: CLI 
         <!-- SETTINGS -->
         <article class="card card-orange" style="grid-area: settings">
           <h2 class="card-h">▸ SETTINGS — <code>settings.json</code></h2>
-          <p class="card-sub">precedence chain · LATER OVERRIDES EARLIER</p>
+          <p class="card-sub">precedence chain · TOP WINS</p>
           <ol class="chain">
-            <li><code>~/.claude/settings.json</code> <span class="arg">user-global · per-machine</span></li>
+            <li><code>managed / enterprise policy</code> <span class="arg">MDM-installed · highest authority</span></li>
+            <li><code>--settings &lt;file|json&gt;</code> <span class="arg">CLI flag · per-invocation override</span></li>
+            <li><code>&lt;proj&gt;/.claude/settings.local.json</code> <span class="arg">project-local · gitignored</span></li>
             <li><code>&lt;proj&gt;/.claude/settings.json</code> <span class="arg">project · git-tracked, ships to team</span></li>
-            <li><code>&lt;proj&gt;/.claude/settings.local.json</code> <span class="arg">project-local · gitignored, personal</span></li>
+            <li><code>~/.claude/settings.json</code> <span class="arg">user-global · per-machine</span></li>
           </ol>
           <p class="card-sub" style="margin-top:10px">top-level keys</p>
           <dl class="flags two-col">
@@ -337,8 +346,8 @@ const pageDesc = `One-page poster reference for Claude Code v${CC_VERSION}: CLI 
             </div>
             <div class="hg">
               <span class="hg-h">▸ tool gates</span>
-              <code>PreToolUse</code> · <code>PostToolUse</code> <span class="arg">exit 0 only</span> ·
-              <code>PostToolUseFailure</code> <span class="arg">non-zero exits</span> ·
+              <code>PreToolUse</code> · <code>PostToolUse</code> <span class="arg">on tool success</span> ·
+              <code>PostToolUseFailure</code> <span class="arg">on tool failure</span> ·
               <code>PostToolBatch</code>
             </div>
             <div class="hg">
@@ -374,7 +383,7 @@ const pageDesc = `One-page poster reference for Claude Code v${CC_VERSION}: CLI 
             </div>
             <div class="hr-block">
               <span class="recipe-h warn">gotcha</span>
-              <p><code>PostToolUse(Bash)</code> fires ONLY on exit 0. Pair with <code>PostToolUseFailure(Bash)</code> to cover non-zero. Payload diverges — failure uses <code>.error</code>, no <code>tool_response</code>.</p>
+              <p><code>PostToolUse(Bash)</code> fires only on tool <b>success</b> (not exit-code — pipes can mask). Pair with <code>PostToolUseFailure(Bash)</code> to cover failures. Payload diverges — failure uses <code>.error</code>, no <code>tool_response</code>.</p>
             </div>
           </div>
         </article>
@@ -393,19 +402,27 @@ const pageDesc = `One-page poster reference for Claude Code v${CC_VERSION}: CLI 
 <pre class="fm-pre"><code>{`---
 description: One-line discovery hint
 argument-hint: <new <slug> | list>
+allowed-tools: [Read, Grep, Bash]
+disable-model-invocation: false
+paths: ["docs/specs/**"]
+context: fork           # isolated turn
+agent: my-agent         # delegated agent
 ---
-# /name
-body becomes the agent prompt
-when /name is invoked.`}</code></pre>
+# /name — body is the prompt`}</code></pre>
           <dl class="flags" style="margin-top:8px">
             <dt><code>$ARGUMENTS</code></dt>
             <dd>Raw input after the slash command.</dd>
             <dt><code>$CLAUDE_SKILL_DIR</code></dt>
             <dd>Absolute path to the skill dir (for templates).</dd>
+            <dt><code>!`cmd`</code></dt>
+            <dd>Inline shell output injected as context when skill loads. Killer feature for live state.</dd>
             <dt>invoke</dt>
             <dd><code>/name args</code> · or the <code>Skill</code> tool.</dd>
-            <dt>discovery</dt>
-            <dd>Auto-loaded at session start; <code>description</code> is the matchmaker.</dd>
+            <dt>bundled skills</dt>
+            <dd>
+              <code>/simplify</code> · <code>/batch</code> · <code>/debug</code> · <code>/loop</code> · <code>/claude-api</code> ship with CC
+              (docs-defined, not user-installed).
+            </dd>
           </dl>
         </article>
 
@@ -419,11 +436,17 @@ when /name is invoked.`}</code></pre>
             <dt>📁 <code>~/.claude/agents/&lt;name&gt;.md</code></dt>
             <dd>user agent.</dd>
           </dl>
-          <p class="card-sub" style="margin-top:8px">frontmatter</p>
+          <p class="card-sub" style="margin-top:8px">frontmatter (full)</p>
 <pre class="fm-pre"><code>{`---
 description: When to delegate to this agent
 tools: [Read, Grep, Bash]
-model: sonnet
+disallowedTools: [Edit, Write]
+model: sonnet           # alias or full id
+permissionMode: plan
+skills: [sdd, remind]
+mcpServers: [github]
+maxTurns: 12
+isolation: worktree
 ---
 You are an X agent. Your job is …`}</code></pre>
           <p class="card-sub" style="margin-top:8px">built-in agents</p>
@@ -499,6 +522,7 @@ You are an X agent. Your job is …`}</code></pre>
               <ul class="cmd-list">
                 <li><code>/plan</code> plan mode</li>
                 <li><code>/goal</code> stop hook until cond met</li>
+                <li class="hot"><code>/ultraplan</code> cloud planner</li>
                 <li><code>/context</code> visualize usage</li>
                 <li><code>/compact</code> summarize + trim</li>
                 <li><code>/btw</code> side question, no bloat</li>
@@ -512,9 +536,8 @@ You are an X agent. Your job is …`}</code></pre>
                 <li><code>/security-review</code> diff vuln scan</li>
                 <li><code>/simplify</code> quality + reuse pass</li>
                 <li><code>/diff</code> interactive viewer</li>
-                <li class="hot"><code>/ultrareview</code> cloud multi-agent</li>
-                <li class="hot"><code>/ultraplan</code> cloud planner</li>
                 <li><code>/autofix-pr</code> watch + fix CI</li>
+                <li class="hot"><code>/ultrareview</code> cloud multi-agent</li>
               </ul>
             </div>
             <div class="cmd-col">
@@ -560,6 +583,60 @@ You are an X agent. Your job is …`}</code></pre>
                 <li><code>/login</code> · <code>/logout</code></li>
                 <li><code>/help</code> all commands</li>
                 <li><code>/release-notes</code> changelog</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- ENV VARS -->
+        <article class="card card-green wide" style="grid-area: envvars">
+          <h2 class="card-h">▸ ENV VARS — runtime knobs</h2>
+          <p class="card-sub">set in shell · in <code>env</code> key of settings.json · or <code>--settings</code></p>
+          <div class="cmd-cols env-cols">
+            <div class="cmd-col">
+              <span class="cmd-h">auth · provider</span>
+              <ul class="cmd-list">
+                <li><code>ANTHROPIC_API_KEY</code> direct API auth</li>
+                <li><code>ANTHROPIC_BASE_URL</code> proxy / gateway</li>
+                <li><code>ANTHROPIC_AUTH_TOKEN</code> alt header value</li>
+                <li><code>CLAUDE_CODE_USE_BEDROCK=1</code></li>
+                <li><code>CLAUDE_CODE_USE_VERTEX=1</code></li>
+                <li><code>CLAUDE_CODE_USE_FOUNDRY=1</code></li>
+                <li><code>CLAUDE_CONFIG_DIR</code> relocate <code>~/.claude</code></li>
+              </ul>
+            </div>
+            <div class="cmd-col">
+              <span class="cmd-h">timeouts &amp; limits</span>
+              <ul class="cmd-list">
+                <li><code>BASH_DEFAULT_TIMEOUT_MS</code></li>
+                <li><code>BASH_MAX_TIMEOUT_MS</code></li>
+                <li><code>BASH_MAX_OUTPUT_LENGTH</code></li>
+                <li><code>MCP_TIMEOUT</code> startup ms</li>
+                <li><code>MCP_TOOL_TIMEOUT</code> per-call ms</li>
+                <li><code>MAX_THINKING_TOKENS</code></li>
+                <li><code>MAX_MCP_OUTPUT_TOKENS</code></li>
+              </ul>
+            </div>
+            <div class="cmd-col">
+              <span class="cmd-h">behavior toggles</span>
+              <ul class="cmd-list">
+                <li><code>DISABLE_AUTOUPDATER=1</code></li>
+                <li><code>DISABLE_TELEMETRY=1</code></li>
+                <li><code>DISABLE_ERROR_REPORTING=1</code></li>
+                <li><code>DISABLE_BUG_COMMAND=1</code></li>
+                <li><code>DISABLE_NON_ESSENTIAL_MODEL_CALLS=1</code></li>
+                <li><code>HTTP_PROXY</code> · <code>HTTPS_PROXY</code></li>
+              </ul>
+            </div>
+            <div class="cmd-col">
+              <span class="cmd-h">CC-injected (hooks read)</span>
+              <ul class="cmd-list">
+                <li><code>$CLAUDE_PROJECT_DIR</code> repo root</li>
+                <li><code>$CLAUDE_SKILL_DIR</code> skill dir</li>
+                <li><code>$CLAUDE_SECRETS_OVERRIDE_REASON</code></li>
+                <li><code>$CLAUDE_DELEGATION_LOOP_BUDGET</code></li>
+                <li><code>$CLAUDE_*_SKIP</code> per-capacity off</li>
+                <li><code>$CLAUDE_RULE_LOAD_DEBUG=1</code></li>
               </ul>
             </div>
           </div>
@@ -832,7 +909,8 @@ You are an X agent. Your job is …`}</code></pre>
           "settings settings hooks"
           "settings settings hooks"
           "skills   agents   rules"
-          "commands commands commands";
+          "commands commands commands"
+          "envvars  envvars  envvars";
       }
       @media (max-width: 1000px) {
         .grid-platform {
@@ -841,7 +919,8 @@ You are an X agent. Your job is …`}</code></pre>
             "settings hooks"
             "skills   agents"
             "rules    rules"
-            "commands commands";
+            "commands commands"
+            "envvars  envvars";
         }
       }
       @media (max-width: 640px) {
@@ -850,8 +929,19 @@ You are an X agent. Your job is …`}</code></pre>
           grid-template-areas:
             "settings" "hooks"
             "skills" "agents" "rules"
-            "commands";
+            "commands"
+            "envvars";
         }
+      }
+
+      /* ENV VARS — reuse cmd-cols but in green */
+      .env-cols .cmd-h {
+        color: var(--p-green);
+        border-bottom-color: rgba(57, 255, 20, 0.25);
+      }
+      .env-cols .cmd-list li code {
+        color: var(--p-green);
+        background: rgba(57, 255, 20, 0.06);
       }
 
       /* ===== RECIPES SECTION ===== */

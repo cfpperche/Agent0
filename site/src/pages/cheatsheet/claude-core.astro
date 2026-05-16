@@ -24,7 +24,25 @@ const pageDesc = `One-page poster reference for Claude Code v${CC_VERSION}: CLI 
     <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
   </head>
   <body class="poster-body">
-    <a href={`${base}/en/`} class="back-link">← back to Agent0</a>
+    <div class="top-row">
+      <a href={`${base}/en/`} class="back-link">← back to Agent0</a>
+      <div class="cs-toolbar" role="toolbar" aria-label="Cheatsheet tools">
+        <input
+          id="cs-search"
+          type="search"
+          placeholder="search · flags · hooks · commands · env vars   (press /)"
+          aria-label="Search cheatsheet"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button id="cs-myth" type="button" aria-pressed="false" title="Reveal mythological names for each capacity">
+          <span aria-hidden="true">🎴</span> mythology
+        </button>
+        <button id="cs-pdf" type="button" title="Print as A3 poster (uses browser PDF)">
+          <span aria-hidden="true">↓</span> A3 poster
+        </button>
+      </div>
+    </div>
 
     <main class="poster">
       <!-- ===== TOP BANNER ===== -->
@@ -58,7 +76,7 @@ const pageDesc = `One-page poster reference for Claude Code v${CC_VERSION}: CLI 
       <section class="grid">
         <!-- EXECUTION MODES -->
         <article class="card card-green" style="grid-area: modes">
-          <h2 class="card-h">▸ EXECUTION MODES</h2>
+          <h2 class="card-h" data-myth-icon="🎙️" data-myth-name="The Many Voices">▸ EXECUTION MODES</h2>
           <p class="card-sub">how the session is shaped</p>
           <dl class="flags">
             <dt><span class="dim">(default)</span></dt>
@@ -80,7 +98,7 @@ const pageDesc = `One-page poster reference for Claude Code v${CC_VERSION}: CLI 
 
         <!-- MODEL & EFFORT -->
         <article class="card card-orange" style="grid-area: model">
-          <h2 class="card-h">▸ MODEL &amp; EFFORT</h2>
+          <h2 class="card-h" data-myth-icon="🧠" data-myth-name="The Brainpan">▸ MODEL &amp; EFFORT</h2>
           <p class="card-sub">how much brain to bring</p>
           <dl class="flags">
             <dt><code>--model</code> <span class="arg">&lt;alias|id&gt;</span></dt>
@@ -98,7 +116,7 @@ const pageDesc = `One-page poster reference for Claude Code v${CC_VERSION}: CLI 
 
         <!-- PERMISSIONS & SAFETY -->
         <article class="card card-red" style="grid-area: perms">
-          <h2 class="card-h">▸ PERMISSIONS &amp; SAFETY</h2>
+          <h2 class="card-h" data-myth-icon="🛡️" data-myth-name="The Wardens">▸ PERMISSIONS &amp; SAFETY</h2>
           <p class="card-sub">what the agent can touch</p>
           <dl class="flags">
             <dt><code>--permission-mode</code> <span class="arg">&lt;mode&gt;</span></dt>
@@ -135,7 +153,7 @@ const pageDesc = `One-page poster reference for Claude Code v${CC_VERSION}: CLI 
 
         <!-- CONFIG & CONTEXT -->
         <article class="card card-cyan" style="grid-area: config">
-          <h2 class="card-h">▸ CONFIG &amp; CONTEXT</h2>
+          <h2 class="card-h" data-myth-icon="📜" data-myth-name="The Codex">▸ CONFIG &amp; CONTEXT</h2>
           <p class="card-sub">what the agent loads on start</p>
           <dl class="flags two-col">
             <dt><code>--settings</code> <span class="arg">&lt;file|json&gt;</span></dt>
@@ -165,7 +183,7 @@ const pageDesc = `One-page poster reference for Claude Code v${CC_VERSION}: CLI 
 
         <!-- SPECIAL MODES -->
         <article class="card card-magenta" style="grid-area: special">
-          <h2 class="card-h">▸ SPECIAL MODES</h2>
+          <h2 class="card-h" data-myth-icon="🌙" data-myth-name="The Liminal Paths">▸ SPECIAL MODES</h2>
           <p class="card-sub">change the whole posture</p>
           <dl class="flags">
             <dt><code>--bare</code></dt>
@@ -193,7 +211,7 @@ const pageDesc = `One-page poster reference for Claude Code v${CC_VERSION}: CLI 
 
         <!-- I/O & FORMAT -->
         <article class="card card-yellow" style="grid-area: io">
-          <h2 class="card-h">▸ I/O &amp; FORMAT</h2>
+          <h2 class="card-h" data-myth-icon="📡" data-myth-name="The Conduits">▸ I/O &amp; FORMAT</h2>
           <p class="card-sub">automation surface · <code>--print</code> only</p>
           <dl class="flags">
             <dt><code>--output-format</code> <span class="arg">text|json|stream-json</span></dt>
@@ -217,7 +235,7 @@ const pageDesc = `One-page poster reference for Claude Code v${CC_VERSION}: CLI 
 
         <!-- MISC -->
         <article class="card card-violet" style="grid-area: misc">
-          <h2 class="card-h">▸ MISC &amp; DEBUG</h2>
+          <h2 class="card-h" data-myth-icon="🔎" data-myth-name="The Scrutineers">▸ MISC &amp; DEBUG</h2>
           <p class="card-sub">small but useful</p>
           <dl class="flags">
             <dt><code>-d, --debug</code> <span class="arg">[filter]</span></dt>
@@ -241,7 +259,7 @@ const pageDesc = `One-page poster reference for Claude Code v${CC_VERSION}: CLI 
 
         <!-- SUBCOMMANDS -->
         <article class="card card-pink" style="grid-area: sub">
-          <h2 class="card-h">▸ SUBCOMMANDS</h2>
+          <h2 class="card-h" data-myth-icon="⚔️" data-myth-name="The Lieutenants">▸ SUBCOMMANDS</h2>
           <p class="card-sub"><code>claude &lt;cmd&gt; ...</code></p>
           <dl class="flags">
             <dt><code>auth</code></dt>
@@ -283,7 +301,7 @@ const pageDesc = `One-page poster reference for Claude Code v${CC_VERSION}: CLI 
 
         <!-- SETTINGS -->
         <article class="card card-orange" style="grid-area: settings">
-          <h2 class="card-h">▸ SETTINGS — <code>settings.json</code></h2>
+          <h2 class="card-h" data-myth-icon="🏛️" data-myth-name="The Constitution">▸ SETTINGS — <code>settings.json</code></h2>
           <p class="card-sub">precedence chain · TOP WINS</p>
           <ol class="chain">
             <li><code>managed / enterprise policy</code> <span class="arg">MDM-installed · highest authority</span></li>
@@ -330,7 +348,7 @@ const pageDesc = `One-page poster reference for Claude Code v${CC_VERSION}: CLI 
 
         <!-- HOOKS -->
         <article class="card card-cyan" style="grid-area: hooks">
-          <h2 class="card-h">▸ HOOKS — 29 LIFECYCLE EVENTS</h2>
+          <h2 class="card-h" data-myth-icon="⛩️" data-myth-name="The Pantheon">▸ HOOKS — 29 LIFECYCLE EVENTS</h2>
           <p class="card-sub">stdin-JSON in · stdout/stderr + exit-code out</p>
 
           <div class="hooks-groups">
@@ -390,7 +408,7 @@ const pageDesc = `One-page poster reference for Claude Code v${CC_VERSION}: CLI 
 
         <!-- SKILLS -->
         <article class="card card-magenta" style="grid-area: skills">
-          <h2 class="card-h">▸ SKILLS — <code>/&lt;name&gt;</code></h2>
+          <h2 class="card-h" data-myth-icon="✨" data-myth-name="The Incantations">▸ SKILLS — <code>/&lt;name&gt;</code></h2>
           <p class="card-sub">slash commands · prompt-as-markdown</p>
           <dl class="flags">
             <dt>📁 <code>.claude/skills/&lt;name&gt;/SKILL.md</code></dt>
@@ -428,7 +446,7 @@ agent: my-agent         # delegated agent
 
         <!-- AGENTS -->
         <article class="card card-violet" style="grid-area: agents">
-          <h2 class="card-h">▸ AGENTS — sub-agents</h2>
+          <h2 class="card-h" data-myth-icon="👁️" data-myth-name="The Disciples">▸ AGENTS — sub-agents</h2>
           <p class="card-sub">isolated context · single return msg</p>
           <dl class="flags">
             <dt>📁 <code>.claude/agents/&lt;name&gt;.md</code></dt>
@@ -466,7 +484,7 @@ You are an X agent. Your job is …`}</code></pre>
 
         <!-- RULES -->
         <article class="card card-pink" style="grid-area: rules">
-          <h2 class="card-h">▸ RULES — <code>.claude/rules/</code></h2>
+          <h2 class="card-h" data-myth-icon="⚖️" data-myth-name="The Doctrine">▸ RULES — <code>.claude/rules/</code></h2>
           <p class="card-sub">behavioral mandates · path-scoped optional</p>
           <dl class="flags">
             <dt>📁 <code>.claude/rules/&lt;topic&gt;.md</code></dt>
@@ -492,7 +510,7 @@ You are an X agent. Your job is …`}</code></pre>
 
         <!-- COMMANDS -->
         <article class="card card-yellow wide" style="grid-area: commands">
-          <h2 class="card-h">▸ SLASH COMMANDS — built-in</h2>
+          <h2 class="card-h" data-myth-icon="⚒️" data-myth-name="Tools of the Trade">▸ SLASH COMMANDS — built-in</h2>
           <p class="card-sub">type <code>/</code> in the prompt · MCP prompts appear as <code>/mcp__&lt;server&gt;__&lt;name&gt;</code></p>
           <div class="cmd-cols">
             <div class="cmd-col">
@@ -590,7 +608,7 @@ You are an X agent. Your job is …`}</code></pre>
 
         <!-- ENV VARS -->
         <article class="card card-green wide" style="grid-area: envvars">
-          <h2 class="card-h">▸ ENV VARS — runtime knobs</h2>
+          <h2 class="card-h" data-myth-icon="🎚️" data-myth-name="The Knobs of Fate">▸ ENV VARS — runtime knobs</h2>
           <p class="card-sub">set in shell · in <code>env</code> key of settings.json · or <code>--settings</code></p>
           <div class="cmd-cols env-cols">
             <div class="cmd-col">
@@ -653,7 +671,7 @@ You are an X agent. Your job is …`}</code></pre>
 
       <section class="lifecycle-section">
         <article class="card card-cyan wide">
-          <h2 class="card-h">▸ ONE PROMPT — END TO END</h2>
+          <h2 class="card-h" data-myth-icon="🌀" data-myth-name="The Journey">▸ ONE PROMPT — END TO END</h2>
           <p class="card-sub">
             6 actors · time flows down · ▮ markers = where each hook fires · loop = agentic ReAct cycle
           </p>
@@ -739,104 +757,87 @@ You are an X agent. Your job is …`}</code></pre>
 
               <!-- ===== PHASE ① INPUT ===== -->
               <g class="msgs">
-                <!-- 1. user → orch: prompt -->
-                <line x1="120" y1="120" x2="300" y2="120" class="msg" marker-end="url(#arr)" />
-                <text x="210" y="114" class="msg-label">types prompt + enter</text>
-                <!-- hook: UserPromptSubmit -->
-                <g class="hook-badge" transform="translate(380, 130)">
+                <line pathLength="100" x1="120" y1="120" x2="300" y2="120" class="msg" marker-end="url(#arr)" style="--step: 1" />
+                <text x="210" y="114" class="msg-label" style="--step: 1">types prompt + enter</text>
+                <g class="hook-badge" transform="translate(380, 130)" style="--step: 2">
                   <rect width="160" height="20" rx="2" />
                   <text x="80" y="14">▮ UserPromptSubmit</text>
                 </g>
-                <line x1="300" y1="140" x2="480" y2="140" class="msg-d" marker-end="url(#arr-d)" />
-
-                <!-- hook: UserPromptExpansion -->
-                <g class="hook-badge dim" transform="translate(380, 158)">
+                <line pathLength="100" x1="300" y1="140" x2="480" y2="140" class="msg-d" marker-end="url(#arr-d)" style="--step: 2" />
+                <g class="hook-badge dim" transform="translate(380, 158)" style="--step: 3">
                   <rect width="160" height="20" rx="2" />
                   <text x="80" y="14">▮ UserPromptExpansion <tspan class="if">if /skill expands</tspan></text>
                 </g>
-                <line x1="300" y1="168" x2="480" y2="168" class="msg-d" marker-end="url(#arr-d)" />
+                <line pathLength="100" x1="300" y1="168" x2="480" y2="168" class="msg-d" marker-end="url(#arr-d)" style="--step: 3" />
               </g>
 
               <!-- ===== PHASE ② MODEL CALL ===== -->
               <g class="msgs">
-                <!-- orch builds context -->
-                <text x="310" y="222" class="note">build: system prompt + CLAUDE.md + history + skills + memory</text>
-                <!-- orch → model: POST -->
-                <line x1="300" y1="250" x2="660" y2="250" class="msg" marker-end="url(#arr)" />
-                <text x="480" y="244" class="msg-label">POST /messages</text>
-                <!-- model → orch: stream deltas -->
-                <line x1="660" y1="282" x2="300" y2="282" class="msg" marker-end="url(#arr)" />
-                <text x="480" y="276" class="msg-label">stream text + tool_use blocks</text>
+                <text x="310" y="222" class="note" style="--step: 4">build: system prompt + CLAUDE.md + history + skills + memory</text>
+                <line pathLength="100" x1="300" y1="250" x2="660" y2="250" class="msg" marker-end="url(#arr)" style="--step: 5" />
+                <text x="480" y="244" class="msg-label" style="--step: 5">POST /messages</text>
+                <line pathLength="100" x1="660" y1="282" x2="300" y2="282" class="msg" marker-end="url(#arr)" style="--step: 6" />
+                <text x="480" y="276" class="msg-label" style="--step: 6">stream text + tool_use blocks</text>
               </g>
 
               <!-- ===== PHASE ③ TOOL LOOP ===== -->
               <g class="msgs">
-                <!-- tool_use emitted by model -->
-                <text x="310" y="350" class="note">model emits tool_use → CLI dispatches</text>
+                <text x="310" y="350" class="note" style="--step: 7">model emits tool_use → CLI dispatches</text>
 
-                <!-- permission check (optional) -->
-                <line x1="300" y1="376" x2="120" y2="376" class="msg dashed" marker-end="url(#arr)" />
-                <text x="210" y="370" class="msg-label">approve / deny? <tspan class="if">if permission needed</tspan></text>
-                <g class="hook-badge" transform="translate(380, 384)">
+                <line pathLength="100" x1="300" y1="376" x2="120" y2="376" class="msg dashed" marker-end="url(#arr)" style="--step: 8" />
+                <text x="210" y="370" class="msg-label" style="--step: 8">approve / deny? <tspan class="if">if permission needed</tspan></text>
+                <g class="hook-badge" transform="translate(380, 384)" style="--step: 9">
                   <rect width="160" height="20" rx="2" />
                   <text x="80" y="14">▮ PermissionRequest</text>
                 </g>
-                <g class="hook-badge warn" transform="translate(380, 408)">
+                <g class="hook-badge warn" transform="translate(380, 408)" style="--step: 10">
                   <rect width="160" height="20" rx="2" />
                   <text x="80" y="14">▮ PermissionDenied <tspan class="if">if no</tspan></text>
                 </g>
 
-                <!-- PreToolUse hook -->
-                <g class="hook-badge" transform="translate(380, 442)">
+                <g class="hook-badge" transform="translate(380, 442)" style="--step: 11">
                   <rect width="200" height="22" rx="2" />
                   <text x="100" y="15">▮ PreToolUse  <tspan class="block-tag">EXIT 2 → BLOCK</tspan></text>
                 </g>
-                <line x1="300" y1="453" x2="480" y2="453" class="msg-d" marker-end="url(#arr-d)" />
+                <line pathLength="100" x1="300" y1="453" x2="480" y2="453" class="msg-d" marker-end="url(#arr-d)" style="--step: 11" />
 
-                <!-- orch → tool: execute -->
-                <line x1="300" y1="484" x2="840" y2="484" class="msg" marker-end="url(#arr)" />
-                <text x="570" y="478" class="msg-label">execute(input)</text>
+                <line pathLength="100" x1="300" y1="484" x2="840" y2="484" class="msg" marker-end="url(#arr)" style="--step: 12" />
+                <text x="570" y="478" class="msg-label" style="--step: 12">execute(input)</text>
 
-                <!-- tool → orch: result -->
-                <line x1="840" y1="516" x2="300" y2="516" class="msg" marker-end="url(#arr)" />
-                <text x="570" y="510" class="msg-label">tool_response · stdout · stderr</text>
+                <line pathLength="100" x1="840" y1="516" x2="300" y2="516" class="msg" marker-end="url(#arr)" style="--step: 13" />
+                <text x="570" y="510" class="msg-label" style="--step: 13">tool_response · stdout · stderr</text>
 
-                <!-- PostToolUse fork -->
-                <g class="hook-badge ok" transform="translate(380, 540)">
+                <g class="hook-badge ok" transform="translate(380, 540)" style="--step: 14">
                   <rect width="200" height="20" rx="2" />
                   <text x="100" y="14">▮ PostToolUse  <tspan class="if">on success</tspan></text>
                 </g>
-                <g class="hook-badge warn" transform="translate(380, 564)">
+                <g class="hook-badge warn" transform="translate(380, 564)" style="--step: 15">
                   <rect width="220" height="20" rx="2" />
                   <text x="110" y="14">▮ PostToolUseFailure  <tspan class="if">on failure · .error payload</tspan></text>
                 </g>
 
-                <!-- PostToolBatch -->
-                <g class="hook-badge" transform="translate(380, 594)">
+                <g class="hook-badge" transform="translate(380, 594)" style="--step: 16">
                   <rect width="180" height="20" rx="2" />
                   <text x="90" y="14">▮ PostToolBatch <tspan class="if">batch end</tspan></text>
                 </g>
 
-                <!-- LOOP arrow (right side) -->
-                <path d="M 1140 620 Q 1175 620 1175 460 Q 1175 340 700 340" class="loop-arrow" marker-end="url(#arr)" />
-                <text x="1080" y="490" class="loop-label" transform="rotate(-90, 1080, 490)">↻ feed tool_results · loop until end_turn</text>
+                <path pathLength="100" d="M 1140 620 Q 1175 620 1175 460 Q 1175 340 700 340" class="loop-arrow" marker-end="url(#arr)" style="--step: 17" />
+                <text x="1080" y="490" class="loop-label" transform="rotate(-90, 1080, 490)" style="--step: 17">↻ feed tool_results · loop until end_turn</text>
               </g>
 
               <!-- ===== PHASE ④ SUB-AGENT ===== -->
               <g class="msgs">
-                <text x="310" y="680" class="note">spawns when model emits an <tspan class="emph">Agent</tspan> tool_use · separate context</text>
-                <!-- orch → subagent: delegate -->
-                <line x1="300" y1="708" x2="1020" y2="708" class="msg" marker-end="url(#arr)" />
-                <text x="660" y="702" class="msg-label">delegate (5-field brief · isolated context)</text>
-                <g class="hook-badge" transform="translate(380, 716)">
+                <text x="310" y="680" class="note" style="--step: 18">spawns when model emits an <tspan class="emph">Agent</tspan> tool_use · separate context</text>
+                <line pathLength="100" x1="300" y1="708" x2="1020" y2="708" class="msg" marker-end="url(#arr)" style="--step: 18" />
+                <text x="660" y="702" class="msg-label" style="--step: 18">delegate (5-field brief · isolated context)</text>
+                <g class="hook-badge" transform="translate(380, 716)" style="--step: 18">
                   <rect width="140" height="20" rx="2" />
                   <text x="70" y="14">▮ SubagentStart</text>
                 </g>
 
-                <!-- subagent → orch: return -->
-                <line x1="1020" y1="758" x2="300" y2="758" class="msg" marker-end="url(#arr)" />
-                <text x="660" y="752" class="msg-label">single final message (no streaming)</text>
-                <g class="hook-badge" transform="translate(380, 766)">
+                <line pathLength="100" x1="1020" y1="758" x2="300" y2="758" class="msg" marker-end="url(#arr)" style="--step: 19" />
+                <text x="660" y="752" class="msg-label" style="--step: 19">single final message (no streaming)</text>
+                <g class="hook-badge" transform="translate(380, 766)" style="--step: 19">
                   <rect width="140" height="20" rx="2" />
                   <text x="70" y="14">▮ SubagentStop</text>
                 </g>
@@ -844,22 +845,20 @@ You are an X agent. Your job is …`}</code></pre>
 
               <!-- ===== PHASE ⑤ STOP ===== -->
               <g class="msgs">
-                <!-- model returns end_turn -->
-                <line x1="660" y1="858" x2="300" y2="858" class="msg" marker-end="url(#arr)" />
-                <text x="480" y="852" class="msg-label">stop_reason: end_turn</text>
+                <line pathLength="100" x1="660" y1="858" x2="300" y2="858" class="msg" marker-end="url(#arr)" style="--step: 20" />
+                <text x="480" y="852" class="msg-label" style="--step: 20">stop_reason: end_turn</text>
 
-                <g class="hook-badge ok" transform="translate(380, 868)">
+                <g class="hook-badge ok" transform="translate(380, 868)" style="--step: 21">
                   <rect width="140" height="20" rx="2" />
                   <text x="70" y="14">▮ Stop</text>
                 </g>
-                <g class="hook-badge warn" transform="translate(530, 868)">
+                <g class="hook-badge warn" transform="translate(530, 868)" style="--step: 21">
                   <rect width="170" height="20" rx="2" />
                   <text x="85" y="14">▮ StopFailure <tspan class="if">on API err</tspan></text>
                 </g>
 
-                <!-- orch → user: final -->
-                <line x1="300" y1="908" x2="120" y2="908" class="msg" marker-end="url(#arr)" />
-                <text x="210" y="902" class="msg-label">final response rendered</text>
+                <line pathLength="100" x1="300" y1="908" x2="120" y2="908" class="msg" marker-end="url(#arr)" style="--step: 22" />
+                <text x="210" y="902" class="msg-label" style="--step: 22">final response rendered</text>
               </g>
 
             </svg>
@@ -905,7 +904,7 @@ You are an X agent. Your job is …`}</code></pre>
       <!-- ===== RECIPES — common combos ===== -->
       <section class="recipes-section">
         <article class="card card-green">
-          <h2 class="card-h">▸ RECIPES — COMMON COMBOS</h2>
+          <h2 class="card-h" data-myth-icon="🍳" data-myth-name="The Grimoire">▸ RECIPES — COMMON COMBOS</h2>
           <p class="card-sub">copy-paste defaults that pay back fast</p>
           <div class="recipes">
             <div class="recipe-block">
@@ -995,12 +994,180 @@ You are an X agent. Your job is …`}</code></pre>
         padding: 6px 10px;
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 3px;
-        margin-bottom: 12px;
         transition: all 120ms ease;
       }
       .back-link:hover {
         color: var(--p-green);
         border-color: var(--p-green);
+      }
+
+      /* ===== TOP ROW + TOOLBAR ===== */
+      .top-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+      }
+      .cs-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex: 1;
+        min-width: 280px;
+      }
+      .cs-toolbar input {
+        flex: 1;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: var(--p-ink);
+        padding: 6px 12px;
+        border-radius: 3px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        outline: none;
+        transition: border-color 120ms;
+        min-width: 0;
+      }
+      .cs-toolbar input::placeholder { color: var(--p-ink-faint); }
+      .cs-toolbar input:focus { border-color: var(--p-green); }
+      .cs-toolbar input::-webkit-search-cancel-button { display: none; }
+      .cs-toolbar button {
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: var(--p-ink-dim);
+        padding: 6px 12px;
+        border-radius: 3px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        cursor: pointer;
+        letter-spacing: 0.04em;
+        transition: all 120ms;
+        white-space: nowrap;
+      }
+      .cs-toolbar button:hover {
+        border-color: var(--p-orange);
+        color: var(--p-orange);
+      }
+      .cs-toolbar button[aria-pressed="true"] {
+        border-color: var(--p-magenta);
+        color: var(--p-magenta);
+        background: rgba(255, 68, 255, 0.06);
+      }
+
+      /* ===== SEARCH DIMMING ===== */
+      .card {
+        transition: opacity 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+      }
+      body.search-active article.card:not(.search-match) {
+        opacity: 0.12;
+        transform: scale(0.99);
+      }
+      body.search-active article.card.search-match {
+        box-shadow: 0 0 24px color-mix(in srgb, var(--c, var(--p-green)) 35%, transparent);
+      }
+      body.search-active .part-marker,
+      body.search-active .recipes-section,
+      body.search-active .lifecycle-section,
+      body.search-active .bottom {
+        opacity: 0.35;
+      }
+
+      /* ===== MYTHOLOGY MODE ===== */
+      body.myth-mode .card-h[data-myth-icon] {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      body.myth-mode .card-h[data-myth-icon]::before {
+        content: attr(data-myth-icon);
+        font-size: 1.5em;
+        line-height: 1;
+        filter: drop-shadow(0 0 6px color-mix(in srgb, var(--c, var(--p-green)) 60%, transparent));
+      }
+      body.myth-mode .card-h[data-myth-name]::after {
+        content: "· " attr(data-myth-name);
+        font-family: var(--font-mono);
+        font-weight: 500;
+        color: var(--p-ink-faint);
+        font-size: 0.78em;
+        font-style: italic;
+        letter-spacing: 0.05em;
+        opacity: 0.85;
+      }
+
+      /* ===== LIFECYCLE ANIMATION ===== */
+      /* Lines: animate via stroke-dashoffset (safe — no transform clobber) */
+      .lifecycle-svg .msg,
+      .lifecycle-svg .msg-d,
+      .lifecycle-svg .loop-arrow {
+        stroke-dasharray: 100;
+        stroke-dashoffset: 100;
+      }
+      /* SVG <g> and <text> with transform attribute: opacity-only fade */
+      .lifecycle-svg .msg-label,
+      .lifecycle-svg .note,
+      .lifecycle-svg .hook-badge,
+      .lifecycle-svg .loop-label {
+        opacity: 0;
+      }
+      .lifecycle-svg.in-view .msg,
+      .lifecycle-svg.in-view .msg-d,
+      .lifecycle-svg.in-view .loop-arrow {
+        animation: cs-line-draw 0.55s ease-out forwards;
+        animation-delay: calc(var(--step, 0) * 0.18s);
+      }
+      .lifecycle-svg.in-view .msg-label,
+      .lifecycle-svg.in-view .note,
+      .lifecycle-svg.in-view .hook-badge,
+      .lifecycle-svg.in-view .loop-label {
+        animation: cs-appear 0.45s ease-out forwards;
+        animation-delay: calc(var(--step, 0) * 0.18s + 0.1s);
+      }
+      @keyframes cs-line-draw {
+        to { stroke-dashoffset: 0; }
+      }
+      @keyframes cs-appear {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .lifecycle-svg .msg,
+        .lifecycle-svg .msg-d,
+        .lifecycle-svg .loop-arrow {
+          stroke-dashoffset: 0;
+        }
+        .lifecycle-svg .msg-label,
+        .lifecycle-svg .note,
+        .lifecycle-svg .hook-badge,
+        .lifecycle-svg .loop-label {
+          opacity: 1;
+          animation: none;
+        }
+      }
+
+      @media print {
+        .top-row { gap: 0; margin-bottom: 8mm; }
+        .cs-toolbar { display: none !important; }
+        .back-link { display: none; }
+        body.search-active article.card { opacity: 1 !important; transform: none !important; }
+        body.search-active .part-marker,
+        body.search-active .recipes-section,
+        body.search-active .lifecycle-section,
+        body.search-active .bottom { opacity: 1 !important; }
+        /* Force lifecycle SVG to final state for print */
+        .lifecycle-svg .msg,
+        .lifecycle-svg .msg-d,
+        .lifecycle-svg .loop-arrow { stroke-dashoffset: 0 !important; }
+        .lifecycle-svg .msg-label,
+        .lifecycle-svg .note,
+        .lifecycle-svg .hook-badge,
+        .lifecycle-svg .loop-label {
+          opacity: 1 !important;
+          transform: none !important;
+          animation: none !important;
+        }
       }
 
       .poster {
@@ -1890,5 +2057,81 @@ You are an X agent. Your job is …`}</code></pre>
         .flags dt, .flags dd { color: black; }
       }
     </style>
+
+    <script is:inline>
+      (() => {
+        const body = document.body;
+        const search = document.getElementById("cs-search");
+        const myth = document.getElementById("cs-myth");
+        const pdf = document.getElementById("cs-pdf");
+        const cards = Array.from(document.querySelectorAll("article.card"));
+
+        // Fuzzy search — dim non-matching cards
+        if (search) {
+          const apply = () => {
+            const q = search.value.toLowerCase().trim();
+            if (!q) {
+              body.classList.remove("search-active");
+              cards.forEach((c) => c.classList.remove("search-match"));
+              return;
+            }
+            body.classList.add("search-active");
+            cards.forEach((c) => {
+              const txt = (c.textContent || "").toLowerCase();
+              c.classList.toggle("search-match", txt.includes(q));
+            });
+          };
+          search.addEventListener("input", apply);
+          document.addEventListener("keydown", (e) => {
+            const t = e.target;
+            const inField =
+              t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA");
+            if (e.key === "/" && !inField) {
+              e.preventDefault();
+              search.focus();
+              search.select();
+            } else if (e.key === "Escape" && document.activeElement === search) {
+              search.value = "";
+              apply();
+              search.blur();
+            }
+          });
+        }
+
+        // Mythology mode toggle
+        if (myth) {
+          myth.addEventListener("click", () => {
+            const on = body.classList.toggle("myth-mode");
+            myth.setAttribute("aria-pressed", on ? "true" : "false");
+          });
+        }
+
+        // PDF / print
+        if (pdf) {
+          pdf.addEventListener("click", () => window.print());
+        }
+
+        // Lifecycle SVG animation on scroll-into-view
+        const svg = document.querySelector(".lifecycle-svg");
+        if (svg) {
+          if ("IntersectionObserver" in window) {
+            const io = new IntersectionObserver(
+              (entries) => {
+                entries.forEach((e) => {
+                  if (e.isIntersecting) {
+                    svg.classList.add("in-view");
+                    io.disconnect();
+                  }
+                });
+              },
+              { threshold: 0.18 },
+            );
+            io.observe(svg);
+          } else {
+            svg.classList.add("in-view");
+          }
+        }
+      })();
+    </script>
   </body>
 </html>

@@ -1,6 +1,8 @@
 # 028 — sdd-refine-interview
 
-_Created 2026-05-14. Status: draft._
+_Created 2026-05-14._
+
+**Status:** shipped
 
 ## Intent
 

@@ -8,26 +8,25 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-Spec 026 Phase B tasks 11-17 dogfooded end-to-end. Working tree clean. **120 tests pass** (was 109 baseline; +11 from this session's any_of_contains validator extension), `bun tsc --noEmit` clean. **1 commit ahead of origin** (push pending) — cumulative pipeline-improvement commit from this session.
+**2 commits ahead of origin** (push pending): prior session's pipeline-improvement cumulative + a parallel session's `0002aef feat(026): Phase B task 18 — step 9 system-design port + dogfood` (committed at 13:45 by a sibling). Working tree this session (post-update):
 
-This session shipped a 6-item pipeline-improvement arc (user-named items 1+2+3+4+5+7 from the prior pipeline-suggestion list, skipping item 6 — dogfood cost reduction):
-- **Item 1** Layer-1 `any_of_contains` OR-semantics in templates.ts + tools.ts + 11 new tests (backwards-compatible).
-- **Item 2** Cross-step schema substring audit: step 2 REPORT.md (literal pipe-row dimension anchor, mirrors step-7 fix), step 2 compare.html (HTML-tag-content anchors `>Palette`/`>School`, plus `any_of_contains: ["✓ PASS", "PASS ✓"]` — production use of item-1's new feature).
-- **Item 3** `## Audit Response` cross-step symmetry: step 8 now has dedicated section; steps 6 + 7 + 8 all enforce non-emptiness via `any_of_contains` (guards against silent-empty regression mode).
-- **Item 4** Brand-rename placeholder discipline retroactively added to step 1 § 5.5 — consumer-contract for steps 5 (final name commit) + 7 (downstream rename pass).
-- **Item 5** `.claude/memory/consumer-contract-discipline.md` memo (producer documents consumer-side contract IN producer template).
-- **Item 7** `.claude/memory/anthill-port-workflow.md` memo (observed 7-phase loop across steps 5-8 ports).
+- `docs/specs/030-session-edit-attribution/` — spec + plan + tasks all FILLED (0 placeholders); status `draft`; ready to implement.
+- `docs/specs/031-brainstorm/` — untracked, **NOT this session's work**; a parallel session scaffolded a `/brainstorm` skill spec (divergent ideation, complement to `/sdd refine`). Leave alone; sibling owns it.
 
-Smoke-tested all changes against existing dogfood outputs: step 2/6/7 dogfood files all pass tightened schemas with no regression. Step 8 dogfood pre-dates symmetry change (item 3); future runs produce `## Audit Response` correctly.
-
-The earlier parallel-session "Architecto research" SESSION.md content (zero-code-changes turn) is replaced by this update — Architecto notes were session-ephemeral and user has not opted to memorialize.
+This session: (a) read the prior `hermes-agent` transcript at user request; (b) diagnosed the spec-023 false-positive (worktree-delta misattribution when a sibling session edits during your lifetime) with forensic timing evidence; (c) scaffolded + filled **spec 030 session-edit-attribution** — primary `edited-files.txt` tracker via new `PostToolUse(Edit|Write|MultiEdit)` hook, spec 023 demoted to fallback (NOT superseded), 7 acceptance scenarios, 15 implementation tasks, 6 verification checks.
 
 ## Next steps
 
-1. **Push the 1 ahead commit** when ready.
-2. **Spec 026 Phase B — remaining tasks 18-22**: step 9 system-design (next; opens deep Specification phase), step 10 cost, step 11 roadmap, step 12 legal (closes Specification — gate fires), step 13 prototype-v3 NEW.
-3. **Step-8 historical dogfood gap** — `/tmp/bench/026-dogfood-step8/output-a0/prd.md` predates the symmetry change and does NOT have `## Audit Response` as a dedicated section. Future step-8 runs will produce it correctly. Optional re-dogfood for empirical confirmation; not blocking.
+1. **Implement spec 030** — work `docs/specs/030-session-edit-attribution/tasks.md` top-to-bottom. Order: test-dir scaffold → new hook with payload parse + flock append → smoke test → settings.json registration → session-stop.sh primary-step extension → 7 scenario tests → rule doc update → run-all.sh → perf check → status flip to `shipped`.
+2. **Spec 026 Phase B remaining tasks 19-22** — step 10 cost, step 11 roadmap, step 12 legal (closes Specification — gate fires), step 13 prototype-v3 NEW. (Task 18 step-9 committed by sibling as `0002aef`.)
+3. **Untracked sibling spec 031-brainstorm** — coordinate with the owner (other session) before touching; surfacing here so future sessions don't accidentally git-add it.
 4. **REMINDERS.md** unchanged — fair OD re-match, OD `--bump/--apply` upstream test, spec 029 adoption check (due 2026-05-30).
+
+## Decisions & gotchas
+
+- **Spec 023 has a known false-positive mode** (the one motivating spec 030): a session that doesn't edit anything but is open while another process/session modifies the worktree still gets nagged. Evidence: hermes session 95b868a2 — empty `start-porcelain.txt` at 13:23, step-09 files modified out-of-band 13:26/13:27, sibling captured them at 13:27:33, hermes Stop fired at 13:27:48. Spec 030 fixes this structurally; until it ships, parallel-session work risks spurious nags — discipline is to immediately update SESSION.md and let the once-per-session block clear.
+- The hermes-agent transcript IS the only home of those Hermes Agent insights (research-only session, no memory write — by design).
+- **Spec 023 stays `shipped`, NOT superseded.** Its porcelain-compare remains live as fallback for Bash-driven edits, IDE saves, and legacy sessions. The rule doc rewrite in spec 030 must preserve that semantic.
 
 ## Carryover (orthogonal lanes, not active)
 

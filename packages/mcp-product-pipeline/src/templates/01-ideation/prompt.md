@@ -100,6 +100,18 @@ In default mode: present the ranked table to the user; ask which concept(s) to d
 
 In critique mode: pinned gets the deep-dive regardless of rank. If a challenger won, surface the Verdict + ask the user whether to (a) proceed deep-diving pinned as planned, (b) re-pin to the winning challenger, or (c) pause for thinking.
 
+### 5.5. Name commitment — placeholder discipline (consumer contract for steps 5/7)
+
+The Identity block (§ 6 below) carries the product name. **Discipline:** commit to a real name at step 1, OR explicitly mark the name as a placeholder. Both are valid; silent half-commitments are not.
+
+- **Real name committed** — write the chosen name in Identity; downstream steps (5 brand, 7 prototype-v2, 8 PRD) use it verbatim across all artifacts. No rename cascade needed.
+- **Placeholder explicitly marked** — when the user prefers to defer the naming decision to step 5's brand-book conversation (legal/distinctive review pending, founder uncertain, working under a working name like "Linear-Clone"), write the placeholder in Identity AND mark it clearly: `**Working name:** Linear-Clone (placeholder, never shipped; final name decided at step 5 brand-book § Product Name)`. This explicit marker is the **consumer contract for step 5 and step 7**:
+  - Step 5 brand-book § Product Name owns the final name commit (with shortlist + decision rationale).
+  - Step 7 prototype-v2 § 5.4 owns the downstream rename across every screen + `direction-final.html` (brand-mark in topnav, page `<title>`, sidebar/footer, CLI commands, workspace URL prefix). The step-7 v2 dogfood (2026-05-15) surfaced this as a real silent-failure when the placeholder discipline was implicit: 4/9 screens leaked the placeholder despite the page title being correct. The explicit `placeholder, never shipped` marker triggers step 7's rename pass.
+- **Anti-pattern: silent placeholder.** "Octant" or "ClassifyAI" written without marking, but the founder hasn't actually committed — step 5/7 inherit a name they don't know is conditional. The downstream rename only fires if the placeholder is explicitly tagged.
+
+See [[consumer-contract-discipline]] for the cross-step pattern; this clause is the producer-side enforcement at step 1.
+
 ### 6. Deep dive (the concept brief)
 
 Read `references/concept-brief-template.md` for the full output shape. The brief covers:

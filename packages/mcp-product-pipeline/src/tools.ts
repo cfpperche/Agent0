@@ -212,6 +212,15 @@ export function validateLayer1(
         });
       }
     }
+    if (req.any_of_contains !== undefined && req.any_of_contains.length > 0) {
+      const present = req.any_of_contains.some((needle) => match.content.includes(needle));
+      if (!present) {
+        failures.push({
+          path: req.path,
+          reason: `content does not contain any of the required substrings: ${req.any_of_contains.map((s) => `"${s}"`).join(", ")}`,
+        });
+      }
+    }
   }
 
   for (const reqGlob of spec.required_glob ?? []) {
@@ -235,6 +244,15 @@ export function validateLayer1(
           failures.push({
             path: m.path,
             reason: `content does not contain required substring "${needle}" for pattern "${reqGlob.pattern}"`,
+          });
+        }
+      }
+      if (reqGlob.per_match_any_of_contains !== undefined && reqGlob.per_match_any_of_contains.length > 0) {
+        const present = reqGlob.per_match_any_of_contains.some((needle) => m.content.includes(needle));
+        if (!present) {
+          failures.push({
+            path: m.path,
+            reason: `content does not contain any of the required substrings ${reqGlob.per_match_any_of_contains.map((s) => `"${s}"`).join(", ")} for pattern "${reqGlob.pattern}"`,
           });
         }
       }

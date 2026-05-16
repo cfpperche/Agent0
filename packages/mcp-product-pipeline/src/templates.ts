@@ -34,7 +34,15 @@ export interface TemplateFrontmatter {
 export interface RequiredFileExact {
   path: string;
   min_size?: number;
+  /** ALL listed substrings must be present in the file's content (AND semantics). */
   contains?: string[];
+  /**
+   * AT LEAST ONE of the listed substrings must be present (OR semantics).
+   * Useful for enforcing structural content that has multiple canonical forms —
+   * e.g. `## Audit Response` must carry one of {finding-block heading, empty-state line, prose-routed line};
+   * silent-empty is the regression mode. Spec 026 / step 7-8 dogfood surfaced the need.
+   */
+  any_of_contains?: string[];
 }
 
 /** One glob-shaped artifact requirement (for product-dependent screen counts, etc.). */
@@ -42,7 +50,10 @@ export interface RequiredFileGlob {
   pattern: string;
   min_count?: number;
   per_match_min_size?: number;
+  /** ALL listed substrings must be present in EACH matched file's content (AND semantics). */
   per_match_contains?: string[];
+  /** AT LEAST ONE of the listed substrings must be present in EACH matched file (OR semantics). */
+  per_match_any_of_contains?: string[];
 }
 
 /**
@@ -261,6 +272,17 @@ export function parseRequiredFiles(schemaBody: string): RequiredFilesSpec | null
         }
         out.contains = e.contains as string[];
       }
+      if (e.any_of_contains !== undefined) {
+        if (
+          !Array.isArray(e.any_of_contains) ||
+          !e.any_of_contains.every((s) => typeof s === "string")
+        ) {
+          throw new Error(
+            `schema parse: required_files[${i}].any_of_contains must be an array of strings`,
+          );
+        }
+        out.any_of_contains = e.any_of_contains as string[];
+      }
       return out;
     });
   }
@@ -308,6 +330,17 @@ export function parseRequiredFiles(schemaBody: string): RequiredFilesSpec | null
           );
         }
         out.per_match_contains = e.per_match_contains as string[];
+      }
+      if (e.per_match_any_of_contains !== undefined) {
+        if (
+          !Array.isArray(e.per_match_any_of_contains) ||
+          !e.per_match_any_of_contains.every((s) => typeof s === "string")
+        ) {
+          throw new Error(
+            `schema parse: required_glob[${i}].per_match_any_of_contains must be an array of strings`,
+          );
+        }
+        out.per_match_any_of_contains = e.per_match_any_of_contains as string[];
       }
       return out;
     });

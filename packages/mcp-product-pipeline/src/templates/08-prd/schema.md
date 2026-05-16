@@ -13,6 +13,7 @@ Section names slugify by lowercasing + dashing — `## User Stories` → `user-s
 - `requirements`
 - `success-metrics`
 - `acceptance-criteria`
+- `audit-response` (mirror of steps 6 + 7 — the step-4 audit-findings routing trail, separate from Backlog; Backlog stays for genuinely-deferred items only)
 - `open-questions`
 - `backlog`
 
@@ -38,11 +39,19 @@ Section names slugify by lowercasing + dashing — `## User Stories` → `user-s
         "## Requirements",
         "## Success Metrics",
         "## Acceptance Criteria",
+        "## Audit Response",
         "## Open Questions",
         "## Backlog",
         "**US-01.**",
         "| # | Requirement | Acceptance Criteria | Source |",
         "| Metric | Baseline | Target | Measurement |"
+      ],
+      "any_of_contains": [
+        "### F-",
+        "*Step 4 audit ran without YAML frontmatter",
+        "*No step-4 audit findings",
+        "*Step 4 emitted structured findings, none routed",
+        "step 4 F-"
       ]
     }
   ]

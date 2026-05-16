@@ -167,6 +167,66 @@ describe("parseRequiredFiles — error cases", () => {
     expect(() => parseRequiredFiles(schema)).toThrow(/contains must be an array of strings/);
   });
 
+  test("parses any_of_contains when present (OR-semantics field)", () => {
+    const schema = [
+      "```required_files",
+      "{",
+      '  "required_files": [{',
+      '    "path": "REPORT.md",',
+      '    "any_of_contains": ["### Findings reviewed", "*Step 4 audit", "*No findings"]',
+      "  }]",
+      "}",
+      "```",
+    ].join("\n");
+    const result = parseRequiredFiles(schema);
+    expect(result).not.toBeNull();
+    expect(result!.required_files![0]!.any_of_contains).toEqual([
+      "### Findings reviewed",
+      "*Step 4 audit",
+      "*No findings",
+    ]);
+  });
+
+  test("throws when any_of_contains is not an array of strings", () => {
+    const schema = [
+      "```required_files",
+      "{",
+      '  "required_files": [{ "path": "x.md", "any_of_contains": [1, 2] }]',
+      "}",
+      "```",
+    ].join("\n");
+    expect(() => parseRequiredFiles(schema)).toThrow(/any_of_contains must be an array of strings/);
+  });
+
+  test("parses per_match_any_of_contains on required_glob", () => {
+    const schema = [
+      "```required_files",
+      "{",
+      '  "required_glob": [{',
+      '    "pattern": "screens/[0-9]+-*.html",',
+      '    "per_match_any_of_contains": ["<input", "<textarea"]',
+      "  }]",
+      "}",
+      "```",
+    ].join("\n");
+    const result = parseRequiredFiles(schema);
+    expect(result!.required_glob![0]!.per_match_any_of_contains).toEqual(["<input", "<textarea"]);
+  });
+
+  test("throws when per_match_any_of_contains is not an array of strings", () => {
+    const schema = [
+      "```required_files",
+      "{",
+      '  "required_glob": [{',
+      '    "pattern": "x.html",',
+      '    "per_match_any_of_contains": "not-an-array"',
+      "  }]",
+      "}",
+      "```",
+    ].join("\n");
+    expect(() => parseRequiredFiles(schema)).toThrow(/per_match_any_of_contains must be an array of strings/);
+  });
+
   test("throws when required_glob entry is missing pattern", () => {
     const schema = [
       "```required_files",

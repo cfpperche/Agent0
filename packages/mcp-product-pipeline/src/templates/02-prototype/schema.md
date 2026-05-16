@@ -40,7 +40,8 @@ The Identity block (codename, palette tokens, type stack, citation chain per dir
     {
       "path": "compare.html",
       "min_size": 4096,
-      "contains": ["<!DOCTYPE html", "direction-a", "direction-b", "direction-c", "Palette", "School", "Anti-AI-slop", "PASS"]
+      "contains": ["<!DOCTYPE html", "direction-a", "direction-b", "direction-c", ">Palette", ">School", "Anti-AI-slop"],
+      "any_of_contains": ["✓ PASS", "PASS ✓"]
     },
     {
       "path": "REPORT.md",
@@ -52,11 +53,7 @@ The Identity block (codename, palette tokens, type stack, citation chain per dir
         "## 5-Dim Critique",
         "## Anti-AI-Slop Audit",
         "## Brief Compliance",
-        "Philosophy",
-        "Hierarchy",
-        "Execution",
-        "Specificity",
-        "Restraint",
+        "| Philosophy | Hierarchy | Execution | Specificity | Restraint |",
         "design-systems/"
       ]
     }
@@ -79,8 +76,8 @@ The Identity block (codename, palette tokens, type stack, citation chain per dir
   - The `:root` token system + 3 canonical token names (`--background` / `--foreground` / `--primary`) — agents that forget the token system trip Layer 1 immediately
   - The substring `Most Popular` — proxy for the required **pricing tile grid** surface (see prompt.md § 4 section #7). The "Most Popular" badge convention is universal across SaaS pricing surfaces; if a product's tier structure uses a different highlight word (e.g., "Recommended", "Featured", or "Free Forever" for a free-only product), the agent should include the literal substring `Most Popular` in a comment (`<!-- Most Popular tier: rendered as "Recommended" because <reason> -->`) or as the emphasis label, to pass the check
   - The substring `<svg` — proxy for the required **charts & sparklines sample** surface (see prompt.md § 4 section #6). Inline SVG is the canonical way to render charts in self-contained HTML; agents that skip the charts section trip Layer 1 immediately. CSS-only chart treatments (e.g., a `<div>` height-grid bar chart) that don't use `<svg` should include the substring `<svg` in a comment (`<!-- chart rendered as CSS grid; no SVG used -->`) to pass
-- **`compare.html` min_size 4096** + substrings `direction-a` / `direction-b` / `direction-c` + `Palette` + `School` — bumped from 2 KB after step 2 benchmark showed both producers landing at 25-32 KB on a real compare surface. Substrings now enforce both the at-a-glance hero (palette swatches present) and the deeper comparison table (school property row)
-- **`REPORT.md` min_size 6144** (6 KB) — covers Turn 1 sections at honest depth. Turn 2 section grows the file further on resubmit; pivota's REPORT landed at ~16 KB after Turn 2; step 2 bench showed producers landing 21-27 KB on Turn 1 alone
+- **`compare.html` min_size 4096** + structural substrings — bumped from 2 KB after step 2 benchmark showed both producers landing at 25-32 KB on a real compare surface. The contains list now uses **HTML-tag-content anchors** (`>Palette`, `>School`) instead of bare-word substrings (`Palette`, `School`) — bare words are silently fakeable from prose-discussion text; tag-content anchors force the comparison-table cell shape. The `any_of_contains: ["✓ PASS", "PASS ✓"]` accepts both canonical anti-AI-slop badge orderings (OR-semantics added in 2026-05; the loose `"PASS"` substring previously matched any prose use of the word)
+- **`REPORT.md` min_size 6144** (6 KB) — covers Turn 1 sections at honest depth. The dimension-label check is now the **literal pipe-delimited table-row** `| Philosophy | Hierarchy | Execution | Specificity | Restraint |` rather than bare dimension words (Philosophy / Hierarchy / etc) — bare words appear in prose discussion throughout REPORT.md, so the original substrings were silently fakeable. The literal row fragment only appears as a real markdown table header, restoring the structural floor. Turn 2 section grows the file further on resubmit; pivota's REPORT landed at ~16 KB after Turn 2; step 2 bench showed producers landing 21-27 KB on Turn 1 alone
 - **`screens/[0-9][0-9]-*.html` glob** — `01-`, `02-`, ..., `NN-` shape, where N is calibrated per product (see `prompt.md` § 9). `min_count: 3` is the **universal sanity floor** — below 3 is "I didn't try" (1 screen is a stub, 2 is barely a flow). Product-class calibration (how many screens are *right* for THIS product) lives in `prompt.md` § 9's calibration table — a SMB SaaS lands at 6-10, a micro-product at 3-5, a marketplace at 10-15. The schema enforces the floor; the prompt enforces the calibration. `per_match_min_size: 4096` filters stubs. Each screen MUST carry `:root` declaration (verbatim copy of picked direction's tokens) — `per_match_contains` enforces
 
 ## Section content guidance (depth, not just presence)

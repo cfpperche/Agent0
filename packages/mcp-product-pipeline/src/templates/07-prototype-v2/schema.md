@@ -39,6 +39,13 @@ Section names slugify by lowercasing + dashing — `## Audit Response` → `audi
         "## Design Fidelity Scores",
         "## Brand Voice Check",
         "| Token | Voice | Component | Audit-fix | Specificity |"
+      ],
+      "any_of_contains": [
+        "### F-",
+        "*No prototype-v2-routed findings",
+        "*Step 4 emitted structured findings, none routed to prototype-v2",
+        "*Step 4 audit ran without YAML frontmatter",
+        "<!-- fix(F-"
       ]
     }
   ],

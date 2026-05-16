@@ -37,6 +37,12 @@ Each name slugifies by lowercasing + dashing the H2 title. Match these slugs pre
         "## Audit Response",
         "WCAG",
         "| Token |"
+      ],
+      "any_of_contains": [
+        "### F-",
+        "*No design-system-routed findings",
+        "*Step 4 emitted structured findings, none routed to design-system",
+        "Token(s) changed:"
       ]
     },
     {

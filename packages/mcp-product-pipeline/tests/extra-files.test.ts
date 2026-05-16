@@ -220,3 +220,97 @@ describe("validateLayer1 — empty / backwards-compat", () => {
     expect(validateLayer1(spec, files)).toEqual([]);
   });
 });
+
+describe("validateLayer1 — any_of_contains (OR-semantics for required_files)", () => {
+  const spec: RequiredFilesSpec = {
+    required_files: [
+      {
+        path: "REPORT.md",
+        any_of_contains: [
+          "### Findings reviewed (not actioned",
+          "*Step 4 audit ran without YAML frontmatter",
+          "*No prototype-v2-routed findings",
+        ],
+      },
+    ],
+  };
+
+  test("passes when at least one substring is present", () => {
+    const files: SubmissionFile[] = [
+      { path: "REPORT.md", content: "## Audit Response\n\n*No prototype-v2-routed findings from step 4 audit*\n" },
+    ];
+    expect(validateLayer1(spec, files)).toEqual([]);
+  });
+
+  test("passes when a different listed substring is present", () => {
+    const files: SubmissionFile[] = [
+      { path: "REPORT.md", content: "## Audit Response\n\n### Findings reviewed (not actioned at prototype-v2 layer)\n" },
+    ];
+    expect(validateLayer1(spec, files)).toEqual([]);
+  });
+
+  test("fails when NONE of the listed substrings is present", () => {
+    const files: SubmissionFile[] = [
+      { path: "REPORT.md", content: "## Audit Response\n\nThe audit was reviewed.\n" },
+    ];
+    const failures = validateLayer1(spec, files);
+    expect(failures).toHaveLength(1);
+    expect(failures[0]!.path).toBe("REPORT.md");
+    expect(failures[0]!.reason).toMatch(/any of the required substrings/);
+  });
+
+  test("empty any_of_contains array is a no-op (does not fail)", () => {
+    const specEmpty: RequiredFilesSpec = {
+      required_files: [{ path: "REPORT.md", any_of_contains: [] }],
+    };
+    const files: SubmissionFile[] = [{ path: "REPORT.md", content: "any content" }];
+    expect(validateLayer1(specEmpty, files)).toEqual([]);
+  });
+
+  test("any_of_contains composes with contains (AND + OR both enforced)", () => {
+    const specBoth: RequiredFilesSpec = {
+      required_files: [
+        {
+          path: "REPORT.md",
+          contains: ["## Audit Response"], // required (AND)
+          any_of_contains: ["*No prototype-v2-routed findings", "### Findings reviewed"], // one-of (OR)
+        },
+      ],
+    };
+    const files: SubmissionFile[] = [
+      { path: "REPORT.md", content: "## Audit Response\n\n*No prototype-v2-routed findings from step 4*" },
+    ];
+    expect(validateLayer1(specBoth, files)).toEqual([]);
+  });
+});
+
+describe("validateLayer1 — per_match_any_of_contains (OR-semantics for required_glob)", () => {
+  const spec: RequiredFilesSpec = {
+    required_glob: [
+      {
+        pattern: "screens/[0-9]+-*.html",
+        min_count: 1,
+        per_match_any_of_contains: ["<input", "<textarea", "<!-- semantic-input -->"],
+      },
+    ],
+  };
+
+  test("passes when each matched file carries at least one of the listed substrings", () => {
+    const files: SubmissionFile[] = [
+      { path: "screens/01-page.html", content: "<form><input type=text></form>" },
+      { path: "screens/02-page.html", content: "<form><textarea></textarea></form>" },
+    ];
+    expect(validateLayer1(spec, files)).toEqual([]);
+  });
+
+  test("fails on the offending match when none of the substrings are present", () => {
+    const files: SubmissionFile[] = [
+      { path: "screens/01-page.html", content: "<form><input type=text></form>" },
+      { path: "screens/02-page.html", content: "<div class='fake-input'>No real input</div>" },
+    ];
+    const failures = validateLayer1(spec, files);
+    expect(failures).toHaveLength(1);
+    expect(failures[0]!.path).toBe("screens/02-page.html");
+    expect(failures[0]!.reason).toMatch(/any of the required substrings/);
+  });
+});

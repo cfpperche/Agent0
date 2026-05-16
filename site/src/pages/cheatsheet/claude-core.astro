@@ -149,6 +149,22 @@ const pageDesc = `One-page poster reference for Claude Code v${CC_VERSION}: CLI 
             <dt><code>--allow-dangerously-skip-permissions</code></dt>
             <dd>Enables the toggle UI without activating it.</dd>
           </dl>
+          <p class="card-sub" style="margin-top:8px">matcher patterns</p>
+          <dl class="flags">
+            <dt><code>Bash(git *)</code></dt><dd>any <code>git</code> verb</dd>
+            <dt><code>Bash(npm install:*)</code></dt><dd><code>npm install</code> with any args</dd>
+            <dt><code>Read(/abs/path/**)</code></dt><dd>specific tree</dd>
+            <dt><code>Edit(src/**/*.ts)</code></dt><dd>TS files under src</dd>
+            <dt><code>WebFetch(domain:github.com)</code></dt><dd>domain restrict</dd>
+          </dl>
+          <p class="mini" style="margin-top:6px">
+            <b>precedence:</b> <span class="kv warn">deny</span> beats <span class="kv">allow</span>, always.
+          </p>
+          <p class="card-sub" style="margin-top:6px">auto-mode defaults</p>
+          <p class="mini">
+            <code>Read</code> · <code>Glob</code> · <code>Grep</code> → silent allow.
+            <code>Bash</code> · <code>Edit</code> · <code>Write</code> · MCP → classifier-decides per-call.
+          </p>
         </article>
 
         <!-- CONFIG & CONTEXT -->
@@ -403,7 +419,95 @@ const pageDesc = `One-page poster reference for Claude Code v${CC_VERSION}: CLI 
               <span class="recipe-h warn">gotcha</span>
               <p><code>PostToolUse(Bash)</code> fires only on tool <b>success</b> (not exit-code — pipes can mask). Pair with <code>PostToolUseFailure(Bash)</code> to cover failures. Payload diverges — failure uses <code>.error</code>, no <code>tool_response</code>.</p>
             </div>
+            <div class="hr-block">
+              <span class="recipe-h">handler types</span>
+              <p>
+                <code>type: command</code> shell · default · what Agent0 uses.
+                <code>type: prompt</code> single-turn Claude eval over <code>$ARGUMENTS</code>.
+                <code>type: agent</code> spawns a sub-agent w/ tools for deep verification.
+              </p>
+            </div>
           </div>
+        </article>
+
+        <!-- CLAUDE.md -->
+        <article class="card card-cyan" style="grid-area: claudemd">
+          <h2 class="card-h" data-myth-icon="📖" data-myth-name="The Charter">▸ CLAUDE.md — context discovery</h2>
+          <p class="card-sub">auto-loaded into system prompt every session</p>
+          <p class="card-sub" style="margin-top:8px">hierarchy · all merge</p>
+          <dl class="flags">
+            <dt>📁 <code>~/.claude/CLAUDE.md</code></dt>
+            <dd>user-global · per-machine preferences.</dd>
+            <dt>📁 <code>&lt;proj&gt;/CLAUDE.md</code></dt>
+            <dd>project · git-tracked, ships to team.</dd>
+            <dt>📁 <code>&lt;proj&gt;/&lt;sub&gt;/CLAUDE.md</code></dt>
+            <dd>nested · loads when cwd is inside subdir (ancestor-walk).</dd>
+          </dl>
+          <p class="card-sub" style="margin-top:8px">imports (compose)</p>
+          <dl class="flags">
+            <dt><code>@./other.md</code></dt><dd>relative to current file</dd>
+            <dt><code>@~/.claude/snippet.md</code></dt><dd>user-home expansion</dd>
+            <dt><code>@/abs/path.md</code></dt><dd>absolute path</dd>
+          </dl>
+          <p class="card-sub" style="margin-top:8px">path-scoped (load on demand)</p>
+<pre class="fm-pre"><code>{`---
+paths: ["src/**", "tests/**"]
+---
+body…`}</code></pre>
+          <p class="mini">
+            Fires <code>InstructionsLoaded</code> with <code>reason: path_glob_match</code> · dedup: 1 event per rule per session.
+          </p>
+          <p class="card-sub" style="margin-top:8px">reload triggers</p>
+          <p class="mini">
+            <code>/memory</code> edits → next turn · <code>/clear</code> / <code>/compact</code> → <code>SessionStart</code> fires · fresh session → discovery walks ancestors again.
+          </p>
+        </article>
+
+        <!-- MCP -->
+        <article class="card card-magenta" style="grid-area: mcp">
+          <h2 class="card-h" data-myth-icon="🪐" data-myth-name="The Outer Realms">▸ MCP — Model Context Protocol</h2>
+          <p class="card-sub">extend Claude with external tool servers</p>
+          <p class="card-sub" style="margin-top:8px">scope</p>
+          <dl class="flags">
+            <dt>📁 <code>&lt;proj&gt;/.mcp.json</code></dt>
+            <dd>project · git-tracked.</dd>
+            <dt>📁 <code>~/.claude/mcp.json</code></dt>
+            <dd>user · per-machine.</dd>
+            <dt><code>--mcp-config</code> <span class="arg">&lt;file&gt;</span></dt>
+            <dd>per-invocation · overrides scope. Pair with <code>--strict-mcp-config</code> to ignore others.</dd>
+          </dl>
+          <p class="card-sub" style="margin-top:8px"><code>.mcp.json</code> shape</p>
+<pre class="fm-pre"><code>{`{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    },
+    "dbhub": {
+      "url": "http://localhost:8080",
+      "headers": { "Authorization": "Bearer …" }
+    }
+  }
+}`}</code></pre>
+          <p class="card-sub" style="margin-top:8px">naming · discovery</p>
+          <dl class="flags">
+            <dt><code>mcp__&lt;srv&gt;__&lt;tool&gt;</code></dt>
+            <dd>How tools appear to Agent / Skill / model.</dd>
+            <dt><code>/mcp__&lt;srv&gt;__&lt;prompt&gt;</code></dt>
+            <dd>MCP-provided slash commands (server prompts).</dd>
+          </dl>
+          <p class="card-sub" style="margin-top:8px">trust gate</p>
+          <p class="mini">
+            <code>enableAllProjectMcpServers: true</code> auto-trusts <code>.mcp.json</code>; else user prompted on first use.
+          </p>
+          <p class="card-sub" style="margin-top:8px">common servers</p>
+          <ul class="builtins">
+            <li><code>playwright</code> browser automation + DOM snapshots</li>
+            <li><code>chrome-devtools</code> network / perf observability</li>
+            <li><code>dbhub</code> unified multi-DB query interface</li>
+            <li><code>nextjs-devtools</code> build / dev signals</li>
+            <li><code>github</code> structured-output gh CLI replacement</li>
+          </ul>
         </article>
 
         <!-- SKILLS -->
@@ -506,6 +610,144 @@ You are an X agent. Your job is …`}</code></pre>
             Dedup: one <code>InstructionsLoaded</code> per rule per session,
             no matter how many globs match later.
           </p>
+        </article>
+
+        <!-- BUILT-IN TOOLS -->
+        <article class="card card-green wide" style="grid-area: tools">
+          <h2 class="card-h" data-myth-icon="🧰" data-myth-name="The Arsenal">▸ BUILT-IN TOOLS — what the agent can invoke</h2>
+          <p class="card-sub">programmatic surface · gated by <code>--tools</code> / <code>--allowedTools</code> · hooks fire per call</p>
+          <div class="cmd-cols">
+            <div class="cmd-col">
+              <span class="cmd-h">filesystem</span>
+              <ul class="cmd-list">
+                <li><code>Read</code> text · PDF · img · notebook</li>
+                <li><code>Write</code> create / overwrite</li>
+                <li><code>Edit</code> exact string-replace</li>
+                <li><code>MultiEdit</code> atomic multi-edit</li>
+                <li><code>NotebookEdit</code> Jupyter cells</li>
+                <li><code>Glob</code> match by pattern</li>
+                <li><code>Grep</code> ripgrep search</li>
+              </ul>
+            </div>
+            <div class="cmd-col">
+              <span class="cmd-h">shell · web</span>
+              <ul class="cmd-list">
+                <li><code>Bash</code> shell in $cwd</li>
+                <li><code>WebFetch</code> URL → md → analyze</li>
+                <li><code>WebSearch</code> US-only · domain filters</li>
+              </ul>
+            </div>
+            <div class="cmd-col">
+              <span class="cmd-h">delegation · control</span>
+              <ul class="cmd-list">
+                <li><code>Agent</code> dispatch sub-agent</li>
+                <li><code>Skill</code> invoke a skill</li>
+                <li><code>ToolSearch</code> load deferred-tool schema</li>
+                <li><code>ExitPlanMode</code> exit /plan w/ proposal</li>
+              </ul>
+            </div>
+            <div class="cmd-col">
+              <span class="cmd-h">tasks · MCP</span>
+              <ul class="cmd-list">
+                <li><code>TaskCreate</code> · <code>TaskUpdate</code></li>
+                <li><code>TaskList</code> · <code>TaskGet</code></li>
+                <li><code>TaskStop</code> · <code>TaskOutput</code></li>
+                <li><code>mcp__&lt;srv&gt;__&lt;tool&gt;</code> MCP-provided</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- AUTHENTICATION -->
+        <article class="card card-violet wide" style="grid-area: auth">
+          <h2 class="card-h" data-myth-icon="🔑" data-myth-name="The Sigil">▸ AUTHENTICATION — who pays for the tokens</h2>
+          <p class="card-sub">resolution order: managed → CLI flag → env var → keychain (OAuth) → <code>apiKeyHelper</code></p>
+          <div class="cmd-cols">
+            <div class="cmd-col">
+              <span class="cmd-h">OAuth (default)</span>
+              <ul class="cmd-list">
+                <li>browser flow → keychain</li>
+                <li><code>claude auth</code> manage login</li>
+                <li><code>claude setup-token</code> long-lived</li>
+                <li>requires Pro / Team / Max plan</li>
+              </ul>
+            </div>
+            <div class="cmd-col">
+              <span class="cmd-h">API key</span>
+              <ul class="cmd-list">
+                <li><code>ANTHROPIC_API_KEY</code> direct</li>
+                <li><code>ANTHROPIC_BASE_URL</code> proxy</li>
+                <li><code>ANTHROPIC_AUTH_TOKEN</code> alt header</li>
+                <li><code>apiKeyHelper</code> in settings → script</li>
+              </ul>
+            </div>
+            <div class="cmd-col">
+              <span class="cmd-h">cloud providers</span>
+              <ul class="cmd-list">
+                <li><code>CLAUDE_CODE_USE_BEDROCK=1</code></li>
+                <li><code>CLAUDE_CODE_USE_VERTEX=1</code></li>
+                <li><code>CLAUDE_CODE_USE_FOUNDRY=1</code></li>
+                <li>uses provider's native creds</li>
+              </ul>
+            </div>
+            <div class="cmd-col">
+              <span class="cmd-h">strict / isolated</span>
+              <ul class="cmd-list">
+                <li><code>--bare</code> env var only · no keychain</li>
+                <li><code>CLAUDE_CONFIG_DIR</code> relocate <code>~/.claude</code></li>
+                <li><code>/login</code> · <code>/logout</code> in-session</li>
+                <li>CI tip: secrets → <code>ANTHROPIC_API_KEY</code></li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- OUTPUT STYLES -->
+        <article class="card card-orange" style="grid-area: output">
+          <h2 class="card-h" data-myth-icon="🎭" data-myth-name="The Personas">▸ OUTPUT STYLES</h2>
+          <p class="card-sub">change Claude's response posture</p>
+          <dl class="flags">
+            <dt><code>/config</code> → output style</dt>
+            <dd>Pick a style; applied to current session.</dd>
+            <dt>built-in</dt>
+            <dd>
+              <span class="kv">default</span>
+              <span class="kv">verbose</span>
+              <span class="kv">concise</span>
+              <span class="kv">explanatory</span>
+            </dd>
+            <dt>custom</dt>
+            <dd>
+              <code>.claude/output-styles/&lt;name&gt;.md</code> — markdown body becomes the style directive.
+            </dd>
+            <dt>settings key</dt>
+            <dd><code>outputStyle: "&lt;name&gt;"</code> in settings.json</dd>
+            <dt>how it works</dt>
+            <dd>prepends a style directive to the system prompt; CLAUDE.md still loads after.</dd>
+          </dl>
+        </article>
+
+        <!-- PLUGIN AUTHORING -->
+        <article class="card card-red" style="grid-area: plugin">
+          <h2 class="card-h" data-myth-icon="🪄" data-myth-name="The Bestowal">▸ PLUGIN AUTHORING</h2>
+          <p class="card-sub">distribute a bundle of skills · agents · rules · hooks</p>
+          <p class="card-sub" style="margin-top:6px">layout</p>
+<pre class="fm-pre"><code>{`my-plugin/
+├── .claude-plugin/
+│   └── plugin.json
+├── skills/<name>/SKILL.md
+├── agents/<name>.md
+├── rules/<name>.md
+└── hooks/*.sh`}</code></pre>
+          <p class="card-sub" style="margin-top:8px">install · session-only</p>
+          <dl class="flags">
+            <dt><code>--plugin-dir &lt;path&gt;</code></dt>
+            <dd>directory or <code>.zip</code></dd>
+            <dt><code>--plugin-url &lt;url&gt;</code></dt>
+            <dd>fetch <code>.zip</code> from URL</dd>
+            <dt><code>/plugin</code></dt>
+            <dd>install · list · update · remove</dd>
+          </dl>
         </article>
 
         <!-- COMMANDS -->
@@ -1333,7 +1575,12 @@ You are an X agent. Your job is …`}</code></pre>
         grid-template-areas:
           "settings settings hooks"
           "settings settings hooks"
+          "claudemd claudemd mcp"
+          "claudemd claudemd mcp"
           "skills   agents   rules"
+          "tools    tools    tools"
+          "auth     auth     auth"
+          "output   output   plugin"
           "commands commands commands"
           "envvars  envvars  envvars";
       }
@@ -1342,8 +1589,12 @@ You are an X agent. Your job is …`}</code></pre>
           grid-template-columns: repeat(2, 1fr);
           grid-template-areas:
             "settings hooks"
+            "claudemd mcp"
             "skills   agents"
             "rules    rules"
+            "tools    tools"
+            "auth     auth"
+            "output   plugin"
             "commands commands"
             "envvars  envvars";
         }
@@ -1353,7 +1604,11 @@ You are an X agent. Your job is …`}</code></pre>
           grid-template-columns: 1fr;
           grid-template-areas:
             "settings" "hooks"
+            "claudemd" "mcp"
             "skills" "agents" "rules"
+            "tools"
+            "auth"
+            "output" "plugin"
             "commands"
             "envvars";
         }

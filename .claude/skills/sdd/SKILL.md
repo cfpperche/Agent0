@@ -1,6 +1,12 @@
 ---
+name: sdd
 description: Spec-driven development scaffolding. Use when starting non-trivial work (3+ files, new module, API/schema change, vague request needing decomposition). Creates and progresses docs/specs/NNN-slug/{spec,plan,tasks}.md per the spec-driven workflow. Subcommands - new <slug>, refine, plan, tasks, list. See .claude/rules/spec-driven.md for when SDD applies and when to skip.
 argument-hint: <new <slug> | refine [<idea> | NNN] | plan | tasks | list>
+license: MIT
+compatibility: Designed for Claude Code. Body references `.claude/` conventional paths and CC-specific tools; portable to any runtime that maps a `.claude/`-analog directory and surfaces the referenced tools.
+metadata:
+  agent0-portability-tier: cc-native
+  version: "0.1"
 ---
 
 # /sdd — spec-driven development

@@ -1,6 +1,12 @@
 ---
+name: remind
 description: Deferred-intent reminder list for this project. Use when the user wants to capture a future to-do that isn't urgent enough to act on now ("circle back on caching when first user complains", "review pricing in Q3", "update README after auth refactor lands"). Subcommands - add "<text>" [--due <YYYY-MM-DD>], list, dismiss <N>. State lives in .claude/REMINDERS.md (git-tracked) and is auto-injected at session start by .claude/hooks/reminders-readout.sh. See .claude/rules/reminders.md for what belongs here vs MEMORY vs SESSION.md.
 argument-hint: <add "<text>" [--due <YYYY-MM-DD>] | list | dismiss <N>>
+license: MIT
+compatibility: Designed for Claude Code. Body references `.claude/` conventional paths and CC-specific tools; portable to any runtime that maps a `.claude/`-analog directory and surfaces the referenced tools.
+metadata:
+  agent0-portability-tier: cc-native
+  version: "0.1"
 ---
 
 # /remind — deferred reminders

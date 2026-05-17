@@ -1,6 +1,12 @@
 ---
+name: brainstorm
 description: Conduct a divergent ideation session and render the captured material as a self-contained local HTML for human review. Use when the user wants to explore a vague idea (product, strategy, "what if…") that is not yet a spec candidate — sits before /sdd refine in the ideation→spec pipeline. Subcommands - start "<topic>", list, resume <slug-or-filename>, done. State and rendered HTML live under .claude/.brainstorm-state/ (gitignored). See .claude/skills/brainstorm/references/techniques.md for the lens library.
 argument-hint: <start "<topic>" | list | resume <slug-or-filename> | done>
+license: MIT
+compatibility: Designed for Claude Code. Body references `.claude/` conventional paths and CC-specific tools; portable to any runtime that maps a `.claude/`-analog directory and surfaces the referenced tools.
+metadata:
+  agent0-portability-tier: cc-native
+  version: "0.1"
 ---
 
 # /brainstorm — divergent ideation skill

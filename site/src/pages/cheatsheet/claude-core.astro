@@ -713,6 +713,32 @@ You are an X agent. Your job is …`}</code></pre>
         <article class="card card-cyan wide" style="grid-area: cost">
           <h2 class="card-h" data-myth-icon="💰" data-myth-name="The Ledger">▸ COST &amp; TOKENS — bills you can see</h2>
           <p class="card-sub">monitor · cache · swap · cap · the four habits that drop bills 60–70%</p>
+
+          <div class="dgm-wrap">
+            <p class="dgm-h">▸ where tokens go (typical session)</p>
+            <svg class="dgm-svg" viewBox="0 0 800 70" xmlns="http://www.w3.org/2000/svg">
+              <g>
+                <rect x="0"   y="22" width="120" height="36" class="dgm-bar-seg seg-orange" />
+                <rect x="120" y="22" width="80"  height="36" class="dgm-bar-seg seg-cyan" />
+                <rect x="200" y="22" width="400" height="36" class="dgm-bar-seg seg-magenta" />
+                <rect x="600" y="22" width="200" height="36" class="dgm-bar-seg seg-green" />
+              </g>
+              <g>
+                <text x="60"  y="16" class="dgm-bar-lbl">sysprompt</text>
+                <text x="60"  y="46" class="dgm-bar-pct">15%</text>
+                <text x="160" y="16" class="dgm-bar-lbl">CLAUDE.md</text>
+                <text x="160" y="46" class="dgm-bar-pct">10%</text>
+                <text x="400" y="16" class="dgm-bar-lbl">history</text>
+                <text x="400" y="46" class="dgm-bar-pct">50%</text>
+                <text x="700" y="16" class="dgm-bar-lbl">response</text>
+                <text x="700" y="46" class="dgm-bar-pct">25%</text>
+              </g>
+            </svg>
+            <p class="mini" style="margin-top:4px">
+              Cache wins biggest on the first 25% (<span style="color:var(--p-orange)">sysprompt</span> + <span style="color:var(--p-cyan)">CLAUDE.md</span>) — keep them static, dynamic content last.
+            </p>
+          </div>
+
           <div class="cmd-cols">
             <div class="cmd-col">
               <span class="cmd-h">monitor</span>
@@ -1254,6 +1280,866 @@ You are an X agent. Your job is …`}</code></pre>
         </article>
       </section>
 
+      <!-- ===== PART IV HEADER ===== -->
+      <div class="part-marker part-marker-violet">
+        <span class="part-tag part-tag-violet">PART IV</span>
+        <span class="part-h">Atlas — mental models &amp; maps</span>
+        <span class="part-dim">decision compasses · file system · taxonomies</span>
+      </div>
+
+      <section class="atlas-section">
+
+        <!-- DECISION TRIPTYCH -->
+        <article class="card card-yellow wide">
+          <h2 class="card-h" data-myth-icon="🧭" data-myth-name="The Compass">▸ DECISION COMPASSES — pick by priority</h2>
+          <p class="card-sub">three quick triages: permission · model · workflow</p>
+          <div class="compass-trio">
+
+            <!-- Compass 1: Permission -->
+            <div class="compass" style="--c: var(--p-red)">
+              <p class="compass-h">▶ permission mode</p>
+              <svg class="dgm-svg" viewBox="0 0 320 290" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <marker id="ca1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor" /></marker>
+                </defs>
+                <circle cx="160" cy="130" r="44" class="dgm-q" />
+                <text x="160" y="128" class="dgm-lbl" style="font-size:11px">PRIORITY?</text>
+                <text x="160" y="142" class="dgm-lbl-sm">pick one</text>
+
+                <line x1="160" y1="86" x2="160" y2="58" class="dgm-arr" marker-end="url(#ca1)" />
+                <g transform="translate(70, 14)">
+                  <rect width="180" height="40" rx="3" class="dgm-box dgm-box-cyan" />
+                  <text x="90" y="17" class="dgm-lbl-sm">safety</text>
+                  <text x="90" y="32" class="dgm-lbl">default</text>
+                </g>
+
+                <line x1="125" y1="155" x2="78" y2="200" class="dgm-arr" marker-end="url(#ca1)" />
+                <g transform="translate(0, 208)">
+                  <rect width="150" height="40" rx="3" class="dgm-box dgm-box-green" />
+                  <text x="75" y="17" class="dgm-lbl-sm">autonomy</text>
+                  <text x="75" y="32" class="dgm-lbl">acceptEdits</text>
+                </g>
+
+                <line x1="195" y1="155" x2="242" y2="200" class="dgm-arr" marker-end="url(#ca1)" />
+                <g transform="translate(170, 208)">
+                  <rect width="150" height="40" rx="3" class="dgm-box dgm-box-magenta" />
+                  <text x="75" y="17" class="dgm-lbl-sm">planning</text>
+                  <text x="75" y="32" class="dgm-lbl">plan</text>
+                </g>
+
+                <text x="160" y="278" class="dgm-lbl-sm" style="font-size:9.5px">
+                  sandbox → <tspan fill="var(--p-red)">bypassPermissions</tspan> · CI → <tspan fill="var(--p-orange)">dontAsk</tspan>
+                </text>
+              </svg>
+            </div>
+
+            <!-- Compass 2: Model -->
+            <div class="compass" style="--c: var(--p-orange)">
+              <p class="compass-h">▶ model</p>
+              <svg class="dgm-svg" viewBox="0 0 320 290" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <marker id="ca2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor" /></marker>
+                </defs>
+                <circle cx="160" cy="130" r="44" class="dgm-q" />
+                <text x="160" y="128" class="dgm-lbl" style="font-size:11px">TASK?</text>
+                <text x="160" y="142" class="dgm-lbl-sm">complexity</text>
+
+                <line x1="160" y1="86" x2="160" y2="58" class="dgm-arr" marker-end="url(#ca2)" />
+                <g transform="translate(70, 14)">
+                  <rect width="180" height="40" rx="3" class="dgm-box dgm-box-green" />
+                  <text x="90" y="17" class="dgm-lbl-sm">format · docs · simple</text>
+                  <text x="90" y="32" class="dgm-lbl">haiku</text>
+                </g>
+
+                <line x1="125" y1="155" x2="78" y2="200" class="dgm-arr" marker-end="url(#ca2)" />
+                <g transform="translate(0, 208)">
+                  <rect width="150" height="40" rx="3" class="dgm-box dgm-box-cyan" />
+                  <text x="75" y="17" class="dgm-lbl-sm">coding default</text>
+                  <text x="75" y="32" class="dgm-lbl">sonnet</text>
+                </g>
+
+                <line x1="195" y1="155" x2="242" y2="200" class="dgm-arr" marker-end="url(#ca2)" />
+                <g transform="translate(170, 208)">
+                  <rect width="150" height="40" rx="3" class="dgm-box dgm-box-magenta" />
+                  <text x="75" y="17" class="dgm-lbl-sm">architecture · deep</text>
+                  <text x="75" y="32" class="dgm-lbl">opus</text>
+                </g>
+
+                <text x="160" y="278" class="dgm-lbl-sm" style="font-size:9.5px">
+                  cost ratio · haiku : sonnet : opus → <tspan fill="var(--p-green)">1×</tspan> : <tspan fill="var(--p-cyan)">12×</tspan> : <tspan fill="var(--p-magenta)">60×</tspan>
+                </text>
+              </svg>
+            </div>
+
+            <!-- Compass 3: Workflow -->
+            <div class="compass" style="--c: var(--p-magenta)">
+              <p class="compass-h">▶ workflow pattern</p>
+              <svg class="dgm-svg" viewBox="0 0 320 290" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <marker id="ca3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor" /></marker>
+                </defs>
+                <circle cx="160" cy="130" r="44" class="dgm-q" />
+                <text x="160" y="128" class="dgm-lbl" style="font-size:11px">SHAPE?</text>
+                <text x="160" y="142" class="dgm-lbl-sm">scope</text>
+
+                <line x1="160" y1="86" x2="160" y2="58" class="dgm-arr" marker-end="url(#ca3)" />
+                <g transform="translate(70, 14)">
+                  <rect width="180" height="40" rx="3" class="dgm-box dgm-box-cyan" />
+                  <text x="90" y="17" class="dgm-lbl-sm">predictable · linear</text>
+                  <text x="90" y="32" class="dgm-lbl">sequential</text>
+                </g>
+
+                <line x1="125" y1="155" x2="78" y2="200" class="dgm-arr" marker-end="url(#ca3)" />
+                <g transform="translate(0, 208)">
+                  <rect width="150" height="40" rx="3" class="dgm-box dgm-box-green" />
+                  <text x="75" y="17" class="dgm-lbl-sm">parallel</text>
+                  <text x="75" y="32" class="dgm-lbl">split-merge</text>
+                </g>
+
+                <line x1="195" y1="155" x2="242" y2="200" class="dgm-arr" marker-end="url(#ca3)" />
+                <g transform="translate(170, 208)">
+                  <rect width="150" height="40" rx="3" class="dgm-box dgm-box-orange" />
+                  <text x="75" y="17" class="dgm-lbl-sm">fully specced</text>
+                  <text x="75" y="32" class="dgm-lbl">headless</text>
+                </g>
+
+                <text x="160" y="278" class="dgm-lbl-sm" style="font-size:9.5px">
+                  high stakes → <tspan fill="var(--p-red)">operator</tspan> · multi-day → <tspan fill="var(--p-violet)">agent-teams</tspan>
+                </text>
+              </svg>
+            </div>
+
+          </div>
+        </article>
+
+        <!-- HOOK TAXONOMY RADIAL -->
+        <article class="card card-cyan wide">
+          <h2 class="card-h" data-myth-icon="⚛️" data-myth-name="The Sigils">▸ HOOK TAXONOMY — 29 events at a glance</h2>
+          <p class="card-sub">7 categories radiating from the agentic loop</p>
+          <div style="display:flex;justify-content:center;padding:10px 0">
+            <svg class="dgm-svg hk-radial" viewBox="0 0 700 540" xmlns="http://www.w3.org/2000/svg" style="max-width:720px">
+
+              <!-- Connector lines (under petals) -->
+              <g class="hk-lines">
+                <line x1="350" y1="285" x2="350" y2="85" />
+                <line x1="350" y1="285" x2="506" y2="160" />
+                <line x1="350" y1="285" x2="545" y2="330" />
+                <line x1="350" y1="285" x2="437" y2="466" />
+                <line x1="350" y1="285" x2="263" y2="466" />
+                <line x1="350" y1="285" x2="155" y2="330" />
+                <line x1="350" y1="285" x2="194" y2="160" />
+              </g>
+
+              <!-- Hub -->
+              <rect x="300" y="255" width="100" height="60" rx="6" class="hk-hub" />
+              <text x="350" y="282" class="hk-hub-lbl">HOOKS</text>
+              <text x="350" y="302" class="hk-hub-sub">29 events</text>
+
+              <!-- Petal 1: Session lifecycle (top) -->
+              <g transform="translate(280, 52)">
+                <rect width="140" height="65" rx="4" class="hk-petal-box" />
+                <text x="70" y="15" class="hk-petal-cat">session lifecycle</text>
+                <text x="70" y="29" class="hk-petal-events">SessionStart · End</text>
+                <text x="70" y="41" class="hk-petal-events">Setup · Stop · StopFailure</text>
+                <text x="70" y="57" class="hk-petal-count">5 events</text>
+              </g>
+
+              <!-- Petal 2: Prompts + instructions (upper-right) -->
+              <g transform="translate(436, 127)">
+                <rect width="140" height="65" rx="4" class="hk-petal-box" />
+                <text x="70" y="15" class="hk-petal-cat">prompts · instructions</text>
+                <text x="70" y="29" class="hk-petal-events">UserPromptSubmit</text>
+                <text x="70" y="41" class="hk-petal-events">Expansion · InstructionsLoaded</text>
+                <text x="70" y="57" class="hk-petal-count">3 events</text>
+              </g>
+
+              <!-- Petal 3: Tool gates (right) -->
+              <g transform="translate(475, 297)">
+                <rect width="140" height="65" rx="4" class="hk-petal-box" />
+                <text x="70" y="15" class="hk-petal-cat">tool gates</text>
+                <text x="70" y="29" class="hk-petal-events">PreToolUse · PostToolUse</text>
+                <text x="70" y="41" class="hk-petal-events">PostToolUseFailure · Batch</text>
+                <text x="70" y="57" class="hk-petal-count">4 events</text>
+              </g>
+
+              <!-- Petal 4: Permission (lower-right) -->
+              <g transform="translate(367, 433)">
+                <rect width="140" height="65" rx="4" class="hk-petal-box" />
+                <text x="70" y="15" class="hk-petal-cat">permission</text>
+                <text x="70" y="29" class="hk-petal-events">PermissionRequest</text>
+                <text x="70" y="41" class="hk-petal-events">PermissionDenied</text>
+                <text x="70" y="57" class="hk-petal-count">2 events</text>
+              </g>
+
+              <!-- Petal 5: Sub-agents + tasks (lower-left) -->
+              <g transform="translate(193, 433)">
+                <rect width="140" height="65" rx="4" class="hk-petal-box" />
+                <text x="70" y="15" class="hk-petal-cat">sub-agents · tasks</text>
+                <text x="70" y="29" class="hk-petal-events">SubagentStart · Stop</text>
+                <text x="70" y="41" class="hk-petal-events">TaskCreated · Completed</text>
+                <text x="70" y="57" class="hk-petal-count">4 events</text>
+              </g>
+
+              <!-- Petal 6: Compaction (left) -->
+              <g transform="translate(85, 297)">
+                <rect width="140" height="65" rx="4" class="hk-petal-box" />
+                <text x="70" y="15" class="hk-petal-cat">compaction</text>
+                <text x="70" y="29" class="hk-petal-events">PreCompact</text>
+                <text x="70" y="41" class="hk-petal-events">PostCompact</text>
+                <text x="70" y="57" class="hk-petal-count">2 events</text>
+              </g>
+
+              <!-- Petal 7: System events (upper-left) -->
+              <g transform="translate(124, 127)">
+                <rect width="140" height="65" rx="4" class="hk-petal-box" />
+                <text x="70" y="15" class="hk-petal-cat">system events</text>
+                <text x="70" y="29" class="hk-petal-events">Notification · TeammateIdle</text>
+                <text x="70" y="41" class="hk-petal-events">Config · Cwd · File · Worktree · Elicit</text>
+                <text x="70" y="57" class="hk-petal-count">9 events</text>
+              </g>
+
+            </svg>
+          </div>
+          <p class="mini" style="margin-top:6px">
+            Agent0 currently uses <b>9 of 29</b>: <code>SessionStart</code> · <code>Stop</code> · <code>PreCompact</code> · <code>PreToolUse</code> · <code>PostToolUse</code> · <code>PostToolUseFailure</code> · <code>InstructionsLoaded</code>. The other 20 are untapped capacity.
+          </p>
+        </article>
+
+        <!-- MCP ECOSYSTEM RADIAL -->
+        <article class="card card-magenta wide">
+          <h2 class="card-h" data-myth-icon="🛸" data-myth-name="The Constellation">▸ MCP ECOSYSTEM — Claude's outer surface</h2>
+          <p class="card-sub">5 mature servers connect Claude to the world · each exposes its tools via <code>mcp__&lt;srv&gt;__&lt;tool&gt;</code></p>
+          <div style="display:flex;justify-content:center;padding:10px 0">
+            <svg class="dgm-svg mcp-radial" viewBox="0 0 800 560" xmlns="http://www.w3.org/2000/svg" style="max-width:820px">
+
+              <g class="mcp-lines">
+                <line x1="400" y1="280" x2="400" y2="80" />
+                <line x1="400" y1="280" x2="590" y2="218" />
+                <line x1="400" y1="280" x2="518" y2="442" />
+                <line x1="400" y1="280" x2="282" y2="442" />
+                <line x1="400" y1="280" x2="210" y2="218" />
+              </g>
+
+              <!-- Hub -->
+              <rect x="340" y="245" width="120" height="70" rx="8" class="mcp-hub" />
+              <text x="400" y="275" class="mcp-hub-lbl">CLAUDE</text>
+              <text x="400" y="295" class="mcp-hub-sub">via MCP</text>
+
+              <!-- Server 1: playwright (top) -->
+              <g transform="translate(310, 20)">
+                <rect width="180" height="80" rx="4" class="mcp-srv-box" />
+                <text x="90" y="18" class="mcp-srv-name">playwright</text>
+                <text x="90" y="34" class="mcp-srv-tool">browser_navigate</text>
+                <text x="90" y="46" class="mcp-srv-tool">browser_click · snapshot</text>
+                <text x="90" y="58" class="mcp-srv-tool">browser_type · evaluate</text>
+                <text x="90" y="73" class="mcp-srv-purpose">browser automation</text>
+              </g>
+
+              <!-- Server 2: chrome-devtools (upper-right) -->
+              <g transform="translate(500, 178)">
+                <rect width="180" height="80" rx="4" class="mcp-srv-box" />
+                <text x="90" y="18" class="mcp-srv-name">chrome-devtools</text>
+                <text x="90" y="34" class="mcp-srv-tool">network_requests</text>
+                <text x="90" y="46" class="mcp-srv-tool">performance · console</text>
+                <text x="90" y="58" class="mcp-srv-tool">runtime · debugger</text>
+                <text x="90" y="73" class="mcp-srv-purpose">browser debug</text>
+              </g>
+
+              <!-- Server 3: dbhub (lower-right) -->
+              <g transform="translate(428, 402)">
+                <rect width="180" height="80" rx="4" class="mcp-srv-box" />
+                <text x="90" y="18" class="mcp-srv-name">dbhub</text>
+                <text x="90" y="34" class="mcp-srv-tool">execute_query</text>
+                <text x="90" y="46" class="mcp-srv-tool">list_tables · describe</text>
+                <text x="90" y="58" class="mcp-srv-tool">explain · stats</text>
+                <text x="90" y="73" class="mcp-srv-purpose">multi-DB SQL</text>
+              </g>
+
+              <!-- Server 4: nextjs-devtools (lower-left) -->
+              <g transform="translate(192, 402)">
+                <rect width="180" height="80" rx="4" class="mcp-srv-box" />
+                <text x="90" y="18" class="mcp-srv-name">nextjs-devtools</text>
+                <text x="90" y="34" class="mcp-srv-tool">build_log · dev_server</text>
+                <text x="90" y="46" class="mcp-srv-tool">routes · server_actions</text>
+                <text x="90" y="58" class="mcp-srv-tool">cache_diagnostics</text>
+                <text x="90" y="73" class="mcp-srv-purpose">build / dev signals</text>
+              </g>
+
+              <!-- Server 5: github (upper-left) -->
+              <g transform="translate(120, 178)">
+                <rect width="180" height="80" rx="4" class="mcp-srv-box" />
+                <text x="90" y="18" class="mcp-srv-name">github</text>
+                <text x="90" y="34" class="mcp-srv-tool">issues · prs · repos</text>
+                <text x="90" y="46" class="mcp-srv-tool">workflows · releases</text>
+                <text x="90" y="58" class="mcp-srv-tool">discussions · search</text>
+                <text x="90" y="73" class="mcp-srv-purpose">structured gh CLI</text>
+              </g>
+
+            </svg>
+          </div>
+          <p class="mini" style="margin-top:6px">
+            Configure via <code>.mcp.json</code> in repo root or <code>~/.claude/mcp.json</code>. Trust gate: <code>enableAllProjectMcpServers</code>.
+          </p>
+        </article>
+
+        <!-- AUTH CHAIN + TOOL TREE (combined) -->
+        <article class="card card-orange wide">
+          <h2 class="card-h" data-myth-icon="🪢" data-myth-name="The Chains">▸ AUTH CHAIN · TOOL TREE — two hierarchies</h2>
+          <p class="card-sub">how Claude finds credentials · how Claude finds tools</p>
+
+          <p class="card-sub" style="margin-top:8px">auth resolution chain · first match wins</p>
+          <div style="padding:8px 0">
+            <svg class="dgm-svg auth-chain" viewBox="0 0 1200 160" xmlns="http://www.w3.org/2000/svg" style="max-width:1200px">
+              <defs>
+                <marker id="ac" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--p-ink-dim)" /></marker>
+              </defs>
+
+              <g transform="translate(10, 50)">
+                <rect width="200" height="60" rx="3" class="dgm-box dgm-box-red" />
+                <text x="100" y="20" class="dgm-lbl-sm">1 · highest</text>
+                <text x="100" y="38" class="dgm-lbl">managed config</text>
+                <text x="100" y="52" class="dgm-lbl-sm">enterprise / MDM</text>
+              </g>
+              <line x1="220" y1="80" x2="244" y2="80" class="dgm-arr" marker-end="url(#ac)" />
+
+              <g transform="translate(250, 50)">
+                <rect width="200" height="60" rx="3" class="dgm-box dgm-box-orange" />
+                <text x="100" y="20" class="dgm-lbl-sm">2</text>
+                <text x="100" y="38" class="dgm-lbl">--settings flag</text>
+                <text x="100" y="52" class="dgm-lbl-sm">per-invocation override</text>
+              </g>
+              <line x1="460" y1="80" x2="484" y2="80" class="dgm-arr" marker-end="url(#ac)" />
+
+              <g transform="translate(490, 50)">
+                <rect width="200" height="60" rx="3" class="dgm-box dgm-box-yellow" />
+                <text x="100" y="20" class="dgm-lbl-sm">3</text>
+                <text x="100" y="38" class="dgm-lbl">env var</text>
+                <text x="100" y="52" class="dgm-lbl-sm">ANTHROPIC_API_KEY</text>
+              </g>
+              <line x1="700" y1="80" x2="724" y2="80" class="dgm-arr" marker-end="url(#ac)" />
+
+              <g transform="translate(730, 50)">
+                <rect width="200" height="60" rx="3" class="dgm-box dgm-box-green" />
+                <text x="100" y="20" class="dgm-lbl-sm">4 · default</text>
+                <text x="100" y="38" class="dgm-lbl">keychain · OAuth</text>
+                <text x="100" y="52" class="dgm-lbl-sm">browser-flow login</text>
+              </g>
+              <line x1="940" y1="80" x2="964" y2="80" class="dgm-arr" marker-end="url(#ac)" />
+
+              <g transform="translate(970, 50)">
+                <rect width="220" height="60" rx="3" class="dgm-box dgm-box-cyan" />
+                <text x="110" y="20" class="dgm-lbl-sm">5 · fallback</text>
+                <text x="110" y="38" class="dgm-lbl">apiKeyHelper</text>
+                <text x="110" y="52" class="dgm-lbl-sm">custom script (vault, etc.)</text>
+              </g>
+
+              <text x="600" y="20" class="dgm-lbl-sm" style="font-size:10px">resolution order — top → bottom of search, first hit decides</text>
+              <text x="600" y="145" class="dgm-lbl-sm" style="font-size:9.5px;font-style:italic">
+                <tspan fill="var(--p-orange)">--bare</tspan> strips this chain: only env var counts, no OAuth, no keychain.
+              </text>
+            </svg>
+          </div>
+
+          <p class="card-sub" style="margin-top:8px">tool capability tree · what each lane does</p>
+          <div style="padding:8px 0">
+            <svg class="dgm-svg tool-tree" viewBox="0 0 1100 240" xmlns="http://www.w3.org/2000/svg" style="max-width:1100px">
+
+              <!-- Root -->
+              <g transform="translate(460, 14)">
+                <rect width="180" height="40" rx="3" class="dgm-box dgm-box-orange" />
+                <text x="90" y="18" class="dgm-lbl-sm">programmatic surface</text>
+                <text x="90" y="32" class="dgm-lbl">BUILT-IN TOOLS</text>
+              </g>
+
+              <!-- Connectors -->
+              <g class="hk-lines">
+                <line x1="550" y1="54" x2="100" y2="100" />
+                <line x1="550" y1="54" x2="295" y2="100" />
+                <line x1="550" y1="54" x2="490" y2="100" />
+                <line x1="550" y1="54" x2="685" y2="100" />
+                <line x1="550" y1="54" x2="880" y2="100" />
+                <line x1="550" y1="54" x2="1050" y2="100" />
+              </g>
+
+              <!-- 6 lanes -->
+              <g transform="translate(20, 90)">
+                <rect width="160" height="140" rx="3" class="dgm-box dgm-box-cyan" />
+                <text x="80" y="18" class="dgm-lbl-sm">filesystem · 7</text>
+                <text x="80" y="38" class="dgm-lbl">Read · Write</text>
+                <text x="80" y="56" class="dgm-lbl">Edit · MultiEdit</text>
+                <text x="80" y="74" class="dgm-lbl">NotebookEdit</text>
+                <text x="80" y="92" class="dgm-lbl">Glob · Grep</text>
+              </g>
+
+              <g transform="translate(215, 90)">
+                <rect width="160" height="140" rx="3" class="dgm-box dgm-box-yellow" />
+                <text x="80" y="18" class="dgm-lbl-sm">shell · 1</text>
+                <text x="80" y="40" class="dgm-lbl" style="font-size:14px">Bash</text>
+                <text x="80" y="68" class="dgm-lbl-sm">in $cwd</text>
+                <text x="80" y="92" class="dgm-lbl-sm">--allowedTools to scope</text>
+              </g>
+
+              <g transform="translate(410, 90)">
+                <rect width="160" height="140" rx="3" class="dgm-box dgm-box-magenta" />
+                <text x="80" y="18" class="dgm-lbl-sm">web · 2</text>
+                <text x="80" y="40" class="dgm-lbl">WebFetch</text>
+                <text x="80" y="62" class="dgm-lbl">WebSearch</text>
+                <text x="80" y="92" class="dgm-lbl-sm">domain filters</text>
+              </g>
+
+              <g transform="translate(605, 90)">
+                <rect width="160" height="140" rx="3" class="dgm-box dgm-box-violet" />
+                <text x="80" y="18" class="dgm-lbl-sm">delegation · 4</text>
+                <text x="80" y="38" class="dgm-lbl">Agent</text>
+                <text x="80" y="56" class="dgm-lbl">Skill</text>
+                <text x="80" y="74" class="dgm-lbl">ToolSearch</text>
+                <text x="80" y="92" class="dgm-lbl">ExitPlanMode</text>
+              </g>
+
+              <g transform="translate(800, 90)">
+                <rect width="160" height="140" rx="3" class="dgm-box dgm-box-green" />
+                <text x="80" y="18" class="dgm-lbl-sm">tasks · 6</text>
+                <text x="80" y="38" class="dgm-lbl">TaskCreate · Update</text>
+                <text x="80" y="56" class="dgm-lbl">TaskList · Get</text>
+                <text x="80" y="74" class="dgm-lbl">TaskStop · Output</text>
+              </g>
+
+              <g transform="translate(970, 90)">
+                <rect width="120" height="140" rx="3" class="dgm-box dgm-box-pink" />
+                <text x="60" y="18" class="dgm-lbl-sm">MCP · *</text>
+                <text x="60" y="42" class="dgm-lbl" style="font-size:10px">mcp__&lt;srv&gt;</text>
+                <text x="60" y="58" class="dgm-lbl" style="font-size:10px">__&lt;tool&gt;</text>
+                <text x="60" y="92" class="dgm-lbl-sm">auto-discovered</text>
+              </g>
+
+            </svg>
+          </div>
+        </article>
+
+        <!-- FILE SYSTEM MAP -->
+        <article class="card card-green wide">
+          <h2 class="card-h" data-myth-icon="🗺️" data-myth-name="The Cartography">▸ FILE SYSTEM MAP — where everything lives</h2>
+          <p class="card-sub">user-global vs project-scoped · what ships in PR vs what stays per-machine</p>
+          <div class="fs-map">
+
+            <div class="fs-side" style="--c: var(--p-violet)">
+              <h4>~/.claude/ <span class="fs-tag">user-global · per-machine · NOT shipped</span></h4>
+<pre class="fs-tree"><span class="fs-dir">~/.claude/</span>
+├── <span class="fs-key">CLAUDE.md</span>            <span class="fs-dim"># personal preferences</span>
+├── <span class="fs-key">settings.json</span>        <span class="fs-dim"># user-level defaults</span>
+├── <span class="fs-key">mcp.json</span>             <span class="fs-dim"># user-scope MCP servers</span>
+├── <span class="fs-dir">projects/</span>
+│   └── <span class="fs-dir">&lt;path-hash&gt;/</span>
+│       └── <span class="fs-dir">memory/</span>
+│           ├── <span class="fs-key">MEMORY.md</span>     <span class="fs-dim"># index, auto-loaded</span>
+│           └── <span class="fs-key">&lt;slug&gt;.md</span>     <span class="fs-dim"># on-demand</span>
+├── <span class="fs-dir">skills/&lt;name&gt;/</span>SKILL.md
+├── <span class="fs-dir">agents/</span>&lt;name&gt;.md
+└── <span class="fs-key">keybindings.json</span></pre>
+            </div>
+
+            <div class="fs-side" style="--c: var(--p-green)">
+              <h4>&lt;proj&gt;/.claude/ <span class="fs-tag">project · git-tracked · ships with PR</span></h4>
+<pre class="fs-tree"><span class="fs-dir">&lt;proj&gt;/</span>
+├── <span class="fs-key">CLAUDE.md</span>            <span class="fs-dim"># team-shared orientation</span>
+├── <span class="fs-key">.mcp.json</span>            <span class="fs-dim"># project-scope MCP</span>
+└── <span class="fs-dir">.claude/</span>
+    ├── <span class="fs-key">settings.json</span>    <span class="fs-dim"># team-shared</span>
+    ├── <span class="fs-key">settings.local.json</span> <span class="fs-dim"># gitignored, personal</span>
+    ├── <span class="fs-dir">hooks/</span>*.sh        <span class="fs-dim"># lifecycle scripts</span>
+    ├── <span class="fs-dir">rules/</span>*.md        <span class="fs-dim"># behavioral mandates</span>
+    ├── <span class="fs-dir">skills/&lt;name&gt;/</span>
+    ├── <span class="fs-dir">agents/</span>&lt;name&gt;.md
+    ├── <span class="fs-dir">memory/</span>&lt;topic&gt;.md <span class="fs-dim"># project-only</span>
+    └── <span class="fs-dir">.browser-state/</span>   <span class="fs-dim"># gitignored</span></pre>
+            </div>
+
+          </div>
+          <p class="mini" style="margin-top:8px">
+            <b>Rule of thumb:</b> if a teammate cloning your repo should get it → put it in <code>&lt;proj&gt;/.claude/</code>. If only you should have it → <code>~/.claude/</code>. If neither (it's per-machine local) → <code>settings.local.json</code> (gitignored).
+          </p>
+        </article>
+
+        <!-- COST × MODEL FIT MATRIX -->
+        <article class="card card-cyan wide">
+          <h2 class="card-h" data-myth-icon="🎯" data-myth-name="The Right Tool">▸ COST × TASK × MODEL — pick once, save 70%</h2>
+          <p class="card-sub">where each model fits · diagonal is optimal · off-diagonal is over- or under-spec</p>
+          <div style="display:flex;justify-content:center;padding:10px 0">
+            <svg class="dgm-svg cost-matrix" viewBox="0 0 820 300" xmlns="http://www.w3.org/2000/svg" style="max-width:840px">
+              <!-- col headers -->
+              <text x="340" y="22" class="mx-col-h" style="fill:var(--p-green)">haiku</text>
+              <text x="500" y="22" class="mx-col-h" style="fill:var(--p-cyan)">sonnet</text>
+              <text x="660" y="22" class="mx-col-h" style="fill:var(--p-magenta)">opus</text>
+              <text x="340" y="38" class="mx-sub">$0.25 / $1.25</text>
+              <text x="500" y="38" class="mx-sub">$3 / $15</text>
+              <text x="660" y="38" class="mx-sub">$15 / $75</text>
+
+              <!-- row 1: formatting -->
+              <text x="220" y="78" class="mx-row-h">formatting · docs</text>
+              <text x="220" y="92" class="mx-sub" style="text-anchor:end">simple refactor</text>
+              <rect x="260" y="55" width="160" height="58" rx="3" class="mx-cell good" />
+              <text x="340" y="78" class="mx-cell-lbl good">✓ OPTIMAL</text>
+              <text x="340" y="96" class="mx-cell-sub">~$0.01 / task</text>
+              <rect x="420" y="55" width="160" height="58" rx="3" class="mx-cell mid" />
+              <text x="500" y="78" class="mx-cell-lbl mid">~ okay</text>
+              <text x="500" y="96" class="mx-cell-sub">12× cost</text>
+              <rect x="580" y="55" width="160" height="58" rx="3" class="mx-cell bad" />
+              <text x="660" y="78" class="mx-cell-lbl bad">✗ WASTE</text>
+              <text x="660" y="96" class="mx-cell-sub">60× cost</text>
+
+              <!-- row 2: coding -->
+              <text x="220" y="148" class="mx-row-h">coding · default</text>
+              <text x="220" y="162" class="mx-sub" style="text-anchor:end">most tasks</text>
+              <rect x="260" y="125" width="160" height="58" rx="3" class="mx-cell mid" />
+              <text x="340" y="148" class="mx-cell-lbl mid">~ underspec</text>
+              <text x="340" y="166" class="mx-cell-sub">simple cases</text>
+              <rect x="420" y="125" width="160" height="58" rx="3" class="mx-cell good" />
+              <text x="500" y="148" class="mx-cell-lbl good">✓ DEFAULT</text>
+              <text x="500" y="166" class="mx-cell-sub">$0.20 / task</text>
+              <rect x="580" y="125" width="160" height="58" rx="3" class="mx-cell mid" />
+              <text x="660" y="148" class="mx-cell-lbl mid">~ overspec</text>
+              <text x="660" y="166" class="mx-cell-sub">5× cost</text>
+
+              <!-- row 3: architecture -->
+              <text x="220" y="218" class="mx-row-h">architecture · deep</text>
+              <text x="220" y="232" class="mx-sub" style="text-anchor:end">multi-source review</text>
+              <rect x="260" y="195" width="160" height="58" rx="3" class="mx-cell bad" />
+              <text x="340" y="218" class="mx-cell-lbl bad">✗ UNDERSPEC</text>
+              <text x="340" y="236" class="mx-cell-sub">misses nuance</text>
+              <rect x="420" y="195" width="160" height="58" rx="3" class="mx-cell mid" />
+              <text x="500" y="218" class="mx-cell-lbl mid">~ workable</text>
+              <text x="500" y="236" class="mx-cell-sub">may need redo</text>
+              <rect x="580" y="195" width="160" height="58" rx="3" class="mx-cell good" />
+              <text x="660" y="218" class="mx-cell-lbl good">✓ OPTIMAL</text>
+              <text x="660" y="236" class="mx-cell-sub">$2 / task</text>
+
+              <text x="410" y="285" class="dgm-lbl-sm" style="font-size:10px">
+                Mix freely: <tspan fill="var(--p-green)">haiku</tspan> for formatting subtasks, escalate to <tspan fill="var(--p-magenta)">opus</tspan> only for the hard bits.
+              </text>
+            </svg>
+          </div>
+        </article>
+
+        <!-- HOOK FIRE FREQUENCY HEATMAP -->
+        <article class="card card-yellow wide">
+          <h2 class="card-h" data-myth-icon="🔥" data-myth-name="The Pulse">▸ HOOK FIRE FREQUENCY — what runs how often</h2>
+          <p class="card-sub">typical session · the hot path is tool gates · everything else is occasional or rare</p>
+          <div style="display:flex;justify-content:center;padding:10px 0">
+            <svg class="dgm-svg hf-bars" viewBox="0 0 800 380" xmlns="http://www.w3.org/2000/svg" style="max-width:820px">
+              <!-- axis -->
+              <line x1="220" y1="20" x2="220" y2="360" class="hf-axis" />
+              <text x="220" y="14" class="dgm-lbl-sm">fires per session</text>
+              <text x="270" y="14" class="dgm-lbl-sm">10</text>
+              <text x="420" y="14" class="dgm-lbl-sm">25</text>
+              <text x="620" y="14" class="dgm-lbl-sm">50+</text>
+
+              <!-- bar generator: each y has label + bar -->
+              <g class="hf-bar">
+                <text x="210" y="42" class="hf-name">PreToolUse</text>
+                <rect x="220" y="30" width="500" height="22" class="hf-rect hf-hot" />
+                <text x="730" y="46" class="hf-count">~50</text>
+              </g>
+              <g class="hf-bar">
+                <text x="210" y="74" class="hf-name">PostToolUse</text>
+                <rect x="220" y="62" width="480" height="22" class="hf-rect hf-hot" />
+                <text x="710" y="78" class="hf-count">~48</text>
+              </g>
+              <g class="hf-bar">
+                <text x="210" y="106" class="hf-name">UserPromptSubmit</text>
+                <rect x="220" y="94" width="100" height="22" class="hf-rect hf-warm" />
+                <text x="330" y="110" class="hf-count">~10</text>
+              </g>
+              <g class="hf-bar">
+                <text x="210" y="138" class="hf-name">PostToolBatch</text>
+                <rect x="220" y="126" width="80" height="22" class="hf-rect hf-warm" />
+                <text x="310" y="142" class="hf-count">~8</text>
+              </g>
+              <g class="hf-bar">
+                <text x="210" y="170" class="hf-name">InstructionsLoaded</text>
+                <rect x="220" y="158" width="60" height="22" class="hf-rect hf-warm" />
+                <text x="290" y="174" class="hf-count">~6</text>
+              </g>
+              <g class="hf-bar">
+                <text x="210" y="202" class="hf-name">SubagentStart/Stop</text>
+                <rect x="220" y="190" width="50" height="22" class="hf-rect hf-warm" />
+                <text x="280" y="206" class="hf-count">~5</text>
+              </g>
+              <g class="hf-bar">
+                <text x="210" y="234" class="hf-name">PostToolUseFailure</text>
+                <rect x="220" y="222" width="30" height="22" class="hf-rect hf-cool" />
+                <text x="260" y="238" class="hf-count">~3</text>
+              </g>
+              <g class="hf-bar">
+                <text x="210" y="266" class="hf-name">FileChanged</text>
+                <rect x="220" y="254" width="20" height="22" class="hf-rect hf-cool" />
+                <text x="250" y="270" class="hf-count">~2</text>
+              </g>
+              <g class="hf-bar">
+                <text x="210" y="298" class="hf-name">SessionStart / Stop</text>
+                <rect x="220" y="286" width="10" height="22" class="hf-rect hf-cold" />
+                <text x="240" y="302" class="hf-count">1 each</text>
+              </g>
+              <g class="hf-bar">
+                <text x="210" y="330" class="hf-name">PreCompact / PostCompact</text>
+                <rect x="220" y="318" width="6" height="22" class="hf-rect hf-cold" />
+                <text x="240" y="334" class="hf-count">0–1</text>
+              </g>
+              <g class="hf-bar">
+                <text x="210" y="362" class="hf-name">WorktreeCreate · ConfigChange · …</text>
+                <rect x="220" y="350" width="4" height="22" class="hf-rect hf-cold" />
+                <text x="240" y="366" class="hf-count">~0</text>
+              </g>
+            </svg>
+          </div>
+          <p class="mini" style="margin-top:6px">
+            Optimization implication: <code>PreToolUse</code> and <code>PostToolUse</code> hooks run hot — keep them <b>fast</b> (&lt;50ms). Session-lifecycle hooks can be heavier.
+          </p>
+        </article>
+
+        <!-- SKILL · AGENT · RULE COMPOSITION -->
+        <article class="card card-violet wide">
+          <h2 class="card-h" data-myth-icon="🕸️" data-myth-name="The Weave">▸ SKILL · AGENT · RULE — how a capacity composes</h2>
+          <p class="card-sub">a real example: <code>/sdd</code> uses 3 layers · skill ▸ agents ▸ rules + hooks</p>
+          <div style="display:flex;justify-content:center;padding:10px 0">
+            <svg class="dgm-svg comp-graph" viewBox="0 0 900 360" xmlns="http://www.w3.org/2000/svg" style="max-width:920px">
+              <defs>
+                <marker id="cg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--p-ink-dim)" /></marker>
+              </defs>
+
+              <!-- Layer labels -->
+              <text x="20" y="50" class="cg-layer">SKILL</text>
+              <text x="20" y="150" class="cg-layer">AGENT</text>
+              <text x="20" y="270" class="cg-layer">RULES + HOOKS</text>
+
+              <!-- Skills row -->
+              <g transform="translate(120, 20)">
+                <rect width="120" height="50" rx="3" class="dgm-box dgm-box-magenta" />
+                <text x="60" y="22" class="dgm-lbl">/sdd</text>
+                <text x="60" y="40" class="dgm-lbl-sm">new · plan · tasks</text>
+              </g>
+              <g transform="translate(280, 20)">
+                <rect width="120" height="50" rx="3" class="dgm-box dgm-box-magenta" />
+                <text x="60" y="22" class="dgm-lbl">/remind</text>
+                <text x="60" y="40" class="dgm-lbl-sm">add · list · dismiss</text>
+              </g>
+              <g transform="translate(440, 20)">
+                <rect width="120" height="50" rx="3" class="dgm-box dgm-box-magenta" />
+                <text x="60" y="22" class="dgm-lbl">/brainstorm</text>
+                <text x="60" y="40" class="dgm-lbl-sm">divergent ideation</text>
+              </g>
+              <g transform="translate(600, 20)">
+                <rect width="120" height="50" rx="3" class="dgm-box dgm-box-magenta" />
+                <text x="60" y="22" class="dgm-lbl">user skill</text>
+                <text x="60" y="40" class="dgm-lbl-sm">your own</text>
+              </g>
+
+              <!-- arrows skill → agent -->
+              <line x1="180" y1="70" x2="180" y2="124" class="dgm-arr" marker-end="url(#cg)" />
+              <line x1="340" y1="70" x2="340" y2="124" class="dgm-arr" marker-end="url(#cg)" />
+              <line x1="500" y1="70" x2="500" y2="124" class="dgm-arr" marker-end="url(#cg)" />
+
+              <!-- Agents row -->
+              <g transform="translate(120, 124)">
+                <rect width="120" height="50" rx="3" class="dgm-box dgm-box-violet" />
+                <text x="60" y="22" class="dgm-lbl">general-purpose</text>
+                <text x="60" y="40" class="dgm-lbl-sm">multi-step</text>
+              </g>
+              <g transform="translate(280, 124)">
+                <rect width="120" height="50" rx="3" class="dgm-box dgm-box-violet" />
+                <text x="60" y="22" class="dgm-lbl">Explore</text>
+                <text x="60" y="40" class="dgm-lbl-sm">read-only search</text>
+              </g>
+              <g transform="translate(440, 124)">
+                <rect width="120" height="50" rx="3" class="dgm-box dgm-box-violet" />
+                <text x="60" y="22" class="dgm-lbl">Plan</text>
+                <text x="60" y="40" class="dgm-lbl-sm">architect</text>
+              </g>
+              <g transform="translate(600, 124)">
+                <rect width="120" height="50" rx="3" class="dgm-box dgm-box-violet" />
+                <text x="60" y="22" class="dgm-lbl">claude-code-guide</text>
+                <text x="60" y="40" class="dgm-lbl-sm">CC questions</text>
+              </g>
+
+              <!-- arrows agent → rules -->
+              <line x1="180" y1="174" x2="180" y2="248" class="dgm-arr" marker-end="url(#cg)" />
+              <line x1="340" y1="174" x2="340" y2="248" class="dgm-arr" marker-end="url(#cg)" />
+              <line x1="500" y1="174" x2="500" y2="248" class="dgm-arr" marker-end="url(#cg)" />
+              <line x1="660" y1="174" x2="660" y2="248" class="dgm-arr" marker-end="url(#cg)" />
+
+              <!-- Rules + Hooks row -->
+              <g transform="translate(120, 248)">
+                <rect width="120" height="50" rx="3" class="dgm-box dgm-box-pink" />
+                <text x="60" y="22" class="dgm-lbl">spec-driven.md</text>
+                <text x="60" y="40" class="dgm-lbl-sm">rule</text>
+              </g>
+              <g transform="translate(280, 248)">
+                <rect width="120" height="50" rx="3" class="dgm-box dgm-box-pink" />
+                <text x="60" y="22" class="dgm-lbl">delegation.md</text>
+                <text x="60" y="40" class="dgm-lbl-sm">rule</text>
+              </g>
+              <g transform="translate(440, 248)">
+                <rect width="120" height="50" rx="3" class="dgm-box dgm-box-cyan" />
+                <text x="60" y="22" class="dgm-lbl">PreToolUse</text>
+                <text x="60" y="40" class="dgm-lbl-sm">hook</text>
+              </g>
+              <g transform="translate(600, 248)">
+                <rect width="120" height="50" rx="3" class="dgm-box dgm-box-cyan" />
+                <text x="60" y="22" class="dgm-lbl">PostToolUse</text>
+                <text x="60" y="40" class="dgm-lbl-sm">hook</text>
+              </g>
+
+              <!-- Annotation -->
+              <text x="760" y="65" class="dgm-lbl-sm" style="text-anchor:start">user types <tspan fill="var(--p-magenta)">/sdd new auth</tspan></text>
+              <text x="760" y="165" class="dgm-lbl-sm" style="text-anchor:start">skill body dispatches</text>
+              <text x="760" y="165" dy="14" class="dgm-lbl-sm" style="text-anchor:start">an Agent (e.g. Plan)</text>
+              <text x="760" y="290" class="dgm-lbl-sm" style="text-anchor:start">rule + hook layer</text>
+              <text x="760" y="290" dy="14" class="dgm-lbl-sm" style="text-anchor:start">gates execution</text>
+
+              <text x="450" y="345" class="dgm-lbl-sm" style="font-size:10px">
+                Pattern: each layer extends · skill is invocation, agent is delegated work, rules + hooks are guardrails.
+              </text>
+            </svg>
+          </div>
+        </article>
+
+        <!-- SESSION STATE DIAGRAM -->
+        <article class="card card-orange wide">
+          <h2 class="card-h" data-myth-icon="🔁" data-myth-name="The Cycle">▸ SESSION STATES — startup to end</h2>
+          <p class="card-sub">what state your session is in at any time · how commands transition</p>
+          <div style="display:flex;justify-content:center;padding:10px 0">
+            <svg class="dgm-svg sess-state" viewBox="0 0 900 320" xmlns="http://www.w3.org/2000/svg" style="max-width:920px">
+              <defs>
+                <marker id="ss" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--p-ink-dim)" /></marker>
+              </defs>
+
+              <!-- Startup -->
+              <circle cx="80" cy="160" r="48" class="ss-state ss-start" />
+              <text x="80" y="158" class="ss-lbl">startup</text>
+              <text x="80" y="174" class="ss-sub">claude</text>
+
+              <!-- Interactive (main hub) -->
+              <circle cx="320" cy="160" r="62" class="ss-state ss-active" />
+              <text x="320" y="155" class="ss-lbl ss-lbl-big">interactive</text>
+              <text x="320" y="172" class="ss-sub">REPL loop</text>
+
+              <!-- Compacted -->
+              <circle cx="600" cy="60" r="48" class="ss-state ss-alt" />
+              <text x="600" y="58" class="ss-lbl">compacted</text>
+              <text x="600" y="74" class="ss-sub">summarized ctx</text>
+
+              <!-- Fresh -->
+              <circle cx="600" cy="260" r="48" class="ss-state ss-alt" />
+              <text x="600" y="258" class="ss-lbl">fresh</text>
+              <text x="600" y="274" class="ss-sub">CLAUDE.md only</text>
+
+              <!-- Ended -->
+              <circle cx="820" cy="160" r="44" class="ss-state ss-end" />
+              <text x="820" y="158" class="ss-lbl">ended</text>
+              <text x="820" y="174" class="ss-sub">SessionEnd</text>
+
+              <!-- Transitions -->
+              <line x1="128" y1="160" x2="252" y2="160" class="ss-arr" marker-end="url(#ss)" />
+              <text x="190" y="153" class="ss-arr-lbl">SessionStart</text>
+
+              <path d="M 370 115 Q 480 50 552 60" class="ss-arr" marker-end="url(#ss)" fill="none" />
+              <text x="475" y="80" class="ss-arr-lbl">/compact</text>
+
+              <path d="M 552 80 Q 480 130 372 152" class="ss-arr" marker-end="url(#ss)" fill="none" />
+              <text x="475" y="140" class="ss-arr-lbl">resume</text>
+
+              <path d="M 370 205 Q 480 270 552 260" class="ss-arr" marker-end="url(#ss)" fill="none" />
+              <text x="475" y="240" class="ss-arr-lbl">/clear</text>
+
+              <path d="M 552 240 Q 480 200 372 184" class="ss-arr" marker-end="url(#ss)" fill="none" />
+              <text x="475" y="200" class="ss-arr-lbl">resume</text>
+
+              <line x1="382" y1="160" x2="776" y2="160" class="ss-arr" marker-end="url(#ss)" style="stroke:var(--p-red);color:var(--p-red)" />
+              <text x="580" y="155" class="ss-arr-lbl" style="fill:var(--p-red)">/exit · Ctrl-D</text>
+
+              <text x="450" y="310" class="dgm-lbl-sm" style="font-size:10px">
+                SessionStart fires on each entry · source = startup · resume · clear · compact.
+              </text>
+            </svg>
+          </div>
+        </article>
+
+        <!-- COMPACTION INTERRUPT FLOW -->
+        <article class="card card-red wide">
+          <h2 class="card-h" data-myth-icon="🌀" data-myth-name="The Archive">▸ COMPACTION INTERRUPT — what happens during /compact</h2>
+          <p class="card-sub">how raw signal survives summarization · the bridge Agent0 uses to preserve context</p>
+          <div style="display:flex;justify-content:center;padding:10px 0">
+            <svg class="dgm-svg cmp-flow" viewBox="0 0 1100 260" xmlns="http://www.w3.org/2000/svg" style="max-width:1100px">
+              <defs>
+                <marker id="cm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--p-ink-dim)" /></marker>
+              </defs>
+
+              <!-- Step 1: turn N nearing budget -->
+              <g transform="translate(10, 80)">
+                <rect width="170" height="80" rx="3" class="dgm-box dgm-box-cyan" />
+                <text x="85" y="20" class="dgm-lbl-sm">step 1 · trigger</text>
+                <text x="85" y="40" class="dgm-lbl">turn N</text>
+                <text x="85" y="58" class="dgm-lbl-sm">token budget</text>
+                <text x="85" y="72" class="dgm-lbl-sm">approaching limit</text>
+              </g>
+              <line x1="190" y1="120" x2="214" y2="120" class="dgm-arr" marker-end="url(#cm)" />
+
+              <!-- Step 2: PreCompact -->
+              <g transform="translate(220, 80)">
+                <rect width="170" height="80" rx="3" class="dgm-box dgm-box-orange" />
+                <text x="85" y="20" class="dgm-lbl-sm">step 2 · capture</text>
+                <text x="85" y="40" class="dgm-lbl">PreCompact</text>
+                <text x="85" y="58" class="dgm-lbl-sm">snapshot raw turns</text>
+                <text x="85" y="72" class="dgm-lbl-sm">→ COMPACT_NOTES.md</text>
+              </g>
+              <line x1="400" y1="120" x2="424" y2="120" class="dgm-arr" marker-end="url(#cm)" />
+
+              <!-- Step 3: summarizer runs -->
+              <g transform="translate(430, 80)">
+                <rect width="170" height="80" rx="3" class="dgm-box dgm-box-magenta" />
+                <text x="85" y="20" class="dgm-lbl-sm">step 3 · summarize</text>
+                <text x="85" y="40" class="dgm-lbl">summarizer</text>
+                <text x="85" y="58" class="dgm-lbl-sm">model compresses</text>
+                <text x="85" y="72" class="dgm-lbl-sm">conversation history</text>
+              </g>
+              <line x1="610" y1="120" x2="634" y2="120" class="dgm-arr" marker-end="url(#cm)" />
+
+              <!-- Step 4: PostCompact -->
+              <g transform="translate(640, 80)">
+                <rect width="170" height="80" rx="3" class="dgm-box dgm-box-yellow" />
+                <text x="85" y="20" class="dgm-lbl-sm">step 4 · settle</text>
+                <text x="85" y="40" class="dgm-lbl">PostCompact</text>
+                <text x="85" y="58" class="dgm-lbl-sm">summary committed</text>
+                <text x="85" y="72" class="dgm-lbl-sm">old turns trimmed</text>
+              </g>
+              <line x1="820" y1="120" x2="844" y2="120" class="dgm-arr" marker-end="url(#cm)" />
+
+              <!-- Step 5: SessionStart(compact) -->
+              <g transform="translate(850, 80)">
+                <rect width="240" height="80" rx="3" class="dgm-box dgm-box-green" />
+                <text x="120" y="20" class="dgm-lbl-sm">step 5 · re-inject</text>
+                <text x="120" y="40" class="dgm-lbl">SessionStart(source:compact)</text>
+                <text x="120" y="58" class="dgm-lbl-sm">re-loads COMPACT_NOTES.md</text>
+                <text x="120" y="72" class="dgm-lbl-sm">raw signal preserved · turn N+1</text>
+              </g>
+
+              <!-- Top annotation -->
+              <text x="550" y="30" class="dgm-lbl-sm" style="font-size:10.5px;font-weight:600">
+                Why this matters: <tspan fill="var(--p-orange)">summarization is lossy</tspan> · the bridge through COMPACT_NOTES.md is what keeps decisions, file paths, exact wording.
+              </text>
+
+              <!-- Bottom annotation -->
+              <text x="550" y="200" class="dgm-lbl-sm" style="font-size:10px">
+                Agent0's hooks: <tspan fill="var(--p-orange)">pre-compact.sh</tspan> writes last 12 user turns to <tspan fill="var(--p-green)">.claude/COMPACT_NOTES.md</tspan> · <tspan fill="var(--p-orange)">session-start.sh</tspan> reads it when <tspan fill="var(--p-cyan)">source: "compact"</tspan>.
+              </text>
+              <text x="550" y="230" class="dgm-lbl-sm" style="font-size:9.5px;font-style:italic">
+                Pure mechanical capture — not a second summarization. Preserves verbatim user prompts and assistant text/tool_use blocks across the boundary.
+              </text>
+            </svg>
+          </div>
+        </article>
+
+      </section>
+
       <!-- ===== RECIPES — common combos ===== -->
       <section class="recipes-section">
         <article class="card card-green">
@@ -1760,6 +2646,369 @@ You are an X agent. Your job is …`}</code></pre>
         margin-top: 18px;
       }
 
+      /* ===== DIAGRAM PRIMITIVES (shared) ===== */
+      .dgm-wrap {
+        margin: 10px 0;
+        padding: 8px;
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px dashed rgba(255, 255, 255, 0.08);
+        border-radius: 3px;
+      }
+      .dgm-h {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        letter-spacing: 0.1em;
+        color: var(--c, var(--p-ink-dim));
+        margin: 0 0 6px;
+      }
+      .dgm-svg {
+        display: block;
+        width: 100%;
+        height: auto;
+        font-family: var(--font-mono);
+      }
+
+      /* shared SVG primitives */
+      .dgm-svg .dgm-box {
+        fill: rgba(0, 0, 0, 0.4);
+        stroke-width: 1.2;
+        rx: 3;
+      }
+      .dgm-svg .dgm-box-green   { stroke: var(--p-green); }
+      .dgm-svg .dgm-box-orange  { stroke: var(--p-orange); }
+      .dgm-svg .dgm-box-red     { stroke: var(--p-red); }
+      .dgm-svg .dgm-box-cyan    { stroke: var(--p-cyan); }
+      .dgm-svg .dgm-box-magenta { stroke: var(--p-magenta); }
+      .dgm-svg .dgm-box-yellow  { stroke: var(--p-yellow); }
+      .dgm-svg .dgm-box-violet  { stroke: var(--p-violet); }
+      .dgm-svg .dgm-box-pink    { stroke: var(--p-pink); }
+      .dgm-svg .dgm-q {
+        fill: rgba(255, 215, 0, 0.08);
+        stroke: var(--p-yellow);
+        stroke-width: 1.2;
+        rx: 3;
+      }
+      .dgm-svg .dgm-arr {
+        stroke: var(--p-ink-dim);
+        stroke-width: 1.2;
+        fill: none;
+        color: var(--p-ink-dim);
+      }
+      .dgm-svg .dgm-arr-yes { stroke: var(--p-green); color: var(--p-green); }
+      .dgm-svg .dgm-arr-no  { stroke: var(--p-red); color: var(--p-red); }
+      .dgm-svg .dgm-arr-lbl {
+        font-size: 10px;
+        font-weight: 700;
+        text-anchor: middle;
+        letter-spacing: 0.04em;
+      }
+      .dgm-svg .dgm-arr-lbl-yes { fill: var(--p-green); }
+      .dgm-svg .dgm-arr-lbl-no  { fill: var(--p-red); }
+      .dgm-svg .dgm-lbl {
+        font-size: 11px;
+        font-weight: 600;
+        text-anchor: middle;
+        fill: var(--p-ink);
+      }
+      .dgm-svg .dgm-lbl-sm {
+        font-size: 9.5px;
+        text-anchor: middle;
+        fill: var(--p-ink-faint);
+        letter-spacing: 0.04em;
+      }
+
+      /* token-bar specific */
+      .dgm-bar-seg { stroke: rgba(0, 0, 0, 0.4); stroke-width: 1; }
+      .dgm-bar-seg.seg-orange  { fill: rgba(255, 153, 51, 0.7); }
+      .dgm-bar-seg.seg-cyan    { fill: rgba(0, 229, 255, 0.7); }
+      .dgm-bar-seg.seg-magenta { fill: rgba(255, 68, 255, 0.6); }
+      .dgm-bar-seg.seg-green   { fill: rgba(57, 255, 20, 0.7); }
+      .dgm-bar-lbl {
+        font-size: 11px;
+        font-weight: 600;
+        fill: var(--p-ink);
+        text-anchor: middle;
+      }
+      .dgm-bar-pct {
+        font-size: 13px;
+        font-weight: 800;
+        fill: rgba(0, 0, 0, 0.85);
+        text-anchor: middle;
+      }
+
+      /* file-system map */
+      .fs-map {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: 1fr 1fr;
+        margin: 10px 0;
+      }
+      @media (max-width: 720px) {
+        .fs-map { grid-template-columns: 1fr; }
+      }
+      .fs-side {
+        padding: 8px 10px;
+        background: rgba(0, 0, 0, 0.3);
+        border-left: 3px solid var(--c, var(--p-cyan));
+        border-radius: 2px;
+      }
+      .fs-side h4 {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--c, var(--p-cyan));
+        margin: 0 0 4px;
+        font-weight: 700;
+      }
+      .fs-tag {
+        font-family: var(--font-mono);
+        font-size: 9.5px;
+        font-weight: 400;
+        color: var(--p-ink-faint);
+        font-style: italic;
+        letter-spacing: 0.04em;
+        margin-left: 4px;
+      }
+      .fs-tree {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        line-height: 1.55;
+        color: var(--p-ink);
+        margin: 0;
+        white-space: pre;
+      }
+      .fs-tree .fs-dir {
+        color: var(--c, var(--p-cyan));
+        font-weight: 600;
+      }
+      .fs-tree .fs-key {
+        color: var(--p-orange);
+      }
+      .fs-tree .fs-dim {
+        color: var(--p-ink-faint);
+      }
+
+      /* decision compass */
+      .compass-trio {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: repeat(3, 1fr);
+        margin: 10px 0;
+      }
+      @media (max-width: 900px) {
+        .compass-trio { grid-template-columns: 1fr; }
+      }
+      .compass {
+        padding: 6px 8px;
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px dashed rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+      }
+      .compass-h {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        color: var(--c, var(--p-ink));
+        margin: 0 0 6px;
+      }
+
+      /* hook radial */
+      .hk-lines line, .mcp-lines line {
+        stroke: rgba(0, 229, 255, 0.25);
+        stroke-width: 1;
+        stroke-dasharray: 2 3;
+      }
+      .mcp-lines line { stroke: rgba(255, 68, 255, 0.3); }
+      .hk-hub {
+        fill: rgba(0, 229, 255, 0.12);
+        stroke: var(--p-cyan);
+        stroke-width: 1.5;
+      }
+      .hk-hub-lbl {
+        font-size: 14px;
+        font-weight: 800;
+        text-anchor: middle;
+        fill: var(--p-cyan);
+        letter-spacing: 0.08em;
+      }
+      .hk-hub-sub {
+        font-size: 10px;
+        text-anchor: middle;
+        fill: var(--p-ink-faint);
+        letter-spacing: 0.06em;
+      }
+      .hk-petal-box {
+        fill: rgba(0, 0, 0, 0.55);
+        stroke: var(--p-cyan);
+        stroke-width: 1;
+      }
+      .hk-petal-cat {
+        font-size: 10px;
+        font-weight: 700;
+        text-anchor: middle;
+        fill: var(--p-cyan);
+        letter-spacing: 0.04em;
+      }
+      .hk-petal-events {
+        font-size: 9px;
+        text-anchor: middle;
+        fill: var(--p-ink);
+      }
+      .hk-petal-count {
+        font-size: 9px;
+        text-anchor: middle;
+        fill: var(--p-ink-faint);
+        font-style: italic;
+      }
+
+      /* MCP radial — same shape, magenta theme */
+      .mcp-hub {
+        fill: rgba(255, 68, 255, 0.12);
+        stroke: var(--p-magenta);
+        stroke-width: 1.5;
+      }
+      .mcp-hub-lbl {
+        font-size: 16px;
+        font-weight: 800;
+        text-anchor: middle;
+        fill: var(--p-magenta);
+        letter-spacing: 0.1em;
+      }
+      .mcp-hub-sub {
+        font-size: 10px;
+        text-anchor: middle;
+        fill: var(--p-ink-faint);
+        letter-spacing: 0.06em;
+      }
+      .mcp-srv-box {
+        fill: rgba(0, 0, 0, 0.55);
+        stroke: var(--p-magenta);
+        stroke-width: 1;
+      }
+      .mcp-srv-name {
+        font-size: 11px;
+        font-weight: 800;
+        text-anchor: middle;
+        fill: var(--p-magenta);
+        letter-spacing: 0.04em;
+      }
+      .mcp-srv-tool {
+        font-size: 9px;
+        text-anchor: middle;
+        fill: var(--p-ink);
+      }
+      .mcp-srv-purpose {
+        font-size: 9px;
+        text-anchor: middle;
+        fill: var(--p-ink-faint);
+        font-style: italic;
+        letter-spacing: 0.04em;
+      }
+
+      /* Cost matrix */
+      .mx-col-h {
+        font-size: 13px;
+        font-weight: 800;
+        text-anchor: middle;
+        letter-spacing: 0.08em;
+      }
+      .mx-sub {
+        font-size: 9.5px;
+        text-anchor: middle;
+        fill: var(--p-ink-faint);
+        letter-spacing: 0.04em;
+      }
+      .mx-row-h {
+        font-size: 11px;
+        font-weight: 700;
+        text-anchor: end;
+        fill: var(--p-ink);
+        letter-spacing: 0.04em;
+      }
+      .mx-cell.good { fill: rgba(57, 255, 20, 0.15); stroke: var(--p-green); stroke-width: 1.5; }
+      .mx-cell.mid  { fill: rgba(255, 215, 0, 0.1);   stroke: var(--p-yellow); stroke-width: 1; }
+      .mx-cell.bad  { fill: rgba(255, 77, 77, 0.08);   stroke: var(--p-red); stroke-width: 1; stroke-dasharray: 3 2; }
+      .mx-cell-lbl {
+        font-size: 11.5px;
+        font-weight: 700;
+        text-anchor: middle;
+        letter-spacing: 0.06em;
+      }
+      .mx-cell-lbl.good { fill: var(--p-green); }
+      .mx-cell-lbl.mid  { fill: var(--p-yellow); }
+      .mx-cell-lbl.bad  { fill: var(--p-red); }
+      .mx-cell-sub {
+        font-size: 9.5px;
+        text-anchor: middle;
+        fill: var(--p-ink-dim);
+      }
+
+      /* Hook fire heatmap */
+      .hf-axis { stroke: rgba(255, 255, 255, 0.2); stroke-width: 1; }
+      .hf-name {
+        font-size: 10.5px;
+        text-anchor: end;
+        fill: var(--p-ink);
+        font-family: var(--font-mono);
+      }
+      .hf-rect { rx: 2; stroke-width: 0.5; }
+      .hf-hot  { fill: rgba(255, 77, 77, 0.7); stroke: var(--p-red); }
+      .hf-warm { fill: rgba(255, 153, 51, 0.6); stroke: var(--p-orange); }
+      .hf-cool { fill: rgba(0, 229, 255, 0.5); stroke: var(--p-cyan); }
+      .hf-cold { fill: rgba(155, 135, 245, 0.4); stroke: var(--p-violet); }
+      .hf-count {
+        font-size: 10px;
+        font-weight: 700;
+        fill: var(--p-ink);
+        font-family: var(--font-mono);
+      }
+
+      /* Composition graph */
+      .cg-layer {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        fill: var(--p-ink-faint);
+      }
+
+      /* Session state */
+      .ss-state {
+        stroke-width: 2;
+      }
+      .ss-state.ss-start  { fill: rgba(57, 255, 20, 0.15); stroke: var(--p-green); }
+      .ss-state.ss-active { fill: rgba(255, 153, 51, 0.18); stroke: var(--p-orange); stroke-width: 2.5; }
+      .ss-state.ss-alt    { fill: rgba(0, 229, 255, 0.12); stroke: var(--p-cyan); }
+      .ss-state.ss-end    { fill: rgba(255, 77, 77, 0.12); stroke: var(--p-red); }
+      .ss-lbl {
+        font-size: 11.5px;
+        font-weight: 700;
+        text-anchor: middle;
+        fill: var(--p-ink);
+        letter-spacing: 0.04em;
+      }
+      .ss-lbl-big {
+        font-size: 13px;
+      }
+      .ss-sub {
+        font-size: 9.5px;
+        text-anchor: middle;
+        fill: var(--p-ink-faint);
+        font-style: italic;
+      }
+      .ss-arr {
+        stroke: var(--p-ink-dim);
+        stroke-width: 1.4;
+        fill: none;
+        color: var(--p-ink-dim);
+      }
+      .ss-arr-lbl {
+        font-size: 10px;
+        font-weight: 600;
+        text-anchor: middle;
+        fill: var(--p-ink);
+        font-family: var(--font-mono);
+      }
+
       /* ===== PART III MARKER (cyan variant) ===== */
       .part-marker-cyan {
         border-left-color: var(--p-cyan);
@@ -1771,6 +3020,26 @@ You are an X agent. Your job is …`}</code></pre>
       .part-marker-cyan .part-h code {
         color: var(--p-cyan);
         background: rgba(0, 229, 255, 0.08);
+      }
+
+      /* ===== PART IV MARKER (violet variant) ===== */
+      .part-marker-violet {
+        border-left-color: var(--p-violet);
+        background: linear-gradient(90deg, rgba(155, 135, 245, 0.1), transparent);
+      }
+      .part-tag-violet {
+        background: var(--p-violet);
+      }
+      .part-marker-violet .part-h code {
+        color: var(--p-violet);
+        background: rgba(155, 135, 245, 0.08);
+      }
+
+      /* ===== ATLAS SECTION ===== */
+      .atlas-section {
+        display: grid;
+        gap: 14px;
+        margin-top: 14px;
       }
 
       /* ===== LIFECYCLE SECTION ===== */

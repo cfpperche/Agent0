@@ -54,6 +54,18 @@ The schema does NOT structurally enforce the product-class calibration (Consumer
 }
 ```
 
+### Patent posture + IP-assignment anchors (advisory, not Layer-1-enforced)
+
+The step-12 calibration revisions applied 2026-05-16 (per `prompt.md § What this step ports vs diverges § Calibration revisions applied`) introduce two new posture surfaces — **patent strategy** (KEEP 5) and **IP-assignment / PIIA** (KEEP 2) — that the prompt mandates but the Layer 1 schema does NOT enforce as literal-contains anchors. Three reasons for the soft-enforcement choice:
+
+1. **Anchor surface is wide.** Patent posture may legitimately phrase as `Alice/Mayo`, `Alice / Mayo`, `§ 101`, `Section 101`, `no patent filings`, `no software-only patent filings`, `Patent strategy posture`, `Patent posture`, or any English paraphrase. A single literal anchor under-fires; an `any_of_contains` covering all variants would over-fire on cosmetic differences. Hard-coding the variant set risks an arms-race against the agent's phrasing latitude.
+2. **The schema parser does not support multiple `any_of_contains` arrays per file.** Only one such array is parsed (see `src/templates.ts:275`), and that slot is already used by the terms-section-variant tolerance check. Adding a second `any_of_contains_patent` field would be silently ignored — the false-confidence anti-pattern.
+3. **Soft enforcement matches the discipline.** Patent omission and PIIA-burial are content-shape regressions that surface at counsel-review time (the lawyer notices "the document doesn't mention patents") AND at investor-diligence time (Series A IP-chain-of-title pass surfaces the PIIA gap). The discipline lives in the prompt's § 4 step 5 (Licensing) + § Voice & rigor + the Calibration revisions paragraph, not in a brittle literal-anchor check.
+
+**For agents writing `legal-posture.md`:** the patent-posture line and the IP-assignment posture (with PIIA + Founder IPAA § Open Decisions rows) are MANDATORY per the prompt's § Voice & rigor. The Layer 1 schema check does NOT block submission on their absence; counsel-review at Phase 5 + investor-diligence at Series A will catch the gaps. Treat the prompt's mandate as the binding contract.
+
+**For future schema revisions:** if dogfood evidence shows agents systematically omit patent / IPAA / PIIA surfaces despite the prompt's mandate, the right fix is to extend the parser to support multiple `any_of_contains_*` arrays per file (e.g. `any_of_contains_patent`, `any_of_contains_ip_assignment`) rather than overloading the single existing slot. The slot-extension pattern preserves the OR-semantic-per-concept shape; overloading would conflate concepts.
+
 ### Notes on the floors
 
 - **`legal-posture.md` `min_size: 9216` (9 KB)** — anchored against the 7 required sections at honest depth (plus § AI-Specific when triggered). A B2B SaaS posture with 6-row § Privacy regulation matrix, 4-6-row § Data Handling sub-processor table, 3-5 § Regulated Aspects rows, § Licensing with OSS-component table (4-8 rows), § Open Decisions (2-4 rows) lands at 9-11 KB. AI-stack adds ~2 KB for § AI-Specific. Regulated Vertical expands to ~12-15 KB with additional regime rows. Micro-products may legitimately land under 9 KB when § Privacy degenerates (use `# OVERRIDE: compact-product: <class>` shape in submit context); 9 KB is the universal sanity line. The floor is slightly higher than step-11's 8 KB because legal is denser (regulation matrix + sub-processor table + OSS license matrix all carry table content; step-11 ran narrative-shorter).

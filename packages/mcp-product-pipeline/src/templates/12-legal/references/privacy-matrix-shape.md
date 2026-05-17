@@ -159,6 +159,85 @@ The posture document commits to the SLA + the internal escalation playbook (who 
 - Annual tabletop exercise: documented in `security.md § Incident Response § Tabletop Cadence`
 ```
 
+## DSAR-window-per-regulation precision
+
+Data Subject Access Request (DSAR) response windows are **per-regulation, NOT a blanket SLA**. Posture-document commits should name the per-regulation window AND default to the strictest applicable window when multiple regulations apply.
+
+| Regulation | DSAR response window | Extension | Citation |
+|---|---|---|---|
+| GDPR (EU) | 30 days | +60 days for complex requests; data subject notified within the initial 30-day window | Art 12(3) |
+| LGPD (Brazil) | 15 days | No statutory extension; ANPD may issue guidance | Art 19 |
+| CCPA / CPRA (California) | 45 days | +45 days for complex requests; consumer notified within the initial 45-day window | § 1798.130(a)(2) |
+| PIPEDA (Canada) | 30 days | +30 days for complex requests | s. 8(3) |
+| HIPAA (US health) | 30 days (designated record set) | +30 days one-time extension | 45 CFR § 164.524(b)(2) |
+| UK GDPR | 30 days | +60 days for complex requests | Art 12(3) (mirrors EU GDPR) |
+| Swiss FADP | 30 days | Reasonable extension on notification | Art 25 |
+
+### Default to the strictest applicable window
+
+When a product serves users across multiple jurisdictions, the operational SLA should default to the strictest applicable window across the user base — typically **LGPD's 15 days** for any product with Brazilian users. The blanket "30-day response" anti-pattern under-serves LGPD subjects and creates regulatory exposure.
+
+### Posture-document shape
+
+```markdown
+**Data Subject Rights — DSAR response commitments:**
+
+- **GDPR (EU):** 30 days per Art 12(3); +60 day extension available for complex requests with notification
+- **LGPD (Brazil):** **15 days per Art 19** — strictest applicable window; operational default
+- **CCPA / CPRA (California):** 45 days per § 1798.130(a)(2); +45 day extension available
+- **PIPEDA (Canada):** 30 days per s. 8(3); +30 day extension available
+- **Internal operational SLA:** **15 days across all jurisdictions** (defaults to LGPD strictness; over-serves GDPR / CCPA / PIPEDA at no cost)
+```
+
+### Anti-pattern: blanket "30-day response"
+
+```markdown
+**DSAR response window:** 30 days for all data subjects.
+```
+
+Under-serves LGPD subjects (15-day window) by 15 days; the LGPD subject is told their request will be answered in 30 days when statute requires 15. Counsel reading this catches it; the agent writing the posture should catch it first.
+
+## GDPR article-grid matrix — fillable template
+
+When GDPR applies AND the product is non-trivial (more than the smallest dev-tool class), the § Privacy Posture includes an article-grid sub-section as the reusable audit substrate counsel hands to enterprise customers during procurement. Format:
+
+```markdown
+### GDPR article-grid (Applicable / Control / Evidence-location)
+
+| Article | Requirement | Applicable? | Control | Evidence location |
+|---|---|---|---|---|
+| Art 5 | Principles relating to processing (lawfulness, fairness, transparency, purpose limitation, data minimisation, accuracy, storage limitation, integrity/confidentiality, accountability) | Yes | Data-categories table limits collection to identified purposes; retention schedule enforces storage limitation; security measures section addresses integrity/confidentiality | `legal-posture.md § Data Categories`, `§ Security Measures` |
+| Art 6 | Lawfulness of processing (legal basis required for every processing activity) | Yes | Each processing activity in the data-categories table mapped to a specific Art 6(1) basis (Contract / Legitimate Interest / Consent / Legal Obligation) | `legal-posture.md § Legal Basis`, `§ Data Categories` |
+| Art 7 | Conditions for consent (where consent is the basis) | Partial / Yes / No | Marketing email + AI features rely on granular opt-in; revocation surface = in-app settings | `legal-posture.md § Legal Basis`; gap: granular in-app revocation UI is v1.x deliverable |
+| Art 8 | Child's consent (under 16, or as Member State lowers to 13) | No (if product not directed to minors) / Yes (if minors are reasonably foreseeable) | Age-gate at signup; representation of legal age (18+); no behavioral advertising to under-13 | `legal-posture.md § Scope`, `§ Regulated Aspects § COPPA` |
+| Art 12 | Transparent information, communication, modalities (free of charge, plain language) | Yes | Privacy Policy is the canonical transparent notice; presented at signup and accessible from in-app footer | `legal-posture.md`; planned in-app placement: `/legal/privacy` |
+| Art 13 | Information to be provided where data are collected from the data subject | Yes | Signup flow presents Privacy Policy and consent statements before account creation | `legal-posture.md`, `prototype-v2/screens/02-onboarding.html` |
+| Art 14 | Information to be provided where data have NOT been obtained from the data subject (e.g. imported corpus from third-party tools) | Partial | Imported corpus carries identifiers of individuals who are not the product's User; Customer Controller responsible for notifying under Art 14; product surfaces this in DPA + import flow | `legal-posture.md § Data Categories`; gap: in-app notice to Customer Controller about Art 14 obligations at import time is a polish deliverable |
+| Art 15-22 | Data subject rights (access, rectification, erasure, restriction, portability, objection, automated decisions) | Yes | Procedures documented in § Data Subject Rights; 15-30-45 day response windows per regulation; manual handling at v1; DSAR runbook is a polish deliverable | `legal-posture.md § Data Subject Rights`; gap: DSAR runbook documentation is a polish deliverable |
+| Art 24 | Responsibility of the controller (appropriate technical and organisational measures) | Yes | Security measures section documents the v1 baseline; `security.md` is the engineering-readable elaboration | `legal-posture.md § Security Measures`, `security.md` |
+| Art 25 | Data protection by design and by default | Partial | Pseudonymization in IP storage (IP-class only, never full IP); non-enumerable primary keys; minimal-permission OAuth scopes; gap: no formal "privacy by design review" gate in engineering process | `legal-posture.md § Security Measures`, `system-design.md § Data Model`, `security.md § Threat Model` |
+| Art 28 | Processor (engagement of sub-processors; written contract; equivalent obligations downstream) | Yes | Each sub-processor has a published DPA with the company; customer-facing DPA (separate document) flows down Art 28 obligations to the Customer Controller's processor role for imported data | `legal-posture.md § Sub-Processors`; planned DPA: separate document, canonical version part of the legal-posture deliverable |
+| Art 30 | Records of processing activities (RoPA) | Yes | Internal RoPA maintained at `docs/compliance/ropa.md` (founder-authored, reviewed quarterly); the data-categories table is the customer-facing extract | `docs/compliance/ropa.md` (planned deliverable); evidence of intent: `legal-posture.md § Data Categories` |
+| Art 32 | Security of processing (encryption, pseudonymisation, restoration after incident, regular testing) | Partial / Yes | TLS 1.3 in transit; column-encryption for sensitive tokens; storage-level encryption inherited from sub-processors; gap: no formal "regular testing" cadence beyond annual sensitive-secret-leak drill | `legal-posture.md § Security Measures`, `security.md § Secrets`; gap: penetration test schedule is a v1.x deliverable |
+| Art 33 | Notification of a personal data breach to the supervisory authority (72 hours) | Partial / Yes | Incident response plan covers detection and internal escalation; supervisory authority notification SOP documented in security playbook | `legal-posture.md § Breach notification`, `security.md § Threat Model § Incident Response` |
+| Art 34 | Communication of a personal data breach to the data subject (without undue delay when high risk) | Partial / Yes | Template communication for data-subject breach notification drafted as polish deliverable | gap: data-subject breach-notification template is a polish deliverable |
+| Art 35 | Data protection impact assessment for high-risk processing | Yes (DPIA required) / Yes (no DPIA required at v1) | DPIA trigger analysis concludes no DPIA required at v1; template on file for v2 AI-assisted features when funded | `legal-posture.md § DPIA Trigger Statement` |
+| Art 37 | Designation of the data protection officer | No (not mandatory at SMB scale) / Yes (mandatory) | Company is not a public authority, does not perform regular and systematic monitoring on large scale, does not process special categories at scale; DPO designation not mandatory at v1; contact privacy@<domain> routes to founder | `legal-posture.md § DPO Contact` |
+| Art 44-49 | Transfers to third countries | Yes | SCCs Module 2 with each sub-processor; current data residency is named region; EU-region residency deferred per documented deciding signal | `legal-posture.md § Sub-Processors`, `system-design.md § Open Decisions` |
+```
+
+### How to populate
+
+The agent fills the `Applicable? / Control / Evidence location` columns with project-specific entries — citing the legal-posture document itself, the system-design document, the security playbook, the cost-estimate, and the roadmap. Gaps that surface (rows where Control is "partial" or Evidence-location names a deferred deliverable) become § Open Decisions rows OR § Risks entries.
+
+### Why this is reusable audit substrate
+
+Enterprise customers during procurement send the company a "GDPR readiness questionnaire" with these articles enumerated. The article-grid IS that questionnaire pre-answered. Without it, every procurement cycle re-derives the same map; with it, the same artifact serves: (1) outside-counsel briefing (the document's primary purpose); (2) enterprise procurement (handed to customer's compliance team); (3) regulator inquiry (handed to lead DPA on Art 30 record request); (4) internal RoPA bootstrapping (the Art 30 record is a structurally similar table).
+
+### When to omit
+
+Omit the article-grid for: (a) Micro-Product / CLI helper / dev-tool with no GDPR exposure (no EU users, no EU customers, no EU sub-processors); (b) products where the broader Privacy Posture is in compact-degenerate mode (no PII collected); (c) products where GDPR applicability is genuinely conditional + no EU customer has materialized AND no design-partner is EU-based (in which case the matrix appears as a forward-anchor in § Open Decisions row "Build GDPR article-grid before first EU customer signs"). For any product with active GDPR applicability, the article-grid is mandatory — it is the audit substrate, not optional decoration.
+
 ## Cross-border transfers — when data leaves the EU/UK/Brazil/etc
 
 Default mechanism for EU→US transfer: **SCCs Module 2** (controller→processor). Module 1 (controller→controller), Module 3 (processor→processor), Module 4 (processor→controller) for the other shapes. Adequacy decisions cover some destinations (UK, Switzerland, Japan, Canada commercial data, Israel, Argentina, Uruguay, Faroe Islands, Guernsey, Isle of Man, Jersey, New Zealand, South Korea, Andorra) — list adequacy WHERE adequacy applies, fall back to SCCs WHERE adequacy doesn't.

@@ -148,12 +148,88 @@ The H2 emits; the section's contents declare the compact posture explicitly.
 
 These are DEFAULTS — the rationale paragraph defends the choice when the default fits, or defends the deviation when it doesn't.
 
+## Transitive-dependency posture — framework-level is necessary but NOT sufficient
+
+The § Licensing § OSS components table in `legal-posture.md` typically lists the **framework-level** dependencies declared in system-design § Stack (Next.js, React, Prisma, Tailwind, …). That inventory is what counsel can verify by eye at the posture-document layer. But it is **not the full risk surface** — a typical Next.js + React + Prisma SaaS pulls **600-1500 transitive dependencies** through its `package-lock.json`; a Rust + Tokio service pulls hundreds via `Cargo.lock`; a Python + FastAPI service pulls 80-200 via `poetry.lock` / `requirements.txt`. A single AGPL-licensed transitive dep — pulled three layers deep by an innocuous logger or color formatter — is the dominant probabilistic risk and the framework-level table is structurally blind to it.
+
+### The discipline
+
+Every posture document MUST acknowledge the gap explicitly. The acknowledgement shape:
+
+```markdown
+**OSS component compatibility:** top-level dependencies per system-design § Stack; full transitive audit via `npx license-checker --excludePrivatePackages` fires before public launch (Phase 5 polish per roadmap). The framework-level table below is necessary but NOT sufficient — the actual `package-lock.json` carries ~800 transitive dependencies; the transitive audit is the load-bearing risk-surface check.
+```
+
+Then a § Open Decisions row with deciding signal = end of polish / before public launch:
+
+```markdown
+| N | Transitive-dependency license audit via `license-checker` (or `cargo-license` / `pip-licenses` / `go-licenses`) | end of polish phase / before public launch | Run `npx license-checker --excludePrivatePackages --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;MPL-2.0;PostgreSQL'`; fail-build CI gate added; flag any AGPL/GPL/LGPL/SSPL/Elastic-License-v2 hit as `Critical — network copyleft triggered` | [engineering] [counsel-review] |
+```
+
+### Stack-specific tool inventory
+
+| Stack | Transitive-audit tool | One-line invocation |
+|---|---|---|
+| npm / pnpm / yarn (Node.js) | `license-checker` | `npx license-checker --excludePrivatePackages --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;MPL-2.0'` |
+| Rust (Cargo) | `cargo-license` or `cargo-about` | `cargo license --json \| jq '[.[] \| .license] \| unique'` |
+| Python (pip / poetry / pdm / uv) | `pip-licenses` or `licensecheck` | `pip-licenses --format=json --with-license-file` |
+| Go modules | `go-licenses` | `go-licenses report ./...` |
+| Ruby (Bundler) | `license_finder` | `license_finder --format json` |
+| Maven (Java) | `license-maven-plugin` | `mvn license:add-third-party` |
+
+The tool-run report is what counsel + engineering jointly review at the Phase 5 polish gate. CI integration (fail-build on disallowed license) prevents regression.
+
+### Anti-pattern: declared framework-level inventory treated as the full audit
+
+```markdown
+| Component | License | Version | Use | Distribution Model | Copyleft Risk | Action Required |
+|---|---|---|---|---|---|---|
+| Next.js | MIT | 15.x | Frontend | SaaS | None | None |
+| React | MIT | 19.x | UI | SaaS | None | None |
+| Prisma | Apache 2.0 | 6.x | ORM | SaaS | None | None |
+```
+
+No transitive-audit acknowledgement. The table looks clean but is structurally blind to the 800 transitive deps pulled in by these three roots. Counsel reading this document at the briefing call sees the framework-level cleanliness AND the deferred transitive audit as a known-and-managed gap, not a missing-audit blind spot.
+
+## Patent strategy — software-only v1 stacks
+
+For software-only products at the pre-revenue stage, the **default posture is no patent filings**. The reasons compound:
+
+1. **Alice/Mayo § 101 prosecution risk.** US Supreme Court decisions *Alice Corp. v. CLS Bank International* (2014) and *Mayo Collaborative Services v. Prometheus Laboratories* (2012) established that abstract ideas — including algorithms implemented in software — are not patent-eligible unless they recite "significantly more" than the abstract idea itself. Software algorithmic surfaces (keyboard routers, import-pipeline orchestrators, free-tier-cap enforcement, recommendation rankers) face § 101 rejection at high rates (~50-70% for software-only applications post-Alice; varies by USPTO art unit). The cited rejection grounds: "the claims are directed to an abstract idea (data manipulation, automating a manual process, optimization) and do not amount to significantly more."
+
+2. **Prosecution cost is not justified at pre-revenue.** USPTO prosecution costs $10k-$50k per application (attorney fees + filing fees + office-action responses). For a pre-revenue startup, the same capital is better deployed on customer acquisition, runway, or hiring.
+
+3. **Defensive value is low for SMB / SaaS.** Patents matter for: (a) defensive cross-licensing posture (large enterprises with patent portfolios); (b) NPE / patent-troll litigation defense (general liability + E&O insurance is cheaper); (c) Series B+ fundraising signaling (Seed/A investors do not weight patents heavily). None of these apply at pre-revenue scale.
+
+4. **Trade-secret protection is the better posture.** Algorithmic differentiation that is NOT observable from the user-facing behavior (a proprietary ranking model, a trained-on-customer-data ML model, a non-obvious data-pipeline optimization) is better protected as a trade secret — NDAs + access controls + no public disclosure. Patent disclosure forfeits trade-secret protection in exchange for a 20-year monopoly that the § 101 prosecution risk may not deliver.
+
+### When to revisit
+
+The patent-posture line in § Licensing should declare the revisit signal:
+
+> **Patent strategy posture:** no patent filings at v1 due to Alice/Mayo § 101 prosecution risk; revisit at $5M ARR OR when a genuinely-novel non-obvious method emerges (e.g. hardware/software co-design, biotech adjacency, true algorithmic invention with prior-art search supporting non-obviousness). Re-evaluation triggers a § Open Decisions row; until then, NO software-only patent filings.
+
+### When patents DO matter at v1
+
+- **Hardware products** (medical devices, IoT, semiconductor) — § 101 doesn't reject hardware claims the same way; patents are load-bearing for hardware moats.
+- **Biotech / pharma** — patent-eligible subject matter is the entire competitive moat.
+- **True novel methods with strong prior-art support** — once-in-a-decade situations; counsel sizes the patentability + freedom-to-operate (FTO) gap before any filing.
+- **Acqui-hire defense** — an acquirer may value a defensive patent portfolio; this is the post-Series-A consideration, not v1.
+
+For these cases, the patent posture is NOT the default-skip line — it is a § Open Decisions row with `[counsel-review] [founder]` concern tags and a deciding signal naming the specific filing window.
+
+### Anti-pattern: patent silence
+
+The posture document that omits any mention of patents is the regression mode. Counsel reading the document doesn't know whether the founder considered patents and rejected them (deliberate posture) or never considered them (uninformed). The explicit declaration — even when the declaration is "no filings, here's why" — is the discipline.
+
 ## Anti-patterns the discipline catches
 
 - **AGPL component in SaaS stack without flagging** — the load-bearing risk; surface every AGPL dependency as `Critical — network copyleft triggered`.
 - **GPL / AGPL / OSS license treated as interchangeable** — MIT ≠ GPL; each has distinct obligations.
 - **License chosen without rationale paragraph** — the choice is decorative; counsel can't defend it.
 - **Missing OSS audit in stacks of 50+ dependencies** — the dependency tree of a modern Node.js / Rust / Python project has hundreds of transitive deps; a tool-run audit is mandatory before public launch.
+- **Framework-level OSS inventory treated as complete audit** — the system-design § Stack table is the framework-level surface; the actual risk surface is the full transitive tree. Acknowledge the gap explicitly; queue the transitive audit as a § Open Decisions row with deciding signal = before public launch.
+- **Patent posture silence** — the document that never mentions patents leaves counsel unable to distinguish "founder considered and rejected" from "founder never considered". Declare the posture explicitly even when the posture is no-filings.
 - **Static-linking gray area for LGPL ignored** — flag for counsel review when static linking is the model.
 - **Self-asserting "GPL is fine in SaaS"** — GPL distribution is gray-area when on-prem / SDK / downloadable client is in scope; flag for counsel review.
 - **Proprietary product licensing OSS components under proprietary** — re-licensing OSS-licensed components under proprietary is a license violation. You can ship them under their original license inside your proprietary product, but you cannot relicense.

@@ -188,6 +188,38 @@ This is a *trigger-driven* checklist, NOT a "list every regulation that exists" 
 
 ---
 
+### IP Assignment — Founder IPAA + Contractor / Employee PIIA
+
+**Trigger:** the company exists and has founders OR engages contractors / employees who write code, designs, or other copyrightable material. Universal at v1 — every product company has this trigger.
+
+**Why this is its own row (not folded into Trade-secret):** trade-secret protection covers the *information*; IP assignment covers *ownership chain of title*. They are orthogonal — a company can have rigorous trade-secret discipline (NDAs, access controls, marking) AND a broken IP chain (unassigned founder code, contractor-owned designs). Investors diligence the IP chain at Series A; unassigned-contractor or unassigned-founder exposure is a deal-killer. Surfacing IP-assignment as its own row — and as explicit § Open Decisions rows in `legal-posture.md` § Open Decisions — is the discipline.
+
+**The two artifacts:**
+
+1. **Founder IP Assignment Agreement (Founder IPAA).** Executed at entity formation, assigning all founder work-product (pre-incorporation code, designs, brand assets, domain names, founder-developed algorithms) to the company. Without this, the founder's pre-incorporation code is owned by the founder personally; on a Series A funding event, the diligence process surfaces the gap and demands retroactive assignment — which the founder may then leverage for an unfavorable equity adjustment.
+
+   **Deciding signal:** at entity formation, before any Company code is committed to the company's repositories. The Founder IPAA is a corporate-counsel deliverable; flagged in `legal-posture.md § Open Decisions` with `[founder] [counsel-review]`.
+
+2. **PIIA (Proprietary Information and Inventions Assignment Agreement) for contractors and employees.** Executed BEFORE first commit / first day for any contractor or employee. The PIIA: (a) assigns all work-product produced during the engagement to the company; (b) includes a perpetual royalty-free license back to the contractor for pre-existing materials they bring; (c) covers post-engagement confidentiality + non-solicitation as the local jurisdiction permits; (d) names the inventions-disclosure obligation. Retroactive PIIA is unenforceable in many jurisdictions (California Labor Code § 2870 + similar state statutes); signing-before-engagement is the rule.
+
+   **Deciding signal:** before the first contractor's / first employee's first commit. The roadmap's part-time designer (~10 hr/wk weeks 2-14) OR the first-engineer-hire is the standard trigger. Flagged in `legal-posture.md § Open Decisions` with `[founder] [counsel-review]`.
+
+**Posture commitment shape (in `legal-posture.md` § Licensing):**
+
+```markdown
+**IP Assignment posture:**
+
+- **Founder IPAA:** scheduled at entity formation (Delaware Certificate of Incorporation filed → counsel supplies template → founder executes → file in cap-table records). Currently pending — entity formation has not yet completed. Tracked in § Open Decisions row N.
+- **Contractor PIIA:** template prepared; first execution trigger is the part-time designer engagement at roadmap week 2. Tracked in § Open Decisions row N+1.
+- **Employee PIIA:** template prepared (same shape as contractor PIIA + employment-specific clauses); first execution trigger is the first-engineer-hire post-Series-A.
+```
+
+**Counsel-review checkpoint:** outside corporate counsel signs off on the IPAA + PIIA templates BEFORE first execution. Series A IP-chain-of-title diligence re-validates.
+
+**Anti-pattern:** burying IP-assignment under § Regulated Aspects § Trade-secret as a sub-paragraph. Trade-secret protection and IP-assignment are orthogonal disciplines; collapsing them lets investors / acquirers / Series A diligence catch the gap that the founder thought was covered.
+
+---
+
 ### Trademark posture — brand-name protection
 
 **Trigger:** the product has a brand name worth protecting (most consumer-facing products + most B2B with a distinctive product name).

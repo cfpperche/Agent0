@@ -8,30 +8,34 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-Spec 026 Phase B tasks 18 + 19 SHIPPED with **port → judge → calibrate** loop validated twice. Working tree clean. 120 tests pass; `bun tsc --noEmit` clean. Origin up to date (4 commits pushed this session: `0002aef` step-9 port · `e21720f` step-9 calibration · `7458853` step-10 port · `b282c21` step-10 calibration).
+Working tree has 3 uncommitted edits under `packages/mcp-product-pipeline/src/templates/11-roadmap/` — **NOT this session's work**, owned by a sibling session that already committed `15d200d feat(026): Phase B task 20 — step 11 roadmap port` and may still be mid-calibration on the same task. Leave alone.
 
-**Pattern observed (loop ran 2x consecutively):** port anthill skill → dogfood Octant PRD → side-by-side judge vs anthill canonical → apply KEEPs/CUTs → re-dogfood → re-judge confirms. Both calibrations landed at 30/30 (anthill at 22 and 26 respectively).
+**This session's main deliverable: Claude Code Core Cheatsheet** at `site/src/pages/cheatsheet/claude-core.astro`. 7 commits shipped end-to-end (`6b8e5f3` → `db9ace7`). Single printable A3 poster page with 4 parts:
 
-- **Step 9 system-design (task 18):** 3-artifact bundle (system-design.md ≥20 KB + architecture.json + sibling security.md). 11 required H2 sections. Calibration: +biggest-eng-risk + cost-ceiling pointer + modular-monolith disclaimer + Trade-off Triggers digest H3; −meta-commentary − Locked sub-section. Final: MCP 30 vs anthill 22.
-- **Step 10 cost-estimate (task 19):** single artifact (cost-estimate.md ≥10 KB). 8 required + 4 conditional H2 sections. Calibration: +§ Projections monthly cadence + § Recommendations 3-5 decisões com `*Flip if:*` + Probability column 25/50/25 on Scenarios. Step-9 CUTs carried pre-emptively. Final: MCP 30 vs anthill 26.
+- **PART I — CLI** (8 cards) — every `claude --help` flag/subcommand
+- **PART II — Platform** (16 cards) — settings · hooks · CLAUDE.md · MCP · skills · agents · rules · tools · auth · cost · output · plugin · commands · env vars · workflow patterns
+- **PART III — Lifecycle** — SVG sequence diagram (6 lanes, 12 per-turn hook events, scroll-animated)
+- **PART IV — Atlas** (10 cards / 14 SVG diagrams) — decision compasses · file system map · hook taxonomy radial · MCP ecosystem · auth chain · tool tree · cost matrix · hook fire heatmap · composition graph · session states · compaction flow
+
+Interactive: fuzzy search (`/` to focus), mythology mode (17 capacities as tarot epithets), animated lifecycle on scroll, PDF poster export via `window.print()`. Vanilla JS + CSS + inline SVG only — no framework.
+
+Live at <https://cfpperche.github.io/Agent0/cheatsheet/claude-core/> once GitHub Pages workflow finishes.
 
 ## Next steps
 
-1. **Spec 026 Phase B — remaining tasks 20-22**: step 11 roadmap (next; `anthill-roadmap` + `anthill-roadmap-bridge`) · step 12 legal (closes Specification gate — fires) · step 13 prototype-v3 NEW (visual step, depends on steps 5/6/8). Expected same port→judge→calibrate loop per task.
-2. **Step-10 nits surfaced by judge (NOT blocking, pick up next iteration):** cash-vs-GAAP reconciliation paragraph + explicit headcount-plan callout. Sub-paragraph additions, not architectural.
+1. **Spec 026 Phase B — remaining tasks 21-22** (sibling owns task 20 calibration). Step 12 legal closes Specification gate; step 13 prototype-v3 is NEW visual step. Same port→judge→calibrate loop. Coordinate with sibling on task 20 before starting.
+2. **Memorialize port→judge→calibrate as 8th phase** of `.claude/memory/anthill-port-workflow.md` — deferred from prior session, still pending.
 3. **REMINDERS unchanged** — fair OD re-match, OD `--bump/--apply` upstream test, spec 029 adoption check (due 2026-05-30).
 
 ## Carryover (orthogonal lanes, not active)
 
-- **Spec 030 session-edit-attribution** — already shipped per parallel hermes-agent session; verify via `/sdd list` if needed.
-- **Memorialize port→judge→calibrate loop**: ran 2x → worth updating `.claude/memory/anthill-port-workflow.md` (exists from prior session) with the post-judge calibration phase as observed-8th-phase. Deferred to next session.
-- **Architecture HTML rendering deferred** (step-9 open Q1) — vendor Cocoon-AI renderer into `packages/mcp-product-pipeline/scripts/`. Not blocking spec 026 acceptance.
+- **Cheatsheet content drift watch** — when Claude Code ships a new version, bump `CC_VERSION` constant at top of `claude-core.astro` and re-audit. Page stamps version in banner.
+- **Architecture HTML rendering** (step-9 open Q1) — vendor Cocoon-AI renderer into `packages/mcp-product-pipeline/scripts/`. Not blocking spec 026 acceptance.
+- **Step-10 nits** surfaced by judge — cash-vs-GAAP reconciliation paragraph + headcount-plan callout. Sub-paragraph additions, pick up if revisiting spec 026.
 - **Pyshrnk CLAUDE.md reconciliation** — long-standing parking lot.
-- **Praxis-prototype** (separate repo): deployed at https://cfpperche.github.io/praxis-prototype/.
-- **Bench artifacts (~2 MB, wipe-able):** `/tmp/bench/026-dogfood-step{2,3-4,5,6,7,8,9,10}/` — output-a0, output-a0-v2, output-anthill per step.
 
 ## Decisions & gotchas
 
-- **Port→judge→calibrate is now THE workflow** for spec 026 Phase B. Each task ships in 2 commits (port + calibration). Token cost ~150-200k per loop (sub-agents parallel) — well-bounded.
-- **Step-9 CUTs propagate forward.** Step 10 absorbed both step-9 CUTs (no meta-commentary, no Locked sub-section) without judge prompting — both judges agreed they were anti-patterns. Each future step inherits.
-- **Anthill judge bundle for step 10 sits at 26/30** (vs step-9 anthill at 22). FPA skill is more decision-shaped than principal-engineer — closer to recommendations. The MCP-vs-anthill gap narrows when the anthill source is already decision-shaped.
+- **SVG `<text>` with HTML `<code>` children breaks layout.** Browser renders the `<code>` as inline HTML, escaping the SVG flow and squashing positioned elements. Use `<tspan fill="...">` for monospace coloring inside SVG text. Caught + fixed in `db9ace7`.
+- **Cheatsheet content + chrome are decoupled.** CC version bumps need only an edit to the `CC_VERSION` constant at the top of the .astro file plus content tweaks; no schema, no JS rebuild dance.
+- **Atlas section is dense (~5 MB page) but A3-printable.** The "↓ A3 poster" toolbar button triggers `window.print()` against the existing print stylesheet — works cleanly across all 4 parts including the animated lifecycle SVG (force-final-state under @media print).

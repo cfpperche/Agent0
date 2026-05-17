@@ -8,32 +8,39 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Claude Code learning site shipped.** Three big surfaces landed this session, all under `/site/src/pages/`:
+**Claude Code learning content extracted to its own repo.** All four learning surfaces (cheatsheet, Master Class EN/PT/ES, /goal Class, Hook Cookbook) — plus the shared `ResourcesMenu` component and the index landing — now live at `/home/goat/claude-core/` and are published as a standalone repo.
 
-1. **Cheatsheet de-Agent0-ification + anatomy upgrade** — `cheatsheet/claude-core.astro`. Purged 7 contamination points (RULES card removed, `[sdd, remind]` → `[simplify, debug]`, SKILL·AGENT·RULE → SKILL·AGENT·HOOK diagram, etc.). FILE SYSTEM MAP card upgraded to thematic `.claude/` anatomy (CONTEXT / CONFIG / CAPABILITIES / LIFECYCLE / RUNTIME STATE) with managed-policy + precedence chains. Added anchor IDs on Atlas cards so other pages can deep-link.
-2. **Master Class** — `masterclass/claude-code.astro` (EN) + `masterclass/pt/claude-code.astro` + `masterclass/es/claude-code.astro`. 12 modules each, TL;DR-first per Akshay pedagogical pattern, mini-diagrams + recipes + "Deep dive →" to Atlas. Language switcher (EN/PT/ES) + PDF print button with A4 reading-flow @media print.
-3. **Hook Cookbook** — `cookbook/hooks.astro`. 10 production-ready recipes covering all 7 hook event families. Filter-by-family chips, PDF print, deep-links to Atlas + Master Class.
+**claude-core (new, published):**
+- Repo: https://github.com/cfpperche/claude-core (public, MIT)
+- Live: https://cfpperche.github.io/claude-core/
+- Local: `/home/goat/claude-core/` (sibling to Agent0)
+- Initial commit `8a0b07f` — 19 files, 9843 insertions
+- GitHub Pages workflow deployed in 29s, ✓ success
+- Rebrand pass complete: "AGENT0 CONTROL ROOM"/"ACADEMY" → "CLAUDE-CORE · CHEATSHEET"/"ACADEMY", `← back to Agent0` → `← claude-core`, REPO_URL points to new repo, footers re-attributed.
 
-Wiring: `components/Header.astro` got `Master Class ↗` + `Cookbook ↗` links; `i18n/strings.ts` got `nav.masterclass` + `nav.cookbook` in en/pt/es. Build clean (`bun run build` → 8 pages, 1.04s).
-
-Working tree: 8 files staged-ready (5 modified, 3 new dirs). Two unrelated files left untouched: pre-existing `.claude/skills/brainstorm/templates/render.html.tmpl` mod and `banner-4-atos.png` — both from prior sessions.
+**Agent0 (cleaned, uncommitted):**
+- Removed 5 tracked Claude-Code page files + 2 untracked (`goal-command.astro`, `ResourcesMenu.astro`)
+- Header.astro: stripped the `Claude Code ↗` pill nav item
+- strings.ts: removed 5 nav fields from en/pt/es (`cheatsheet`, `masterclass`, `goalClass`, `cookbook`, `claudeCodeHub`)
+- Build verified: 3 pages, 609ms, clean — Agent0 is back to landing-only shape
+- Working tree: 4 modified + 5 deleted from this session, plus 3 unrelated items left untouched
 
 ## Next steps
 
-1. **Commit cheatsheet cleanup + masterclass + cookbook in one consolidated push.** Pending user OK.
-2. **Distribution before more building** — Akshay-style announcement thread on X. The site has zero distribution; building a third page has lower marginal ROI than promoting the existing two. (Suggested by analysis at end of "more ideas?" prompt; user can redirect.)
-3. **Spec 026 Phase C** (tasks 23-25). Still pending. Pick dogfood slug; update `packages/mcp-product-pipeline/README.md` (13-step diagram); update `.mcp.json.example` header.
-4. **Spec 026 Phase D** (tasks 26-31). End-to-end dogfood. Still pending.
-5. **Memorialize port→judge→calibrate as 8th phase of `.claude/memory/anthill-port-workflow.md`** — still pending 3+ sessions.
-6. **REMINDERS unchanged** — fair OD re-match, OD `--bump/--apply` upstream test, spec 029 adoption check (2026-05-30).
+1. **Commit Agent0 cleanup.** Suggested message: `chore(site): extract Claude Code content to claude-core repo`. Working tree has 4 M + 5 D from this session — staging is selective, leave the 3 unrelated items.
+2. **Translations for /goal class** (now lives in claude-core) — pt-BR and es versions, mirroring the main Master Class i18n pattern. Open work item in claude-core.
+3. **Distribution announcement** — Akshay-style thread on X promoting the now-standalone claude-core site. Marginal ROI of another page is now lower than promoting the existing four.
+4. **Spec 026 Phase C / Phase D** — still pending in Agent0.
+5. **Memorialize port→judge→calibrate as 8th phase of `.claude/memory/anthill-port-workflow.md`** — still pending 4+ sessions.
 
 ## Decisions & gotchas
 
-- **i18n routing dev/prod mismatch.** `astro.config.mjs` has `redirectToDefaultLocale: true` + `prefixDefaultLocale: true`. Dev server returns 404 (with full HTML body) for non-locale-prefixed URLs (`/cheatsheet/claude-core/`, `/cookbook/hooks/`, `/masterclass/claude-code/`). PT/ES work because they match locale list. **Static build is fine** — `dist/<path>/index.html` is generated and GitHub Pages serves as 200. Resolution deferred: either move EN under `/masterclass/en/` to match PT/ES, or set `redirectToDefaultLocale: false`. Not blocking deploy.
-- **Page chrome stays Agent0-branded; page content is Claude-Code-only.** Settled in the de-Agent0 pass. Watch: any new card/annotation naming an Agent0 skill/rule/script/dir is contamination.
-- **CSS duplicated across 3 Master Class variants + Cookbook.** Future refactor: extract poster theme tokens + module CSS to a shared `styles/poster.css`. Today's duplication is intentional shipping cost.
+- **Separation rationale.** Agent0 is a harness story, claude-core is a Claude Code story. Audiences and identity differ. Hub card + Resources dropdown handle nav within claude-core; no cross-link back to Agent0 in content.
+- **URL stability.** Page URLs kept their shape (`/cheatsheet/claude-core/`, `/masterclass/claude-code/` …); only base path changed from `/Agent0/` to `/claude-core/`.
+- **i18n config dropped in claude-core.** Astro `i18n` block was needed for Agent0's landing locales. claude-core's pt/es variants are just nested routes, no Astro-level i18n. Side benefit: eliminates the dev-server 404 quirk for non-prefixed URLs.
+- **Deploy workflow shape.** Agent0's uses `path: ./site`; claude-core's uses repo root. Single-project repo needs no nested-site indirection.
 
 ## Carryover (orthogonal lanes, not active)
 
-- Spec 026 Phase B follow-ons (multi-`any_of_contains_*` schema; 4-dim model upstream; step-10 nits; step-13 open Qs; architecture HTML rendering; Pyshrnk CLAUDE.md reconciliation).
-- Bench artifacts (~10+ MB wipe-able): `/tmp/bench/026-dogfood-step{11,12,13}/`.
+- Spec 026 Phase B follow-ons + bench artifacts in `/tmp/bench/026-dogfood-step{11,12,13}/`.
+- 3 unrelated working-tree items NOT this session: `.claude/skills/brainstorm/templates/render.html.tmpl` mod, `banner-4-atos.png`, `next-steps-tab.png`, `docs/specs/032-pipeline-industry-alignment/`.

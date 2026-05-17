@@ -12,9 +12,6 @@ export type Strings = {
     quickStart: string;
     howToExtend: string;
     faq: string;
-    cheatsheet: string;
-    masterclass: string;
-    cookbook: string;
     github: string;
   };
   hero: {
@@ -106,9 +103,6 @@ export const STRINGS: Record<Locale, Strings> = {
       quickStart: "Quick start",
       howToExtend: "Extend",
       faq: "FAQ",
-      cheatsheet: "Cheatsheet",
-      masterclass: "Master Class",
-      cookbook: "Cookbook",
       github: "GitHub",
     },
     hero: {
@@ -248,9 +242,6 @@ export const STRINGS: Record<Locale, Strings> = {
       quickStart: "Início rápido",
       howToExtend: "Estender",
       faq: "FAQ",
-      cheatsheet: "Cheatsheet",
-      masterclass: "Master Class",
-      cookbook: "Cookbook",
       github: "GitHub",
     },
     hero: {
@@ -390,9 +381,6 @@ export const STRINGS: Record<Locale, Strings> = {
       quickStart: "Inicio rápido",
       howToExtend: "Extender",
       faq: "FAQ",
-      cheatsheet: "Cheatsheet",
-      masterclass: "Master Class",
-      cookbook: "Cookbook",
       github: "GitHub",
     },
     hero: {

@@ -1,0 +1,71 @@
+# Prototype REPORT — {{SLUG}}
+
+_Generated {{DATE}} · stack {{STACK}} · {{N_SCREENS}} screens · build {{BUILD_HEALTH}}_
+
+## Coverage scorecard
+
+**Sitemap routes wired:** {{N_WIRED}} / {{N_TOTAL}}
+
+**Per-category coverage:**
+| Category | Required | Sitemap entries | Built | Notes |
+|---|---|---|---|---|
+| marketing | yes | {{marketing_count}} | {{marketing_built}} | {{marketing_note}} |
+| auth | yes | {{auth_count}} | {{auth_built}} | {{auth_note}} |
+| primary | yes | {{primary_count}} | {{primary_built}} | {{primary_note}} |
+| admin | yes | {{admin_count}} | {{admin_built}} | {{admin_note}} |
+| error | yes | {{error_count}} | {{error_built}} | {{error_note}} |
+
+**Gap audit:**
+- {{gap_audit_line_1}}
+- {{gap_audit_line_2_optional}}
+
+(Each gap-audit line names a category that was compensated by mechanism — agent added without founder explicit — vs founder-explicit demands. Example: "auth required by schema — agent added /login, /signup, /reset without founder explicit mention".)
+
+## Fidelity scorecard (4-dim per screen)
+
+Each primary-category screen scores 1-5 on Token / Voice / Component / Brief-fit. Threshold: ≥3/5 on every dim for primary/auth.
+
+| Route | Category | Token | Voice | Component | Brief-fit | Notes |
+|---|---|---|---|---|---|---|
+| {{route_path_1}} | {{cat_1}} | {{t_1}} | {{v_1}} | {{c_1}} | {{b_1}} | {{note_1}} |
+| {{route_path_2}} | {{cat_2}} | {{t_2}} | {{v_2}} | {{c_2}} | {{b_2}} | {{note_2}} |
+| ... | ... | ... | ... | ... | ... | ... |
+
+**Below-threshold rows:** {{n_below_threshold}}
+
+## States matrix
+
+Each route × declared state. ✓ = implemented; · = not declared / not implemented.
+
+```
+                  default  loading  empty  error
+{{route_1}}        {{state_row_1}}
+{{route_2}}        {{state_row_2}}
+...
+```
+
+**Auto-augmented routes** (primary screens where loading/empty/error were added beyond what sitemap declared):
+- {{auto_aug_1}}
+
+## Build health
+
+| Step | Status | Duration |
+|---|---|---|
+| `pnpm install` (or stack-equivalent) | {{install_status}} | {{install_duration}} |
+| `pnpm dev` startup (first 10s) | {{dev_status}} | {{dev_startup}} |
+| `pnpm typecheck` | {{typecheck_status}} | {{typecheck_duration}} |
+| `pnpm lint` | {{lint_status}} | {{lint_duration}} |
+| Playwright screenshots (per route) | {{screenshot_status}} | {{screenshot_duration}} |
+
+**BUILD_BROKEN routes:** {{n_broken_routes}}
+{{broken_route_listing_optional}}
+
+## Skill compliance
+
+- `bash .claude/skills/skill/scripts/validate.sh .claude/skills/prototype` → {{skill_validate_status}}
+
+## Next steps
+
+1. Run `cd /tmp/prototype-{{SLUG}} && {{DEV_COMMAND}}` to start the dev server.
+2. Open `{{LOCAL_URL}}` in your browser (web) or scan the QR code (mobile).
+3. Engineering handoff: `/sdd new {{SLUG}}` from the Agent0 repo when ready to promote past prototype.

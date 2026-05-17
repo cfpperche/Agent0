@@ -8,34 +8,31 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-Working tree has 3 uncommitted edits under `packages/mcp-product-pipeline/src/templates/11-roadmap/` — **NOT this session's work**, owned by a sibling session that already committed `15d200d feat(026): Phase B task 20 — step 11 roadmap port` and may still be mid-calibration on the same task. Leave alone.
+**Spec 026 Phase B COMPLETE.** All 13 templates (steps 1-13) ported + calibrated. This session shipped tasks 20+21+22 in 6 commits (`15d200d` task 20 port · `c8f5575` task 20 calibration · `40cd650` task 21 port · `3a71715` task 21 calibration · `2be4f0c` task 22 port · `0146332` task 22 calibration). `tasks.md` checkboxes 20/21/22 flipped to `[x]`. Working tree has the tasks.md edit + an unrelated `site/...claude-core.astro` modification from prior session + leftover PNG screenshots (untouched). Validators: `bunx tsc --noEmit` clean, `bun test` 120 pass / 0 fail / 227 expect() — preserved across all 6 commits.
 
-**This session's main deliverable: Claude Code Core Cheatsheet** at `site/src/pages/cheatsheet/claude-core.astro`. 7 commits shipped end-to-end (`6b8e5f3` → `db9ace7`). Single printable A3 poster page with 4 parts:
-
-- **PART I — CLI** (8 cards) — every `claude --help` flag/subcommand
-- **PART II — Platform** (16 cards) — settings · hooks · CLAUDE.md · MCP · skills · agents · rules · tools · auth · cost · output · plugin · commands · env vars · workflow patterns
-- **PART III — Lifecycle** — SVG sequence diagram (6 lanes, 12 per-turn hook events, scroll-animated)
-- **PART IV — Atlas** (10 cards / 14 SVG diagrams) — decision compasses · file system map · hook taxonomy radial · MCP ecosystem · auth chain · tool tree · cost matrix · hook fire heatmap · composition graph · session states · compaction flow
-
-Interactive: fuzzy search (`/` to focus), mythology mode (17 capacities as tarot epithets), animated lifecycle on scroll, PDF poster export via `window.print()`. Vanilla JS + CSS + inline SVG only — no framework.
-
-Live at <https://cfpperche.github.io/Agent0/cheatsheet/claude-core/> once GitHub Pages workflow finishes.
+**Loop pattern held across all 3 tasks** (port → dogfood → judge → calibrate → re-dogfood → re-judge):
+- Task 20 (step 11 roadmap): MCP 30/30 vs anthill 17→19. 5 KEEPs + 2 CUTs absorbed.
+- Task 21 (step 12 legal): MCP 29→30/30 vs anthill 19/19. 6 KEEPs + 4 CUTs. **Porter caught a bug**: old skeleton said step 12 closed the pipeline; actually step 13 does (LAST_STEP=13). Corrected in new prompt.
+- Task 22 (step 13 prototype-v3 NEW): no anthill comparator (NEW step). Dogfood-only calibration; 7 over-prescription smells folded same-session. Schema literal swapped 5-dim → 4-dim (Token Hygiene / Voice Match / Component Reuse / Brief Fit; Specificity dropped, Audit-fix → narrative-only).
 
 ## Next steps
 
-1. **Spec 026 Phase B — remaining tasks 21-22** (sibling owns task 20 calibration). Step 12 legal closes Specification gate; step 13 prototype-v3 is NEW visual step. Same port→judge→calibrate loop. Coordinate with sibling on task 20 before starting.
-2. **Memorialize port→judge→calibrate as 8th phase** of `.claude/memory/anthill-port-workflow.md` — deferred from prior session, still pending.
-3. **REMINDERS unchanged** — fair OD re-match, OD `--bump/--apply` upstream test, spec 029 adoption check (due 2026-05-30).
+1. **Spec 026 Phase C — docs + decisions** (tasks 23-25). Pick dogfood slug (a) re-Linear-clone vs (b) fresh product; update `packages/mcp-product-pipeline/README.md` with 13-step pipeline diagram; update `.mcp.json.example` header (cosmetic; says "12 steps").
+2. **Spec 026 Phase D — end-to-end dogfood validation** (tasks 26-31). Walk 1→13 in chosen dogfood dir; verify `product_done` after step 13 fires `pipeline-complete` + `/sdd new <slug>` handoff; measure artifact volume ≥285 KB; ship dogfood evidence to `docs/specs/026-*/dogfood/`.
+3. **Memorialize port→judge→calibrate as 8th phase of `.claude/memory/anthill-port-workflow.md`** — observed 4× now (steps 9/10/11/12) plus the NEW-step variant (step 13 = dogfood-only calibration when no anthill comparator). Still pending from 2 sessions ago.
+4. **REMINDERS unchanged** — fair OD re-match, OD `--bump/--apply` upstream test, spec 029 adoption check (due 2026-05-30).
 
 ## Carryover (orthogonal lanes, not active)
 
-- **Cheatsheet content drift watch** — when Claude Code ships a new version, bump `CC_VERSION` constant at top of `claude-core.astro` and re-audit. Page stamps version in banner.
-- **Architecture HTML rendering** (step-9 open Q1) — vendor Cocoon-AI renderer into `packages/mcp-product-pipeline/scripts/`. Not blocking spec 026 acceptance.
-- **Step-10 nits** surfaced by judge — cash-vs-GAAP reconciliation paragraph + headcount-plan callout. Sub-paragraph additions, pick up if revisiting spec 026.
-- **Pyshrnk CLAUDE.md reconciliation** — long-standing parking lot.
+- **Step-12 v2 + step-13 schema follow-on**: porter flagged a future schema-parser extension (multi-`any_of_contains_*` arrays per concept) as the right way to hard-enforce step-12 patent/IPAA surfaces and step-13 legal-screen mandate when current dogfood is no longer enough.
+- **4-dim model upstream propagation** — step 7's design-fidelity 5-dim model (Token/Voice/Component/Audit-fix/Specificity) was deliberately NOT touched; if a future spec wants the 4-dim shape uniformly across steps 2/7/13, that's a separate refactor.
+- **Step-10 nits** (cash-vs-GAAP reconciliation + headcount-plan callout) — unchanged.
+- **Step-13 open questions deferred to Phase D dogfood**: synthesis-mode Open Decisions framing live test; `partial` US-NN status usage; per-component vs per-screen states matrix tension.
+- **Architecture HTML rendering** (step-9 open Q1) + **Pyshrnk CLAUDE.md reconciliation** — long-standing parking lots.
+- **Bench artifacts (~10+ MB wipe-able):** `/tmp/bench/026-dogfood-step{11,12,13}/` — output-a0, output-a0-v2, output-anthill per step (step 13 has output-a0 only — NEW step, no comparator).
 
 ## Decisions & gotchas
 
-- **SVG `<text>` with HTML `<code>` children breaks layout.** Browser renders the `<code>` as inline HTML, escaping the SVG flow and squashing positioned elements. Use `<tspan fill="...">` for monospace coloring inside SVG text. Caught + fixed in `db9ace7`.
-- **Cheatsheet content + chrome are decoupled.** CC version bumps need only an edit to the `CC_VERSION` constant at the top of the .astro file plus content tweaks; no schema, no JS rebuild dance.
-- **Atlas section is dense (~5 MB page) but A3-printable.** The "↓ A3 poster" toolbar button triggers `window.print()` against the existing print stylesheet — works cleanly across all 4 parts including the animated lifecycle SVG (force-final-state under @media print).
+- **Schema literal-anchor mid-spec swap is now precedent.** Step 13 calibration swapped `| Screen | Token | Voice | Component | Audit-fix | Specificity |` → `| Screen | Token Hygiene | Voice Match | Component Reuse | Brief Fit |`. Documented in calibration revisions paragraph for git-log greppability. If schema swaps recur, consider a `.claude/rules/` discipline on the "before vs after" notation.
+- **Pre-emptive KEEP/CUT inheritance works.** Step 12 absorbed step-11's 5 KEEPs (user-flow names, concern tags, real-human acceptance, step-4 lineage, sub-bullet exit criteria) BEFORE its own judge ran — landed at 29/30. Step 13 absorbed all the above PLUS step-12's transitive-dep + Alice/Mayo + PIIA discipline pre-emptively. The dogfood phase catches what pre-emptive can't.
+- **NEW-step calibration variant**: when no anthill comparator exists, dogfood-A0 alone surfaces over-prescription smells. Step 13 was the first instance — 7 smells folded same-session, validates the 7-phase workflow's "skip phase 1 [anthill source]; audit phase still applies" provision.

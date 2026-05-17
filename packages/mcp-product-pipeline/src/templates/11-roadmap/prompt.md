@@ -53,7 +53,16 @@ Once horizon + team locked (and PRD `validation_mode` read), the parent dispatch
 
 The sub-agent's job is structural synthesis — fill the canonical roadmap template using the captured inputs + the prior-artifact reads. No more user questions; the parent's interview was the last input needing the founder.
 
+**Phase naming — user-flow outcomes first, label categories as fallback.** Each phase title should be a sentence a non-engineer can verify as user-facing value, NOT a label like "Foundation" or "Polish". Examples:
+
+- Good (user-flow shaped): `## Slice 1 — Sign up, land in an empty workspace (Weeks 1-3)`, `## Slice 2 — Import a Jira workspace and see real issues (Weeks 4-6)`, `## Slice 3 — Triage flow + command palette (the killer flow) (Weeks 7-9)`.
+- Acceptable fallback (compact roadmaps, micro-products, or when the user-flow is the infrastructure itself): `## Phase 1 — Foundation (Weeks 1-4)`. The label categories (Foundation / Killer Flow / Surrounding / Polish + Launch) are valid compact shorthand when the slice IS the named category — Foundation phase in particular often ships hollow infrastructure with an empty-dashboard artifact, so "Foundation" is honest. Avoid label categories for the middle phases (Killer Flow / Surrounding) when a user-flow sentence is available — "Killer flow" labels what the phase is ABOUT instead of what the user can DO at end-of-phase.
+
+The user-flow shape closes the "phase label tells you nothing about what the user gained" audit-smell — a non-engineer reading the H2 should know what was shipped without reading the table.
+
 Use `model: opus` for the sub-agent — sonnet sometimes flattens the slice-by-end-to-end-user-value discipline into horizontal-layer phases ("Phase 1: backend; Phase 2: frontend") which is the anthill-roadmap regression mode the discipline catches.
+
+**Deliverable concern tags (optional disciplinary signals).** Deliverable rows MAY carry a bracketed cross-functional concern tag at the end of the deliverable name: `[engineering]`, `[product+engineering]`, `[product]`, `[design]`, `[founder]`. These signal disciplinary pairing (e.g. a `[product+engineering]` row implies designer + engineer pair-implementation) and surface parallelisation opportunity without a separate column. Tags are OPTIONAL — omit when the team is single-discipline (solo founder coding) or when the Owner column already names the discipline. Allow-list is the 5 tags above; don't invent new ones (a 6th tag should land in this rule first via spec revision, not ad-hoc in roadmap output).
 
 ### 4. The canonical roadmap structure (timeline-aware mode)
 
@@ -75,21 +84,29 @@ The sub-agent writes `roadmap.md` against this 8-required spine (full shape with
 
 3. **Phases** — the sequence. Count calibrated by product class (see § 5 below):
    - Per phase: **Goal** (one sentence — what end-to-end user value this slice delivers) + **Week range** (e.g. weeks 1-4) + **Deliverables table** + **Dependencies** + **Exit criteria**.
-   - Format (mirrors anthill-roadmap § Step 3 + step-10's table-discipline):
+   - Format (mirrors anthill-roadmap § Step 3 + step-10's table-discipline; phase title is user-flow shaped per § 3):
      ```markdown
-     ## Phase 1 — Foundation (Weeks 1-4)
+     ## Phase 1 — Sign up, land in an empty workspace (Weeks 1-4)
 
-     **Goal:** Skeleton that takes a request and persists it — auth + data model + deploy pipeline + observability floor. No user-visible features yet.
+     **Goal:** A user can sign up via email or Google, create a workspace, and land on an empty dashboard on staging — auth + data model + deploy pipeline + observability floor wired. No product features yet, but the infrastructure that proves the next 3 phases can ship.
 
      | Deliverable | Owner | Status | Source |
      |---|---|---|---|
-     | Postgres schema + migrations (Workspace, User, Issue, Comment) | Eng | not-started | step 9 § Data Model |
-     | Auth0 integration + session middleware | Eng | not-started | step 9 § Integrations; US-01 prereq |
-     | Vercel + Neon deploy pipeline (preview + prod envs) | Eng | not-started | step 9 § Deployment |
-     | Sentry + PostHog wired (observability floor) | Eng | not-started | step 10 § Run Cost; step 9 § Observability |
+     | Postgres schema + migrations (Workspace, User, Issue, Comment) [engineering] | Eng | not-started | step 9 § Data Model |
+     | Auth0 integration + session middleware [engineering] | Eng | not-started | step 9 § Integrations; US-01 prereq |
+     | Vercel + Neon deploy pipeline (preview + prod envs) [engineering] | Eng | not-started | step 9 § Deployment |
+     | Empty-state dashboard — `aria-live="polite"` hint inviting first action [product+engineering] | Designer + Eng | not-started | step 9 § Frontend modules; F-08 resolved |
+     | Sentry + PostHog wired (observability floor) [engineering] | Eng | not-started | step 10 § Run Cost; step 9 § Observability |
 
      **Dependencies:** none (Foundation is the root)
-     **Exit criteria:** A user can sign up, create a workspace, see an empty dashboard on staging. Sentry captures errors; PostHog captures pageviews.
+
+     **Exit criteria:**
+     - A user can sign up via `/signup`, complete email or Google OAuth, land on `/workspace/<slug>` and see the empty dashboard on staging.
+     - Sentry captures a deliberately-thrown error from a probe route.
+     - PostHog records `signup_complete` events for the cohort.
+     - Both engineers have walked the flow end-to-end on staging without manual intervention.
+     - Closed-beta partner #1 reproduces the signup-to-dashboard flow unassisted (founder-led 5-min screenshare; the first real-human verification of v1's surface).
+
      **Build cost range (from step 10 § Build Cost):** $24-32k
      ```
    - **Slice = end-to-end user value, NOT horizontal layer.** A slice might include backend + frontend + tests for one complete user flow. Anti-pattern: "Phase 1: all backend; Phase 2: all frontend" (Shape-Up violation).
@@ -161,7 +178,7 @@ Mirrors step-9 + step-10 calibration ladder. **Phase count + roadmap depth scale
 | **Micro-Product / CLI helper / single-purpose tool** | Compact ~6 KB | 2-3 phases | Foundation + Build + Ship. § Milestones collapses to 2-3. § v2-Vision optional (some micro-products genuinely v1-and-done). § Open Decisions may have 1-2 rows only. |
 | **Mobile App (focused, 1 persona)** | Standard ~9 KB | 3-4 phases | Adds App-Store-Review phase (1-2 week buffer for first review). § Risks: review-rejection probability + remediation playbook is a load-bearing row. |
 | **Developer Tool / API-first** | Standard ~9 KB | 3-4 phases | Foundation + API/Core + SDK/Dashboard + Docs/Launch. § Dependencies emphasises external SDK consumers (early-access programs, beta-partner onboarding). |
-| **SMB SaaS (the spec 026 default)** | Full ~10-12 KB | 4-5 phases | Foundation + Killer Flow + Surrounding + Polish + Launch (sometimes Polish + Launch merge to 4). § Risks: 4 phase rows + buffer calibration. § Open Decisions: 2-4 rows typical. |
+| **SMB SaaS (the spec 026 default)** | Full ~10-12 KB | 4-5 phases | Foundation + Killer Flow + Surrounding + Polish + Launch (sometimes Polish + Launch merge to 4). § Risks: 4 phase rows + buffer calibration. § Open Decisions: 2-4 rows typical. **Pick 5 phases when the killer flow has a separate migration / on-ramp demo worth separating from the post-import core flow (e.g. import-then-triage — Slice 2 = "import a workspace and see real issues", Slice 3 = "triage flow + command palette"); pick 4 phases when the killer flow is a single tightly-coupled demo (no separate on-ramp / migration step worth showing alone).** The trigger is whether the founder would record TWO distinct demo videos for closed-beta partners (one "look, your data lives here now", one "look, you can clear a sprint in 5 minutes") or ONE. Two demos → 5 phases; one demo → 4 phases. |
 | **Venture-Scale / Marketplace / multi-persona** | Expanded ~14-18 KB | 5-6+ phases | Foundation + Per-Persona-Onboarding (1-2 phases) + Killer Flow + Marketplace-Bootstrap + Polish + Launch. § Dependencies graph carries cross-persona ordering (supply side before demand side, typical). |
 
 Brief field missing or ambiguous → default to **SMB SaaS (Full, 4-5 phases)**. Mark the chosen class + phase count in `## Overview` opening sentence (`v1 roadmap for an SMB SaaS — 4-phase full template applied.`).
@@ -214,11 +231,15 @@ Schema enforces section presence + Layer 1 contains/size floors (phase heading, 
 - **Buffer is per-phase, NOT flat.** Foundation is well-understood (lower buffer); Killer Flow has the most user-feedback unknowns (higher buffer). Polish has the lowest unknown count (well-understood checklist). A flat-30% buffer hides which phases have the real risk.
 - **Risks are SPECIFIC.** "Schedule slip" is not a risk; "OpenAI tokens may exceed budget if usage 3x our assumption — mitigation: per-user rate limit ships with auth" is. Every phase row in § Risks names the assumption + the impact-in-weeks + the mitigation playbook.
 - **Milestones are observable, not procedural.** "Killer flow walks end-to-end on staging" is observable; "Sprint 3 done" / "feature-complete" / "75% progress" are procedural. Procedural milestones rot — they describe agent work, not user value.
+- **Exit criteria anchor to a real person who can verify the outcome, not just CI green.** Where possible, name a concrete human role — closed-beta partner #N, a teammate, the founder — who can independently confirm the outcome. Example: `Closed-beta partner #1 reproduces the demo unassisted in <5 minutes` is stronger than `Axe-core CI gate green`. CI checks are necessary-but-not-sufficient; a human reproducing the flow is the contract. At least one exit criterion per phase SHOULD name a human-verification clause; "CI green + tests pass + no Sev-1" alone is the regression mode this discipline catches.
 - **v2 vision anchors v1 decisions.** 3-5 bullets max. Each bullet carries a "drives v1 decision" clause that names what v1 should design FOR or AGAINST. Without the v1-decision clause, v2 sketch is decorative.
 - **Open Decisions carry deciding signals.** Every deferred decision either HOLDS or FLIPS on a measurable signal. Mirrors step-9 § Open Decisions § Deciding signal and step-10 § Recommendations § Flip if: discipline.
 - **No meta-commentary section about the document's own discipline.** Do NOT write a `## Notes on this roadmap's sequencing discipline` or any equivalent. The phases + dependencies + risks + buffer math ARE the discipline; a section *about* them is noise. (Inherits step-9/10 CUT-2.)
 - **No "locked decisions" sub-section.** Time horizon, team shape, optional deadline are locked in running prose of § Horizon. Re-tabling them as a separate Locked H2 duplicates the running commitment. (Inherits step-9/10 CUT-1.)
 - **PRD `US-NN` cross-references in the deliverable Source column.** Every Phase deliverable row traces back to a PRD story / system-design section / cost-estimate line. This is the audit trail; without it, the roadmap is a wish list.
+- **Step-4 finding-ID lineage in the Source column.** The Source column MAY also cite step-4 (ux-testing) finding IDs (`F-NN`, `F-NN resolved`, `F-NN closed`) when the deliverable resolves a step-4 finding. Example: `prototype-v2 screens/07-command-palette.html, F-12 + F-13 resolved`. This adds the step-4 → step-11 lineage that step-9 + step-10 don't carry — closes the trace from observed-user-pain → shipped-fix. Skip when no step-4 finding applies; the citation is opportunistic, not mandatory.
+- **No metadata banner with pipe-separators at the top of the file.** Do NOT emit a header line in the shape `**Pipeline step:** 11 (Roadmap) | **Generated:** YYYY-MM-DD | **Mode:** canonical (...)` (or any other pipe-delimited metadata banner with `Status:` / `Reads:` / `Inputs locked at...` blocks). Ceremony with no payoff — the file's title + the inline `**Mode:**` declaration near § Overview already carry the operating-mode signal, and "Pipeline step: 11" is recoverable from the file's path. The single `**Mode:** canonical (timeline-aware; validation_mode: tested)` line near the top is fine; the metadata-banner shape is the anti-pattern.
+- **Exit criteria with ≥4 observable conditions format as a sub-bulleted list, not a single paragraph.** The bold `**Exit criteria:**` label introduces a sub-list (`- ...`) when 4+ conditions are listed. Wall-of-text paragraphs with 5+ semicolon-separated conditions are unscannable; the bulleted shape lets a reviewer (human or sub-agent) check each clause individually. Single-condition or 2-3-condition exit criteria may stay inline as a paragraph. Format example lives in `references/milestone-format.md` § Exit criteria + `references/phasing-discipline.md` § Exit criteria.
 
 ## What this step does NOT do
 
@@ -248,3 +269,17 @@ The MCP port diverges from anthill on six points worth naming:
 6. **Parent-collects-2-questions split (delegable: partial).** Anthill-roadmap is single-orchestrator (one agent does the interview + research + draft). The MCP port splits: parent collects time horizon + team shape live (2 questions); sub-agent synthesises structurally from prior artifacts. Closes the "single-orchestrator" audit-smell + mirrors step-10's interview-then-synthesize discipline.
 
 Anthill's `.anthill/issues/` ingestion (Step 2b) is NOT ported — the MCP doesn't have a fork-side issue tracker. Consumer tracker integration (Linear, Jira, GitHub Issues) is deferred to a future MCP step. Anthill's halt-protocol (`Halting: Missing prerequisite: ...`) translates to the MCP's `product_step_submit` validation error semantics (`{code: "schema-incomplete", missing_or_invalid: [...]}`). Resumability is `product_status` + `.state.json`.
+
+### Calibration revisions (2026-05-16)
+
+Blind judge feedback on the step-11 dogfood scored the MCP template 30/30 vs anthill's canonical 17/30. Five disciplines from the lower-scoring template were nonetheless worth absorbing (KEEPs); two patterns the MCP template carried were worth cutting (CUTs). Inheritance from step-11 judge-feedback (mirrors step-9 + step-10's commit-body convention):
+
+1. **KEEP — User-flow shaped phase names.** Phase H2 titles read as user-flow outcomes ("Sign up, land in an empty workspace") not phase labels ("Foundation"). Documented in § 3 Drafting + `references/phasing-discipline.md` § Phase naming. The label categories (Foundation / Killer Flow / Surrounding / Polish + Launch) remain valid fallback shorthand for compact roadmaps and for the Foundation phase specifically.
+2. **KEEP — Cross-functional concern tags on deliverable rows.** Optional `[engineering]` / `[product+engineering]` / `[product]` / `[design]` / `[founder]` tags signal disciplinary pairing without a separate column. Documented in § 3 Drafting + `references/phasing-discipline.md` § Phase shape. Optional — omit when single-discipline.
+3. **KEEP — Real-human acceptance in exit criteria.** At least one exit criterion per phase SHOULD name a concrete human role (closed-beta partner #N, a teammate, the founder) who can independently verify the outcome. Documented in § Voice & rigor + `references/phasing-discipline.md` § Exit criteria + `references/milestone-format.md`.
+4. **KEEP — 5-phase trigger for SMB SaaS sharpened.** Pick 5 phases when the killer flow has a separate migration / on-ramp demo worth recording separately (import-then-triage); pick 4 phases when the killer flow is a single tightly-coupled demo. Documented in § 5 product-class calibration ladder.
+5. **KEEP — Step-4 finding-ID lineage in Source columns.** Source column may cite `F-NN`, `F-NN resolved`, `F-NN closed` when the deliverable resolves a step-4 (ux-testing) finding. Adds the step-4 → step-11 lineage that step-9 + step-10 don't carry. Documented in § Voice & rigor + `references/phasing-discipline.md` § Source column.
+6. **CUT — Metadata banner with pipe-separators at top of file.** No `**Pipeline step:** 11 (Roadmap) | **Generated:** YYYY-MM-DD | **Mode:** canonical (...)` header — ceremony with no payoff. The single inline `**Mode:** canonical (timeline-aware; validation_mode: tested)` line is fine; the banner shape is the anti-pattern. Documented in § Voice & rigor.
+7. **CUT — Wall-of-text exit-criteria paragraphs.** When exit criteria carry ≥4 observable conditions, format as sub-bulleted list under the bold label, not single paragraph. Documented in § Voice & rigor + `references/milestone-format.md` + `references/phasing-discipline.md` § Exit criteria.
+
+Step-9 + step-10's prior calibration anti-patterns are preserved unchanged: § Voice & rigor still carries "no meta-commentary section" and "no Locked Decisions sub-section" (the two CUTs from step-9/10 calibration).

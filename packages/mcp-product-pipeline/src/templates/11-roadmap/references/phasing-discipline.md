@@ -29,19 +29,19 @@ This is the regression mode. User value lands ONLY at end of Phase 2 (12 weeks i
 ### Canonical shape: vertical slicing
 
 ```markdown
-## Phase 1 — Foundation (Weeks 1-4)
+## Phase 1 — Sign up, land in an empty workspace (Weeks 1-4)
 **Goal:** A user can sign up, create a workspace, see an empty dashboard on staging.
 (Auth + data model + deploy pipeline + observability floor; no user-visible product features yet.)
 
-## Phase 2 — Killer Flow (Weeks 5-8)
+## Phase 2 — Triage a 25-issue sprint via keyboard (Weeks 5-8)
 **Goal:** Keyboard-first triage (US-07) walks end-to-end: user creates an issue, triages with `j/k/x/y` keys, sees it land in the right swimlane.
 (Issue CRUD + triage state machine + keyboard shortcuts + UI for triage view + tests for the flow.)
 
-## Phase 3 — Surrounding (Weeks 9-12)
+## Phase 3 — Upgrade plan + invite a teammate (Weeks 9-12)
 **Goal:** Bulk action (US-19) + Stripe checkout (US-05) shipped behind feature flag.
 (Surrounding P0 features; each ships end-to-end before the next starts.)
 
-## Phase 4 — Polish + Launch (Weeks 13-14)
+## Phase 4 — Closed-beta launch with 10 design partners (Weeks 13-14)
 **Goal:** Closed-beta launchable. Accessibility audit clean; error states wired; onboarding flow exists.
 ```
 
@@ -50,6 +50,58 @@ Each phase ships USER-OBSERVABLE BEHAVIOR. Phase 1's "empty dashboard" is observ
 ### When horizontal layering is OK
 
 Foundation phase is the one exception. Auth, data model, deploy pipeline, observability — these are infrastructure that has no user-visible flow by definition. But Foundation should ship A user-visible artifact (the empty dashboard above), even if the artifact is hollow. The artifact proves the infrastructure works.
+
+## Phase naming — user-flow outcomes first, label categories as fallback
+
+The phase H2 title should be a sentence a non-engineer can verify as user-facing value, NOT a label that describes the phase's category. The user-flow shape is the default; label categories are fallback for compact roadmaps.
+
+### Canonical (user-flow shaped)
+
+- `## Slice 1 — Sign up, land in an empty workspace (Weeks 1-3)`
+- `## Slice 2 — Import a Jira workspace and see real issues (Weeks 4-6)`
+- `## Slice 3 — Triage flow + command palette (the killer flow) (Weeks 7-9)`
+- `## Slice 4 — Backlog, billing, settings (week-to-week operation) (Weeks 10-12)`
+- `## Slice 5 — Polish, accessibility-floor, public launch (Weeks 13-14)`
+
+A reader skimming the H2s alone learns the v1 narrative. Each title declares an end-of-phase observable outcome.
+
+### Acceptable fallback (label categories)
+
+- `## Phase 1 — Foundation (Weeks 1-4)` — Foundation specifically is fine as a label because the phase ships infrastructure; the user-visible artifact is the hollow dashboard, and "Foundation" honestly names the category.
+- `## Phase 4 — Polish + Launch (Weeks 13-14)` — Polish specifically is fine when the phase is a checklist (a11y audit, error states, launch prep); the user-flow shape collapses into "Closed-beta launchable".
+
+Compact roadmaps (Micro / CLI helper) may use label categories throughout — the user-flow shape adds little when there's only 2-3 phases. SMB SaaS and Venture-Scale roadmaps should use user-flow shapes for the middle phases (Killer Flow / Surrounding / per-persona) where the label tells you nothing.
+
+### Anti-pattern (uninformative label)
+
+- `## Phase 2 — Killer Flow (Weeks 5-8)` — what does the user gain at end of Phase 2? Not in the title. Reader has to read the table.
+- `## Phase 3 — Surrounding Features (Weeks 9-12)` — "surrounding" is engineer-vocabulary; a non-engineer reading the heading learns nothing about what shipped.
+
+Replace with the user-flow shape: `## Phase 2 — Triage a 25-issue sprint in 5 minutes (Weeks 5-8)` / `## Phase 3 — Upgrade plan + invite teammate via email (Weeks 9-12)`.
+
+## Phase shape — deliverable rows, optional concern tags
+
+Each phase H2 carries a deliverable table with 4-10 rows. Row format:
+
+```markdown
+| Deliverable | Owner | Status | Source |
+|---|---|---|---|
+| <deliverable name> [optional concern-tag] | <Eng / Designer / Founder> | not-started | <PRD US-NN; system-design § X; F-NN resolved> |
+```
+
+### Concern tags (optional disciplinary signals)
+
+The deliverable name MAY end with a bracketed cross-functional concern tag. Allow-list:
+
+- `[engineering]` — pure engineering work; no design or product input needed beyond what the spec carries.
+- `[product+engineering]` — designer + engineer pair-implementation; the row depends on a design decision that's not pre-locked.
+- `[product]` — product / designer-led work (landing copy, brand surface, partner outreach).
+- `[design]` — design-only work (token revisions, illustration, in-product copy review).
+- `[founder]` — founder bandwidth (partner recruiting, legal coordination, launch thread, OAuth app submission).
+
+Tags are OPTIONAL. Omit when the team is single-discipline (solo founder coding) or when the Owner column already names the discipline. The tag exists to signal parallelisation opportunity (a `[product+engineering]` row implies designer + engineer pair) without adding a separate column.
+
+Don't invent new tags. A 6th tag should land in this rule first via spec revision, not ad-hoc in roadmap output.
 
 ## Per-phase exit criteria
 
@@ -67,15 +119,47 @@ The criteria are testable — a reviewer can verify each clause empirically. NOT
 - "Auth works" (works how? for what flow?)
 - "Backend deployed" (deployed to where? doing what?)
 
-### Exit criteria reference PRD stories
+### Format — bullet list when ≥4 conditions
 
-Where possible, exit criteria reference the PRD user-story IDs (US-NN) that the phase satisfies:
+When exit criteria carry **4 or more observable conditions**, format as a sub-bulleted list under the bold label, NOT a single paragraph:
 
 ```markdown
-**Exit criteria:** US-07 (keyboard triage) and US-19 (bulk action) both walk end-to-end on staging. Demo recording exists (<5 min, no narration). 3 design partners have walked through both flows without facilitator intervention.
+**Exit criteria:**
+- A user can sign up via `/signup`, land on `/workspace/<slug>`, see the empty dashboard on staging.
+- Sentry captures a deliberately-thrown error from a probe route.
+- PostHog records `signup_complete` events.
+- Two engineers have walked the flow end-to-end on staging without manual intervention.
+- Closed-beta partner #1 reproduces the demo unassisted in <5 min.
 ```
 
-This closes the trace — exit criteria → PRD story → audit trail.
+1-3 conditions may stay inline as a paragraph; 4+ conditions belong in a list. Wall-of-text paragraphs with 5+ semicolon-separated conditions are unscannable — a reviewer (human or sub-agent) can't check each clause individually.
+
+### Exit criteria anchor to a real person (not just CI green)
+
+At least one exit criterion per phase SHOULD anchor to a real human role who can independently verify the outcome — a closed-beta partner, a teammate, the founder, a design partner. NOT just "CI green / tests pass / no Sev-1 open".
+
+Strong human-verification examples:
+
+- `Closed-beta partner #1 completes the triage flow unassisted in ≤5 minutes.`
+- `The first 3 design partners (recruited from week 1) have demoed the flow without help.`
+- `An invited teammate signs in via the Resend invite email and triages an issue without facilitator intervention.`
+- `Founder hands the first key to a real customer and the customer's first session lands.`
+
+CI-only exit criteria are necessary-but-not-sufficient. A human reproducing the flow is the contract — CI green is the prerequisite, not the proof. The regression mode this discipline catches is "tests pass, but no real user has touched the flow yet, and Phase 2 ships unblocked while keyboard-triage UX is actually broken in ways the test suite doesn't catch".
+
+### Exit criteria reference PRD stories AND step-4 findings
+
+Where possible, exit criteria reference the PRD user-story IDs (US-NN) that the phase satisfies AND the step-4 finding IDs (F-NN) the phase resolves:
+
+```markdown
+**Exit criteria:**
+- US-07 (keyboard triage) and US-19 (bulk action) both walk end-to-end on staging.
+- F-12 (palette no-results state) and F-13 (palette ranked-results ordering) both resolved.
+- Demo recording exists (<5 min, no narration).
+- 3 design partners have walked through both flows without facilitator intervention.
+```
+
+This closes the trace — exit criteria → PRD story / step-4 finding → audit trail.
 
 ### Exit criteria are observable, not procedural
 
@@ -84,6 +168,22 @@ Anti-pattern: "Sprint 3 done" / "75% of tasks complete" / "all tickets closed" /
 Canonical: "A user can <do thing>" / "<artifact> exists at <path>" / "<metric> measures <value> on <env>".
 
 The criterion's job is to be a contract the team agrees on BEFORE the phase starts. Procedural criteria let scope creep; observable criteria force scope to lock.
+
+## Source column — full audit trail
+
+Every deliverable row's Source column traces back to one or more prior-step artifacts. Accepted citation shapes:
+
+- **PRD user-story IDs:** `US-NN`, `US-NN, US-MM`, `US-NN (scaffold)`, `US-NN acceptance row 3`.
+- **PRD priority requirements:** `P0-N`, `P1-N`, `P2-N` (when the PRD uses priority-prefixed requirement IDs).
+- **System-design section refs:** `step 9 § Services § X`, `step 9 § Data Model`, `step 9 § Integrations § Atlassian`, `system-design § APIs § Workspaces`.
+- **Cost-estimate refs:** `step 10 § Build Cost Phase 1`, `step 10 § Run Cost`, `step 10 § Sensitivity row 2`.
+- **Step-4 finding IDs:** `F-NN`, `F-NN resolved`, `F-NN closed`, `F-08 + F-09 resolved`. **This is the lineage step-9 + step-10 don't carry** — when a deliverable resolves an observed-user-pain finding from prototype testing, cite it. Closes the step-4 → step-11 trace from "user struggled with X" to "we shipped Y".
+- **Prototype-v2 screen refs:** `prototype-v2 screens/05-triage-view.html`, `prototype-v2 screens/07-command-palette.html`. Useful when the deliverable's visual shape comes from a step-6 prototype.
+- **Security / compliance refs:** `security.md § Auth § MFA posture`, `security.md § OAuth token leak`.
+
+A single deliverable may cite multiple sources separated by semicolons (the column is comma-allergic — commas mean "this is one source with multiple parts"). Example: `step 9 § Services § ImportModule; § Integrations § Atlassian; PRD US-03, US-10, P0-1; F-08 resolved`.
+
+A deliverable with NO Source is an anti-pattern — the row is unmotivated, and the roadmap loses its audit trail. If a deliverable genuinely has no prior-step lineage (rare; usually means it should be a v2 item, not v1), the Source column says `*founder-initiated; no prior step trace*` so the gap is visible.
 
 ## Dependency DAG (no circular deps)
 
@@ -196,6 +296,17 @@ Mirrors step-9 + step-10 calibration ladder. Phase count scales with product com
 | **Venture-Scale / Marketplace** | 5-6+ | Foundation + Per-Persona-Onboarding (1-2) + Killer Flow + Marketplace-Bootstrap + Polish + Launch |
 
 Brief field missing or ambiguous → default to **SMB SaaS (4-5 phases)**. Mark the chosen phase count in § Overview opening sentence.
+
+### SMB SaaS — when 4 vs when 5 phases
+
+The 4-or-5 choice is real, not optional. The trigger:
+
+- **Pick 5 phases** when the killer flow has a separate migration / on-ramp demo worth recording on its own — typically `Sign up + workspace` (Phase 1) + `Import data and see it` (Phase 2) + `Use the killer flow on the imported data` (Phase 3) + `Surrounding day-to-day surfaces` (Phase 4) + `Polish + Launch` (Phase 5). Example trigger: a Jira-import-then-keyboard-triage product where the import is the migration story and the triage is the wedge story — two distinct demos. The 5-phase shape lets each demo land at a clean phase boundary.
+- **Pick 4 phases** when the killer flow is a single tightly-coupled demo — no separate on-ramp / migration step worth showing alone. Foundation + Killer Flow + Surrounding + Polish + Launch (Polish + Launch merged). Example trigger: a greenfield issue tracker without import, or a product where signup directly opens onto the killer flow (no migration).
+
+The deciding question: would the founder record TWO distinct demo videos for closed-beta partners (one "look, your data lives here now", one "look, you can clear a sprint in 5 minutes") or ONE? Two demos → 5 phases; one demo → 4 phases.
+
+When in doubt, pick 4 phases and merge import-and-killer-flow into one. The 5-phase shape is the upgrade triggered by genuine migration-on-ramp complexity, not the default.
 
 ## Anti-patterns the discipline catches
 

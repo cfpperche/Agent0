@@ -29,10 +29,22 @@ Examples:
 - "User can sign up, create a workspace, see the empty dashboard"
 - "Demo recording (<5 min, no narration) exists at `<url>`"
 - "First 3 design partners have walked through the flow without facilitator intervention"
+- "Closed-beta partner #1 reproduces the demo unassisted in <5 minutes"
 - "Accessibility audit (axe-core) reports zero blocker findings on staging"
 - "Sentry dashboard captures errors on staging for 7 consecutive days with no Sev-1 unaddressed"
 
 These are CONTRACTS a non-engineer can verify empirically. Either the demo recording exists or it doesn't; either accessibility audit is clean or it isn't.
+
+### Anchor at least one criterion to a real human
+
+A milestone is strongest when at least one of its conditions names a specific human role who can independently verify the outcome — a closed-beta partner, a teammate, the founder, a design partner. Examples:
+
+- `Closed-beta partner #1 completes the triage flow unassisted in ≤5 minutes.`
+- `The first 3 design partners have walked through both flows without facilitator intervention.`
+- `An invited teammate signs in via the Resend invite email and triages an issue without help.`
+- `Founder hands the first key to a real customer and the customer's first session lands.`
+
+"CI green + tests pass + no Sev-1 unaddressed" is necessary-but-not-sufficient — a human reproducing the flow is the contract. CI green proves the artifact builds; a partner using it proves the artifact works. The regression mode this catches: phase ships, tests pass, no human has actually touched it, Phase 2 starts unblocked while the killer flow is broken in ways the test suite doesn't exercise.
 
 ### Anti-pattern (procedural)
 
@@ -44,6 +56,37 @@ These are CONTRACTS a non-engineer can verify empirically. Either the demo recor
 - "Test coverage at 80%"
 
 These describe AGENT WORK, not user value. They rot — at week 4, "Sprint 3" is meaningless; at week 8, "PR #142" is forgotten. Procedural milestones also let scope creep — "Sprint 3 done" doesn't say WHAT was done.
+
+## Exit criteria — bullet list when ≥4 conditions
+
+Milestones live in § Milestones (one line each). Per-phase **exit criteria** (under each Phase H2 in § Phases) follow a similar discipline — observable conditions, real-human anchors where possible — but their FORMAT differs based on count.
+
+### Canonical (4+ conditions → sub-bulleted list)
+
+```markdown
+**Exit criteria:**
+- A user can sign up via `/signup`, complete email or Google OAuth, land on `/workspace/<slug>` on staging.
+- Sentry captures a deliberately-thrown error from a probe route.
+- PostHog records `signup_complete` events for the cohort.
+- Both engineers have walked the flow end-to-end on staging without manual intervention.
+- Closed-beta partner #1 reproduces the signup-to-dashboard flow unassisted in <5 min.
+```
+
+### Acceptable (1-3 conditions → inline paragraph)
+
+```markdown
+**Exit criteria:** A user can sign up via `/signup`, land on `/workspace/<slug>`, see the empty dashboard. PostHog captures the `signup_complete` event.
+```
+
+### Anti-pattern (wall-of-text paragraph with 5+ semicolon-separated conditions)
+
+```markdown
+**Exit criteria:** A user can hit /signup, complete signup via email OR Google, create a workspace at a slug, and land on an empty /dashboard on staging; Sentry captures a deliberately-thrown error from a probe route; PostHog captures the signup_complete event for the cohort; Logtail receives one structured log per authenticated request; both engineers (founder + hire) have walked the flow end-to-end on staging without manual intervention; Atlassian OAuth client_id + Stripe production-account onboarding both initiated.
+```
+
+Unscannable. A reviewer can't check each clause individually; the wall-of-text packs 6 conditions into one prose block, and three of them are buried mid-sentence. Format as a sub-bulleted list when there are 4+ conditions — scannability is the point.
+
+The rule: **count the observable conditions in the criterion. If 4+, format as sub-bullets under the bold label. If 1-3, inline as a paragraph is fine.**
 
 ## Trace to PRD stories where possible
 

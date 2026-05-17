@@ -25,6 +25,20 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
       <a href="#extend" class="hover:text-[var(--color-ink)]">{t.howToExtend}</a>
       <a href="#faq" class="hover:text-[var(--color-ink)]">{t.faq}</a>
       <a
+        href={`${base}/masterclass/claude-code/`}
+        class="inline-flex items-center gap-1 font-mono text-[var(--color-accent)] hover:text-[var(--color-accent-ink)]"
+      >
+        {t.masterclass}
+        <span aria-hidden="true" class="text-[10px]">↗</span>
+      </a>
+      <a
+        href={`${base}/cookbook/hooks/`}
+        class="inline-flex items-center gap-1 font-mono text-[var(--color-accent)] hover:text-[var(--color-accent-ink)]"
+      >
+        {t.cookbook}
+        <span aria-hidden="true" class="text-[10px]">↗</span>
+      </a>
+      <a
         href={`${base}/cheatsheet/claude-core/`}
         class="inline-flex items-center gap-1 font-mono text-[var(--color-accent)] hover:text-[var(--color-accent-ink)]"
       >

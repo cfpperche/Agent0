@@ -1,0 +1,821 @@
+---
+import "../../styles/global.css";
+import { REPO_URL } from "../../i18n/locales";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const siteUrl = "https://cfpperche.github.io";
+const CC_VERSION = "2.1.143";
+const pageTitle = `Claude Code · Hook Cookbook · v${CC_VERSION}`;
+const pageDesc = `Production-ready hook recipes for Claude Code v${CC_VERSION}: 10 examples covering all 7 lifecycle event families. Copy, paste, customize.`;
+
+const cheatsheetPath = `${base}/cheatsheet/claude-core/`;
+const masterclassPath = `${base}/masterclass/claude-code/`;
+
+type Family =
+  | "session"
+  | "prompt"
+  | "tool-gate"
+  | "permission"
+  | "subagent"
+  | "compaction";
+
+const families: Record<Family, { label: string; color: string }> = {
+  session:     { label: "session lifecycle", color: "cyan"    },
+  prompt:      { label: "prompts & instructions", color: "magenta" },
+  "tool-gate": { label: "tool gates", color: "orange"  },
+  permission:  { label: "permission",         color: "green"   },
+  subagent:    { label: "sub-agents & tasks", color: "violet"  },
+  compaction:  { label: "compaction",         color: "yellow"  },
+};
+
+const recipes: {
+  n: number;
+  slug: string;
+  family: Family;
+  event: string;
+  title: string;
+}[] = [
+  { n: 1,  slug: "session-start-context",   family: "session",    event: "SessionStart",      title: "Inject CHANGELOG + uncommitted state at session start" },
+  { n: 2,  slug: "stop-handoff-guard",       family: "session",    event: "Stop",              title: "Block exit if SESSION.md is stale with WIP" },
+  { n: 3,  slug: "userprompt-pr-expansion",  family: "prompt",     event: "UserPromptSubmit",  title: "Auto-expand @PR/123 to fetched PR diff" },
+  { n: 4,  slug: "instructions-loaded-trace", family: "prompt",    event: "InstructionsLoaded", title: "Log which CLAUDE.md / rule loaded when (debug aid)" },
+  { n: 5,  slug: "pre-bash-deny",            family: "tool-gate",  event: "PreToolUse(Bash)",  title: "Block destructive shell shapes (rm -rf, force push, …)" },
+  { n: 6,  slug: "pre-agent-five-field",     family: "tool-gate",  event: "PreToolUse(Agent)", title: "Require 5-field delegation handoff (TASK / CONTEXT / …)" },
+  { n: 7,  slug: "post-edit-format",         family: "tool-gate",  event: "PostToolUse(Edit)", title: "Run prettier --check on every touched file" },
+  { n: 8,  slug: "permission-denied-hint",   family: "permission", event: "PermissionDenied",  title: "Suggest an alternative when the user denies a tool" },
+  { n: 9,  slug: "subagent-verify-deliverable", family: "subagent", event: "SubagentStop",    title: "Verify the sub-agent's claimed deliverable actually exists" },
+  { n: 10, slug: "pre-compact-snapshot",     family: "compaction", event: "PreCompact",        title: "Snapshot last 12 user turns to disk before summarization" },
+];
+---
+
+<!doctype html>
+<html lang="en" data-theme="poster">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDesc} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDesc} />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content={`${siteUrl}${base}/cookbook/hooks/`} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
+  </head>
+  <body class="ck-body">
+
+    <div class="ck-top">
+      <a href={`${base}/en/`} class="ck-back">← back to Agent0</a>
+      <div class="ck-top-tools">
+        <button id="ck-print" type="button" class="ck-tool-btn" title="Print as PDF (uses browser PDF)">
+          <span aria-hidden="true">↓</span> PDF
+        </button>
+        <a href={masterclassPath} class="ck-back">master class ↗</a>
+        <a href={cheatsheetPath} class="ck-back">cheatsheet ↗</a>
+      </div>
+    </div>
+
+    <main class="ck-page">
+
+      <header class="ck-banner">
+        <div class="ck-strip">
+          <span class="ck-tag">▮ AGENT0 ACADEMY</span>
+          <span class="ck-tag">CLAUDE CODE v{CC_VERSION}</span>
+          <span class="ck-tag">10 RECIPES · 7 FAMILIES ▮</span>
+        </div>
+        <h1 class="ck-title">
+          <span class="ck-title-line">HOOK</span>
+          <span class="ck-title-line ck-title-accent">COOKBOOK</span>
+        </h1>
+        <p class="ck-sub">
+          Ten production-ready hook recipes — one per real-world need, covering all seven lifecycle event families. Copy, paste, customize. Each recipe is &lt;20 lines of bash.
+        </p>
+      </header>
+
+      <section class="ck-intro">
+        <h2 class="ck-intro-h">What a hook is, in 30 seconds</h2>
+        <p>
+          A hook is a shell script Claude Code runs at a specific lifecycle event. It reads a JSON payload from stdin, decides via exit code (<code>0</code> = allow, <code>2</code> on a Pre* event = <b>BLOCK</b> with stderr shown to the agent, anything else = log-only), and optionally writes <code>additionalContext</code> to stdout for the agent to consume.
+        </p>
+        <h2 class="ck-intro-h">Anatomy of a recipe</h2>
+        <ul class="ck-intro-ul">
+          <li><b>When</b> — the real scenario where this recipe pays off.</li>
+          <li><b>Payload</b> — sample JSON the hook receives on stdin.</li>
+          <li><b>Script</b> — the actual bash. Short. Real.</li>
+          <li><b>Wire-up</b> — the <code>settings.json</code> fragment.</li>
+          <li><b>Gotcha</b> — the one thing that bit someone.</li>
+        </ul>
+      </section>
+
+      <nav class="ck-filters" aria-label="Filter by family">
+        <span class="ck-filter-h">▸ FILTER BY FAMILY</span>
+        <button type="button" class="ck-filter ck-filter-all" data-family="all" aria-pressed="true">all (10)</button>
+        {Object.entries(families).map(([key, meta]) => {
+          const count = recipes.filter((r) => r.family === key).length;
+          return (
+            <button type="button" class={`ck-filter ck-filter-${meta.color}`} data-family={key} aria-pressed="false">
+              {meta.label} ({count})
+            </button>
+          );
+        })}
+      </nav>
+
+      <!-- ===== RECIPES ===== -->
+
+      <!-- §1 SessionStart -->
+      <article id="r1" class="ck-recipe ck-fam-cyan" data-family="session">
+        <header class="ck-rec-head">
+          <span class="ck-rec-n">§1</span>
+          <h2 class="ck-rec-h">Inject CHANGELOG + uncommitted state at session start</h2>
+          <span class="ck-rec-event"><code>SessionStart</code></span>
+        </header>
+        <p class="ck-when"><b>When</b> — Claude opens a session and the user wants the latest release notes and current git state surfaced automatically, instead of asking "what's changed?" every time.</p>
+
+        <p class="ck-mini-h">▸ Payload (stdin)</p>
+        <pre><code>{`{
+  "session_id": "abc-123",
+  "hook_event_name": "SessionStart",
+  "source": "startup",                  // startup | resume | clear | compact
+  "transcript_path": "/.../transcript.jsonl",
+  "cwd": "/home/user/project"
+}`}</code></pre>
+
+        <p class="ck-mini-h">▸ Script — <code>.claude/hooks/session-start.sh</code></p>
+        <pre><code>{`#!/usr/bin/env bash
+set -euo pipefail
+{
+  echo "=== CHANGELOG (latest) ==="
+  head -n 40 CHANGELOG.md 2>/dev/null || echo "(no CHANGELOG.md)"
+  echo
+  echo "=== UNCOMMITTED ==="
+  git status --short 2>/dev/null || echo "(not a git repo)"
+}`}</code></pre>
+
+        <p class="ck-mini-h">▸ Wire-up</p>
+        <pre><code>{`// .claude/settings.json
+{ "hooks": {
+    "SessionStart": [{ "hooks": [{
+      "type": "command",
+      "command": "bash .claude/hooks/session-start.sh"
+    }] }]
+} }`}</code></pre>
+
+        <p class="ck-gotcha"><b>Gotcha</b> — <code>SessionStart</code> fires on <i>every</i> source including <code>compact</code>. If you want startup-only, branch on <code>source</code> via <code>jq -r '.source'</code> first.</p>
+      </article>
+
+      <!-- §2 Stop -->
+      <article id="r2" class="ck-recipe ck-fam-cyan" data-family="session">
+        <header class="ck-rec-head">
+          <span class="ck-rec-n">§2</span>
+          <h2 class="ck-rec-h">Block exit if SESSION.md is stale with uncommitted WIP</h2>
+          <span class="ck-rec-event"><code>Stop</code></span>
+        </header>
+        <p class="ck-when"><b>When</b> — you keep ending sessions with WIP that the next session forgets. The hook nags once: "either commit, or update SESSION.md, then end normally."</p>
+
+        <p class="ck-mini-h">▸ Script — <code>.claude/hooks/session-stop.sh</code></p>
+        <pre><code>{`#!/usr/bin/env bash
+set -euo pipefail
+dirty=$(git status --porcelain 2>/dev/null || true)
+[[ -z "$dirty" ]] && exit 0
+session_mtime=$(stat -c %Y .claude/SESSION.md 2>/dev/null || echo 0)
+started=$(stat -c %Y .claude/.session-state/started-at 2>/dev/null || echo 0)
+[[ "$session_mtime" -gt "$started" ]] && exit 0
+[[ -f .claude/.session-state/nagged ]] && exit 0
+touch .claude/.session-state/nagged
+echo "Before ending: uncommitted WIP exists but SESSION.md was not updated this session. Update it (or commit), then end normally." >&2
+exit 2`}</code></pre>
+
+        <p class="ck-mini-h">▸ Wire-up</p>
+        <pre><code>{`{ "hooks": {
+    "Stop": [{ "hooks": [{
+      "type": "command",
+      "command": "bash .claude/hooks/session-stop.sh"
+    }] }]
+} }`}</code></pre>
+
+        <p class="ck-gotcha"><b>Gotcha</b> — <code>nagged</code> marker is per-session; without it the hook would block forever (infinite loop). Always include a "block at most once" guard.</p>
+      </article>
+
+      <!-- §3 UserPromptSubmit -->
+      <article id="r3" class="ck-recipe ck-fam-magenta" data-family="prompt">
+        <header class="ck-rec-head">
+          <span class="ck-rec-n">§3</span>
+          <h2 class="ck-rec-h">Auto-expand <code>@PR/123</code> in prompts to the fetched PR diff</h2>
+          <span class="ck-rec-event"><code>UserPromptSubmit</code></span>
+        </header>
+        <p class="ck-when"><b>When</b> — you reference PRs constantly. Instead of pasting the diff each time, type <code>@PR/123</code> and the hook fetches and inlines the diff.</p>
+
+        <p class="ck-mini-h">▸ Payload</p>
+        <pre><code>{`{
+  "hook_event_name": "UserPromptSubmit",
+  "user_message": "review @PR/123 for security issues"
+}`}</code></pre>
+
+        <p class="ck-mini-h">▸ Script — <code>.claude/hooks/expand-pr.sh</code></p>
+        <pre><code>{`#!/usr/bin/env bash
+set -euo pipefail
+msg=$(jq -r '.user_message')
+prs=$(echo "$msg" | grep -oE '@PR/[0-9]+' | sed 's|@PR/||' | sort -u || true)
+[[ -z "$prs" ]] && exit 0
+echo "=== referenced PR diffs ==="
+for n in $prs; do
+  echo "--- PR #$n ---"
+  gh pr diff "$n" 2>/dev/null | head -c 4096 || echo "(failed to fetch)"
+done`}</code></pre>
+
+        <p class="ck-mini-h">▸ Wire-up</p>
+        <pre><code>{`{ "hooks": {
+    "UserPromptSubmit": [{ "hooks": [{
+      "type": "command",
+      "command": "bash .claude/hooks/expand-pr.sh"
+    }] }]
+} }`}</code></pre>
+
+        <p class="ck-gotcha"><b>Gotcha</b> — stdout from <code>UserPromptSubmit</code> hooks is injected as <code>additionalContext</code> right after the user message. Keep it bounded (<code>head -c 4096</code>) or one big PR floods the context window.</p>
+      </article>
+
+      <!-- §4 InstructionsLoaded -->
+      <article id="r4" class="ck-recipe ck-fam-magenta" data-family="prompt">
+        <header class="ck-rec-head">
+          <span class="ck-rec-n">§4</span>
+          <h2 class="ck-rec-h">Log which CLAUDE.md / rule loaded when (debug aid)</h2>
+          <span class="ck-rec-event"><code>InstructionsLoaded</code></span>
+        </header>
+        <p class="ck-when"><b>When</b> — you've added a path-scoped rule (<code>paths:</code> frontmatter) and it doesn't seem to be firing. The hook writes a JSONL trace so you can confirm.</p>
+
+        <p class="ck-mini-h">▸ Script — <code>.claude/hooks/rule-load-debug.sh</code></p>
+        <pre><code>{`#!/usr/bin/env bash
+set -euo pipefail
+[[ "$&#123;CLAUDE_RULE_LOAD_DEBUG:-0&#125;" = "1" ]] || exit 0
+mkdir -p .claude
+exec 9>>.claude/.rule-load-debug.jsonl
+flock 9
+jq -c '{ts:now|todate, file, memory_type, load_reason, globs, trigger_file, session_id}' >&9`}</code></pre>
+
+        <p class="ck-mini-h">▸ Inspect</p>
+        <pre><code>{`tail -f .claude/.rule-load-debug.jsonl | jq .`}</code></pre>
+
+        <p class="ck-gotcha"><b>Gotcha</b> — <code>InstructionsLoaded</code> fires inside the same turn as the load that triggered it. Hook is pure-observability; stdout/stderr are NOT injected into the conversation for this event.</p>
+      </article>
+
+      <!-- §5 PreToolUse(Bash) -->
+      <article id="r5" class="ck-recipe ck-fam-orange" data-family="tool-gate">
+        <header class="ck-rec-head">
+          <span class="ck-rec-n">§5</span>
+          <h2 class="ck-rec-h">Block destructive shell shapes</h2>
+          <span class="ck-rec-event"><code>PreToolUse(Bash)</code></span>
+        </header>
+        <p class="ck-when"><b>When</b> — you trust Claude to run Bash, but you never want to see <code>rm -rf</code>, <code>git push --force</code>, or a dependency install without a lockfile. Block these by shape, not by global denial.</p>
+
+        <p class="ck-mini-h">▸ Script — <code>.claude/hooks/pre-bash.sh</code></p>
+        <pre><code>{`#!/usr/bin/env bash
+set -euo pipefail
+cmd=$(jq -r '.tool_input.command')
+block() { echo "blocked: $1" >&2; exit 2; }
+[[ "$cmd" =~ rm[[:space:]]+-[rRf]+ ]] && block "rm -rf is denied"
+[[ "$cmd" =~ git[[:space:]]+push.*--force ]] && block "force push is denied"
+[[ "$cmd" =~ (npm|pnpm|bun)[[:space:]]+(i|install) ]] && {
+  [[ -f package-lock.json || -f pnpm-lock.yaml || -f bun.lock ]] || \
+    block "install without lockfile in tree"
+}
+exit 0`}</code></pre>
+
+        <p class="ck-mini-h">▸ Wire-up</p>
+        <pre><code>{`{ "hooks": {
+    "PreToolUse": [{
+      "matcher": "Bash",
+      "hooks": [{
+        "type": "command",
+        "command": "bash .claude/hooks/pre-bash.sh"
+      }]
+    }]
+} }`}</code></pre>
+
+        <p class="ck-gotcha"><b>Gotcha</b> — <code>matcher: "Bash"</code> at the array level limits the hook to Bash calls. Without it, the hook fires on every tool call and your jq query fails on the wrong payload shape.</p>
+      </article>
+
+      <!-- §6 PreToolUse(Agent) -->
+      <article id="r6" class="ck-recipe ck-fam-orange" data-family="tool-gate">
+        <header class="ck-rec-head">
+          <span class="ck-rec-n">§6</span>
+          <h2 class="ck-rec-h">Require a 5-field delegation handoff</h2>
+          <span class="ck-rec-event"><code>PreToolUse(Agent)</code></span>
+        </header>
+        <p class="ck-when"><b>When</b> — you keep getting under-specified sub-agents that invent their own framing. Enforce a structured handoff: TASK / CONTEXT / CONSTRAINTS / DELIVERABLE / DONE_WHEN.</p>
+
+        <p class="ck-mini-h">▸ Script — <code>.claude/hooks/pre-agent.sh</code></p>
+        <pre><code>{`#!/usr/bin/env bash
+set -euo pipefail
+prompt=$(jq -r '.tool_input.prompt')
+required=(TASK CONTEXT CONSTRAINTS)
+outcome=0
+for f in "$&#123;required[@]&#125;"; do
+  echo "$prompt" | grep -qiE "^[[:space:]]*$f:" || { missing+=" $f"; outcome=1; }
+done
+echo "$prompt" | grep -qiE "^[[:space:]]*(DELIVERABLE|DONE_WHEN):" || outcome=1
+
+[[ $outcome -eq 0 ]] && exit 0
+cat >&2 <<MSG
+delegation-gate: missing fields$missing (and/or DELIVERABLE/DONE_WHEN).
+Use 5-field handoff:
+  TASK:        <one sentence>
+  CONTEXT:     <files/paths>
+  CONSTRAINTS: <what NOT to do>
+  DELIVERABLE: <artifact> | DONE_WHEN: <verifier>
+MSG
+exit 2`}</code></pre>
+
+        <p class="ck-gotcha"><b>Gotcha</b> — case-insensitive matching (<code>-i</code>) is on purpose; agents write <code>Task:</code>, <code>TASK:</code>, <code>task:</code> indifferently. Anchoring to start of line (<code>^</code>) avoids matching "task list" inside prose.</p>
+      </article>
+
+      <!-- §7 PostToolUse(Edit) -->
+      <article id="r7" class="ck-recipe ck-fam-orange" data-family="tool-gate">
+        <header class="ck-rec-head">
+          <span class="ck-rec-n">§7</span>
+          <h2 class="ck-rec-h">Run prettier check on every edited file</h2>
+          <span class="ck-rec-event"><code>PostToolUse(Edit | Write | MultiEdit)</code></span>
+        </header>
+        <p class="ck-when"><b>When</b> — you want format consistency without manual <code>prettier --write</code> after every edit. The hook runs <code>--check</code> and surfaces violations to the agent on its next turn.</p>
+
+        <p class="ck-mini-h">▸ Script — <code>.claude/hooks/post-edit-prettier.sh</code></p>
+        <pre><code>{`#!/usr/bin/env bash
+set -euo pipefail
+file=$(jq -r '.tool_input.file_path // .tool_input.path // empty')
+[[ -z "$file" ]] && exit 0
+[[ "$file" =~ \\.(ts|tsx|js|jsx|json|md|css)$ ]] || exit 0
+out=$(npx -y prettier --check "$file" 2>&1) && exit 0
+echo "prettier-advisory: $file is not formatted" >&2
+echo "$out" >&2
+exit 0  # advisory: log, do not block`}</code></pre>
+
+        <p class="ck-gotcha"><b>Gotcha</b> — the matcher <code>"Edit|Write|MultiEdit"</code> uses regex alternation. Payload field names differ: Edit/MultiEdit use <code>file_path</code>; Write uses <code>file_path</code>; some legacy tools used <code>path</code>. The <code>// empty</code> fallback in jq covers all shapes.</p>
+      </article>
+
+      <!-- §8 PermissionDenied -->
+      <article id="r8" class="ck-recipe ck-fam-green" data-family="permission">
+        <header class="ck-rec-head">
+          <span class="ck-rec-n">§8</span>
+          <h2 class="ck-rec-h">Suggest an alternative when the user denies a tool</h2>
+          <span class="ck-rec-event"><code>PermissionDenied</code></span>
+        </header>
+        <p class="ck-when"><b>When</b> — the agent asks for <code>Bash(curl …)</code>, you deny, but you'd rather it use a different verb. The hook injects a hint so the agent retries with the right tool.</p>
+
+        <p class="ck-mini-h">▸ Script — <code>.claude/hooks/perm-denied-hint.sh</code></p>
+        <pre><code>{`#!/usr/bin/env bash
+set -euo pipefail
+denied=$(jq -r '.tool_name + "(" + (.tool_input | tostring) + ")"')
+case "$denied" in
+  Bash*curl*)  echo "hint: try the WebFetch tool instead of curl" ;;
+  Bash*rm*)    echo "hint: this project blocks rm; if you need to remove, ask the user" ;;
+  Bash*gh*pr*) echo "hint: prefer the GitHub MCP server (mcp__github__*) for PR ops" ;;
+esac`}</code></pre>
+
+        <p class="ck-gotcha"><b>Gotcha</b> — <code>PermissionDenied</code> fires after the user denies the prompt. Stdout becomes <code>additionalContext</code> on the agent's next turn. Don't moralize — give a concrete redirect or stay quiet.</p>
+      </article>
+
+      <!-- §9 SubagentStop -->
+      <article id="r9" class="ck-recipe ck-fam-violet" data-family="subagent">
+        <header class="ck-rec-head">
+          <span class="ck-rec-n">§9</span>
+          <h2 class="ck-rec-h">Verify the sub-agent's claimed deliverable actually exists</h2>
+          <span class="ck-rec-event"><code>SubagentStop</code></span>
+        </header>
+        <p class="ck-when"><b>When</b> — sub-agents say "done, created file X" but X doesn't exist. The hook parses the brief's <code>DELIVERABLE:</code> field, checks the path, and flags discrepancies.</p>
+
+        <p class="ck-mini-h">▸ Script — <code>.claude/hooks/subagent-verify.sh</code></p>
+        <pre><code>{`#!/usr/bin/env bash
+set -euo pipefail
+brief=$(jq -r '.tool_input.prompt // empty')
+deliverable=$(echo "$brief" | grep -iE '^[[:space:]]*DELIVERABLE:' | head -1 | sed -E 's/^[^:]*:[[:space:]]*//')
+# crude: pull any path-shaped token from the deliverable line
+path=$(echo "$deliverable" | grep -oE '[a-zA-Z0-9_./-]+\\.(ts|tsx|md|json|astro|sh|py|go|rs)' | head -1 || true)
+[[ -z "$path" ]] && exit 0
+[[ -f "$path" ]] && exit 0
+echo "subagent-advisory: claimed deliverable '$path' not found in tree" >&2
+exit 0  # advisory`}</code></pre>
+
+        <p class="ck-gotcha"><b>Gotcha</b> — extracting paths from prose is fragile; the script only catches deliverables that name a path with a recognized extension. For richer checks, pair <code>DELIVERABLE</code> with <code>DONE_WHEN: <verifiable command></code> and run the command instead.</p>
+      </article>
+
+      <!-- §10 PreCompact -->
+      <article id="r10" class="ck-recipe ck-fam-yellow" data-family="compaction">
+        <header class="ck-rec-head">
+          <span class="ck-rec-n">§10</span>
+          <h2 class="ck-rec-h">Snapshot last 12 user turns before summarization</h2>
+          <span class="ck-rec-event"><code>PreCompact</code></span>
+        </header>
+        <p class="ck-when"><b>When</b> — long sessions get summarized and the summarizer drops verbatim wording, file paths, exact identifiers. The hook saves raw turns to disk so the next session-start can re-inject them.</p>
+
+        <p class="ck-mini-h">▸ Script — <code>.claude/hooks/pre-compact.sh</code></p>
+        <pre><code>{`#!/usr/bin/env bash
+set -euo pipefail
+transcript=$(jq -r '.transcript_path // empty')
+[[ -f "$transcript" ]] || exit 0
+# extract last 12 user prompts + their assistant text
+jq -c 'select(.role=="user" or .role=="assistant") | {role, content}' "$transcript" \\
+  | tail -n 48 > .claude/COMPACT_NOTES.md
+echo "wrote .claude/COMPACT_NOTES.md ($(wc -l < .claude/COMPACT_NOTES.md) lines)" >&2`}</code></pre>
+
+        <p class="ck-mini-h">▸ Companion SessionStart hook</p>
+        <pre><code>{`# in .claude/hooks/session-start.sh
+if [[ "$(jq -r '.source')" = "compact" && -f .claude/COMPACT_NOTES.md ]]; then
+  echo "=== PRE-COMPACT SNAPSHOT ==="
+  cat .claude/COMPACT_NOTES.md
+fi`}</code></pre>
+
+        <p class="ck-gotcha"><b>Gotcha</b> — only <code>PreCompact</code> can write before the summarizer truncates context, and only <code>SessionStart</code> with <code>source: "compact"</code> can inject after. No other hook bridges that gap. Both halves are required.</p>
+      </article>
+
+      <!-- ===== FOOTER ===== -->
+      <footer class="ck-foot">
+        <div class="ck-foot-band">
+          <span class="ck-tag">10 RECIPES · 7 FAMILIES · 29 EVENTS COVERED IN PRINCIPLE</span>
+        </div>
+        <p class="ck-foot-next">
+          Want the full taxonomy? <a href={`${cheatsheetPath}#hooks-radial`}>Atlas hook radial</a> on the cheatsheet. New to hooks? Start with <a href={`${masterclassPath}#m8`}>§8 of the Master Class</a>. Source: <a href={REPO_URL} target="_blank" rel="noopener">github/cfpperche/Agent0</a>.
+        </p>
+      </footer>
+
+    </main>
+
+    <style is:global>
+      :root[data-theme="poster"] {
+        --p-bg: #0a0e1f;
+        --p-bg-2: #0e1530;
+        --p-ink: #e5e7eb;
+        --p-ink-dim: #9ca3af;
+        --p-ink-faint: #6b7280;
+        --p-green: #39ff14;
+        --p-orange: #ff9933;
+        --p-red: #ff4d4d;
+        --p-cyan: #00e5ff;
+        --p-magenta: #ff44ff;
+        --p-violet: #a78bfa;
+        --p-yellow: #ffe066;
+        --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+      }
+      html, body { background: var(--p-bg); color: var(--p-ink); }
+      .ck-body {
+        font-family: var(--font-sans);
+        margin: 0;
+        background: radial-gradient(ellipse at top, var(--p-bg-2), var(--p-bg) 70%);
+        min-height: 100vh;
+        padding: 0 0 60px;
+      }
+      .ck-top {
+        display: flex;
+        align-items: center;
+        padding: 14px 32px 0;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        gap: 16px;
+      }
+      .ck-top-tools { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+      .ck-back {
+        color: var(--p-cyan);
+        text-decoration: none;
+        letter-spacing: 0.04em;
+        border-bottom: 1px dashed transparent;
+      }
+      .ck-back:hover { border-bottom-color: var(--p-cyan); }
+      .ck-tool-btn {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        color: var(--p-orange);
+        background: transparent;
+        border: 1px solid rgba(255,153,51,0.4);
+        border-radius: 2px;
+        padding: 3px 10px;
+        cursor: pointer;
+      }
+      .ck-tool-btn:hover { color: var(--p-yellow); border-color: var(--p-yellow); }
+
+      .ck-page {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 24px 32px;
+      }
+      @media (max-width: 720px) {
+        .ck-page { padding: 16px; }
+      }
+
+      /* banner */
+      .ck-banner { text-align: center; margin-bottom: 30px; }
+      .ck-strip {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--p-orange);
+        letter-spacing: 0.12em;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: center;
+        gap: 18px;
+        flex-wrap: wrap;
+      }
+      .ck-tag { white-space: nowrap; }
+      .ck-title {
+        font-family: var(--font-mono);
+        font-size: 56px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin: 8px 0 14px;
+        line-height: 0.98;
+      }
+      .ck-title-line { display: block; color: var(--p-ink); }
+      .ck-title-accent { color: var(--p-orange); }
+      .ck-sub {
+        color: var(--p-ink-dim);
+        font-size: 14px;
+        margin: 0;
+      }
+      .ck-sub code { color: var(--p-orange); }
+      @media (max-width: 720px) {
+        .ck-title { font-size: 38px; }
+        .ck-strip { font-size: 9.5px; gap: 10px; }
+      }
+
+      /* intro */
+      .ck-intro {
+        background: rgba(0,0,0,0.3);
+        border-left: 3px solid var(--p-cyan);
+        border-radius: 2px;
+        padding: 18px 22px;
+        margin: 18px 0 24px;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      .ck-intro-h {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--p-cyan);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin: 0 0 8px;
+      }
+      .ck-intro-h + p, .ck-intro-h + ul { margin-top: 0; }
+      .ck-intro p { margin: 0 0 14px; color: var(--p-ink); }
+      .ck-intro-ul { margin: 0 0 14px; padding-left: 20px; color: var(--p-ink); }
+      .ck-intro-ul li { margin-bottom: 4px; }
+      .ck-intro code { color: var(--p-orange); font-family: var(--font-mono); }
+
+      /* filters */
+      .ck-filters {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 0 0 28px;
+        padding: 12px 16px;
+        background: rgba(0,0,0,0.25);
+        border-radius: 2px;
+        border-left: 3px solid var(--p-magenta);
+      }
+      .ck-filter-h {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--p-magenta);
+        letter-spacing: 0.08em;
+        font-weight: 700;
+        margin-right: 6px;
+      }
+      .ck-filter {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        background: transparent;
+        border: 1px solid rgba(255,255,255,0.15);
+        color: var(--p-ink-dim);
+        padding: 3px 10px;
+        border-radius: 2px;
+        cursor: pointer;
+        letter-spacing: 0.04em;
+      }
+      .ck-filter:hover { color: var(--p-ink); border-color: var(--p-ink-dim); }
+      .ck-filter[aria-pressed="true"] { color: var(--p-ink); background: rgba(255,255,255,0.06); }
+      .ck-filter-cyan[aria-pressed="true"]    { border-color: var(--p-cyan); color: var(--p-cyan); }
+      .ck-filter-magenta[aria-pressed="true"] { border-color: var(--p-magenta); color: var(--p-magenta); }
+      .ck-filter-orange[aria-pressed="true"]  { border-color: var(--p-orange); color: var(--p-orange); }
+      .ck-filter-green[aria-pressed="true"]   { border-color: var(--p-green); color: var(--p-green); }
+      .ck-filter-violet[aria-pressed="true"]  { border-color: var(--p-violet); color: var(--p-violet); }
+      .ck-filter-yellow[aria-pressed="true"]  { border-color: var(--p-yellow); color: var(--p-yellow); }
+
+      /* recipe cards */
+      .ck-recipe {
+        margin-bottom: 28px;
+        padding: 18px 22px;
+        background: rgba(0,0,0,0.28);
+        border-left: 3px solid var(--ck-fam, var(--p-ink-faint));
+        border-radius: 2px;
+        scroll-margin-top: 20px;
+      }
+      .ck-fam-cyan    { --ck-fam: var(--p-cyan); }
+      .ck-fam-magenta { --ck-fam: var(--p-magenta); }
+      .ck-fam-orange  { --ck-fam: var(--p-orange); }
+      .ck-fam-green   { --ck-fam: var(--p-green); }
+      .ck-fam-violet  { --ck-fam: var(--p-violet); }
+      .ck-fam-yellow  { --ck-fam: var(--p-yellow); }
+
+      .ck-rec-head {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        margin-bottom: 10px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        flex-wrap: wrap;
+      }
+      .ck-rec-n {
+        font-family: var(--font-mono);
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--ck-fam);
+      }
+      .ck-rec-h {
+        font-family: var(--font-mono);
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--p-ink);
+        margin: 0;
+        flex: 1;
+        line-height: 1.35;
+      }
+      .ck-rec-h code {
+        color: var(--p-orange);
+        font-size: 13.5px;
+      }
+      .ck-rec-event {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--ck-fam);
+        letter-spacing: 0.06em;
+      }
+      .ck-rec-event code { color: var(--ck-fam); }
+
+      .ck-when {
+        font-size: 13.5px;
+        line-height: 1.55;
+        color: var(--p-ink);
+        margin: 0 0 14px;
+      }
+      .ck-when b { color: var(--ck-fam); margin-right: 4px; letter-spacing: 0.04em; }
+      .ck-when code { color: var(--p-orange); font-family: var(--font-mono); font-size: 12px; }
+
+      .ck-mini-h {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--p-magenta);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin: 12px 0 4px;
+      }
+      .ck-mini-h code { color: var(--p-orange); font-size: 11px; }
+      .ck-recipe pre {
+        background: rgba(0,0,0,0.45);
+        border-left: 2px solid var(--p-green);
+        padding: 10px 14px;
+        font-size: 11.5px;
+        color: var(--p-ink);
+        overflow-x: auto;
+        margin: 4px 0 12px;
+        border-radius: 2px;
+        line-height: 1.5;
+      }
+      .ck-recipe pre code { color: var(--p-ink); font-family: var(--font-mono); }
+
+      .ck-gotcha {
+        margin: 14px 0 0;
+        padding: 10px 14px;
+        background: rgba(255,77,77,0.08);
+        border-left: 2px solid var(--p-red);
+        border-radius: 2px;
+        font-size: 12.5px;
+        color: var(--p-ink);
+        line-height: 1.5;
+      }
+      .ck-gotcha b { color: var(--p-red); margin-right: 6px; }
+      .ck-gotcha code { color: var(--p-orange); font-family: var(--font-mono); font-size: 11px; }
+
+      /* footer */
+      .ck-foot {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255,255,255,0.08);
+        text-align: center;
+      }
+      .ck-foot-band {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--p-orange);
+        letter-spacing: 0.12em;
+        margin-bottom: 12px;
+      }
+      .ck-foot-next {
+        font-size: 13px;
+        color: var(--p-ink-dim);
+      }
+      .ck-foot-next a {
+        color: var(--p-cyan);
+        text-decoration: none;
+        border-bottom: 1px dashed transparent;
+      }
+      .ck-foot-next a:hover { border-bottom-color: var(--p-cyan); }
+
+      /* filter dim */
+      .ck-body.filter-active .ck-recipe:not(.ck-match) {
+        opacity: 0.15;
+        filter: grayscale(0.6);
+        transition: opacity 0.18s, filter 0.18s;
+      }
+
+      /* ===== PRINT — pocket-guide ===== */
+      @media print {
+        @page { margin: 14mm 12mm; size: A4; }
+        html, body, .ck-body {
+          background: #fff !important;
+          color: #111 !important;
+        }
+        .ck-top, .ck-filters, .ck-back, .ck-tool-btn { display: none !important; }
+        .ck-page { max-width: none; padding: 0; margin: 0; }
+        .ck-banner { margin-bottom: 8mm; page-break-after: avoid; }
+        .ck-strip { color: #555 !important; }
+        .ck-title { color: #111 !important; font-size: 28pt; }
+        .ck-title-accent { color: #111 !important; }
+        .ck-sub { color: #444 !important; font-size: 10pt; }
+        .ck-intro {
+          background: #fafafa !important;
+          border-left-color: #888 !important;
+          color: #111 !important;
+          font-size: 9.5pt;
+          page-break-after: always;
+        }
+        .ck-intro-h { color: #111 !important; }
+        .ck-intro code { color: #b04500 !important; }
+        .ck-recipe {
+          background: #fff !important;
+          border-left: 2pt solid #555 !important;
+          page-break-before: always;
+          page-break-inside: avoid;
+          padding: 4mm 6mm;
+        }
+        .ck-recipe:first-of-type { page-break-before: auto; }
+        .ck-rec-head { border-bottom-color: #ccc !important; }
+        .ck-rec-n, .ck-rec-h, .ck-rec-h code { color: #111 !important; }
+        .ck-rec-event, .ck-rec-event code { color: #555 !important; }
+        .ck-when { color: #111 !important; }
+        .ck-when b { color: #555 !important; }
+        .ck-when code { color: #b04500 !important; }
+        .ck-mini-h { color: #666 !important; }
+        .ck-recipe pre {
+          background: #f4f4f4 !important;
+          border-left-color: #888 !important;
+          color: #111 !important;
+          font-size: 8.5pt;
+        }
+        .ck-recipe pre code { color: #111 !important; }
+        .ck-gotcha {
+          background: #fef0f0 !important;
+          border-left-color: #b91c1c !important;
+          color: #111 !important;
+          font-size: 9pt;
+        }
+        .ck-gotcha b { color: #b91c1c !important; }
+        .ck-foot-next { color: #444 !important; font-size: 9pt; }
+        .ck-foot-next a { color: #0066aa !important; }
+        .ck-foot-next a::after {
+          content: " (" attr(href) ")";
+          font-size: 7.5pt;
+          color: #777;
+        }
+      }
+    </style>
+
+    <script is:inline>
+      (() => {
+        const body = document.body;
+        const filters = Array.from(document.querySelectorAll(".ck-filter"));
+        const recipes = Array.from(document.querySelectorAll(".ck-recipe"));
+
+        filters.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const fam = btn.getAttribute("data-family");
+            filters.forEach((b) => b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
+            if (fam === "all") {
+              body.classList.remove("filter-active");
+              recipes.forEach((r) => r.classList.remove("ck-match"));
+              return;
+            }
+            body.classList.add("filter-active");
+            recipes.forEach((r) => {
+              r.classList.toggle("ck-match", r.getAttribute("data-family") === fam);
+            });
+          });
+        });
+
+        const print = document.getElementById("ck-print");
+        if (print) print.addEventListener("click", () => window.print());
+      })();
+    </script>
+  </body>
+</html>

@@ -66,7 +66,7 @@ const pageDesc = `One-page poster reference for Claude Code v${CC_VERSION}: CLI 
       </header>
 
       <!-- ===== PART I HEADER ===== -->
-      <div class="part-marker">
+      <div id="part-i" class="part-marker">
         <span class="part-tag">PART I</span>
         <span class="part-h">CLI — the runtime surface</span>
         <span class="part-dim">flags, modes, subcommands</span>
@@ -306,7 +306,7 @@ const pageDesc = `One-page poster reference for Claude Code v${CC_VERSION}: CLI 
       </section>
 
       <!-- ===== PART II HEADER ===== -->
-      <div class="part-marker">
+      <div id="part-ii" class="part-marker">
         <span class="part-tag part-tag-orange">PART II</span>
         <span class="part-h">Platform — what you configure in <code>.claude/</code></span>
         <span class="part-dim">settings · hooks · skills · agents · rules · commands</span>
@@ -422,7 +422,7 @@ const pageDesc = `One-page poster reference for Claude Code v${CC_VERSION}: CLI 
             <div class="hr-block">
               <span class="recipe-h">handler types</span>
               <p>
-                <code>type: command</code> shell · default · what Agent0 uses.
+                <code>type: command</code> shell · the default.
                 <code>type: prompt</code> single-turn Claude eval over <code>$ARGUMENTS</code>.
                 <code>type: agent</code> spawns a sub-agent w/ tools for deep verification.
               </p>
@@ -572,7 +572,7 @@ tools: [Read, Grep, Bash]
 disallowedTools: [Edit, Write]
 model: sonnet           # alias or full id
 permissionMode: plan
-skills: [sdd, remind]
+skills: [simplify, debug]
 mcpServers: [github]
 maxTurns: 12
 isolation: worktree
@@ -590,32 +590,6 @@ You are an X agent. Your job is …`}</code></pre>
           <p class="mini">
             <code>Agent</code> tool: <code>subagent_type</code> + <code>prompt</code> +
             optional <code>model</code> · <code>isolation:"worktree"</code> · <code>run_in_background</code>.
-          </p>
-        </article>
-
-        <!-- RULES -->
-        <article class="card card-pink" style="grid-area: rules">
-          <h2 class="card-h" data-myth-icon="⚖️" data-myth-name="The Doctrine">▸ RULES — <code>.claude/rules/</code></h2>
-          <p class="card-sub">behavioral mandates · path-scoped optional</p>
-          <dl class="flags">
-            <dt>📁 <code>.claude/rules/&lt;topic&gt;.md</code></dt>
-            <dd>git-tracked · ships to forks via harness-sync.</dd>
-            <dt>frontmatter (optional)</dt>
-            <dd>
-              <code>paths: ["**/foo.sh", "**/bar.md"]</code> — load only when
-              accessed file matches a glob. Fires <code>InstructionsLoaded</code>
-              with <code>load_reason: path_glob_match</code>.
-            </dd>
-            <dt>vs <b>memory</b></dt>
-            <dd><code>.claude/memory/</code> = factual reference (DOES NOT ship). Rules = behavior (DOES ship).</dd>
-            <dt>vs <b>CLAUDE.md</b></dt>
-            <dd>Always loaded; canonical orientation. Rules are on-demand, deeper.</dd>
-            <dt>load reasons</dt>
-            <dd><code>session_start</code> · <code>path_glob_match</code> · <code>nested_traversal</code> · <code>include</code> · <code>compact</code></dd>
-          </dl>
-          <p class="mini" style="margin-top:8px">
-            Dedup: one <code>InstructionsLoaded</code> per rule per session,
-            no matter how many globs match later.
           </p>
         </article>
 
@@ -1413,7 +1387,7 @@ You are an X agent. Your job is …`}</code></pre>
         </article>
 
         <!-- HOOK TAXONOMY RADIAL -->
-        <article class="card card-cyan wide">
+        <article id="hooks-radial" class="card card-cyan wide">
           <h2 class="card-h" data-myth-icon="⚛️" data-myth-name="The Sigils">▸ HOOK TAXONOMY — 29 events at a glance</h2>
           <p class="card-sub">7 categories radiating from the agentic loop</p>
           <div style="display:flex;justify-content:center;padding:10px 0">
@@ -1501,12 +1475,12 @@ You are an X agent. Your job is …`}</code></pre>
             </svg>
           </div>
           <p class="mini" style="margin-top:6px">
-            Agent0 currently uses <b>9 of 29</b>: <code>SessionStart</code> · <code>Stop</code> · <code>PreCompact</code> · <code>PreToolUse</code> · <code>PostToolUse</code> · <code>PostToolUseFailure</code> · <code>InstructionsLoaded</code>. The other 20 are untapped capacity.
+            Most projects only wire <b>3–5 of 29</b> — typically <code>SessionStart</code>, <code>PreToolUse</code>, <code>PostToolUse</code>, <code>Stop</code>, <code>PreCompact</code>. The other 20+ are untapped capacity (tool-batch gates, sub-agent boundaries, file/cwd change, elicitation, …).
           </p>
         </article>
 
         <!-- MCP ECOSYSTEM RADIAL -->
-        <article class="card card-magenta wide">
+        <article id="mcp-radial" class="card card-magenta wide">
           <h2 class="card-h" data-myth-icon="🛸" data-myth-name="The Constellation">▸ MCP ECOSYSTEM — Claude's outer surface</h2>
           <p class="card-sub">5 mature servers connect Claude to the world · each exposes its tools via <code>mcp__&lt;srv&gt;__&lt;tool&gt;</code></p>
           <div style="display:flex;justify-content:center;padding:10px 0">
@@ -1716,52 +1690,85 @@ You are an X agent. Your job is …`}</code></pre>
           </div>
         </article>
 
-        <!-- FILE SYSTEM MAP -->
+        <!-- ANATOMY OF .claude/ — user-global + project, grouped by function -->
         <article class="card card-green wide">
-          <h2 class="card-h" data-myth-icon="🗺️" data-myth-name="The Cartography">▸ FILE SYSTEM MAP — where everything lives</h2>
-          <p class="card-sub">user-global vs project-scoped · what ships in PR vs what stays per-machine</p>
+          <h2 class="card-h" data-myth-icon="🗺️" data-myth-name="The Cartography">▸ ANATOMY OF <code>.claude/</code> — every file CC reads or writes</h2>
+          <p class="card-sub">two scopes · five functions · what ships in PR vs what stays per-machine</p>
           <div class="fs-map">
 
             <div class="fs-side" style="--c: var(--p-violet)">
               <h4>~/.claude/ <span class="fs-tag">user-global · per-machine · NOT shipped</span></h4>
 <pre class="fs-tree"><span class="fs-dir">~/.claude/</span>
-├── <span class="fs-key">CLAUDE.md</span>            <span class="fs-dim"># personal preferences</span>
-├── <span class="fs-key">settings.json</span>        <span class="fs-dim"># user-level defaults</span>
-├── <span class="fs-key">mcp.json</span>             <span class="fs-dim"># user-scope MCP servers</span>
-├── <span class="fs-dir">projects/</span>
-│   └── <span class="fs-dir">&lt;path-hash&gt;/</span>
-│       └── <span class="fs-dir">memory/</span>
-│           ├── <span class="fs-key">MEMORY.md</span>     <span class="fs-dim"># index, auto-loaded</span>
-│           └── <span class="fs-key">&lt;slug&gt;.md</span>     <span class="fs-dim"># on-demand</span>
-├── <span class="fs-dir">skills/&lt;name&gt;/</span>SKILL.md
-├── <span class="fs-dir">agents/</span>&lt;name&gt;.md
-└── <span class="fs-key">keybindings.json</span></pre>
+│
+│  <span class="fs-section">── CONTEXT</span>
+├── <span class="fs-key">CLAUDE.md</span>             <span class="fs-dim"># user-wide instructions · every session</span>
+│
+│  <span class="fs-section">── CONFIGURATION</span>
+├── <span class="fs-key">settings.json</span>         <span class="fs-dim"># user-level defaults · model · theme</span>
+├── <span class="fs-key">keybindings.json</span>      <span class="fs-dim"># key shortcuts</span>
+│
+│  <span class="fs-section">── CAPABILITIES</span>
+├── <span class="fs-dir">skills/</span>&lt;n&gt;/SKILL.md   <span class="fs-dim"># personal slash commands</span>
+├── <span class="fs-dir">agents/</span>&lt;n&gt;.md         <span class="fs-dim"># personal sub-agents</span>
+├── <span class="fs-dir">output-styles/</span>&lt;n&gt;.md  <span class="fs-dim"># custom personas</span>
+├── <span class="fs-dir">plugins/</span>&lt;n&gt;/         <span class="fs-dim"># personal extensions</span>
+│
+│  <span class="fs-section">── RUNTIME STATE  (CC-managed)</span>
+└── <span class="fs-dir">projects/</span>&lt;repo-slug&gt;/
+    ├── <span class="fs-dir">memory/</span><span class="fs-key">MEMORY.md</span>    <span class="fs-dim"># auto-memory index</span>
+    ├── <span class="fs-dir">memory/</span>&lt;topic&gt;.md  <span class="fs-dim"># facts CC learns</span>
+    └── <span class="fs-key">history.jsonl</span>      <span class="fs-dim"># conversation log</span>
+
+<span class="fs-key">~/.claude.json</span>             <span class="fs-dim"># OAuth + MCP + trust (FILE, sibling)</span></pre>
             </div>
 
             <div class="fs-side" style="--c: var(--p-green)">
-              <h4>&lt;proj&gt;/.claude/ <span class="fs-tag">project · git-tracked · ships with PR</span></h4>
+              <h4>&lt;proj&gt;/ + .claude/ <span class="fs-tag">project · git-tracked · ships with PR</span></h4>
 <pre class="fs-tree"><span class="fs-dir">&lt;proj&gt;/</span>
-├── <span class="fs-key">CLAUDE.md</span>            <span class="fs-dim"># team-shared orientation</span>
-├── <span class="fs-key">.mcp.json</span>            <span class="fs-dim"># project-scope MCP</span>
+│
+│  <span class="fs-section">── CONTEXT  (repo root)</span>
+├── <span class="fs-key">CLAUDE.md</span>             <span class="fs-dim"># team-shared · auto-loaded every session</span>
+├── <span class="fs-key">CLAUDE.local.md</span>       <span class="fs-dim"># personal overrides (gitignored)</span>
+│
+│  <span class="fs-section">── CONNECTIVITY  (repo root)</span>
+├── <span class="fs-key">.mcp.json</span>             <span class="fs-dim"># MCP servers for this project</span>
+│
 └── <span class="fs-dir">.claude/</span>
-    ├── <span class="fs-key">settings.json</span>    <span class="fs-dim"># team-shared</span>
+    │
+    │  <span class="fs-section">── CONFIGURATION</span>
+    ├── <span class="fs-key">settings.json</span>     <span class="fs-dim"># team-shared</span>
     ├── <span class="fs-key">settings.local.json</span> <span class="fs-dim"># gitignored, personal</span>
-    ├── <span class="fs-dir">hooks/</span>*.sh        <span class="fs-dim"># lifecycle scripts</span>
-    ├── <span class="fs-dir">rules/</span>*.md        <span class="fs-dim"># behavioral mandates</span>
-    ├── <span class="fs-dir">skills/&lt;name&gt;/</span>
-    ├── <span class="fs-dir">agents/</span>&lt;name&gt;.md
-    ├── <span class="fs-dir">memory/</span>&lt;topic&gt;.md <span class="fs-dim"># project-only</span>
-    └── <span class="fs-dir">.browser-state/</span>   <span class="fs-dim"># gitignored</span></pre>
+    │
+    │  <span class="fs-section">── CAPABILITIES</span>
+    ├── <span class="fs-dir">skills/</span>&lt;n&gt;/SKILL.md
+    ├── <span class="fs-dir">agents/</span>&lt;n&gt;.md
+    ├── <span class="fs-dir">commands/</span>&lt;n&gt;.md   <span class="fs-dim"># legacy slash-cmd format</span>
+    ├── <span class="fs-dir">output-styles/</span>&lt;n&gt;.md
+    ├── <span class="fs-dir">plugins/</span>&lt;n&gt;/
+    │
+    │  <span class="fs-section">── LIFECYCLE</span>
+    └── <span class="fs-dir">hooks/</span>&lt;event&gt;.sh   <span class="fs-dim"># scripts referenced from settings.json</span></pre>
             </div>
 
           </div>
+
+          <p class="card-sub" style="margin-top:10px">precedence &amp; load order</p>
+          <p class="mini">
+            <b>Settings:</b> managed-policy → CLI flags → <code>settings.local.json</code> → <code>.claude/settings.json</code> → <code>~/.claude/settings.json</code>. First match wins per key.
+          </p>
+          <p class="mini" style="margin-top:4px">
+            <b>CLAUDE.md walk:</b> managed-policy → <code>~/.claude/CLAUDE.md</code> → ancestors of cwd → <code>./CLAUDE.md</code> → <code>CLAUDE.local.md</code> → nested subdir <code>CLAUDE.md</code> (on-demand when files in those dirs are touched).
+          </p>
+          <p class="mini" style="margin-top:4px">
+            <b>Managed policy</b> (admin-pushed, cannot be excluded): <code>/etc/claude-code/</code> Linux/WSL · <code>/Library/Application Support/ClaudeCode/</code> macOS · <code>C:\Program Files\ClaudeCode\</code> Windows. Holds <code>CLAUDE.md</code> + <code>managed-settings.json</code>.
+          </p>
           <p class="mini" style="margin-top:8px">
-            <b>Rule of thumb:</b> if a teammate cloning your repo should get it → put it in <code>&lt;proj&gt;/.claude/</code>. If only you should have it → <code>~/.claude/</code>. If neither (it's per-machine local) → <code>settings.local.json</code> (gitignored).
+            <b>Rule of thumb:</b> teammate cloning your repo should get it → <code>&lt;proj&gt;/.claude/</code> · only you should have it → <code>~/.claude/</code> · per-machine local → <code>settings.local.json</code> (gitignored).
           </p>
         </article>
 
         <!-- COST × MODEL FIT MATRIX -->
-        <article class="card card-cyan wide">
+        <article id="cost-matrix" class="card card-cyan wide">
           <h2 class="card-h" data-myth-icon="🎯" data-myth-name="The Right Tool">▸ COST × TASK × MODEL — pick once, save 70%</h2>
           <p class="card-sub">where each model fits · diagonal is optimal · off-diagonal is over- or under-spec</p>
           <div style="display:flex;justify-content:center;padding:10px 0">
@@ -1896,10 +1903,10 @@ You are an X agent. Your job is …`}</code></pre>
           </p>
         </article>
 
-        <!-- SKILL · AGENT · RULE COMPOSITION -->
-        <article class="card card-violet wide">
-          <h2 class="card-h" data-myth-icon="🕸️" data-myth-name="The Weave">▸ SKILL · AGENT · RULE — how a capacity composes</h2>
-          <p class="card-sub">a real example: <code>/sdd</code> uses 3 layers · skill ▸ agents ▸ rules + hooks</p>
+        <!-- SKILL · AGENT · HOOK COMPOSITION -->
+        <article id="composition" class="card card-violet wide">
+          <h2 class="card-h" data-myth-icon="🕸️" data-myth-name="The Weave">▸ SKILL · AGENT · HOOK — how a capacity composes</h2>
+          <p class="card-sub">3 layers built into the platform · invocation ▸ delegation ▸ gating</p>
           <div style="display:flex;justify-content:center;padding:10px 0">
             <svg class="dgm-svg comp-graph" viewBox="0 0 900 360" xmlns="http://www.w3.org/2000/svg" style="max-width:920px">
               <defs>
@@ -1909,36 +1916,37 @@ You are an X agent. Your job is …`}</code></pre>
               <!-- Layer labels -->
               <text x="20" y="50" class="cg-layer">SKILL</text>
               <text x="20" y="150" class="cg-layer">AGENT</text>
-              <text x="20" y="270" class="cg-layer">RULES + HOOKS</text>
+              <text x="20" y="270" class="cg-layer">HOOK</text>
 
-              <!-- Skills row -->
+              <!-- Skills row · bundled CC skills -->
               <g transform="translate(120, 20)">
                 <rect width="120" height="50" rx="3" class="dgm-box dgm-box-magenta" />
-                <text x="60" y="22" class="dgm-lbl">/sdd</text>
-                <text x="60" y="40" class="dgm-lbl-sm">new · plan · tasks</text>
+                <text x="60" y="22" class="dgm-lbl">/simplify</text>
+                <text x="60" y="40" class="dgm-lbl-sm">refactor passes</text>
               </g>
               <g transform="translate(280, 20)">
                 <rect width="120" height="50" rx="3" class="dgm-box dgm-box-magenta" />
-                <text x="60" y="22" class="dgm-lbl">/remind</text>
-                <text x="60" y="40" class="dgm-lbl-sm">add · list · dismiss</text>
+                <text x="60" y="22" class="dgm-lbl">/batch</text>
+                <text x="60" y="40" class="dgm-lbl-sm">parallel actions</text>
               </g>
               <g transform="translate(440, 20)">
                 <rect width="120" height="50" rx="3" class="dgm-box dgm-box-magenta" />
-                <text x="60" y="22" class="dgm-lbl">/brainstorm</text>
-                <text x="60" y="40" class="dgm-lbl-sm">divergent ideation</text>
+                <text x="60" y="22" class="dgm-lbl">/debug</text>
+                <text x="60" y="40" class="dgm-lbl-sm">root-cause loop</text>
               </g>
               <g transform="translate(600, 20)">
                 <rect width="120" height="50" rx="3" class="dgm-box dgm-box-magenta" />
-                <text x="60" y="22" class="dgm-lbl">user skill</text>
-                <text x="60" y="40" class="dgm-lbl-sm">your own</text>
+                <text x="60" y="22" class="dgm-lbl">/loop</text>
+                <text x="60" y="40" class="dgm-lbl-sm">autonomous runs</text>
               </g>
 
               <!-- arrows skill → agent -->
               <line x1="180" y1="70" x2="180" y2="124" class="dgm-arr" marker-end="url(#cg)" />
               <line x1="340" y1="70" x2="340" y2="124" class="dgm-arr" marker-end="url(#cg)" />
               <line x1="500" y1="70" x2="500" y2="124" class="dgm-arr" marker-end="url(#cg)" />
+              <line x1="660" y1="70" x2="660" y2="124" class="dgm-arr" marker-end="url(#cg)" />
 
-              <!-- Agents row -->
+              <!-- Agents row · built-in CC agents -->
               <g transform="translate(120, 124)">
                 <rect width="120" height="50" rx="3" class="dgm-box dgm-box-violet" />
                 <text x="60" y="22" class="dgm-lbl">general-purpose</text>
@@ -1960,43 +1968,44 @@ You are an X agent. Your job is …`}</code></pre>
                 <text x="60" y="40" class="dgm-lbl-sm">CC questions</text>
               </g>
 
-              <!-- arrows agent → rules -->
+              <!-- arrows agent → hook -->
               <line x1="180" y1="174" x2="180" y2="248" class="dgm-arr" marker-end="url(#cg)" />
               <line x1="340" y1="174" x2="340" y2="248" class="dgm-arr" marker-end="url(#cg)" />
               <line x1="500" y1="174" x2="500" y2="248" class="dgm-arr" marker-end="url(#cg)" />
               <line x1="660" y1="174" x2="660" y2="248" class="dgm-arr" marker-end="url(#cg)" />
 
-              <!-- Rules + Hooks row -->
+              <!-- Hooks row · platform events that gate the agent's edits -->
               <g transform="translate(120, 248)">
-                <rect width="120" height="50" rx="3" class="dgm-box dgm-box-pink" />
-                <text x="60" y="22" class="dgm-lbl">spec-driven.md</text>
-                <text x="60" y="40" class="dgm-lbl-sm">rule</text>
+                <rect width="120" height="50" rx="3" class="dgm-box dgm-box-cyan" />
+                <text x="60" y="22" class="dgm-lbl">PreToolUse</text>
+                <text x="60" y="40" class="dgm-lbl-sm">gate before</text>
               </g>
               <g transform="translate(280, 248)">
-                <rect width="120" height="50" rx="3" class="dgm-box dgm-box-pink" />
-                <text x="60" y="22" class="dgm-lbl">delegation.md</text>
-                <text x="60" y="40" class="dgm-lbl-sm">rule</text>
+                <rect width="120" height="50" rx="3" class="dgm-box dgm-box-cyan" />
+                <text x="60" y="22" class="dgm-lbl">PostToolUse</text>
+                <text x="60" y="40" class="dgm-lbl-sm">validate after</text>
               </g>
               <g transform="translate(440, 248)">
                 <rect width="120" height="50" rx="3" class="dgm-box dgm-box-cyan" />
-                <text x="60" y="22" class="dgm-lbl">PreToolUse</text>
-                <text x="60" y="40" class="dgm-lbl-sm">hook</text>
+                <text x="60" y="22" class="dgm-lbl">SubagentStart</text>
+                <text x="60" y="40" class="dgm-lbl-sm">delegation in</text>
               </g>
               <g transform="translate(600, 248)">
                 <rect width="120" height="50" rx="3" class="dgm-box dgm-box-cyan" />
-                <text x="60" y="22" class="dgm-lbl">PostToolUse</text>
-                <text x="60" y="40" class="dgm-lbl-sm">hook</text>
+                <text x="60" y="22" class="dgm-lbl">SubagentStop</text>
+                <text x="60" y="40" class="dgm-lbl-sm">delegation out</text>
               </g>
 
               <!-- Annotation -->
-              <text x="760" y="65" class="dgm-lbl-sm" style="text-anchor:start">user types <tspan fill="var(--p-magenta)">/sdd new auth</tspan></text>
-              <text x="760" y="165" class="dgm-lbl-sm" style="text-anchor:start">skill body dispatches</text>
-              <text x="760" y="165" dy="14" class="dgm-lbl-sm" style="text-anchor:start">an Agent (e.g. Plan)</text>
-              <text x="760" y="290" class="dgm-lbl-sm" style="text-anchor:start">rule + hook layer</text>
-              <text x="760" y="290" dy="14" class="dgm-lbl-sm" style="text-anchor:start">gates execution</text>
+              <text x="760" y="45" class="dgm-lbl-sm" style="text-anchor:start">user types</text>
+              <text x="760" y="45" dy="14" class="dgm-lbl-sm" style="text-anchor:start"><tspan fill="var(--p-magenta)">/&lt;skill&gt; args</tspan></text>
+              <text x="760" y="155" class="dgm-lbl-sm" style="text-anchor:start">skill dispatches</text>
+              <text x="760" y="155" dy="14" class="dgm-lbl-sm" style="text-anchor:start">an Agent (isolated)</text>
+              <text x="760" y="270" class="dgm-lbl-sm" style="text-anchor:start">hooks gate every</text>
+              <text x="760" y="270" dy="14" class="dgm-lbl-sm" style="text-anchor:start">tool the agent runs</text>
 
               <text x="450" y="345" class="dgm-lbl-sm" style="font-size:10px">
-                Pattern: each layer extends · skill is invocation, agent is delegated work, rules + hooks are guardrails.
+                Pattern: skill = invocation · agent = delegated work in its own context · hooks = guardrails on every tool call.
               </text>
             </svg>
           </div>
@@ -2064,9 +2073,9 @@ You are an X agent. Your job is …`}</code></pre>
         </article>
 
         <!-- COMPACTION INTERRUPT FLOW -->
-        <article class="card card-red wide">
+        <article id="compaction-flow" class="card card-red wide">
           <h2 class="card-h" data-myth-icon="🌀" data-myth-name="The Archive">▸ COMPACTION INTERRUPT — what happens during /compact</h2>
-          <p class="card-sub">how raw signal survives summarization · the bridge Agent0 uses to preserve context</p>
+          <p class="card-sub">how raw signal survives summarization · the PreCompact → SessionStart(compact) bridge</p>
           <div style="display:flex;justify-content:center;padding:10px 0">
             <svg class="dgm-svg cmp-flow" viewBox="0 0 1100 260" xmlns="http://www.w3.org/2000/svg" style="max-width:1100px">
               <defs>
@@ -2124,15 +2133,15 @@ You are an X agent. Your job is …`}</code></pre>
 
               <!-- Top annotation -->
               <text x="550" y="30" class="dgm-lbl-sm" style="font-size:10.5px;font-weight:600">
-                Why this matters: <tspan fill="var(--p-orange)">summarization is lossy</tspan> · the bridge through COMPACT_NOTES.md is what keeps decisions, file paths, exact wording.
+                Why this matters: <tspan fill="var(--p-orange)">summarization is lossy</tspan> · only <tspan fill="var(--p-orange)">PreCompact</tspan> can write before truncation; only <tspan fill="var(--p-orange)">SessionStart</tspan> can inject after.
               </text>
 
               <!-- Bottom annotation -->
               <text x="550" y="200" class="dgm-lbl-sm" style="font-size:10px">
-                Agent0's hooks: <tspan fill="var(--p-orange)">pre-compact.sh</tspan> writes last 12 user turns to <tspan fill="var(--p-green)">.claude/COMPACT_NOTES.md</tspan> · <tspan fill="var(--p-orange)">session-start.sh</tspan> reads it when <tspan fill="var(--p-cyan)">source: "compact"</tspan>.
+                Pattern: <tspan fill="var(--p-orange)">PreCompact</tspan> writes raw turns to a file on disk · <tspan fill="var(--p-orange)">SessionStart</tspan> with <tspan fill="var(--p-cyan)">source: "compact"</tspan> reads it back as <tspan fill="var(--p-green)">additionalContext</tspan>.
               </text>
               <text x="550" y="230" class="dgm-lbl-sm" style="font-size:9.5px;font-style:italic">
-                Pure mechanical capture — not a second summarization. Preserves verbatim user prompts and assistant text/tool_use blocks across the boundary.
+                Other hooks (PostToolUse, UserPromptSubmit) get baked into the transcript and replayed stale — useless for this purpose.
               </text>
             </svg>
           </div>
@@ -2582,37 +2591,18 @@ You are an X agent. Your job is …`}</code></pre>
 
       /* ===== GRID — PLATFORM (PART II) ===== */
       .grid-platform {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         grid-template-areas:
-          "settings settings hooks"
-          "settings settings hooks"
-          "claudemd claudemd mcp"
-          "claudemd claudemd mcp"
-          "skills   agents   rules"
-          "tools    tools    tools"
-          "auth     auth     auth"
-          "cost     cost     cost"
-          "output   output   plugin"
-          "workflow workflow workflow"
-          "commands commands commands"
-          "envvars  envvars  envvars";
-      }
-      @media (max-width: 1000px) {
-        .grid-platform {
-          grid-template-columns: repeat(2, 1fr);
-          grid-template-areas:
-            "settings hooks"
-            "claudemd mcp"
-            "skills   agents"
-            "rules    rules"
-            "tools    tools"
-            "auth     auth"
-            "cost     cost"
-            "output   plugin"
-            "workflow workflow"
-            "commands commands"
-            "envvars  envvars";
-        }
+          "settings hooks"
+          "claudemd mcp"
+          "skills   agents"
+          "tools    tools"
+          "auth     auth"
+          "cost     cost"
+          "output   plugin"
+          "workflow workflow"
+          "commands commands"
+          "envvars  envvars";
       }
       @media (max-width: 640px) {
         .grid-platform {
@@ -2620,7 +2610,7 @@ You are an X agent. Your job is …`}</code></pre>
           grid-template-areas:
             "settings" "hooks"
             "claudemd" "mcp"
-            "skills" "agents" "rules"
+            "skills" "agents"
             "tools"
             "auth"
             "cost"
@@ -2785,6 +2775,13 @@ You are an X agent. Your job is …`}</code></pre>
       }
       .fs-tree .fs-dim {
         color: var(--p-ink-faint);
+      }
+      .fs-tree .fs-section {
+        color: var(--c, var(--p-cyan));
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        font-size: 9.5px;
+        text-transform: uppercase;
       }
 
       /* decision compass */

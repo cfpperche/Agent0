@@ -1,0 +1,1102 @@
+---
+import "../../styles/global.css";
+import { REPO_URL } from "../../i18n/locales";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const siteUrl = "https://cfpperche.github.io";
+const CC_VERSION = "2.1.143";
+const pageTitle = `Claude Code · Master Class · v${CC_VERSION}`;
+const pageDesc = `A 12-module Master Class for Claude Code v${CC_VERSION}: from first session to power-user. CLI, CLAUDE.md, MCP, skills, agents, hooks, cost, workflow patterns, compaction, CI/CD.`;
+
+const cheatsheetPath = `${base}/cheatsheet/claude-core/`;
+
+const modules = [
+  { n: 1,  slug: "mental-model",      title: "Mental Model",                tag: "foundations"  },
+  { n: 2,  slug: "first-session",     title: "Your First Session",          tag: "foundations"  },
+  { n: 3,  slug: "claude-md",         title: "CLAUDE.md, the manual",       tag: "foundations"  },
+  { n: 4,  slug: "permissions",       title: "Permissions & Safety",        tag: "foundations"  },
+  { n: 5,  slug: "mcp",               title: "The MCP Universe",            tag: "capabilities" },
+  { n: 6,  slug: "skills",            title: "Skills — bottling prompts",   tag: "capabilities" },
+  { n: 7,  slug: "agents",            title: "Agents — delegation",         tag: "capabilities" },
+  { n: 8,  slug: "hooks",             title: "Hooks — gate every action",   tag: "capabilities" },
+  { n: 9,  slug: "cost",              title: "Cost & Model Fit",            tag: "power"        },
+  { n: 10, slug: "workflows",         title: "Workflow Patterns",           tag: "power"        },
+  { n: 11, slug: "compaction",        title: "Compaction & Memory",         tag: "power"        },
+  { n: 12, slug: "headless",          title: "CI/CD & Headless",            tag: "power"        },
+];
+---
+
+<!doctype html>
+<html lang="en" data-theme="poster">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDesc} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDesc} />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content={`${siteUrl}${base}/masterclass/claude-code/`} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
+  </head>
+  <body class="mc-body">
+
+    <div class="mc-top">
+      <a href={`${base}/en/`} class="mc-back">← back to Agent0</a>
+      <div class="mc-top-tools">
+        <div class="mc-lang" role="group" aria-label="Language">
+          <a href={`${base}/masterclass/claude-code/`} class="mc-lang-pill mc-lang-active" aria-current="page">EN</a>
+          <a href={`${base}/masterclass/pt/claude-code/`} class="mc-lang-pill">PT</a>
+          <a href={`${base}/masterclass/es/claude-code/`} class="mc-lang-pill">ES</a>
+        </div>
+        <button id="mc-print" type="button" class="mc-tool-btn" title="Print as PDF (uses browser PDF)">
+          <span aria-hidden="true">↓</span> PDF
+        </button>
+        <a href={cheatsheetPath} class="mc-back">cheatsheet ↗</a>
+      </div>
+    </div>
+
+    <main class="mc-page">
+
+      <!-- ===== BANNER ===== -->
+      <header class="mc-banner">
+        <div class="mc-strip">
+          <span class="mc-tag">▮ AGENT0 ACADEMY</span>
+          <span class="mc-tag">CLAUDE CODE v{CC_VERSION}</span>
+          <span class="mc-tag">12 MODULES · BEGINNER → POWER ▮</span>
+        </div>
+        <h1 class="mc-title">
+          <span class="mc-title-line">CLAUDE CODE</span>
+          <span class="mc-title-line mc-title-accent">MASTER CLASS</span>
+        </h1>
+        <p class="mc-sub">
+          From first session to power user · 12 modules · about 60 minutes end-to-end.
+        </p>
+      </header>
+
+      <!-- ===== INTRO ===== -->
+      <section class="mc-intro">
+        <h2 class="mc-intro-h">Who this is for</h2>
+        <p>
+          You have used a coding assistant before, but Claude Code feels deeper than a chat box and you suspect there's a system underneath. There is. This Master Class walks the 12 surfaces of that system, from the <code>claude</code> binary all the way to headless CI/CD, with one diagram per concept and one copy-paste recipe per module.
+        </p>
+        <h2 class="mc-intro-h">How to use this page</h2>
+        <ul class="mc-intro-ul">
+          <li>Top to bottom is the canonical path. Each module builds on the last.</li>
+          <li>If you only have 10 minutes — read §1 Mental Model, §3 CLAUDE.md, §8 Hooks. Those three are the conceptual core.</li>
+          <li>Each module ends with a <b>Deep dive →</b> link to the dense reference cheatsheet for the full table-of-flags / full diagram / full schema.</li>
+          <li>Built against Claude Code <code>v{CC_VERSION}</code>. CLI flags and hook event names track that version.</li>
+        </ul>
+      </section>
+
+      <!-- ===== TOC ===== -->
+      <nav class="mc-toc" aria-label="Master Class table of contents">
+        <div class="mc-toc-h">▸ TABLE OF CONTENTS</div>
+        <ol class="mc-toc-list">
+          {modules.map((m) => (
+            <li>
+              <a href={`#m${m.n}`} data-tag={m.tag}>
+                <span class="mc-toc-n">§{m.n}</span>
+                <span class="mc-toc-t">{m.title}</span>
+                <span class="mc-toc-tag">{m.tag}</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+
+      <!-- ===== MODULES ===== -->
+
+      <!-- §1 · MENTAL MODEL -->
+      <section id="m1" class="mc-mod mc-mod-foundations">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§1</span>
+          <h2 class="mc-mod-h">Mental Model</h2>
+          <span class="mc-mod-tag">foundations</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — Claude Code is not "Claude in a terminal." It's an <i>agent harness</i>: a loop that reads your repo, runs tools, watches results, and iterates. The model is one node; the harness is the system.</p>
+
+          <p class="mc-mini-h">▸ Three things Claude offers (pick the right one)</p>
+          <ol>
+            <li><b>claude.ai (chat)</b> — conversation, no tools, no repo. Best for thinking out loud.</li>
+            <li><b>Claude Code</b> — terminal-native agent that reads your codebase, edits files, runs commands, fixes errors. Best for shipping code.</li>
+            <li><b>Anthropic API</b> — programmable Claude in your own application. Best when YOU are the harness.</li>
+          </ol>
+
+          <p class="mc-mini-h">▸ The agent loop, in five steps</p>
+          <div class="mc-diagram"><span class="d-acc">prompt</span>  →  <span class="d-mag">model</span>  →  <span class="d-key">tool call</span>  →  <span class="d-dim">tool result</span>  →  <span class="d-mag">model</span>  →  (loop until done)
+
+repeat until: text-only response · max-turns hit · budget hit · user interrupt</div>
+
+          <p class="mc-mini-h">▸ What makes Claude Code different</p>
+          <ul>
+            <li><b>It owns a workspace.</b> It can `Read`, `Edit`, `Write`, `Bash` against your files — not just talk about them.</li>
+            <li><b>It has a contract.</b> Permissions, hooks, and CLAUDE.md are the rails. You configure intent; Claude works inside it.</li>
+            <li><b>It composes.</b> Skills, agents, MCP servers, hooks — each is a primitive. The Master Class teaches each one.</li>
+          </ul>
+
+          <p class="mc-mini-h">▸ Try it now</p>
+          <pre><code>cd ~/your-project
+claude
+&gt; what does this codebase do?</code></pre>
+
+          <a class="mc-deep" href={`${cheatsheetPath}#part-i`}>Deep dive → cheatsheet PART I (CLI surface)</a>
+        </div>
+        <a class="mc-next" href="#m2">Next → §2 · Your First Session</a>
+      </section>
+
+      <!-- §2 · FIRST SESSION -->
+      <section id="m2" class="mc-mod mc-mod-foundations">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§2</span>
+          <h2 class="mc-mod-h">Your First Session</h2>
+          <span class="mc-mod-tag">foundations</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — Four entry shapes cover 95% of real use: <code>claude</code> (interactive), <code>claude -p</code> (one-shot), <code>claude -c</code> (continue), <code>claude -r</code> (resume by id). The rest are flags on top.</p>
+
+          <p class="mc-mini-h">▸ The four shapes</p>
+          <ol>
+            <li><code>claude</code> — interactive REPL. The 90% case. You type, it responds, you iterate.</li>
+            <li><code>claude -p "task"</code> — one-shot. Print result and exit. For pipes, scripts, CI.</li>
+            <li><code>claude -c</code> — resume the <b>last</b> conversation in this dir. Picks up where you left off.</li>
+            <li><code>claude -r [id|search]</code> — pick a specific past session. Interactive picker if no arg.</li>
+          </ol>
+
+          <p class="mc-mini-h">▸ Three flags worth knowing day one</p>
+          <ul>
+            <li><code>--model haiku|sonnet|opus</code> — pick the brain. Default is sonnet. (§9 covers when to pick what.)</li>
+            <li><code>--add-dir &lt;path&gt;</code> — let Claude see files outside cwd. Multi-repo workflow.</li>
+            <li><code>--max-budget-usd 0.50</code> — hard ceiling. Session stops when the cost cap is hit.</li>
+          </ul>
+
+          <p class="mc-mini-h">▸ The session graph</p>
+          <div class="mc-diagram"><span class="d-acc">startup</span> ─SessionStart→ <span class="d-mag">interactive</span> ⇄ /compact ⇄ <span class="d-dim">compacted</span>
+                       │
+                       └─/clear→ <span class="d-dim">fresh ctx</span>  ─SessionEnd→ <span class="d-key">ended</span></div>
+
+          <p class="mc-mini-h">▸ Try it now</p>
+          <pre><code># scriptable one-shot, structured output, budgeted
+claude -p --output-format json --max-budget-usd 0.50 \
+  "summarize the last 3 commits"</code></pre>
+
+          <a class="mc-deep" href={`${cheatsheetPath}#part-i`}>Deep dive → cheatsheet PART I (execution modes · model · I/O · subcommands)</a>
+        </div>
+        <a class="mc-next" href="#m3">Next → §3 · CLAUDE.md, the manual</a>
+      </section>
+
+      <!-- §3 · CLAUDE.md -->
+      <section id="m3" class="mc-mod mc-mod-foundations">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§3</span>
+          <h2 class="mc-mod-h">CLAUDE.md, the instruction manual</h2>
+          <span class="mc-mod-tag">foundations</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — <code>CLAUDE.md</code> is the first thing Claude reads. Put your project conventions here and you stop repeating yourself every session. Files merge along an ancestor walk; nested files can be path-scoped.</p>
+
+          <p class="mc-mini-h">▸ The hierarchy (all merge into the prompt)</p>
+          <div class="mc-diagram"><span class="d-key">~/.claude/CLAUDE.md</span>         <span class="d-dim"># user-global · per-machine preferences</span>
+<span class="d-key">&lt;ancestors&gt;/CLAUDE.md</span>        <span class="d-dim"># every dir from cwd up to repo root</span>
+<span class="d-key">./CLAUDE.md</span>                  <span class="d-dim"># project · the canonical one · git-tracked</span>
+<span class="d-key">./CLAUDE.local.md</span>            <span class="d-dim"># personal overrides · gitignored</span>
+<span class="d-key">&lt;subdir&gt;/CLAUDE.md</span>           <span class="d-dim"># nested · on-demand when files in subdir are touched</span></div>
+
+          <p class="mc-mini-h">▸ The four things worth putting in it</p>
+          <ol>
+            <li><b>Stack.</b> Language, framework, test runner. Saves Claude from guessing.</li>
+            <li><b>Build &amp; test.</b> Exact commands. <code>bun test</code>, <code>pnpm run lint</code>, etc.</li>
+            <li><b>Conventions.</b> Style, patterns, naming. The stuff a reviewer would correct.</li>
+            <li><b>Gotchas.</b> Non-obvious behaviors. The stuff that bit you once.</li>
+          </ol>
+
+          <p class="mc-mini-h">▸ Path-scoped frontmatter</p>
+          <pre><code>---
+paths: ["src/**", "tests/**"]
+---
+# Only loaded when files under src/ or tests/ are touched.
+# Use to keep CLAUDE.md focused.</code></pre>
+
+          <p class="mc-mini-h">▸ Imports (compose, don't duplicate)</p>
+          <pre><code>@./conventions.md       # relative
+@~/.claude/snippet.md   # user-home
+@/abs/path.md           # absolute</code></pre>
+
+          <a class="mc-deep" href={`${cheatsheetPath}#part-ii`}>Deep dive → cheatsheet PART II (CLAUDE.md card · imports · reload triggers)</a>
+        </div>
+        <a class="mc-next" href="#m4">Next → §4 · Permissions &amp; Safety</a>
+      </section>
+
+      <!-- §4 · PERMISSIONS -->
+      <section id="m4" class="mc-mod mc-mod-foundations">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§4</span>
+          <h2 class="mc-mod-h">Permissions &amp; Safety</h2>
+          <span class="mc-mod-tag">foundations</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — Claude asks before doing destructive things, but you decide the policy. Four modes go from "ask everything" to "trust the agent", plus an allow/deny list with glob patterns.</p>
+
+          <p class="mc-mini-h">▸ The four modes (least to most trusting)</p>
+          <ol>
+            <li><b>default</b> — prompt on every tool call. Safest, slowest.</li>
+            <li><b>acceptEdits</b> — auto-accept file edits, still prompt for Bash. Good for refactors.</li>
+            <li><b>plan</b> — read-only mode; Claude proposes a plan, you approve before any write.</li>
+            <li><b>bypassPermissions</b> — agent runs free. Use in throwaway sandboxes or CI with hard budget caps.</li>
+          </ol>
+
+          <p class="mc-mini-h">▸ Allow / deny with glob patterns</p>
+          <pre><code>// .claude/settings.json
+&#123; "permissions": &#123;
+    "defaultMode": "default",
+    "allow": ["Bash(git *)", "Read", "Edit"],
+    "deny":  ["Bash(rm -rf *)", "Bash(curl *)"]
+&#125; &#125;</code></pre>
+
+          <p class="mc-mini-h">▸ The rule of safety</p>
+          <ul>
+            <li>Most patterns are <code>ToolName(arg-pattern)</code>. The arg pattern is a shell-glob.</li>
+            <li><b>Deny wins</b> over allow for the same tool. Build your safety net with deny.</li>
+            <li><b>Never paste <code>--dangerously-skip-permissions</code> on a real repo.</b> The flag exists for sandboxes only — it disables every permission check including the deny list.</li>
+            <li>Pair high-trust modes with <code>--max-budget-usd</code> so a runaway agent burns money instead of files.</li>
+          </ul>
+
+          <a class="mc-deep" href={`${cheatsheetPath}#part-i`}>Deep dive → cheatsheet PERMISSIONS card (defaultMode · allow patterns · escape hatches)</a>
+        </div>
+        <a class="mc-next" href="#m5">Next → §5 · The MCP Universe</a>
+      </section>
+
+      <!-- §5 · MCP -->
+      <section id="m5" class="mc-mod mc-mod-capabilities">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§5</span>
+          <h2 class="mc-mod-h">The MCP Universe</h2>
+          <span class="mc-mod-tag">capabilities</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — <b>MCP</b> (Model Context Protocol) is how Claude talks to the world beyond your filesystem. One <code>.mcp.json</code> declares servers; each server exposes tools named <code>mcp__&lt;srv&gt;__&lt;tool&gt;</code>.</p>
+
+          <p class="mc-mini-h">▸ Five mature servers worth knowing</p>
+          <ul>
+            <li><b>playwright</b> — browser automation. Click, type, screenshot, evaluate JS. Default for authenticated workflows.</li>
+            <li><b>chrome-devtools</b> — network observability, performance, runtime. Debug-only.</li>
+            <li><b>dbhub</b> — multi-DB SQL (Postgres, MySQL, SQLite). Read-only by default.</li>
+            <li><b>nextjs-devtools</b> — build logs, routes, server actions, cache diagnostics.</li>
+            <li><b>github</b> — structured issues / PRs / repos / workflows (richer than <code>gh</code> CLI).</li>
+          </ul>
+
+          <p class="mc-mini-h">▸ Adding a server</p>
+          <pre><code>// .mcp.json at repo root
+&#123; "mcpServers": &#123;
+    "playwright": &#123;
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-playwright"]
+    &#125;
+&#125; &#125;</code></pre>
+
+          <p class="mc-mini-h">▸ Trust gate</p>
+          <p>By default Claude prompts before enabling MCP servers declared in a project. Set <code>enableAllProjectMcpServers: true</code> in settings to skip the prompt — only do that for repos you trust.</p>
+
+          <p class="mc-mini-h">▸ Mental model</p>
+          <div class="mc-diagram">            <span class="d-key">playwright</span>
+                │
+<span class="d-key">github</span> ───── <span class="d-acc">CLAUDE</span> ───── <span class="d-key">chrome-devtools</span>
+                │
+       <span class="d-key">dbhub</span>   <span class="d-key">nextjs-devtools</span>
+
+<span class="d-dim">each server = one external surface · each tool = one verb on that surface</span></div>
+
+          <a class="mc-deep" href={`${cheatsheetPath}#mcp-radial`}>Deep dive → Atlas MCP ecosystem radial</a>
+        </div>
+        <a class="mc-next" href="#m6">Next → §6 · Skills — bottling prompts</a>
+      </section>
+
+      <!-- §6 · SKILLS -->
+      <section id="m6" class="mc-mod mc-mod-capabilities">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§6</span>
+          <h2 class="mc-mod-h">Skills — bottling your prompts</h2>
+          <span class="mc-mod-tag">capabilities</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — a skill is a folder with a <code>SKILL.md</code> inside. Its body IS the prompt. Invoke as <code>/&lt;name&gt;</code>. You stop pasting the same instructions every session.</p>
+
+          <p class="mc-mini-h">▸ Anatomy</p>
+          <div class="mc-diagram">.claude/skills/<span class="d-mag">&lt;name&gt;/</span>
+├── <span class="d-key">SKILL.md</span>        <span class="d-dim"># frontmatter + body is the prompt</span>
+├── <span class="d-key">templates/</span>      <span class="d-dim"># optional assets</span>
+└── <span class="d-key">examples/</span>       <span class="d-dim"># reference material</span></div>
+
+          <p class="mc-mini-h">▸ Frontmatter that matters</p>
+          <pre><code>---
+description: One-line discovery hint (Claude reads this to know when to suggest you)
+argument-hint: &lt;new &lt;slug&gt; | list&gt;
+allowed-tools: [Read, Grep, Bash]
+paths: ["docs/specs/**"]   # path-scoped: only loadable in matching dirs
+context: fork               # isolated turn (doesn't pollute main convo)
+---
+# /name — body below this line is the prompt</code></pre>
+
+          <p class="mc-mini-h">▸ Two killer features</p>
+          <ol>
+            <li><code>$ARGUMENTS</code> — whatever the user typed after the slash command. Lets one skill handle many phrasings.</li>
+            <li><code>!`shell-cmd`</code> — runs at skill-load time; stdout is injected as context. Great for live state ("today's date", "current branch", "open PR list").</li>
+          </ol>
+
+          <p class="mc-mini-h">▸ Bundled skills (already on your machine)</p>
+          <p><code>/simplify</code> · <code>/batch</code> · <code>/debug</code> · <code>/loop</code> · <code>/claude-api</code> — all ship with Claude Code. <code>/help</code> lists them in your install.</p>
+
+          <a class="mc-deep" href={`${cheatsheetPath}#part-ii`}>Deep dive → cheatsheet SKILLS card (full frontmatter · invocation patterns)</a>
+        </div>
+        <a class="mc-next" href="#m7">Next → §7 · Agents — delegation</a>
+      </section>
+
+      <!-- §7 · AGENTS -->
+      <section id="m7" class="mc-mod mc-mod-capabilities">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§7</span>
+          <h2 class="mc-mod-h">Agents — delegation done right</h2>
+          <span class="mc-mod-tag">capabilities</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — an agent runs in an <i>isolated context</i> and returns a single message. Delegate when (a) the work needs many tool calls, (b) the result fits in a summary, or (c) you want to keep noise out of your main conversation.</p>
+
+          <p class="mc-mini-h">▸ The five built-in agents</p>
+          <ul>
+            <li><b>general-purpose</b> — multi-step research and execution. The default.</li>
+            <li><b>Explore</b> — read-only fast search. "Where is X defined? Which files use Y?"</li>
+            <li><b>Plan</b> — architect mode. Produces an implementation plan, doesn't write code.</li>
+            <li><b>claude-code-guide</b> — Q&amp;A about Claude Code itself (this Master Class is a real-world example).</li>
+            <li><b>statusline-setup</b> — configures your status line. Niche but ships.</li>
+          </ul>
+
+          <p class="mc-mini-h">▸ A good delegation has five parts</p>
+          <pre><code>TASK:        one sentence — what to do
+CONTEXT:     files/paths the agent should read first
+CONSTRAINTS: what NOT to do · budgets · style guardrails
+DELIVERABLE: concrete artifact (file path, PR, summary shape)
+DONE_WHEN:   verifiable condition (tests pass, file exists)</code></pre>
+          <p>Either <b>DELIVERABLE</b> or <b>DONE_WHEN</b> is required (or both). The agent inherits no context from the parent — give it everything it needs upfront.</p>
+
+          <p class="mc-mini-h">▸ Dispatch from a tool call</p>
+          <pre><code>Agent(&#123;
+  subagent_type: "Explore",
+  prompt: "TASK: locate all callers of getUser() across src/.\n..." ,
+  model: "sonnet",          // optional · overrides default
+  isolation: "worktree",    // optional · runs in a temp git worktree
+&#125;)</code></pre>
+
+          <p class="mc-mini-h">▸ Model-fit cheatsheet</p>
+          <p>Mechanical implementation → <code>sonnet</code>. Quick schema/protocol lookup → <code>haiku</code>. Architecture review or exploratory debugging → <code>opus</code>. Multi-source comparative research → <code>opus</code> if ≥2 signals fire; otherwise <code>sonnet</code>.</p>
+
+          <a class="mc-deep" href={`${cheatsheetPath}#composition`}>Deep dive → Atlas Skill · Agent · Hook composition diagram</a>
+        </div>
+        <a class="mc-next" href="#m8">Next → §8 · Hooks — gate every action</a>
+      </section>
+
+      <!-- §8 · HOOKS -->
+      <section id="m8" class="mc-mod mc-mod-capabilities">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§8</span>
+          <h2 class="mc-mod-h">Hooks — gate every action</h2>
+          <span class="mc-mod-tag">capabilities</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — hooks are shell scripts that run on lifecycle events. 29 events total. Each gets JSON on stdin and decides via exit code: <code>0</code> = allow, <code>2</code> on PreToolUse = <b>BLOCK</b> (stderr shown to agent), anything else = log-only.</p>
+
+          <p class="mc-mini-h">▸ The seven event families</p>
+          <ol>
+            <li><b>Session lifecycle</b> — SessionStart · SessionEnd · Setup · Stop · StopFailure</li>
+            <li><b>Prompts &amp; instructions</b> — UserPromptSubmit · UserPromptExpansion · InstructionsLoaded</li>
+            <li><b>Tool gates</b> — PreToolUse · PostToolUse · PostToolUseFailure · PostToolBatch</li>
+            <li><b>Permission</b> — PermissionRequest · PermissionDenied</li>
+            <li><b>Sub-agents &amp; tasks</b> — SubagentStart · SubagentStop · TaskCreated · TaskCompleted</li>
+            <li><b>Compaction</b> — PreCompact · PostCompact</li>
+            <li><b>System</b> — Notification · TeammateIdle · ConfigChange · CwdChanged · FileChanged · WorktreeCreate · WorktreeRemove · Elicitation · ElicitationResult</li>
+          </ol>
+
+          <p class="mc-mini-h">▸ Minimum viable hook</p>
+          <pre><code>// .claude/settings.json
+&#123; "hooks": &#123;
+    "PreToolUse": [&#123;
+      "matcher": "Bash",
+      "hooks": [&#123;
+        "type": "command",
+        "command": "bash .claude/hooks/check-bash.sh"
+      &#125;]
+    &#125;]
+&#125; &#125;</code></pre>
+
+          <pre><code>#!/usr/bin/env bash
+# .claude/hooks/check-bash.sh — read JSON from stdin, decide via exit
+input=$(cat)
+cmd=$(echo "$input" | jq -r '.tool_input.command')
+if [[ "$cmd" =~ rm\ -rf ]]; then
+  echo "blocked: rm -rf is denied in this project" &gt;&amp;2
+  exit 2
+fi
+exit 0</code></pre>
+
+          <p class="mc-mini-h">▸ The one gotcha worth flagging</p>
+          <p><code>PostToolUse(Bash)</code> fires only on tool <b>success</b>. To catch failures, pair it with <code>PostToolUseFailure(Bash)</code>. The failure payload uses <code>.error</code> and has no <code>tool_response</code>.</p>
+
+          <p class="mc-mini-h">▸ Three handler types</p>
+          <ul>
+            <li><code>type: command</code> — shell script. The default.</li>
+            <li><code>type: prompt</code> — single-turn Claude eval over <code>$ARGUMENTS</code>.</li>
+            <li><code>type: agent</code> — spawn a sub-agent with tools for deep verification.</li>
+          </ul>
+
+          <a class="mc-deep" href={`${cheatsheetPath}#hooks-radial`}>Deep dive → Atlas Hook taxonomy radial · 29 events at a glance</a>
+        </div>
+        <a class="mc-next" href="#m9">Next → §9 · Cost &amp; Model Fit</a>
+      </section>
+
+      <!-- §9 · COST & MODEL FIT -->
+      <section id="m9" class="mc-mod mc-mod-power">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§9</span>
+          <h2 class="mc-mod-h">Cost &amp; Model Fit</h2>
+          <span class="mc-mod-tag">power</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — the same task at Opus rates can cost 60× more than at Haiku. The diagonal is optimal; off-diagonal is overpay or underpay. Picking right once can cut a project's bill by 70%.</p>
+
+          <p class="mc-mini-h">▸ The three models · per million tokens</p>
+          <div class="mc-diagram">                <span class="d-key">haiku</span>          <span class="d-acc">sonnet</span>         <span class="d-mag">opus</span>
+                $0.25/$1.25   $3/$15        $15/$75
+                input/output  input/output  input/output
+
+formatting docs ✓ optimal       ~ okay         ✗ 60× waste
+simple refactor
+─────────────────────────────────────────────────────────────────
+coding tasks    ~ underspec    ✓ optimal      ~ 5× overpay
+test fixes
+─────────────────────────────────────────────────────────────────
+architecture    ✗ misses       ~ tries hard   ✓ optimal
+hard debugging</div>
+
+          <p class="mc-mini-h">▸ Effort knob (Opus only)</p>
+          <p><code>--effort low|medium|high</code> trades latency for depth. <code>low</code> for tight loops, <code>high</code> for one-shot architecture review.</p>
+
+          <p class="mc-mini-h">▸ The cache is your second-best lever</p>
+          <ul>
+            <li>Anthropic caches prompts for <b>5 minutes</b> (free tier) or <b>1 hour</b> (with explicit <code>cache_control</code>).</li>
+            <li>System prompts + CLAUDE.md + long file reads are all cache candidates. Repeating them within the TTL is ~90% cheaper.</li>
+            <li>Long sleeps (≥5 min) bust the cache. Plan your loop intervals accordingly.</li>
+          </ul>
+
+          <p class="mc-mini-h">▸ The hard ceiling</p>
+          <pre><code>claude -p --max-budget-usd 1.00 --max-turns 12 \
+  "run tests, fix failures, repeat until green"</code></pre>
+          <p>Budget caps and turn caps are the safety net — when a loop fails to converge, it stops burning money instead of getting clever.</p>
+
+          <a class="mc-deep" href={`${cheatsheetPath}#cost-matrix`}>Deep dive → Atlas Cost × Model fit matrix</a>
+        </div>
+        <a class="mc-next" href="#m10">Next → §10 · Workflow Patterns</a>
+      </section>
+
+      <!-- §10 · WORKFLOW PATTERNS -->
+      <section id="m10" class="mc-mod mc-mod-power">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§10</span>
+          <h2 class="mc-mod-h">Workflow Patterns</h2>
+          <span class="mc-mod-tag">power</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — most real Claude Code work fits one of five shapes. Picking the right shape matters more than picking the right model.</p>
+
+          <p class="mc-mini-h">▸ The five patterns</p>
+          <ol>
+            <li><b>Sequential</b> — one Claude, one task, top-to-bottom. The default. Use for anything where step N depends on step N−1.</li>
+            <li><b>Operator</b> — you stay in the loop, Claude proposes diffs, you accept/reject. Use for code review and surgical edits.</li>
+            <li><b>Split-merge</b> — one parent fans out N delegated agents (one per file, one per module), parent merges the returns. Use for codemod-style refactors.</li>
+            <li><b>Agent teams</b> — Plan → Implement → Review chain, each a different sub-agent with its own context. Use for non-trivial features.</li>
+            <li><b>Headless</b> — <code>claude -p</code> in CI/CD with structured output. No human in the loop. Use for PR review bots, test-fix loops, dependency audits.</li>
+          </ol>
+
+          <p class="mc-mini-h">▸ Picking the shape</p>
+          <div class="mc-diagram">need a human checkpoint between steps?     ─yes→ <span class="d-mag">operator</span>
+       │ no
+       ▼
+work is naturally parallel?                ─yes→ <span class="d-mag">split-merge</span>
+       │ no
+       ▼
+work decomposes into different reasoning   ─yes→ <span class="d-mag">agent teams</span>
+modes (plan / code / review)?
+       │ no
+       ▼
+runs in CI without human?                  ─yes→ <span class="d-mag">headless</span>
+       │ no
+       ▼
+default → <span class="d-mag">sequential</span></div>
+
+          <p class="mc-mini-h">▸ The hidden trade-off</p>
+          <p>Parallel patterns (split-merge, agent teams) are fast but cost more in total tokens because each delegated agent loads its own context. Sequential is slower but cheaper. Pick parallel only when wall-clock latency genuinely matters.</p>
+
+          <a class="mc-deep" href={`${cheatsheetPath}#part-ii`}>Deep dive → cheatsheet WORKFLOW PATTERNS card</a>
+        </div>
+        <a class="mc-next" href="#m11">Next → §11 · Compaction &amp; Memory</a>
+      </section>
+
+      <!-- §11 · COMPACTION & MEMORY -->
+      <section id="m11" class="mc-mod mc-mod-power">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§11</span>
+          <h2 class="mc-mod-h">Compaction &amp; Memory</h2>
+          <span class="mc-mod-tag">power</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — Claude Code summarizes long sessions automatically. The summary is lossy. The PreCompact → SessionStart(compact) hook bridge is how you preserve the raw signal that matters.</p>
+
+          <p class="mc-mini-h">▸ Three memory layers</p>
+          <ol>
+            <li><b>CLAUDE.md</b> — always in context. The "this is how this project works" layer.</li>
+            <li><b>Auto-memory</b> — Claude writes facts about your project into <code>~/.claude/projects/&lt;slug&gt;/memory/</code> as it learns. Indexed by <code>MEMORY.md</code>, loaded at session start.</li>
+            <li><b>Transcript</b> — the conversation itself. When it grows past the budget, compaction kicks in.</li>
+          </ol>
+
+          <p class="mc-mini-h">▸ The compaction flow</p>
+          <div class="mc-diagram">turn N → <span class="d-mag">PreCompact</span> hook → summarizer runs → PostCompact
+                                                        │
+                                                        ▼
+                                          <span class="d-mag">SessionStart(source:compact)</span>
+                                                <span class="d-dim">re-injects additionalContext for turn N+1</span></div>
+
+          <p class="mc-mini-h">▸ Why the hook bridge matters</p>
+          <ul>
+            <li>The summarizer is the only thing that crosses the boundary by default — and summarization drops verbatim quotes, file paths, exact wording.</li>
+            <li>Only <code>PreCompact</code> can write before truncation; only <code>SessionStart</code> can inject after. No other hook bridges the gap.</li>
+            <li>Save raw turns to disk in PreCompact, read them back in SessionStart-with-source-compact. That's the canonical pattern.</li>
+          </ul>
+
+          <p class="mc-mini-h">▸ Try it now</p>
+          <pre><code># manual compaction
+/compact
+
+# review what was preserved
+/memory</code></pre>
+
+          <a class="mc-deep" href={`${cheatsheetPath}#compaction-flow`}>Deep dive → Atlas Compaction interrupt flow</a>
+        </div>
+        <a class="mc-next" href="#m12">Next → §12 · CI/CD &amp; Headless</a>
+      </section>
+
+      <!-- §12 · CI/CD & HEADLESS -->
+      <section id="m12" class="mc-mod mc-mod-power">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§12</span>
+          <h2 class="mc-mod-h">CI/CD &amp; Headless</h2>
+          <span class="mc-mod-tag">power</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — <code>claude -p</code> is the gateway to non-interactive use. Pair it with <code>--output-format json</code>, <code>--max-budget-usd</code>, and <code>--max-turns</code> to get a deterministic, budgeted, parseable agent in your pipeline.</p>
+
+          <p class="mc-mini-h">▸ The five flags that make headless work</p>
+          <ul>
+            <li><code>-p, --print</code> — print result and exit. No REPL.</li>
+            <li><code>--output-format json|text|stream-json</code> — JSON is the right default for machines.</li>
+            <li><code>--max-turns N</code> — hard cap on agent iterations. Stops runaways.</li>
+            <li><code>--max-budget-usd X</code> — hard cap on cost. Stops cost overruns.</li>
+            <li><code>--permission-mode bypassPermissions</code> — required in CI where no human can approve. Pair with the two caps above.</li>
+          </ul>
+
+          <p class="mc-mini-h">▸ A real GitHub Actions step</p>
+          <pre><code>- name: PR review bot
+  run: |
+    claude -p \
+      --permission-mode bypassPermissions \
+      --output-format json \
+      --max-turns 6 \
+      --max-budget-usd 0.50 \
+      "review PR #$&#123;&#123; github.event.number &#125;&#125; for security issues,
+       return findings as JSON: &#123;findings: [&#123;file, line, severity, why&#125;]&#125;"
+  env:
+    ANTHROPIC_API_KEY: $&#123;&#123; secrets.ANTHROPIC_API_KEY &#125;&#125;</code></pre>
+
+          <p class="mc-mini-h">▸ Three patterns that ship</p>
+          <ol>
+            <li><b>PR review bot</b> — runs on <code>pull_request</code>, posts findings as a review comment.</li>
+            <li><b>Test-fix loop</b> — runs on <code>workflow_dispatch</code>, attempts to fix failing tests, opens a PR with the fix.</li>
+            <li><b>Dependency audit</b> — runs nightly, reads <code>package.json</code> + advisories, files issues for vulnerable deps.</li>
+          </ol>
+
+          <p class="mc-mini-h">▸ The discipline</p>
+          <ul>
+            <li><b>Always</b> set a turn cap AND a budget cap. Both. CI loops are where money disappears.</li>
+            <li>Use the cheapest model that gets the job done. Most CI work is <code>sonnet</code> at most.</li>
+            <li>Treat the JSON output as a contract — fail the CI step if the JSON is malformed instead of letting it cascade.</li>
+          </ul>
+
+          <a class="mc-deep" href={`${cheatsheetPath}#part-ii`}>Deep dive → cheatsheet I/O &amp; FORMAT card · recipes section</a>
+        </div>
+      </section>
+
+      <!-- ===== FOOTER ===== -->
+      <footer class="mc-foot">
+        <div class="mc-foot-band">
+          <span class="mc-tag">YOU FINISHED 12/12</span>
+          <span class="mc-foot-sep">|</span>
+          <span class="mc-tag">NOW SHIP SOMETHING</span>
+        </div>
+        <p class="mc-foot-next">
+          Where to go from here:
+          <a href={cheatsheetPath}>the dense cheatsheet</a> · <a href="https://code.claude.com/docs" target="_blank" rel="noopener">official docs</a> · <a href={`${base}/en/`}>back to Agent0</a> · <a href={REPO_URL} target="_blank" rel="noopener">repo</a>.
+        </p>
+      </footer>
+
+    </main>
+
+    <style is:global>
+      :root[data-theme="poster"] {
+        --p-bg: #0a0e1f;
+        --p-bg-2: #0e1530;
+        --p-ink: #e5e7eb;
+        --p-ink-dim: #9ca3af;
+        --p-ink-faint: #6b7280;
+        --p-green: #39ff14;
+        --p-orange: #ff9933;
+        --p-red: #ff4d4d;
+        --p-cyan: #00e5ff;
+        --p-magenta: #ff44ff;
+        --p-violet: #a78bfa;
+        --p-yellow: #ffe066;
+        --p-pink: #ff8ab2;
+        --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+      }
+      html, body { background: var(--p-bg); color: var(--p-ink); }
+      .mc-body {
+        font-family: var(--font-sans);
+        margin: 0;
+        background: radial-gradient(ellipse at top, var(--p-bg-2), var(--p-bg) 70%);
+        min-height: 100vh;
+        padding: 0 0 60px;
+      }
+
+      .mc-top {
+        display: flex;
+        align-items: center;
+        padding: 14px 32px 0;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        gap: 16px;
+      }
+      .mc-top-tools {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .mc-back {
+        color: var(--p-cyan);
+        text-decoration: none;
+        letter-spacing: 0.04em;
+        border-bottom: 1px dashed transparent;
+      }
+      .mc-back:hover { border-bottom-color: var(--p-cyan); }
+
+      .mc-lang { display: flex; gap: 4px; }
+      .mc-lang-pill {
+        display: inline-block;
+        padding: 3px 8px;
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        color: var(--p-ink-dim);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 2px;
+        text-decoration: none;
+        background: transparent;
+      }
+      .mc-lang-pill:hover { color: var(--p-ink); border-color: var(--p-ink-dim); }
+      .mc-lang-pill.mc-lang-active {
+        color: var(--p-green);
+        border-color: var(--p-green);
+        background: rgba(57,255,20,0.08);
+      }
+
+      .mc-tool-btn {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        color: var(--p-orange);
+        background: transparent;
+        border: 1px solid rgba(255,153,51,0.4);
+        border-radius: 2px;
+        padding: 3px 10px;
+        cursor: pointer;
+      }
+      .mc-tool-btn:hover { color: var(--p-yellow); border-color: var(--p-yellow); }
+
+      .mc-page {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 24px 32px;
+      }
+      @media (max-width: 720px) {
+        .mc-page { padding: 16px; }
+      }
+
+      /* ===== BANNER ===== */
+      .mc-banner {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .mc-strip {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--p-orange);
+        letter-spacing: 0.12em;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: center;
+        gap: 18px;
+        flex-wrap: wrap;
+      }
+      .mc-tag { white-space: nowrap; }
+      .mc-title {
+        font-family: var(--font-mono);
+        font-size: 56px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin: 8px 0 14px;
+        line-height: 0.98;
+      }
+      .mc-title-line { display: block; color: var(--p-ink); }
+      .mc-title-accent { color: var(--p-green); }
+      .mc-sub {
+        color: var(--p-ink-dim);
+        font-size: 14px;
+        margin: 0;
+      }
+      .mc-sub code { color: var(--p-orange); }
+      @media (max-width: 720px) {
+        .mc-title { font-size: 38px; }
+        .mc-strip { font-size: 9.5px; gap: 10px; }
+      }
+
+      /* ===== INTRO ===== */
+      .mc-intro {
+        background: rgba(0,0,0,0.3);
+        border-left: 3px solid var(--p-cyan);
+        border-radius: 2px;
+        padding: 18px 22px;
+        margin: 18px 0 30px;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      .mc-intro-h {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--p-cyan);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin: 0 0 8px;
+      }
+      .mc-intro-h + p, .mc-intro-h + ul { margin-top: 0; }
+      .mc-intro p { margin: 0 0 14px; color: var(--p-ink); }
+      .mc-intro-ul { margin: 0 0 14px; padding-left: 20px; color: var(--p-ink); }
+      .mc-intro-ul li { margin-bottom: 4px; }
+      .mc-intro code { color: var(--p-orange); font-family: var(--font-mono); }
+
+      /* ===== TOC ===== */
+      .mc-toc {
+        background: rgba(0,0,0,0.3);
+        border-left: 3px solid var(--p-magenta);
+        border-radius: 2px;
+        padding: 16px 22px;
+        margin-bottom: 36px;
+      }
+      .mc-toc-h {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--p-magenta);
+        letter-spacing: 0.08em;
+        margin-bottom: 10px;
+        font-weight: 700;
+      }
+      .mc-toc-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px 18px;
+      }
+      @media (max-width: 720px) {
+        .mc-toc-list { grid-template-columns: 1fr; }
+      }
+      .mc-toc-list a {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        padding: 6px 0;
+        color: var(--p-ink);
+        text-decoration: none;
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+      }
+      .mc-toc-list a:hover { color: var(--p-cyan); }
+      .mc-toc-n {
+        color: var(--p-orange);
+        font-weight: 700;
+        min-width: 30px;
+      }
+      .mc-toc-t { flex: 1; }
+      .mc-toc-tag {
+        font-size: 9.5px;
+        color: var(--p-ink-faint);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .mc-toc-list a[data-tag="foundations"] .mc-toc-tag { color: var(--p-cyan); }
+      .mc-toc-list a[data-tag="capabilities"] .mc-toc-tag { color: var(--p-magenta); }
+      .mc-toc-list a[data-tag="power"] .mc-toc-tag { color: var(--p-yellow); }
+
+      /* ===== MODULES ===== */
+      .mc-mod {
+        margin-bottom: 48px;
+        scroll-margin-top: 20px;
+      }
+      .mc-mod-head {
+        display: flex;
+        align-items: baseline;
+        gap: 14px;
+        margin-bottom: 14px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+      }
+      .mc-mod-n {
+        font-family: var(--font-mono);
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--p-orange);
+      }
+      .mc-mod-h {
+        font-family: var(--font-mono);
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--p-ink);
+        margin: 0;
+        flex: 1;
+        letter-spacing: -0.01em;
+      }
+      .mc-mod-tag {
+        font-family: var(--font-mono);
+        font-size: 9.5px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--p-ink-faint);
+      }
+      .mc-mod-foundations .mc-mod-tag { color: var(--p-cyan); }
+      .mc-mod-capabilities .mc-mod-tag { color: var(--p-magenta); }
+      .mc-mod-power .mc-mod-tag { color: var(--p-yellow); }
+
+      .mc-mod-body {
+        font-size: 14px;
+        line-height: 1.65;
+        color: var(--p-ink);
+      }
+      .mc-mod-body code {
+        color: var(--p-orange);
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+      }
+      .mc-mod-body p { margin: 0 0 14px; }
+      .mc-mod-body ul, .mc-mod-body ol {
+        margin: 0 0 14px;
+        padding-left: 22px;
+      }
+      .mc-mod-body li { margin-bottom: 4px; }
+      .mc-mod-body strong, .mc-mod-body b { color: var(--p-ink); }
+
+      .mc-tldr {
+        background: rgba(0,229,255,0.06);
+        border-left: 3px solid var(--p-cyan);
+        padding: 10px 14px;
+        font-size: 14px;
+        margin: 0 0 18px;
+        border-radius: 2px;
+      }
+      .mc-tldr b { color: var(--p-cyan); margin-right: 6px; letter-spacing: 0.06em; }
+
+      .mc-mod-body .mc-mini-h {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--p-magenta);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin: 18px 0 8px;
+      }
+      .mc-mod-body pre {
+        background: rgba(0,0,0,0.4);
+        border-left: 2px solid var(--p-green);
+        padding: 10px 14px;
+        font-size: 12px;
+        color: var(--p-ink);
+        overflow-x: auto;
+        margin: 8px 0 16px;
+        border-radius: 2px;
+      }
+      .mc-mod-body pre code { color: var(--p-ink); }
+      .mc-mod-body .mc-diagram {
+        background: rgba(0,0,0,0.3);
+        border: 1px dashed rgba(255,255,255,0.1);
+        padding: 12px 14px;
+        margin: 10px 0 16px;
+        border-radius: 2px;
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        line-height: 1.5;
+        color: var(--p-ink);
+        white-space: pre;
+        overflow-x: auto;
+      }
+      .mc-mod-body .mc-diagram .d-key { color: var(--p-orange); }
+      .mc-mod-body .mc-diagram .d-dim { color: var(--p-ink-faint); }
+      .mc-mod-body .mc-diagram .d-acc { color: var(--p-cyan); }
+      .mc-mod-body .mc-diagram .d-mag { color: var(--p-magenta); }
+      .mc-mod-body .mc-deep {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        color: var(--p-yellow);
+        margin-top: 4px;
+        padding: 4px 0;
+        border-bottom: 1px dashed var(--p-yellow);
+      }
+      .mc-mod-body .mc-deep:hover { color: var(--p-orange); border-bottom-color: var(--p-orange); }
+
+      .mc-next {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        color: var(--p-green);
+        margin-top: 18px;
+        padding: 6px 0;
+        text-decoration: none;
+        letter-spacing: 0.04em;
+        border-bottom: 1px dashed var(--p-green);
+      }
+      .mc-next:hover { color: var(--p-orange); border-bottom-color: var(--p-orange); }
+
+      /* ===== FOOTER ===== */
+      .mc-foot {
+        margin-top: 50px;
+        padding-top: 24px;
+        border-top: 1px solid rgba(255,255,255,0.08);
+        text-align: center;
+      }
+      .mc-foot-band {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--p-green);
+        letter-spacing: 0.12em;
+        margin-bottom: 14px;
+      }
+      .mc-foot-sep { color: var(--p-ink-faint); margin: 0 14px; }
+      .mc-foot-next {
+        font-size: 13px;
+        color: var(--p-ink-dim);
+      }
+      .mc-foot-next a {
+        color: var(--p-cyan);
+        text-decoration: none;
+        border-bottom: 1px dashed transparent;
+      }
+      .mc-foot-next a:hover { border-bottom-color: var(--p-cyan); }
+
+      /* ===== PRINT — pocket-guide PDF ===== */
+      @media print {
+        @page { margin: 14mm 12mm; size: A4; }
+        html, body, .mc-body {
+          background: #fff !important;
+          color: #111 !important;
+        }
+        .mc-top, .mc-toc, .mc-next, .mc-foot-band, .mc-back, .mc-tool-btn, .mc-lang { display: none !important; }
+        .mc-page { max-width: none; padding: 0; margin: 0; }
+        .mc-banner { margin-bottom: 12mm; page-break-after: avoid; }
+        .mc-strip { color: #555 !important; }
+        .mc-title { color: #111 !important; font-size: 30pt; }
+        .mc-title-accent { color: #111 !important; }
+        .mc-sub { color: #444 !important; font-size: 10pt; }
+
+        .mc-intro {
+          background: #fafafa !important;
+          border-left-color: #888 !important;
+          color: #111 !important;
+          page-break-after: always;
+          font-size: 10pt;
+        }
+        .mc-intro-h { color: #111 !important; }
+        .mc-intro code { color: #b04500 !important; }
+
+        .mc-mod {
+          page-break-before: always;
+          page-break-inside: avoid;
+          margin-bottom: 0;
+        }
+        .mc-mod:first-of-type { page-break-before: auto; }
+        .mc-mod-head { border-bottom-color: #ccc !important; }
+        .mc-mod-n, .mc-mod-h { color: #111 !important; }
+        .mc-mod-tag { color: #666 !important; }
+        .mc-mod-body { color: #111 !important; font-size: 10pt; line-height: 1.55; }
+        .mc-mod-body code { color: #b04500 !important; }
+
+        .mc-tldr {
+          background: #fff7e6 !important;
+          border-left-color: #d97706 !important;
+          color: #111 !important;
+        }
+        .mc-tldr b { color: #d97706 !important; }
+        .mc-mini-h { color: #666 !important; }
+
+        .mc-mod-body pre,
+        .mc-mod-body .mc-diagram {
+          background: #f4f4f4 !important;
+          border-left-color: #888 !important;
+          color: #111 !important;
+          font-size: 9pt;
+          page-break-inside: avoid;
+        }
+        .mc-mod-body .mc-diagram .d-key { color: #b04500 !important; }
+        .mc-mod-body .mc-diagram .d-dim { color: #777 !important; }
+        .mc-mod-body .mc-diagram .d-acc { color: #0066aa !important; }
+        .mc-mod-body .mc-diagram .d-mag { color: #8b008b !important; }
+
+        .mc-mod-body .mc-deep {
+          color: #0066aa !important;
+          border-bottom-color: #0066aa !important;
+        }
+        /* print external URLs as footnote text */
+        .mc-mod-body .mc-deep::after {
+          content: " (" attr(href) ")";
+          font-size: 8pt;
+          color: #777;
+        }
+
+        .mc-foot { border-top: 1px solid #ccc; margin-top: 8mm; padding-top: 4mm; }
+        .mc-foot-next { color: #444 !important; font-size: 9pt; }
+        .mc-foot-next a { color: #0066aa !important; }
+        .mc-foot-next a::after {
+          content: " (" attr(href) ")";
+          font-size: 8pt;
+          color: #777;
+        }
+      }
+    </style>
+
+    <script is:inline>
+      (() => {
+        const btn = document.getElementById("mc-print");
+        if (btn) btn.addEventListener("click", () => window.print());
+      })();
+    </script>
+  </body>
+</html>

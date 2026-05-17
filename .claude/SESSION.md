@@ -8,31 +8,32 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Spec 026 Phase B COMPLETE.** All 13 templates (steps 1-13) ported + calibrated. This session shipped tasks 20+21+22 in 6 commits (`15d200d` task 20 port · `c8f5575` task 20 calibration · `40cd650` task 21 port · `3a71715` task 21 calibration · `2be4f0c` task 22 port · `0146332` task 22 calibration). `tasks.md` checkboxes 20/21/22 flipped to `[x]`. Working tree has the tasks.md edit + an unrelated `site/...claude-core.astro` modification from prior session + leftover PNG screenshots (untouched). Validators: `bunx tsc --noEmit` clean, `bun test` 120 pass / 0 fail / 227 expect() — preserved across all 6 commits.
+**Claude Code learning site shipped.** Three big surfaces landed this session, all under `/site/src/pages/`:
 
-**Loop pattern held across all 3 tasks** (port → dogfood → judge → calibrate → re-dogfood → re-judge):
-- Task 20 (step 11 roadmap): MCP 30/30 vs anthill 17→19. 5 KEEPs + 2 CUTs absorbed.
-- Task 21 (step 12 legal): MCP 29→30/30 vs anthill 19/19. 6 KEEPs + 4 CUTs. **Porter caught a bug**: old skeleton said step 12 closed the pipeline; actually step 13 does (LAST_STEP=13). Corrected in new prompt.
-- Task 22 (step 13 prototype-v3 NEW): no anthill comparator (NEW step). Dogfood-only calibration; 7 over-prescription smells folded same-session. Schema literal swapped 5-dim → 4-dim (Token Hygiene / Voice Match / Component Reuse / Brief Fit; Specificity dropped, Audit-fix → narrative-only).
+1. **Cheatsheet de-Agent0-ification + anatomy upgrade** — `cheatsheet/claude-core.astro`. Purged 7 contamination points (RULES card removed, `[sdd, remind]` → `[simplify, debug]`, SKILL·AGENT·RULE → SKILL·AGENT·HOOK diagram, etc.). FILE SYSTEM MAP card upgraded to thematic `.claude/` anatomy (CONTEXT / CONFIG / CAPABILITIES / LIFECYCLE / RUNTIME STATE) with managed-policy + precedence chains. Added anchor IDs on Atlas cards so other pages can deep-link.
+2. **Master Class** — `masterclass/claude-code.astro` (EN) + `masterclass/pt/claude-code.astro` + `masterclass/es/claude-code.astro`. 12 modules each, TL;DR-first per Akshay pedagogical pattern, mini-diagrams + recipes + "Deep dive →" to Atlas. Language switcher (EN/PT/ES) + PDF print button with A4 reading-flow @media print.
+3. **Hook Cookbook** — `cookbook/hooks.astro`. 10 production-ready recipes covering all 7 hook event families. Filter-by-family chips, PDF print, deep-links to Atlas + Master Class.
+
+Wiring: `components/Header.astro` got `Master Class ↗` + `Cookbook ↗` links; `i18n/strings.ts` got `nav.masterclass` + `nav.cookbook` in en/pt/es. Build clean (`bun run build` → 8 pages, 1.04s).
+
+Working tree: 8 files staged-ready (5 modified, 3 new dirs). Two unrelated files left untouched: pre-existing `.claude/skills/brainstorm/templates/render.html.tmpl` mod and `banner-4-atos.png` — both from prior sessions.
 
 ## Next steps
 
-1. **Spec 026 Phase C — docs + decisions** (tasks 23-25). Pick dogfood slug (a) re-Linear-clone vs (b) fresh product; update `packages/mcp-product-pipeline/README.md` with 13-step pipeline diagram; update `.mcp.json.example` header (cosmetic; says "12 steps").
-2. **Spec 026 Phase D — end-to-end dogfood validation** (tasks 26-31). Walk 1→13 in chosen dogfood dir; verify `product_done` after step 13 fires `pipeline-complete` + `/sdd new <slug>` handoff; measure artifact volume ≥285 KB; ship dogfood evidence to `docs/specs/026-*/dogfood/`.
-3. **Memorialize port→judge→calibrate as 8th phase of `.claude/memory/anthill-port-workflow.md`** — observed 4× now (steps 9/10/11/12) plus the NEW-step variant (step 13 = dogfood-only calibration when no anthill comparator). Still pending from 2 sessions ago.
-4. **REMINDERS unchanged** — fair OD re-match, OD `--bump/--apply` upstream test, spec 029 adoption check (due 2026-05-30).
-
-## Carryover (orthogonal lanes, not active)
-
-- **Step-12 v2 + step-13 schema follow-on**: porter flagged a future schema-parser extension (multi-`any_of_contains_*` arrays per concept) as the right way to hard-enforce step-12 patent/IPAA surfaces and step-13 legal-screen mandate when current dogfood is no longer enough.
-- **4-dim model upstream propagation** — step 7's design-fidelity 5-dim model (Token/Voice/Component/Audit-fix/Specificity) was deliberately NOT touched; if a future spec wants the 4-dim shape uniformly across steps 2/7/13, that's a separate refactor.
-- **Step-10 nits** (cash-vs-GAAP reconciliation + headcount-plan callout) — unchanged.
-- **Step-13 open questions deferred to Phase D dogfood**: synthesis-mode Open Decisions framing live test; `partial` US-NN status usage; per-component vs per-screen states matrix tension.
-- **Architecture HTML rendering** (step-9 open Q1) + **Pyshrnk CLAUDE.md reconciliation** — long-standing parking lots.
-- **Bench artifacts (~10+ MB wipe-able):** `/tmp/bench/026-dogfood-step{11,12,13}/` — output-a0, output-a0-v2, output-anthill per step (step 13 has output-a0 only — NEW step, no comparator).
+1. **Commit cheatsheet cleanup + masterclass + cookbook in one consolidated push.** Pending user OK.
+2. **Distribution before more building** — Akshay-style announcement thread on X. The site has zero distribution; building a third page has lower marginal ROI than promoting the existing two. (Suggested by analysis at end of "more ideas?" prompt; user can redirect.)
+3. **Spec 026 Phase C** (tasks 23-25). Still pending. Pick dogfood slug; update `packages/mcp-product-pipeline/README.md` (13-step diagram); update `.mcp.json.example` header.
+4. **Spec 026 Phase D** (tasks 26-31). End-to-end dogfood. Still pending.
+5. **Memorialize port→judge→calibrate as 8th phase of `.claude/memory/anthill-port-workflow.md`** — still pending 3+ sessions.
+6. **REMINDERS unchanged** — fair OD re-match, OD `--bump/--apply` upstream test, spec 029 adoption check (2026-05-30).
 
 ## Decisions & gotchas
 
-- **Schema literal-anchor mid-spec swap is now precedent.** Step 13 calibration swapped `| Screen | Token | Voice | Component | Audit-fix | Specificity |` → `| Screen | Token Hygiene | Voice Match | Component Reuse | Brief Fit |`. Documented in calibration revisions paragraph for git-log greppability. If schema swaps recur, consider a `.claude/rules/` discipline on the "before vs after" notation.
-- **Pre-emptive KEEP/CUT inheritance works.** Step 12 absorbed step-11's 5 KEEPs (user-flow names, concern tags, real-human acceptance, step-4 lineage, sub-bullet exit criteria) BEFORE its own judge ran — landed at 29/30. Step 13 absorbed all the above PLUS step-12's transitive-dep + Alice/Mayo + PIIA discipline pre-emptively. The dogfood phase catches what pre-emptive can't.
-- **NEW-step calibration variant**: when no anthill comparator exists, dogfood-A0 alone surfaces over-prescription smells. Step 13 was the first instance — 7 smells folded same-session, validates the 7-phase workflow's "skip phase 1 [anthill source]; audit phase still applies" provision.
+- **i18n routing dev/prod mismatch.** `astro.config.mjs` has `redirectToDefaultLocale: true` + `prefixDefaultLocale: true`. Dev server returns 404 (with full HTML body) for non-locale-prefixed URLs (`/cheatsheet/claude-core/`, `/cookbook/hooks/`, `/masterclass/claude-code/`). PT/ES work because they match locale list. **Static build is fine** — `dist/<path>/index.html` is generated and GitHub Pages serves as 200. Resolution deferred: either move EN under `/masterclass/en/` to match PT/ES, or set `redirectToDefaultLocale: false`. Not blocking deploy.
+- **Page chrome stays Agent0-branded; page content is Claude-Code-only.** Settled in the de-Agent0 pass. Watch: any new card/annotation naming an Agent0 skill/rule/script/dir is contamination.
+- **CSS duplicated across 3 Master Class variants + Cookbook.** Future refactor: extract poster theme tokens + module CSS to a shared `styles/poster.css`. Today's duplication is intentional shipping cost.
+
+## Carryover (orthogonal lanes, not active)
+
+- Spec 026 Phase B follow-ons (multi-`any_of_contains_*` schema; 4-dim model upstream; step-10 nits; step-13 open Qs; architecture HTML rendering; Pyshrnk CLAUDE.md reconciliation).
+- Bench artifacts (~10+ MB wipe-able): `/tmp/bench/026-dogfood-step{11,12,13}/`.

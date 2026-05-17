@@ -54,6 +54,20 @@ The visual-contract's table-of-contents. Markdown table:
 - `step 7 — (no source)` — when the step-7 screen has no direct lineage but the atlas extends from step-7's visual conventions (typical for `01-landing` which is often marketing-pass).
 - `net-new at step 13` — screens that step 7 did NOT render (typical for legal-consent surfaces, edge-state combinations, P1 supporting surfaces step 7 deferred).
 
+**Field-free screens (calibrated 2026-05-16).** Not every screen carries a US-NN, an audit-fix, or a voice anchor. The Covers / Extends / Concern table columns AND the per-screen HTML header comment (`<!-- screen: ... | covers: ... | extends: ... | fix: ... | tokens: ... | voice: ... | legal: ... -->` per `prompt.md` § 4 step 7) both support a field-free trim that explicitly marks "intentionally not-applicable" without inventing phantom values.
+
+Full-header vs field-free per screen archetype:
+
+| Screen archetype | covers | fix | voice-anchor | legal | Notes |
+|---|---|---|---|---|---|
+| Killer-flow / dashboard / detail / settings (US-NN-bound) | `US-NN[, US-NN]` | `F-NN` or `n/a` | `step 5 § Voice § <register>` | `n/a` typically | Full-header — load-bearing for engineering handoff |
+| Marketing / landing | `—` | `n/a` | `step 5 § Voice sample #N` when reused verbatim, else `—` | `n/a` | `covers: —` is correct — landing supports the concept brief's killer-message, not a PRD US-NN |
+| Legal / policy (privacy notice, ToS, sub-processor) | `legal-mandatory (step 12 § <section>)` | `n/a` | `—` when literal counsel-approved copy ships verbatim | `<regulation> Art <N>` cite | Voice-anchor `—` is intentional — voice tuning may regress counsel-approved literals |
+| Error / 404 / offline / maintenance | `—` (system surface) | `n/a` unless audit-routed | `step 5 § Voice § Error register` | `n/a` | System surfaces support the design-system's error vocabulary, not a PRD US-NN |
+| Consent dialog (legal + interactive) | `legal-mandatory (step 12 § Privacy Posture)` | `n/a` typically | `step 5 § Voice § Direct posture` typically | `<regulation> Art <N>` cite | Hybrid — both legal-driven AND voice-tuned; both anchors populated |
+
+**Trim discipline.** Field-free means the slot keeps its key but the value reads as `—` or `n/a`. Do NOT omit the slot from the header (grep-consistency); do NOT invent a phantom US-NN or fix-ID to fill it (silent regression). The 4 always-required slots — `screen` (filename), `extends` (lineage), `tokens` (step 6 path A/B), `legal` (regulation cite or `n/a`) — remain populated on every screen regardless of archetype. A reader scanning the per-screen header comments across the atlas should see every slot in every header, with `—` / `n/a` honestly marking the non-applicable ones.
+
 ### `## PRD Coverage`
 
 The load-bearing scorecard. Markdown table with one row per US-NN from step 8 PRD:
@@ -84,26 +98,31 @@ The section closes with the `## PRD coverage: X/Y` summary line. The exact phras
 
 ### `## Design Fidelity`
 
-Per-screen 5-dim scoring table. Same dimensions as step 7 (Token / Voice / Component / Audit-fix / Specificity / Min). Format:
+Per-screen 4-dim scoring table (calibrated 2026-05-16; was 5-dim through dogfood). Format:
 
 ```markdown
 ## Design Fidelity
 
-| Screen | Token | Voice | Component | Audit-fix | Specificity | Min |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|
-| 01-landing | 5 | 5 | 4 | n/a | 5 | 4 ✓ |
-| 02-signup | 5 | 5 | 5 | 5 | 4 | 4 ✓ |
-| 03-onboarding | 4 | 4 | 5 | 5 | 4 | 4 ✓ |
-| 04-dashboard | 5 | 5 | 5 | 4 | 5 | 4 ✓ |
-| 05-killer-flow | 5 | 5 | 5 | 5 | 5 | 5 ✓ |
-| 06-detail-view | 4 | 4 | 4 | n/a | 4 | 4 ✓ |
-| 07-settings | 5 | 5 | 4 | n/a | 4 | 4 ✓ |
-| 08-empty-error-consent | 4 | 5 | 4 | 4 | 5 | 4 ✓ |
+| Screen | Token Hygiene | Voice Match | Component Reuse | Brief Fit | Min |
+|---|:---:|:---:|:---:|:---:|:---:|
+| 01-landing | 5 | 5 | 4 | 5 | 4 ✓ |
+| 02-signup | 5 | 5 | 5 | 4 | 4 ✓ |
+| 03-onboarding | 4 | 4 | 5 | 4 | 4 ✓ |
+| 04-dashboard | 5 | 5 | 5 | 5 | 5 ✓ |
+| 05-killer-flow | 5 | 5 | 5 | 5 | 5 ✓ |
+| 06-detail-view | 4 | 4 | 4 | 4 | 4 ✓ |
+| 07-settings | 5 | 5 | 4 | 4 | 4 ✓ |
+| 08-empty-error-consent | 4 | 5 | 4 | 5 | 4 ✓ |
 ```
 
-The Min column carries the gate indicator (✓ if ≥ 3 across all five dims). Any score < 3 should have been fixed in a pre-emit pass — if it lands in the final atlas, the deviation gets a one-liner in REPORT.md § Recommendations.
+The Min column carries the gate indicator (✓ if ≥ 3 across all four dims). Any score < 3 should have been fixed in a pre-emit pass — if it lands in the final atlas, the deviation gets a one-liner in REPORT.md § Recommendations.
 
-`n/a` is valid for the Audit-fix column when no step-4 finding routes to that screen.
+**Why 4 dims, not 5 (the calibration rationale).** Step 7 ships a 5-dim model (Token / Voice / Component / Audit-fix / Specificity); step 13 inherited it for the v1 schema. Dogfood-A0 surfaced two regression modes: (a) **Specificity was gameable** — most screens scored 4-5 without distinguishing it from Voice or Component depth; the dim collapsed in practice with the dims it was meant to complement. (b) **Audit-fix coverage was `n/a` on screens with no routed finding** — pure noise on the rollup table; the per-screen audit-fix story lives at the inline HTML comment + the REPORT § Recommendations narrative, not in a numeric score. The 4-dim model captures both Specificity grains at distinct, exercise-driven dimensions:
+
+- **Specificity-as-language-precision folds into Voice Match** — the dim that already evaluates every user-facing string; "concrete vs filler" is a Voice judgment, not a separate axis.
+- **Specificity-as-component-precision folds into Component Reuse** — the dim that already evaluates per-component anatomy + states; "shipped component vs invented variant" is a Component judgment, not a separate axis.
+- **Audit-fix coverage moves to REPORT.md § Recommendations as narrative** — when ≥1 step-4 finding routed to a screen, the row's Notes column names the F-NN(s) closed; the inline `<!-- fix(F-NN): ... -->` HTML comment in the screen is the audit-trail of record.
+- **Brief Fit is the new fourth dim** — every word / number / label / persona handle / mechanic vocabulary sourced from the brief (step 1) or self-citable; persona handles like `@mara.ic` ship verbatim from the brief; the product name (when step 5 picked a final name different from step 1's placeholder) propagates here.
 
 ### `## States Coverage`
 
@@ -151,7 +170,22 @@ She presses `t` to enter triage mode → `screens/05-killer-flow.html`. The firs
 
 **Real-human acceptance** is mandatory — the literal `Closed-beta partner` substring is the schema-enforced anchor. The canonical phrasing is `Closed-beta partner #N navigates the atlas unassisted and reproduces the killer flow in <5 minutes`; cosmetic variants (`closed-beta partner #2`, `Closed-beta partner #1 walks the atlas`) all carry the literal substring.
 
-When the killer flow spans ≥4 distinct actions, format as sub-bulleted list under the bold persona-name introduction (inherits step-11 + step-12 sub-bullet discipline). When 1-3 actions, prose-paragraph is fine.
+**Bullets vs prose — the length-based calibration (2026-05-16).** The canonical shape is **sub-bulleted list when the flow has ≥4 distinct actions; prose paragraph when ≤3 actions**. Mirrors step-11 + step-12 exit-criteria sub-bullet discipline at the user-flow layer — the same regression mode (a 6-action flow crammed into a single semicolon-separated paragraph is unreadable; the reader loses the step boundaries) applies here. Worked example for the canonical SMB SaaS killer flow:
+
+```markdown
+**Persona:** Engineering Manager at a 5-30 person squad. Coming from Jira; needs to triage a 25-issue sprint in under 5 minutes.
+
+- Opens `screens/02-signup.html`, signs up via Google OAuth in <30 seconds.
+- Lands at `screens/03-onboarding.html`. Pastes Jira workspace URL, authorizes OAuth, watches import progress complete in 90 seconds (US-03 acceptance).
+- Lands at `screens/04-dashboard.html`. 25 imported issues visible, sorted by stale-cycle-time, color-coded by priority (US-04, US-06 acceptance).
+- Presses `t` to enter triage mode → `screens/05-killer-flow.html`. First untriaged issue presents full-screen with keyboard hints (US-07 acceptance).
+- Presses `1` for priority-high → `a` to assign to herself → next issue auto-loads within 100ms. After 12 issues, bulk-selects the remaining 13 (US-19 acceptance), presses `b` to confirm bulk-action — confirmation modal appears (F-13 resolved inline; was the audit's bulk-action-without-confirmation finding from step 4), confirms, all 13 issues triaged.
+- Triage-mode-complete summary surfaces: 25 issues, 4 minutes 12 seconds, cycle-time-stat 4.5 days.
+
+**Closed-beta partner #1 navigates the atlas unassisted and reproduces this killer flow in <5 minutes.**
+```
+
+A 2-action flow (e.g., a micro-product's "open `--help` → run the primary command") prose-paragraph reads naturally; forcing it into a 2-bullet list reads stilted. The calibration is honest about which shape carries the flow's structure best — sub-bullets when actions are step-discrete, prose when actions chain naturally.
 
 ### `## Open Decisions`
 
@@ -168,6 +202,20 @@ Decisions the atlas surfaces for `/sdd new <slug>` to resolve. Inherits step-9 /
 ```
 
 2-5 rows is the target. **NOT every decision** — just the ones the atlas is parked on for engineering handoff. Each row has a deciding signal that closes the deferral.
+
+**Synthesis-mode distinction (calibrated 2026-05-16).** Step 13 is synthesis-from-prior-steps — founder-hasn't-decided questions were closed by steps 1-12 (concept brief / PRD / system-design / cost-estimate / roadmap / legal posture). § Open Decisions in step 13 surfaces INTEGRATION-shape questions — engineering choices that the visual contract leaves open for `/sdd new <slug>` execution. Each row reads as *"Engineering chooses between X / Y; visual contract supports both; deciding signal is N."*
+
+Worked example showing the synthesis-mode shape vs prior steps:
+
+| # | Decision | Default if no decision by | Deciding signal | Concern |
+|---|---|---|---|---|
+| 1 | Stripe Checkout (hosted redirect) vs Elements (embedded form) per US-05 billing | first /sdd planning session | Engineering's PCI scope preference — Checkout offloads PCI scope to Stripe; Elements gives form-control granularity at higher PCI overhead | [engineering] [product+engineering] |
+| 2 | SSE (one-way server-push) vs WebSocket (bidirectional) per US-03 import progress | first /sdd planning session | The import job's bidirectionality need — SSE if read-only progress; WS if user can cancel mid-import from the UI | [engineering] |
+| 3 | Native combobox (`<input role=combobox>` + listbox) vs `cmdk` library per F-12 fix on US-04 command palette | first /sdd planning session | Engineering's keyboard-UX depth — native is sufficient for simple search; cmdk adds nested-command + fuzzy + keyboard-discoverability layers | [engineering] [design] |
+
+Contrast with prior-step § Open Decisions (which surface DECISION-shape questions awaiting founder input — e.g., step 11's "Phase 3 split or merge"; step 12's "DPO appointment timing"). Step 13's rows are INTEGRATION-shape — the visual contract is locked; engineering picks the implementation shape. The deciding signal column names the ENGINEERING input (PCI scope / bidirectionality need / keyboard-UX depth), NOT a founder-input (counsel-review email / closed-beta partner request).
+
+When step 13 DOES surface a founder-input row (e.g., "Legal-consent copy is literal text shipped vs placeholder for counsel review"), that row is the exception — it carries the founder-decision shape because counsel-review timing is genuinely an external dependency, not an engineering integration choice. Mix is fine; the discipline is honesty about which shape each row carries.
 
 ### `## v2-Vision`
 

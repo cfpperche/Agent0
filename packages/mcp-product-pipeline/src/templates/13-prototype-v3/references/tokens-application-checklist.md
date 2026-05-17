@@ -10,6 +10,27 @@ Step 6's `tokens.css` is the canonical value layer. Every color / type / spacing
 
 **To verify the path step 7 picked:** open any `docs/product/07-prototype-v2/screens/*.html`, look at the `:root` block. If it has `--color-canvas` / `--color-foreground` / `--color-accent` (step 6's semantic names) and CSS rules use `var(--color-*)`, Path A. If it has step-6's tokens declared PLUS a `--background: var(--color-canvas)` alias block, Path B. Inherit the same shape for step 13.
 
+### Pattern A vs Pattern B is a continuum, not a binary
+
+The Path A (inline-verbatim) / Path B (alias-in-`:root`) split inherited from step 7 reads as binary on first encounter but is actually a continuum calibrated to the engineering target:
+
+- **Pattern A (inline verbatim)** — every screen's `<style>` opens with the canonical `:root { ... }` from step 6 `tokens.css`, repeated literally per screen. Optimizes for `file://` visual inspection — a reviewer opens a screen, the tokens are right there in the file; no cross-file resolution needed. Cost: token edits at step 6 must re-apply across N screens.
+- **Pattern B (shared-stylesheet shape with aliases)** — the `:root` declares step 6's tokens once + a per-screen alias block (`--background: var(--color-canvas)`) that adapts the canonical tokens to per-screen semantic intent. Optimizes for the engineering shape — when step 13's atlas lands at a real CSS pipeline (Tailwind config, CSS modules, design-tokens build), the alias layer is the substrate. Cost: a `file://` reviewer needs to resolve the alias chain mentally.
+- **The continuum between A and B** — most real atlases land at a *mostly-A-with-some-B* shape: tokens inline verbatim per screen (Pattern A discipline) PLUS a small alias block for screen-specific semantic adaptation (`--current-issue-bg: var(--color-canvas-elevated)` for a triage screen). The split is not 100% one pattern; it's "which pattern dominates the screen's `:root` block".
+
+The agent's job is to inherit the dominant pattern step 7 picked, NOT to re-decide between A and B per screen. A step-13 screen with Path A dominant on screen 02 and Path B dominant on screen 03 is a discipline failure — engineering cannot grep consistently across the atlas.
+
+### When step 7 is absent or skipped
+
+When the product class genuinely has no step-7 prototype-v2 artifact (CLI-tool, dev-tool with no killer-flow visual surface, micro-product that skipped step 7 per the conditional-step calibration), step 13 cannot inherit a pattern from step 7. The fallback discipline:
+
+- **Default to Pattern A (inline verbatim)** — no shared CSS pipeline exists yet, so the alias layer Pattern B optimizes for has no downstream consumer. The `file://` visual-inspection optimization Pattern A delivers IS the use case; engineering execution at `/sdd new <slug>` decides the alias shape later based on the chosen stack (Tailwind / CSS modules / vanilla / etc.).
+- **Switch to Pattern B only when a real CSS pipeline lands** — if step 13 is rendered AFTER a stack decision (e.g., the spec named Tailwind upfront and the design-system was already authored as Tailwind tokens), the alias layer Pattern B requires can be authored against the named pipeline. Until then, Pattern A is the honest default.
+
+**Worked example: CLI-tool product class (no step 7 in the pipeline).** A CLI helper with `--help` text rendering + 1 error-output surface + 1 settings-config command output has no step-7 visual lineage. Step 13 renders the 3 screens with Pattern A inline — `:root` declares the (minimal) step 6 tokens.css content verbatim in each screen; no alias layer; CSS rules use `var(--color-*)` directly. The shared-stylesheet shape Pattern B optimizes for has no downstream consumer because CLI helpers do not ship a CSS bundle. Engineering at `/sdd new <slug>` will likely never need an alias layer at all (the "screens" are HTML mockups of CLI output, not React components); Pattern A stays for the lifetime of the atlas.
+
+**When the founder later upgrades the CLI to a desktop UI** (post-v1, separate spec), step 13 may be re-run with a real step 7 + design-system pipeline; the new pattern decision (A or B) ships at that re-run, not retroactively patched into the original step-13 artifact.
+
 ## The per-screen checklist
 
 For every screen `docs/product/13-prototype-v3/screens/<NN>-<name>.html`, the agent runs this checklist before submitting:

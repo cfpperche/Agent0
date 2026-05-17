@@ -139,6 +139,58 @@ Path 1 is the discipline; Path 2 is the escape hatch. Don't ship a stale atlas t
 
 For micro-products / CLI helpers, step 8 PRD may have 3-5 US-NNs only. The matrix is short. The coverage score is still meaningful: `3/3` or `4/5` is a valid score; the atlas doesn't pad the matrix with invented rows. Step 8's depth-calibration discipline applies upstream — a short PRD produces a short matrix, not a regression.
 
+## Sweet-spot calibration within SMB SaaS (N=6 vs N=9)
+
+The prompt's § 3 calibration table lands SMB SaaS at **N=6-10 screens** — a range, not a single value. The agent's job is to pick within that band. This sub-section documents the trade-offs at the two ends of the band, with a worked example showing the same 16-US-NN PRD rendered at N=6 vs N=9.
+
+### The worked example — 16 US-NNs, two N choices
+
+A 16-US-NN SMB SaaS PRD (the spec 026 default product class). The PRD inventory triages into 3 killer-flow US-NNs (US-01/02/07 — the triage loop) + 9 supporting US-NNs (US-03 import, US-04 palette, US-05 billing, US-06 dashboard stats, US-08 issue detail, US-09 settings, US-10 onboarding progress, US-11 backlog filters, US-12 help overlay) + 4 polish US-NNs (US-13 keyboard remapping, US-14 logo customization, US-15 weekly stats, US-16 reduced-motion). Plus 1 legal-mandatory consent surface (per step 12 § Privacy Posture).
+
+**N=6 rendering — collapsed**
+
+1. `01-landing.html` — marketing
+2. `02-signup-consent.html` — US-05 entry + legal-consent
+3. `03-onboarding-import.html` — US-03, US-10
+4. `04-dashboard.html` — US-06, US-15, US-11 (backlog folded into dashboard tabs)
+5. `05-triage-killerflow.html` — US-01, US-02, US-07, US-08 (issue-detail folded into triage drill-in)
+6. `06-settings-tabs.html` — US-09, US-12, US-13, US-14, US-16, US-04 (palette help folded under settings § Keyboard tab; settings + billing + help + palette + customization all live as tabs on one composite surface)
+
+**N=9 rendering — separated** (matches the dogfood-A0 output)
+
+1. `01-landing.html` — marketing
+2. `02-signup-consent.html` — US-05 entry + legal-consent
+3. `03-onboarding-import.html` — US-03, US-10
+4. `04-dashboard.html` — US-06, US-15
+5. `05-triage-killerflow.html` — US-01, US-02, US-07
+6. `06-backlog-bulk.html` — US-11
+7. `07-issue-detail.html` — US-08
+8. `08-command-palette-help.html` — US-04, US-12, US-13
+9. `09-settings.html` — US-09, US-14, US-16
+
+### The trade-off
+
+| Axis | N=6 wins | N=9 wins |
+|---|---|---|
+| **Simplicity** | Fewer files for engineering to read; one composite "settings tabs" mental model | — |
+| **Render cost** | 6 × 8 KB = ~48 KB lower bound; less per-screen state-gallery coverage | — |
+| **Demo-recording clarity** | — | One screen = one mental concept; founder records the killer flow as a 5-screen sequence (signup → onboarding → dashboard → triage → backlog) without composite-surface tab-switching mid-recording |
+| **Concern-tag separation** | — | Settings (`[product+engineering]`) and command palette (`[design]` for keyboard-UX) and billing (`[counsel-review]` for consent) live on distinct screens — concern-routing for `/sdd` planning is per-screen, not per-tab |
+| **Audit-fix density per screen** | Composite surfaces carry 3-5 routed F-NN fixes — harder to read inline | Each screen carries 0-2 routed F-NN fixes — easier to audit per file |
+| **PRD coverage clarity** | One screen covers 5-6 US-NNs (composite); the per-US-NN reader has to scroll within a screen to find the right tab | One screen covers 1-3 US-NNs; the per-US-NN reader opens the named screen, finds the surface immediately |
+
+### Decision heuristic
+
+**If killer-flow + migration are TWO separate demos, prefer N=9** (or higher within the band). The signal: a founder who plans to record the killer flow AND a separate "switching from Jira" migration demo benefits from the screen-per-mental-concept shape at N=9 — each demo's surface list is distinct. Mirrors step-11's 4-phase-vs-5-phase trigger (the founder's narrative shape drives the structural split).
+
+**If the killer flow IS the migration AND the founder records ONE demo**, N=6 is honest — the composite settings surface saves a render pass and matches the founder's one-demo mental model.
+
+For the spec 026 default (16-US-NN SMB SaaS with killer-flow + migration as separable demos), **N=9 is the sweet spot within the SMB SaaS band**. The dogfood-A0 rendering landed at N=9 for this reason; N=6 would have crammed concern-tagged surfaces (settings + palette + help) into one screen, regressing the engineering-handoff per-concern routing.
+
+### Outside the SMB SaaS band
+
+N=11+ for an SMB SaaS PRD signals two regressions: (a) the PRD is over-scoped — escalate to step 8 revision; (b) the founder is treating step 13 as a v2 atlas — defer screens to a separate step-13-v2 run. N=5 or fewer for a 16-US-NN PRD signals composite-surface cramming — engineering reads N screens but the per-US-NN audit trail is buried. The band exists for a reason; the agent justifies any out-of-band N in REPORT.md § Run Summary.
+
 ## Anti-patterns (quick reference)
 
 - **Silent US-NN omission** — the matrix is missing a US-NN that exists in step 8 PRD. Schema's `| US-NN |` literal anchor catches the structural shape; manual review catches the per-row gap. Inventory every US-NN at signal-extraction time.

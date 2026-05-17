@@ -161,6 +161,22 @@ Per-screen, the agent's responsibility before submitting:
 
 The states-coverage matrix is the engineering-facing audit trail — engineering reads it during `/sdd new <slug>` to discover which states the design has committed to + which gaps need engineering decisions. Silent omission is the regression mode; explicit `[gap]` is the discipline.
 
+## Why the 8 KB floor matters (the state-gallery forcing function)
+
+The schema declares `per_match_min_size: 8192` (8 KB) for every `screens/[0-9][0-9]-*.html` file. The number reads as arbitrary on first encounter — it isn't. **The 8 KB per-screen floor is the forcing function for the state-gallery section.**
+
+Without the floor, a screen collapses to a single ~5-6 KB happy-path: the `:root` token block (~1.5-2 KB) + the primary surface render (~3-4 KB) + minimal CSS. The agent ships the happy-path, declares victory, moves on. The state-gallery — the `[Loading] / [Empty] / [Error] / [Disabled] / [Success]` per-component state coverage that this entire reference page exists to enforce — gets silently dropped because the screen "looks done" at 5-6 KB.
+
+The 8 KB floor closes that regression. To clear 8 KB on a real product screen, the agent MUST render the state-gallery — Pattern A (sectioned demonstration), Pattern B (inline annotation + variants in `<style>`), or Pattern C (mixed) per the patterns above. The math: happy-path (3-4 KB) + state-gallery for 1 dominant component covering 4-5 states (3-4 KB) + token block + minor structural HTML lands the file at 8-12 KB. A screen that lands at 7 KB is signalling the state-gallery is incomplete; a screen at 12-15 KB is signalling the state-gallery is honest.
+
+**The discipline, not the number.** The forcing function is the discipline of "render every applicable state explicitly, not just declare them in CSS"; the number (8 KB) is the floor that catches the most common regression of state-gallery omission. A screen that genuinely has no interactive components (a pure-presentation marketing one-pager) may legitimately land at 8 KB through richer marketing-section content (hero + value props + pricing + FAQ + footer); the floor doesn't force state-gallery on screens that don't need it, but it does prevent the lazy happy-path collapse on screens that do.
+
+Cross-references:
+- The states-coverage matrix in `screen-atlas.md` § States Coverage (this page § Matrix shape — atlas vs REPORT) is the per-screen rollup.
+- The 5 canonical states (this page § The 5 canonical states) are the per-component vocabulary.
+- The 3 rendering patterns (this page § Per-state rendering discipline) are HOW to land the state-gallery in the HTML.
+- The 8 KB floor is the schema-level enforcement that the discipline above actually ships, not silently drops.
+
 ## Common per-screen state-coverage profiles
 
 For agent quick reference. The profile is illustrative; the screen's actual interactive-component inventory drives the per-state cells.

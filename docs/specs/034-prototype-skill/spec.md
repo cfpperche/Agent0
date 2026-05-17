@@ -2,7 +2,7 @@
 
 _Created 2026-05-17._
 
-**Status:** in-progress  _(toolkit + mechanism verified 2026-05-17; full E2E dogfood deferred — see tasks.md § Notes for the gap and REMINDERS.md for the deferred run)_
+**Status:** shipped  _(2026-05-17. Two-stack typecheck + lint gates verified empirically: Next.js prototype `/tmp/prototype-linear-clone/` and Expo prototype `/tmp/prototype-habit-tracker/` both pass typecheck exit 0 AND lint exit 0 after a single `biome format --write` + 4 surgical type/key fixes. 2 scenarios remain documented-partial — see tasks.md § Notes.)_
 
 ## Intent
 
@@ -51,7 +51,7 @@ _Observable outcomes as Given/When/Then scenarios for behavior, plain checkbox b
 - [x] `.claude/skills/prototype/references/` contains at least: `stack-defaults.md` (research-cached with date stamp), `sitemap-schema.md`, `quality-checklist.md`, `delegation-briefs.md` (5-field templates for each subagent type)
 - [x] `.claude/skills/prototype/templates/` contains at least: `monorepo-skeleton/next/`, `monorepo-skeleton/expo/`, `prd-1pager.md.tmpl`, `report.md.tmpl`
 - [x] Skill body ≤ 500 lines (`rule7-body-warn` clean); body ≤ 5000 estimated tokens (`rule8-body-token-warn` clean) — actual: 130 lines / ~2889 tokens
-- [ ] Two-stack dogfood verified — Next.js (linear-clone) AND a mobile product (founder's choice via Phase 1 discovery) — both pass typecheck + lint via the generated monorepo's scripts _(DEFERRED — sandbox skipped deps-fetch; REMINDERS.md item tracks the full E2E run)_
+- [x] Two-stack dogfood verified — Next.js (linear-clone) AND Expo (habit-tracker) — both pass typecheck + lint via the generated monorepo's scripts. **Empirical evidence:** Next.js `tsc --noEmit` exit 0, `biome check .` exit 0 after auto-format + 4 surgical fixes (3 useButtonType + 1 noArrayIndexKey on dashboard screen-writer output) propagated to the bundled template. Expo `tsc --noEmit` exit 0, `biome check .` exit 0 after `biome check --fix --unsafe` of bundled babel.config.js (arrow-function migration) + biome.json added to template.
 - [x] Compliance gate is non-skippable: tasks.md includes a final acceptance task that runs `/skill validate prototype` and requires exit 0 before declaring done
 
 ## Non-goals

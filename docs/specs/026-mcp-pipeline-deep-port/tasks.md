@@ -68,7 +68,7 @@ Each task: read anthill source skill(s) + references → rewrite `templates/<NN-
 
 - [x] 19. **Step 10 — cost-estimate port** (`anthill-fpa` or `anthill-bizops-analyst` — pick richer one during port). Single-artifact `cost-estimate.md` with build cost + run cost + unit economics + sensitivity analysis. References: if anthill skill is light, skip references subdir.
 
-- [ ] 20. **Step 11 — roadmap port** (`anthill-roadmap` + `anthill-roadmap-bridge`). Single-artifact `roadmap.md` with phases, milestones, dependencies, risks, buffer. References: phasing-discipline.md, milestone-format.md.
+- [x] 20. **Step 11 — roadmap port** (`anthill-roadmap` + `anthill-roadmap-bridge`). Single-artifact `roadmap.md` with phases, milestones, dependencies, risks, buffer. References: phasing-discipline.md, milestone-format.md.
 
 - [ ] 21. **Step 12 — legal port** (`anthill-corporate-counsel` + `anthill-privacy-dpo` + `anthill-ip-counsel`). Single-artifact `legal-posture.md` with multi-section coverage (terms posture, privacy, data handling, licensing, regulated aspects, AI-specific section reserved for future). References: regulated-aspects-checklist.md, sub-processors-template.md.
 

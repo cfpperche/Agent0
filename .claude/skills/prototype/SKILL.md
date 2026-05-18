@@ -1,130 +1,163 @@
 ---
 name: prototype
-description: Hi-fi prototype generator. Use when the user types `/prototype "<idea>"` and wants a working, monorepo-scaffolded, stack-native prototype (NOT HTML mockups) at /tmp/prototype-<slug>/ — real Next.js or Expo code that compiles and runs. Agile counterpart to the 15-step mcp-product-pipeline. ≤5 discovery questions, 4 parallel sub-agents in Phase 2, per-route sub-agents (cap 5 concurrent) in Phase 3, REPORT.md authored inline in Phase 4. Flags - `--stack=<name>` (next|expo), `--skip-prd`, `--skip-brand`. See `.claude/skills/prototype/references/` for sitemap-schema, stack-defaults, quality-checklist, delegation-briefs.
+description: Agile frontend to the 13-step mcp-product-pipeline. Covers ALL planning steps (ideation / spec / UX audit / brand / design system / PRD / system design / cost / roadmap / legal) PLUS the 3 prototype passes (v1 mood + killer flow / v2 brand-tuned / v3 PRD-coverage atlas) in fluid agile mode at a single "standard" depth tier. Output is a complete monorepo at user-specified path with all 13 pipeline artifacts. 4 phases - Discovery / Identity / Specification / Synthesis - with 3 condensed AskUserQuestion gates between them. Standalone (no MCP runtime dep, templates bundled). Flags - `<idea>` `--stack=<next|expo>` `--out=<path>` `--from-step=NN` `--skip-prd` `--skip-brand`. See `.claude/skills/prototype/references/{pipeline-coverage,state-machine,delegation-briefs,quality-checklist}.md`. Supersedes spec 034's v1 (sitemap-only scope).
 license: MIT
-compatibility: Designed for Claude Code. Body references `.claude/` conventional paths, dispatches Agent tool with 5-field handoffs (delegation-gate), optionally uses Playwright MCP for screenshots. Not portable to runtimes that lack these surfaces.
+compatibility: Designed for Claude Code. Body references `.claude/` conventional paths, dispatches Agent tool with 5-field handoffs (delegation-gate), uses AskUserQuestion at phase gates, optionally uses Playwright MCP for screenshots. Not portable to runtimes that lack these surfaces.
 metadata:
   agent0-portability-tier: cc-native
-  version: "0.1"
-argument-hint: "<idea>" [--stack=<name>] [--skip-prd] [--skip-brand]
+  version: "2.0"
+argument-hint: "<idea>" --out=<path> [--stack=<next|expo>] [--from-step=NN] [--skip-prd] [--skip-brand]
 ---
 
-# /prototype — hi-fi prototype generator
+# /prototype — 13-step agile frontend
 
-Takes a founder's one-line product idea and produces a working monorepo-scaffolded hi-fi prototype at `/tmp/prototype-<slug>/`. Real code in the chosen stack (Next.js 16 or Expo SDK 55) — not HTML mockups. The agile counterpart to the 15-step `mcp-product-pipeline`: same quality bar on artifacts that matter (sitemap completeness, design fidelity, brand voice, states coverage) but parallelized execution and minimal ceremony.
+Takes a founder's one-line idea and produces a complete v1-ready product package at `<--out>`: concept brief, mood + killer-flow prototype, functional spec, UX audit, brand book, design system, brand-tuned prototype, PRD, system design, cost estimate, roadmap, legal posture, full PRD-coverage screen atlas. Agile counterpart to `mcp-product-pipeline` — same artifacts, lighter calibration ("standard" tier), fluid 4-phase shape with 3 condensed user gates instead of the heavy pipeline's 3 Layer-3 checkpoints.
 
-See spec `docs/specs/034-prototype-skill/` for the rationale. See `references/` files for: `stack-defaults.md` (versions + scaffold facts), `sitemap-schema.md` (sitemap.yaml shape), `quality-checklist.md` (4-dim fidelity rubric + states matrix), `delegation-briefs.md` (5-field templates for every subagent dispatch — required reading before Phase 2).
+**v2 of spec 034** — see `docs/specs/036-prototype-skill-refactor/` for the refactor rationale. The v1 (sitemap + tokens + screens only, no planning artifacts) is superseded.
+
+**Required reading before execution:**
+- `references/pipeline-coverage.md` — what each of the 13 steps produces at standard tier
+- `references/state-machine.md` — `.state.json` shape + phase/step progression + resume support
+- `references/delegation-briefs.md` — 5-field briefs for all 14 sub-agent dispatches (13 step-specific + 1 per-stack screen-writer)
+- `references/quality-checklist.md` — per-step gate criteria the skill checks before declaring a step complete
 
 ## Argument parsing
 
-User invokes as `/prototype "<idea>" [flags]`. The raw argument string is `$ARGUMENTS`. Parse it yourself:
+User invokes as `/prototype "<idea>" --out=<path> [flags]`. The raw argument string is `$ARGUMENTS`. Parse it yourself:
 
-1. First token after `prototype` is the quoted `<idea>` — refuse with `usage: /prototype "<idea>" [flags]` if missing or empty after quote-strip.
-2. Optional flags (any order after idea): `--stack=<name>` where name ∈ {next, expo}; `--skip-prd`; `--skip-brand`.
-3. Compute `slug` = kebab-case derived from idea (lowercase, alphanumeric + hyphens, max 40 chars, trim leading/trailing hyphens). Example: `"linear-clone for SMB SaaS"` → `linear-clone-for-smb-saas`.
+1. First quoted-token is `<idea>` — refuse with `usage: /prototype "<idea>" --out=<path> [flags]` if missing.
+2. `--out=<path>` is REQUIRED — refuse if missing. Resolve to absolute path.
+3. Optional flags (any order after idea): `--stack=<name>` (next | expo; default: web stack inferred from idea → next), `--from-step=NN` (resume from step N), `--skip-prd` (omit Step 08 dispatch — degenerate; not recommended), `--skip-brand` (omit Step 05 + fall back to `templates/default-tokens.css`).
+4. Compute `slug` = kebab-case from idea (lowercase, alphanumeric + hyphens, max 40 chars).
 
-## Phase 0 — Setup + idempotency check
+## Phase 0 — Setup + idempotency check + resume detection
 
-1. If `/tmp/prototype-<slug>/` already exists: prompt user `prototype-<slug> already exists at /tmp/. Overwrite? (y/N)`. On `n` or no answer, abort with `aborted; rename via different idea or wait for current state to be saved`. On `y`, run `rm -r /tmp/prototype-<slug>` (NOT `rm -rf` — governance-gate blocks the combined flags per spec 001).
-2. Create the prototype dir: `mkdir -p /tmp/prototype-<slug>`.
-3. Initialize a tiny state file at `/tmp/prototype-<slug>/.state.json` with `{slug, idea, flags, phase: 0, started_at: <ISO>}` so resumability is possible if a phase blocks (not required for v1; future hook).
+1. **Idempotency check** — if `<out>` exists and is non-empty:
+   - If `--from-step=NN` was passed AND `<out>/.state.json` exists: read state, validate `slug`/`idea`/`flags.stack` match the invocation; if mismatch, abort with `state mismatch — clear --out dir or pick different --from-step`. If match, jump to step NN.
+   - Else (no `--from-step` OR no `.state.json`): prompt `<out> exists and is non-empty. Overwrite? (y/N) ▷`. On `y` → `rm -r <out>` (NOT `rm -rf` — governance-gate blocks combined flags). On `n` / no answer → abort cleanly with `aborted; pick a different --out or rm the existing dir yourself`. Exit 0.
+2. **Init** — `mkdir -p <out>`; write fresh `<out>/.state.json` per `state-machine.md` v2 shape with `phase=0, step=0, started_at=<ISO>, gates_passed=[], completed_steps=[], blocked_steps=[], iterations={discovery:0, identity:0, specification:0}, completed_at=null`.
 
-## Phase 1 — Discovery (≤5 questions)
+## Phase 1 — Discovery (pipeline steps 01-04)
 
-**Read `.claude/skills/prototype/references/stack-defaults.md` BEFORE asking platform/stack questions** — recommendations must reference the file's per-platform-target table.
+**Read `references/delegation-briefs.md` § "Phase 1 — Discovery" BEFORE dispatching.** Each Agent call uses the 5-field template there.
 
-For each question, state an opinionated default; founder confirms/overrides. Skip questions whose answer is obvious from the idea, OR whose flag was supplied. Use the `AskUserQuestion` tool to surface options when interactive.
+1. **Step 01 — Ideation** (BLOCKING) — dispatch Sub-agent A per § Step 01 brief. **model: opus.** Returns `<out>/concept-brief.md`. If BLOCKED: ABORT the entire run (Step 01 feeds everything downstream).
+2. **Steps 02 + 03 + 04 — parallel fan-out** — once Step 01 returns, dispatch THREE sub-agents in ONE MESSAGE (parallel tool calls) per the § Step 02 / 03 / 04 briefs. All `sonnet`. Worked example shape:
+   ```
+   <single message with 3 Agent tool calls>:
+     Agent(brief = Step 02 direction-writer, model=sonnet)
+     Agent(brief = Step 03 spec-writer, model=sonnet)
+     Agent(brief = Step 04 audit-writer, model=sonnet)
+   ```
+   Awaiting all 3 returns is a single conversational beat (not 3 round-trips). Note: Step 02 additionally fans out N per-route screen-writers (cap=5) for killer-flow screens — those dispatch INSIDE Step 02 from a sub-orchestrator pattern.
+3. **Update `.state.json`** — append to `completed_steps`; any BLOCKED to `blocked_steps`.
+4. **Gate** — `AskUserQuestion` with 3 options:
+   - `continue` → proceed to Phase 2 (append `discovery` to `gates_passed`).
+   - `iterate` → user names which step(s) to re-dispatch (sub-prompt). Re-dispatches with augmented brief. Increment `iterations.discovery`. Re-gate after.
+   - `abort` → exit cleanly; set `flags.from_step = current_step`; print resume command.
 
-1. **Platform target** — web / mobile / desktop / CLI / multi. Default heuristic: "linear-clone" / "SaaS" / "dashboard" → web; "tracker" / "scanner" / "tap-to-X" → mobile. Skip if `--stack=` set (stack implies platform: next → web; expo → mobile).
-2. **Frontend stack** — read recommendation from `stack-defaults.md` § Recommendation by platform target. Default: web → "Next.js 16 + React 19 + Tailwind 4 + Biome"; mobile → "Expo SDK 55 + React Native + expo-router + NativeWind". Skip if `--stack=` set.
-3. **Backend / data layer** — none / local-storage / SQLite / Postgres+API. Default: none (prototype-only, mock data inline). Skip if obvious from idea.
-4. **Auth shape** — none / local / OAuth / magic-link. Default: none. Skip if obvious from idea.
-5. **Persona + product class** — ask for a 1-sentence persona + product class (Micro / Mobile / Dev Tool / SMB SaaS / Venture). Required for screen-count calibration per `sitemap-schema.md` Rule 7.
+## Phase 2 — Identity (pipeline steps 05-07)
 
-Record answers in `.state.json` before proceeding.
+Steps run STRICTLY SERIAL (each depends on the prior):
 
-## Phase 2 — Parallel scaffold (4 sub-agents)
+1. **Step 05 — Brand book.** Dispatch per § Step 05 brief. Returns `<out>/brand-book.md`. If `--skip-brand`: skip dispatch, `cp templates/default-tokens.css <out>/tokens.css` + write minimal `<out>/brand-voice.md` with neutral tone.
+2. **Step 06 — Design system.** Dispatch per § Step 06 brief. Reads brand-book + audit findings (Step 04). Returns 3 files: `tokens.css`, `components.md`, `design-system.md`.
+3. **Step 07 — Prototype v2.** Dispatch direction-final writer (Sub-agent (a)) per § Step 07 brief. Then dispatch N screen re-writers (Sub-agent (b)) per § Per-stack screen-writer in PARALLEL (cap=5), one per route from Step 02's sitemap. Inheritance discipline: same N + same filenames + same flow as Step 02; the v2 pass APPLIES brand + tokens + audit fixes to identical structure.
+4. **Update `.state.json`**.
+5. **Gate** — `AskUserQuestion` (same shape as Phase 1).
 
-**Read `.claude/skills/prototype/references/delegation-briefs.md` BEFORE dispatching.** Each Agent call MUST use the 5-field template there (TASK / CONTEXT / CONSTRAINTS / DELIVERABLE / DONE_WHEN) — the delegation-gate hook returns exit 2 otherwise.
+## Phase 3 — Specification (pipeline steps 08-12)
 
-Dispatch ALL FOUR in a single message (parallel tool calls):
+1. **Step 08 — PRD** (BLOCKING; downstream depends on US-NN inventory). Dispatch per § Step 08. Returns `<out>/prd.md`.
+2. **Steps 09 + 10 + 11 + 12 — parallel fan-out** — once Step 08 returns, dispatch FOUR sub-agents in ONE MESSAGE per § Step 09-12 briefs. All sonnet. (Step 10 nominally depends on Step 09 in heavy pipeline; standard tier relaxes — sub-agents read system-design draft from `<out>` if present, fall back gracefully if Step 09 is still running.)
+3. **Update `.state.json`**.
+4. **Gate** — `AskUserQuestion`.
 
-- **Subagent A — Sitemap generator** (subagent_type: general-purpose, model: sonnet). Brief substituted from `delegation-briefs.md` § Phase 2 — Subagent A. Returns `/tmp/prototype-<slug>/sitemap.yaml`.
-- **Subagent B — Brand + tokens** (subagent_type: general-purpose, model: sonnet). Brief substituted. Returns `/tmp/prototype-<slug>/tokens.css` + `brand-voice.md`. If `--skip-brand`, cp `.claude/skills/prototype/templates/default-tokens.css` to `/tmp/prototype-<slug>/tokens.css` and produce a minimal `brand-voice.md` with neutral tone (no subagent dispatch needed).
-- **Subagent C — Monorepo scaffolder** (subagent_type: general-purpose, model: sonnet). Brief substituted. Subagent runs `cp -r .claude/skills/prototype/templates/monorepo-skeleton/<stack>/ /tmp/prototype-<slug>/` then `cd /tmp/prototype-<slug> && pnpm install` (next) or `bun install` (expo). Returns `dep-install-status`.
-- **Subagent D — PRD-1pager** (subagent_type: general-purpose, model: sonnet). Brief substituted. If `--skip-prd`, NOT dispatched (marked SKIPPED in REPORT.md).
+## Phase 4 — Synthesis (pipeline step 13)
 
-After all return, validate each artifact per `sitemap-schema.md` Rules 1-7 (skill side, not subagent). If sitemap validation fails, offer the user (a) re-dispatch Subagent A with augmented brief, or (b) edit `sitemap.yaml` manually.
+NO GATE — Phase 4 closes the pipeline; the `/sdd new <slug>` handoff is the implicit "next" gate.
 
-**After scaffold + sitemap validated:** substitute `PROTOTYPE_SLUG` literal in all bundled template files with the actual slug. Use sed:
-```bash
-find /tmp/prototype-<slug> -type f \( -name '*.json' -o -name '*.tsx' -o -name '*.ts' -o -name '*.css' \) -exec sed -i "s|PROTOTYPE_SLUG|<slug>|g" {} +
-```
-
-## Phase 3 — Parallel build (per-route, cap 5 concurrent)
-
-**Read `.claude/skills/prototype/references/delegation-briefs.md` § Phase 3 — Screen-writer BEFORE dispatching.** Pick the stack-specific brief.
-
-For each route in `sitemap.yaml`:
-1. Build the 5-field brief by substituting route metadata, sitemap entry, tokens path, brand-voice path.
-2. Dispatch via Agent tool (subagent_type: general-purpose, model: sonnet) — Phase 3 dispatches use sonnet per `.claude/rules/delegation.md` § Advisories task-fit table (mechanical implementation).
-3. **Concurrency cap: 5.** Dispatch 5 in parallel; await any return; dispatch next from queue.
-4. On any subagent failure (validator-style rejection OR explicit can't-do response), mark the route `BLOCKED` in `.state.json`; continue with remaining routes. The whole build does NOT fail on one bad screen.
-
-**Concurrency probe note** (spec 034 plan Risk #1 + Open Q #1): observe parent context pressure during the first dogfood. If OOM signals appear, drop cap to 3 here AND in `delegation-briefs.md` § Concurrency cap.
-
-## Phase 4 — Stitch + verify + REPORT.md (inline)
-
-The skill (NOT a subagent) does these steps:
-
-1. **Wire token import (next-stack only):** append `@import "../tokens.css";` line to `/tmp/prototype-<slug>/app/globals.css`. (Expo stack consumes tokens via tailwind.config.js — no inline import.)
-2. **Wire navigation (sub-route page files):** for each route in `sitemap.yaml`, the screen-writer subagent has already created its `page.tsx` (next) or `index.tsx` (expo) per the brief. Verify each file exists; mark missing as BLOCKED in `.state.json`.
-3. **Run install verification:** in the prototype dir, run `pnpm install --frozen-lockfile` (next) or `bun install` (expo) → capture exit code + duration for REPORT.
-4. **Run typecheck + lint:** `cd /tmp/prototype-<slug> && pnpm typecheck && pnpm lint` → capture per-step exit + duration. If either fails, RECORD the failure in REPORT.md `## Build health` section — do NOT fail the prototype build (founder may iterate).
-5. **Start dev server, capture screenshot per route (if Playwright MCP available):**
-   - `command -v playwright` OR check for `mcp__playwright__browser_navigate` tool availability.
-   - If available: start `pnpm dev` in background, navigate to each route, take screenshot, save to `/tmp/prototype-<slug>/screenshots/<route-slug>.png`, stop dev server.
-   - If NOT available: skip gracefully, mark "screenshots N/A — Playwright MCP unavailable" in REPORT.md.
-6. **Author REPORT.md inline:**
-   - Read `.claude/skills/prototype/templates/report.md.tmpl`.
-   - Substitute all placeholders from `.state.json` + Phase 3 returns + Phase 4 measurements.
-   - Score each screen 1-5 per dim per `quality-checklist.md` § Design fidelity (Token / Voice / Component / Brief-fit). Inspect each screen file + matched sitemap entry + tokens.css + brand-voice.md.
-   - Build the states matrix per `quality-checklist.md` § States coverage matrix.
-   - List gap-audit entries: per missing required_category, name what the agent auto-compensated (e.g., "auth required by schema — agent added /login, /signup, /reset without founder explicit mention").
-   - Write the substituted REPORT.md to `/tmp/prototype-<slug>/REPORT.md`.
+1. **Step 13 — Atlas writer** (Sub-agent (a)) — dispatch per § Step 13. Returns `<out>/screen-atlas.md` with PRD coverage matrix + design-fidelity scores + states-coverage matrix.
+2. **Step 13 — Per-route screen writers** (Sub-agent (b)) — dispatch N screen-writers in parallel (cap=5) per § Per-stack screen-writer. N = full PRD coverage at standard tier (killer-flow + 1 edge-state minimum; legal-mandatory surfaces from Step 12 net-new at Step 13).
+3. **Stitch step — wire token import + verify.** Stack-specific:
+   - **Next.js:** Verify `<out>/app/globals.css` contains the token import via strict regex: `grep -qE '^@import.*tokens\.css' <out>/app/globals.css`. The bundled `templates/monorepo-skeleton/next/app/globals.css` SHIPS this line as line 1 — if missing (e.g. user edited template), prepend it via `sed -i '1i @import "../tokens.css";' <out>/app/globals.css`. DO NOT use the v1 loose-substring `grep -q 'tokens.css'` (matched comments, gave false-positive — root cause of 2026-05-17 dogfood render-raw bug).
+   - **Expo:** Tokens consumed via `tailwind.config.js` → no inline import needed.
+4. **Build verification:**
+   - Install verification: `cd <out> && pnpm install --frozen-lockfile` (next) or `bun install` (expo). MUST include OVERRIDE marker for supply-chain hook:
+     ```
+     # OVERRIDE: /prototype Phase 4 build verification — bundled-template install per spec 036
+     cd <out> && pnpm install --frozen-lockfile
+     ```
+   - Typecheck: `cd <out> && node_modules/.bin/tsc --noEmit` (direct bin path; pnpm v11 deps-status can block `pnpm typecheck`).
+   - Lint: `cd <out> && node_modules/.bin/biome check .` (same reason).
+   - Capture per-step exit codes + durations for REPORT.md `## Build health` section. Do NOT fail the build on typecheck/lint non-zero — record and continue (founder can iterate).
+5. **Author REPORT.md inline.** Read `templates/report.md.tmpl`, substitute placeholders from `.state.json` + Phase outputs. See `quality-checklist.md` for the per-step gate criteria scoring.
 
 ## Phase 5 — Handoff message
 
 Print to chat:
 
 ```
-Prototype ready at /tmp/prototype-<slug>/.
+Prototype ready at <out>/.
 
-  Run: cd /tmp/prototype-<slug> && <pnpm dev|bunx expo start>
-  Open: http://localhost:3000 (next) or scan QR code (expo)
-  Report: /tmp/prototype-<slug>/REPORT.md
+  Pipeline coverage: 13/13 steps completed (or N/13 if any BLOCKED — see REPORT.md § Blocked steps).
+  Run: cd <out> && pnpm dev   (open http://localhost:3000)
+  Report: <out>/REPORT.md
+  Concept brief: <out>/concept-brief.md
+  PRD: <out>/prd.md
+  Atlas: <out>/screen-atlas.md
 
-  Sitemap: <N_WIRED>/<N_TOTAL> routes wired
-  Fidelity: <below_threshold_count> screens below 3/5 threshold (see REPORT.md § Fidelity scorecard)
-  Build: typecheck <ok|FAIL>, lint <ok|FAIL>, dev <ok|FAIL>
-  Skill compliance: <skill-validate-status>
+  Phase wall-clock: <total elapsed from started_at to completed_at>
+  Gate iterations: discovery=<n> identity=<n> specification=<n>
 
   Engineering handoff: /sdd new <slug>
 ```
 
-## Unknown / extra subcommand
+Then update `<out>/.state.json` with `completed_at` ISO timestamp.
 
-This skill does not have subcommands beyond the initial invocation. If `$ARGUMENTS` starts with an unrecognized token (not a quoted string and not a flag), refuse with the usage hint:
+## Worked example — parallel dispatch in a single message
+
+Phase 1 Step 02+03+04 (and Phase 3 Step 09+10+11+12) require a SINGLE message with N parallel Agent tool calls. The Agent tool returns N results bundled into one tool-result block — not N round-trips through the user. Example (3 calls):
 
 ```
-/prototype "<idea>" [--stack=<name>] [--skip-prd] [--skip-brand]
+[single assistant message with three <tool_use> blocks]:
+  <tool_use name="Agent" id="A1">
+    subagent_type: general-purpose
+    model: sonnet
+    description: Step 02 — direction-writer
+    prompt: <TASK + CONTEXT + CONSTRAINTS + DELIVERABLE + DONE_WHEN per delegation-briefs.md § Step 02>
+  </tool_use>
+  <tool_use name="Agent" id="A2">
+    subagent_type: general-purpose
+    model: sonnet
+    description: Step 03 — spec-writer
+    prompt: <... per § Step 03>
+  </tool_use>
+  <tool_use name="Agent" id="A3">
+    subagent_type: general-purpose
+    model: sonnet
+    description: Step 04 — audit-writer
+    prompt: <... per § Step 04>
+  </tool_use>
+```
+
+Dispatching the three serially (one Agent call per message, awaiting each in turn) is a v1 orchestration bug, NOT v2 behaviour. Wall-time penalty alone (~3x) makes this critical to enforce.
+
+## Unknown / extra subcommand
+
+This skill does not have subcommands beyond the initial invocation. If `$ARGUMENTS` starts with an unrecognized token (not a quoted idea and not a flag), refuse with the usage hint:
+
+```
+/prototype "<idea>" --out=<path> [--stack=<name>] [--from-step=NN] [--skip-prd] [--skip-brand]
 ```
 
 ## Notes
 
 - **Spec 033 compliance is non-skippable.** Run `bash .claude/skills/skill/scripts/validate.sh .claude/skills/prototype` before commit; exit 0 required.
-- **Output goes to /tmp.** The prototype dir at `/tmp/prototype-<slug>/` is gitignored by virtue of being in `/tmp`; the skill never writes into the Agent0 repo itself.
-- **No MCP product-pipeline calls.** This skill explicitly bypasses `mcp__product-pipeline__*` tools — see spec 034 Non-goals.
-- **Concurrency cap of 5** in Phase 3 is the design. Drop to 3 if dogfood reveals OOM (update this file AND `delegation-briefs.md`).
-- **Defer cleanup confirmation.** Phase 0 prompts before `rm -r` on idempotent re-run; never auto-deletes without consent.
-- **Stack staleness.** `references/stack-defaults.md` was snapshotted 2026-05-17; quarterly re-research is REMINDERS.md tracked.
+- **Validator scope is REPO-WIDE, not per-edited-file.** The post-edit validator (delegation-gate hook) runs Biome over the WHOLE prototype dir, not just the sub-agent's edited file — one bad Biome format error blocks ALL subsequent sub-agents until cleaned. **Mitigation:** the orchestrator runs `node_modules/.bin/biome check --write .` (parent-side) between Phase 3 and Phase 4 batches as a one-pass fixer. (Dogfood finding #4, 2026-05-17.)
+- **Concurrency cap 5** for screen-writer fan-outs (Steps 02 / 07 / 13). Proven non-OOM on 17-route dogfood. Re-evaluate if Phase 4 with 12+ atlas screens surfaces context pressure.
+- **Output dir is `--out=<path>`**, NOT hardcoded `/tmp/`. v1 hardcoded `/tmp/prototype-<slug>/` made `gh repo create --source=.` flow awkward. v2 lets the founder scaffold-direct-to-target.
+- **No MCP product-pipeline calls.** v2 is standalone — bundled templates at `templates/pipeline/01-ideation/` … `13-prototype-v3/` (copied verbatim from `packages/mcp-product-pipeline/src/templates/` at 2026-05-18). Quarterly REMINDERS check for drift sync (see REMINDERS.md).
+- **`--skip-prd` is degenerate.** PRD feeds Steps 09-13 (system-design references US-NN; atlas's coverage matrix depends on PRD inventory). Skipping it produces a partial pipeline with downstream gaps marked in REPORT.md. Not recommended for real founders; useful for dev iteration only.
+- **OD vendor index at `references/od-catalog-index.json`** snapshot from 2026-05-18 (72 vendors). Step 06 design-system brief reads this to pick 1-2 catalog vendors. Full per-vendor `DESIGN.md` files are NOT bundled (size budget) — Step 06 brief reads them from `packages/mcp-product-pipeline/design-systems/<vendor>/DESIGN.md` if the package is present; falls back to mood-only inheritance if absent.
+- **Spec 034 superseded.** Set its `**Status:**` line to `superseded by 036-prototype-skill-refactor` after v2 ships.

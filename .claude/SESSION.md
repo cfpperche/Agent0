@@ -8,43 +8,36 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Spec 034 (prototype-skill) SHIPPED this session — typecheck + lint gate verified empirically on both stacks.** Initial sandbox dogfood deferred the dep-fetch step; Stop hook caught it; resolved by running the full install + lint + typecheck on both Next.js (linear-clone) and Expo (habit-tracker) prototypes — both pass `tsc --noEmit` exit 0 + `biome check .` exit 0 (after 1 auto-format pass + 4 surgical Edits for screen-writer output + Expo babel.config.js arrow-function migration). Template fixes propagated back to bundled skeletons.
+**Spec 036 (`prototype-skill-refactor`) — IN-PROGRESS.** Drafted + Pass A + Pass B shipped this session. Pass C + Pass D pending. The skill is mid-refactor: v2 4-phase orchestration body landed, 13-step delegation briefs written, 14 sub-agent shells declared, OD vendor index extracted (72 vendors @ 21.6 KB). v1 still routable until v2 dogfood validates (per spec 034 supersede order in tasks.md).
 
-New at `.claude/skills/prototype/`: SKILL.md (130 lines, 5-phase orchestrator), 4 reference files (~24 KB total), 2 stack templates (Next.js 16.2.6 + Expo SDK 55 skeletons), 3 markdown templates + default-tokens.css. Self-validates via spec 033 toolkit. 5 Agent dispatches in dogfood, all delegation-gate-clean.
+Triggered by 2026-05-17 dogfood "skill rejeitada" user feedback. `/prototype` v1 was scoped as agile *alternative* to 13-step mcp-product-pipeline but covered only ~25-30% (8 steps missing entirely). v2 reframes as agile *frontend* covering all 13 steps at single "standard" depth tier, standalone (templates bundled, no MCP runtime dep), `--out=<path>` flag (drop /tmp hardcode), `--from-step=NN` resume support, 3 `AskUserQuestion` gates between phases.
 
-**Spec 034 status: shipped.** 9/10 acceptance items fully verified; 2 documented-partial-by-scope (NOT gate-blocked): scenario 2 (sandbox built 3/23 sitemap routes — mechanism proven, remaining 20 are mechanical repetition) + scenario 7 (idempotency mechanism in SKILL.md + code-inspected, empirical retry deferred to real-user invocation).
-
-**Parallel sibling-session work:**
-- `cfpperche/claude-core` — 5 surfaces × 3 locales, Routing Class.
-- `cfpperche/hermes-core` — 3 surfaces, Hermes Agent v0.14.0.
-- Spec 035 (`user-prompt-framing`) shipped — added `## User prompt framing` section to CLAUDE.md.
-
-Working tree: this session's spec 034 + sibling-session work (CLAUDE.md ## User prompt framing, claude-core/hermes-core artifacts, spec 032 dir, brainstorm template, screenshot pngs).
+This session also produced a complete /prototype v1 dogfood at `/tmp/prototype-claude-code-governance-dashboard/` (17 routes, 10 KLoC TSX, dev server runs, 5 dogfood findings — all 5 will be fixed in Pass C). The tokens.css import bug (false-positive grep heuristic — root cause of "skill rejeitada") was caught + fixed live + propagated to v2 design.
 
 ## WIP (in flight)
 
-Spec 034 deferred E2E (per REMINDERS #2 new item): fresh-session full `/prototype` run through all 23 routes with deps + typecheck + lint verification.
+**Pass C + Pass D of spec 036.** Tasks 14-23 in `docs/specs/036-prototype-skill-refactor/tasks.md`. Pass C = 5 template bug fixes (~30 min). Pass D = ops/docs hygiene (REMINDERS quarterly entry, supersede spec 034, CLAUDE.md pointer, delete v1 prd-1pager template). Then Pass E = live dogfood replay (scenario 10 acceptance — same brief as 2026-05-17, verify design system renders) — gate before spec 036 status flips `draft → shipped`.
 
 ## Next steps
 
-1. **Review + commit spec 034.** Files: `.claude/skills/prototype/` + `docs/specs/034-prototype-skill/` + REMINDERS.md updates + this SESSION.md. Single bundled commit per spec 033's recent convention.
-2. **Full E2E dogfood** (deferred) — fresh session, full 23-route Phase 3, real dep-resolution + typecheck + lint, then flip spec 034 status to `shipped`. Tracked in REMINDERS.md.
-3. **REMINDERS.md** now has 6 items: OD re-match (027), OD --bump test, spec 029 adoption check (due 2026-05-30), Hermes+Agent0 post (due 2026-06-30), mcp-product-pipeline as agentskills.io skill (due 2026-07-31), agent0-atlas (due 2026-09-30), SOUL.md per sub-agent, quarterly agentskills.io snapshot (due 2026-08-17), quarterly /prototype stack-defaults re-research (due 2026-08-17), deferred /prototype full E2E.
-4. Memory-layer research from sibling session — sub-agents may have returned.
-5. Spec 026 Phase C/D still pending.
+1. **Pass C** (5 template bug fixes — tasks 14-19): `pnpm-workspace.yaml` placeholders → literal true/false; `package.json` add test script; `globals.css` prepend tokens.css import; SKILL.md add validator-scope advisory; symmetric expo `package.json` fix.
+2. **Pass D** (tasks 20-23): REMINDERS quarterly drift-sync item; spec 034 status → `superseded by 036-prototype-skill-refactor`; CLAUDE.md `## Prototype skill` pointer; delete v1 `prd-1pager.md.tmpl`.
+3. **Live dogfood (acceptance gate)** — replay "Claude Code governance dashboard" brief; verify all 13 step artifacts produced; verify design system renders (NOT raw HTML).
+4. **Spec 036 status flip** to `shipped` after dogfood passes.
+5. **Push deferred 7+ commits to origin** when user authorizes (currently 6 ahead per pre-spec-036 count + at least 1 more from this commit).
 
 ## Decisions & gotchas
 
-- **gawk reserves `close`** (spec 033 finding, persists as institutional knowledge): use `-v cl=...` not `-v close=...` in awk inline scripts.
-- **Spec 033 Phase C decisions inherited** by spec 034: `agent0-portability-tier` kebab-namespaced; `argument-hint:` stays at top-level of frontmatter.
-- **CC harness picks up new SKILL.md live** — proven for both spec 033 (`/skill`) and spec 034 (`/prototype`); writing the file surfaces it in the next system-reminder's available-skills set.
-- **Supply-chain hook over-eager on substring** — verification echo containing the literal text "pnpm install" tripped the hook even though no install was being run. Worked around by rephrasing. Real bug; out of scope for spec 034.
-- **Phase 3 concurrency cap of 5 not stress-tested** — dogfood only used cap-of-2; tuning decision deferred to the full E2E dogfood.
-- **Login screen Token=3/5** due to 4 hardcoded hex values for SVG brand logos (GitHub/Google). Legitimate exception; flag for future iteration to introduce a `brand-asset` exception class in screen-writer brief.
+- **5 spec 036 open questions resolved 2026-05-18:** Step 1=opus + Steps 2-13=sonnet; quarterly REMINDERS drift sync (no script); `AskUserQuestion` structured at 3 gates; degrade gracefully + log on mid-pipeline BLOCKED, abort only on Step 01 or Step 13 fail; Phase 0 overwrite prompt (no `--force` flag).
+- **Validator scope is repo-wide gotcha** (Pass B SKILL.md Notes documents). One bad Biome format error in any file blocks ALL subsequent sub-agents in the same dispatch batch until cleaned. Run `biome check --write .` between batches as parent-side mitigation.
+- **OD catalog index bundled at 21.6 KB** (72 vendors with category + mood + palette_primary + vendor_path). Full per-vendor DESIGN.md NOT bundled (size budget) — Step 06 reads them from `packages/mcp-product-pipeline/design-systems/<vendor>/DESIGN.md` if present, falls back to mood-only otherwise.
+- **Bundled pipeline templates 1.3 MB total** (13 step dirs × 60-160 KB each). Skill dir grew from ~250 KB → 1.5 MB. Acceptable (no per-skill size cap; SKILL.md body is 163 lines / ~2400 tokens — well under 5000 cap).
+- **Sub-agent parallel-dispatch discipline rediscovered.** Spec 034 dogfood revealed serial-1 dispatching even when skill body said parallel. v2 SKILL.md now has an explicit literal "5 Agent tool calls in one message" worked example.
 
 ## Carryover (orthogonal lanes, not active)
 
-- 1+ commits ahead of origin (older sessions).
-- Pre-existing dirty: `.claude/skills/brainstorm/templates/render.html.tmpl`, `banner-4-atos.png`, `next-steps-tab.png`, `docs/specs/032-pipeline-industry-alignment/`, claude-core/hermes-core artifacts.
-- Bench artifacts: `/tmp/bench/026-dogfood-step{11,12,13}/`.
-- Dogfood prototypes at `/tmp/prototype-{linear-clone,habit-tracker}/` — sandbox, wipe-able.
+- **Pre-existing dirty (NOT touched this session):** `.claude/REMINDERS.md` (sibling-session edits from prior), `.claude/skills/brainstorm/templates/render.html.tmpl` (older session WIP). NOT included in this session's commit.
+- **Sibling sessions:** hermes-core 8th surface decision (Cookbook/Recipes was top recommendation; user thinking). `cfpperche/claude-core` and `cfpperche/hermes-core` repos at separate paths.
+- **Dogfood artifacts at /tmp/:** `/tmp/prototype-claude-code-governance-dashboard/` (17-route Next.js v1 dogfood, contains design-system-fix patch — wipe-able; v2 replay will create new dir).
+- **Spec 029** adoption check due 2026-05-30.
+- **Spec 026 Phase C/D** still pending (orthogonal track).

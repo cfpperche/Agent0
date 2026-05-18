@@ -1,40 +1,46 @@
 # OD Bridge — grounding step 2 directions in the vendored Open Design bundle
 
-This document teaches the agent how to consume the vendored **Open Design (OD)** bundle that ships *inside* the `agent0-mcp-product-pipeline` package (spec 027). It is the grounded replacement for `pipeline.md`'s inline 5-school description: instead of inventing palette/typography from training data, the agent reads a pinned, vendored `DESIGN.md` per direction and cites it by name in `REPORT.md`.
+This document teaches the agent how to consume the vendored **Open Design (OD)** bundle that ships *inside* the `/product` skill (spec 027 ported it to MCP; spec 049 re-homed it to the skill so `/product` stays self-contained after MCP discontinuation). It is the grounded replacement for `pipeline.md`'s inline 5-school description: instead of inventing palette/typography from training data, the agent reads a pinned, vendored `DESIGN.md` per direction and cites it by name in `REPORT.md`.
 
-Ported from anthill's `anthill-prototype/references/od-bridge.md`. Anthill injected the vendor via symlink, so it used relative `.anthill/vendor/...` paths. This package ships inside `node_modules/` of an arbitrary consumer project — **the agent never hardcodes vendor paths. It asks the MCP for absolute paths.**
+Ported from anthill's `anthill-prototype/references/od-bridge.md`. Anthill injected the vendor via symlink and used `.anthill/vendor/...` paths; spec 027 nested it under the MCP package and used MCP tools to resolve absolute paths; spec 049 collapsed that indirection — **the agent reads vendor paths directly under `.claude/skills/product/`**, no tool round-trip needed, because the skill ships the vendor in-tree.
 
-## The two MCP tools
+## Vendor layout (canonical paths)
 
-| Tool | Returns | When |
-|------|---------|------|
-| `product_design_systems_index` | The full 72-system index (`{name, mood, palette_summary}` each) **plus** a `vendor_paths` map of absolute roots (`design_systems`, `skills`, `prompts`, `frames`, `templates`) | Once, at the start of step 2 — to pick which systems ground which direction, and to learn where the vendor tree lives |
-| `product_design_system_path` | `{name, path}` — the absolute path to one system's `DESIGN.md` | Per chosen system — feed `path` straight to your `Read` tool |
+| What | Path |
+|------|------|
+| Design systems index (73 entries, lightweight) | `.claude/skills/product/references/od-catalog-index.json` |
+| Per-system `DESIGN.md` | `.claude/skills/product/design-systems/<system>/DESIGN.md` |
+| Skill bundles (`web-prototype`, `saas-landing`, 31 others) | `.claude/skills/product/vendor/open-design/skills/<bundle>/` |
+| Prompt sources (`directions`, `discovery`, `system`) | `.claude/skills/product/vendor/open-design/prompts/<name>.ts` |
+| Frames (`iphone-15-pro`, `macbook`, `browser-chrome`) | `.claude/skills/product/vendor/open-design/frames/<frame>.html` |
+| Pitch-deck template | `.claude/skills/product/vendor/open-design/templates/deck-framework.html` |
+| Manifest + provenance | `.claude/skills/product/vendor/open-design/{MANIFEST.json,LICENSE,NOTICE}` |
 
-If either tool returns `code: "od-vendor-missing"`, the vendor bundle is absent (broken install); if it returns `code: "od-disabled"`, OD grounding was deliberately switched off via `PRODUCT_PIPELINE_OD=off`. In both cases: do **not** silently fall back — surface the error, then consult the "Manual escape" section of `pipeline.md` (the pre-OD inline 5-school method).
+Paths are repo-relative; sub-agents working from `$CLAUDE_PROJECT_DIR` resolve them via the `Read` tool with an absolute prefix.
 
 ## Pre-flight reads (do once, before writing any HTML)
 
 Run in order. Reading these *before* writing prevents re-deriving defaults the vendored assets already encode.
 
 ```
-1. product_design_systems_index
-   → the 72-system catalogue + vendor_paths (absolute roots)
+1. Read .claude/skills/product/references/od-catalog-index.json
+   → the 73-system catalogue (name + category + mood + palette + path)
    → scan moods/palettes; shortlist 1-4 systems per direction (a/b/c)
 
-2. product_design_system_path("<system>")  — for each shortlisted system
-   → Read the returned DESIGN.md path
+2. For each shortlisted system:
+   Read .claude/skills/product/design-systems/<system>/DESIGN.md
    → this is the compositional source for that direction: palette roles,
      typography rules, component stylings, layout principles, do's/don'ts
 
-3. <vendor_paths.prompts>/directions.extracted.md
+3. Read .claude/skills/product/vendor/open-design/prompts/directions.ts
    → the 5 canonical visual schools, full specs — map each direction to one
      school (or justify a blend, citing both)
 
-4. <vendor_paths.prompts>/discovery.extracted.md
+4. Read .claude/skills/product/vendor/open-design/prompts/discovery.ts
    → discovery-form structure, if step 2's discovery turn needs one
 
-5. <vendor_paths.skills>/web-prototype/SKILL.md
+5. Pick the right skill bundle:
+   Read .claude/skills/product/vendor/open-design/skills/web-prototype/SKILL.md
        + assets/template.html  (seed: token system + class inventory)
        + references/layouts.md  (paste-ready section skeletons)
        + references/checklist.md  (P0/P1/P2 self-review)
@@ -48,7 +54,7 @@ OD skill selection heuristic:
 
 ## The 5 canonical schools
 
-Source of truth: `<vendor_paths.prompts>/directions.extracted.md`. Each direction the agent emits maps to ONE school, or explicitly justifies a blend in `REPORT.md`.
+Source of truth: `.claude/skills/product/vendor/open-design/prompts/directions.ts`. Each direction the agent emits maps to ONE school, or explicitly justifies a blend in `REPORT.md`.
 
 | id | Label | Mood |
 |----|-------|------|
@@ -58,7 +64,7 @@ Source of truth: `<vendor_paths.prompts>/directions.extracted.md`. Each directio
 | `tech-utility` | Tech / utility — Datadog / GitHub | Data-dense, monospace, dark or light + grid, ops-focused |
 | `brutalist-experimental` | Brutalist / experimental — Are.na / Yale | Loud type, visible grid, hot-red accent |
 
-The `directions.extracted.md` vendored file carries the full per-school spec (palette families, type stacks, school-specific OpenType tells). Read it — do not work from this table alone.
+The vendored `directions.ts` carries the full per-school spec (palette families, type stacks, school-specific OpenType tells). Read it — do not work from this table alone.
 
 ## Grounding rule — DS citation is mandatory
 
@@ -72,20 +78,24 @@ Design systems consulted:
   - vercel      (design-systems/vercel/DESIGN.md)     — hairline borders, weight-300 display
 ```
 
-This is the citation chain that makes 3 directions genuinely distinct: their grounding sources are distinct, not their prompt-engineered variety. `schema.md` enforces a `Design systems consulted` section in `REPORT.md`.
+This is the citation chain that makes 3 directions genuinely distinct: their grounding sources are distinct, not their prompt-engineered variety. `schema.md` enforces a `Design systems consulted` section in `REPORT.md` (substring `design-systems/` must appear at least once).
 
 ## Build phase
 
 Follow `pipeline.md` § *Build phase* for the per-direction HTML scaffold, the 8 required surfaces, the token-system enrichment guidance, and the hard rules. The OD bridge adds two grounding obligations on top of that playbook:
 
-1. **Seed from the vendored template, not from scratch.** Copy `<vendor_paths.skills>/web-prototype/assets/template.html` as the starting token system + class inventory. Replace the `:root` tokens with palette values *taken from the consulted DESIGN.md files* — verbatim, not improvised.
-2. **Apply the school-specific tells from `directions.extracted.md`** — e.g. the Linear-anchored direction carries `font-feature-settings: "cv01", "ss03"` on body.
+1. **Seed from the vendored template, not from scratch.** Copy `.claude/skills/product/vendor/open-design/skills/web-prototype/assets/template.html` as the starting token system + class inventory. Replace the `:root` tokens with palette values *taken from the consulted DESIGN.md files* — verbatim, not improvised.
+2. **Apply the school-specific tells from `prompts/directions.ts`** — e.g. the Linear-anchored direction carries `font-feature-settings: "cv01", "ss03"` on body.
 
-Frames (`<vendor_paths.frames>/{iphone-15-pro,macbook,browser-chrome}.html`) are optional device-chrome wrappers for screen mocks.
+Frames (`.claude/skills/product/vendor/open-design/frames/{iphone-15-pro,macbook,browser-chrome}.html`) are optional device-chrome wrappers for screen mocks.
 
 ## Anti-AI-slop hard rules
 
-Unchanged from `pipeline.md` § *Anti-AI-slop hard rules* — that P0 gate still applies. The vendored `checklist.md` (`<vendor_paths.skills>/web-prototype/references/checklist.md`) carries the OD project's own P0/P1/P2 list; run both.
+Unchanged from `pipeline.md` § *Anti-AI-slop hard rules* — that P0 gate still applies. The vendored `checklist.md` (`.claude/skills/product/vendor/open-design/skills/web-prototype/references/checklist.md`) carries the OD project's own P0/P1/P2 list; run both.
+
+## When the vendor is genuinely missing
+
+The vendor ships inside the skill; if it's missing, the skill itself is broken. The agent surfaces the error (`OD vendor missing at .claude/skills/product/design-systems/ — reinstall the /product skill or check git status for an incomplete checkout`) and consults the "Manual escape" section of `pipeline.md` (the pre-OD inline 5-school method) only as an explicit, documented fallback. The escape is a conscious choice, not a silent degradation.
 
 ## PT-BR product considerations
 

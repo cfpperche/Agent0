@@ -3,8 +3,8 @@
   "upstream_url": "https://github.com/nexu-io/open-design",
   "pinned_sha": "d25a7aaf4219d69b6a3055ddda25fbce0dafd24d",
   "pinned_at": "2026-04-30T20:18:32.516Z",
-  "last_check_sha": "d25a7aaf4219d69b6a3055ddda25fbce0dafd24d",
-  "last_check_at": "2026-05-01T00:31:36.701Z",
+  "last_check_sha": "34f66113a0f2391714d081d848e7dc48a5222de0",
+  "last_check_at": "2026-05-18T22:45:27.628Z",
   "vendored_paths": [
     {
       "src": "design-systems/",

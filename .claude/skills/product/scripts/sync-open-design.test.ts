@@ -17,7 +17,7 @@ import {
   validateManifestShape,
   validateDesignMd,
   verifyManifest,
-} from "../scripts/sync-open-design.js";
+} from "./sync-open-design.js";
 
 let tmpRoot: string;
 

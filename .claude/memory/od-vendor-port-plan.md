@@ -1,11 +1,17 @@
 ---
 name: od-vendor-port-plan
-description: Open Design vendor bundle proved high-value in anthill; needs porting to packages/mcp-product-pipeline. Captures what OD is, why it matters, and the open architectural questions for the port.
+description: Open Design vendor bundle proved high-value in anthill. RESOLVED in two waves — spec 027 ported it into packages/mcp-product-pipeline/ (2026-05-14); spec 049 re-homed it into .claude/skills/product/ when MCP was discontinued (2026-05-18). This memo is the historical record of the port-plan deliberations.
 metadata:
   type: project
 ---
 
-# OD vendor port plan (deferred)
+# OD vendor port plan — RESOLVED (spec 049)
+
+**Status:** RESOLVED 2026-05-18. The vendor now lives inside the `/product` skill at `.claude/skills/product/{design-systems,vendor/open-design,scripts/sync-open-design.ts,schemas/od-vendor-manifest.schema.json,runtime/od-sync}/` — self-contained, no MCP dependency. Sync engine empirically verified at the new location (`--check` ran cleanly 2026-05-18, drift report works; `--verify` confirms 7 paths match MANIFEST). See `docs/specs/049-od-vendor-port-to-skill/` for the resolution; the body below is the historical pre-resolution thinking.
+
+---
+
+# OD vendor port plan (deferred — historical)
 
 ## The fact
 

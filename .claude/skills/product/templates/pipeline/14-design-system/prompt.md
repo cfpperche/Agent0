@@ -42,14 +42,14 @@ The parent decides this and tells the sub-agent in CONTEXT. Two paths:
 
 **Catalog path** — when one of:
 - The brand-book § Visual Direction names a catalog system explicitly (e.g. "Cool Brutalist anchored on Composio + Voltagent + Warp")
-- The founder declared a preference for a known design system (Linear / Vercel / Notion / etc — 73 vendored systems available via `mcp__product-pipeline__product_design_systems_index`)
+- The founder declared a preference for a known design system (Linear / Vercel / Notion / etc — 73 vendored systems catalogued at `.claude/skills/product/references/od-catalog-index.json`)
 - The product is in a category where a catalog system is a strong fit and the brand-book left visual direction open
 
 Catalog path procedure:
-1. Call `mcp__product-pipeline__product_design_systems_index` to see the available 73 systems.
+1. `Read` `.claude/skills/product/references/od-catalog-index.json` to see the available 73 systems (each entry carries `name + category + mood + palette_primary + vendor_path`).
 2. Pick 1 primary system (anchor) + optionally 1–2 secondary systems for accent treatment (e.g. *Composio anchor + Warp partial-fit on terminal-block layout*).
-3. Call `mcp__product-pipeline__product_design_system_path(name)` for each picked system to get the absolute path to its `DESIGN.md`.
-4. Read the catalog DESIGN.md(s). They are dense (~10–20 KB each, 9 sections, full token specs). Derive the project's `tokens.css` directly from the catalog DESIGN.md's hex/typography/spacing values.
+3. The `vendor_path` field of each chosen entry is the relative path to its `DESIGN.md` (e.g. `.claude/skills/product/design-systems/linear/DESIGN.md`).
+4. `Read` the catalog DESIGN.md(s). They are dense (~10–20 KB each, 9 sections, full token specs). Derive the project's `tokens.css` directly from the catalog DESIGN.md's hex/typography/spacing values.
 5. Document in `design-system.md` § "Catalog Lineage" which systems were borrowed from, what was taken verbatim, and what was deviated (every deviation needs a one-line justification grounded in the brand-book).
 
 **Custom path** — when one of:
@@ -154,7 +154,7 @@ Step 6 is mid-Identity. No gate yet. After a clean submit, `product_advance` mov
 
 This template synthesises two archived anthill skills (see `.claude/memory/anthill-archived.md`):
 
-- **`anthill-design-system`** — the bootstrap discipline: catalog OR custom, 9-section DESIGN.md, stack-adapted token output. The MCP port keeps the catalog/custom split, expands to a 4-file bundle (spec + tokens + components + optional JSON), and integrates the catalog lookup via the existing `product_design_systems_index` / `product_design_system_path` MCP tools (anthill used `npx getdesign add`).
+- **`anthill-design-system`** — the bootstrap discipline: catalog OR custom, 9-section DESIGN.md, stack-adapted token output. The `/product` skill keeps the catalog/custom split, expands to a 4-file bundle (spec + tokens + components + optional JSON), and integrates the catalog lookup via the bundled `.claude/skills/product/references/od-catalog-index.json` + direct `Read` of `.claude/skills/product/design-systems/<system>/DESIGN.md` (anthill used `npx getdesign add`; spec 027 used MCP tools; spec 049 collapsed the indirection — the skill ships the vendor in-tree).
 - **`anthill-design-system-lead`** — the governance discipline: token semantic naming, primitive vs semantic distinction, component inventory with status, accessibility-as-a-hard-gate. The MCP port keeps the discipline; the inventory + governance posture flow through `components.md`.
 
 Anthill's runtime scaffolding — `.anthill/teams/design.md` reads, `npx getdesign` shell-out, `tailwind.config.patch.js` / `design-tokens.css` / `style-dictionary.config` stack-adaptation auto-generation, the deliverable-registry hook — does not port. Stack adaptation is deferred to consumer choice (the consuming codebase converts `tokens.css` to whatever its framework uses); the catalog lookup flows through MCP tools instead of a shell-out.

@@ -13,7 +13,7 @@ Run before submitting the bundle (`design-system.md` + `tokens.css` + `component
 
 - [ ] Path declared in `## Overview` is one of: `catalog` / `custom` / `mixed`
 - [ ] `## Catalog Lineage` section present when path is `catalog` or `mixed`; absent when path is `custom`
-- [ ] Catalog systems named explicitly (no "inspired by various brutalist systems") — full kebab-case names matching `mcp__product-pipeline__product_design_systems_index` entries
+- [ ] Catalog systems named explicitly (no "inspired by various brutalist systems") — full kebab-case names matching `.claude/skills/product/design-systems/<name>/` directories (catalogue index: `.claude/skills/product/references/od-catalog-index.json`)
 - [ ] Verbatim borrowings + deviations both documented (a deviation without rationale is undisciplined)
 
 ## Token integrity

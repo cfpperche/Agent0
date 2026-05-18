@@ -28,12 +28,13 @@ import { pipeline } from 'node:stream';
 const streamPipeline = promisify(pipeline);
 
 // ── Paths ────────────────────────────────────────────────────────────────────
-// Script lives at <pkg-root>/scripts/sync-open-design.ts — `..` resolves to <pkg-root>.
-const PKG_ROOT = new URL('..', import.meta.url).pathname.replace(/\/$/, '');
-const MANIFEST_PATH = path.join(PKG_ROOT, 'vendor/open-design/MANIFEST.json');
-const RUNTIME_DIR = path.join(PKG_ROOT, 'runtime/od-sync');
-const DS_INDEX_PATH = path.join(PKG_ROOT, 'vendor/open-design/.cache/ds-index.json');
-const DESIGN_SYSTEMS_DIR = path.join(PKG_ROOT, 'design-systems');
+// Script lives at <skill-root>/scripts/sync-open-design.ts — `..` resolves to <skill-root>.
+// (Spec 049 moved the engine from packages/mcp-product-pipeline/ into the /product skill.)
+const SKILL_ROOT = new URL('..', import.meta.url).pathname.replace(/\/$/, '');
+const MANIFEST_PATH = path.join(SKILL_ROOT, 'vendor/open-design/MANIFEST.json');
+const RUNTIME_DIR = path.join(SKILL_ROOT, 'runtime/od-sync');
+const DS_INDEX_PATH = path.join(SKILL_ROOT, 'vendor/open-design/.cache/ds-index.json');
+const DESIGN_SYSTEMS_DIR = path.join(SKILL_ROOT, 'design-systems');
 const UPSTREAM_URL = 'https://github.com/nexu-io/open-design';
 const UPSTREAM_GIT = `${UPSTREAM_URL}.git`;
 
@@ -355,7 +356,7 @@ async function cmdApply(): Promise<void> {
   let alreadyInSync = manifest.vendored_paths.length > 0;
   for (const vp of manifest.vendored_paths) {
     if (!vp.checksum) { alreadyInSync = false; break; }
-    const dstFull = path.join(PKG_ROOT, vp.dst);
+    const dstFull = path.join(SKILL_ROOT, vp.dst);
     if (!existsSync(dstFull)) { alreadyInSync = false; break; }
     if (vp.recursive) {
       continue;
@@ -413,7 +414,7 @@ async function cmdApply(): Promise<void> {
 
   for (const vp of manifest.vendored_paths) {
     const srcFull = path.join(extractDir, archiveRoot, vp.src);
-    const dstFull = path.join(PKG_ROOT, vp.dst);
+    const dstFull = path.join(SKILL_ROOT, vp.dst);
 
     if (vp.recursive) {
       const walkResult = spawnSync('find', [srcFull, '-type', 'f'], {
@@ -429,7 +430,7 @@ async function cmdApply(): Promise<void> {
       const files = walkResult.stdout.trim().split('\n').filter(Boolean);
       for (const fileSrc of files) {
         const relPath = path.relative(path.join(extractDir, archiveRoot), fileSrc);
-        const fileDst = path.join(PKG_ROOT, vp.dst, path.relative(vp.src, relPath));
+        const fileDst = path.join(SKILL_ROOT, vp.dst, path.relative(vp.src, relPath));
 
         const entry = await stageFile({
           fileSrc,
@@ -585,7 +586,7 @@ async function stageFile({
 
   const checksum = `sha256:${sha256hex(outBytes)}`;
 
-  const relToDst = path.relative(PKG_ROOT, fileDst);
+  const relToDst = path.relative(SKILL_ROOT, fileDst);
   const stagedPath = path.join(stagingDir, relToDst);
   mkdirSync(path.dirname(stagedPath), { recursive: true });
   await fs.writeFile(stagedPath, outBytes);
@@ -631,7 +632,7 @@ export function verifyManifest(manifest: Manifest, root: string): VerifyResult[]
 
 async function cmdVerify(): Promise<void> {
   const manifest = await readManifest();
-  const results = verifyManifest(manifest, PKG_ROOT);
+  const results = verifyManifest(manifest, SKILL_ROOT);
   const mismatches = results.filter((r) => !r.ok);
 
   if (mismatches.length > 0) {

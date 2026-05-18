@@ -4,7 +4,7 @@ Skip this entire checklist if no DESIGN.md was detected at the project root (`DE
 
 When DESIGN.md exists, that file is the authoritative source. Direction picks BLEND with DESIGN.md (one direction may anchor on DESIGN.md tokens; the other two propose alternatives). REPORT.md's Brief Compliance section should call out which direction matches DESIGN.md vs which deviates.
 
-> **OD vendor note:** Anthill checks `.anthill/design-systems/<active-system>/DESIGN.md` against a library of 73 vendored design systems. We don't ship that library yet — see `.claude/memory/od-vendor-port-plan.md`. Until OD ports, only repo-root DESIGN.md detection applies.
+> **OD vendor note:** The skill ships the OD vendor library at `.claude/skills/product/design-systems/<vendor>/DESIGN.md` (73 vendored systems — spec 049). Sub-agents pick from the catalogue index at `.claude/skills/product/references/od-catalog-index.json` and `Read` the chosen `DESIGN.md` paths directly. The repo-root DESIGN.md detection (if a fork has its own root-level `DESIGN.md` or `docs/DESIGN.md`) still takes precedence; the OD library is the grounding source when no project-specific DESIGN.md exists.
 
 ---
 

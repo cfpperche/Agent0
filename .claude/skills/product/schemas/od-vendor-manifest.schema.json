@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://github.com/cfpperche/Agent0/packages/mcp-product-pipeline/schemas/od-vendor-manifest.schema.json",
+  "$id": "https://github.com/cfpperche/Agent0/.claude/skills/product/schemas/od-vendor-manifest.schema.json",
   "title": "OD Vendor Manifest",
   "description": "Tracks the vendored open-design snapshot: pinned SHA, vendored paths, license attribution, and sync history.",
   "type": "object",

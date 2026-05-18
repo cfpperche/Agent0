@@ -37,7 +37,22 @@ has_typecheck_script() {
   [ -f "package.json" ] && jq -e '.scripts.typecheck // empty' package.json >/dev/null 2>&1
 }
 
-if [ -f "bun.lockb" ] || [ -f "bun.lock" ] || [ -f "bunfig.toml" ]; then
+# Laravel canonical check — runs BEFORE the JS branch because Laravel 11+
+# ships package.json (Vite frontend) by default, which would otherwise hijack
+# detection. When BOTH `artisan` and `composer.json` declaring `laravel/framework`
+# are present, the project IS a Laravel app; PHP test runner is the primary.
+# Pure-PHP projects (no Laravel) still hit the late `composer.json` elif below.
+# Surfaced via Acme Yard dogfood 2026-05-18: vanilla `composer create-project
+# laravel/laravel` includes package.json + composer.json; pre-fix routed to npm
+# and `package.json scripts.test` missing → exit 1.
+if [ -f "artisan" ] && [ -f "composer.json" ] && jq -e '(.require["laravel/framework"] // .["require-dev"]["laravel/framework"]) // empty' composer.json >/dev/null 2>&1; then
+  stack="php"
+  if jq -e '(.["require-dev"]["pestphp/pest"] // .require["pestphp/pest"]) // empty' composer.json >/dev/null 2>&1; then
+    command_str='vendor/bin/pest --colors=never'
+  else
+    command_str='vendor/bin/phpunit --colors=never'
+  fi
+elif [ -f "bun.lockb" ] || [ -f "bun.lock" ] || [ -f "bunfig.toml" ]; then
   stack="js"
   stack_subtype="bun"
   if [ -f "tsconfig.json" ]; then
@@ -95,6 +110,19 @@ elif [ -f "go.mod" ]; then
 elif [ -f "Cargo.toml" ]; then
   stack="rust"
   command_str='cargo test --quiet && cargo clippy -q -- -D warnings'
+elif [ -f "composer.json" ]; then
+  stack="php"
+  # Detect Pest vs PHPUnit via composer.json deps. Pest depends on PHPUnit so
+  # checking pestphp/pest first is correct precedence. Default to phpunit when
+  # neither is explicitly declared (Laravel ships with phpunit by default).
+  # --colors=never disables ANSI at source; runtime-capture.sh strips ANSI
+  # anyway, but disabling at source is cleaner and inference patterns stay
+  # simpler.
+  if jq -e '(.["require-dev"]["pestphp/pest"] // .require["pestphp/pest"]) // empty' composer.json >/dev/null 2>&1; then
+    command_str='vendor/bin/pest --colors=never'
+  else
+    command_str='vendor/bin/phpunit --colors=never'
+  fi
 fi
 
 if [ -z "$command_str" ]; then
@@ -168,6 +196,36 @@ if [ "${CLAUDE_VALIDATOR_SKIP_LINT:-0}" != "1" ]; then
         lint_advisory_msg="lint-advisory: ruff declared in $ruff_manifest but not installed — run \`$py_install_cmd\`"
       fi
     fi
+  elif [ "$stack" = "php" ]; then
+    # Pint detection (Laravel formatter wrapping php-cs-fixer).
+    # Manifest-as-intent: laravel/pint in require-dev OR require. Installed
+    # probe: vendor/bin/pint exists. Same shape as Biome/Ruff branches.
+    if [ -f "composer.json" ] && jq -e '(.["require-dev"]["laravel/pint"] // .require["laravel/pint"]) // empty' composer.json >/dev/null 2>&1; then
+      if [ -x "vendor/bin/pint" ]; then
+        command_str="$command_str && vendor/bin/pint --test"
+      else
+        lint_advisory_msg="lint-advisory: pint declared in composer.json but not installed — run \`composer install\`"
+      fi
+    fi
+    # PHPStan / Larastan detection. Larastan extends PHPStan with Laravel-aware
+    # rules; both ship the `vendor/bin/phpstan` binary. Either declaration counts.
+    if [ -f "composer.json" ] && jq -e '(.["require-dev"]["phpstan/phpstan"] // .["require-dev"]["larastan/larastan"] // .require["phpstan/phpstan"] // .require["larastan/larastan"]) // empty' composer.json >/dev/null 2>&1; then
+      if [ -x "vendor/bin/phpstan" ]; then
+        command_str="$command_str && vendor/bin/phpstan analyse --no-progress"
+      else
+        # Concatenate if Pint advisory already set; newline-separated so each
+        # advisory becomes its own stderr line (the emit loop below loops once
+        # per `printf` of $lint_advisory_msg — newline-embedded strings print
+        # multi-line).
+        phpstan_advisory="lint-advisory: phpstan declared in composer.json but not installed — run \`composer install\`"
+        if [ -n "$lint_advisory_msg" ]; then
+          lint_advisory_msg="$lint_advisory_msg
+$phpstan_advisory"
+        else
+          lint_advisory_msg="$phpstan_advisory"
+        fi
+      fi
+    fi
   fi
 fi
 
@@ -230,6 +288,7 @@ if git rev-parse --git-dir >/dev/null 2>&1; then
     python)   default_patterns='*_test.py test_*.py tests/* test/*' ;;
     go)       default_patterns='*_test.go' ;;
     rust)     default_patterns='tests/* *_test.rs *_tests.rs' ;;
+    php)      default_patterns='tests/* *Test.php *_test.php' ;;
     *)        default_patterns='' ;;
   esac
 

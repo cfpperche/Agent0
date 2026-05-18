@@ -192,6 +192,14 @@ while [ "$i" -lt "$n" ]; do
       detector="pytest"
       break
       ;;
+    vendor/bin/phpunit|./vendor/bin/phpunit)
+      detector="phpunit"
+      break
+      ;;
+    vendor/bin/pest|./vendor/bin/pest)
+      detector="pest"
+      break
+      ;;
   esac
 
   # python|python3 -m pytest|unittest
@@ -220,6 +228,9 @@ while [ "$i" -lt "$n" ]; do
     "cargo build")   detector="cargo-build"; break ;;
     "cargo check")   detector="cargo-check"; break ;;
     "cargo clippy")  detector="cargo-clippy"; break ;;
+    "artisan test")  detector="artisan-test"; break ;;
+    "composer test") detector="composer-test"; break ;;
+    "composer lint") detector="composer-lint"; break ;;
   esac
 
   # run-script verifiers: bun run / npm run / pnpm run + script with keyword.
@@ -343,6 +354,84 @@ infer_status() {
       if [ "${#out}" -lt 500 ] && ! printf '%s' "$out" | grep -qiE 'error|fail'; then
         inferred_status="PASS"
         inference_basis="$det: clean (no error TS or fail keyword)"
+        return
+      fi
+      ;;
+    # PHP test runners — PHPUnit, Pest, Laravel artisan test, composer-script wrappers.
+    # PHPUnit canonical summary: "OK (5 tests, 12 assertions)" (PASS) or
+    # "FAILURES!" / "ERRORS!" followed by "Tests: N, Assertions: M, Failures: K".
+    # Pest similar shape — wraps PHPUnit internally, summary line "Tests:  N passed".
+    # `php artisan test` and `composer test` typically wrap one of these two runners.
+    phpunit|pest|artisan-test|composer-test)
+      # Laravel 11+ JSON output shape (default in `vendor/bin/phpunit` from
+      # composer create-project laravel/laravel — verified empirically against
+      # Laravel 11.x on 2026-05-18). Shape: `{"tool":"phpunit","result":"passed",...}`
+      # or `"result":"failed"`. Check this FIRST because it's the most specific
+      # and the JSON line is short, often the entire output.
+      if printf '%s' "$out" | grep -qE '"result"[[:space:]]*:[[:space:]]*"passed"'; then
+        inferred_status="PASS"
+        inference_basis="$det: JSON \"result\":\"passed\""
+        return
+      fi
+      if printf '%s' "$out" | grep -qE '"result"[[:space:]]*:[[:space:]]*"failed"'; then
+        inferred_status="FAIL"
+        inference_basis="$det: JSON \"result\":\"failed\""
+        return
+      fi
+      # PHPUnit/Pest FAIL signals — most specific first.
+      if printf '%s' "$out" | grep -qE '^FAILURES!'; then
+        inferred_status="FAIL"
+        inference_basis="$det: 'FAILURES!' header"
+        return
+      fi
+      if printf '%s' "$out" | grep -qE '^ERRORS!'; then
+        inferred_status="FAIL"
+        inference_basis="$det: 'ERRORS!' header"
+        return
+      fi
+      # Pest summary line: "Tests:  3 failed, 7 passed (...)" — failed count wins.
+      if printf '%s' "$out" | grep -qE 'Tests:[[:space:]]+[1-9][0-9]* failed'; then
+        inferred_status="FAIL"
+        inference_basis="$det: 'Tests: N failed' summary"
+        return
+      fi
+      # PHPUnit summary: "Tests: 5, Assertions: 10, Failures: 2" — non-zero Failures or Errors wins.
+      if printf '%s' "$out" | grep -qE '(Failures|Errors): [1-9][0-9]*'; then
+        inferred_status="FAIL"
+        inference_basis="$det: PHPUnit summary with non-zero Failures/Errors"
+        return
+      fi
+      # PHPUnit PASS canonical: "OK (N tests, M assertions)"
+      if printf '%s' "$out" | grep -qE '^OK \([0-9]+ test'; then
+        inferred_status="PASS"
+        inference_basis="$det: 'OK (N tests, ...)' PHPUnit summary"
+        return
+      fi
+      # Pest PASS: "Tests:  N passed" without "failed" siblings.
+      if printf '%s' "$out" | grep -qE 'Tests:[[:space:]]+[0-9]+ passed' && ! printf '%s' "$out" | grep -qE 'failed|FAILURES|ERRORS'; then
+        inferred_status="PASS"
+        inference_basis="$det: 'Tests: N passed' (Pest summary)"
+        return
+      fi
+      # Fatal PHP error (uncaught exception during bootstrap, syntax error, etc.)
+      if printf '%s' "$out" | grep -qE 'PHP Fatal error|Parse error|Uncaught'; then
+        inferred_status="FAIL"
+        inference_basis="$det: PHP fatal/parse/uncaught error"
+        return
+      fi
+      ;;
+    # Composer lint wrappers — Pint and PHPStan have distinct output shapes.
+    # Pint test mode: exit 0 if clean, exit 1 with "Style violations found".
+    # PHPStan: exit 0 clean, exit 1 with "[ERROR] N errors" or "Found N errors".
+    composer-lint)
+      if printf '%s' "$out" | grep -qiE 'style violation|errors found|\[ERROR\]'; then
+        inferred_status="FAIL"
+        inference_basis="$det: lint failure marker"
+        return
+      fi
+      if [ "${#out}" -lt 1500 ] && ! printf '%s' "$out" | grep -qiE 'error|fail|violation'; then
+        inferred_status="PASS"
+        inference_basis="$det: clean (no error/fail/violation keyword)"
         return
       fi
       ;;

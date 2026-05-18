@@ -42,6 +42,13 @@
 //      "command": "npx",
 //      "args": ["-y", "next-devtools-mcp@latest"]
 //    },
+//    "laravel-boost": {
+//      "command": "php",
+//      "args": ["artisan", "boost:mcp"]
+//      // Requires: composer require laravel/boost --dev + php artisan boost:install.
+//      // Runs within the Laravel project (artisan must be present). Laravel 10-13.
+//      // Full recipe: .claude/rules/mcp-recipes.md § Laravel Boost MCP.
+//    },
 //    "product-pipeline": {
 //      "command": "bun",
 //      "args": ["run", "packages/mcp-product-pipeline/src/server.ts"]

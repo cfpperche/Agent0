@@ -43,6 +43,10 @@ Detection is tokenisation-based, twin to `.claude/hooks/supply-chain-scan.sh`. M
 | `cargo build` | Rust compile (release/dev profile) |
 | `cargo check` | Rust typecheck-equivalent (no codegen, fastest verifier) |
 | `cargo clippy` | Rust lint analog of biome/ruff; `cargo clippy -- -D warnings` promotes warnings to errors |
+| `vendor/bin/phpunit` / `./vendor/bin/phpunit` | Single-token PHP test runner (PHPUnit) |
+| `vendor/bin/pest` / `./vendor/bin/pest` | Single-token PHP test runner (Pest, wraps PHPUnit) |
+| `php artisan test` | Laravel's `artisan test` command (typically wraps Pest or PHPUnit). Pair-token match on `artisan test` — the leading `php` is the shell context |
+| `composer test` / `composer lint` | Composer-script wrappers — common pattern in Laravel forks where `composer.json` `scripts.test` aliases the test runner |
 
 **Extension via env var (HUMAN-ONLY, pre-launch).** `CLAUDE_RUNTIME_INTROSPECT_EXTRA_DETECT="<space-separated globs>"` adds custom runners without modifying the hook. Example: `CLAUDE_RUNTIME_INTROSPECT_EXTRA_DETECT="make-test just-check"` accepts `make test` and `just check`. The hook normalises the matched pair to `extra:<glob>` in the `detector` field so audits stay distinguishable from core detections. **The variable must be exported in the shell BEFORE `claude` launches** — agents cannot set it mid-session via a Bash tool call. Reason: the hook is spawned by the Claude Code harness as a sibling process, inheriting the harness's env, not the Bash tool child shell's env (verified empirically by rshrnk dogfood B3, finding #6 — see § Gotchas). When a stack needs a new detector and the human can't pre-launch (or doesn't want to), the path is a follow-up spec extending the native detector list, not the env-var workaround.
 

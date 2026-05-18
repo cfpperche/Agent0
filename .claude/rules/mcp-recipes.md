@@ -32,6 +32,7 @@ The hint hook fires when any signal matches. Multiple signals can fire; the sugg
 | Next.js | `next.config.{js,ts,mjs,cjs}` exists, OR `package.json` has `next` in `dependencies` or `devDependencies` | `next-devtools-mcp` + `playwright-mcp` |
 | Browser (non-Next) | `package.json` has any of `react` / `vue` / `svelte` / `vite` / `astro` in deps, AND Next signal is absent | `playwright-mcp` + `chrome-devtools-mcp` |
 | DB | Any of `schema.prisma`, `drizzle.config.{js,ts,mjs}`, `alembic.ini`, `database/migrations/`, `db/migrate/` exists, OR `.env.example` has a `^DATABASE_URL=` line | `dbhub` |
+| Laravel | `artisan` executable file at root (canonical), OR `composer.json` declares `laravel/framework` in `require` / `require-dev` | `laravel-boost-mcp` + `playwright-mcp` |
 
 The list is deliberately small. Same lesson as spec 011's detector allowlist and spec 008's supply-chain manager table: ship a strict shape, extend on real-world signal.
 
@@ -138,6 +139,46 @@ The walk is strictly depth-1: `apps/web/next.config.js` fires; `apps/web/nested/
 **Runtime requirements:** `DATABASE_URL` env var with a valid DSN. The connection string controls which engine is targeted (driver prefix). Readonly mode is the default; write-mode is opt-in via config.
 
 **Security:** readonly default is the safety floor — keep it. Connection strings ARE secrets; do NOT commit a populated `DATABASE_URL` in `.mcp.json` to git. Use `.env` files + harness env-var injection, or set the variable in your shell before `claude` launches. See upstream's security section before enabling write mode.
+
+---
+
+### Laravel Boost MCP
+
+**Source:** [github.com/laravel/boost](https://github.com/laravel/boost) (Laravel official, MIT)
+
+**What it provides:** Laravel-specific framework introspection — Application Info (PHP & Laravel versions, DB engine, ecosystem packages with versions, Eloquent models); Browser Logs (errors + logs from the browser); Database Connections / Schema / Query (inspect connections, read schema, execute queries); Last Error / Read Log Entries (Laravel application log inspection); Search Docs (semantic search across 17,000+ pieces of Laravel documentation). Closest equivalent to next-devtools-mcp for Laravel projects.
+
+**`.mcp.json` block:**
+
+```json
+{
+  "mcpServers": {
+    "laravel-boost": {
+      "command": "php",
+      "args": ["artisan", "boost:mcp"]
+    }
+  }
+}
+```
+
+**Install:** Two steps inside the Laravel project:
+
+```bash
+composer require laravel/boost --dev
+php artisan boost:install
+```
+
+The first installs the package; the second wires up the `boost:mcp` artisan command. Alternative one-shot registration with Claude Code: `claude mcp add -s local -t stdio laravel-boost php artisan boost:mcp`.
+
+**When to enable:** any Laravel fork (Laravel 10.x / 11.x / 12.x / 13.x). The agent gets ergonomic access to Eloquent models, DB schema, app logs, and Laravel docs without grepping the codebase manually.
+
+**Runtime requirements:**
+
+- PHP installed on the host (the command uses the `php` binary).
+- Laravel project directory with `artisan` available — the MCP runs `php artisan boost:mcp` inside that working dir.
+- `composer require laravel/boost --dev` ran successfully (so the artisan command is registered).
+
+**Security:** local-only (introspects the Laravel project, no remote endpoints). Tools include `Database Query` which can execute arbitrary SQL — treat this MCP's exposure to agent prompts the same as giving the agent a Laravel tinker session. Boost can be configured to disable specific tools; see upstream README for the toolset config.
 
 ---
 

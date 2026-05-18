@@ -266,6 +266,7 @@ while [ "$i" -lt "$((n - 1))" ]; do
     pdm)    verbs="add" ;;
     cargo)  verbs="add update install" ;;
     go)     verbs="get" ;;
+    composer) verbs="require remove update install" ;;
     *)      i=$((i + 1)); continue ;;
   esac
 
@@ -324,7 +325,7 @@ while [ "$i" -lt "$((n - 1))" ]; do
   # NOT recorded — they're genuine no-ops, not lockfile resolves.
   if [ -z "$bare_install_manager" ]; then
     case "$current.$verb_match" in
-      npm.install|npm.i|pnpm.install|pnpm.i|bun.install|bun.i)
+      npm.install|npm.i|pnpm.install|pnpm.i|bun.install|bun.i|composer.install)
         bare_install_manager="$current"
         bare_install_action="$verb_match"
         ;;
@@ -361,7 +362,7 @@ if [ -z "$detected_manager" ]; then
       esac
       base="$(basename "$path")"
       case "$base" in
-        package.json|pyproject.toml|Cargo.toml|go.mod)
+        package.json|pyproject.toml|Cargo.toml|go.mod|composer.json)
           # Dedup across multiple matches (monorepo with both apps/web/package.json
           # and apps/api/package.json dirty → list `package.json` once).
           case " $manifests_dirty " in

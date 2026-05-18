@@ -43,6 +43,7 @@ signals=""             # human-readable signal labels (for hint header)
 have_next=0
 have_browser=0         # react/vue/svelte/vite/astro
 have_db=0
+have_laravel=0         # artisan file OR composer.json with laravel/framework
 
 # detect_at <abs_path> [<label_prefix>]
 #
@@ -147,6 +148,28 @@ detect_at() {
       signals="$signals ${prefix}.env.example:DATABASE_URL"
     fi
   fi
+
+  # --- Laravel signal: artisan file (canonical) OR composer.json with laravel/framework ---
+  local local_have_laravel=0
+  if [ -f "$path/artisan" ]; then
+    have_laravel=1
+    local_have_laravel=1
+    signals="$signals ${prefix}artisan"
+  fi
+  if [ "$local_have_laravel" -eq 0 ] && [ -f "$path/composer.json" ]; then
+    if command -v jq >/dev/null 2>&1; then
+      laravel_dep="$(jq -r '(.require // {} | keys[]?), (.["require-dev"] // {} | keys[]?)' "$path/composer.json" 2>/dev/null | grep -Fx 'laravel/framework' | head -1)"
+      if [ -n "$laravel_dep" ]; then
+        have_laravel=1
+        signals="$signals ${prefix}composer.json:laravel/framework"
+      fi
+    else
+      if grep -qE '"laravel/framework"[[:space:]]*:' "$path/composer.json"; then
+        have_laravel=1
+        signals="$signals ${prefix}composer.json:laravel/framework"
+      fi
+    fi
+  fi
 }
 
 # Root scan — preserves spec 012 behaviour (bare signal labels, no prefix).
@@ -204,6 +227,10 @@ fi
 if [ "$have_db" -eq 1 ]; then
   add_recipe "dbhub"
 fi
+if [ "$have_laravel" -eq 1 ]; then
+  add_recipe "laravel-boost-mcp"
+  add_recipe "playwright-mcp"
+fi
 
 # No recipes -> silent.
 [ -z "$recipes" ] && exit 0
@@ -226,6 +253,8 @@ for r in $recipes; do
       printf '  - chrome-devtools-mcp  Chrome DevTools (network, console, Lighthouse, V8 heap)\n' ;;
     dbhub)
       printf '  - dbhub              multi-engine DB schema + safe query exec\n' ;;
+    laravel-boost-mcp)
+      printf '  - laravel-boost-mcp  Laravel framework introspection (Eloquent models, DB schema, logs, docs)\n' ;;
   esac
 done
 printf 'See .claude/rules/mcp-recipes.md for full recipes (install commands, runtime requirements, security).\n'

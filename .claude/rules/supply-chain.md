@@ -41,6 +41,7 @@ Each row: manager → matched verb whitelist → example command. Detection requ
 | `pdm` | `add` | `pdm add axios` |
 | `cargo` | `add`, `update`, `install` | `cargo add tokio` |
 | `go` | `get` | `go get example.com/mod` |
+| `composer` | `require`, `remove`, `update`, `install` | `composer require laravel/cashier` |
 
 Detection is tokenisation-based, not regex anchored to start-of-line: `python -m pip install foo` matches (the `pip install foo` substring is found mid-command). Chained commands work too: `git push && npm install foo` triggers on the second half.
 
@@ -52,6 +53,7 @@ The Edit/Write hook fires on exact basename match against:
 - **Python**: `pyproject.toml`, `requirements.txt`, `uv.lock`, `poetry.lock`, `pdm.lock`
 - **Rust**: `Cargo.toml`, `Cargo.lock`
 - **Go**: `go.mod`, `go.sum`
+- **PHP**: `composer.json`, `composer.lock`
 
 No glob walking — `tests/fixtures/pkg-with-bad-deps/package.json` matches because the basename is `package.json`, regardless of containing directory. This is deliberate: forks that fixture-test manifests will trip the advisory occasionally; the cost (one stderr line) is lower than the alternative (false negatives on real edits to fixture-named manifests in production paths).
 

@@ -27,6 +27,16 @@ The validator's existing JS / Python branches gain a lint extension that runs af
 
 `<py_prefix>` is the same `python` / `uv run python` / `poetry run python` / `pdm run python` chain the validator already detected for test+typecheck.
 
+**PHP.** When `composer.json` exists AND `jq -e '.["require-dev"]["laravel/pint"] // .require["laravel/pint"]'` resolves: Laravel Pint is declared. Pint wraps `php-cs-fixer` with Laravel-leaning defaults; it's the idiomatic formatter for Laravel projects (and works for non-Laravel PHP too).
+- `vendor/bin/pint` exists and is executable → append `vendor/bin/pint --test` to `command_str` (test mode = check without fix, exits non-zero on style violations).
+- `vendor/bin/pint` missing → emit `lint-advisory: pint declared in composer.json but not installed — run \`composer install\``. The pipeline runs without Pint; `ok` reflects test only.
+
+Static analysis (Larastan / vanilla PHPStan) follows the same shape under PHP. When `composer.json` declares ONE of `phpstan/phpstan` OR `larastan/larastan` in `require-dev` (or `require`): PHPStan is declared. Larastan is a wrapper that extends PHPStan with Laravel-aware rules; both ship the `vendor/bin/phpstan` binary, so either declaration triggers the same probe.
+- `vendor/bin/phpstan` exists and is executable → append `vendor/bin/phpstan analyse --no-progress`.
+- `vendor/bin/phpstan` missing → emit `lint-advisory: phpstan declared in composer.json but not installed — run \`composer install\``.
+
+PHP is the first stack where TWO lint primitives (Pint + PHPStan) can fire side-by-side in a single validator run; the existing `lint_advisory_msg` channel concatenates per-linter advisories with a newline separator so each declared+missing linter gets its own stderr line on the agent's next turn.
+
 ## Manifest-as-intent
 
 The single signal is **manifest declaration**, not config-file presence. `biome.json` / `[tool.ruff]` are customization, not intent — a fork that has them but does not declare the linter in deps does not trigger lint. Rationale: ecosystem-native dep declaration is unambiguous and language-uniform across npm/pnpm/bun/yarn (`devDependencies`/`dependencies` is standard) and Python (`ruff` in pyproject deps array or requirements.txt is standard). Config presence is noisy (a fork can have a `biome.json` for editor integration without wanting CI lint enforcement) and would multiply detector predicates without raising precision. See spec.md § Open questions Q1-Q3 for the design pivot rationale.

@@ -65,6 +65,8 @@ case "$BASENAME" in
     ;;
   go.mod|go.sum)
     ;;
+  composer.json|composer.lock)
+    ;;
   *)
     # Not a manifest — silent exit, no audit row (avoid log explosion on
     # every Edit/Write across the project).

@@ -23,7 +23,7 @@ Some product classes earn additional sections that wouldn't be filler. Read the 
 
 - `## Touch Targets` — minimum 44×44 px tap target, spacing rules between adjacent touch zones, tap-feedback duration. WCAG 2.5.8 floor (24×24 minimum) + the 44×44 platform convention.
 - `## Motion` — durations + easing curves. Mobile expects more motion than dev tools (state changes feel mechanical without it). 2–3 durations (`instant 150ms`, `quick 250ms`, `expressive 400ms`) + 1–2 easing curves.
-- `## Iconography` — icon style + primary source. Mobile UIs are icon-dense; without a documented system, the prototype-v2 step ships inconsistent icons.
+- `## Iconography` — icon style + primary source. Mobile UIs are icon-dense; without a documented system, the screen-atlas step ships inconsistent icons.
 
 ### Marketing sites / luxury / editorial
 

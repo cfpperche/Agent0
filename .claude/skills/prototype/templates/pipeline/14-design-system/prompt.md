@@ -6,7 +6,7 @@ delegation_hint: "synthesise the design-system bundle (design-system.md + tokens
 
 # Step 6 — Design System
 
-**Goal:** translate the brand-book (step 5) into a concrete design system — actual hex values, type scale, spacing scale, component anatomy/states, accessibility floor — that step 7 (prototype-v2) and step 13 (prototype-v3) consume to render screens consistently. This is where the *posture* the brand-book named (e.g. "Cool Brutalist", "Warm Humanist") becomes *spec* (e.g. `--color-canvas: oklch(0.10 0.005 240)`, `--space-2: 0.5rem`, `--radius-card: 2px`).
+**Goal:** translate the brand-book (step 5) into a concrete design system — actual hex values, type scale, spacing scale, component anatomy/states, accessibility floor — that step 15 (screen-atlas; absorbed step 7 per spec 045) and step 15 (screen-atlas; renamed per spec 045) consume to render screens consistently. This is where the *posture* the brand-book named (e.g. "Cool Brutalist", "Warm Humanist") becomes *spec* (e.g. `--color-canvas: oklch(0.10 0.005 240)`, `--space-2: 0.5rem`, `--radius-card: 2px`).
 
 **Mode:** `synthesis` with `delegable: partial`. The path decision (catalog vs custom) is parent-side because it requires context the sub-agent shouldn't reinvent — does the brand-book name a catalog system explicitly? Did the founder declare a preference? Is there an existing DESIGN.md in the workspace? Once the path is decided, synthesis itself is fully delegable.
 
@@ -130,7 +130,7 @@ Machine-readable export of `tokens.css` for downstream tooling (Style Dictionary
 
 Call `product_step_submit` with `filename: "design-system.md"`, `content: <design system narrative>`, `extra_files: [{path: "tokens.css", content: ...}, {path: "components.md", content: ...}]` (and optionally `{path: "tokens.json", content: ...}`). Layer 1 validates all files atomically — nothing is written unless every file passes.
 
-Step 6 is mid-Identity. No gate yet. After a clean submit, `product_advance` moves to step 7 (prototype-v2 — re-render the prototype with brand+tokens applied). Step 7 reads `tokens.css` directly and pre-fixes every step-4 audit finding tagged `fix_skill_hint: "prototype-v2"` during the re-render.
+Step 6 is mid-Identity. No gate yet. After a clean submit, `product_advance` moves to step 7 (screen-atlas — re-render the prototype with brand+tokens applied). Step 7 reads `tokens.css` directly and pre-fixes every step-4 audit finding tagged `fix_skill_hint: "screen-atlas"` during the re-render.
 
 ---
 
@@ -146,7 +146,7 @@ Step 6 is mid-Identity. No gate yet. After a clean submit, `product_advance` mov
 ## What this step does NOT do
 
 - **Implementation.** This is a spec + tokens + anatomy. React components, Tailwind config files, Figma variables generation are downstream consumer choices.
-- **Per-screen designs.** Step 7 (prototype-v2) re-renders the screens; step 6 produces the system step 7 reads.
+- **Per-screen designs.** Step 7 (screen-atlas) re-renders the screens; step 6 produces the system step 7 reads.
 - **Marketing site assets.** Future GTM step.
 - **Component testing / Storybook stories / docs site.** All downstream of the spec.
 

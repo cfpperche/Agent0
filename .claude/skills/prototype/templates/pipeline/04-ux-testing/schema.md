@@ -34,7 +34,7 @@ Case-insensitive on the key, case-sensitive on the value. Place it near the top 
 
 ## Optional YAML frontmatter — structured findings handoff
 
-The report MAY open with a YAML frontmatter block (`---` ... `---`) carrying a structured `findings[]` field that downstream steps (step 6 design-system, step 7 prototype-v2) read programmatically. This is the audit-as-delegation-manifest pattern restored from the anthill comparison (the original `anthill-ux-audit` schema-validated its frontmatter; the pre-prepare port had pure markdown). Optional, not required by Layer 1 — but **strongly recommended** when `validation_mode: intuition` or `tested` AND the audit branch is `(i) measurable` (HTML inputs), because that's when the findings have the concrete data downstream consumers can act on.
+The report MAY open with a YAML frontmatter block (`---` ... `---`) carrying a structured `findings[]` field that downstream steps (step 6 design-system, step 7 screen-atlas) read programmatically. This is the audit-as-delegation-manifest pattern restored from the anthill comparison (the original `anthill-ux-audit` schema-validated its frontmatter; the pre-prepare port had pure markdown). Optional, not required by Layer 1 — but **strongly recommended** when `validation_mode: intuition` or `tested` AND the audit branch is `(i) measurable` (HTML inputs), because that's when the findings have the concrete data downstream consumers can act on.
 
 Frontmatter shape:
 
@@ -48,7 +48,7 @@ findings:
     issue: "<one-line concrete description>"
     recommendation: "<specific actionable fix>"
     wcag: "2.4.7"             # optional, only for a11y findings
-    fix_skill_hint: "design-system"   # one of: design-system | prototype-v2 | deferred
+    fix_skill_hint: "design-system"   # one of: design-system | screen-atlas | deferred
     complexity_estimate: "~30 min"     # rough effort, free-form
 priority_fixes:
   - batch: "a11y-contrast-token-tune"
@@ -63,7 +63,7 @@ priority_fixes:
 
 - `findings[].fix_skill_hint` — names which downstream MCP step naturally owns the fix:
   - `"design-system"` — the fix is a token tune (contrast, lightness, semantic-color rebalance). Step 6 reads these and applies them in `tokens.css`, documenting each in `## Audit Response` of `design-system.md`.
-  - `"prototype-v2"` — the fix requires re-rendering screens (semantic HTML pass, focus-indicator restore, missing input elements). Step 7 reads these as acceptance criteria.
+  - `"screen-atlas"` — the fix requires re-rendering screens (semantic HTML pass, focus-indicator restore, missing input elements). Step 7 reads these as acceptance criteria.
   - `"deferred"` — the fix is real but not blocking the v1 pipeline (cosmetic polish, WCAG 2.2 readiness, `prefers-reduced-motion` wraps). Surfaced for backlog grooming, not consumed mid-pipeline.
 - `priority_fixes[]` — the same named-batch grouping the markdown `## Priority Recommendations` section already requires, mirrored as structured data so consumers can iterate without re-parsing markdown tables. Each batch's `finding_ids` reference the `findings[].id` values; the `batch` slug is the handoff unit.
 

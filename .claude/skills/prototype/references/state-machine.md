@@ -1,34 +1,43 @@
-# State machine — `/prototype` v2
+# State machine — `/prototype` v3
 
-Defines `.state.json` shape, phase/step progression, gate semantics, and resume support via `--from-step=NN`. Spec source: `docs/specs/036-prototype-skill-refactor/`.
+Defines `.state.json` shape, phase/step progression, gate semantics, and resume support via `--from-step=NN`. Spec source: `docs/specs/045-prototype-skill-pipeline-realign/` (v3) — supersedes spec 036 (v2). v2 shape preserved for compatibility detection (orchestrator aborts cleanly when v2 state file found, rather than silently corrupting it).
 
-## `.state.json` shape
+## `.state.json` shape (v3)
 
-Written at `<out-dir>/.state.json`. Initialized by Phase 0, updated at each step boundary, finalized at Phase 4 close.
+Written at `<out-dir>/docs/.state.json`. Initialized by Phase 0, updated at each step boundary, finalized at Phase 4 close.
 
 ```json
 {
-  "version": 2,
+  "version": 3,
   "slug": "claude-code-governance-dashboard",
   "idea": "Claude Code governance dashboard",
   "flags": {
     "stack": "next",
-    "out": "/tmp/dogfood-v2",
+    "out": "/tmp/dogfood-v3",
     "from_step": null,
     "skip_brand": false,
     "skip_prd": false
   },
-  "phase": 3,
+  "phase": "specification",
   "step": 9,
-  "step_label": "09-system-design",
+  "step_label": "09-legal",
   "started_at": "2026-05-18T14:30:00Z",
-  "gates_passed": ["discovery", "identity"],
-  "completed_steps": ["01-ideation", "02-prototype", "03-spec", "04-ux-testing", "05-brand", "06-design-system", "07-prototype-v2", "08-prd"],
+  "gates_passed": ["discovery"],
+  "completed_steps": [
+    "01-ideation",
+    "02-prototype",
+    "03-spec",
+    "04-ux-testing",
+    "05-prd",
+    "06-ost",
+    "07-sitemap-ia",
+    "08-system-design"
+  ],
   "blocked_steps": [],
   "iterations": {
     "discovery": 0,
-    "identity": 1,
-    "specification": 0
+    "specification": 0,
+    "identity": 0
   },
   "completed_at": null
 }
@@ -36,59 +45,83 @@ Written at `<out-dir>/.state.json`. Initialized by Phase 0, updated at each step
 
 Field semantics:
 
-- **`version`** — schema version of `.state.json` itself. Incremented when shape changes. Current: `2`. v1 was the spec-034 shape (single `phase` int from 0-5); v2 adds the 13-step tracking.
+- **`version`** — schema version of `.state.json` itself. Current: `3`. Increments when shape changes.
+  - v1 (spec 034) — single `phase` int 0-5, no step tracking.
+  - v2 (spec 036) — 13-step tracking, `phase` int 0-5, `iterations` keyed by `discovery`/`identity`/`specification`.
+  - v3 (spec 045) — 15-step tracking, `phase` **string enum** `discovery|specification|identity|visual-contract` (was int), `iterations` keys reordered to match new phase order (`discovery`/`specification`/`identity`); `step_label` enum reflects new step names (including new `06-ost`, `07-sitemap-ia`, `12-gtm-launch`, `15-screen-atlas` — and absence of v2's `07-prototype-v2`, `13-prototype-v3`).
 - **`slug`** — kebab-case product slug derived from `idea`. Computed once at Phase 0; immutable thereafter.
 - **`idea`** — verbatim user input from `/prototype "<idea>"`. Immutable.
 - **`flags`** — captured from invocation; `out` is required, others default. Immutable post-Phase 0 except `from_step` (cleared after resume completes).
-- **`phase`** — current phase number (0-5). Updated at phase boundary.
-- **`step`** — current step number (0 = Phase 0 setup, 1-13 = pipeline steps).
-- **`step_label`** — human-readable step name matching bundled template dir name (e.g. `09-system-design`).
+- **`phase`** — current phase as string enum. One of `discovery | specification | identity | visual-contract`. Updated at phase boundary.
+- **`step`** — current step number, int 1-15 (or 0 during Phase 0 setup).
+- **`step_label`** — human-readable step name matching bundled template dir name (e.g. `09-legal`, `12-gtm-launch`, `15-screen-atlas`).
 - **`started_at`** — UTC ISO-8601 timestamp from Phase 0.
-- **`gates_passed`** — list of phase names with `continue` choice at gate. Order matters (cannot be in `specification` if not in `identity`).
+- **`gates_passed`** — list of phase names with `continue` choice at gate. Order matters (cannot be in `specification` if `discovery` not first). Valid values: `discovery`, `specification`, `identity`.
 - **`completed_steps`** — list of step labels that finished cleanly. Append-only.
-- **`blocked_steps`** — list of objects `{step_label, reason, artifacts_partial?}` for steps that returned BLOCKED (per Q4 resolution: degrade gracefully + log + continue). Empty list when no blocks.
+- **`blocked_steps`** — list of objects `{step_label, reason, artifacts_partial?}` for steps that returned BLOCKED. Empty list when no blocks.
 - **`iterations`** — count of `iterate` gate-pass choices per phase. Each `iterate` increments; `continue` does not. Used to cap runaway iteration (soft cap = 3 per phase; warn at 3, soft-abort at 5).
 - **`completed_at`** — UTC ISO-8601 set when Phase 4 closes successfully. Null otherwise.
 
-## Phase progression
+## Phase progression (v3)
 
 ```
 Phase 0 (setup) → step 0
   ↓
 Phase 1 (discovery) → steps 01-04
+  steps 01 (blocking, opus) → 02 alone → 03+04 parallel
   ↓
   gate_discovery [AskUserQuestion: continue / iterate / abort]
     continue → Phase 2
     iterate  → re-dispatch failing step(s) within Phase 1, then re-gate
     abort    → exit; .state.json preserved for later resume
   ↓
-Phase 2 (identity) → steps 05-07
-  ↓
-  gate_identity [AskUserQuestion: continue / iterate / abort]
-  ↓
-Phase 3 (specification) → steps 08-12
+Phase 2 (specification) → steps 05-12
+  steps 05 (blocking, PRD) → 06+07 parallel (OST + sitemap-IA)
+    → schema enforcement on 07-sitemap.yaml (BLOCK if required_categories not covered)
+    → 08 (system-design + data-flow) → 09 (legal + DPIA from data-flow)
+    → 10 (roadmap defines phases) → 11+12 parallel (cost + GTM)
   ↓
   gate_specification [AskUserQuestion: continue / iterate / abort]
   ↓
-Phase 4 (synthesis) → step 13
+Phase 3 (identity) → steps 13-14
+  steps 13 (brand) → 14 (design-system, depends on brand) — strict serial
+  ↓
+  gate_identity [AskUserQuestion: continue / iterate / abort]
+  ↓
+Phase 4 (visual-contract) → step 15
+  step 15 atlas-writer + per-route screen-writers (parallel cap=5)
+    + stitch step (token import verify) + build verification
   ↓
   Phase 5 (handoff message)
   ↓
   completed_at set
 ```
 
-Phase 0 has no gate (idempotency check is local). Phase 4 has no gate (final synthesis; `/sdd new` handoff is the implicit "next" gate).
+Phase 0 has no gate (idempotency check is local). Phase 4 has no gate (final synthesis; `/sdd new` handoff is the implicit "next" gate). Note phase ORDER CHANGED vs v2: Specification (was Phase 3 in v2) is now Phase 2 (PRD-first per spec 045 Decision 3); Identity (was Phase 2) is now Phase 3.
 
-## Step ordering within a phase
+## Step ordering within Phase 2 — Specification (most complex)
 
-Within each phase, steps run **mostly in parallel** with two ordering constraints:
+Phase 2's 8 steps follow a DAG (not strictly serial, not fully parallel):
 
-- **Phase 1 (Discovery):** Step 01 blocks (concept brief feeds all downstream). Steps 02 + 03 + 04 run in parallel (one Agent message with 3 calls) after Step 01 returns.
-- **Phase 2 (Identity):** Step 05 (brand) → Step 06 (design-system, depends on brand-book) → Step 07 (prototype-v2, depends on tokens + audit findings from Phase 1 Step 04). Strict serial; no parallel.
-- **Phase 3 (Specification):** Step 08 (PRD) blocks. Steps 09 + 10 + 11 + 12 run in parallel after Step 08 returns. (Step 09 system-design depends on PRD scope; Step 10 cost depends on system-design — relaxed at standard tier to "any reasonable ordering" since the deferred details outweigh the strict dependency).
-- **Phase 4 (Synthesis):** Step 13 single sub-agent + per-route screen-writer fan-out (cap=5) for the atlas screens.
+```
+05 PRD (blocking)
+  ├──────► 06 OST   ┐
+  └──────► 07 sitemap-IA   ┘ ──► 08 system-design ──► 09 legal
+                                       │                  │
+                                       ▼                  ▼
+                                  10 roadmap     11 cost + 12 GTM (parallel)
+```
 
-## Gate UX (per Q3 resolution)
+Dispatch sequence (orchestrator follows literally):
+1. Step 05 alone (blocking; downstream depends on US-NN)
+2. Steps 06+07 parallel (both consume Step 05's PRD)
+3. **Step 07 schema enforcement check** (orchestrator parses sitemap.yaml; BLOCK Step 07 + re-dispatch if `required_categories` not covered without `deferred_categories` declaration)
+4. Step 08 alone (needs Step 07 sitemap routes for system-design integration list)
+5. Step 09 alone (needs Step 08 data-flow inventory for DPIA trigger)
+6. Step 10 alone (defines phases for cost calculation)
+7. Steps 11+12 parallel (cost reads Step 09 legal budget + Step 10 roadmap; GTM reads Step 09 + Step 10)
+
+## Gate UX
 
 At end of Phase 1, 2, 3:
 
@@ -103,30 +136,36 @@ Iteration soft cap: warn at `iterations.<phase> >= 3`, force-abort at `>= 5`. Pr
 ## Resume via `--from-step=NN`
 
 ```bash
-/prototype "Claude Code governance dashboard" --from-step=09 --out=/tmp/dogfood-v2
+/prototype "Claude Code governance dashboard" --from-step=09 --out=/tmp/dogfood-v3
 ```
 
 Behavior:
 
-1. Phase 0 reads `.state.json` from `<out-dir>`.
-2. Validates: `slug` matches argument-derived slug; `idea` matches verbatim (case-sensitive); `flags.stack` matches; if mismatch, abort with `state mismatch — clear --out dir or pick different --from-step`.
-3. Jumps to step NN. All `completed_steps` entries with step number < NN remain trusted (artifacts on disk are used as inputs to downstream).
-4. Continues from there through remaining steps + phases.
-5. On clean completion, `flags.from_step` set back to `null` for next invocation.
+1. Phase 0 reads `.state.json` from `<out-dir>/docs/`.
+2. **Validates `version`** — must be `3`. If `version != 3` (v1 or v2 from older runs), abort with:
+   ```
+   state v<N> found — pre-spec-045 run; clear --out dir or run fresh /prototype
+   ```
+   Conservative: refuse to silently upgrade an older state file, because the step numbering changed (v2's `08-prd` is v3's `05-prd`; v2's `13-prototype-v3` is v3's `15-screen-atlas`).
+3. Validates: `slug` matches argument-derived slug; `idea` matches verbatim (case-sensitive); `flags.stack` matches; if mismatch, abort with `state mismatch — clear --out dir or pick different --from-step`.
+4. Jumps to step NN. All `completed_steps` entries with step number < NN remain trusted (artifacts on disk are used as inputs to downstream).
+5. Continues from there through remaining steps + phases.
+6. On clean completion, `flags.from_step` set back to `null` for next invocation.
 
 **Edge case:** `--from-step=NN` where NN is past the user's actual progress. Skill detects (NN > current `step` value), warns, falls back to `step = current` (the actual current step, not requested).
 
-## Failure handling (per Q4 resolution)
+## Failure handling
 
 Sub-agent dispatch returns BLOCKED (DELIVERABLE not met OR sub-agent explicit can't-do):
 
-- **Step 01 (concept brief) or Step 13 (atlas) blocks** → ABORT the run. These steps are upstream-of-everything (01) or final-deliverable (13); continuing without them produces incomplete artifacts the rest of the pipeline can't reason about.
+- **Step 01 (concept brief) or Step 15 (screen-atlas) blocks** → ABORT the run. These steps are upstream-of-everything (01) or final-deliverable (15); continuing without them produces incomplete artifacts the rest of the pipeline can't reason about.
+- **Step 07 (sitemap-IA) blocks via schema-enforcement** → AUTO-RETRY with augmented brief naming the uncovered category(ies). Up to 2 retries before falling through to user `iterate` choice at Phase 2 gate.
 - **Any other step blocks** → degrade gracefully:
   - Append `{step_label, reason, artifacts_partial: <list>}` to `blocked_steps`.
   - Log to REPORT.md `## Blocked steps` section.
-  - Continue to next step. Downstream steps that depend on this one note the gap (e.g., Step 07 prototype-v2 with no Step 04 audit findings just omits the audit-fix-inline pass).
+  - Continue to next step. Downstream steps that depend on this one note the gap.
 
-## Output dir collision (per Q5 resolution, matches v1)
+## Output dir collision
 
 Phase 0 checks if `<out-dir>` exists and is non-empty (any file present):
 
@@ -134,16 +173,26 @@ Phase 0 checks if `<out-dir>` exists and is non-empty (any file present):
 <out-dir> exists and is non-empty. Overwrite? (y/N) ▷
 ```
 
-- `y` → `rm -r <out-dir>` (NOT `rm -rf` — governance-gate blocks combined flags); then `mkdir -p <out-dir>` + init `.state.json`.
-- `n` / no answer / anything else → abort with `aborted; pick a different --out or rm the existing dir yourself`. Exit 0 (user-chosen abort, not error).
+- `y` → `rm -r <out-dir>` (NOT `rm -rf` — governance-gate blocks combined flags); then `mkdir -p <out-dir>/docs/02-screens` + init `<out-dir>/docs/.state.json`.
+- `n` / no answer / anything else → abort with `aborted; pick a different --out or rm the existing dir yourself`. Exit 0.
 
 No `--force` flag; the prompt is the gate.
+
+## Migration from v2 (spec 036) to v3 (spec 045)
+
+The shape change is breaking:
+- `phase` int → string enum
+- step numbering shift (8 vs 5 for PRD; 13 vs 15 for atlas; new steps 06/07/12; deleted step 7)
+- `iterations` keys reordered
+
+No automatic migration. Founders with in-flight v2 prototypes must complete those runs before upgrading the skill (or accept rm + restart). New runs after upgrade always start at v3.
 
 ## Cross-references
 
 - `pipeline-coverage.md` — what each step produces at standard tier
 - `delegation-briefs.md` — sub-agent dispatch shape per step
-- `quality-checklist.md` — per-step gate criteria the skill checks before declaring a step complete
+- `quality-checklist.md` — per-step gate criteria
+- `sitemap-schema.md` — Step 07's required_categories binding
 - `SKILL.md` — orchestration body that operates this state machine
-- `.claude/rules/delegation.md` — 5-field handoff discipline all sub-agent dispatches follow
-- `docs/specs/036-prototype-skill-refactor/` — spec source
+- `.claude/rules/delegation.md` — 5-field handoff discipline
+- `docs/specs/045-prototype-skill-pipeline-realign/` — spec source

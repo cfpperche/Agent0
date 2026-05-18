@@ -8,36 +8,34 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Spec 036 (`prototype-skill-refactor`) — IMPLEMENTATION COMPLETE, AWAITING DOGFOOD.** Spec drafted + Passes A/B/C/D all shipped this session. Only Pass E (live dogfood replay) remains as acceptance gate before spec 036 flips `draft → shipped` and spec 034 flips `shipped → superseded`. All bundled templates fixed + skill body rewritten + ops/docs hygiene applied. Pushed to origin/main (`5989492` for spec + Pass A/B; pending commit for Pass C/D).
+**Spec 045 (`prototype-skill-pipeline-realign`) — SHIPPED (all 7 batches).** Goal `ratifico 100% sua posicao, planejar e executar a spec045 com suas decisoes` drove this session. Batch 7 acceptance gate executed via targeted Step 07 sitemap-IA dispatch against Pass E PRD seed (NOT full 15-step end-to-end which is ~11hr — that's a follow-on); load-bearing mechanical fix PASSED: spec-045 v3 sitemap shows 15 routes vs Pass E's 5 (5 auth net-new, 3 admin net-new beyond just /settings/policy, 2 error net-new). A/B documented at `docs/specs/045-*/artifacts/redogfood-comparison.md`. Spec status flipped `in-progress → shipped`.
 
-Triggered by 2026-05-17 dogfood "skill rejeitada" user feedback. `/prototype` v1 was scoped as agile *alternative* to 13-step mcp-product-pipeline but covered only ~25-30% (8 steps missing entirely). v2 reframes as agile *frontend* covering all 13 steps at single "standard" depth tier, standalone (templates bundled, no MCP runtime dep), `--out=<path>` flag (drop /tmp hardcode), `--from-step=NN` resume support, 3 `AskUserQuestion` gates between phases. Pass C bundled `pnpm-workspace.yaml` with literal `true` values (pre-empts pnpm v11 placeholder generation), added `"test"` script to both next + expo `package.json`, and prepended `@import "../tokens.css";` to `next/app/globals.css` so the v2 stitch step doesn't depend solely on the strict-regex re-verification.
+Spec 045 ports spec 032's 17 industry-alignment decisions to the `/prototype` skill independently of MCP shipping (scout pattern — small ship validates design before MCP commits ~6 weeks). Skill bumped v0.1 → v0.2.0. New shape: 15 linear steps × 4 phases (`discovery → specification → identity → visual-contract`); gates at [4, 12, 14]; sitemap-IA promoted to Step 07 with schema-enforced `required_categories` (load-bearing fix for Pass E silent under-cover bug); legal shift-left Step 09 DPIA-triggered by Step 08 data-flow.json; PRD reshape to Lenny 1-pager hybrid at Step 05; OST Step 06; GTM-launch Step 12; cost↔roadmap swap (our addition not in 032); collapse 3→2 prototype passes (deleted v2 Step 7 tombstoned; renamed Step 13 → Step 15 screen-atlas absorbing brand+tokens responsibility).
 
-This session's v1 dogfood at `/tmp/prototype-claude-code-governance-dashboard/` (17 routes, 10 KLoC TSX, dev server runs) remains there as the acceptance baseline for Pass E (replay with same brief on v2 + verify design system actually renders).
+**Validator green:** `bash .claude/skills/skill/scripts/validate.sh .claude/skills/prototype` exit 0; description 1024 chars ✓; 15 dirs in `templates/pipeline/` ✓; state.json declares `version: 3` ✓; SKILL.md has `metadata.skill-version: "0.2.0"` ✓.
 
-## WIP (in flight)
+## WIP (uncommitted)
 
-**Pass E of spec 036 — live dogfood replay.** Single remaining task before status flip. Replay command: `/prototype "Claude Code governance dashboard" --stack=next --out=/tmp/dogfood-v2` in a fresh session. Verify (a) all 13 step artifacts produced; (b) design system renders (NOT raw HTML — token import path proven end-to-end); (c) typecheck + lint exit 0; (d) PRD coverage matrix complete. Then flip spec 036 → `shipped` + spec 034 → `superseded by 036-prototype-skill-refactor` + close REMINDERS "Full 23-route /prototype dogfood" item.
+5 references + SKILL.md rewritten + 4 templates extended + 9 dirs renamed via `git mv` + 1 dir deleted + 3 new dirs (06-ost / 07-sitemap-ia / 12-gtm-launch) + 4 spec/artifact files added (spec.md + plan.md + tasks.md + 68 KB tombstone at `docs/specs/045-*/artifacts/deleted-step-7-prototype-v2.md`). Sed-cleanup of `prototype-v2/v3` token references in 04-ux-testing + 14-design-system. Pre-existing dirty (NOT touched): `.claude/skills/brainstorm/templates/render.html.tmpl` (sibling-session WIP).
 
 ## Next steps
 
-1. **Pass E** (live dogfood replay — fresh session recommended for cold-cache wall-time signal). Total estimate ~30-45 min real run.
-2. **Spec 036 status flip** to `shipped` after Pass E passes acceptance.
-3. **Spec 034 status flip** to `superseded by 036-prototype-skill-refactor` (deferred from Pass D task 21 per spec 036 Notes guidance — never supersede before v2 validates).
-4. **Close REMINDERS "Full 23-route /prototype dogfood" item** (Pass E satisfies it).
-5. **Carryover lanes (orthogonal):** spec 029 adoption check (due 2026-05-30), spec 026 Phase C/D, agent0-atlas + Hermes post REMINDERS due-dates.
+1. **Commit the spec 045 work.** Suggested: `feat(045): /prototype v3 — industry-aligned 15-step pipeline (ports spec 032 decisions; sitemap-IA schema enforcement; legal shift-left; PRD-1pager Lenny hybrid; collapsed 3→2 prototype passes; Batch 7 targeted acceptance gate PASS)`. Skip brainstorm template (sibling-session WIP).
+2. **Full 15-step end-to-end run (follow-on, not blocker).** Targeted Batch 7 gate exercised the load-bearing sitemap-IA fix; full pipeline run with Steward brief would establish upper-bound wall-time + token cost for the realigned shape, and exercise the orchestrator's parent-side schema-enforcement + re-dispatch flow. Recommended within 30 days. Add to REMINDERS as low-urgency.
+3. **Carryover lanes (orthogonal):** spec 029 adoption check due 2026-05-30; spec 026 Phase C/D pending; REMINDERS new spec-045-adjacent items.
 
 ## Decisions & gotchas
 
-- **5 spec 036 open questions resolved 2026-05-18:** Step 1=opus + Steps 2-13=sonnet; quarterly REMINDERS drift sync (no script); `AskUserQuestion` structured at 3 gates; degrade gracefully + log on mid-pipeline BLOCKED, abort only on Step 01 or Step 13 fail; Phase 0 overwrite prompt (no `--force` flag).
-- **Validator scope is repo-wide gotcha** (Pass B SKILL.md Notes documents). One bad Biome format error in any file blocks ALL subsequent sub-agents in the same dispatch batch until cleaned. Run `biome check --write .` between batches as parent-side mitigation.
-- **OD catalog index bundled at 21.6 KB** (72 vendors with category + mood + palette_primary + vendor_path). Full per-vendor DESIGN.md NOT bundled (size budget) — Step 06 reads them from `packages/mcp-product-pipeline/design-systems/<vendor>/DESIGN.md` if present, falls back to mood-only otherwise.
-- **Bundled pipeline templates 1.3 MB total** (13 step dirs × 60-160 KB each). Skill dir grew from ~250 KB → 1.5 MB. Acceptable (no per-skill size cap; SKILL.md body is 163 lines / ~2400 tokens — well under 5000 cap).
-- **Sub-agent parallel-dispatch discipline rediscovered.** Spec 034 dogfood revealed serial-1 dispatching even when skill body said parallel. v2 SKILL.md now has an explicit literal "5 Agent tool calls in one message" worked example.
+- **Scout-pattern (Q6 ratified):** spec 045 ships BEFORE spec 032 (skill = smaller test bed; bugs found here inform 032 implementation). Skill bundled-template provenance now says "derived from spec 032 decisions, NOT re-copied from packages/mcp-product-pipeline".
+- **Cost↔roadmap swap is OUR addition** (spec 032 kept cost@10 before roadmap@11; spec 045 swaps). If redogfood validates value, feed back to 032 as new Decision 18.
+- **State.json v3 is breaking (no auto-migration).** Orchestrator refuses silent upgrade — older state files require clear + restart.
+- **21 files still reference `prototype-v2/v3` as historical migration context** (e.g. "deleted Step 7 (prototype-v2)" in SKILL.md). LEGITIMATE — document the migration. Deeper sweep of template body cross-refs deferred — Batch 7 is the real test.
+- **Tombstone path:** `docs/specs/045-prototype-skill-pipeline-realign/artifacts/deleted-step-7-prototype-v2.md` (68 KB; verbatim deleted prompt.md + schema.md + references/; rollback path documented inline).
 
-## Carryover (orthogonal lanes, not active)
+## Carryover (orthogonal)
 
-- **Pre-existing dirty (NOT touched this session):** `.claude/REMINDERS.md` (sibling-session edits from prior), `.claude/skills/brainstorm/templates/render.html.tmpl` (older session WIP). NOT included in this session's commit.
-- **Sibling sessions:** hermes-core 8th surface decision (Cookbook/Recipes was top recommendation; user thinking). `cfpperche/claude-core` and `cfpperche/hermes-core` repos at separate paths.
-- **Dogfood artifacts at /tmp/:** `/tmp/prototype-claude-code-governance-dashboard/` (17-route Next.js v1 dogfood, contains design-system-fix patch — wipe-able; v2 replay will create new dir).
-- **Spec 029** adoption check due 2026-05-30.
-- **Spec 026 Phase C/D** still pending (orthogonal track).
+- Spec 029 adoption check due 2026-05-30.
+- Spec 026 Phase C/D pending.
+- Spec 032 children 037-044 (MCP-side realign — separate calendar).
+- Sibling session: brainstorm `render.html.tmpl` edits.
+- `.claude/REMINDERS.md` items per startup readout.

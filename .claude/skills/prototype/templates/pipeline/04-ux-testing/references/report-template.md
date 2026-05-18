@@ -6,7 +6,7 @@ The full shape for the step-4 artifact. The H2 titles slugify to the required-se
 ---
 # Optional YAML frontmatter — ONLY emit when audit ran in measurable mode (HTML inputs).
 # Skip this entire block when audit ran in projected mode (markdown spec inputs).
-# Step 6 (design-system) and step 7 (prototype-v2) read this block to consume findings
+# Step 6 (design-system) and step 15 (screen-atlas; absorbed step 7 per spec 045) read this block to consume findings
 # programmatically. The markdown body below is the derived human-readable view.
 findings:
   - id: F-01
@@ -16,7 +16,7 @@ findings:
     issue: "Inline <style> omits the :focus-visible rule on triage + palette"
     recommendation: "Add the global :focus-visible { outline: 2px solid var(--primary); ... } rule"
     wcag: "2.4.7"
-    fix_skill_hint: "prototype-v2"
+    fix_skill_hint: "screen-atlas"
     complexity_estimate: "~15 min"
   - id: F-07
     severity: 3
@@ -135,7 +135,7 @@ A non-zero count of severity-4 findings makes PROCEED hard to justify — addres
 
 ## Priority Recommendations
 
-Group findings into **named batches** by shared cause. Batch label = the handoff unit a downstream step (6 design-system, 7 prototype-v2) consumes; rationale = the one-line reason these findings group (single token edit, focus rule copy-paste, semantic-element pass, etc). Real effort estimates only — `TBD` is not an estimate.
+Group findings into **named batches** by shared cause. Batch label = the handoff unit a downstream step (14 design-system, 15 screen-atlas) consumes; rationale = the one-line reason these findings group (single token edit, focus rule copy-paste, semantic-element pass, etc). Real effort estimates only — `TBD` is not an estimate.
 
 | Batch | Finding IDs | Severity | Effort | When | Rationale |
 |-------|-------------|----------|--------|------|-----------|

@@ -106,7 +106,7 @@ I think developers will like this. It's similar to other tools but better.
 ```markdown
 PROCEED with reservations. The heuristic audit surfaced 1 severity-4 finding (F-04,
 unconfirmed account deletion) and 2 severity-3 a11y failures (F-02, F-07). F-04 must be
-fixed before the Discovery gate; the a11y failures are batched for step 6 (design-system).
+fixed before the Discovery gate; the a11y failures are batched for step 14 (design-system).
 No structural redesign needed — the killer flow tested clean.
 ```
 

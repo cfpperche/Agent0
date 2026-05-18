@@ -16,7 +16,7 @@ findings:
     issue: "..."
     recommendation: "..."
     wcag: "2.4.7"
-    fix_skill_hint: "prototype-v2"        # <-- NOT for step 6
+    fix_skill_hint: "screen-atlas"        # <-- NOT for step 6
     complexity_estimate: "~15 min"
   - id: F-07
     severity: 3
@@ -53,12 +53,12 @@ Keep only findings where `fix_skill_hint == "design-system"`. Typical patterns:
 - **Color-on-color hierarchy fails** — same as above; the lightness ratio between two semantic colors needs adjustment
 - **Border / divider invisibility** — token tune (border-color stronger; or a deliberate "borders are decorative, not state-bearing" doc decision)
 
-What's NOT design-system territory (leave for step 7 prototype-v2):
+What's NOT design-system territory (leave for step 7 screen-atlas):
 
 - Missing `:focus-visible` rules — that's a CSS rule the rendered HTML needs, not a token
-- `<span>`-as-input — semantic HTML, prototype-v2 fix
-- Skip-link missing — semantic HTML, prototype-v2 fix
-- Bulk-action without confirmation — interaction design, prototype-v2 fix
+- `<span>`-as-input — semantic HTML, screen-atlas fix
+- Skip-link missing — semantic HTML, screen-atlas fix
+- Bulk-action without confirmation — interaction design, screen-atlas fix
 
 What's NOT either (deferred):
 
@@ -110,8 +110,8 @@ After per-finding blocks, summarize which `priority_fixes` batches are now resol
 
 ### Batches deferred to step 7
 
-- `keyboard-focus-restore` (F-01) — `fix_skill_hint: "prototype-v2"`, not actionable at the token layer.
-- `semantic-html-pass` (F-12, F-13) — `fix_skill_hint: "prototype-v2"`, deferred.
+- `keyboard-focus-restore` (F-01) — `fix_skill_hint: "screen-atlas"`, not actionable at the token layer.
+- `semantic-html-pass` (F-12, F-13) — `fix_skill_hint: "screen-atlas"`, deferred.
 ```
 
 ### 5b. Doc-only fixes (policy added, no token edit)
@@ -158,7 +158,7 @@ When step 4 frontmatter exists but no findings have `fix_skill_hint: "design-sys
 ```markdown
 ## Audit Response
 
-*Step 4 emitted structured findings, none routed to design-system. All findings deferred to step 7 (prototype-v2) or marked deferred for backlog. No token edits applied this step.*
+*Step 4 emitted structured findings, none routed to design-system. All findings deferred to step 15 (screen-atlas; absorbed step 7 per spec 045) or marked deferred for backlog. No token edits applied this step.*
 
 ### Findings reviewed (not actioned)
 

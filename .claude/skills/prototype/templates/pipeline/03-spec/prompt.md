@@ -96,13 +96,34 @@ After a clean submit, call `product_advance` — step 3 is mid-Discovery, no gat
 - **Length budget.** `functional-spec.md` lands ≥ 15 KB for a non-trivial product (the deep-port floor — a thinner spec is almost certainly missing pages, states, or features). If you genuinely can't fill 15 KB, the prototype scope was probably too small for this pipeline — flag back to the parent rather than padding.
 - **Three files, one truth.** `architecture.md` and `architecture.{html,json}` are *derived* — if they disagree with `functional-spec.md` or each other, that's a defect, not a variation.
 
+## Problem-Validation Interviews (NEW per spec 045 Decision 6 — extends Discovery phase)
+
+The functional-spec MUST include a `## Problem-Validation Interviews` H2 section with 3-5 summaries seeding the OST (Step 06). Per-interview shape:
+
+```markdown
+### Interview N — <subject name OR persona label>
+
+- **Date:** <YYYY-MM-DD OR "synthetic">
+- **Subject:** <role / company / context — 1 line>
+- **Provenance:** `[real]` (verbatim quotes from actual interview) OR `[synthetic]` (sub-agent-inferred from persona)
+- **Problem signal:** <2-3 sentences in user voice — what the subject said the problem is>
+- **Workaround today:** <1-2 sentences — how they cope without the proposed product>
+- **Quoted asks:** <2-3 verbatim quotes if real; OR inferred-best-guess phrasings if synthetic>
+- **What would make them switch:** <1 sentence>
+```
+
+**Discipline:** at standard tier, SYNTHETIC interviews are acceptable (sub-agent infers from concept-brief persona). Clearly mark provenance — `[synthetic]` vs `[real]` — so post-Step-06 OST knows which opportunities have real signal vs inferred. Real interviews dominate when possible (the founder may have actual customer-development conversations to feed in).
+
+**Why this matters:** Step 06 OST consumes these summaries as opportunity inputs. Without this section, OST opportunities default to "[inferred: persona]" tags everywhere — losing the discovery-implementation gap that distinguishes a "PRD-and-pray" team from a "continuously-discovering" team (Torres-aligned per spec 032 Decision 6 + 12).
+
 ## What this step does NOT do
 
-- **Full system design** — scale assumptions, deployment topology, security/threat-model, stack-specific decisions. That's step 9. `architecture.md` here is the *preliminary* skeleton step 9 deepens; the `## Open Architecture Questions` section is the explicit handoff.
-- **Visual / brand decisions** — step 5 (brand), step 6 (design-system).
-- **Pricing, business model details** — step 8 (PRD) + step 10 (cost-estimate).
+- **Full system design** — scale assumptions, deployment topology, security/threat-model, stack-specific decisions. That's step 8 (renumbered per spec 045). `architecture.md` here is the *preliminary* skeleton step 8 deepens; the `## Open Architecture Questions` section is the explicit handoff.
+- **Visual / brand decisions** — step 13 (brand), step 14 (design-system) — moved AFTER Specification per spec 045 PRD-first ordering.
+- **Pricing, business model details** — step 5 (PRD 1-pager) + step 11 (cost-estimate) + step 12 (gtm-launch).
 - **Test execution** — step 4 (ux-testing). But the success criteria and acceptance scenarios written here ARE the inputs to step 4's tests.
-- **Comprehensive screen atlas** — step 13 (prototype-v3).
+- **Sitemap / full screen inventory** — step 7 (sitemap-IA). This step's § Pages & Surfaces is a sketch; Step 7 is the canonical inventory.
+- **Comprehensive screen atlas** — step 15 (screen-atlas).
 
 ## What this step replaces
 

@@ -1,22 +1,24 @@
 ---
 mode: synthesis
 delegable: true
-delegation_hint: "draft step-9 system-design bundle — system-design.md (stack, services, data model, apis, integrations, deployment, non-functional, evaluation table, alternatives considered, decisions locked, open decisions) + architecture.json (component graph derived from system-design.md) + security.md (threat model, auth/authz, data classification, secrets, regulated aspects) — synthesising step 3 architecture.md skeleton + step 8 PRD; no user input required; fully delegable"
+delegation_hint: "draft step-08 system-design bundle (renumbered from v2 step-9 per spec 045) — system-design.md (stack, integrations, data model, decisions locked, security, observability + NEW: RACI matrix + risk register per spec 045 Decision 10) + security.md (threat model, auth/authz, data classification, secrets, AI-specific) + NEW: data-flow.json (structured inventory consumed by Step 09 legal for DPIA trigger) — synthesising step 03 architecture skeleton + step 05 PRD + step 07 sitemap; no user input required; fully delegable"
 ---
 
-# Step 9 — System Design
+# Step 08 — System Design (renumbered from v2 step 9; extended with RACI + risk + data-flow per spec 045 Decision 10)
 
-**Goal:** technical architecture for v1 — stack choices, service decomposition, data model, APIs, integrations, deployment topology, non-functional posture, security floor. The artifact engineering reads to start building (`/sdd new <feature>` consumes this design post-pipeline). **Deepens step 3's preliminary `architecture.md` skeleton** into the production design.
+**Goal:** technical architecture for v1 — stack choices, service decomposition, data model, APIs, integrations, deployment topology, non-functional posture, security floor + **RACI matrix + risk register + data-flow inventory**. The artifact engineering reads to start building (`/sdd new <feature>` consumes this design post-pipeline). **Deepens step 03's preliminary `architecture.md` skeleton** into the production design.
 
-**Mode:** `synthesis` with `delegable: true`. Fully delegable. Sub-agent reads `docs/product/03-spec/architecture.md` + `docs/product/08-prd/prd.md` (plus earlier artifacts for context) and produces the design without user input. This step generates 20+ KB of design content that the parent never needs to load — canonical example of why MCP architecture pays off.
+Per spec 045 Decision 10 (ported from spec 032): system-design absorbs RACI matrix + risk register as required sections (separate steps in v2 collapsed). Per spec 045 Decision 4 (shift-left legal): system-design produces `data-flow.json` — structured machine-readable inventory consumed by Step 09 legal posture for DPIA trigger. If any data flow has sensitive categories (`pii | health | minors | financial`), Step 09's DPIA section becomes mandatory.
 
-**Output bundle** (all written atomically via one `product_step_submit` call — primary `content` + `extra_files`):
+**Mode:** `synthesis` with `delegable: true`. Fully delegable. Sub-agent reads `<out>/docs/03-functional-spec.md` § Preliminary Architecture + `<out>/docs/05-prd.md` + `<out>/docs/07-sitemap.yaml` (route inventory drives integration list) plus earlier artifacts and produces the design without user input.
 
-| File | Role | Floor |
-|---|---|---|
-| `system-design.md` | primary — the design itself; the document engineering consumes | ≥ 20 KB |
-| `architecture.json` | machine-readable component graph derived from system-design.md (renders to HTML in a future visualisation refinement; spec 026 ships JSON-only) | structural shape — `title`, `components[]`, `arrows[]`, `summary_prose` |
-| `security.md` | sibling — threat model + security posture, deeper than a single section in system-design.md | ≥ 3 KB |
+**Output bundle** (all written atomically — primary `content` + `extra_files`):
+
+| File | Role | Floor | Ceiling |
+|---|---|---|---|
+| `<out>/docs/08-system-design.md` | primary — the design + RACI + risk register | 12 KB | 18 KB |
+| `<out>/docs/08-security.md` | sibling — threat model + security posture | 3 KB | 5 KB |
+| `<out>/docs/08-data-flow.json` | NEW — structured data-flow inventory (consumed by Step 09 legal DPIA trigger) | 1 KB | 3 KB |
 
 ---
 
@@ -180,3 +182,61 @@ Three points where the MCP port diverges from the anthill source:
 - **`security.md` sibling file, not a section in system-design.md.** Anthill's `principal-engineer` puts security treatment in the evaluation table + one section. The MCP port elevates security to a sibling so step 12 (legal-posture) and downstream consumers can cite security.md as a stable contract.
 
 Anthill's `architecture.yaml` constraint (declared `pattern`, `layers`, `vertical_slice` that the assessment must respect or challenge) is not ported — the MCP doesn't model fork-level architecture constraints. If a fork needs this, it lives in the fork's `CLAUDE.md` and the agent reads it as ordinary repo context.
+
+---
+
+## NEW required sections per spec 045 Decision 10 + 4
+
+### `## RACI Matrix` (H2 in system-design.md)
+
+5-10 key roles × 5-10 key activities. Each cell: R (Responsible) / A (Accountable) / C (Consulted) / I (Informed) / blank.
+
+```markdown
+| Activity | Founder | Engineer | Designer | Legal | DevOps |
+|---|---|---|---|---|---|
+| Auth implementation | A | R | C | C | I |
+| Payment integration | A | R | I | R | C |
+| Audit-log retention policy | A | C | I | R | R |
+| ... | ... | ... | ... | ... | ... |
+```
+
+Roles depend on team shape (concept-brief signals; e.g. solo-founder → most cells are R+A on founder). Activities come from system-design's Integrations + Data Model + Security sections.
+
+### `## Risk Register` (H2 in system-design.md)
+
+5-10 risks. Columns: ID · Description · Probability (L/M/H) · Impact (L/M/H) · Mitigation · Owner.
+
+```markdown
+| ID | Risk | Prob | Impact | Mitigation | Owner |
+|---|---|---|---|---|---|
+| R1 | Anthropic API rate limits during peak override-event ingestion | M | H | Queue + retry + degrade-to-stub if 429 sustained | Engineer |
+| R2 | Single-region Postgres becomes write-bottleneck above 1k orgs | L | H | Document the rewrite trigger; defer multi-region until 500 orgs reached | Founder |
+| ... | ... | ... | ... | ... | ... |
+```
+
+### `<out>/docs/08-data-flow.json` (NEW required output — DPIA trigger for Step 09)
+
+Structured machine-readable inventory consumed by Step 09 legal. Schema:
+
+```json
+{
+  "flows": [
+    {
+      "from": "<source>",
+      "to": "<sink>",
+      "data_categories": ["pii" | "health" | "minors" | "financial" | "behavioral" | "credentials" | "session" | "telemetry"],
+      "encryption_at_rest": true,
+      "encryption_in_transit": true,
+      "retention_days": 90,
+      "sub_processor": "Anthropic | AWS | Vercel | Slack | null"
+    }
+  ]
+}
+```
+
+Cover ALL data flows the system handles. **If ANY flow includes `pii | health | minors | financial`**, Step 09 legal posture's DPIA section becomes mandatory (GDPR Art 25 + IAPP shift-left posture).
+
+Example flows for a SaaS:
+- `{from: "client browser", to: "ingest API", data_categories: ["session", "behavioral"], encryption_at_rest: true, encryption_in_transit: true, retention_days: 30, sub_processor: null}`
+- `{from: "ingest API", to: "Anthropic API", data_categories: ["pii"], encryption_at_rest: true, encryption_in_transit: true, retention_days: 0, sub_processor: "Anthropic"}` → THIS triggers DPIA at Step 09 (pii to model provider).
+- `{from: "ingest API", to: "Postgres", data_categories: ["session", "behavioral", "credentials"], encryption_at_rest: true, encryption_in_transit: true, retention_days: 365, sub_processor: "AWS"}` → credentials category triggers heightened scrutiny.

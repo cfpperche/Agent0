@@ -169,14 +169,26 @@ After submit, call `product_advance` — no human-checkpoint required for step 1
 - Competitor data must be factual — funding rounds, public pricing, named features. Never invent revenue or user counts.
 - Critique mode is adversarial. Pinned does NOT get protected scoring. If a challenger wins, say so.
 
+## Market Sizing (NEW per spec 045 Decision 6 — extends Discovery phase)
+
+The concept brief MUST include an `## Market Sizing` H2 section with TAM / SAM / SOM estimates (one paragraph each). At standard tier:
+
+- **TAM (Total Addressable Market):** the universe of potential customers if everyone in the world used this category of product. Top-down: industry analyst report (Gartner / Forrester / IDC / Statista). 1 paragraph + citation.
+- **SAM (Serviceable Addressable Market):** subset reachable by THIS product's geography + language + segment. Top-down: filter TAM by reachable subset. 1 paragraph + citation OR explicit derivation from TAM.
+- **SOM (Serviceable Obtainable Market):** realistic v1 customer count in 1-3 years given founder's resources. Bottom-up: founder's pipeline / waitlist / outbound capacity × conversion. 1 paragraph + hedged ("estimated; based on...").
+
+**Discipline:** desk research, NOT primary research. 1-2 cited sources per number. NEVER invent numbers — if no source exists for a number, say "Estimated; based on <basis>" and explain. Worst case (zero sources): write "[Estimated — no public source found; 1-paragraph derivation from cost of building x competitor TAM y]".
+
+This section is the lightweight upstream signal the heavy `mcp-product-pipeline` (spec 032) would dedicate a full step to. Standard tier folds it into ideation as 3 paragraphs.
+
 ## What this step does NOT do
 
-- High-fidelity visual prototype. Step 2 (prototype) renders 3 HTML directions.
+- High-fidelity visual prototype. Step 2 (prototype lo-fi) renders 1 mood direction + 3-5 killer-flow HTML screens.
 - Functional spec (edge cases, validation rules). Step 3 (spec).
 - User testing. Step 4 (ux-testing) validates the prototype with real users (tested mode) or articulates intuition (intuition mode).
-- Brand voice / design system. Steps 5 / 6 in the Identity phase.
-- PRD / roadmap / cost / legal. Specification phase, steps 8-12.
-- Comprehensive screen atlas. Step 13 (prototype-v3) synthesizes the full surface.
+- PRD 1-pager / OST / sitemap / system-design / legal / roadmap / cost / GTM. Specification phase, steps 5-12.
+- Brand voice / design system. Steps 13 / 14 in the Identity phase (moved after Specification per spec 045 PRD-first ordering).
+- Comprehensive screen atlas. Step 15 (screen-atlas) synthesizes the full surface.
 
 ## What this step replaces
 

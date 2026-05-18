@@ -31,6 +31,6 @@ Ported from `anthill-ux-audit` and augmented for this pipeline's three-mode post
 | Anti-pattern | Instead |
 |---|---|
 | The agent picking the validation mode for the user | The mode is the user's posture decision; the parent conducts that dialogue. The agent owns the heuristic audit, not the mode choice. |
-| Fixing the findings in this step | Step 4 audits and recommends. Remediation lands in steps 6 (design-system) and 7 (prototype-v2). |
+| Fixing the findings in this step | Step 4 audits and recommends. Remediation lands in steps 6 (design-system) and 7 (screen-atlas). |
 | Auto-crossing the Discovery gate after submit | `product_advance` deliberately returns `gate-required` — the parent confirms with the user and calls `product_gate_pass("discovery")` consciously. |
 | A one-paragraph "looks fine, ship it" report | That is the pre-port failure mode this step exists to kill. A real audit walks 10 heuristics × N flows + a WCAG checklist + severity-rated findings. |

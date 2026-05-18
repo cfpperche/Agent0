@@ -1,17 +1,17 @@
 ---
 name: sdd
-description: Spec-driven development scaffolding. Use when starting non-trivial work (3+ files, new module, API/schema change, vague request needing decomposition). Creates and progresses docs/specs/NNN-slug/{spec,plan,tasks}.md per the spec-driven workflow. Subcommands - new <slug>, refine, plan, tasks, list. See .claude/rules/spec-driven.md for when SDD applies and when to skip.
+description: Spec-driven development scaffolding. Use when starting non-trivial work (3+ files, new module, API/schema change, vague request needing decomposition). Creates and progresses docs/specs/NNN-slug/{spec,plan,tasks,notes}.md per the spec-driven workflow. Subcommands - new <slug>, refine, plan, tasks, list. See .claude/rules/spec-driven.md for when SDD applies and when to skip.
 argument-hint: <new <slug> | refine [<idea> | NNN] | plan | tasks | list>
 license: MIT
 compatibility: Designed for Claude Code. Body references `.claude/` conventional paths and CC-specific tools; portable to any runtime that maps a `.claude/`-analog directory and surfaces the referenced tools.
 metadata:
   agent0-portability-tier: cc-native
-  version: "0.1"
+  version: "0.2"
 ---
 
 # /sdd — spec-driven development
 
-Scaffolds and progresses spec folders for non-trivial work. Each feature gets `docs/specs/NNN-<slug>/` with three files: `spec.md` (what + why), `plan.md` (how), `tasks.md` (do).
+Scaffolds and progresses spec folders for non-trivial work. Each feature gets `docs/specs/NNN-<slug>/` with four files: `spec.md` (what + why), `plan.md` (how), `tasks.md` (do), `notes.md` (in-flight design memory populated during implementation).
 
 See `.claude/rules/spec-driven.md` for the workflow rationale and when to apply / skip SDD.
 
@@ -38,6 +38,7 @@ Scaffold a new spec dir. Parse `$ARGUMENTS`: first token must be `new`, second t
    cp ${CLAUDE_SKILL_DIR}/templates/spec.md.tmpl  docs/specs/NNN-<slug>/spec.md
    cp ${CLAUDE_SKILL_DIR}/templates/plan.md.tmpl  docs/specs/NNN-<slug>/plan.md
    cp ${CLAUDE_SKILL_DIR}/templates/tasks.md.tmpl docs/specs/NNN-<slug>/tasks.md
+   cp ${CLAUDE_SKILL_DIR}/templates/notes.md.tmpl docs/specs/NNN-<slug>/notes.md
    ```
 
 4. **Substitute placeholders** in each created file — replace literally:
@@ -45,7 +46,7 @@ Scaffold a new spec dir. Parse `$ARGUMENTS`: first token must be `new`, second t
    - `{{NNN}}` → the zero-padded number
    - `{{DATE}}` → current date in `YYYY-MM-DD` (UTC)
 
-5. **Report** — output the three paths and tell the user the next step is to fill `spec.md`. Do NOT auto-fill it; the user owns intent. Suggest they describe the change conversationally and you can draft `spec.md` from that, but only after they say so. If the idea is still vague, suggest `/sdd refine` instead.
+5. **Report** — output the four paths and tell the user the next step is to fill `spec.md`. Do NOT auto-fill it; the user owns intent. Suggest they describe the change conversationally and you can draft `spec.md` from that, but only after they say so. If the idea is still vague, suggest `/sdd refine` instead. The fourth file `notes.md` stays empty at scaffold time — its purpose is in-flight design memory populated **during** implementation (see `.claude/rules/spec-driven.md` § The four artifacts).
 
 ## Subcommand: `refine`
 

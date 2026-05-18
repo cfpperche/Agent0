@@ -27,6 +27,8 @@ Canonical template (verbatim from `delegation-gate.sh` stderr):
   DONE_WHEN: <verifiable condition — tests pass, file exists, etc.>
 ```
 
+**Spec-scoped delegations and `notes.md`** — when `CONTEXT` references a spec dir (`docs/specs/NNN-*`), `DELIVERABLE` SHOULD include the phrase "append any in-flight decisions/deviations/tradeoffs/open-questions to `docs/specs/NNN-*/notes.md`" (verbatim or equivalent). This gives the sub-agent a sanctioned surface for judgment calls that weren't pre-empted by spec/plan — the parent reviews the appended entries rather than reverse-engineering decisions from the diff. Author each entry as the dispatched `subagent_type`. Rule-only in v1 (no gate enforcement); see `.claude/rules/spec-driven.md` § *The four artifacts* for the artifact's purpose and entry shape.
+
 ## Why DONE_WHEN exists (the /goal connection)
 
 DONE_WHEN is the local materialization of the same primitive that Codex CLI and Claude Code (v2.1.139+, May 2026) ship as `/goal` — a done-state declared up front so the agent works toward a contract instead of a sequence of prompts. The frame is **contract, not promise**: a goal statement without a verifier is just a fancier prompt.

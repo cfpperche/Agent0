@@ -24,13 +24,14 @@ Mechanical or local-only work — go straight to the edit:
 
 When in doubt, write a spec — 5 minutes of markdown is cheap insurance.
 
-## The three artifacts
+## The four artifacts
 
-Specs live under `docs/specs/NNN-<slug>/` where `NNN` is zero-padded sequential (001, 002, …). Each spec has three files:
+Specs live under `docs/specs/NNN-<slug>/` where `NNN` is zero-padded sequential (001, 002, …). Each spec has four files:
 
 - **`spec.md`** — the *what* and *why*. Intent, acceptance criteria as scenarios or a checklist (see § *Acceptance scenarios* below), non-goals, open questions. This is the contract — hand it to a stakeholder or paste it into the PR body. The `**Status:**` line near the top declares lifecycle: `draft` (not started), `in-progress` (work begun), `shipped` (acceptance criteria satisfied), `superseded` (replaced by a later spec, slug named inline — e.g. `superseded by 0NN-<slug>`).
 - **`plan.md`** — the *how*. Approach, files to touch, alternatives considered and rejected (with reasoning), risks and unknowns. This is the engineering judgment.
 - **`tasks.md`** — the *do*. Numbered checklist of concrete execution steps. This is what Claude (or you) works through one at a time, checking off as it goes.
+- **`notes.md`** — the *in-flight design memory* (spec 046; optional in v1). Decisions, deviations, tradeoffs, and open questions surfaced **while building** that weren't pre-empted by `spec.md` or `plan.md`. Append-only by convention. Four canonical sections (`Design decisions` / `Deviations` / `Tradeoffs` / `Open questions`) function as a routing rubric; sections may stay empty. Entry shape: `### YYYY-MM-DD — <author> — <one-line title>` followed by free-prose body, where `<author>` is `parent` or the `subagent_type` of the delegated worker. Distinct from `spec.md` § *Open questions* (pre-flight, set before implementation) and from `SESSION.md` (cross-session WIP, overwritten each handoff). Append entries when a non-trivial decision wasn't pre-empted by spec/plan; do not log every micro-step. Sub-agent integration via `DELIVERABLE` — see `.claude/rules/delegation.md` § *The 5-field handoff*.
 
 Specs are **git-tracked** — they are the project's design memory. Don't gitignore them. Update them when the plan shifts; the file history *is* the audit trail.
 

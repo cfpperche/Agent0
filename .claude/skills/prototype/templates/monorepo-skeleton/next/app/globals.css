@@ -1,5 +1,0 @@
-@import "../docs/06-tokens.css";
-@import "tailwindcss";
-
-/* tokens.css is a skill artifact (written by Step 06 sub-agent into <out>/docs/06-tokens.css).
-   Phase 4 stitch verifies with: grep -qE '^@import.*docs/.*tokens\.css' app/globals.css */

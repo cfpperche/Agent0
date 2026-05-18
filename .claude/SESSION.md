@@ -8,23 +8,23 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Spec 036 (`prototype-skill-refactor`) — IN-PROGRESS.** Drafted + Pass A + Pass B shipped this session. Pass C + Pass D pending. The skill is mid-refactor: v2 4-phase orchestration body landed, 13-step delegation briefs written, 14 sub-agent shells declared, OD vendor index extracted (72 vendors @ 21.6 KB). v1 still routable until v2 dogfood validates (per spec 034 supersede order in tasks.md).
+**Spec 036 (`prototype-skill-refactor`) — IMPLEMENTATION COMPLETE, AWAITING DOGFOOD.** Spec drafted + Passes A/B/C/D all shipped this session. Only Pass E (live dogfood replay) remains as acceptance gate before spec 036 flips `draft → shipped` and spec 034 flips `shipped → superseded`. All bundled templates fixed + skill body rewritten + ops/docs hygiene applied. Pushed to origin/main (`5989492` for spec + Pass A/B; pending commit for Pass C/D).
 
-Triggered by 2026-05-17 dogfood "skill rejeitada" user feedback. `/prototype` v1 was scoped as agile *alternative* to 13-step mcp-product-pipeline but covered only ~25-30% (8 steps missing entirely). v2 reframes as agile *frontend* covering all 13 steps at single "standard" depth tier, standalone (templates bundled, no MCP runtime dep), `--out=<path>` flag (drop /tmp hardcode), `--from-step=NN` resume support, 3 `AskUserQuestion` gates between phases.
+Triggered by 2026-05-17 dogfood "skill rejeitada" user feedback. `/prototype` v1 was scoped as agile *alternative* to 13-step mcp-product-pipeline but covered only ~25-30% (8 steps missing entirely). v2 reframes as agile *frontend* covering all 13 steps at single "standard" depth tier, standalone (templates bundled, no MCP runtime dep), `--out=<path>` flag (drop /tmp hardcode), `--from-step=NN` resume support, 3 `AskUserQuestion` gates between phases. Pass C bundled `pnpm-workspace.yaml` with literal `true` values (pre-empts pnpm v11 placeholder generation), added `"test"` script to both next + expo `package.json`, and prepended `@import "../tokens.css";` to `next/app/globals.css` so the v2 stitch step doesn't depend solely on the strict-regex re-verification.
 
-This session also produced a complete /prototype v1 dogfood at `/tmp/prototype-claude-code-governance-dashboard/` (17 routes, 10 KLoC TSX, dev server runs, 5 dogfood findings — all 5 will be fixed in Pass C). The tokens.css import bug (false-positive grep heuristic — root cause of "skill rejeitada") was caught + fixed live + propagated to v2 design.
+This session's v1 dogfood at `/tmp/prototype-claude-code-governance-dashboard/` (17 routes, 10 KLoC TSX, dev server runs) remains there as the acceptance baseline for Pass E (replay with same brief on v2 + verify design system actually renders).
 
 ## WIP (in flight)
 
-**Pass C + Pass D of spec 036.** Tasks 14-23 in `docs/specs/036-prototype-skill-refactor/tasks.md`. Pass C = 5 template bug fixes (~30 min). Pass D = ops/docs hygiene (REMINDERS quarterly entry, supersede spec 034, CLAUDE.md pointer, delete v1 prd-1pager template). Then Pass E = live dogfood replay (scenario 10 acceptance — same brief as 2026-05-17, verify design system renders) — gate before spec 036 status flips `draft → shipped`.
+**Pass E of spec 036 — live dogfood replay.** Single remaining task before status flip. Replay command: `/prototype "Claude Code governance dashboard" --stack=next --out=/tmp/dogfood-v2` in a fresh session. Verify (a) all 13 step artifacts produced; (b) design system renders (NOT raw HTML — token import path proven end-to-end); (c) typecheck + lint exit 0; (d) PRD coverage matrix complete. Then flip spec 036 → `shipped` + spec 034 → `superseded by 036-prototype-skill-refactor` + close REMINDERS "Full 23-route /prototype dogfood" item.
 
 ## Next steps
 
-1. **Pass C** (5 template bug fixes — tasks 14-19): `pnpm-workspace.yaml` placeholders → literal true/false; `package.json` add test script; `globals.css` prepend tokens.css import; SKILL.md add validator-scope advisory; symmetric expo `package.json` fix.
-2. **Pass D** (tasks 20-23): REMINDERS quarterly drift-sync item; spec 034 status → `superseded by 036-prototype-skill-refactor`; CLAUDE.md `## Prototype skill` pointer; delete v1 `prd-1pager.md.tmpl`.
-3. **Live dogfood (acceptance gate)** — replay "Claude Code governance dashboard" brief; verify all 13 step artifacts produced; verify design system renders (NOT raw HTML).
-4. **Spec 036 status flip** to `shipped` after dogfood passes.
-5. **Push deferred 7+ commits to origin** when user authorizes (currently 6 ahead per pre-spec-036 count + at least 1 more from this commit).
+1. **Pass E** (live dogfood replay — fresh session recommended for cold-cache wall-time signal). Total estimate ~30-45 min real run.
+2. **Spec 036 status flip** to `shipped` after Pass E passes acceptance.
+3. **Spec 034 status flip** to `superseded by 036-prototype-skill-refactor` (deferred from Pass D task 21 per spec 036 Notes guidance — never supersede before v2 validates).
+4. **Close REMINDERS "Full 23-route /prototype dogfood" item** (Pass E satisfies it).
+5. **Carryover lanes (orthogonal):** spec 029 adoption check (due 2026-05-30), spec 026 Phase C/D, agent0-atlas + Hermes post REMINDERS due-dates.
 
 ## Decisions & gotchas
 

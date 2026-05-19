@@ -366,21 +366,21 @@ DONE_WHEN: tokens.css ≥ 1.5 KB valid CSS with :root block + light-mode @media 
 
 ### Step 15 — Screen atlas (renamed from v2 Step 13; absorbs deleted v2 Step 7 per Decision 8 + 14)
 
-Two-part dispatch: atlas writer + N screen writers covering ALL sitemap routes (per spec 045 — sitemap is load-bearing source of inventory, NOT PRD alone).
+Two-part dispatch — **SERIALIZED per spec 052**: (a) atlas writer runs FIRST and writes the route-group layout files + atlas index; (b) N screen writers fan-out AFTER the atlas returns (they consume the layout files atlas just wrote, so atlas-before-writers is mandatory).
 
 **(a) Atlas writer — model:** `sonnet`  ·  **subagent_type:** `general-purpose`
 
 ```
-TASK: Produce screen-atlas.md — navigable index + sitemap coverage cross-check + PRD coverage matrix + design-fidelity scores + states-coverage matrix + user-flow walkthrough for the complete prototype of "{{idea}}".
+TASK: Produce screen-atlas.md AND the route-group layout files (`app/(app)/layout.tsx` for shared chrome of primary+admin routes; optional `app/(marketing)/layout.tsx` for marketing nav if sitemap declares ≥3 marketing routes) for the complete prototype of "{{idea}}".
 
 CONTEXT: Read ALL prior artifacts at {{out}}/docs/ (semantic-named per spec 048; pipeline order via REPORT.md):
 - Phase 1 (Discovery): concept-brief.md, functional-spec.md, validation-report.md
-- Phase 2 (Specification): prd/v1.md (US-NN inventory — load-bearing for PRD coverage), ost.md, sitemap.yaml (route inventory — load-bearing for screen coverage), system-design.md + security.md + data-flow.json, legal-posture.md (legal-mandatory surfaces — consent dialog if DPIA fires), roadmap.md, cost-estimate.md, gtm-launch.md
+- Phase 2 (Specification): prd/v1.md (US-NN inventory — load-bearing for PRD coverage), ost.md, sitemap.yaml (route inventory — load-bearing for screen coverage; **and source-of-truth for which routes go under `app/(app)/` vs flat**), system-design.md + security.md + data-flow.json, legal-posture.md (legal-mandatory surfaces — consent dialog if DPIA fires), roadmap.md, cost-estimate.md, gtm-launch.md
 - Phase 3 (Identity): brand-book.md, design-system/tokens.css, design-system/components.md, design-system/README.md
 Read .claude/skills/product/templates/pipeline/15-screen-atlas/prompt.md + schema.md for atlas shape.
 
 CONSTRAINTS:
-- 8-15 KB hard ceiling. NOT a re-render of any single screen — the atlas IS the index.
+- 8-15 KB hard ceiling for screen-atlas.md. NOT a re-render of any single screen — the atlas IS the index.
 - Required H2 sections (verbatim): Overview / Screens Index / Sitemap Coverage Cross-Check / PRD Coverage Matrix / Design Fidelity / States Coverage Matrix / User Flow Walkthrough / Open Decisions.
 - **Sitemap Coverage Cross-Check** (NEW per spec 045) — for every route in sitemap.yaml, atlas confirms the corresponding `app/<route>/page.tsx` was actually generated. Missing screens listed as `[GAP — re-dispatch screen-writer]`.
 - **Screens Index** — table: filename | route path | category | covers_us | states implemented.
@@ -390,11 +390,13 @@ CONSTRAINTS:
 - **User Flow Walkthrough** — killer flow end-to-end with copy snippets at each step.
 - **Open Decisions** — 4-6 v1→v2 decisions deferred.
 - This atlas IS the brand+tokens-applied hi-fi pass (Step 7 prototype-v2 from v2 was deleted per spec 045 Decision 8). The screens MUST consume var(--*) tokens from `docs/design-system/tokens.css`, NOT raw hex.
-- Write file DIRECTLY to {{out}}/docs/screen-atlas.md.
+- Write atlas file DIRECTLY to {{out}}/docs/screen-atlas.md.
+- **Route-group layouts (spec 052):** ALSO write `{{out}}/app/(app)/layout.tsx` containing the shared sidebar + topbar nav for sitemap `primary` + `admin` categories (links derived from sitemap routes, labels from sitemap entry's display name or kebab-to-Title-case fallback). Layout is a Server Component (NO `'use client'` at top — interactive children handle their own client boundaries per spec 051). Tokens-only (NO hex/px except 1px borders). If sitemap has ≥3 `marketing` routes, ALSO write `{{out}}/app/(marketing)/layout.tsx` with a marketing nav (header + footer). Otherwise marketing pages stay flat under `app/` with no shared layout.
+- The root `app/layout.tsx` stays untouched by atlas — it's the HTML/body shell with metadata only (spec 051 covers its placeholder substitution).
 
-DELIVERABLE: {{out}}/docs/screen-atlas.md
+DELIVERABLE: {{out}}/docs/screen-atlas.md + {{out}}/app/(app)/layout.tsx + optionally {{out}}/app/(marketing)/layout.tsx
 
-DONE_WHEN: File exists; size 8-15 KB; contains all 8 H2 section headers; Sitemap Coverage Cross-Check lists every route from sitemap.yaml with status; PRD coverage matrix lists every US-NN from prd.md (covered → screen file OR deferred → reason); design-fidelity table has 4-dim Min column.
+DONE_WHEN: All 3 files exist (atlas + (app)/layout.tsx + optional (marketing)/layout.tsx); atlas size 8-15 KB; atlas contains all 8 H2 section headers; Sitemap Coverage Cross-Check lists every route from sitemap.yaml with status; PRD coverage matrix lists every US-NN from prd.md; design-fidelity table has 4-dim Min column; `(app)/layout.tsx` exists with sidebar nav matching sitemap primary+admin categories, tokens-only, no `'use client'` directive.
 ```
 
 **(b) Screen writer:** see § Per-stack screen-writer below. N = all sitemap.yaml routes (NOT killer-flow only — full sitemap coverage at standard tier per spec 045 Decision 13 sitemap schema enforcement).
@@ -417,17 +419,23 @@ CONTEXT:
 - Voice (Step 15 only): {{out}}/docs/brand-book.md (match ON-brand voice for copy)
 - Components reference (Step 15 only): {{out}}/docs/design-system/components.md
 - Stack defaults: .claude/skills/product/references/stack-defaults.md § Next.js
-- Target file:
-  - Step 02: {{out}}/docs/screens/{{NN}}-{{name}}.html (self-contained HTML, inline styles, mood-only)
-  - Step 15: {{out}}/app{{path_to_file_path}}/page.tsx (root `/` → app/page.tsx; dynamic routes like `/audit/overrides/[eventId]` → app/audit/overrides/[eventId]/page.tsx)
+- Target file (Step 15 — category determines route-group per spec 052):
+  - Sitemap category `primary` OR `admin` → `{{out}}/app/(app){{path_to_file_path}}/page.tsx` (shared sidebar+topbar chrome inherited from `app/(app)/layout.tsx` written by the atlas)
+  - Sitemap category `marketing` → `{{out}}/app/(marketing){{path_to_file_path}}/page.tsx` IF the atlas wrote `(marketing)/layout.tsx` (≥3 marketing routes); else flat `{{out}}/app{{path_to_file_path}}/page.tsx`
+  - Sitemap category `auth` OR `booking` (public funnel) → flat `{{out}}/app{{path_to_file_path}}/page.tsx` (chromeless / white-label)
+  - Root marketing landing (`/`) → `{{out}}/app/page.tsx` (flat regardless)
+  - Dynamic routes like `/check-in/[appointmentId]` → preserve the bracketed segment in the route-group path: `{{out}}/app/(app)/check-in/[appointmentId]/page.tsx`
+- Target file (Step 02): {{out}}/docs/screens/{{NN}}-{{name}}.html (self-contained HTML, inline styles, mood-only — route groups don't apply to lo-fi mood phase)
 
 CONSTRAINTS:
 - ≤ 3 component definitions per file (extract to {{out}}/app/_components/ if needed).
-- Implement ALL declared states from sitemap entry; for primary routes, ALWAYS implement default + loading + empty + error regardless of declaration (auto-augment).
 - Token reads via var(--color-*) inline OR Tailwind utility classes that map to tokens — NO hard-coded #hex or px values (1px borders idiomatic CSS exception).
 - Mock data inline OR in {{out}}/lib/mock-data.ts.
 - Soft token budget: 4000 tokens output.
 - Buttons: explicit type attribute (Biome a11y).
+- **Chrome inheritance via route-group layout (spec 052) — DO NOT REINVENT.** The shared sidebar + topbar lives in `{{out}}/app/(app)/layout.tsx` (written by the atlas before this dispatch). Your `page.tsx` renders the route's UNIQUE content body ONLY — no sidebar, no topbar, no app-wide navigation chrome. If you find yourself writing `<Sidebar>` or `<TopNav>` inside `page.tsx`, stop: the layout already provides them. Pages whose category routes them outside `app/(app)/` (marketing/auth/booking) similarly inherit from `app/(marketing)/layout.tsx` or no layout (chromeless) — adapt accordingly.
+- **State rendering — use Next.js sibling files, NOT inline mode chips (spec 052).** Sitemap entry `states: [loading]` → emit `<route>/loading.tsx` (Server Component skeleton, fallback for the route's Suspense boundary). `states: [error]` → emit `<route>/error.tsx` (Client Component with `'use client'`, accepts `{ error, reset }` props, includes a "Try again" button calling `reset()`). `states: [404]` or `states: [not-found]` → emit `<route>/not-found.tsx` (rendered when the page calls `notFound()` from `next/navigation`). **Empty state is page-internal rendering logic** (data-driven `if (items.length === 0) return <EmptyState />` branch) — NOT a developer-mode toggle. Skeleton root-level defaults at `app/{loading,error,not-found}.tsx` are inherited when no per-route override exists (nearest-wins per Next.js convention).
+- **DO NOT embed `default | loading | empty | error` toggle chips in production page bodies (spec 052).** Anti-pattern caught in 2026-05-18 audit: sub-agents had been adding `useState<"default" | "loading" | "empty" | "error">` plus a chip row showing those words as developer-mode switches, bleeding dev-mode UI into the product surface. The chips MUST NOT appear in shipped pages. State demonstration belongs in the sibling files above (Next.js handles when to render them); developer-mode state inspection happens via the dev server's HMR, not embedded controls.
 - **Next.js 16+ async params + `'use client'` separation (spec 051 — DO NOT VIOLATE).** Dynamic-route segments (`[id]`, `[slug]`) deliver `params` as `Promise<{...}>` that MUST be `await`ed. Awaiting a Promise can ONLY happen in a Server Component. Therefore: **`'use client'` MUST NOT appear at the top of an `async` page component.** Next.js explicitly blocks this combination — the runtime error is verbatim `<PageName> is an async Client Component. Only Server Components can be async at the moment. This error is often caused by accidentally adding 'use client' to a module that was originally written for the server.` Canonical pattern when the page needs client interactivity (useState/useEffect/event handlers/hooks):
   ```tsx
   // app/<route>/page.tsx  — Server Component, NO directive

@@ -70,6 +70,21 @@ Result: fork-only hook entries (e.g. a fork-specific custom hook) are preserved;
 
 **Limitation:** when Agent0 renames a hook (e.g. `supply-chain-scan.sh` → `supply-chain-block.sh`), the dedup key changes, so the old entry stays alongside the new one in the fork. The fork's `git diff` post-sync surfaces both; the developer prunes manually. Auto-prune deferred to v2 pending real evidence of this hurting.
 
+## .gitignore merge strategy
+
+`.gitignore` is **additively merged**, not hash-compared. Agent0's `.gitignore` carries harness-runtime entries (`.claude/.runtime-state/`, `.claude/secrets-audit.jsonl`, `.claude/delegation-audit.jsonl`, `.claude/.session-state/`, etc.) that MUST exist in every fork for the harness to run cleanly. Forks typically ship stack-canonical `.gitignore` files (Laravel's `/vendor`, Next.js's `/node_modules`, Cargo's `/target`, etc.) that would be lost under naive overwrite. Algorithm:
+
+1. If fork has no `.gitignore` → copy Agent0's verbatim via `process_file` (counted as `copied`, NOT `merged`).
+2. Else extract non-comment, non-empty, trimmed lines from both files as the entry set; compute `comm -23` to find Agent0 entries the fork is missing.
+3. If no entries missing → `= up to date` (regardless of comment/whitespace drift; entries are the semantic unit).
+4. Else: append a marker line `# === Agent0 harness sync — additions ===` (only on first sync — idempotent on re-runs) followed by the missing entries, preserving Agent0's original ordering. Fork-specific entries are never touched.
+
+Result: a Laravel fork's `.gitignore` keeps `/vendor`, `/node_modules`, `.env`, etc. verbatim, AND gets Agent0's `.claude/*.jsonl` / `.claude/.runtime-state/` / etc. appended below the marker. Idempotent: a second `--apply` reports `= up to date`; `comm -23` returns nothing because the additions from the first run are now in the entry set.
+
+**Force-except scope** — `--force-except='.gitignore'` is honored by the merge handler too: the merge is skipped and `!! force-except .gitignore (merge skipped)` is logged, mirroring the canonical example documented under § Escape hatches. The skip is recorded in the `customized-refused` counter, and the exit code reflects refusal as it does for `process_file`-handled files. This preserves the contract that operators who explicitly say "do not touch .gitignore" get that behavior even after the merge primitive landed.
+
+**Comments and orphans** — the marker block contains entries only, not their source-side comment groupings. Fork developers reviewing the post-sync `git diff` will see flat appended entries; if comment grouping matters for readability, they can reorganize after merge. Comment drift in fork's `.gitignore` (e.g., comments rewritten by the fork) is never overwritten — only the entry set is compared.
+
 ## CLAUDE.md merge strategy
 
 Heading-set comparison, **not** full-file hash. Fork-authored sections (Overview, Stack, Conventions, Gotchas, etc.) intentionally diverge from Agent0; a full-hash compare would always flag CLAUDE.md as customized and break the workflow. Algorithm:
@@ -88,8 +103,8 @@ Encoded in three arrays at the top of `sync-harness.sh`:
 
 - **`COPY_CHECK_RECURSIVE`** — `find -type f` under each base: `.claude/skills/`, `.claude/tests/`, `.claude/agents/`. Recursive walks; subdirs preserved.
 - **`COPY_CHECK_GLOBS`** — `dir|pattern` pairs, single-level: `.claude/hooks/*.sh`, `.claude/rules/*.md`, `.claude/tools/*.sh`, `.claude/validators/*.sh`.
-- **`COPY_CHECK_FILES`** — literal paths: `.mcp.json.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.gitignore`.
-- **Structured merge** (not in COPY_CHECK): `.claude/settings.json`, `CLAUDE.md`.
+- **`COPY_CHECK_FILES`** — literal paths: `.mcp.json.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.claude/memory/.gitkeep`, `.claude/.browser-state/.gitkeep`.
+- **Structured merge** (not in COPY_CHECK): `.claude/settings.json`, `CLAUDE.md`, `.gitignore`.
 
 The walk only reads from Agent0 manifest paths. Out-of-scope fork content (`src/`, fork's `tests/` outside `.claude/tests/`, `docs/`, `package.json`, `Cargo.toml`, `pyproject.toml`, `.mcp.json`, `.env*`, `target/`, `node_modules/`, `.venv/`, `dist/`, `build/`) is **implicitly invisible** — no denylist guard fires because nothing in the manifest points at those paths. This means adding a new path to the manifest is the only way to extend scope; the safety floor is the manifest itself.
 

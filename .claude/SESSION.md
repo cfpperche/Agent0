@@ -8,41 +8,42 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**5 specs de refinamento do `/product` v0.3.0 — ALL SHIPPED.** Cada uma commitada como `feat(NNN): ...` separado, scaffolds preservados em commit anterior `docs(053-057): scaffold ...`.
+**Spec 060 umbrella + top-3 follow-ups scaffolded** (2026-05-19) — ready for commit:
 
-- **053** screen-writer brief hardening — metadata + states evidence + Biome anti-pattern checklist + `primary_metric` field
-- **054** brand-book Glossary + Language — Phase 0.5 language resolution + `## Glossary` table mandatory; consumed by Step 15 only
-- **055** sitemap `chrome` field orthogonal to `category` — drives route-group placement; default-inference back-compat fallback
-- **056** pipeline size reconciliation — schema.md canonical for 6 priority steps; 9 legacy steps deferred to phase 2
-- **057** fan-out fallback — between-wave biome sweep + degrade-to-parent-write at N=1 same-wave (revised from N=2)
+- `docs/specs/060-harness-gaps-2026/` — **umbrella** (new `Type:` convention) aggregating 2026 competitive-audit findings: §A 8 standard-missing · §B 9 emerging · §C 8 descartado
+- `docs/specs/061-subagent-stop-hook/` — #1 (§A3 · alta · S) — closes delegation audit row via `SubagentStop`
+- `docs/specs/062-goal-skill/` — #2 (§A1 · alta · M) — `/goal` skill, contract-not-promise at user→main
+- `docs/specs/063-worktree-isolated-subagents/` — #3 (§A2 · alta · M) — 6th optional handoff field `ISOLATION: worktree`
 
-**OQ resolutions: critique-driven across all 5 specs.** 5 of the 15 original recommendations were revised after the user pushed back on rubber-stamping. See per-spec `notes.md` for the design memory. Memory entry `feedback_no_rubber_stamping_own_prior_text.md` saved.
+All in `draft`. `.claude/rules/spec-driven.md` § The four artifacts extended to document `**Type:**` (omitted default; `umbrella` for aggregators; expansion gated by rule-of-three). Two REMINDERS appended (mid-cycle §A/§B review 2026-07-19; Q3 audit 2026-08-19).
 
 ## WIP (uncommitted)
 
-- `M .claude/SESSION.md` — this file (about to commit)
-- `M .claude/skills/brainstorm/templates/render.html.tmpl` — pre-existing dirty, NOT this session
+- `M .claude/{REMINDERS,SESSION}.md` · `M .claude/rules/spec-driven.md`
+- `?? docs/specs/{060,061,062,063}-*/` (16 new files)
+- Carryover from prior session (orthogonal — not this session's work): `M docs/specs/059-product-phase0-harness-aware/tasks.md`, `?? v*-*.png` screenshots
 
 ## Next steps
 
-1. **Verification dogfood** of all 5 specs at next `/product` invocation. Each tasks.md task 8 (or equivalent) is deferred to a real run — confirms the new schemas/briefs/orchestration actually work end-to-end.
-2. **Untouched Vetro audit findings** (qualitative gaps not addressable by mechanical brief changes): #2 time-cursor agenda over text, #4/#5/#9 UX semantic (growth-loop, animal photo, booking hierarchy), #10 console errors. Ex-post Playwright audit only — no spec yet.
-3. **Spec 056 phase 2** when next 2-3 dogfoods accumulate evidence on the 9 legacy steps (01/04/05/06/07/11/12/13/14).
+1. **Commit** in 3 fatias (umbrella+rule · 3 follow-ups · reminders) OR single `feat:` — user preference pending
+2. **Attack 061 first** (top ROI). Pre-flight per `061/tasks.md` task 1 = capture real `SubagentStop` payload schema empirically before locking the parser
+3. After 061 ships: re-priorize §A/§B rows, scaffold next batch per umbrella `tasks.md` task 6
+4. mei-saas `/product` invocation still pending (founder action, prior-session carryover)
 
 ## Decisions & gotchas
 
-- **Critique discipline saved.** When user asks to "resume" / "attack" work I drafted earlier, I default to rubber-stamping my prior recommendations. New memory entry `[[feedback-no-rubber-stamping-own-prior-text]]` codifies the discipline: critique prior recs, surface where reasoning was thin, present real tradeoffs.
-- **Spec 053 `primary_metric` v1 = string-label, not rich struct.** v2 deferred until downstream sub-agents prove ambiguous.
-- **Spec 054 Phase 0.5 NEW.** Adds an `AskUserQuestion` between Init and Phase 1 for `target_language` resolution. `{{target_language}}` substituted into 6 user-facing briefs. Phase 4.5 simplified to read state.
-- **Spec 055 default-inference back-compat ONLY.** New sitemaps SHOULD emit `chrome` explicitly; default-inference cannot decide booking-vs-app correctly without help.
-- **Spec 056 conditional model for Step 09 legal.** Base 5-10 KB + DPIA +5/+12 + AI +2/+5 + Regulated +2/+8. Other 5 steps use simple ranges.
-- **Spec 057 N=1, not N=2.** Sub-agents in same wave share lint state via repo-wide biome — first fail strongly predicts siblings will too. N=2 wastes throughput.
-- **`max_size` added to JSON `required_files` blocks** is documentation-only at standalone-skill level (MCP package validator ignores unknown keys).
+- **Term `umbrella`** picked over `epic` / `tracking` — descriptive without Jira baggage; spec 060 is canonical example
+- **`**Type:**` is bold inline line**, not YAML — preserves 59-spec convention; avoids parser/migration cost
+- **062 /goal: rule-only v1**. Same constraint as `user-prompt-framing.md` — actor (main agent) can't externally enforce on itself. Hook deferred to v2 on rule-of-three drift only. Native `/goal` exists in CC v2.1.139+ — skill is portable/customizable across versions; task 1 checks namespace collision, renames to `/contract` if needed
+- **063 worktree: rule-only v1** by same constraint — gate parses brief but can't mutate the `Agent` tool call pre-dispatch. Operational hook for validator scoping = `git rev-parse --show-toplevel` before validator runner (safe regardless of isolation)
+- **Audit research delegated** to general-purpose agent (opus) 2026-05-19; URLs frozen in `060/plan.md` § Research
+- **Delegation gate blocked first dispatch** of this session (research agent missing 5-field handoff) — capacity working as intended; frame validated empirically
 
-## Carryover (orthogonal)
+## Carryover (orthogonal — not touched this session)
 
-- Spec 046 dogfood window — promotion gate 2026-07-01.
-- Spec 029 adoption check due 2026-05-30.
-- Spec 026 Phase C/D pending.
-- Acme Yard substrate work — `/sdd new substrate` at `/home/goat/acmeyard`.
-- `.claude/REMINDERS.md` items per startup readout.
+- mei-saas `/product` Phase 0 ready (founder owns next step; full context in `git log` 2026-05-19 commits 5f33e3e + 1d11e07 + .claude/memory)
+- Spec 046 dogfood gate due 2026-07-01
+- Spec 029 adoption check due 2026-05-30
+- Spec 026 Phase C/D pending
+- Acme Yard substrate work at `/home/goat/acmeyard`
+- `.claude/REMINDERS.md` items per startup readout

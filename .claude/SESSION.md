@@ -17,12 +17,22 @@ Behavioral fix to /product trim-loop antipattern (empirical case: mei-saas 2026-
 ## WIP (uncommitted)
 
 - `M docs/specs/059-product-phase0-harness-aware/tasks.md` — orthogonal carryover (not this session)
-- `?? .claude/routines/cc-platform-audit.md` — routine scaffold from spec 064 session
+
+## Recent commits (this multi-session day)
+
+- `d0cf24d` — cc-platform-audit 2nd-run findings (payload-shape additions to memo + Open Q on routine prompt specificity)
+- `e1443d9` — SESSION.md handoff (spec 065 shipped)
+- `7012a22` — session handoff post-064 follow-ups
+- `fa0d7d2` — first real routine (cc-platform-audit) + drift fix
+- `ff35d17` — spec 065 ship (artifact-budget discipline)
+- `265772a` — spec 064 ship (project-scoped routines)
+- `850190c` — spec 064 scaffold
 
 ## Next steps
 
 1. **Empirical Step 02 retry in mei-saas** — fresh session `/product --from-step=2 --out=...` to observe sub-agent abort at 54 KB (1.8× of 30 KB) with partial-result instead of trim-looping. End-to-end validation of the spec 065 mechanism; user-gated by design (spec.md Open Q4).
 2. **Spec 064 cron natural fire** — Monday 2026-05-25 09:00 UTC. `cc-platform-audit` should queue without manual intervention. Validates cron+leader-flag path under real timing.
+3. **3rd cc-platform-audit run** (after natural fire) — should report `no-drift-detected since 2026-05-19T22:41:22Z` IFF no new platform changes AND the 2 prior runs collectively caught all drift. If 3rd run still finds drift, that's empirical signal to tighten the routine prompt per `docs/specs/064-project-scoped-routines/notes.md` § Open questions.
 
 ## Decisions & gotchas
 

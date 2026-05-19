@@ -9,11 +9,11 @@ When a pipeline step produces an artifact that a downstream step consumes struct
 
 ## Why
 
-Anthill skills (the quality-floor reference for our MCP-port — see [[anthill-archived]]) had this pattern only implicitly: anthill-prd produces a PRD that anthill-roadmap consumes for phasing, anthill-spec produces a spec that anthill-prd consumes for requirements, anthill-design-system produces tokens that anthill-prototype consumes for visual fidelity. None of the producer skills told the writer "this output will be consumed by X downstream with shape Y; if you change shape, X breaks silently."
+Anthill skills (the quality-floor reference for the original MCP port — see [[anthill-archived]]) had this pattern only implicitly: anthill-prd produces a PRD that anthill-roadmap consumes for phasing, anthill-spec produces a spec that anthill-prd consumes for requirements, anthill-design-system produces tokens that anthill-prototype consumes for visual fidelity. None of the producer skills told the writer "this output will be consumed by X downstream with shape Y; if you change shape, X breaks silently."
 
 Result: anthill consumers had to defensively parse upstream artifacts, often with regex hacks. When the producer drifted (e.g., changed user-story format), the consumer broke silently — the symptom appeared 2-3 steps downstream from the cause.
 
-The MCP-port made this pattern explicit. Step 6 design-system says "step 7 reads `tokens.css` verbatim; do not invent unnamed tokens." Step 4 audit says "frontmatter is consumed by step 6 (design-system fixes) + step 7 (prototype-v2 fixes); the contract is `findings[].fix_skill_hint`." Step 8 PRD says "user-story IDs (`US-NN`) are consumed by step 13 PRD-coverage scoring; renumbering breaks coverage silently." Each producer template carries its own consumer-contract block.
+The MCP port (specs 025-027, now discontinued 2026-05-19) surfaced this pattern, and the `/product` skill (spec 048) carries it forward. Step 14 design-system says "step 15 atlas reads `tokens.css` verbatim; do not invent unnamed tokens." Step 04 audit says "frontmatter is consumed by step 14 (design-system fixes) + step 15 (atlas fixes); the contract is `findings[].fix_skill_hint`." Step 05 PRD says "user-story IDs (`US-NN`) are consumed by step 07 sitemap + step 15 atlas PRD-coverage scoring; renumbering breaks coverage silently." Each producer template carries its own consumer-contract block.
 
 ## When this applies
 
@@ -47,10 +47,9 @@ This is project-internal knowledge, not a behavioral rule. Future ports (steps 9
 
 ## Canonical examples in current codebase
 
-- `packages/mcp-product-pipeline/src/templates/04-ux-testing/schema.md` § "Optional YAML frontmatter — structured findings handoff" — consumer contract for steps 6/7/8
-- `packages/mcp-product-pipeline/src/templates/06-design-system/prompt.md` § 1 + § 4a — tokens.css consumer contract for step 7
-- `packages/mcp-product-pipeline/src/templates/08-prd/prompt.md` § 4 item 5 — US-NN consumer contract for step 13
-- `packages/mcp-product-pipeline/src/templates/07-prototype-v2/prompt.md` § 4 — direction-final.html consumer contract for the user's gut-check at Layer-3 checkpoint
+- `.claude/skills/product/templates/pipeline/04-ux-testing/schema.md` § "Optional YAML frontmatter — structured findings handoff" — consumer contract for steps 08/14/15
+- `.claude/skills/product/templates/pipeline/14-design-system/prompt.md` § tokens — tokens.css consumer contract for step 15 (screen atlas)
+- `.claude/skills/product/templates/pipeline/05-prd/prompt.md` § user stories — US-NN consumer contract for step 07 (sitemap) + step 15 (screen atlas)
 
 ## Anti-pattern
 

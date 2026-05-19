@@ -344,7 +344,7 @@ Open decisions without a deciding signal are red flags — the design owes the f
 Spec 026 ships `architecture.json` only. The anthill source (`anthill-principal-engineer § Step 5c`) emits a sibling `<slug>-architecture.html` via `.anthill/scripts/render-architecture-diagram.mjs` (Cocoon-AI-derived, MIT). The MCP port defers the HTML rendering to a post-spec-026 refinement:
 
 - **Why deferred:** spec 026 V5 accepts "one of `architecture.json` / `architecture.html`" — JSON-only satisfies acceptance. Vendoring the renderer (or replicating it) is a 1-2 day chore that doesn't unlock new pipeline capability (the JSON is the load-bearing artifact; HTML is presentation).
-- **What the refinement would do:** vendor `render-architecture-diagram.mjs` into `packages/mcp-product-pipeline/scripts/`, schema-validate the JSON against the vendored schema, emit HTML next to the JSON at submit time, surface the file path in `product_step_submit` response so the parent can ping the user with the rendered diagram (Layer 3 visual checkpoint).
+- **What the refinement would do:** vendor `render-architecture-diagram.mjs` into `.claude/skills/product/scripts/`, schema-validate the JSON against the vendored schema, emit HTML next to the JSON at submit time, surface the file path so the parent can ping the user with the rendered diagram (Layer 3 visual checkpoint).
 - **Forward-compat:** the JSON shape this template emits is a strict subset of anthill's schema (`title`, `summary_prose`, `components[]`, `arrows[]`, optional `zones[]`, optional `summary_cards[]`). The renderer when vendored will accept these graphs unchanged.
 
 ## Voice & anti-patterns

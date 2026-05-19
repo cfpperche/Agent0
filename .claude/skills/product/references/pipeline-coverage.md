@@ -63,11 +63,9 @@ Industry-aligned per spec 032's 17 decisions ported via spec 045 (`/prototype` v
 
 ## Bundled-template provenance + drift discipline
 
-All 15 step prompts + schemas + references live at `.claude/skills/product/templates/pipeline/<step>/`. **Source: spec 045 derives each template from spec 032's 17 decisions, NOT copied from `packages/mcp-product-pipeline/src/templates/`** (the MCP package is mid-realign via spec 032's child specs 037-044 — neither side is "the canonical" until both land).
+All 15 step prompts + schemas + references live at `.claude/skills/product/templates/pipeline/<step>/`. **Source: spec 045 derives each template from spec 032's 17 decisions.** The MCP `packages/mcp-product-pipeline/` (specs 025-027) was discontinued 2026-05-19; the skill is the canonical delivery.
 
-**Drift sync:** `.claude/REMINDERS.md` carries a quarterly item (due 2026-08-18) to diff bundled vs canonical when both sides have landed. Currently divergent by design — spec 045 ships first as scout, spec 032 follows.
-
-**Why bundle (not symlink or runtime-read):** the skill is standalone — must work in a fork that lacks `packages/mcp-product-pipeline/`. Bundle is the price of portability.
+**Why bundle (not symlink or runtime-read):** the skill is standalone — must work in any fork. Bundle is the price of portability.
 
 ## Two-prototype-pass rationale (v3 — collapsed from v2's three)
 

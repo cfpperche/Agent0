@@ -179,7 +179,7 @@ The concept brief MUST include an `## Market Sizing` H2 section with TAM / SAM /
 
 **Discipline:** desk research, NOT primary research. 1-2 cited sources per number. NEVER invent numbers — if no source exists for a number, say "Estimated; based on <basis>" and explain. Worst case (zero sources): write "[Estimated — no public source found; 1-paragraph derivation from cost of building x competitor TAM y]".
 
-This section is the lightweight upstream signal the heavy `mcp-product-pipeline` (spec 032) would dedicate a full step to. Standard tier folds it into ideation as 3 paragraphs.
+This section is the lightweight upstream signal a heavier pipeline would dedicate a full step to (TAM/SAM/SOM market sizing). Standard tier folds it into ideation as 3 paragraphs.
 
 ## What this step does NOT do
 

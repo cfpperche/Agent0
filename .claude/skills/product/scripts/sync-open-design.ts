@@ -1,8 +1,8 @@
 /**
  * sync-open-design.ts — vendored open-design sync engine
  *
- * Ported from anthill's `scripts/sync-open-design.ts` (spec 027). Adapted for the
- * mcp-product-pipeline package: paths resolve from the package root via
+ * Ported from anthill's `scripts/sync-open-design.ts` (spec 027) and re-homed in
+ * the /product skill (spec 049). Paths resolve from the skill root via
  * `import.meta.url`, invocation is `bun scripts/sync-open-design.ts` (no tsx shebang).
  *
  * Four subcommands:
@@ -29,7 +29,6 @@ const streamPipeline = promisify(pipeline);
 
 // ── Paths ────────────────────────────────────────────────────────────────────
 // Script lives at <skill-root>/scripts/sync-open-design.ts — `..` resolves to <skill-root>.
-// (Spec 049 moved the engine from packages/mcp-product-pipeline/ into the /product skill.)
 const SKILL_ROOT = new URL('..', import.meta.url).pathname.replace(/\/$/, '');
 const MANIFEST_PATH = path.join(SKILL_ROOT, 'vendor/open-design/MANIFEST.json');
 const RUNTIME_DIR = path.join(SKILL_ROOT, 'runtime/od-sync');

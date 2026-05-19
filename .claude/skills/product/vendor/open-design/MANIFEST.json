@@ -100,7 +100,7 @@
       "event": "apply",
       "sha": "d25a7aaf4219d69b6a3055ddda25fbce0dafd24d",
       "at": "2026-05-14T00:00:00.000Z",
-      "reason": "spec 027 — bootstrap port into agent0-mcp-product-pipeline by copy from anthill at pinned SHA"
+      "reason": "spec 027 — bootstrap port from anthill at pinned SHA (re-homed into /product skill via spec 049 after MCP discontinued 2026-05-19)"
     }
   ]
 }

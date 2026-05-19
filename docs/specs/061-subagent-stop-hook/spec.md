@@ -18,9 +18,9 @@ Claude Code's `SubagentStop` hook event fires when a sub-agent task ends. This s
 ## Acceptance criteria
 
 - [ ] **Scenario: sub-agent completes normally**
-  - **Given** a `PreToolUse(Agent)` audit row was appended by the delegation gate at dispatch
+  - **Given** a `PreToolUse(Agent)` audit row was appended by the delegation gate at dispatch (now also recording `tool_use_id` per spec resolution)
   - **When** `SubagentStop` fires for the same sub-agent invocation
-  - **Then** a sibling JSONL row is appended to `.claude/delegation-audit.jsonl` with `event: "subagent-stop"`, `agent_id` (or `session_id` fallback), `duration_ms` (now − dispatch_ts), `exit: "ok"`, `edit_count` (integer, from `session-track-edits.sh` accounting or fallback `0`)
+  - **Then** a sibling JSONL row is appended to `.claude/delegation-audit.jsonl` with `event: "subagent-stop"`, `agent_id`, `tool_use_id` (read from per-sub-agent `.meta.json` sidecar), `agent_type`, `duration_ms` (close_ts − dispatch_ts client-computed), `exit: "ok"`, `edit_count` (counted from `agent_transcript_path` JSONL `tool_use` entries), `last_assistant_message_head` (200 chars), `agent_transcript_path`
 
 - [ ] **Scenario: sub-agent stopped due to loop-budget exhaustion**
   - **Given** `.claude/.delegation-state/agents/<agent_id>` recorded `CLAUDE_DELEGATION_LOOP_BUDGET` consecutive validator failures
@@ -42,13 +42,15 @@ Claude Code's `SubagentStop` hook event fires when a sub-agent task ends. This s
   - **When** the hook parses the payload
   - **Then** it exits 0 without appending; no spurious rows
 
-- [ ] `.claude/hooks/delegation-stop.sh` exists, executable (`chmod +x`), follows the same bash conventions as `delegation-gate.sh` (case-insensitive field parsing, jq with guarded `// empty`, no sticky `exec` redirects)
+- [ ] `.claude/hooks/delegation-stop.sh` exists, executable (`chmod +x`), follows the same bash conventions as `delegation-gate.sh` (jq with guarded `// empty`, no sticky `exec` redirects, fail-open on missing deps)
+
+- [ ] `.claude/hooks/delegation-gate.sh` extended to capture `tool_use_id` in the dispatch row (one new `jq -r` call + one new audit field). Existing 11 fields preserved; `tool_use_id` becomes the 12th.
 
 - [ ] `.claude/settings.json` registers the hook under the `SubagentStop` event surface
 
-- [ ] Tests in `.claude/tests/` cover the four success scenarios + failure-safe path; existing test harness pattern from `delegation-gate.sh` tests is the template
+- [ ] Tests in `.claude/tests/` cover the four success scenarios + failure-safe path + orphan-stop (no matching dispatch row) + gate-extension regression (existing dispatch tests still pass with new field)
 
-- [ ] `.claude/rules/delegation.md` § Audit log updated to reflect the new row schema (event field, termination fields)
+- [ ] `.claude/rules/delegation.md` § Audit log updated to reflect both the new dispatch field (`tool_use_id`) AND the new row event schema; § The 5-field handoff unchanged (the parser doesn't expose `tool_use_id` to the handoff brief — it's harness-internal)
 
 ## Non-goals
 
@@ -60,9 +62,13 @@ Claude Code's `SubagentStop` hook event fires when a sub-agent task ends. This s
 
 ## Open questions
 
-- [ ] Does Claude Code's `SubagentStop` event payload reliably include the `agent_id` set in `PreToolUse(Agent)`? If not, fallback correlation is `session_id` + position-in-log heuristic. Verify against the live hook payload schema before locking `plan.md`.
-- [ ] Is `edit_count` reachable from existing state (`.claude/hooks/session-track-edits.sh` writes per-edit; can we count rows in a per-agent file?) or do we need a new accumulator? Resolution: read the existing hook before designing.
-- [ ] Should the closing row include the model identifier again (denormalized for query convenience) or stay normalized (require join with dispatch row by `agent_id`)? Denormalize — append-only logs benefit from self-contained rows for `jq` analysis.
+_All pre-flight unknowns resolved 2026-05-19 via empirical probe-fire of 3 hook events. See `notes.md` § Design decisions for full payload schemas and decision rationale._
+
+- [x] ~~Does Claude Code's `SubagentStop` event payload reliably include the `agent_id` set in `PreToolUse(Agent)`?~~ **Resolved**: `SubagentStop` carries `agent_id` (top-level string), but `PreToolUse(Agent)` does NOT — it carries `tool_use_id` only. The two identifiers are disjoint. Bridge: per-sub-agent transcript sidecar `.meta.json` carries `toolUseId` matching PreToolUse's `tool_use_id`. The gate is extended to record `tool_use_id` in the dispatch row; the stop hook reads the sidecar to get both keys.
+- [x] ~~Is `edit_count` reachable from existing state (`session-track-edits.sh`)?~~ **Resolved**: `session-track-edits.sh` is session-scoped, conflating parent + all sub-agents. Per-sub-agent transcript JSONL (`agent_transcript_path` from SubagentStop payload) is the canonical edit-count source — `jq` filter over `assistant.message[].tool_use` entries with `.name ∈ {Edit, Write, MultiEdit}`. Deterministic per-agent.
+- [x] ~~Denormalize closing row, or require join?~~ **Resolved**: Denormalize. Close row carries `agent_type` (mirrors dispatch's `subagent_type`), `last_assistant_message_head` (200-char snippet), `agent_transcript_path` pointer. Mirrors `.claude/rules/runtime-introspect.md` § `last-run.json schema` self-sufficiency pattern.
+
+No new open questions surfaced during pre-flight. Implementation can proceed against the locked design.
 
 ## Context / references
 

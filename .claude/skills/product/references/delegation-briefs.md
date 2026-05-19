@@ -428,10 +428,29 @@ CONSTRAINTS:
 - Mock data inline OR in {{out}}/lib/mock-data.ts.
 - Soft token budget: 4000 tokens output.
 - Buttons: explicit type attribute (Biome a11y).
+- **Next.js 16+ async params + `'use client'` separation (spec 051 — DO NOT VIOLATE).** Dynamic-route segments (`[id]`, `[slug]`) deliver `params` as `Promise<{...}>` that MUST be `await`ed. Awaiting a Promise can ONLY happen in a Server Component. Therefore: **`'use client'` MUST NOT appear at the top of an `async` page component.** Next.js explicitly blocks this combination — the runtime error is verbatim `<PageName> is an async Client Component. Only Server Components can be async at the moment. This error is often caused by accidentally adding 'use client' to a module that was originally written for the server.` Canonical pattern when the page needs client interactivity (useState/useEffect/event handlers/hooks):
+  ```tsx
+  // app/<route>/page.tsx  — Server Component, NO directive
+  import { <Name>Client } from "./_<Name>Client";
+  export default async function <Name>Page({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    return <<Name>Client id={id} />;
+  }
+  ```
+  ```tsx
+  // app/<route>/_<Name>Client.tsx  — Client Component, owns hooks
+  "use client";
+  import { useState } from "react";
+  export function <Name>Client({ id }: { id: string }) {
+    const [state, setState] = useState(...);
+    return (<div>...</div>);
+  }
+  ```
+  If the page is purely presentational (no hooks, no state, no event handlers), it can stay a single Server Component and skip the split entirely. Sub-agent self-check before declaring DONE: `grep -l "'use client'" app/<route>/page.tsx` MUST return nothing if `page.tsx` is async.
 
-DELIVERABLE: The target file at the path above; if mock-data.ts was added or extended, that too.
+DELIVERABLE: The target file at the path above; if mock-data.ts was added or extended, that too. If the canonical Server+Client split is applied, the sibling `_<Name>Client.tsx` file too.
 
-DONE_WHEN: File exists at deliverable path; valid TypeScript (Step 15 — Phase-4-verified by tsc); declared states visibly implemented; uses tokens via var() or Tailwind utility classes (NO hex/px violations); buttons have type attribute.
+DONE_WHEN: File exists at deliverable path; valid TypeScript (Step 15 — Phase-4-verified by tsc); declared states visibly implemented; uses tokens via var() or Tailwind utility classes (NO hex/px violations); buttons have type attribute; **if dynamic-segment route, `page.tsx` is either a non-async pure Server Component OR an async Server Component (no `'use client'` at top) with the client interactivity split into a sibling `_<Name>Client.tsx`**.
 ```
 
 ### Expo stack

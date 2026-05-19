@@ -83,6 +83,12 @@ NO GATE — Phase 4 closes the pipeline; the `/sdd new <slug>` handoff is the im
 3. **Stitch step — wire token import + verify.** Stack-specific:
    - **Next.js:** Verify `<out>/app/globals.css` contains the token import via strict regex: `grep -qE '^@import.*docs/.*tokens\.css' <out>/app/globals.css`. The bundled `templates/monorepo-skeleton/next/app/globals.css` SHIPS this line as line 1 (`@import "../docs/design-system/tokens.css";` — relative path to the Step-14 deliverable; **note path change vs v2** which had `../docs/06-tokens.css`) — if missing, prepend via `sed -i '1i @import "../docs/design-system/tokens.css";' <out>/app/globals.css`. DO NOT use a loose-substring `grep -q 'tokens.css'` (matched comments — root cause of 2026-05-17 dogfood render-raw bug).
    - **Expo:** Tokens consumed via `tailwind.config.js` → no inline import needed.
+
+3.5. **Stitch step — substitute `app/layout.tsx` placeholders** (Next.js only, spec 051 fix). The skeleton ships `title: "PROTOTYPE_SLUG"` + `<html lang="en">` as markers; both MUST be substituted or every prototype leaks the placeholder in browser tabs + ships the wrong locale.
+   - **Title:** prefer `<out>/docs/brand-book.md` § `## Product Name` body line; fall back to `.state.json` `.idea`.
+   - **Lang:** if `concept-brief.md` / `sitemap.yaml` / `brand-book.md` contains any of `R$` / `LGPD` / `NFS-e` / `Pix` → `lang="pt-BR"`; else keep `en`. (Heuristic v1; `--locale=<bcp47>` flag is a follow-on.)
+   - **Apply via python3** (not sed — idea string can contain `&|/'"$\` that break sed): read `<out>/app/layout.tsx`, `.replace('PROTOTYPE_SLUG', title)` + conditional `.replace('lang="en"', 'lang="pt-BR"')`, write back.
+   - **Verify:** `grep -L PROTOTYPE_SLUG <out>/app/layout.tsx` must show no match; browser tab on hard-refresh must show the resolved title.
 4. **Build verification:**
    - Install: `cd <out> && pnpm install --frozen-lockfile` (next) or `bun install` (expo). MUST include OVERRIDE marker for supply-chain hook:
      ```

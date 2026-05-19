@@ -51,3 +51,6 @@ prototypes/
 #
 # Go (legacy) / PHP / Ruby
 # vendor/
+
+# Visual-audit screenshots — evidence captured by playwright MCP; conversation is the memory
+/audit-*.png

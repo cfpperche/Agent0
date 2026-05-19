@@ -1,6 +1,6 @@
 # 053 — screen-writer brief hardening
 
-**Status:** draft
+**Status:** shipped
 
 ## Problem
 

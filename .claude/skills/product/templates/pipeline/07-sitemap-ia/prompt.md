@@ -70,6 +70,23 @@ routes:
     components: [PasswordResetForm]
 
   # ... primary routes (killer flow + other user-facing surfaces) ...
+  # Example with optional primary_metric — route surfaces a hero-level value:
+  - path: /caixa
+    category: primary
+    states: [default, loading, empty, error]
+    covers_us: [US-07]
+    components: [MetricTile, CashSessionForm, RecentTransactions]
+    primary_metric: Caixa atual
+  # Example with deferred_states — empty has no legitimate degenerate case:
+  - path: /faturamento
+    category: primary
+    states: [default, loading, error]
+    deferred_states:
+      - name: empty
+        reason: founder always has ≥1 invoice in v1; no legitimate zero-state
+    covers_us: [US-12]
+    components: [InvoiceTable, FilterBar]
+    primary_metric: MRR atual
 
   - path: /settings/account
     category: admin
@@ -125,6 +142,8 @@ Each entry MUST have `reason` (non-empty, 1-2 sentences). The deferral becomes a
 | `states` | list[string] | yes | ≥1; primary routes MUST include `default`, `loading`, `empty`, `error` (orchestrator auto-augments if missing) |
 | `covers_us` | list[string] | yes | ≥0; entries match `^US-\d+$`; orphan US-NN refs (not in PRD) emit warning |
 | `components` | list[string] | yes | ≥1; PascalCase; screen-writer treats as materialization targets |
+| `primary_metric` | string | **optional** | Short label (≤ 32 chars) naming the route's load-bearing operational value (e.g. `Caixa atual`, `Estoque crítico`, `Agendamentos hoje`, `MRR atual`). EMIT when the route surfaces a number/state the user comes to check at-a-glance; OMIT when there is none (marketing, settings, auth). Drives MetricTile/hero render in Step 15 (per `sitemap-schema.md § Optional fields`). |
+| `deferred_states` | list[{name, reason}] | optional | Use when a declared state has no legitimate degenerate case (e.g. `empty` on a route where the founder always has ≥1 row). Each entry needs `reason` (1 sentence). Auto-augmented `default+loading+empty+error` on primary routes can ONLY be dropped via this. |
 
 ## Constraints
 

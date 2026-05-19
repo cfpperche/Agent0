@@ -81,6 +81,19 @@ For step 13 atlas to pass:
   - `deferred — <reason>` (legal-mandatory or out-of-scope at standard tier with explicit one-line reason)
 - Silent omission of a US-NN is a step-13 gate failure (the matrix exists exactly to prevent it).
 
+## 8. Step 15 screen-writer additions (NEW in spec 053; per-route page.tsx)
+
+Per `delegation-briefs.md § Per-stack screen-writer CONSTRAINTS`, every Step 15 (hi-fi) route file MUST satisfy:
+
+- **Metadata export** — `page.tsx` exports `export const metadata: Metadata = { title, description }` with route-specific title (matches sitemap display name) AND on-brand description. Exception: root marketing `/` may inherit from `app/layout.tsx`. Skill self-check: `grep -L "export const metadata" <out>/app/**/page.tsx` returns only `<out>/app/page.tsx`.
+- **States implementation evidence** — for every state in the route's `sitemap.routes[i].states[]`, evidence exists: `loading` → sibling `loading.tsx`; `error` → sibling `error.tsx`; `empty` → page-internal render branch (presence of `<EmptyState`, `length === 0`, or equivalent guard). States in `deferred_states[]` are skipped. Skill self-check: per route, intersect declared states with file/grep evidence; any unmatched state = REPORT.md `## Build health § States gaps`.
+- **Biome anti-pattern checklist** — `biome check` on the produced file passes WITHOUT relaxing `biome.json` rules. Specifically: no `key={i}` in `.map`, no `<div role="status|article|region">`, no `dangerouslySetInnerHTML`, no `<button>` without `type`, no `<img>` without `alt`. Skill self-check: `biome check <out>/app/` exits 0; if non-zero, the listed violations are the gap (do NOT auto-relax config to "fix").
+- **Primary metric prominence** — for every route with `sitemap.routes[i].primary_metric` declared, the page renders the metric as `<MetricTile …/>`-or-equivalent hero element (full-width or major-column placement), NOT as a small badge. Skill self-check: grep the produced `page.tsx` for the metric label string; verify it appears inside a component named `MetricTile`, `Stat`, `KPI`, `Hero`, or equivalent (regex against the design-system's tile components in `<out>/docs/design-system/components.md`).
+
+Failures here populate REPORT.md `## Build health § Step 15 brief adherence`. They do NOT block the build (validator-cascade risk per spec 057), but they DO appear in REPORT so the founder + reviewer see them.
+
+> **Note on staleness:** the per-step table in § 1 above still references the v2 13-step pipeline ("13 — Prototype v3 / screen-atlas"). v0.3.0 (current) is 15 steps with atlas at 15a + per-route writers at 15b. The table is preserved as-is for spec 053 scope; full migration is a separate spec (058+ candidate).
+
 ## REPORT.md section mapping
 
 Each checklist item lands in REPORT.md:

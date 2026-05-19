@@ -51,6 +51,33 @@ routes:
 | `covers_us` | list of strings | yes | at least 1; each entry is a US-NN ref from `docs/prd/v1.md` |
 | `components` | list of strings | yes | at least 1; PascalCase; screen-writer treats as materialization targets |
 
+## Optional fields per route
+
+| Field | Type | Constraint | When to emit |
+|---|---|---|---|
+| `primary_metric` | string | Short human-readable label (≤ 32 chars) naming the route's load-bearing operational value | When the route surfaces a hero-level operational number/state the user comes to check — e.g. cashier total, critical-stock count, today's bookings, MRR. The screen-writer renders it as MetricTile/hero, NOT as a small badge in a corner. See `delegation-briefs.md § Per-stack screen-writer CONSTRAINT (d)`. |
+| `deferred_states` | list of `{name, reason}` | Mirrors `deferred_categories` shape (top-level). Each entry must have non-empty `reason` (1 sentence). | When `states[]` declared a state the data model has no degenerate case for — e.g. a billing route declares `empty` but the founder always has at least one invoice. Sub-agent flips the state from `states` to `deferred_states` and the screen-writer skips its render branch. Auto-augmentation for primary routes (forcing `default+loading+empty+error`) still applies, so deferral is the only way to legitimately drop one. |
+
+### `primary_metric` semantic notes
+
+- The value is a **label**, not a value source — sub-agent decides the value (from sitemap `components[]` + route's data-model context). Spec 053 ships this as a string-label v1; if downstream sub-agents prove ambiguous ("which number is that?"), a v2 may richen to `{ label, source, format }`.
+- Optional: routes without an operational hero value (e.g. marketing landing, settings, auth screens) leave it unset.
+- One per route at most. Routes with multiple metrics list the most-glanced one — secondary metrics render as supporting MetricTile siblings or rows in a table, sub-agent's call.
+
+### `deferred_states` example
+
+```yaml
+- path: /faturamento
+  category: primary
+  states: [default, loading, error]
+  deferred_states:
+    - name: empty
+      reason: founder always has ≥1 invoice in v1; no legitimate zero-state at launch
+  covers_us: [US-12]
+  components: [InvoiceTable, FilterBar]
+  primary_metric: MRR atual
+```
+
 ## Required categories enforcement (the load-bearing mechanical fix)
 
 `required_categories: [marketing, auth, primary, admin, error]` — orchestrator parses sitemap.yaml after Step 07 returns and enforces:

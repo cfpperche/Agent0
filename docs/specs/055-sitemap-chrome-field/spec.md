@@ -1,6 +1,6 @@
 # 055 — sitemap `chrome` field orthogonal to `category`
 
-**Status:** draft
+**Status:** shipped
 
 ## Problem
 

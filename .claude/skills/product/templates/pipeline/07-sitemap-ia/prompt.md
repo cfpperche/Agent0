@@ -47,12 +47,21 @@ deferred_categories:
 routes:
   - path: /
     category: marketing
+    chrome: chromeless          # root marketing — flat app/page.tsx (no shared shell)
     states: [default]
     covers_us: [US-01, US-02]
     components: [Hero, FeatureGrid, PricingPreview, FooterCTA]
 
+  - path: /pricing
+    category: marketing
+    chrome: marketing           # under app/(marketing)/layout.tsx — header + footer
+    states: [default]
+    covers_us: [US-02]
+    components: [PricingTable, FAQAccordion, FooterCTA]
+
   - path: /auth/login
     category: auth
+    chrome: auth                # under app/(auth)/layout.tsx — logo + lang switcher
     states: [default, loading, error]
     covers_us: [US-03]
     components: [LoginForm, OAuthButtons]
@@ -73,6 +82,7 @@ routes:
   # Example with optional primary_metric — route surfaces a hero-level value:
   - path: /caixa
     category: primary
+    chrome: app                 # under app/(app)/layout.tsx — authenticated shell
     states: [default, loading, empty, error]
     covers_us: [US-07]
     components: [MetricTile, CashSessionForm, RecentTransactions]
@@ -80,6 +90,7 @@ routes:
   # Example with deferred_states — empty has no legitimate degenerate case:
   - path: /faturamento
     category: primary
+    chrome: app
     states: [default, loading, error]
     deferred_states:
       - name: empty
@@ -87,15 +98,26 @@ routes:
     covers_us: [US-12]
     components: [InvoiceTable, FilterBar]
     primary_metric: MRR atual
+  # Example with chrome diverging from category default (Vetro pattern):
+  # PRD coverage says category: primary; runtime chrome is the booking shell
+  # (clinic-branded white-label, NOT the authenticated app shell).
+  - path: /[clinicSlug]/agendar
+    category: primary
+    chrome: booking             # under app/(booking)/layout.tsx — minimal white-label
+    states: [default, loading, success, error]
+    covers_us: [US-21]
+    components: [ClinicHeader, AppointmentTypePicker, DatePicker, TimeSlots, ConfirmDialog]
 
   - path: /settings/account
     category: admin
+    chrome: app                 # admin inherits app shell
     states: [default, saving, error]
     covers_us: [US-09]
     components: [AccountForm]
 
   - path: /settings/team
     category: admin
+    chrome: app
     states: [default, loading, empty, error]
     covers_us: [US-10]
     components: [TeamMembersTable, InviteForm]
@@ -144,6 +166,7 @@ Each entry MUST have `reason` (non-empty, 1-2 sentences). The deferral becomes a
 | `components` | list[string] | yes | ≥1; PascalCase; screen-writer treats as materialization targets |
 | `primary_metric` | string | **optional** | Short label (≤ 32 chars) naming the route's load-bearing operational value (e.g. `Caixa atual`, `Estoque crítico`, `Agendamentos hoje`, `MRR atual`). EMIT when the route surfaces a number/state the user comes to check at-a-glance; OMIT when there is none (marketing, settings, auth). Drives MetricTile/hero render in Step 15 (per `sitemap-schema.md § Optional fields`). |
 | `deferred_states` | list[{name, reason}] | optional | Use when a declared state has no legitimate degenerate case (e.g. `empty` on a route where the founder always has ≥1 row). Each entry needs `reason` (1 sentence). Auto-augmented `default+loading+empty+error` on primary routes can ONLY be dropped via this. |
+| `chrome` | enum: `app \| marketing \| booking \| auth \| chromeless` | **optional but RECOMMENDED on every route** | Drives the route-group placement at Step 15 (`app/(<chrome>)/<path>/page.tsx`) — orthogonal to `category`. EMIT explicitly on every route (avoids relying on the default-inference fallback which can't decide booking-vs-app correctly). See `sitemap-schema.md § chrome — orthogonal to category` for the enum + default-inference table. |
 
 ## Constraints
 

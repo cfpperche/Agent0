@@ -392,7 +392,14 @@ CONSTRAINTS:
 - **Open Decisions** — 4-6 v1→v2 decisions deferred.
 - This atlas IS the brand+tokens-applied hi-fi pass (Step 7 prototype-v2 from v2 was deleted per spec 045 Decision 8). The screens MUST consume var(--*) tokens from `docs/design-system/tokens.css`, NOT raw hex.
 - Write atlas file DIRECTLY to {{out}}/docs/screen-atlas.md.
-- **Route-group layouts (spec 052):** ALSO write `{{out}}/app/(app)/layout.tsx` containing the shared sidebar + topbar nav for sitemap `primary` + `admin` categories (links derived from sitemap routes, labels from sitemap entry's display name or kebab-to-Title-case fallback). Layout is a Server Component (NO `'use client'` at top — interactive children handle their own client boundaries per spec 051). Tokens-only (NO hex/px except 1px borders). If sitemap has ≥3 `marketing` routes, ALSO write `{{out}}/app/(marketing)/layout.tsx` with a marketing nav (header + footer). Otherwise marketing pages stay flat under `app/` with no shared layout.
+- **Route-group layouts (spec 052 + 055):** Inspect sitemap.yaml and write ONE `app/(<chrome>)/layout.tsx` PER DISTINCT `chrome` value that has ≥1 route assigned to it (use the default-inference table from `sitemap-schema.md § chrome` for routes missing explicit `chrome:`). Concrete layouts to consider:
+  - `app/(app)/layout.tsx` — shared sidebar + topbar for the authenticated product surfaces (`chrome: app` routes; typically primary + admin categories). Links derived from sitemap, labels from display name or kebab-to-Title-case.
+  - `app/(marketing)/layout.tsx` — marketing nav (header + footer) for `chrome: marketing` routes.
+  - `app/(booking)/layout.tsx` — minimal white-label shell for `chrome: booking` routes (e.g. clinic-branded tutor portals, public funnels). Clinic/product brand header only; no nav back to authenticated app.
+  - `app/(auth)/layout.tsx` — auth shell for `chrome: auth` routes (logo, language switcher, "back to marketing" link).
+  - `chrome: chromeless` routes get NO layout file — they sit flat at `app/<path>/page.tsx`.
+
+  All layouts are Server Components (NO `'use client'` at top — interactive children handle their own client boundaries per spec 051). Tokens-only (NO hex/px except 1px borders). Each layout's specific shell content (which links / what header shape) is the atlas's design call, anchored against `docs/brand-book.md` voice + `docs/design-system/components.md` for visual primitives.
 - The root `app/layout.tsx` stays untouched by atlas — it's the HTML/body shell with metadata only (spec 051 covers its placeholder substitution).
 
 DELIVERABLE: {{out}}/docs/screen-atlas.md + {{out}}/app/(app)/layout.tsx + optionally {{out}}/app/(marketing)/layout.tsx
@@ -420,12 +427,14 @@ CONTEXT:
 - Voice (Step 15 only): {{out}}/docs/brand-book.md (match ON-brand voice for copy)
 - Components reference (Step 15 only): {{out}}/docs/design-system/components.md
 - Stack defaults: .claude/skills/product/references/stack-defaults.md § Next.js
-- Target file (Step 15 — category determines route-group per spec 052):
-  - Sitemap category `primary` OR `admin` → `{{out}}/app/(app){{path_to_file_path}}/page.tsx` (shared sidebar+topbar chrome inherited from `app/(app)/layout.tsx` written by the atlas)
-  - Sitemap category `marketing` → `{{out}}/app/(marketing){{path_to_file_path}}/page.tsx` IF the atlas wrote `(marketing)/layout.tsx` (≥3 marketing routes); else flat `{{out}}/app{{path_to_file_path}}/page.tsx`
-  - Sitemap category `auth` OR `booking` (public funnel) → flat `{{out}}/app{{path_to_file_path}}/page.tsx` (chromeless / white-label)
-  - Root marketing landing (`/`) → `{{out}}/app/page.tsx` (flat regardless)
+- Target file (Step 15 — **`chrome` field determines route-group per spec 055**; orthogonal to `category` which is PRD-coverage semantic only):
+  - `chrome: app` → `{{out}}/app/(app){{path_to_file_path}}/page.tsx` (shared sidebar+topbar inherited from `app/(app)/layout.tsx`)
+  - `chrome: marketing` → `{{out}}/app/(marketing){{path_to_file_path}}/page.tsx` (marketing header+footer from `app/(marketing)/layout.tsx`)
+  - `chrome: booking` → `{{out}}/app/(booking){{path_to_file_path}}/page.tsx` (minimal/white-label shell from `app/(booking)/layout.tsx`)
+  - `chrome: auth` → `{{out}}/app/(auth){{path_to_file_path}}/page.tsx` (auth shell — logo + lang switcher — from `app/(auth)/layout.tsx`)
+  - `chrome: chromeless` → flat `{{out}}/app{{path_to_file_path}}/page.tsx` (no shared layout; root marketing landing `/`, error pages, etc)
   - Dynamic routes like `/check-in/[appointmentId]` → preserve the bracketed segment in the route-group path: `{{out}}/app/(app)/check-in/[appointmentId]/page.tsx`
+  - **Sitemap missing `chrome:` field?** Apply default-inference table from `sitemap-schema.md § chrome — orthogonal to category` (`primary/admin → app`, `marketing → marketing`, `auth → auth`, `error → chromeless`). Back-compat ONLY; new sitemaps should always emit `chrome`.
 - Target file (Step 02): {{out}}/docs/screens/{{NN}}-{{name}}.html (self-contained HTML, inline styles, mood-only — route groups don't apply to lo-fi mood phase)
 
 CONSTRAINTS:

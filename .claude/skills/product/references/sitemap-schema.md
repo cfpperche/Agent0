@@ -57,6 +57,60 @@ routes:
 |---|---|---|---|
 | `primary_metric` | string | Short human-readable label (≤ 32 chars) naming the route's load-bearing operational value | When the route surfaces a hero-level operational number/state the user comes to check — e.g. cashier total, critical-stock count, today's bookings, MRR. The screen-writer renders it as MetricTile/hero, NOT as a small badge in a corner. See `delegation-briefs.md § Per-stack screen-writer CONSTRAINT (d)`. |
 | `deferred_states` | list of `{name, reason}` | Mirrors `deferred_categories` shape (top-level). Each entry must have non-empty `reason` (1 sentence). | When `states[]` declared a state the data model has no degenerate case for — e.g. a billing route declares `empty` but the founder always has at least one invoice. Sub-agent flips the state from `states` to `deferred_states` and the screen-writer skips its render branch. Auto-augmentation for primary routes (forcing `default+loading+empty+error`) still applies, so deferral is the only way to legitimately drop one. |
+| `chrome` | enum: `app \| marketing \| booking \| auth \| chromeless` | Drives the Next.js route-group placement (`app/(<chrome>)/<path>/page.tsx`) and which `layout.tsx` the page sits under at runtime | **Emit explicitly when chrome diverges from `category` defaults** (e.g. a tutor-public route filed `category: primary` for PRD coverage but rendered as chromeless white-label `chrome: booking`). New sitemaps SHOULD always emit `chrome` to make the routing decision authoritative at sitemap-write time; legacy sitemaps without `chrome` get default-inference (see table below). See `delegation-briefs.md § Per-stack screen-writer` for path-resolution rules. |
+
+### `chrome` — orthogonal to `category` (spec 055)
+
+`category` is the **PRD-coverage semantic** (which surface satisfies which user-story; required schema enforcement for the 5 required_categories). `chrome` is the **runtime layout inheritance** (which `app/(<group>)/layout.tsx` the page sits under in Next.js).
+
+These are intentionally orthogonal: dogfood-2 (Vetro) had `/[clinicSlug]/agendar` + `/[clinicSlug]/portal` as `category: primary` (covered the booking-flow US-NN entries; satisfied schema) but the runtime chrome was the booking white-label shell (`app/(booking)/layout.tsx`). Conflating them forced the sub-agent screen-writer to either (a) violate PRD coverage by filing as `booking` non-required-category, or (b) violate route-group placement by writing under `app/(app)/`. Splitting the concerns resolves the false choice.
+
+#### Enum closure (v1)
+
+`{app, marketing, booking, auth, chromeless}` — closed for v1. A future product needing `embed`, `print`, or other chrome would bump a spec; the closure is deliberate to prevent enum-sprawl.
+
+| Chrome value | Layout file (Next.js) | Use case |
+|---|---|---|
+| `app` | `app/(app)/layout.tsx` | shared sidebar + topbar shell for authenticated product surfaces (primary + admin routes typically inherit this) |
+| `marketing` | `app/(marketing)/layout.tsx` | public marketing nav (header + footer); written when ≥1 route has `chrome: marketing` |
+| `booking` | `app/(booking)/layout.tsx` | minimal/no-chrome public funnel — booking, white-label tutor portals, etc; clinic-branded or product-branded but NOT the authenticated app shell |
+| `auth` | `app/(auth)/layout.tsx` | consistent auth shell (logo, language switcher, "back to marketing" link); written when ≥1 route has `chrome: auth` |
+| `chromeless` | (no layout file) | flat `app/<path>/page.tsx` with no shared shell (root marketing `/`, error pages, etc) |
+
+#### Default-inference fallback (back-compat ONLY)
+
+For sitemaps without explicit `chrome:` field on each route, the orchestrator applies this default-inference table at Step 15 atlas time:
+
+| `category` | inferred `chrome` |
+|---|---|
+| `primary` | `app` |
+| `admin` | `app` |
+| `marketing` | `marketing` |
+| `auth` | `auth` |
+| `error` | `chromeless` |
+
+**This fallback exists for back-compat with sitemaps generated before spec 055.** New sitemaps SHOULD emit `chrome` explicitly on every route — the default-inference table is mechanical and cannot decide booking-vs-app correctly without help (Vetro evidence: 2 routes filed `primary` were actually `booking`, default-inference would have placed them wrong). The Step 07 prompt instructs sub-agents to always emit `chrome`; the fallback is for resuming/iterating legacy sitemaps.
+
+#### Example with explicit `chrome` divergence
+
+```yaml
+# Tutor-public booking route — covers a primary US-NN for PRD purposes but
+# rendered as the clinic-branded white-label booking shell, NOT the app shell.
+- path: /[clinicSlug]/agendar
+  category: primary
+  chrome: booking
+  states: [default, loading, success, error]
+  covers_us: [US-21]
+  components: [ClinicHeader, AppointmentTypePicker, DatePicker, TimeSlots, ConfirmDialog]
+  primary_metric: Próximo horário disponível
+
+- path: /[clinicSlug]/portal
+  category: primary
+  chrome: booking
+  states: [default, loading, empty, error]
+  covers_us: [US-22]
+  components: [ClinicHeader, AppointmentList, BookingCTA]
+```
 
 ### `primary_metric` semantic notes
 

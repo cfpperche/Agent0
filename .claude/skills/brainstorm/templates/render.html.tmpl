@@ -33,8 +33,13 @@
   .panel.active { display: block; }
   section { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 20px; margin-bottom: 16px; }
   section h2 { font-size: 16px; margin: 0 0 12px; color: var(--ink); }
-  .mindmap-host { width: 100%; height: 480px; border: 1px solid var(--line); border-radius: 6px; background: #fff; overflow: hidden; }
-  .markmap > svg { width: 100% !important; height: 100% !important; }
+  .mindmap-host { width: 100%; height: 520px; border: 1px solid var(--line); border-radius: 6px; background: #fff; overflow: hidden; position: relative; }
+  .mindmap-svg { display: block; width: 100%; height: 100%; cursor: grab; }
+  .mindmap-svg:active { cursor: grabbing; }
+  .mindmap-toolbar { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; z-index: 2; }
+  .mindmap-toolbar button { background: rgba(255,255,255,0.9); border: 1px solid var(--line); border-radius: 4px; padding: 4px 10px; font-size: 12px; cursor: pointer; color: var(--ink); }
+  .mindmap-toolbar button:hover { background: #fff; border-color: var(--accent); color: var(--accent); }
+  .mindmap-hint { position: absolute; bottom: 8px; left: 8px; font-size: 11px; color: var(--muted); background: rgba(255,255,255,0.85); padding: 2px 8px; border-radius: 3px; pointer-events: none; }
   .kanban { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
   @media (max-width: 900px) { .kanban { grid-template-columns: repeat(2, 1fr); } }
   .col { background: #fafafa; border-radius: 6px; padding: 12px; min-height: 80px; }
@@ -92,8 +97,15 @@
     <section>
       <h2>Mindmap</h2>
       <div class="mindmap-host">
-        <div class="markmap"><script type="text/template">{{MINDMAP_MARKDOWN}}</script></div>
+        <div class="mindmap-toolbar">
+          <button type="button" data-mm-action="fit" title="Reset zoom and centre">Fit</button>
+          <button type="button" data-mm-action="zoom-in" title="Zoom in">+</button>
+          <button type="button" data-mm-action="zoom-out" title="Zoom out">−</button>
+        </div>
+        <svg id="brainstorm-markmap" class="mindmap-svg" aria-label="brainstorm mindmap"></svg>
+        <div class="mindmap-hint">drag to pan · scroll to zoom · click ⊝/⊕ on nodes to collapse</div>
       </div>
+      <script id="mindmap-source" type="text/plain">{{MINDMAP_MARKDOWN}}</script>
     </section>
     <section>
       <h2>Ideas</h2>
@@ -139,6 +151,9 @@
     const tab = e.target.dataset.tab;
     tabsEl.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === e.target));
     panels.forEach(p => p.classList.toggle('active', p.dataset.panel === tab));
+    // Lazy-init or refit mindmap when its panel becomes active
+    // (markmap layout NaNs out if its host is display:none at init time — known SVG getBBox quirk)
+    requestAnimationFrame(ensureMindmap);
   });
 
   // Render Exploration tab: kanban + questions + quotes
@@ -190,6 +205,45 @@
   renderKanban('kanban-exploration', STATE.ideas || []);
   renderQuestions();
   renderQuotes();
+
+  // ── Markmap (lazy-init, fit on tab show, toolbar wiring) ─────────────────
+  // Manual API instead of markmap-autoloader so we can defer init until the
+  // panel is actually visible — markmap relies on getBBox() which returns NaN
+  // inside display:none containers, breaking layout permanently.
+  let mmInstance = null;
+  function ensureMindmap() {
+    const host = document.getElementById('brainstorm-markmap');
+    if (!host || !window.markmap) return;
+    const panel = host.closest('.panel');
+    if (!panel || !panel.classList.contains('active')) return;
+    if (mmInstance) {
+      requestAnimationFrame(() => mmInstance.fit());
+      return;
+    }
+    const md = (document.getElementById('mindmap-source')?.textContent || '').trim();
+    if (!md) return;
+    try {
+      const { Transformer, Markmap } = window.markmap;
+      const { root } = new Transformer().transform(md);
+      mmInstance = Markmap.create(host, null, root);
+      requestAnimationFrame(() => mmInstance.fit());
+    } catch (err) {
+      console.warn('markmap init failed:', err);
+    }
+  }
+  // Toolbar (Fit / Zoom in / Zoom out)
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-mm-action]');
+    if (!btn || !mmInstance) return;
+    const action = btn.dataset.mmAction;
+    if (action === 'fit') mmInstance.fit();
+    else if (action === 'zoom-in') mmInstance.rescale(1.25);
+    else if (action === 'zoom-out') mmInstance.rescale(0.8);
+  });
+  // Try on initial load (mindmap panel may already be active); also on window load
+  // (CDN scripts may resolve later) and on tab switches via the handler above.
+  window.addEventListener('load', ensureMindmap);
+  ensureMindmap();
 
   // Render lens-tab kanbans (Claude writes one container per lens with id=`kanban-<lensSlug>`)
   (STATE.lenses_applied || []).forEach(lens => {
@@ -265,7 +319,15 @@
   });
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.18.12"></script>
+<script src="https://cdn.jsdelivr.net/npm/markmap-view@0.18.12"></script>
+<script>
+  // CDN scripts above expose window.markmap.{Transformer,Markmap}. The
+  // ensureMindmap() defined earlier picks them up — invoked here once more to
+  // cover the late-load case (DOMContentLoaded fired before scripts resolved).
+  if (typeof ensureMindmap === 'function') ensureMindmap();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.0/dist/mermaid.min.js"></script>
 <script>
   if (window.mermaid) { window.mermaid.initialize({ startOnLoad: true, theme: 'default' }); }

@@ -8,44 +8,33 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Spec 064 (project-scoped routines) FULLY DOGFOODED** (2026-05-19). 3 commits:
-- `850190c` — scaffold spec dir (spec.md / plan.md / tasks.md / notes.md)
-- `265772a` — ship v1 capacity (rule + skill + 3 tools + hook + integrations)
-- next commit — first real routine (`cc-platform-audit`) + drift output applied to memo
+**Spec 065 (artifact-budget-discipline) shipped** (2026-05-19). Commits:
+- Agent0 `ff35d17` — rule + harness edits + spec docs (10 files, +410/-9)
+- mei-saas `559d215` — harness resync absorbing specs 060/061/064/065 (23 files, +1579/-74)
 
-All 4 post-ship follow-ups exercised end-to-end this session:
-
-1. **Push to origin** ✓ — `9bbba4e..265772a main -> main`
-2. **First real `/routine run` dispatch** ✓ — invoked `cc-platform-audit` via Skill tool: WebFetched <https://code.claude.com/docs/en/hooks>, detected drift (29 → 32 hook events since 2026-05-11 snapshot), applied edits to `.claude/memory/cc-platform-hooks.md` adding 3 new events (`PermissionDenied`, `TaskCreated`, `TaskCompleted`) + fixed Agent0-usage count (8 of 32, not 9 of 29). Queue→completed archived, last-completed.json populated. Skill prose-based dispatch works.
-3. **`sync-harness --apply`** ✓ — all 12 spec-064 files landed in `/tmp/sync-fork-test-2756236`: skill subdir, .gitkeep, rule, 3 tools, hook, CLAUDE.md merged with new `## Routines` section, settings.json gained routines-readout entry, .gitignore got `.routines-state/`. Idempotent re-apply: 0 copied, 0 merged. 4 customized-refused = pre-existing fork drift in product skill + delegation.md (unrelated to 064).
-4. **First real routine created + scheduled** ✓ — `.claude/routines/cc-platform-audit.md` (weekly Mon 9am UTC). Real crontab entry installed; next natural fire ~6 days.
+Behavioral fix to /product trim-loop antipattern (empirical case: mei-saas 2026-05-19 Step 02 produced 69→41.8 KB across 6+ iterations against 30 KB target). Canonical rule at `.claude/rules/artifact-budgets.md`: two-threshold overshoot cascade (≤1.2× → DONE, 1.2-1.8× → partial-result with agency, >1.8× → hard-abort, no agency); trim-loop AND re-emit-at-smaller-scope explicitly forbidden; `oversize_reason` field names bloat dimension (CSS / fixtures / prose / etc — actionable signal, not "too big"). Inlined uniformly into all 16 /product briefs.
 
 ## WIP (uncommitted)
 
 - `M docs/specs/059-product-phase0-harness-aware/tasks.md` — orthogonal carryover (not this session)
-- This session's work fully committed after the two pending commits ship.
+- `?? .claude/routines/cc-platform-audit.md` — routine scaffold from spec 064 session
 
 ## Next steps
 
-1. **Watch for first natural cron fire** — Monday 2026-05-25 09:00 UTC. Queue file should appear without manual intervention. Confirms cron+leader-flag path works under real timing, not just `bash run-routine.sh` direct invocation.
-2. **Run cc-platform-audit again** after the natural fire — verifies idempotency: second run should report `no-drift-detected since 2026-05-19T22:34:40Z` because the memo already reflects current state.
-3. **`/routine run cc-platform-audit` dispatch shape works empirically**; tune the prompt body if next dispatch surfaces clarity issues.
-4. **First REAL fork adoption** (not /tmp synthetic) — mei-saas or acmeyard would exercise full sync into an active project. Founder call when ready.
-5. Carryover from prior cycles: spec 029 adoption check due 2026-05-30; spec 046 dogfood gate due 2026-07-01; mei-saas `/product` Phase 0 still pending founder.
+1. **Empirical Step 02 retry in mei-saas** — fresh session `/product --from-step=2 --out=...` to observe sub-agent abort at 54 KB (1.8× of 30 KB) with partial-result instead of trim-looping. End-to-end validation of the spec 065 mechanism; user-gated by design (spec.md Open Q4).
+2. **Spec 064 cron natural fire** — Monday 2026-05-25 09:00 UTC. `cc-platform-audit` should queue without manual intervention. Validates cron+leader-flag path under real timing.
 
 ## Decisions & gotchas
 
-- **First-real-dispatch unknown closed**: SKILL.md prose-instructions are executable by Claude — the validation step (file exists, queue non-empty), pop-oldest, read-prompt-body, dispatch, archive (mv + last-completed.json write), FIFO cap — all happened in-session via Edit + Bash tools. No script needed for `run` dispatch.
-- **Cc-platform-audit drift output is uncommitted by design** — the routine prompt explicitly says "DO NOT commit, leave diff for human review". Founder reviews the cc-platform-hooks.md edits before committing.
-- **Sync-harness `--apply` worked but the second invocation showed 0 changes because the first invocation copied everything** — Bash hook governance gate blocking the test setup made me run apply twice; second was no-op (correct idempotency). Verified explicitly via `ls` checks on each landed file.
-- **Real crontab entry now active** in user's crontab — `0 9 * * 1 bash /home/goat/Agent0/.claude/tools/run-routine.sh cc-platform-audit`. Uninstall via `bash .claude/tools/uninstall-routines.sh` if you want to halt the weekly fire.
-- **Phase 2 still deferred** per rule-of-three demand test. v1 with this single real routine is the first data point; need ≥2 more routines proving value before promoting to `claude -p` autonomous executor.
+- **Bug caught in walkthrough (Task 11), fixed pre-ship**: initial rule table had `target_max × 1.0 < output ≤ target_max × 1.2` for soft zone, leaving 1.2×–1.8× as undefined gap. Corrected to DONE ≤1.2× / soft 1.2×–1.8× / hard >1.8× before V1-V9.
+- **"re-emit at smaller scope" label collision**: phrase now appears 16× in delegation-briefs.md as forbidden-antipattern label (not as old Step 01 directive). V4 verification checks the OLD wording `≥50% means re-emit` is gone (returns 0), NOT the new label. Future readers may grep and find the label — that's correct.
+- **mei-saas sync required `--force-except`** for 7 fork customs (open-design MANIFEST, prompt tunings, `.mcp.json.example`, `.gitleaks.toml`, fork's `sync-open-design.ts`). This is the normal sync flow when Agent0 evolves post-bootstrap, not "manual intervention".
 
 ## Carryover (orthogonal — not touched this session)
 
-- mei-saas `/product` Phase 0 ready (founder owns next step)
 - Spec 046 dogfood gate due 2026-07-01
 - Spec 029 adoption check due 2026-05-30
 - Spec 026 Phase C/D pending
 - Acme Yard substrate work at `/home/goat/acmeyard`
+- mei-saas `/product` Phase 0 ready (founder owns next step — separate from the spec 065 retry above)
 - `.claude/REMINDERS.md` items per startup readout

@@ -81,7 +81,18 @@ For step 13 atlas to pass:
   - `deferred — <reason>` (legal-mandatory or out-of-scope at standard tier with explicit one-line reason)
 - Silent omission of a US-NN is a step-13 gate failure (the matrix exists exactly to prevent it).
 
-## 8. Step 15 screen-writer additions (NEW in spec 053; per-route page.tsx)
+## 8a. Step 15b fan-out fallback (NEW in spec 057; orchestration discipline)
+
+The per-route screen-writer fan-out at Step 15b runs in waves of cap=5. Spec 057 defines two mechanisms the orchestrator MUST apply:
+
+- **Between-wave biome sweep (MANDATORY).** Before dispatching wave K+1, the orchestrator runs `cd <out> && node_modules/.bin/biome check --write .` (parent-side, validator-exempt). NOT conditional — runs always. Cost is ~25ms; benefit is each wave starts clean, breaking the validator-cascade.
+- **Degrade-to-parent-write at N=1 same-wave (MANDATORY).** If ANY sub-agent in the current wave hits `CLAUDE_DELEGATION_LOOP_BUDGET` exhaustion, the orchestrator cancels in-flight siblings + switches remaining routes to parent-write (same brief verbatim). Threshold is N=1 (NOT N=2) because sub-agents in the same wave share lint state; first failure strongly predicts siblings will also fail.
+
+**Gate criterion for spec 057 compliance:** if ≥1 route degraded during a run, REPORT.md `## Build health § Fan-out degradations` MUST list each degraded route with `{route, wave, reason, attempts, recovery}`. Silent degradation (parent-wrote a route without logging it) is a 057 gate failure. Degradation itself is EXPECTED behavior — the fallback works as designed; the discipline is making the recovery legible.
+
+> **What this enables.** Repeated degradations on similar routes or briefs signal either (a) the brief needs structural attention OR (b) a fork-specific Biome rule is firing that brief-time enforcement misses. Watch the trend across dogfoods — single-route degradation is normal noise; ≥30% degradation rate is a design alarm.
+
+## 8b. Step 15 screen-writer additions (NEW in spec 053; per-route page.tsx)
 
 Per `delegation-briefs.md § Per-stack screen-writer CONSTRAINTS`, every Step 15 (hi-fi) route file MUST satisfy:
 

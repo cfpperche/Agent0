@@ -1,6 +1,6 @@
 # 057 — `/product` fan-out fallback
 
-**Status:** draft
+**Status:** shipped
 
 ## Problem
 

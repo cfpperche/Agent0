@@ -422,6 +422,8 @@ DONE_WHEN: All 3 files exist (atlas + (app)/layout.tsx + optional (marketing)/la
 
 Dispatched ONCE PER ROUTE, capped at 5 concurrent. Brief is templated per stack + step-context.
 
+**Brief is execution-strategy-agnostic (spec 057).** The same brief body works whether the parent dispatches it to a sub-agent (`Agent` call) OR writes it directly (parent-write fallback when fan-out degrades per spec 057). Sub-agent vs parent is an orchestration choice; the brief contract (what to produce + how to verify done) does not change. When a wave triggers the fan-out fallback (N=1 same-wave loop-budget exhaustion), the parent reads this brief and emits `page.tsx` directly via `Write`; the brief's CONTEXT / CONSTRAINTS / DONE_WHEN apply identically.
+
 ### Next.js stack
 
 **model:** `sonnet`  ·  **subagent_type:** `general-purpose`

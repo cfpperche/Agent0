@@ -126,6 +126,19 @@ Net-new surfaces at step 13 driven by step-12 legal posture. Each row: surface n
 **BUILD_BROKEN routes:** {{n_broken_routes}}
 {{broken_route_listing_optional}}
 
+### Fan-out degradations (spec 057)
+
+Empty when fan-out (Step 15b per-route screen-writers) ran cleanly. Each entry: route + wave + reason + recovery path. **Degradation = sub-agent hit `CLAUDE_DELEGATION_LOOP_BUDGET` exhaustion (validator-cascade) and the orchestrator switched to parent-write for that route OR subsequent waves.** Visible degradation is EXPECTED — the fallback works as designed; the row exists to make the recovery legible to the founder + reviewer.
+
+| Route | Wave # | Reason | Recovery | Sub-agent attempts before degrade |
+|---|---|---|---|---|
+| {{degrade_route_1}} | {{degrade_wave_1}} | {{degrade_reason_1}} | parent-write (same brief, verbatim) | {{degrade_attempts_1}} |
+| {{degrade_route_2}} | {{degrade_wave_2}} | {{degrade_reason_2}} | parent-write (same brief, verbatim) | {{degrade_attempts_2}} |
+
+**Total degradations:** {{n_degradations}} / {{n_total_routes}} routes ({{degrade_pct}}%)
+
+> **What this section enables.** Repeated degradations on the same wave or same brief shape signal either (a) the brief needs structural attention OR (b) the validator-cascade is firing on a fork-specific Biome rule that brief-time enforcement misses. Watch the trend across dogfoods — single-route degradation is normal noise; ≥30% degradation rate is a design alarm.
+
 ## Skill compliance
 
 - `bash .claude/skills/skill/scripts/validate.sh .claude/skills/product` → {{skill_validate_status}}

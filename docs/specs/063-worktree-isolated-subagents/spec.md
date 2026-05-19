@@ -2,9 +2,78 @@
 
 _Created 2026-05-19._
 
-**Status:** draft
+**Status:** in-progress
+
+## Redesign (2026-05-19)
+
+Pre-flight empirical discovery (same rigor that closed spec 062) revealed CC 2.1.144 ships **rich native worktree primitives** that change the design:
+
+- `Agent` tool already accepts `isolation: "worktree"` in tool params (set by parent at dispatch)
+- `EnterWorktree` / `ExitWorktree` are native tools (sub-agent invokes EnterWorktree as first action when isolation declared)
+- `.claude/worktrees/<name>/` is the standard convention path
+- `WorktreeCreate` / `WorktreeRemove` exist as hook events (per `.claude/memory/cc-platform-hooks.md`)
+- CC injects the sub-agent's system prompt with worktree instructions automatically when `isolation: "worktree"` is set
+- `--worktree [name]` is a CLI flag for whole-session worktree (with `--tmux` integration)
+- `settings.json.worktree` block configures `bgIsolation`, `baseRef`, `sparsePaths`, `symlinkDirectories`
+
+**Original design premise was wrong.** We assumed the gate needed to mutate the `Agent` tool call payload to set `isolation`. The empirical finding shows: parent sets `isolation` directly via tool params, CC's harness handles the rest. The gate cannot (and does not need to) mutate the tool call.
+
+**The brief field `ISOLATION:` is dropped.** Declaring isolation in the 5-field handoff would duplicate the canonical `tool_input.isolation` field without enforcement value — the gate cannot bridge brief → tool param. Per spec 062 closure rationale: Agent0's frame is **discipline ON TOP of CC**, not replication of canonical primitives.
+
+### What remains in scope (Option B redirect)
+
+Three minimal-viable additions, all "discipline ON TOP of CC" pattern:
+
+1. **Audit** `tool_input.isolation` in the dispatch row (delegation-gate.sh records 13th field `isolation`). Forensic value: post-hoc analysis can answer "did this dispatch isolate, given the signals?"
+2. **§ Worktree isolation** section in `.claude/rules/delegation.md` documenting (a) what CC's native mechanism does, (b) when parents should declare isolation, (c) when NOT to, (d) why no brief field.
+3. **Validator scoping fix** in `.claude/hooks/post-edit-validate.sh`: cd to git toplevel of the edit's file path before invoking the validator. Safe regardless of isolation declaration (parent edits → parent toplevel, worktree edits → worktree toplevel). Independent gain that mitigates cross-cwd validator issues in any sub-agent edit.
+
+### What's dropped from the original design
+
+- 6th optional `ISOLATION:` field in the 5-field handoff (replaced by reading `tool_input.isolation` directly)
+- Gate validation of `ISOLATION:` value enum (CC's harness handles invalid values)
+- State stamp file `.claude/.delegation-state/agents/<agent_id>/isolation` (audit row already records it)
+- Advisory when `ISOLATION:` is missing under complexity signals (deferred — rule-of-three: ship audit first, add advisory only if observed drift demands it)
+
+The historical original-design sections below (Acceptance criteria scenarios, Non-goals, Open questions) are preserved as design memory but most acceptance scenarios become obsolete. **Authoritative acceptance criteria** moved to the next section.
+
+## Acceptance criteria (Option B redirect)
+
+- [ ] **Scenario: dispatch with isolation declared**
+  - **Given** parent makes an `Agent` call with `isolation: "worktree"` in tool params
+  - **When** `delegation-gate.sh` runs
+  - **Then** dispatch audit row contains `"isolation": "worktree"`
+
+- [ ] **Scenario: dispatch without isolation**
+  - **Given** parent makes an `Agent` call without isolation in tool params
+  - **When** `delegation-gate.sh` runs
+  - **Then** dispatch audit row contains `"isolation": ""` (empty string, not null — matches existing convention for missing fields like `model: ""`)
+
+- [ ] **Scenario: validator scoping for parent-tree edit**
+  - **Given** sub-agent edits `src/foo.ts` in the parent's working tree
+  - **When** `post-edit-validate.sh` runs
+  - **Then** validator runs from `git rev-parse --show-toplevel` of `src/foo.ts` (= parent project dir; no behavior change vs today)
+
+- [ ] **Scenario: validator scoping for worktree-isolated edit**
+  - **Given** sub-agent dispatched with `isolation: "worktree"` invoked `EnterWorktree` and edited `.claude/worktrees/foo/src/bar.ts`
+  - **When** `post-edit-validate.sh` fires
+  - **Then** validator runs from `.claude/worktrees/foo/` (= the worktree's git toplevel), validating against the isolated tree state, not stale parent
+
+- [ ] **Scenario: validator scoping fail-safe when git rev-parse fails**
+  - **Given** an edit happens outside any git repo (theoretical — scratch dir)
+  - **When** `post-edit-validate.sh` derives the cwd
+  - **Then** falls back to `$PROJECT_DIR` (no behavior change vs today)
+
+- [ ] `.claude/rules/delegation.md` has new section `## Worktree isolation` documenting native CC behavior, when to use, when not to, and the no-brief-field decision
+
+- [ ] `.claude/hooks/delegation-gate.sh` extracts `tool_input.isolation` and includes it in dispatch row jq build (13th field)
+
+- [ ] Audit log dispatch rows after deploy include `isolation` key; pre-deploy rows do not (schema is additive, no migration needed)
 
 ## Intent
+
+_Historical — original intent before 2026-05-19 redesign. Preserved for design memory; superseded by § Redesign above._
+
 
 The `Agent` tool surfaced by Claude Code accepts an optional `isolation: "worktree"` parameter that creates a temporary git worktree so the sub-agent operates on an isolated copy of the repo (per the `Agent` tool description in the system prompt: "With `isolation: 'worktree'`, the worktree is automatically cleaned up if the agent makes no changes; otherwise the path and branch are returned in the result"). Today, Agent0's delegation gate (`.claude/hooks/delegation-gate.sh`) does NOT parse, validate, or audit this choice — sub-agent isolation is invisible to the discipline pipeline.
 

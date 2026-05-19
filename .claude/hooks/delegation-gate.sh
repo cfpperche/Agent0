@@ -42,6 +42,7 @@ SESSION_ID="$(printf '%s' "$INPUT" | jq -r '.session_id // ""')"
 TOOL_USE_ID="$(printf '%s' "$INPUT" | jq -r '.tool_use_id // ""')"
 MODEL_SPECIFIED="$(printf '%s' "$INPUT" | jq -r '.tool_input | has("model")')"
 MODEL="$(printf '%s' "$INPUT" | jq -r '.tool_input.model // ""')"
+ISOLATION="$(printf '%s' "$INPUT" | jq -r '.tool_input.isolation // ""')"
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 AUDIT_LOG="$PROJECT_DIR/.claude/delegation-audit.jsonl"
@@ -235,13 +236,14 @@ audit_line="$(jq -c -n \
   --arg subagent_type "$SUBAGENT_TYPE" \
   --argjson model "$model_field" \
   --argjson model_specified "$MODEL_SPECIFIED" \
+  --arg isolation "$ISOLATION" \
   --argjson formatted "$formatted" \
   --argjson override "$override_field" \
   --argjson advisory_emitted "$advisory_emitted" \
   --argjson advisory_kind "$advisory_kind" \
   --argjson escalation_signals "$signals_json" \
   --arg task_summary "$task_summary" \
-  '{ts:$ts, session_id:$session_id, tool_use_id:$tool_use_id, subagent_type:$subagent_type, model:$model, model_specified:$model_specified, formatted:$formatted, override:$override, advisory_emitted:$advisory_emitted, advisory_kind:$advisory_kind, escalation_signals:$escalation_signals, task_summary:$task_summary}')"
+  '{ts:$ts, session_id:$session_id, tool_use_id:$tool_use_id, subagent_type:$subagent_type, model:$model, model_specified:$model_specified, isolation:$isolation, formatted:$formatted, override:$override, advisory_emitted:$advisory_emitted, advisory_kind:$advisory_kind, escalation_signals:$escalation_signals, task_summary:$task_summary}')"
 
 printf '%s\n' "$audit_line" >> "$AUDIT_LOG"
 

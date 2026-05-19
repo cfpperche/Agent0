@@ -27,6 +27,22 @@ LOCK_PATH="$STATE_DIR/validate.lock"
 STATE_FILE="$AGENTS_DIR/$AGENT_ID"
 CAP="${CLAUDE_DELEGATION_LOOP_BUDGET:-5}"
 
+# Spec 063: worktree-aware validator scoping. Derive cwd from the git toplevel
+# of the edit's file path so worktree-isolated sub-agent edits are validated
+# against the worktree state, not stale parent state. Safe regardless of
+# isolation declaration — parent-tree edits resolve to $PROJECT_DIR; cross-
+# directory edits resolve to whatever git toplevel contains them.
+# Fail-open: git failure (non-git scratch dir, etc.) falls back to $PROJECT_DIR.
+EDIT_FILE="$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // ""' 2>/dev/null || true)"
+VALIDATOR_CWD="$PROJECT_DIR"
+if [ -n "$EDIT_FILE" ]; then
+  edit_dir="$(dirname "$EDIT_FILE" 2>/dev/null || echo "")"
+  if [ -n "$edit_dir" ] && [ -d "$edit_dir" ]; then
+    toplevel="$(git -C "$edit_dir" rev-parse --show-toplevel 2>/dev/null || true)"
+    [ -n "$toplevel" ] && VALIDATOR_CWD="$toplevel"
+  fi
+fi
+
 mkdir -p "$AGENTS_DIR" 2>/dev/null || exit 0
 
 # Validator resolution chain — first executable wins; otherwise fail-open.
@@ -67,7 +83,7 @@ fi
 # on its own stderr so a `2>&1` merge did no harm; once it started emitting
 # advisories that merge would prepend non-JSON text and break `jq` parsing.
 VALIDATOR_STDERR_FILE="$(mktemp 2>/dev/null || mktemp -t validator-own-stderr)"
-VALIDATOR_OUT="$("$VALIDATOR" 2>"$VALIDATOR_STDERR_FILE" || true)"
+VALIDATOR_OUT="$( ( cd "$VALIDATOR_CWD" && "$VALIDATOR" ) 2>"$VALIDATOR_STDERR_FILE" || true )"
 VALIDATOR_OWN_STDERR="$(cat "$VALIDATOR_STDERR_FILE" 2>/dev/null || true)"
 rm -f "$VALIDATOR_STDERR_FILE"
 

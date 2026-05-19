@@ -2,7 +2,32 @@
 
 _Drafted from `spec.md` on 2026-05-19. Update this file if implementation reveals the plan is wrong; do NOT silently diverge._
 
-## Approach
+## Approach (revised 2026-05-19 per Option B redirect)
+
+_Pre-flight empirical discovery of CC 2.1.144's native worktree primitives changed the design. See `spec.md` § Redesign. The original approach below the line `## Approach (original — superseded)` is preserved as design memory._
+
+Three minimal-viable additions, no new brief field:
+
+1. **Extend `.claude/hooks/delegation-gate.sh`** to extract `tool_input.isolation` from the PreToolUse(Agent) payload and include it in the dispatch audit row as the 13th field. Cost: ~2 lines (one `jq -r` extraction, one `--arg` + schema entry in the `jq -n` build). Identical pattern to the `tool_use_id` extension shipped for spec 061. The audit row schema becomes additive — pre-deploy rows lack the `isolation` field; post-deploy rows have it as empty string when unset, `"worktree"` when set. No migration needed.
+
+2. **Add `## Worktree isolation` section to `.claude/rules/delegation.md`** after the existing `## Audit log` section. Documents:
+   - What CC's native mechanism does (parent sets `isolation`, sub-agent gets system-prompt injection to call `EnterWorktree`, worktree at `.claude/worktrees/<name>/`, cleanup at session-end or `ExitWorktree`)
+   - When parents should declare isolation (parallel dispatches with overlap risk; new files in unknown locations; destructive ops)
+   - When NOT to (single read-only sub-agent; sub-agent must observe parent in-flight state)
+   - Why no brief field (canonical mechanism is `tool_input.isolation`; brief duplication would be redundant — gate cannot bridge brief to tool params anyway)
+
+3. **Modify `.claude/hooks/post-edit-validate.sh`** to derive the validator's cwd from the git toplevel of the edit's `tool_input.file_path`, falling back to `$PROJECT_DIR` when git resolution fails. Subshell-isolated `cd` so the rest of the hook (which uses `$PROJECT_DIR` for state paths) is unaffected. Independent gain — also helps any sub-agent edit in a subdirectory that the parent project doesn't directly own, not just worktree-isolated ones.
+
+Order of operations:
+
+1. Spec docs redirected (this commit's first slice) — `spec.md` § Redesign, `plan.md` (here), `tasks.md`, `notes.md` updated.
+2. Implement audit field in `delegation-gate.sh` (~2 lines).
+3. Implement validator scoping in `post-edit-validate.sh` (~10 lines including derivation + fallback).
+4. Document via new section in `delegation.md`.
+5. Empirical e2e: dispatch a tiny `Agent` call with `isolation: "worktree"` in tool params (or without — both cases need verification); tail `delegation-audit.jsonl` to confirm `isolation` field populated correctly.
+6. Commit as `feat(063): worktree isolation discipline — audit + scoping + rule`. Push.
+
+## Approach (original — superseded by Redesign 2026-05-19)
 
 Layer on top of the `Agent` tool's existing `isolation: "worktree"` parameter without modifying the tool itself. The 6th optional handoff field `ISOLATION:` is a contract between parent and gate — the gate validates and audits, the parent (assistant model) is responsible for setting the `isolation` parameter in the actual tool call when its own brief declared it. This is rule-only discipline at the parent boundary, same pattern as `user-prompt-framing.md` (the actor cannot externally enforce on itself, but the rule + audit + visibility close the loop).
 

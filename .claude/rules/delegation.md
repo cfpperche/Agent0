@@ -66,7 +66,7 @@ The validator may also append a `warnings` array to its JSON output on stack-det
 
 ### Dispatch row (written by `delegation-gate.sh` at PreToolUse(Agent))
 
-Twelve fields: `ts`, `session_id`, `tool_use_id`, `subagent_type`, `model`, `model_specified`, `formatted`, `override`, `advisory_emitted`, `advisory_kind`, `escalation_signals`, `task_summary`. `advisory_kind` is one of `"model-discipline"`, `"escalation"`, or `null` when no advisory fired — the bool `advisory_emitted` answers "did anything fire", the string `advisory_kind` answers "which one". `tool_use_id` is the harness-supplied `toolu_*` identifier and acts as the join key into the close row (see below) — spec 061 added this field as the prerequisite for exact dispatch↔stop correlation under parallel same-type dispatches.
+Thirteen fields: `ts`, `session_id`, `tool_use_id`, `subagent_type`, `model`, `model_specified`, `isolation`, `formatted`, `override`, `advisory_emitted`, `advisory_kind`, `escalation_signals`, `task_summary`. `advisory_kind` is one of `"model-discipline"`, `"escalation"`, or `null` when no advisory fired — the bool `advisory_emitted` answers "did anything fire", the string `advisory_kind` answers "which one". `tool_use_id` is the harness-supplied `toolu_*` identifier and acts as the join key into the close row (see below) — spec 061 added this field as the prerequisite for exact dispatch↔stop correlation under parallel same-type dispatches. `isolation` mirrors the value of `tool_input.isolation` (e.g. `"worktree"` or `""` when unset) — spec 063 added this field for forensic visibility into worktree-isolation choices; see § Worktree isolation below.
 
 ### Close row (written by `delegation-stop.sh` at SubagentStop, spec 061)
 
@@ -111,6 +111,43 @@ jq -s '
   | .[]
 ' .claude/delegation-audit.jsonl
 ```
+
+## Worktree isolation (spec 063)
+
+Claude Code 2.1.144+ ships native worktree primitives that the `Agent` tool exposes via the `isolation` parameter. When a parent sets `isolation: "worktree"` in the `Agent` tool call, CC's harness handles the rest:
+
+1. The sub-agent's system prompt is auto-augmented with the instruction _"Call `EnterWorktree` as your first action — before reading files or running commands — unless your cwd is already under `.claude/worktrees/`. If `EnterWorktree` fails, continue in place."_
+2. The sub-agent invokes the native `EnterWorktree` tool, which creates a temporary git worktree at `.claude/worktrees/<name>/` and changes the sub-agent's cwd into it.
+3. All subsequent edits land in the worktree, isolated from the parent's working tree and from sibling sub-agents.
+4. On session exit (or explicit `ExitWorktree` call), the user is prompted to keep or remove the worktree.
+
+This is canonical CC behavior — **Agent0 does NOT mediate the mechanism**. There is no `ISOLATION:` brief field, no gate-side mutation of the tool call, no propagation logic. The parent declares isolation by setting `tool_input.isolation` directly in the `Agent` call, and CC takes over.
+
+### What Agent0 adds (discipline ON TOP)
+
+- **Audit** — `delegation-gate.sh` extracts `tool_input.isolation` and records it in the dispatch row as the 13th field (see § Audit log above). Empty string when unset, `"worktree"` when set. Forensic queries can ask "did this dispatch isolate, given the complexity signals it carried?":
+  ```bash
+  jq -c 'select(.isolation == "" and (.escalation_signals | length) >= 2)' \
+    .claude/delegation-audit.jsonl
+  ```
+- **Validator scoping** — `post-edit-validate.sh` derives the validator's cwd from the git toplevel of the edit's `tool_input.file_path`. Parent-tree edits resolve to `$PROJECT_DIR` (no change vs pre-063 behavior); worktree-isolated edits resolve to the worktree path, so the validator runs against the isolated tree state, not stale parent state. Fail-open: `git rev-parse` failure (non-git scratch dir, etc.) falls back to `$PROJECT_DIR`.
+
+### When parents SHOULD declare `isolation: "worktree"`
+
+- **≥ 2 parallel `Agent` dispatches** that may touch overlapping files (canonical collision case). Without isolation, both sub-agents edit the same working tree concurrently and the last-writer wins.
+- **Sub-agent will create new files in unknown locations** — keeps the parent tree clean if the work is exploratory or speculative.
+- **Sub-agent will run destructive operations** (`rm -r`, schema migrations, file rewrites at scale) — worktree provides reversibility via discard-on-exit, parent tree remains untouched.
+- **Long-running sub-agent on a `--worktree` background session** — already isolated via `bgIsolation: "worktree"` config, no extra action needed.
+
+### When parents should NOT declare isolation
+
+- **Single read-only sub-agent** (Explore, research, listing) — worktree setup adds latency with no benefit.
+- **Sub-agent must observe the parent's in-flight tree state** (rare; usually wrong — sub-agents should operate on committed-or-staged state).
+- **Trivial single-edit sub-agent** where the parent will review the diff immediately and merge.
+
+### Why no brief field
+
+The original spec 063 draft proposed a 6th optional `ISOLATION:` field in the 5-field handoff. Empirical pre-flight (2026-05-19) showed the canonical mechanism is already `tool_input.isolation` set by the parent. Adding a brief field would duplicate intent (once verbally in CONSTRAINTS/DELIVERABLE, once mechanically in tool params) without enforcement value — the gate cannot mutate the tool call payload from the brief. The audit row records the canonical signal; the rule documents the discipline; the validator scoping fix mitigates the cross-cwd risk regardless of declaration. See `docs/specs/063-worktree-isolated-subagents/notes.md` § Design decisions for the full redirect rationale.
 
 ## Advisories
 

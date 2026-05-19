@@ -24,6 +24,18 @@ _(none yet — spec was just scaffolded)_
 
 ## Tradeoffs
 
+### 2026-05-19 — parent — close §A1 (→ 062) instead of redesigning with Stop-hook
+
+When discussing 062's design (rule-only v1 vs revised v1 with Stop-hook enforcement), pre-flight verification of competitive landscape revealed CC 2.1.144 already ships `/goal` natively. Surface confirmed via `strings /home/goat/.local/bin/claude | grep -iE '^/goal'` — full command set (`/goal <condition>`, `/goal clear`, `/goal`), description "Set a goal — keep working until the condition is met", internal `goal-command-nudge` identifier suggesting built-in enforcement mechanism.
+
+Three options weighed: (A) close 062 cleanly, defer to CC native; (B) thin wrapper `/contract` adding Agent0 audit + persistence; (C) alternative with stricter semantics. Chose A.
+
+Reason for A over B: Agent0's framing principle is **discipline ON TOP of CC**, not replication of canonical CC primitives. A wrapper around a primitive whose internals we haven't probed (`goal-command-nudge` mechanism, feature flag gate `isHidden: !T6()`) would commit us to a design before dogfood reveals the gap. The marginal value of B (forensic audit of /goal usage) is exactly what `feedback_speculative_observability.md` flags as anti-pattern.
+
+The hour spent yesterday scaffolding 062 wasn't wasted — it forced reading the design space sharply enough to ask "does CC already do this?" at the right moment. Pre-flight verification (Task 1 of the original tasks.md) was the load-bearing step that surfaced this.
+
+Row A1 in § Gap matrix updated from `→ 062` to `closed: superseded by CC native /goal (2.1.144+)`. Spec 062 marked `superseded` with full Closure section in `spec.md`; design memory preserved (acceptance criteria, plan, tasks outline) as historical reference if a future spec targets a concrete gap CC's `/goal` proves insufficient for.
+
 ### 2026-05-19 — parent — scaffold top-3 follow-ups immediately, defer the rest
 
 The user said "vamos abrindo specs refinadas de followup ... por ordem de prioridade". Two interpretations: (a) open ALL §A+§B follow-up specs now, (b) open the top priority ones now and iterate. Chose (b): scaffolds only specs 061/062/063 (the three alta-prioridade rows). Tradeoff accepted: §A4-A8 + §B medium-priority rows wait for explicit prioritization. Reason: stale draft specs rot and signal noise; scaffold-when-ready preserves the umbrella matrix as the single source of truth for "what's pending".

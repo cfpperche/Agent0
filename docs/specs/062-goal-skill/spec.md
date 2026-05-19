@@ -2,7 +2,39 @@
 
 _Created 2026-05-19._
 
-**Status:** draft
+**Status:** superseded by CC native `/goal` (CC 2.1.144+)
+
+## Closure (2026-05-19)
+
+Closed without implementation. Empirical discovery during design-phase pre-flight: Claude Code 2.1.144 ships `/goal` as a native slash command. Decompilation of the CC binary (`strings /home/goat/.local/bin/claude | grep goal`) revealed the full command surface:
+
+```
+/goal <condition>     — set goal
+/goal clear           — stop early
+/goal                 — show active goal
+/goal all tests pass  — (canonical example string in binary)
+```
+
+Internal identifier `goal-command-nudge` suggests the CC harness ships its own enforcement mechanism (system-prompt inject, Stop hook, or evaluator pass — exact mechanism not yet probed). Command descriptor:
+
+```javascript
+{ type: "local-jsx",
+  name: "goal",
+  description: "Set a goal — keep working until the condition is met",
+  argumentHint: "[<condition> | clear]",
+  immediate: true }
+```
+
+Visibility gated by `isHidden: !T6()` feature flag (entitlement-bound; exact gate not investigated). The command is **not in this build's user-invocable skills list** (per SessionStart skill enumeration) but is present in the binary. Activation path unknown — possibly requires workspace trust dialog acceptance or a managed-settings flag.
+
+Per `feedback_speculative_observability.md` rule-of-three and Agent0's framing principle (discipline ON TOP of CC, not replication of canonical CC primitives), building our own `/goal` skill would be **accidental complexity**. The native command covers the gap row A1 of umbrella spec 060 identified.
+
+**Pre-flight design work preserved** in `plan.md` (approach, alternatives), `tasks.md` (10-task implementation outline), and `notes.md` (closure rationale). If 4-6 weeks of dogfood reveals concrete limitation of CC's native `/goal` (e.g. nudge mechanism doesn't survive compaction, or enforcement too weak under specific workflows), a new spec **targeted at the observed gap** is the path — NOT a wholesale rebuild.
+
+Cross-references:
+- Umbrella `docs/specs/060-harness-gaps-2026/spec.md` § Gap matrix row A1 — outcome updated from `→ 062` to `closed: superseded by CC native /goal (CC 2.1.144+)`
+- `.claude/memory/feedback_speculative_observability.md` — rule-of-three discipline that gated the close decision
+- `.claude/memory/cc-platform-hooks.md` — should be updated with the `goal-command-nudge` finding if the mechanism gets probed in a future session
 
 ## Intent
 

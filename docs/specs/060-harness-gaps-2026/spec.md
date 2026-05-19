@@ -49,9 +49,9 @@ The audit ran 2026-05-19; sources cited in `plan.md` § Research. The frame is t
 
 - Audit conversation 2026-05-19 (research delegated via general-purpose agent, opus model)
 - Top-3 picks (alta prioridade + esforço S/M):
-  - **061** → SubagentStop hook (closes delegation audit row)
-  - **062** → `/goal` skill (done-state contract at user→main boundary)
-  - **063** → worktree-isolated sub-agents (collision prevention via 6th handoff field)
+  - **061** → SubagentStop hook (closes delegation audit row) — _in-progress, shipped backbone 2026-05-19_
+  - **062** → `/goal` skill — _closed 2026-05-19: superseded by CC native `/goal` (2.1.144+)_
+  - **063** → worktree-isolated sub-agents (collision prevention via 6th handoff field) — _draft_
 - `.claude/rules/spec-driven.md` § The four artifacts — convention being extended
 - `.claude/memory/feedback_speculative_observability.md` — gates re-evaluation of §B deferrals
 
@@ -61,7 +61,7 @@ The audit ran 2026-05-19; sources cited in `plan.md` § Research. The frame is t
 
 | # | Gap | Canonized by | Priority | Esforço | Outcome |
 |---|---|---|---|---|---|
-| A1 | `/goal` primitive (done-state contract + auto-loop at user→main) | Codex CLI 0.128+; Claude Code v2.1.139+ | Alta | M | **→ 062** |
+| A1 | `/goal` primitive (done-state contract + auto-loop at user→main) | Codex CLI 0.128+; Claude Code v2.1.139+ | Alta | M | **closed**: superseded by CC native `/goal` (2.1.144+ binary confirms surface); see `docs/specs/062-goal-skill/spec.md` § Closure |
 | A2 | Worktree-isolated sub-agents (6th handoff field `ISOLATION: worktree`) | Claude Code native | Alta | M | **→ 063** |
 | A3 | `SubagentStop` hook closing delegation audit row | Claude Code 2026 (27+ events) | Alta | S | **→ 061** |
 | A4 | `AGENTS.md` cross-tool standard (CLAUDE.md ↔ AGENTS.md sync) | Linux Foundation Agentic AI | Média | S | pending follow-up spec |

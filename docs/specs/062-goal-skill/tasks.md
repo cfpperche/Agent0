@@ -2,6 +2,8 @@
 
 _Generated from `plan.md` on 2026-05-19. Work top-to-bottom. Check boxes as tasks complete. If a task reveals the plan is wrong, update `plan.md` before continuing._
 
+> **CLOSED 2026-05-19** — spec superseded by CC native `/goal` (CC 2.1.144+); see `spec.md` § Closure and `notes.md` § Design decisions. All tasks below are **obsolete** (preserved as historical record of the implementation path we did not take). Do NOT execute.
+
 ## Implementation
 
 - [ ] 1. **Pre-flight: native `/goal` compatibility check.** Run `/help` in Claude Code; check whether v2.1.139+ exposes a native `/goal`. Document the version present and whether it conflicts with our skill name. If conflict, either (a) rename skill to `/contract` or `/done-when`, or (b) confirm CC's namespace resolution prefers skill over native (verify per the SKILL.md description's primacy). Update plan if rename needed.

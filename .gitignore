@@ -20,6 +20,7 @@ CLAUDE.local.md
 .claude/.rule-load-debug.jsonl.lock
 .claude/.browser-state/*.json
 .claude/.brainstorm-state/
+.claude/.routines-state/
 
 # Spec 058 — sync-harness CLAUDE.md migration artifacts (ephemeral; ratified via mv,
 # divergence reports re-generated each sync until resolved)

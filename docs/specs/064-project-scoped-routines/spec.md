@@ -2,7 +2,7 @@
 
 _Created 2026-05-19._
 
-**Status:** draft
+**Status:** shipped
 
 ## Intent
 
@@ -10,49 +10,49 @@ Claude Code's native `/schedule` skill stores routines as account-scoped cloud s
 
 ## Acceptance criteria
 
-- [ ] **Scenario: declarative routine definition**
+- [x] **Scenario: declarative routine definition**
   - **Given** a fork has cloned Agent0 and run `./.claude/tools/install-routines.sh` once, designating itself as leader
   - **When** the developer creates `.claude/routines/cc-knowledge-audit.md` with frontmatter `schedule: "0 9 1 */3 *"` and commits it
   - **Then** the next cron tick on the leader machine matching that schedule renders the prompt into `.claude/.routines-state/cc-knowledge-audit/queue/<ts>.md`, and the next interactive Claude Code session emits a `=== ROUTINES ===` block listing the pending routine
 
-- [ ] **Scenario: leader-flag N-fold prevention**
+- [x] **Scenario: leader-flag N-fold prevention**
   - **Given** three developers have cloned the same repo, but only one ran `install-routines.sh` answering "y" to the leader-designation prompt
   - **When** the scheduled cron tick fires on all three machines simultaneously
-  - **Then** only the leader machine writes to `queue/`; the other two `run-routine.sh` invocations exit 0 silently after checking `~/.claude/.routines-leaders.json` for this repo
+  - **Then** only the leader machine writes to `queue/`; the other two `run-routine.sh` invocations exit 0 silently after checking `~/.claude/.agent0-routines-leaders.json` for this repo
 
-- [ ] **Scenario: idempotent re-execution**
+- [x] **Scenario: idempotent re-execution**
   - **Given** a routine ran successfully and produced output (commit, edit, or `no-drift-detected` log)
   - **When** the same routine is dispatched again within the same scheduling window (manual `/routine run <slug>` or accidental dual-leader)
   - **Then** the second execution either no-ops because state is already current, or produces an identical artifact — no destructive side effect, no duplicated PR / commit / issue
 
-- [ ] **Scenario: prompt interpolation at enqueue time**
+- [x] **Scenario: prompt interpolation at enqueue time**
   - **Given** `.claude/routines/<slug>.md` contains `{{LAST_COMPLETED_TS}}` and `{{GIT_HEAD}}` placeholders in the prompt body
   - **When** `run-routine.sh` renders the queue entry
   - **Then** placeholders are substituted with values read from `.claude/.routines-state/<slug>/last-completed.json` and `git rev-parse HEAD` respectively, so the dispatched prompt carries fresh temporal context
 
-- [ ] **Scenario: session-start nag with queue digest**
+- [x] **Scenario: session-start nag with queue digest**
   - **Given** ≥1 routine has pending queue entries from prior cron ticks
   - **When** a new Claude Code session starts in the repo
   - **Then** `routines-readout.sh` (SessionStart hook) emits a `=== ROUTINES ===` block listing each pending slug, age of oldest queued entry, count of queued entries, and the slash-command form to dispatch (`/routine run <slug>`)
 
-- [ ] **Scenario: completion archival**
+- [x] **Scenario: completion archival**
   - **Given** a queued routine has just been successfully executed in an interactive session
   - **When** the dispatched routine reports done (per its `# Done when` block)
   - **Then** the queue file moves from `queue/<ts>.md` → `completed/<ts>.md`, `last-completed.json` updates, and `completed/` rotation caps at 50 entries (oldest dropped FIFO)
 
-- [ ] **Scenario: fork propagation via sync-harness**
+- [x] **Scenario: fork propagation via sync-harness**
   - **Given** a fork that previously adopted Agent0's harness and is running `sync-harness.sh --check`
   - **When** spec 064 capacities land in upstream Agent0
   - **Then** `--check` reports drift for `.claude/tools/{install,uninstall,run}-routines.sh`, `.claude/hooks/routines-readout.sh`, `.claude/rules/routines.md`, `.claude/skills/routine/SKILL.md`; `--apply` installs them; fork-specific `.claude/routines/*.md` definitions are NOT overwritten (sync ships the capacity, not the routine instances)
 
-- [ ] `.claude/routines/<slug>.md` files exist and are git-tracked (NOT gitignored)
-- [ ] `.claude/.routines-state/**` is gitignored (per-machine ephemeral cache)
-- [ ] `~/.claude/.routines-leaders.json` is per-user, never in any repo
-- [ ] `install-routines.sh` is idempotent: re-running produces no duplicate crontab entries (uses `# AGENT0-ROUTINES-START / END` marker block)
-- [ ] `uninstall-routines.sh` removes the marker block cleanly without touching unrelated crontab entries
-- [ ] `/routine validate <slug>` rejects a routine declaring `idempotent: false` in its frontmatter
-- [ ] The discipline is documented in `.claude/rules/routines.md`, cross-referenced from CLAUDE.md `## Routines` section
-- [ ] Sync-harness manifest includes all capacity files; `--check` on a fork reports drift when this spec lands upstream
+- [x] `.claude/routines/<slug>.md` files exist and are git-tracked (NOT gitignored)
+- [x] `.claude/.routines-state/**` is gitignored (per-machine ephemeral cache)
+- [x] `~/.claude/.agent0-routines-leaders.json` is per-user, never in any repo
+- [x] `install-routines.sh` is idempotent: re-running produces no duplicate crontab entries (uses `# AGENT0-ROUTINES-START / END` marker block)
+- [x] `uninstall-routines.sh` removes the marker block cleanly without touching unrelated crontab entries
+- [x] `/routine validate <slug>` rejects a routine declaring `idempotent: false` in its frontmatter
+- [x] The discipline is documented in `.claude/rules/routines.md`, cross-referenced from CLAUDE.md `## Routines` section
+- [x] Sync-harness manifest includes all capacity files; `--check` on a fork reports drift when this spec lands upstream
 
 ## Non-goals
 
@@ -67,12 +67,12 @@ Claude Code's native `/schedule` skill stores routines as account-scoped cloud s
 
 ## Open questions
 
-- [ ] **Queue collapsing semantics.** Should multiple cron ticks between two interactive sessions produce multiple queue files (audit-rich) or substitute the latest (terse)? Recommended default: append (multiple files), but the SessionStart readout collapses the display to "N pending since <oldest>". Owner: founder, decide before plan.
-- [ ] **`idempotent: false` policy.** Reject at validate time (proposed), or warn-only with override marker? Recommended: hard reject — non-idempotent recurring work has no home here; route to `/remind` or `/sdd` instead. Owner: founder.
-- [ ] **`crontab` install mechanism.** User-level `crontab -e` (no sudo, current proposal) vs. `/etc/cron.d/` drop-in (system-wide, needs sudo). Recommended: user crontab, idempotency via comment marker. Owner: founder; verify WSL2 cron daemon defaults before locking.
-- [ ] **WSL2 portability detection.** WSL2 cron sometimes requires `service cron start` manual activation per session. Should `install-routines.sh` detect WSL2 and warn / auto-configure, or document and skip? Recommended: detect + warn + emit one-line `wsl-advisory:` to stderr. Owner: founder; spike during plan phase.
-- [ ] **`completed/` rotation cap.** Hard-coded 50 (current proposal) vs. env-configurable `CLAUDE_ROUTINES_KEEP_N`? Recommended: hard-code 50 for v1, promote to env var only if rule-of-three demand emerges. Owner: founder.
-- [ ] **Routine vs `/remind` triage rule.** Need explicit `.claude/rules/routines.md` § *When to use vs `/remind`* table. The line is "recurring cadence" vs "one-shot deferred", but the rule should give worked examples (quarterly CC audit → routine; "review pricing in Q3" → reminder; "weekly dependency check" → routine). Owner: founder, finalize during rule authoring.
+- [x] **Queue collapsing semantics.** Should multiple cron ticks between two interactive sessions produce multiple queue files (audit-rich) or substitute the latest (terse)? Recommended default: append (multiple files), but the SessionStart readout collapses the display to "N pending since <oldest>". Owner: founder, decide before plan.
+- [x] **`idempotent: false` policy.** Reject at validate time (proposed), or warn-only with override marker? Recommended: hard reject — non-idempotent recurring work has no home here; route to `/remind` or `/sdd` instead. Owner: founder.
+- [x] **`crontab` install mechanism.** User-level `crontab -e` (no sudo, current proposal) vs. `/etc/cron.d/` drop-in (system-wide, needs sudo). Recommended: user crontab, idempotency via comment marker. Owner: founder; verify WSL2 cron daemon defaults before locking.
+- [x] **WSL2 portability detection.** WSL2 cron sometimes requires `service cron start` manual activation per session. Should `install-routines.sh` detect WSL2 and warn / auto-configure, or document and skip? Recommended: detect + warn + emit one-line `wsl-advisory:` to stderr. Owner: founder; spike during plan phase.
+- [x] **`completed/` rotation cap.** Hard-coded 50 (current proposal) vs. env-configurable `CLAUDE_ROUTINES_KEEP_N`? Recommended: hard-code 50 for v1, promote to env var only if rule-of-three demand emerges. Owner: founder.
+- [x] **Routine vs `/remind` triage rule.** Need explicit `.claude/rules/routines.md` § *When to use vs `/remind`* table. The line is "recurring cadence" vs "one-shot deferred", but the rule should give worked examples (quarterly CC audit → routine; "review pricing in Q3" → reminder; "weekly dependency check" → routine). Owner: founder, finalize during rule authoring.
 
 ## Context / references
 

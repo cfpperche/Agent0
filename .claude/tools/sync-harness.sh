@@ -120,6 +120,9 @@ fi
 #                           gitignored *.json, only .gitkeep sentinel travels via git.
 # .claude/memory/           project knowledge; content is project-local (spec 019).
 #                           The empty .gitkeep IS in COPY_CHECK_FILES — content is not.
+# .claude/routines/         project-scoped routine definitions (spec 064); content is
+#                           project-local. Only .gitkeep travels via git so a fresh
+#                           fork has the empty directory ready for /routine new.
 
 # Recursive globs (find -type f under base dir) — encoded as "base/**"
 COPY_CHECK_RECURSIVE=(
@@ -144,6 +147,7 @@ COPY_CHECK_FILES=(
   ".githooks/pre-commit"
   ".claude/memory/.gitkeep"
   ".claude/.browser-state/.gitkeep"
+  ".claude/routines/.gitkeep"
 )
 
 # Structured merge handled by dedicated functions below

@@ -8,43 +8,41 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Spec 048 (`product-skill-foundation`) — SHIPPED in this session.** Two coupled changes: (1) skill rename `/prototype` → `/product` (semantic reframe: foundation generator + design partner for product lifecycle, NOT throwaway prototype); (2) layout refactor — drop `NN-` prefix, emit semantic-named artifacts under `<out>/docs/` (PRD release-scoped at `prd/v1.md` subfolder from day 1; design system grouped at `design-system/`). Skill v0.2.0 → v0.3.0. State.json v3 → v4 (breaking). Dogfood: `/tmp/dogfood-erp/` (ERP para salões de beleza) cold-cache full 15-step PASS — 24 routes generated, tsc + biome clean. Bundled skeleton `globals.css` token import path updated 3rd time (`docs/06-tokens.css` → `docs/14-tokens.css` → `docs/design-system/tokens.css`). MCP discontinuation cascade explicitly OUT OF SCOPE (handled in MCP session).
+**5 specs de refinamento do `/product` v0.3.0 — ALL SHIPPED.** Cada uma commitada como `feat(NNN): ...` separado, scaffolds preservados em commit anterior `docs(053-057): scaffold ...`.
 
-**Spec 047 (`php-laravel-support`) — SHIPPED + pushed (sibling session).** Made Agent0 PHP/Laravel-aware end-to-end across 7 capacities. 24 tests passing. Acme Yard project bootstrapped at `/home/goat/acmeyard` with Laravel 13.8 + Agent0 harness synced; public repo live at https://github.com/cfpperche/acmeyard. Domain `acmeyard.com` purchase in flight.
+- **053** screen-writer brief hardening — metadata + states evidence + Biome anti-pattern checklist + `primary_metric` field
+- **054** brand-book Glossary + Language — Phase 0.5 language resolution + `## Glossary` table mandatory; consumed by Step 15 only
+- **055** sitemap `chrome` field orthogonal to `category` — drives route-group placement; default-inference back-compat fallback
+- **056** pipeline size reconciliation — schema.md canonical for 6 priority steps; 9 legacy steps deferred to phase 2
+- **057** fan-out fallback — between-wave biome sweep + degrade-to-parent-write at N=1 same-wave (revised from N=2)
+
+**OQ resolutions: critique-driven across all 5 specs.** 5 of the 15 original recommendations were revised after the user pushed back on rubber-stamping. See per-spec `notes.md` for the design memory. Memory entry `feedback_no_rubber_stamping_own_prior_text.md` saved.
 
 ## WIP (uncommitted)
 
-Spec 048 work needs commit:
-- `R/RM` block: `.claude/skills/prototype/**` → `.claude/skills/product/**` (~50+ renames)
-- `M .claude/skills/product/SKILL.md` (name + description + version 0.3.0)
-- `M .claude/skills/product/references/{state-machine,delegation-briefs,pipeline-coverage,quality-checklist,stack-defaults}.md`
-- `M .claude/skills/product/templates/**/prompt.md` (output paths semantic + token path)
-- `M .claude/skills/product/templates/monorepo-skeleton/next/app/{globals.css,layout.tsx}`
-- `M CLAUDE.md` (`## Prototype skill` → `## Product skill`)
-- `M docs/specs/045-prototype-skill-pipeline-realign/spec.md` (§ Lineage note)
-- `?? docs/specs/048-product-skill-foundation/{spec,plan,tasks}.md`
-
-Pre-existing dirty (NOT mine, leave alone): `.claude/skills/brainstorm/templates/render.html.tmpl`.
+- `M .claude/SESSION.md` — this file (about to commit)
+- `M .claude/skills/brainstorm/templates/render.html.tmpl` — pre-existing dirty, NOT this session
 
 ## Next steps
 
-1. **Commit spec 048 work.** Suggested: `feat(048): /product skill foundation — rename + production-shaped layout`. Skip brainstorm template.
-2. **Spec 049 candidate — `product-skill-vN-mode`** — post-launch evolution primitives (`/product --mode=evolve --existing=<docs>` + `/product promote`). Picks up the gap MCP was supposed to fill. High founder value.
-3. **Spec 050 candidate — schema-ceiling reconciliation.** Persistent finding across spec 045 + 048 dogfoods: Steps 03/04/08/10/11/14 schemas mandate sizes that conflict with brief ceilings. Pick one canonical truth.
-4. **Spec 051 candidate — validator-cascade structural fix.** Per-file scope OR ship pre-spec biome.json defaults so sub-agents don't burn loop-budget on sibling lint errors.
+1. **Verification dogfood** of all 5 specs at next `/product` invocation. Each tasks.md task 8 (or equivalent) is deferred to a real run — confirms the new schemas/briefs/orchestration actually work end-to-end.
+2. **Untouched Vetro audit findings** (qualitative gaps not addressable by mechanical brief changes): #2 time-cursor agenda over text, #4/#5/#9 UX semantic (growth-loop, animal photo, booking hierarchy), #10 console errors. Ex-post Playwright audit only — no spec yet.
+3. **Spec 056 phase 2** when next 2-3 dogfoods accumulate evidence on the 9 legacy steps (01/04/05/06/07/11/12/13/14).
 
 ## Decisions & gotchas
 
-- **`/product` name ratified** via `/goal confirmo tudo, pode implementar e validar o plano`. Rejected `/blueprint`, `/foundry`, `/launchpad`, keep-`/prototype`-with-reframe.
-- **Slug numbering bumped 046 → 048.** Sibling sessions claimed 046 (sdd-in-flight-notes) + 047 (php-laravel-support) during this work. Renamed cleanly.
-- **MCP discontinuation announced — Agent0's foundation tool becomes `/product` going forward.** Spec 032 children 037-044 (MCP-side) are no longer planned. Reconciliation of spec 032 with this reality is user's MCP-session concern.
-- **PRD release-scoped via `prd/v1.md`** from day 1 — forces founder to think "this PRD is v1, there will be v2" instead of "this is THE PRD". OST/roadmap/cost stay flat (`docs/ost.md`) — founder promotes to subfolder when accumulation justifies.
+- **Critique discipline saved.** When user asks to "resume" / "attack" work I drafted earlier, I default to rubber-stamping my prior recommendations. New memory entry `[[feedback-no-rubber-stamping-own-prior-text]]` codifies the discipline: critique prior recs, surface where reasoning was thin, present real tradeoffs.
+- **Spec 053 `primary_metric` v1 = string-label, not rich struct.** v2 deferred until downstream sub-agents prove ambiguous.
+- **Spec 054 Phase 0.5 NEW.** Adds an `AskUserQuestion` between Init and Phase 1 for `target_language` resolution. `{{target_language}}` substituted into 6 user-facing briefs. Phase 4.5 simplified to read state.
+- **Spec 055 default-inference back-compat ONLY.** New sitemaps SHOULD emit `chrome` explicitly; default-inference cannot decide booking-vs-app correctly without help.
+- **Spec 056 conditional model for Step 09 legal.** Base 5-10 KB + DPIA +5/+12 + AI +2/+5 + Regulated +2/+8. Other 5 steps use simple ranges.
+- **Spec 057 N=1, not N=2.** Sub-agents in same wave share lint state via repo-wide biome — first fail strongly predicts siblings will too. N=2 wastes throughput.
+- **`max_size` added to JSON `required_files` blocks** is documentation-only at standalone-skill level (MCP package validator ignores unknown keys).
 
 ## Carryover (orthogonal)
 
-- Spec 045 full end-to-end cold-cache run — DONE this session at /tmp/dogfood-v3/ (already shipped).
 - Spec 046 dogfood window — promotion gate 2026-07-01.
 - Spec 029 adoption check due 2026-05-30.
 - Spec 026 Phase C/D pending.
-- Acme Yard substrate work — `/sdd new substrate` in `/home/goat/acmeyard` (mês 0 of Acme Yard).
+- Acme Yard substrate work — `/sdd new substrate` at `/home/goat/acmeyard`.
 - `.claude/REMINDERS.md` items per startup readout.

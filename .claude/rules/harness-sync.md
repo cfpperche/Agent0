@@ -85,9 +85,65 @@ Result: a Laravel fork's `.gitignore` keeps `/vendor`, `/node_modules`, `.env`, 
 
 **Comments and orphans** — the marker block contains entries only, not their source-side comment groupings. Fork developers reviewing the post-sync `git diff` will see flat appended entries; if comment grouping matters for readability, they can reorganize after merge. Comment drift in fork's `.gitignore` (e.g., comments rewritten by the fork) is never overwritten — only the entry set is compared.
 
-## CLAUDE.md merge strategy
+## CLAUDE.md managed-block merge strategy
 
-Heading-set comparison, **not** full-file hash. Fork-authored sections (Overview, Stack, Conventions, Gotchas, etc.) intentionally diverge from Agent0; a full-hash compare would always flag CLAUDE.md as customized and break the workflow. Algorithm:
+Primary strategy (spec 058). The fork's `CLAUDE.md` declares an explicit Agent0-owned region via paired HTML comment markers:
+
+```markdown
+# Fork title
+
+## Overview
+... fork-authored project narrative ...
+
+## Gotchas
+... fork-authored ...
+
+<!-- AGENT0:BEGIN -->
+
+## Spec-driven development
+... Agent0 capacity body ...
+
+## Compact Instructions
+... Agent0 capacity body ...
+
+<!-- AGENT0:END -->
+```
+
+Markers MUST be on their own lines and match exactly: `<!-- AGENT0:BEGIN -->` and `<!-- AGENT0:END -->`. The dispatcher (`merge_claude_md`) inspects the fork's `CLAUDE.md` and routes by 4-state detection:
+
+| State | Trigger | Behavior |
+| --- | --- | --- |
+| `paired` | exactly one BEGIN, exactly one END, BEGIN before END | Run managed-block merge: extract region from Agent0 source, check body divergence in shared sections, replace fork region wholesale when no divergence (or under `--force`), refuse on divergence (without `--force`). |
+| `absent` | no BEGIN, no END | Run legacy heading-set merge (fallback) AND write `.claude/CLAUDE.md.migration-candidate.md` proposing the wrapped layout for operator review. |
+| `mismatched` | one of BEGIN/END present, not both | Refuse the file's merge with `!! claude-md: markers mismatched`; increments `customized-refused`. |
+| `nested-invalid` | more than one BEGIN or END, or END before BEGIN | Refuse with `!! claude-md: nested or out-of-order markers`; increments `customized-refused`. |
+
+**Region replacement semantics** — on `paired` state, the lines between markers are extracted from Agent0 source and substitute the fork's region wholesale. Project-narrative sections above BEGIN (and any trailing content after END) are preserved verbatim. The marker lines themselves are preserved exactly. This propagates Agent0 ADDs AND REMOVALs symmetrically — a section dropped upstream is gone on the next sync, fixing the legacy heading-set merge's append-only orphan bug (canonical case: `## Prototype skill` orphaning in forks after spec 048 renamed it to `## Product skill`).
+
+**Body divergence guard** — before replacement, the merge inspects each section title in both fork's region and Agent0's region (intersection); if the body of any shared title differs, divergence is detected. Without `--force`, the merge writes `.claude/CLAUDE.md.diverged-region.md` (per-section list + unified diff), refuses with `customized-refused` increment, and exits non-zero in apply mode. With `--force`, the region is overwritten wholesale and `OVERWRITTEN` increments. Heading-only diffs (fork has sections Agent0 doesn't, or vice versa) are NOT divergence — they are the intended target of the wholesale replace, including orphan removal.
+
+**Migration candidate flow** — when the fork has no markers (state `absent`), spec 058's primary mechanism is to propose the wrapped layout via `.claude/CLAUDE.md.migration-candidate.md`. The candidate file has:
+
+1. A leading HTML comment block explaining itself + Agent0 source SHA at generation time
+2. Fork preamble (lines before first `## ` heading)
+3. Fork's project-only sections (headings NOT in Agent0's region), preserving fork order
+4. `<!-- AGENT0:BEGIN -->` marker
+5. Agent0's region content, sourced verbatim from Agent0 source
+6. `<!-- AGENT0:END -->` marker
+
+The operator reviews the candidate; if it matches intent, they ratify with `mv .claude/CLAUDE.md.migration-candidate.md CLAUDE.md`. Subsequent syncs route via the `paired` state and apply managed-block semantics. There is no `--migrate-claude-md` flag — the operator's `mv` IS the ratification step (deliberate, per spec 058 Open-Q resolution).
+
+**Per-section divergence blocks migration** — candidate generation runs `_check_section_divergence` against Agent0's region first; if the fork rewrote the body of any Agent0-region-titled section, the candidate is NOT written. Instead `.claude/CLAUDE.md.diverged-sections.md` is written listing the diverged titles. Legacy fallback merge still runs (zero disruption — fork keeps its custom body, gets new capacity sections appended). The operator either renames the heading (removing it from the Agent0-managed namespace) or accepts Agent0's body, then re-runs sync.
+
+**Source must be wrapped for candidate generation** — `_generate_migration_candidate` no-ops when Agent0 source itself has no markers. Markers define the "Agent0-managed namespace"; without them, every `## ` in Agent0 source would be treated as Agent0-owned, falsely flagging fork's `## Overview` body customization as divergence. Agent0's own `CLAUDE.md` ships wrapped from spec 058 onward.
+
+**Mode interaction** — `--check` and `--apply --dry-run` both detect drift but write no files; the dispatcher emits the same advisory shape on stderr ("would write candidate" / "would diverge"). Only `--apply` (no dry-run) writes the candidate or diverged-* reports.
+
+**Idempotency** — once the fork is migrated (markers paired, region matches Agent0 source), `--apply` reports `= up to date` and produces zero mutations. `sha256sum` of `CLAUDE.md` is stable across consecutive applies.
+
+## CLAUDE.md heading-set merge strategy (legacy fallback)
+
+Spec 016's original strategy. Active only when the fork's `CLAUDE.md` lacks paired markers (state `absent` in the dispatcher). Heading-set comparison, **not** full-file hash. Fork-authored sections (Overview, Stack, Conventions, Gotchas, etc.) intentionally diverge from Agent0; a full-hash compare would always flag CLAUDE.md as customized and break the workflow. Algorithm:
 
 1. Extract `^## <Title>` lines from Agent0's and fork's CLAUDE.md.
 2. Compute the set of headings in Agent0 missing from fork.
@@ -95,7 +151,7 @@ Heading-set comparison, **not** full-file hash. Fork-authored sections (Overview
 4. Else: locate the line containing `## Compact Instructions` in fork's CLAUDE.md (the canonical "always last" anchor). Insert the missing sections (full body extracted from Agent0 via awk) immediately before that line.
 5. If `## Compact Instructions` is absent in fork: emit `!! claude-md: missing "## Compact Instructions" anchor — appending at EOF` warning, append at EOF. Developer reorganizes manually if EOF placement is wrong.
 
-Fork-authored sections are always preserved verbatim — the sync only writes Agent0-sourced sections that fork is missing.
+Fork-authored sections are always preserved verbatim — the sync only writes Agent0-sourced sections that fork is missing. Append-only is the structural limitation that spec 058's managed-block merge supersedes: a section REMOVED from Agent0 stays as an orphan in fork CLAUDE.md until that fork migrates to the wrapped layout.
 
 ## Manifest scope
 

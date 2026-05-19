@@ -1,6 +1,6 @@
 # 054 — brand-book glossary
 
-**Status:** draft
+**Status:** shipped
 
 ## Problem
 

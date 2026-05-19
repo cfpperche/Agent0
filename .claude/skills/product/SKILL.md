@@ -36,7 +36,25 @@ User invokes as `/product "<idea>" --out=<path> [flags]`. The raw argument strin
 1. **Idempotency check** — if `<out>` exists and is non-empty:
    - If `--from-step=NN` was passed AND `<out>/docs/.state.json` exists: read state, validate (a) `version == 4` — if v3 found, abort with `state v3 found — pre-spec-048 run; clear --out dir or run fresh /product`; if v2 found, abort with `state v2 found — pre-spec-045 run; clear --out dir or run fresh /product`; (b) `slug`/`idea`/`flags.stack` match the invocation; if mismatch, abort with `state mismatch — clear --out dir or pick different --from-step`. If both pass, jump to step NN.
    - Else (no `--from-step` OR no `.state.json`): prompt `<out> exists and is non-empty. Overwrite? (y/N) ▷`. On `y` → `rm -r <out>` (NOT `rm -rf` — governance-gate blocks combined flags). On `n` / no answer → abort cleanly with `aborted; pick a different --out or rm the existing dir yourself`. Exit 0.
-2. **Init** — `mkdir -p <out>/docs/screens <out>/docs/prd <out>/docs/design-system`; write fresh `<out>/docs/.state.json` per `state-machine.md` v4 shape with `version=4, phase="discovery", step=0, started_at=<ISO>, gates_passed=[], completed_steps=[], blocked_steps=[], iterations={discovery:0, specification:0, identity:0}, completed_at=null`. **Artifact layout discipline:** EVERY skill-produced output writes under `<out>/docs/` — pipeline deliverables semantic-named (`docs/concept-brief.md`, `docs/sitemap.yaml`, `docs/system-design.md`, etc. — NO `NN-` prefix per spec 048), PRD release-scoped at `docs/prd/v1.md`, design system grouped at `docs/design-system/{tokens.css, components.md, README.md}`, the run report at `docs/REPORT.md`, the state file at `docs/.state.json`. The `<out>/` root holds ONLY the runtime tree (`app/`, `lib/`, `node_modules/`) and build config (`package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `next.config.ts`, `biome.json`, `tsconfig.json`, `postcss.config.mjs`, `.gitignore`). Rule: if the founder didn't write it and Next.js / Expo doesn't expect it at root, it lives under `docs/`. Temporal ordering of pipeline steps survives via REPORT.md + .state.json; semantic naming wins for the founder's day-to-day mental model.
+2. **Init** — `mkdir -p <out>/docs/screens <out>/docs/prd <out>/docs/design-system`; write fresh `<out>/docs/.state.json` per `state-machine.md` v4 shape with `version=4, phase="discovery", step=0, started_at=<ISO>, gates_passed=[], completed_steps=[], blocked_steps=[], iterations={discovery:0, specification:0, identity:0}, completed_at=null, target_language=null`. **Artifact layout discipline:** EVERY skill-produced output writes under `<out>/docs/` — pipeline deliverables semantic-named (`docs/concept-brief.md`, `docs/sitemap.yaml`, `docs/system-design.md`, etc. — NO `NN-` prefix per spec 048), PRD release-scoped at `docs/prd/v1.md`, design system grouped at `docs/design-system/{tokens.css, components.md, README.md}`, the run report at `docs/REPORT.md`, the state file at `docs/.state.json`. The `<out>/` root holds ONLY the runtime tree (`app/`, `lib/`, `node_modules/`) and build config (`package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `next.config.ts`, `biome.json`, `tsconfig.json`, `postcss.config.mjs`, `.gitignore`). Rule: if the founder didn't write it and Next.js / Expo doesn't expect it at root, it lives under `docs/`. Temporal ordering of pipeline steps survives via REPORT.md + .state.json; semantic naming wins for the founder's day-to-day mental model.
+
+## Phase 0.5 — Target language resolution (spec 054)
+
+Resolves `target_language` BEFORE Step 01 dispatches so every downstream sub-agent generates user-facing text in the right language. Runs ONCE per fresh run (skipped on `--from-step` resume — state already carries the value).
+
+1. **Heuristic from idea string** — scan `<idea>` for signals:
+   - Portuguese cues: any of `R$` / `LGPD` / `NFS-e` / `Pix` / `CNPJ` / `CPF` / `clínica` / `salão` / `petshop`, OR pt-BR diacritics (`á é í ó ú ã õ ç`) anywhere in the string → propose `pt-BR`.
+   - Spanish cues: `€` (combined with `IVA` / `S.L.` / `México` / `España`), OR es diacritics (`ñ ¿ ¡`) → propose `es-ES` or `es-MX` (favor `es-ES` if ambiguous).
+   - Otherwise → propose `en` (US default; `en-GB` only if `Ltd` / `programme` / `colour` appear).
+2. **`AskUserQuestion` — single question, 2-4 options**:
+   - Q: `Target language for all artifacts (PRD, brand-book, screen copy, etc)?`
+   - Options: `<proposed> (Recommended)` · `en` · `pt-BR` · `Other` (founder types BCP-47 tag like `es-MX`, `fr-FR`, etc).
+   - The (Recommended) label uses whichever the heuristic proposed.
+3. **Store** — write `target_language` into `<out>/docs/.state.json` (BCP-47 string). This is now the canonical signal for every brief substitution + brand-book Step 13 § Language section.
+
+**On `--from-step` resume:** read `.state.json.target_language`. If null (pre-spec-054 state), run the heuristic + ask. If present, use as-is (no re-ask).
+
+**Override:** founder can edit `.state.json.target_language` between phases — downstream sub-agents read the current value at dispatch time, so changes mid-run propagate to subsequent steps (but artifacts already written stay in their original language until re-iterated).
 
 ## Phase 1 — Discovery (pipeline steps 01-04)
 
@@ -86,8 +104,8 @@ NO GATE — Phase 4 closes the pipeline; the `/sdd new <slug>` handoff is the im
 
 3.5. **Stitch step — substitute `app/layout.tsx` placeholders** (Next.js only, spec 051 fix). The skeleton ships `title: "PROTOTYPE_SLUG"` + `<html lang="en">` as markers; both MUST be substituted or every prototype leaks the placeholder in browser tabs + ships the wrong locale.
    - **Title:** prefer `<out>/docs/brand-book.md` § `## Product Name` body line; fall back to `.state.json` `.idea`.
-   - **Lang:** if `concept-brief.md` / `sitemap.yaml` / `brand-book.md` contains any of `R$` / `LGPD` / `NFS-e` / `Pix` → `lang="pt-BR"`; else keep `en`. (Heuristic v1; `--locale=<bcp47>` flag is a follow-on.)
-   - **Apply via python3** (not sed — idea string can contain `&|/'"$\` that break sed): read `<out>/app/layout.tsx`, `.replace('PROTOTYPE_SLUG', title)` + conditional `.replace('lang="en"', 'lang="pt-BR"')`, write back.
+   - **Lang:** read `.state.json.target_language` (resolved at Phase 0.5 per spec 054). If `pt-BR` / `es-*` / non-`en` → substitute `lang="<value>"`; else keep `lang="en"`. (Heuristic + ask shifted upstream to Phase 0.5 so this step is just an apply.)
+   - **Apply via python3** (not sed — idea string can contain `&|/'"$\` that break sed): read `<out>/app/layout.tsx`, `.replace('PROTOTYPE_SLUG', title)` + conditional `.replace('lang="en"', f'lang="{target_language}"')`, write back.
    - **Verify:** `grep -L PROTOTYPE_SLUG <out>/app/layout.tsx` must show no match; browser tab on hard-refresh must show the resolved title.
 4. **Build verification:**
    - Install: `cd <out> && pnpm install --frozen-lockfile` (next) or `bun install` (expo). MUST include OVERRIDE marker for supply-chain hook:

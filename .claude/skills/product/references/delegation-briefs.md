@@ -6,7 +6,9 @@ Every `Agent` tool call dispatched by `/product` v0.3.0 MUST use the 5-field han
 
 **Per-step model assignment** (per spec 036 Q1 resolution preserved in spec 045): Step 01 = `opus` (concept brief multi-source synthesis); Steps 02-15 = `sonnet` (mechanical with dense brief + bundled template).
 
-**Substitution placeholders** ({{...}}) are replaced inline by the orchestrator (SKILL.md) before dispatch. The orchestrator reads `<out>/docs/.state.json` for `slug`, `idea`, `out`, `flags.stack` and the prior-step outputs by path.
+**Substitution placeholders** ({{...}}) are replaced inline by the orchestrator (SKILL.md) before dispatch. The orchestrator reads `<out>/docs/.state.json` for `slug`, `idea`, `out`, `flags.stack`, `target_language` (resolved at Phase 0.5 per spec 054), and the prior-step outputs by path.
+
+**Per spec 054, every brief producing user-facing text MUST receive `{{target_language}}` substitution.** The orchestrator threads `.state.json.target_language` into the brief at dispatch time. Sub-agents read it and match all generated copy (page headings, button labels, microcopy, marketing copy, voice samples, etc) to that language. Code-flavored surfaces (e.g. `/settings/integrations` references to `API`, `OAuth`, etc) may stay English locally; flag those as exceptions in the brand-book `## Glossary § applies_to` column.
 
 ## Phase 1 — Discovery
 
@@ -21,6 +23,7 @@ CONTEXT: Read .claude/skills/product/templates/pipeline/01-ideation/prompt.md fo
 
 CONSTRAINTS:
 - Standard tier: target 4-10 KB output as HARD CEILING (NOT minimum — going over by ≥50% means re-emit at smaller scope).
+- **Target language: `{{target_language}}`** (BCP-47, resolved at Phase 0.5). All section bodies + persona language + tagline candidates + name candidates in this language; cited sources stay in their original language.
 - Cover the standard-tier minimum sections as H2 headings: Hook (problem + audience) / Mechanics (user flow) / Monetization / Growth loop / Competitive positioning / Risks / Anti-goals / JTBD statement / **Market Sizing (TAM/SAM/SOM — 1 paragraph each, desk research with 1-2 cited sources per number, NOT primary research)**. SKIP critique-mode at standard tier.
 - Cite at least 5 unique sources with inline [N] references. Market Sizing section cites at minimum 1 source per TAM/SAM/SOM number.
 - Name placeholder discipline: if final product name not yet decided, use `**Working name:** <placeholder> (placeholder, never shipped; final at Step 13 brand-book § Product Name)`. Suggest 2-3 candidates.
@@ -45,6 +48,7 @@ CONTEXT: Read concept-brief.md at {{out}}/docs/concept-brief.md for product pers
 
 CONSTRAINTS:
 - Standard tier: ONE direction only.
+- **Target language: `{{target_language}}`** (BCP-47, resolved at Phase 0.5). All user-facing copy in the mood HTML matches this language — section headings, button labels, marketing taglines, voice samples. Code-flavored surfaces stay English locally.
 - 8 mandatory sections (palette / type / hero / dashboard / charts / pricing / FooterCTA + DS lineage). Cite 1-2 OD vendors.
 - Self-contained HTML — single file, inline styles + SVG.
 - CSS :root custom properties (vendor-agnostic names: --color-primary, --background, --foreground).
@@ -71,6 +75,7 @@ CONTEXT: Read concept-brief.md at {{out}}/docs/concept-brief.md for product scop
 
 CONSTRAINTS:
 - Standard tier: combined functional-spec.md (skip separate architecture.md). Size budget: per schema.md § Target (12-30 KB; soft overshoot trigger at max × 1.2).
+- **Target language: `{{target_language}}`** (BCP-47). All section bodies, page descriptions, Gherkin scenario text + acceptance prose in this language. Technical terms (HTTP, JSON, OAuth, etc) stay English. User-story summaries match the language.
 - Sections required (H2): Product Overview / Pages & Surfaces (table per page) / Features (with Gherkin) / Navigation Map / Cross-cutting concerns / Acceptance Scenarios / Edge Cases / Non-goals / Decisions Pending / Preliminary Architecture / **Problem-Validation Interviews (3-5 summaries seeding OST; synthetic-OK at standard tier — clearly marked as synthetic vs sourced from real interviews)**.
 - Scale depth to surface importance; killer flow gets full treatment; trivial pages collapse to 2-4 table rows.
 - Every "Decisions Pending" row has either a source citation OR a default value.
@@ -118,6 +123,7 @@ CONTEXT: Read concept-brief.md + functional-spec.md + validation-report.md front
 
 CONSTRAINTS:
 - 4-7 KB hard ceiling (TIGHTER than v2's 6-10). Each section ≤3 bullets to preserve 1-pager honesty.
+- **Target language: `{{target_language}}`** (BCP-47). All H2 body text + user-story summaries + acceptance criteria in this language. H2 section headers themselves stay English-canonical (Problem / Why now / Success metrics / etc) because they ARE the Lenny 1-pager template — match the source attribution.
 - Lenny bones (H2 in this order): Problem · Why now · Success metrics · Solution sketch · User stories · Anti-goals.
 - Plus 3 our-specific sections (H2 after Lenny bones): Release scope (v1 vs v2 vs vN scoped) · NSM (dedicated slot — ONE primary metric, never two equal-priority) · Upstream/downstream refs (links to concept-brief + functional-spec + downstream sitemap/system-design slots).
 - User-story IDs: zero-padded sequential US-01, US-02, ..., US-NN. APPEND-don't-renumber discipline (Step 07 sitemap-IA + Step 15 atlas coverage matrix both depend on stable IDs).
@@ -296,6 +302,7 @@ CONTEXT: Read prd.md at {{out}}/docs/prd/v1.md (NSM + audience for positioning) 
 
 CONSTRAINTS:
 - Standard tier: 4-7 KB hard ceiling.
+- **Target language: `{{target_language}}`** (BCP-47). Positioning Canvas body lines + launch plan milestones + pricing tier descriptions in this language. The 5 canvas line-labels (`For:`, `Who:`, `We are:`, `Unlike:`, `Our product:`) stay English per Dunford template.
 - Required H2 sections: Positioning Canvas / Launch Plan / Pricing Strategy / Open Decisions.
 - **Positioning Canvas** (Dunford-lite, 3 lines minimum):
   - For: [target customer]
@@ -325,7 +332,9 @@ TASK: Produce brand-book.md — voice + visual direction posture + we-are/we-are
 CONTEXT: Read prd.md at {{out}}/docs/prd/v1.md (finalized scope + NSM + persona) + gtm-launch.md at {{out}}/docs/gtm-launch.md (positioning canvas already locked — brand voice should reinforce, not contradict) + concept-brief.md at {{out}}/docs/concept-brief.md (audience + product class) + direction-a.html at {{out}}/docs/direction-a.html (visual lineage). Read .claude/skills/product/templates/pipeline/13-brand/prompt.md for canonical 7-section structure (we target 2-3 section snapshot at standard tier).
 
 CONSTRAINTS:
-- Standard tier: 2-3 sections (NOT canonical 7). Voice Samples + Visual Direction posture + ONE "We are / We are not" pair minimum.
+- Standard tier: voice (1-2 paragraphs) + voice samples + ONE "We are / We are not" pair minimum + **`## Language` section (spec 054)** + **`## Glossary` section (spec 054)** + Visual Direction posture + Logo Direction (clear-space + min-size + ≥3 prohibited uses) + Color Story + Anti-Patterns.
+- **Target language: `{{target_language}}`** (BCP-47, from `.state.json.target_language` resolved at Phase 0.5). All voice samples, "We are / We are not" pairs, anti-pattern bullets, color-story prose, and other brand prose in this language. The `## Language` section declares this target as a machine-readable `**target_language:** <bcp47>` line.
+- **Glossary obligation (spec 054):** the `## Glossary` H2 has two sub-sections — `### We say` (preferred terms / phrasing the brand favors) and `### We don't say` (avoided terms with native replacement, reason, and applies_to scope). 4-column table format: `| Term | Replacement | Reason | Applies to |`. Cap ≤ 20 entries per sub-section. Identify entries ORGANICALLY from concept-brief + positioning + product domain — domain jargon the founder uses naturally, voice traps the comparables fall into, anglicisms the brand should localize. **DO NOT auto-derive from positioning Unlike-clause** (positioning is product-vs-product level; glossary is copy-trap level; mechanical translation produces noise). Downstream Step 15 screen-writers consume `### We don't say` as a string-replace lookup.
 - Voice samples: 3 minimum (one-liner per surface type — headline, microcopy, CTA label).
 - Visual Direction names the feel (e.g. "Cool Brutalist", "Warm Premium") + 2-3 posture decisions (e.g. "hairline 1px borders only" / "monospace dominant" / "single saturated accent"). NO hex codes (Step 14 handles).
 - "We are / We are not" pair: contrast — NOT a flat adjective list.
@@ -337,7 +346,7 @@ CONSTRAINTS:
 
 DELIVERABLE: {{out}}/docs/brand-book.md
 
-DONE_WHEN: File exists; size 4-8 KB; contains **Version:** + **Date:** + **We are** + **We are not** + 3+ voice samples + visual-direction posture (named feel + 2+ posture decisions) + Product Name decision; voice alignment with Step 12 positioning is stated (1 sentence cross-ref).
+DONE_WHEN: File exists; size 4-8 KB; contains **Version:** + **Date:** + `## Language` H2 + `**target_language:**` declaration + **We are** + **We are not** + 3+ voice samples + `## Glossary` H2 with both `### We say` + `### We don't say` sub-sections (each carrying a 4-column table with ≥1 entry) + visual-direction posture (named feel + 2+ posture decisions) + Product Name decision; voice alignment with Step 12 positioning is stated (1 sentence cross-ref).
 ```
 
 ### Step 14 — Design System (renamed from v2 Step 06; tokens path changed)
@@ -424,7 +433,7 @@ CONTEXT:
 - Pipeline step context: {{step_label}} (02 = lo-fi pre-brand mood HTML at {{out}}/docs/screens/, 15 = hi-fi brand-tuned page.tsx in {{out}}/app/).
 - Sitemap entry source: {{out}}/docs/sitemap.yaml (route fields: path / category / states / covers_us / components)
 - Tokens (Step 15 only): {{out}}/docs/design-system/tokens.css (consumed via the `app/globals.css` `@import "../docs/design-system/tokens.css"` line — use `var(--color-*)` inline / Tailwind utility-classes that resolve to the token names)
-- Voice (Step 15 only): {{out}}/docs/brand-book.md (match ON-brand voice for copy)
+- Voice (Step 15 only): {{out}}/docs/brand-book.md (match ON-brand voice for copy) — **specifically read `## Language` for `target_language` + `## Glossary § We say / We don't say` for the term-replacement lookup (spec 054)**
 - Components reference (Step 15 only): {{out}}/docs/design-system/components.md
 - Stack defaults: .claude/skills/product/references/stack-defaults.md § Next.js
 - Target file (Step 15 — **`chrome` field determines route-group per spec 055**; orthogonal to `category` which is PRD-coverage semantic only):
@@ -457,6 +466,7 @@ CONSTRAINTS:
 
   Inline here on purpose — these shapes are React/Next-specific and don't belong in a generic `.claude/rules/` rule that propagates to non-JS forks. (Extract-if-reused decision deferred: not reused outside this brief.)
 - **Primary metric prominence — render as MetricTile/hero, NOT badge (spec 053 — Step 15 only).** If the sitemap entry declares `primary_metric: "<label>"`, the value MUST render at hero-level: full-width MetricTile (per `<out>/docs/design-system/components.md`), large-numeric tile in a metrics grid row, OR a dashboard-card sized component. It MUST NOT render as a small badge in a page corner or a sub-line in a header. Reason: dogfood-2 shipped `/vendas` with "Caixa atual R$ 1.450,00" as a 12px top-right badge despite being the route's load-bearing value the user comes to check. If the route has no `primary_metric` field, ignore this constraint.
+- **Glossary obligation — replace `### We don't say` terms with `### We say` equivalents (spec 054 — Step 15 only).** Before declaring DONE, scan the produced `page.tsx` for every term listed in brand-book `## Glossary § We don't say`. For each match, replace with the row's `Replacement` value UNLESS the route's surface scope falls under the entry's `Applies to` exemption (e.g. an entry marked `applies_to: marketing, pricing` does NOT apply to `/settings/integrations`). Example from dogfood-2 (Vetro): brand-book declared `Most Popular | Mais escolhido | English in pt-BR product | marketing, pricing`; pricing page MUST render `Mais escolhido` (NOT `Most Popular`) on the pricing badge. Sub-agent self-check before DONE: for each glossary `We don't say` entry whose `applies_to` matches the route's chrome/category, `grep -L "<term>" <target>/page.tsx` MUST return the file (term absent). If `## Glossary` is empty, no constraint applies.
 - **Next.js 16+ async params + `'use client'` separation (spec 051 — DO NOT VIOLATE).** Dynamic-route segments (`[id]`, `[slug]`) deliver `params` as `Promise<{...}>` that MUST be `await`ed. Awaiting a Promise can ONLY happen in a Server Component. Therefore: **`'use client'` MUST NOT appear at the top of an `async` page component.** Next.js explicitly blocks this combination — the runtime error is verbatim `<PageName> is an async Client Component. Only Server Components can be async at the moment. This error is often caused by accidentally adding 'use client' to a module that was originally written for the server.` Canonical pattern when the page needs client interactivity (useState/useEffect/event handlers/hooks):
   ```tsx
   // app/<route>/page.tsx  — Server Component, NO directive
@@ -479,7 +489,7 @@ CONSTRAINTS:
 
 DELIVERABLE: The target file at the path above; if mock-data.ts was added or extended, that too. If the canonical Server+Client split is applied, the sibling `_<Name>Client.tsx` file too.
 
-DONE_WHEN: File exists at deliverable path; valid TypeScript (Step 15 — Phase-4-verified by tsc); declared states visibly implemented (sibling files for loading/error; render branch for empty; deferred_states skipped per sitemap); uses tokens via var() or Tailwind utility classes (NO hex/px violations); buttons have type attribute; **per-route `export const metadata: Metadata` is present** (Step 15 only, except for root `/`); **Biome anti-pattern checklist self-passes** (no `key={i}`, no `<div role="status|article|region">`, no `dangerouslySetInnerHTML`, no `<img>` without `alt`); **if `primary_metric` declared in sitemap entry, the value renders as MetricTile/hero (not a corner badge)**; **if dynamic-segment route, `page.tsx` is either a non-async pure Server Component OR an async Server Component (no `'use client'` at top) with the client interactivity split into a sibling `_<Name>Client.tsx`**.
+DONE_WHEN: File exists at deliverable path; valid TypeScript (Step 15 — Phase-4-verified by tsc); declared states visibly implemented (sibling files for loading/error; render branch for empty; deferred_states skipped per sitemap); uses tokens via var() or Tailwind utility classes (NO hex/px violations); buttons have type attribute; **per-route `export const metadata: Metadata` is present** (Step 15 only, except for root `/`); **Biome anti-pattern checklist self-passes** (no `key={i}`, no `<div role="status|article|region">`, no `dangerouslySetInnerHTML`, no `<img>` without `alt`); **if `primary_metric` declared in sitemap entry, the value renders as MetricTile/hero (not a corner badge)**; **all user-facing copy matches brand-book `## Language` target_language and respects `## Glossary § We don't say` term replacements where applies_to scope hits**; **if dynamic-segment route, `page.tsx` is either a non-async pure Server Component OR an async Server Component (no `'use client'` at top) with the client interactivity split into a sibling `_<Name>Client.tsx`**.
 ```
 
 ### Expo stack

@@ -17,25 +17,31 @@ Industry-aligned per spec 032's 17 decisions ported via spec 045 (`/prototype` v
 
 ## Per-step output + size targets (standard tier)
 
-Sizes are TARGET CEILINGS (not minimums per spec 036 finding #3 — sub-agents tend to overshoot when treating size as "≥"; treating as hard ceiling forces concise output). Going materially under target may trigger BLOCKED; going materially over (≥1.5× ceiling) triggers a warning + sub-agent ABORT-and-re-emit suggestion.
+**Per spec 056, the canonical size budget lives in each step's `templates/pipeline/<NN-step>/schema.md § Target` block.** This table is a **derived view** — when a budget needs to change, update the schema, not this table.
 
-| # | Step | Sub-agent model | Output file(s) (paths relative to `<out>/`) | Size target (standard) | Industry source |
-|---|---|---|---|---|---|
-| 01 | Ideation | **opus** | `docs/concept-brief.md` (includes § Market Sizing TAM/SAM/SOM) | 4-10 KB | extends per spec 032 Decision 6 |
-| 02 | Prototype v1 (lo-fi) | sonnet × N | `docs/direction-a.html` (1 only at standard) + `docs/screens/<NN>-<name>.html` × 3-5 (killer flow) | direction ≥ 6 KB, screens ≥ 4 KB each | unchanged from v2; **sitemap moved to Step 07** |
-| 03 | Spec | sonnet | `docs/functional-spec.md` (includes § Problem-Validation Interviews) | 8-12 KB | extends per spec 032 Decision 6 |
-| 04 | UX Testing | sonnet | `docs/validation-report.md` (YAML frontmatter) | 5-8 KB | unchanged from v2 |
-| 05 | PRD (1-pager hybrid) | sonnet | `docs/prd/v1.md` (Lenny 1-pager bones + 3 our-specific sections; US-NN stable IDs; NSM slot) | 4-7 KB (TIGHTER than v2's 6-10) | spec 032 Decisions 1 + 9 + 15 |
-| 06 | OST | sonnet | `docs/ost.md` (Opportunity Solution Tree — 1 outcome root → 3-5 opportunities → 2-3 solutions per) | 3-6 KB | spec 032 Decision 12 (Torres) |
-| 07 | Sitemap-IA | sonnet | `docs/sitemap.yaml` (schema-bound to `references/sitemap-schema.md` — `required_categories: [marketing, auth, primary, admin, error]` enforced) | 2-5 KB | spec 032 Decisions 5 + 13 (load-bearing root-cause fix) |
-| 08 | System Design | sonnet | `docs/system-design.md` (bridge-floor + § RACI + § Risk Register) + `docs/security.md` + `docs/data-flow.json` (consumed by Step 09) | sd ≥ 12 KB, sec ≥ 3 KB, data-flow ≥ 1 KB | spec 032 Decision 10 |
-| 09 | Legal posture | sonnet | `docs/legal-posture.md` (DPIA-triggered by Step 08 data-flow; shift-left per Decision 4) | 4-7 KB | spec 032 Decision 4 (GDPR Art 25 + IAPP shift-left) |
-| 10 | Roadmap | sonnet | `docs/roadmap.md` (3-phase sketch — defines phases consumed by Step 11) | 5-8 KB | **moved before cost per spec 045 cost↔roadmap swap** |
-| 11 | Cost Estimate | sonnet | `docs/cost-estimate.md` (single-scenario; uses Step 10 phases + Step 09 legal-review budget) | 5-8 KB | **moved after roadmap per spec 045** |
-| 12 | GTM-launch | sonnet | `docs/gtm-launch.md` (positioning canvas Dunford + launch plan 4-week sketch + pricing strategy) | 4-7 KB | spec 032 Decision 7 (Stage-Gate stage 6 + April Dunford) |
-| 13 | Brand | sonnet | `docs/brand-book.md` | 4-8 KB (2-3 section snapshot) | spec 032 Decision 3 (moved after Specification — PRD-first) |
-| 14 | Design System | sonnet | `docs/design-system/tokens.css` (imported by `app/globals.css` as `@import "../docs/design-system/tokens.css"`) + `docs/design-system/components.md` + `docs/design-system/README.md` | tokens ≥ 1.5 KB, components ≥ 3 KB, ds ≥ 8 KB | unchanged content; renumbered |
-| 15 | Screen atlas (hi-fi) | sonnet × N (cap=5) | `docs/screen-atlas.md` (with sitemap coverage cross-check + PRD coverage matrix) + `app/**/*.tsx` page files for ALL sitemap routes + `app/_components/*.tsx` (legal-mandatory surfaces from Step 09) + project `REPORT.md` at `<out>/docs/REPORT.md` | atlas ≥ 8 KB, screens ≥ 6 KB each | spec 032 Decision 8 + 14 (absorbs deleted Step 7 prototype-v2 work) |
+**Soft-ceiling discipline (uniform across all calibrated steps):** exceeding `max_size × 1.2` triggers sub-agent partial-result with `oversize_reason` field naming what bloated. Going materially under the floor triggers BLOCKED via the schema's Layer 1 enforcement.
+
+| # | Step | Sub-agent model | Output file(s) (paths relative to `<out>/`) | Size target (standard) | Canonical source | Industry source |
+|---|---|---|---|---|---|---|
+| 01 | Ideation | **opus** | `docs/concept-brief.md` (includes § Market Sizing TAM/SAM/SOM) | 4-10 KB | (legacy — 056 phase 2) | extends per spec 032 Decision 6 |
+| 02 | Prototype v1 (lo-fi) | sonnet × N | `docs/direction-a.html` (1 only at standard) + `docs/screens/<NN>-<name>.html` × 3-5 (killer flow) | direction **10-30 KB**, screens 4-12 KB each | `02-prototype/schema.md § Target` ✓ 056 | unchanged content; sitemap moved to Step 07 |
+| 03 | Spec | sonnet | `docs/functional-spec.md` (includes § Problem-Validation Interviews) | **12-30 KB** | `03-spec/schema.md § Target` ✓ 056 | extends per spec 032 Decision 6 |
+| 04 | UX Testing | sonnet | `docs/validation-report.md` (YAML frontmatter) | 5-8 KB | (legacy — 056 phase 2) | unchanged from v2 |
+| 05 | PRD (1-pager hybrid) | sonnet | `docs/prd/v1.md` (Lenny 1-pager bones + 3 our-specific sections; US-NN stable IDs; NSM slot) | 4-7 KB (TIGHTER than v2's 6-10) | (legacy) | spec 032 Decisions 1 + 9 + 15 |
+| 06 | OST | sonnet | `docs/ost.md` (Opportunity Solution Tree — 1 outcome root → 3-5 opportunities → 2-3 solutions per) | 3-6 KB | (legacy) | spec 032 Decision 12 (Torres) |
+| 07 | Sitemap-IA | sonnet | `docs/sitemap.yaml` (schema-bound to `references/sitemap-schema.md` — `required_categories: [marketing, auth, primary, admin, error]` enforced) | 2-5 KB | (legacy) | spec 032 Decisions 5 + 13 (load-bearing root-cause fix) |
+| 08 | System Design | sonnet | `docs/system-design.md` (bridge-floor + § RACI + § Risk Register) + `docs/security.md` + `docs/data-flow.json` (consumed by Step 09) | sd **15-42 KB**, sec 3-10 KB, data-flow ≥ 1 KB | `08-system-design/schema.md § Target` ✓ 056 | spec 032 Decision 10 |
+| 09 | Legal posture | sonnet | `docs/legal-posture.md` (DPIA-triggered by Step 08 data-flow; shift-left per Decision 4) | **conditional: base 5-10 + DPIA +5/+12 + AI +2/+5 + Regulated +2/+8** | `09-legal/schema.md § Target` (conditional) ✓ 056 | spec 032 Decision 4 (GDPR Art 25 + IAPP shift-left) |
+| 10 | Roadmap | sonnet | `docs/roadmap.md` (3-phase sketch — defines phases consumed by Step 11) | **6-18 KB** | `10-roadmap/schema.md § Target` ✓ 056 | **moved before cost per spec 045 cost↔roadmap swap** |
+| 11 | Cost Estimate | sonnet | `docs/cost-estimate.md` (single-scenario; uses Step 10 phases + Step 09 legal-review budget) | 5-8 KB | (legacy — 056 phase 2) | **moved after roadmap per spec 045** |
+| 12 | GTM-launch | sonnet | `docs/gtm-launch.md` (positioning canvas Dunford + launch plan 4-week sketch + pricing strategy) | 4-7 KB | (legacy) | spec 032 Decision 7 (Stage-Gate stage 6 + April Dunford) |
+| 13 | Brand | sonnet | `docs/brand-book.md` | 4-8 KB (2-3 section snapshot) | (legacy) | spec 032 Decision 3 (moved after Specification — PRD-first) |
+| 14 | Design System | sonnet | `docs/design-system/tokens.css` (imported by `app/globals.css` as `@import "../docs/design-system/tokens.css"`) + `docs/design-system/components.md` + `docs/design-system/README.md` | tokens ≥ 1.5 KB, components ≥ 3 KB, ds ≥ 8 KB | (legacy) | unchanged content; renumbered |
+| 15 | Screen atlas (hi-fi) | sonnet × N (cap=5) | `docs/screen-atlas.md` (with sitemap coverage cross-check + PRD coverage matrix) + `app/**/*.tsx` page files for ALL sitemap routes + `app/_components/*.tsx` (legal-mandatory surfaces from Step 09) + project `REPORT.md` at `<out>/docs/REPORT.md` | atlas **10-28 KB**, REPORT 6-18 KB, screens 8-18 KB each | `15-screen-atlas/schema.md § Target` ✓ 056 | spec 032 Decision 8 + 14 (absorbs deleted Step 7 prototype-v2 work) |
+
+**Legend:**
+- ✓ 056 = canonical size budget reconciled per spec 056 against 3-dogfood empirical pass (045 / 048 / Vetro)
+- (legacy) = unchanged from pre-056 declaration; awaiting phase 2 calibration when next dogfood data accumulates
 
 ## Lightening op applied per step (single-tier "standard" decisions)
 

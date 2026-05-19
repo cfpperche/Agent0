@@ -50,11 +50,12 @@ CONSTRAINTS:
 - CSS :root custom properties (vendor-agnostic names: --color-primary, --background, --foreground).
 - Includes "Most Popular" string token + ≥1 `<svg` (catalog citation discipline).
 - **Do NOT produce sitemap.yaml** — that's Step 07's deliverable per spec 045 (sitemap-IA promoted to own step).
+- Size budget: per `.claude/skills/product/templates/pipeline/02-prototype/schema.md § Target` (currently 10-30 KB for direction-a.html; soft overshoot trigger at max × 1.2 → partial-result with `oversize_reason`).
 - Write file DIRECTLY to {{out}}/docs/direction-a.html. The 3-5 killer-flow mood screens are produced by separate per-stack screen-writer dispatches (sub-agent b — see § Per-stack screen-writer below).
 
 DELIVERABLE: {{out}}/docs/direction-a.html (+ killer-flow HTML mood screens at {{out}}/docs/screens/NN-<name>.html produced by sub-agent b in parallel)
 
-DONE_WHEN: File exists; size ≤ 12 KB (ceiling) AND ≥ 6 KB; contains :root + --background + --foreground + --primary tokens; contains "Most Popular"; ≥1 `<svg`; cites ≥1 OD vendor in HTML comment header.
+DONE_WHEN: File exists; size within schema target range (see schema.md § Target); contains :root + --background + --foreground + --primary tokens; contains "Most Popular"; ≥1 `<svg`; cites ≥1 OD vendor in HTML comment header.
 ```
 
 **(b) Screen writer — reused by Step 02 (mood HTML) + Step 15 (real Next.js/Expo).** See § Per-stack screen-writer below.
@@ -66,10 +67,10 @@ DONE_WHEN: File exists; size ≤ 12 KB (ceiling) AND ≥ 6 KB; contains :root + 
 ```
 TASK: Produce functional-spec.md decomposing "{{idea}}" into pages, components, interactions, states, features with Gherkin acceptance scenarios + preliminary architecture skeleton + problem-validation interview summaries (seeds OST at Step 06).
 
-CONTEXT: Read concept-brief.md at {{out}}/docs/concept-brief.md for product scope. Read direction-a.html at {{out}}/docs/direction-a.html + screens at {{out}}/docs/screens/ for surface inventory. Read .claude/skills/product/templates/pipeline/03-spec/prompt.md for canonical structure (standard tier combines spec + architecture to 8-12 KB single file). Read .claude/skills/product/templates/pipeline/03-spec/schema.md.
+CONTEXT: Read concept-brief.md at {{out}}/docs/concept-brief.md for product scope. Read direction-a.html at {{out}}/docs/direction-a.html + screens at {{out}}/docs/screens/ for surface inventory. Read .claude/skills/product/templates/pipeline/03-spec/prompt.md for canonical structure (standard tier combines spec + architecture into a single file). Read .claude/skills/product/templates/pipeline/03-spec/schema.md for the size budget (`§ Target`) + required sections.
 
 CONSTRAINTS:
-- Standard tier: combined functional-spec.md (skip separate architecture.md). 8-12 KB (hard ceiling).
+- Standard tier: combined functional-spec.md (skip separate architecture.md). Size budget: per schema.md § Target (12-30 KB; soft overshoot trigger at max × 1.2).
 - Sections required (H2): Product Overview / Pages & Surfaces (table per page) / Features (with Gherkin) / Navigation Map / Cross-cutting concerns / Acceptance Scenarios / Edge Cases / Non-goals / Decisions Pending / Preliminary Architecture / **Problem-Validation Interviews (3-5 summaries seeding OST; synthetic-OK at standard tier — clearly marked as synthetic vs sourced from real interviews)**.
 - Scale depth to surface importance; killer flow gets full treatment; trivial pages collapse to 2-4 table rows.
 - Every "Decisions Pending" row has either a source citation OR a default value.
@@ -78,7 +79,7 @@ CONSTRAINTS:
 
 DELIVERABLE: {{out}}/docs/functional-spec.md
 
-DONE_WHEN: File exists; size 8-12 KB; contains **Given** / **When** / **Then** keywords; contains "Pages & Surfaces" + "Features" + "Preliminary Architecture" + "Problem-Validation Interviews" section headers; ≥ 3 Gherkin scenarios; ≥ 3 interview summaries.
+DONE_WHEN: File exists; size within schema target range (see schema.md § Target — currently 12-30 KB); contains **Given** / **When** / **Then** keywords; contains "Pages & Surfaces" + "Features" + "Preliminary Architecture" + "Problem-Validation Interviews" section headers; ≥ 3 Gherkin scenarios; ≥ 3 interview summaries.
 ```
 
 ### Step 04 — UX Testing (heuristic audit)
@@ -194,19 +195,19 @@ TASK: Produce system-design.md + security.md + data-flow.json for "{{idea}}". Sy
 CONTEXT: Read prd.md at {{out}}/docs/prd/v1.md (scope drives scale assumption) + sitemap.yaml at {{out}}/docs/sitemap.yaml (route inventory drives integration list + auth requirements) + functional-spec.md at {{out}}/docs/functional-spec.md (preliminary architecture) + concept-brief.md at {{out}}/docs/concept-brief.md (product class + audience). Read .claude/skills/product/templates/pipeline/08-system-design/prompt.md + schema.md.
 
 CONSTRAINTS:
-- system-design.md: BRIDGE-FLOOR (6+ sections H2): Stack / Integrations / Data Model / Decisions Locked / Security / Observability / **RACI Matrix** / **Risk Register**. 12+ KB target ceiling 18 KB.
+- system-design.md: BRIDGE-FLOOR (6+ sections H2): Stack / Integrations / Data Model / Decisions Locked / Security / Observability / **RACI Matrix** / **Risk Register**. Size budget: per `.claude/skills/product/templates/pipeline/08-system-design/schema.md § Target` (15-42 KB; soft overshoot trigger at max × 1.2).
 - RACI Matrix: 5-10 key roles (founder/engineer/designer/data/legal/...) × 5-10 key activities (auth/payments/audit-trail/...). Each cell: R/A/C/I or blank.
 - Risk Register: 5-10 risks with columns: ID · description · probability (L/M/H) · impact (L/M/H) · mitigation · owner.
 - Stack baseline (adapt per product needs): Next.js 16 (matches prototype) + Postgres + Redis + Slack Bot SDK + LLM API (if needed) + S3-compatible blob.
 - Integrations table: name · purpose · sub-processor? · data-flow direction · v1-vs-v2.
 - Decisions Locked: 6-10 architectural decisions with one-line rationale.
-- security.md: STRIDE-lite threat model + auth/authz + data classification + secrets handling + AI-specific section if LLM in stack. 3-5 KB.
+- security.md: STRIDE-lite threat model + auth/authz + data classification + secrets handling + AI-specific section if LLM in stack. Size: 3-10 KB (per schema.md § Target).
 - **data-flow.json: structured machine-readable inventory.** Schema: `{"flows": [{"from": "<source>", "to": "<sink>", "data_categories": ["pii" | "health" | "minors" | "financial" | "behavioral" | "credentials" | "session" | "telemetry"], "encryption_at_rest": bool, "encryption_in_transit": bool, "retention_days": int | null, "sub_processor": string | null}]}`. Cover ALL data flows the system handles. Consumed by Step 09 legal — if ANY flow includes `pii | health | minors | financial`, Step 09 fires DPIA section as mandatory.
 - Write 3 files DIRECTLY to {{out}}/docs/: 08-system-design.md + 08-security.md + 08-data-flow.json.
 
 DELIVERABLE: 3 files: {{out}}/docs/system-design.md + {{out}}/docs/security.md + {{out}}/docs/data-flow.json
 
-DONE_WHEN: system-design.md ≥ 12 KB ≤ 18 KB + 8 H2 sections present (including RACI Matrix + Risk Register); security.md ≥ 3 KB + contains "Threat Model" + "Auth" + "Data Classification" + "Secrets" section headers; data-flow.json valid JSON parses cleanly with `flows` array containing ≥3 entries.
+DONE_WHEN: system-design.md size within schema target range (see 08-system-design/schema.md § Target — currently 15-42 KB) + 8 H2 sections present (including RACI Matrix + Risk Register); security.md size within target range (3-10 KB) + contains "Threat Model" + "Auth" + "Data Classification" + "Secrets" section headers; data-flow.json valid JSON parses cleanly with `flows` array containing ≥3 entries.
 ```
 
 ### Step 09 — Legal posture (shift-left per Decision 4 — DPIA-triggered by Step 08)
@@ -219,7 +220,7 @@ TASK: Produce legal-posture.md — founder's articulated legal posture briefing 
 CONTEXT: Read prd.md at {{out}}/docs/prd/v1.md (audience drives jurisdiction exposure) + system-design.md at {{out}}/docs/system-design.md (Integrations name every sub-processor) + **data-flow.json at {{out}}/docs/data-flow.json (parses flows[]; if any flow has data_categories ⊃ {pii, health, minors, financial}, DPIA section is MANDATORY)** + concept-brief.md at {{out}}/docs/concept-brief.md (audience). Read .claude/skills/product/templates/pipeline/09-legal/prompt.md + schema.md.
 
 CONSTRAINTS:
-- Standard tier: BRIEF CHECKLIST + POSTURE (4-7 KB hard ceiling).
+- Standard tier: BRIEF CHECKLIST + POSTURE. Size budget: **conditional model** per `.claude/skills/product/templates/pipeline/09-legal/schema.md § Target` — base 5-10 KB + DPIA (+5/+12) + AI-Specific (+2/+5) + Regulated Aspects (+2/+8). Compute effective floor/ceiling by summing base with each triggered condition. Soft overshoot at effective max × 1.2 → partial-result with `oversize_reason`.
 - TOP-OF-DOCUMENT escape clause (line 1-5): "This is founder's posture, NOT legal advice. Counsel review required before launch."
 - Sections required (H2): Terms Model / Privacy Posture (regulation applicability checklist GDPR/LGPD/CCPA Yes/No based on audience) / Data Handling Snapshot / Licensing (product license + OSS compatibility flag) / Sub-Processor Disclosure (extracted from system-design § Integrations — count must match) / IP Assignment Posture / Open Decisions.
 - **§ DPIA (conditional — fires if data-flow.json contains sensitive categories):** Required when Step 08 data-flow has any `data_categories ⊃ {pii, health, minors, financial}`. Lists each sensitive data flow, the legal basis (consent/contract/legitimate-interest/legal-obligation/vital-interest/public-task), the data subject rights affected (access/erasure/portability/restriction), and the risk-mitigation posture. **DPIA-shift-left per GDPR Art 25 + IAPP guidance** — counsel reviews DPIA section in 1-pager form BEFORE coding starts, not after launch.
@@ -231,7 +232,7 @@ CONSTRAINTS:
 
 DELIVERABLE: {{out}}/docs/legal-posture.md
 
-DONE_WHEN: File exists; size 4-7 KB; escape clause at TOP (line 1-5); contains "Terms" + "Privacy" + "Licensing" + "Sub-Processor" + "Open Decisions" section headers; § DPIA present IF data-flow.json contains sensitive categories; § AI-Specific present IF LLM in Integrations; sub-processor count matches system-design integration count.
+DONE_WHEN: File exists; size within schema-computed effective range (base 5-10 KB + sum of triggered conditional additions per schema.md § Target); escape clause at TOP (line 1-5); contains "Terms" + "Privacy" + "Licensing" + "Sub-Processor" + "Open Decisions" section headers; § DPIA present IF data-flow.json contains sensitive categories; § AI-Specific present IF LLM in Integrations; sub-processor count matches system-design integration count.
 ```
 
 ### Step 10 — Roadmap (defines phases for Step 11 cost — per spec 045 cost↔roadmap swap)
@@ -250,12 +251,12 @@ CONSTRAINTS:
 - Deliverables table per phase: rows reference Step-05 US-NN.
 - Milestones are observable end-of-phase deliverables.
 - § Overview 2-3 one-liners. § Horizon (duration estimate + team shape). § Open Decisions table.
-- 5-8 KB hard ceiling.
+- Size budget: per `.claude/skills/product/templates/pipeline/10-roadmap/schema.md § Target` (6-18 KB; soft overshoot trigger at max × 1.2).
 - Write file DIRECTLY to {{out}}/docs/roadmap.md.
 
 DELIVERABLE: {{out}}/docs/roadmap.md
 
-DONE_WHEN: File exists; size 5-8 KB; 3 phase headers present + each phase has 1-3 milestones + deliverables table per phase + § Open Decisions section; phase titles are user-flow-shaped (NOT generic labels like "Foundation").
+DONE_WHEN: File exists; size within schema target range (see schema.md § Target — currently 6-18 KB); 3 phase headers present + each phase has 1-3 milestones + deliverables table per phase + § Open Decisions section; phase titles are user-flow-shaped (NOT generic labels like "Foundation").
 ```
 
 ### Step 11 — Cost Estimate (per-phase using Step 10's roadmap — spec 045 swap)
@@ -380,7 +381,7 @@ CONTEXT: Read ALL prior artifacts at {{out}}/docs/ (semantic-named per spec 048;
 Read .claude/skills/product/templates/pipeline/15-screen-atlas/prompt.md + schema.md for atlas shape.
 
 CONSTRAINTS:
-- 8-15 KB hard ceiling for screen-atlas.md. NOT a re-render of any single screen — the atlas IS the index.
+- Size budget: per `.claude/skills/product/templates/pipeline/15-screen-atlas/schema.md § Target` (10-28 KB for screen-atlas.md; soft overshoot trigger at max × 1.2). NOT a re-render of any single screen — the atlas IS the index.
 - Required H2 sections (verbatim): Overview / Screens Index / Sitemap Coverage Cross-Check / PRD Coverage Matrix / Design Fidelity / States Coverage Matrix / User Flow Walkthrough / Open Decisions.
 - **Sitemap Coverage Cross-Check** (NEW per spec 045) — for every route in sitemap.yaml, atlas confirms the corresponding `app/<route>/page.tsx` was actually generated. Missing screens listed as `[GAP — re-dispatch screen-writer]`.
 - **Screens Index** — table: filename | route path | category | covers_us | states implemented.
@@ -396,7 +397,7 @@ CONSTRAINTS:
 
 DELIVERABLE: {{out}}/docs/screen-atlas.md + {{out}}/app/(app)/layout.tsx + optionally {{out}}/app/(marketing)/layout.tsx
 
-DONE_WHEN: All 3 files exist (atlas + (app)/layout.tsx + optional (marketing)/layout.tsx); atlas size 8-15 KB; atlas contains all 8 H2 section headers; Sitemap Coverage Cross-Check lists every route from sitemap.yaml with status; PRD coverage matrix lists every US-NN from prd.md; design-fidelity table has 4-dim Min column; `(app)/layout.tsx` exists with sidebar nav matching sitemap primary+admin categories, tokens-only, no `'use client'` directive.
+DONE_WHEN: All 3 files exist (atlas + (app)/layout.tsx + optional (marketing)/layout.tsx); atlas size within schema target range (see schema.md § Target — currently 10-28 KB); atlas contains all 8 H2 section headers; Sitemap Coverage Cross-Check lists every route from sitemap.yaml with status; PRD coverage matrix lists every US-NN from prd.md; design-fidelity table has 4-dim Min column; `(app)/layout.tsx` exists with sidebar nav matching sitemap primary+admin categories, tokens-only, no `'use client'` directive.
 ```
 
 **(b) Screen writer:** see § Per-stack screen-writer below. N = all sitemap.yaml routes (NOT killer-flow only — full sitemap coverage at standard tier per spec 045 Decision 13 sitemap schema enforcement).

@@ -1,6 +1,6 @@
 # 056 — pipeline size reconciliation
 
-**Status:** draft
+**Status:** shipped (6/15 steps calibrated; 9 legacy steps deferred to phase 2)
 
 ## Problem
 

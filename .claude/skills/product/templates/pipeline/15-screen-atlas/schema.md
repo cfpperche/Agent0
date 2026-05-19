@@ -2,6 +2,18 @@
 
 The submitted `screen-atlas.md` MUST contain the level-2 markdown headings below + meet the Layer 1 size/content floor in the JSON fenced block. All listed files must be persisted via the `extra_files` parameter on `product_step_submit`. Both checks fire on submit; missing sections OR Layer 1 failures produce `code: "schema-incomplete"` with the failure list.
 
+## Target (canonical size budget — reconciled per spec 056)
+
+This schema is the **single source of truth** for Step 15a (screen-atlas) size budgets. `delegation-briefs.md` and `pipeline-coverage.md` REFERENCE these numbers.
+
+| Artifact | `min_size` | `max_size` | Calibration source |
+|---|---|---|---|
+| `screen-atlas.md` | 10 KB | 28 KB | 3-dogfood pass (045/048/Vetro) landed 13.9-25.3 KB; floor unchanged from spec 026's 10 KB; ceiling 28 KB accommodates venture-scale atlas (8-15 screens × 3 dense matrices + flow walkthrough) |
+| `REPORT.md` | 6 KB | 18 KB | Run Summary + PRD Coverage + Fidelity + States Matrix + Recommendations; unchanged content; ceiling added |
+| `screens/*.html` (per file, hi-fi tier) | 8 KB | 18 KB | per-screen hi-fi; ceiling added (compact-product screens land at 8-10 KB, venture at 14-16 KB) |
+
+**Soft overshoot:** exceeding `max_size × 1.2` (≈ 34 KB for `screen-atlas.md`) triggers sub-agent partial-result with `oversize_reason` naming what bloated.
+
 ## Required sections (screen-atlas.md markdown headings)
 
 Section names slugify by lowercasing + dashing — `## PRD Coverage` → `prd-coverage`, `## Open Decisions` → `open-decisions`, `## v2-Vision` → `v2-vision`. Cosmetic variants accepted (trailing punctuation, em-dashes, etc.); slugifier strips them.
@@ -30,6 +42,7 @@ The schema does NOT structurally enforce the product-class calibration (Micro / 
     {
       "path": "screen-atlas.md",
       "min_size": 10240,
+      "max_size": 28672,
       "contains": [
         "## Overview",
         "## Screens Index",
@@ -49,6 +62,7 @@ The schema does NOT structurally enforce the product-class calibration (Micro / 
     {
       "path": "REPORT.md",
       "min_size": 6144,
+      "max_size": 18432,
       "contains": [
         "## Run Summary",
         "## PRD Coverage",

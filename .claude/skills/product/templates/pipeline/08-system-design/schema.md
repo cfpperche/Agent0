@@ -7,6 +7,18 @@ Step 9 submits a **three-artifact bundle**: `system-design.md` (primary `content
 
 A failure in either layer produces `code: "schema-incomplete"` with the precise failure list; nothing is written until the whole bundle passes.
 
+## Target (canonical size budget — reconciled per spec 056)
+
+This schema is the **single source of truth** for Step 08 size budgets. `delegation-briefs.md` and `pipeline-coverage.md` REFERENCE these numbers.
+
+| Artifact | `min_size` | `max_size` | Calibration source |
+|---|---|---|---|
+| `system-design.md` (bridge-floor + RACI + Risk Register) | 15 KB | 42 KB | 3-dogfood pass (045/048/Vetro) landed 15-40 KB; floor LOWERED from spec 026's 20 KB (dogfood-v3 legitimately landed at 15.2 KB); ceiling 42 KB accommodates the 8 required H2 sections + RACI + risk register at venture-scale depth |
+| `architecture.json` | 256 B | (unbounded) | unchanged — compact JSON graph |
+| `security.md` | 3 KB | 10 KB | unchanged floor; ceiling added for STRIDE-lite + AI section combined |
+
+**Soft overshoot:** exceeding `max_size × 1.2` (≈ 50 KB for `system-design.md`) triggers sub-agent partial-result with `oversize_reason` naming what bloated.
+
 ## Required sections (markdown headings in `system-design.md`)
 
 Section names slugify by lowercasing + dashing the H2 title — `## Data Model` → `data-model`, `## Non-Functional` → `non-functional`. Cosmetic variants (trailing punctuation, parenthetical suffixes) are accepted; slugifier strips them.
@@ -36,7 +48,8 @@ Section names slugify by lowercasing + dashing the H2 title — `## Data Model` 
   "required_files": [
     {
       "path": "system-design.md",
-      "min_size": 20480,
+      "min_size": 15360,
+      "max_size": 43008,
       "contains": [
         "## Overview",
         "## Stack",
@@ -88,7 +101,7 @@ Section names slugify by lowercasing + dashing the H2 title — `## Data Model` 
 
 ### Notes on the floors
 
-- **`system-design.md` `min_size: 20480` (20 KB)** — anchored against the 11 required sections at honest depth. Step 3's `architecture.md` floor is 4 KB for 4 sections (the *skeleton*); step 9 deepens those 4 sections AND adds 7 new ones (services, APIs, deployment, non-functional, evaluation, alternatives, triggers-and-open-decisions). A 5x multiplier on section count + design rigor (evaluation table, trade-offs, alternatives with reason, decision-triggers digest) lands at 20 KB minimum. SMB SaaS and venture-scale typically 22-28 KB; micro-products may legitimately land under (use the `# OVERRIDE: compact-product: <class>` shape in the prompt's submit context).
+- **`system-design.md` `min_size: 15360` (15 KB)** — lowered from spec 026's 20 KB per spec 056 calibration (dogfood-v3 legitimately landed at 15.2 KB; the old 20-KB floor would have BLOCKED it). Floor anchored against the 11 required sections at honest depth. Step 3's `architecture.md` floor is 4 KB for 4 sections (the *skeleton*); step 9 deepens those 4 sections AND adds 7 new ones (services, APIs, deployment, non-functional, evaluation, alternatives, triggers-and-open-decisions). A 5x multiplier on section count + design rigor (evaluation table, trade-offs, alternatives with reason, decision-triggers digest) lands at 20 KB minimum. SMB SaaS and venture-scale typically 22-28 KB; micro-products may legitimately land under (use the `# OVERRIDE: compact-product: <class>` shape in the prompt's submit context).
 
 - **The literal pipe-delimited row `| Dimension | Assessment | Concern Level |`** — proves the evaluation table carries the canonical 3-column shape from `anthill-principal-engineer § Step 3`. A system-design that ships evaluation as prose bullets (anti-pattern: "**Simplicity**: medium" line-items) trips Layer 1 — the table is the visual contract and forces the agent to put a concern level on every dimension. The literal row only appears as a real markdown table header.
 

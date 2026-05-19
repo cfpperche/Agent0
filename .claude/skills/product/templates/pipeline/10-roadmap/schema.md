@@ -2,6 +2,16 @@
 
 The submitted `roadmap.md` MUST contain the level-2 markdown headings below + meet the Layer 1 size/content floor in the JSON fenced block. Both checks fire on submit; missing sections OR Layer 1 failures produce `code: "schema-incomplete"` with the failure list. Single-artifact step — no `extra_files`.
 
+## Target (canonical size budget — reconciled per spec 056)
+
+This schema is the **single source of truth** for Step 10 size budgets. `delegation-briefs.md` and `pipeline-coverage.md` REFERENCE these numbers.
+
+| Artifact | `min_size` | `max_size` | Calibration source |
+|---|---|---|---|
+| `roadmap.md` | 6 KB | 18 KB | 3-dogfood pass (045/048/Vetro) landed 7.9-14.6 KB; floor LOWERED from spec 026's 8 KB (compact products legitimately land below); ceiling 18 KB accommodates 3-4 phase deep version with dependency graph + per-phase risks |
+
+**Soft overshoot:** exceeding `max_size × 1.2` (≈ 22 KB) triggers sub-agent partial-result with `oversize_reason` naming what bloated.
+
 ## Required sections (roadmap.md markdown headings)
 
 Section names slugify by lowercasing + dashing — `## Open Decisions` → `open-decisions`, `## v2-Vision` → `v2-vision`. Cosmetic variants accepted; slugifier strips them.
@@ -29,7 +39,8 @@ The schema does NOT structurally enforce the operating-mode (canonical timeline-
   "required_files": [
     {
       "path": "roadmap.md",
-      "min_size": 8192,
+      "min_size": 6144,
+      "max_size": 18432,
       "contains": [
         "## Overview",
         "## Horizon",
@@ -55,7 +66,7 @@ The schema does NOT structurally enforce the operating-mode (canonical timeline-
 
 ### Notes on the floors
 
-- **`roadmap.md` `min_size: 8192` (8 KB)** — anchored against the 8 required sections at honest depth. A roadmap with 4 phases (each with goal + deliverable table 4-6 rows + dependencies + exit criteria), 3-6 milestones, dependency graph for ≥3 phases, per-phase risks table (4 rows + buffer paragraph), v2-vision (3-5 bullets), and open-decisions (2-4 rows) lands at 10-12 KB for SMB SaaS Full. Micro-products may legitimately land under 8 KB (use `# OVERRIDE: compact-product: <class>` shape in submit context); 8 KB is the universal sanity line. The floor is lower than step-10's 10 KB because roadmap is narrative-shorter (no probability tables, no projections, no unit-economics math) — but the load-bearing literal anchors stay the same.
+- **`roadmap.md` `min_size: 6144` (6 KB)** — lowered from spec 026's 8 KB per spec 056 calibration (compact-product variants legitimately land at 6-8 KB without an OVERRIDE marker). Floor anchored against the 8 required sections at honest depth. A roadmap with 4 phases (each with goal + deliverable table 4-6 rows + dependencies + exit criteria), 3-6 milestones, dependency graph for ≥3 phases, per-phase risks table (4 rows + buffer paragraph), v2-vision (3-5 bullets), and open-decisions (2-4 rows) lands at 10-12 KB for SMB SaaS Full. Micro-products may legitimately land under 8 KB (use `# OVERRIDE: compact-product: <class>` shape in submit context); 8 KB is the universal sanity line. The floor is lower than step-10's 10 KB because roadmap is narrative-shorter (no probability tables, no projections, no unit-economics math) — but the load-bearing literal anchors stay the same.
 
 - **The literal `## Phases` substring** — proves the phases section exists as an H2 (NOT inline as a sub-heading under § Horizon). The phases section is the spine; without an H2 anchor, the reader has no scan target.
 

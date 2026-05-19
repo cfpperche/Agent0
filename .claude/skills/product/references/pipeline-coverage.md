@@ -19,7 +19,13 @@ Industry-aligned per spec 032's 17 decisions ported via spec 045 (`/prototype` v
 
 **Per spec 056, the canonical size budget lives in each step's `templates/pipeline/<NN-step>/schema.md § Target` block.** This table is a **derived view** — when a budget needs to change, update the schema, not this table.
 
-**Soft-ceiling discipline (uniform across all calibrated steps):** exceeding `max_size × 1.2` triggers sub-agent partial-result with `oversize_reason` field naming what bloated. Going materially under the floor triggers BLOCKED via the schema's Layer 1 enforcement.
+**Overshoot cascade (uniform v1 baseline across all 15 steps, per spec 065):** every step declares `soft_overshoot_multiplier = 1.2` and `hard_abort_multiplier = 1.8`. The two-threshold semantics:
+
+- `output ≤ max_size × 1.0` → ship as DONE
+- `max_size × 1.2 < output ≤ max_size × 1.8` → emit partial-result with `oversize_reason` (sub-agent has agency to keep producing IF partial useful to downstream)
+- `output > max_size × 1.8` → STOP, emit partial-result with `oversize_reason`, no further production (no agency)
+
+**Trim-loop and re-emit-at-smaller-scope are forbidden** in every zone above 1.0× — both are "redo to fit budget" antipatterns that hide the scope-mismatch signal. `oversize_reason` is free prose naming the bloat dimension (CSS, fixtures, prose verbosity, screen count, etc.), not "too big". Override marker `# OVERRIDE: budget-exempt: <reason ≥10 chars>` ships overshoot deliberately. Per-step differentiation deferred (spec 056 calibration pattern: ship uniform, calibrate via dogfood). Going materially under the floor still triggers BLOCKED via the schema's Layer 1 enforcement. See `.claude/rules/artifact-budgets.md`.
 
 | # | Step | Sub-agent model | Output file(s) (paths relative to `<out>/`) | Size target (standard) | Canonical source | Industry source |
 |---|---|---|---|---|---|---|

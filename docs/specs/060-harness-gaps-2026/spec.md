@@ -1,0 +1,103 @@
+# 060 — harness-gaps-2026
+
+_Created 2026-05-19._
+
+**Status:** draft
+**Type:** umbrella
+
+## Intent
+
+Aggregator for the 2026 competitive harness audit. Web research surfaced gaps between Agent0 and contemporary harnesses (Codex CLI, Claude Code 2026, Hermes Agent, Goose, OpenCode, Spec-Kit, BMAD, OpenSpec) plus the cross-tool `AGENTS.md` standard. Each row in the gap matrix below either gets a follow-up spec (linked) or an explicit close-decision (with reason). This spec ships nothing on its own — it is a tracking artifact whose acceptance state is the closure of every row.
+
+The audit ran 2026-05-19; sources cited in `plan.md` § Research. The frame is the same one that justified the existing discipline gates: Agent0 stays lightweight (bash-zero-dep capacities, discipline-first) and only adopts features whose ROI clears the rule-of-three demand-test from `.claude/memory/feedback_speculative_observability.md`.
+
+## Acceptance criteria
+
+- [ ] **Scenario: every §A row is resolved**
+  - **Given** the gap matrix in this spec lists 8 "standard but missing" rows
+  - **When** the umbrella is moved to `shipped`
+  - **Then** each row has either a `→ NNN` follow-up spec link OR a `closed: <reason>` marker inline
+
+- [ ] **Scenario: every §B row is resolved**
+  - **Given** the gap matrix lists 9 "emerging" rows
+  - **When** the umbrella is moved to `shipped`
+  - **Then** each row has either a `→ NNN` link OR `closed: <reason>` OR `deferred: <re-evaluate condition>`
+
+- [ ] **Scenario: §C is informational only**
+  - **Given** the matrix lists "investigated and discarded" rows
+  - **When** the umbrella is reviewed
+  - **Then** §C requires no action — discards are documentation, not work items
+
+- [ ] `.claude/rules/spec-driven.md` documents the `**Type:** <value>` convention: omitted = default feature/refinement spec, `umbrella` = aggregator (no implementation; tracks closure of child rows)
+
+- [ ] Follow-up specs 061/062/063 are scaffolded (top-3 picks by ROI: small esforço + high priority)
+
+## Non-goals
+
+- Implementing any gap directly in this spec — child specs do that work
+- Re-running the competitive research (sources frozen in `plan.md`; next audit gated by rule-of-three on user-reported drift)
+- Forcing every gap to ship — explicit close-decision is a valid outcome
+- Expanding `**Type:**` to other values (`bugfix` / `refactor` / `research`) — defer until 3+ specs demand the distinction
+- Adopting `AGENTS.md` cross-tool standard from this umbrella (its own row deserves its own spec when prioritized)
+
+## Open questions
+
+- [ ] Should umbrella specs have their own lifecycle state (`shipped` when all child rows closed) or stay `in-progress` until manually marked? Proposed: auto-`shipped` when all rows have outcomes — but no enforcement, just convention.
+- [ ] Does the `umbrella` type ever stack with `superseded`? E.g. a v2 umbrella for next-cycle audit — likely yes, treated like any other spec succession.
+
+## Context / references
+
+- Audit conversation 2026-05-19 (research delegated via general-purpose agent, opus model)
+- Top-3 picks (alta prioridade + esforço S/M):
+  - **061** → SubagentStop hook (closes delegation audit row)
+  - **062** → `/goal` skill (done-state contract at user→main boundary)
+  - **063** → worktree-isolated sub-agents (collision prevention via 6th handoff field)
+- `.claude/rules/spec-driven.md` § The four artifacts — convention being extended
+- `.claude/memory/feedback_speculative_observability.md` — gates re-evaluation of §B deferrals
+
+## Gap matrix
+
+### §A — Standard but missing (8 rows)
+
+| # | Gap | Canonized by | Priority | Esforço | Outcome |
+|---|---|---|---|---|---|
+| A1 | `/goal` primitive (done-state contract + auto-loop at user→main) | Codex CLI 0.128+; Claude Code v2.1.139+ | Alta | M | **→ 062** |
+| A2 | Worktree-isolated sub-agents (6th handoff field `ISOLATION: worktree`) | Claude Code native | Alta | M | **→ 063** |
+| A3 | `SubagentStop` hook closing delegation audit row | Claude Code 2026 (27+ events) | Alta | S | **→ 061** |
+| A4 | `AGENTS.md` cross-tool standard (CLAUDE.md ↔ AGENTS.md sync) | Linux Foundation Agentic AI | Média | S | pending follow-up spec |
+| A5 | `PermissionRequest` hook (dynamic GREEN/YELLOW/RED policy) | Claude Code 2.0.45+ | Média | S | pending follow-up spec |
+| A6 | Cost/token observability per-delegação in audit JSONL | Hermes Agent; Claude Code `/cost` v2.1.92+ | Média | S | pending follow-up spec |
+| A7 | Eval/golden-test harness for `/product`/`/sdd` regression | DeepEval, Promptfoo, Braintrust | Média | M | pending follow-up spec |
+| A8 | Delta-spec tracking convention (ADDED/MODIFIED/REMOVED in `spec.md`) | OpenSpec | Baixa | S | pending follow-up spec |
+
+### §B — Emerging, worth watching (9 rows)
+
+| # | Gap | Canonized by | Priority | Esforço | Outcome |
+|---|---|---|---|---|---|
+| B1 | `SubagentStart`/`SubagentStop` lifecycle hooks (related to A3 but broader) | Claude Code 2026 | Alta | S | folded into 061 — close as duplicate |
+| B2 | InstructionsLoaded-driven rule analytics (histogram of rule load frequency) | (extension of own `rule-load-debug.sh`) | Baixa | S | deferred: re-evaluate when rule count > 30 |
+| B3 | Agent-as-peer / pub-sub channels | Claude Code Channels Q1 2026 | Baixa | L | deferred: rule-of-three on orchestration demand |
+| B4 | Persona/SOUL.md per sub-agent (`.claude/personas/<role>.md`) | Hermes Agent SOUL.md | Média | S | pending follow-up spec (already in REMINDERS.md) |
+| B5 | Honcho-style dialectic memory (peer-modeling, background reasoning loop) | Honcho | Baixa | L | **closed**: heavy infra (FastAPI server) conflicts with bash-zero-dep frame |
+| B6 | Cross-fork bidirectional memory sync | (no canonical) | Baixa | M | **closed**: one-way is conscious design (see `memory-placement.md`) |
+| B7 | `UserPromptExpansion` hook (rewrites prompt with DONE-state inline) | Claude Code 2026 | Baixa-Média | S | folded into 062 — natural surface for `/goal` |
+| B8 | `notes.md` sub-agent integration enforcement (validator checks append) | Spec 046 (parcial) | Média | S | pending follow-up spec |
+| B9 | Constitution / immutable principles as transversal gate | Spec-Kit | Baixa | S | **closed**: cerimônia risk; Agent0 prefers skip-categories + `# OVERRIDE` |
+
+### §C — Investigated and discarded (8 rows, informational only)
+
+| # | Discarded | Reason |
+|---|---|---|
+| C1 | BMAD 12-agent specialized cast (Analyst/PM/Architect/Dev/QA/Orchestrator) | Duplicates `/product` 15-step with weaker ergonomics; reinvents orchestration layer that delegation gate already covers |
+| C2 | Goose recipes + sub-recipes composition | `.claude/skills/` already provides this; MCP-UI widgets are CLI-first antipattern |
+| C3 | Pi RPC mode (subprocess embedding) | Agent0 IS the harness, not a meta-orchestrator over external harnesses |
+| C4 | OpenCode 75+ LLM providers / multi-provider credentials | Runtime concern, not harness-discipline concern; inherited from Claude Code |
+| C5 | MCP-UI visual widgets (Goose desktop) | Explicit antipattern: Agent0 is CLI-first, hooks are bash |
+| C6 | Cursor Design Mode (mockup → impl) | Vertical-specific; `/product` already covers design system via discovery |
+| C7 | Real-time agent dashboards (Braintrust/Langfuse) | Violates `feedback_speculative_observability.md` rule-of-three |
+| C8 | Spec-Kit constitution as gate transversal | Cerimônia risk vs Agent0's skip-categories + override marker |
+
+## Future audits
+
+- Re-run competitive harness audit quarterly (next: 2026-08-19)
+- Add reminder to `.claude/REMINDERS.md` after this spec's first child spec ships, so the audit cadence has an owner

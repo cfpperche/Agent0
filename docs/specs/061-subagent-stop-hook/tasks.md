@@ -8,11 +8,11 @@ _Pre-flight resolved 2026-05-19 via probe-fires of `PreToolUse(Agent)` + `Subage
 
 - [x] 1. ~~Resolve Open Question #1: empirical payload capture.~~ **Resolved.** `SubagentStop` carries `agent_id` (top-level) but PreToolUse only carries `tool_use_id`. Bridge: per-sub-agent transcript sidecar `.meta.json.toolUseId`. Design: extend gate to record `tool_use_id`; stop hook reads sidecar.
 - [x] 2. ~~Resolve Open Question #2: edit-count accounting.~~ **Resolved.** `session-track-edits.sh` is session-scoped (wrong granularity). Canonical source: `agent_transcript_path` JSONL → `jq` filter for `tool_use` blocks with name ∈ {Edit, Write, MultiEdit}. No new accumulator needed.
-- [ ] 3. **Extend `.claude/hooks/delegation-gate.sh`** to capture `tool_use_id` in dispatch audit row:
-  - Add near line 41 (after SESSION_ID extraction): `TOOL_USE_ID="$(printf '%s' "$INPUT" | jq -r '.tool_use_id // ""')"`
-  - Add to `jq -n` args list (~line 230-242): `--arg tool_use_id "$TOOL_USE_ID"`
-  - Add to JSON schema being built: `tool_use_id: $tool_use_id`
-  - Run existing delegation-gate tests; all should pass (additive change). If any fail, the new field is breaking an expected exact-schema assertion — fix the test fixture's expectation, not the schema.
+- [x] 3. **Extend `.claude/hooks/delegation-gate.sh`** to capture `tool_use_id` in dispatch audit row — DONE 2026-05-19.
+  - Added at line 42: `TOOL_USE_ID="$(printf '%s' "$INPUT" | jq -r '.tool_use_id // ""')"`
+  - Added to `jq -n` call: `--arg tool_use_id "$TOOL_USE_ID"` + schema field `tool_use_id:$tool_use_id`
+  - Verified e2e: dispatch fired "gate-verify" Explore (haiku); tail of `.claude/delegation-audit.jsonl` now has `"tool_use_id":"toolu_01HVJW3fCdpnSV13MdWMCwoB"` adjacent to `session_id` — 12-field row.
+  - **No delegation-gate test suite exists** (only `.claude/tests/{secrets-scan,supply-chain,...}` — gap noted in notes.md). Regression coverage = manual e2e only.
 - [ ] 4. **Write `.claude/hooks/delegation-stop.sh`** following the canonical pattern:
   - Shebang + `set -uo pipefail` (NOT `-e` — fail-open requires graceful continuation)
   - `INPUT="$(cat 2>/dev/null || true)"`; bail on empty / missing jq

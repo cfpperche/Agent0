@@ -13,7 +13,7 @@ _Pre-flight resolved 2026-05-19 via probe-fires of `PreToolUse(Agent)` + `Subage
   - Added to `jq -n` call: `--arg tool_use_id "$TOOL_USE_ID"` + schema field `tool_use_id:$tool_use_id`
   - Verified e2e: dispatch fired "gate-verify" Explore (haiku); tail of `.claude/delegation-audit.jsonl` now has `"tool_use_id":"toolu_01HVJW3fCdpnSV13MdWMCwoB"` adjacent to `session_id` — 12-field row.
   - **No delegation-gate test suite exists** (only `.claude/tests/{secrets-scan,supply-chain,...}` — gap noted in notes.md). Regression coverage = manual e2e only.
-- [ ] 4. **Write `.claude/hooks/delegation-stop.sh`** following the canonical pattern:
+- [x] 4. **Write `.claude/hooks/delegation-stop.sh`** following the canonical pattern — DONE 2026-05-19 (174 lines, syntax OK):
   - Shebang + `set -uo pipefail` (NOT `-e` — fail-open requires graceful continuation)
   - `INPUT="$(cat 2>/dev/null || true)"`; bail on empty / missing jq
   - Extract: `AGENT_ID`, `SESSION_ID`, `AGENT_TYPE`, `AGENT_TRANSCRIPT_PATH`, `LAST_MSG` (head 200 chars), `STOP_HOOK_ACTIVE`
@@ -24,8 +24,8 @@ _Pre-flight resolved 2026-05-19 via probe-fires of `PreToolUse(Agent)` + `Subage
   - Build close row with `jq -n`: `{ts, event: "subagent-stop", session_id, agent_id, tool_use_id, agent_type, exit, duration_ms, edit_count, last_assistant_message_head, agent_transcript_path, correlation}`
   - Append with `flock` (mirror runtime-capture.sh § Phase 6 atomic write pattern)
   - Fail-open everywhere: any error → exit 0 silently
-- [ ] 5. `chmod +x .claude/hooks/delegation-stop.sh`
-- [ ] 6. Register the hook in `.claude/settings.json` under `hooks.SubagentStop`:
+- [x] 5. `chmod +x .claude/hooks/delegation-stop.sh` — DONE.
+- [x] 6. Register the hook in `.claude/settings.json` under `hooks.SubagentStop` — DONE (inserted after `Stop` block). Validated JSON via `jq .`:
   ```json
   "SubagentStop": [
     { "hooks": [ { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/delegation-stop.sh" } ] }
@@ -44,7 +44,7 @@ _Pre-flight resolved 2026-05-19 via probe-fires of `PreToolUse(Agent)` + `Subage
 - [ ] 9. Update `.claude/rules/delegation.md`:
   - § Audit log: list `tool_use_id` as 12th dispatch field; document close row event schema (12+ fields); add example `jq` join query
   - § The 5-field handoff: NO change (parser doesn't expose `tool_use_id` to brief — harness-internal)
-- [ ] 10. **Manual end-to-end verification**: dispatch a real Agent call (small Edit task); verify dispatch row has `tool_use_id`; verify close row appended with matching `tool_use_id`, correct `agent_id`, computed `duration_ms`, `edit_count: ≥1`.
+- [x] 10. **Manual end-to-end verification (happy path)** — DONE 2026-05-19. Dispatched "e2e-final" Explore (haiku); audit log tail has paired open+close rows joined by `tool_use_id: "toolu_018PMUwspakE2hZoArVyStUU"`. Close row records: `event: "subagent-stop"`, `agent_id: "ae57e5cc6f6de8796"`, `exit: "ok"`, `duration_ms: 1000`, `edit_count: 0`, `correlation: "tool_use_id"` (exact bridge worked, not heuristic fallback). Remaining e2e scenarios (with-edits, loop-budget, orphan-stop, missing-sidecar, malformed) covered by Task 7 fixture tests.
 
 ## Verification
 

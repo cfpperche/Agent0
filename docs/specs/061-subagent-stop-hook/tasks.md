@@ -41,9 +41,9 @@ _Pre-flight resolved 2026-05-19 via probe-fires of `PreToolUse(Agent)` + `Subage
   - `fixtures/missing-sidecar.json` — sidecar `.meta.json` not present; assert `tool_use_id: null`, fall-back correlation works
   - Each test pipes fixture as stdin, runs hook in isolated tmpdir with synthetic audit log, asserts tail row via `jq`
 - [ ] 8. Verify gate-extension regression: run `bash .claude/tests/run-all.sh` (or whichever orchestrator exists); 100% pass required before declaring done.
-- [ ] 9. Update `.claude/rules/delegation.md`:
-  - § Audit log: list `tool_use_id` as 12th dispatch field; document close row event schema (12+ fields); add example `jq` join query
-  - § The 5-field handoff: NO change (parser doesn't expose `tool_use_id` to brief — harness-internal)
+- [x] 9. Update `.claude/rules/delegation.md` — DONE 2026-05-19.
+  - § Audit log restructured: two row shapes (dispatch + close), bridge mechanism documented, 3 example `jq` queries (pair, find loop-budget exhaustions, find orphans). 12-field dispatch + 13-field close row schemas listed inline.
+  - § The 5-field handoff: untouched (parser doesn't expose `tool_use_id` to brief).
 - [x] 10. **Manual end-to-end verification (happy path)** — DONE 2026-05-19. Dispatched "e2e-final" Explore (haiku); audit log tail has paired open+close rows joined by `tool_use_id: "toolu_018PMUwspakE2hZoArVyStUU"`. Close row records: `event: "subagent-stop"`, `agent_id: "ae57e5cc6f6de8796"`, `exit: "ok"`, `duration_ms: 1000`, `edit_count: 0`, `correlation: "tool_use_id"` (exact bridge worked, not heuristic fallback). Remaining e2e scenarios (with-edits, loop-budget, orphan-stop, missing-sidecar, malformed) covered by Task 7 fixture tests.
 
 ## Verification

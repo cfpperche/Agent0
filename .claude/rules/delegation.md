@@ -60,7 +60,55 @@ The validator may also append a `warnings` array to its JSON output on stack-det
 
 ## Audit log
 
-`.claude/delegation-audit.jsonl` (gitignored, append-only). One JSON object per line, eleven fields: `ts`, `session_id`, `subagent_type`, `model`, `model_specified`, `formatted`, `override`, `advisory_emitted`, `advisory_kind`, `escalation_signals`, `task_summary`. `advisory_kind` is one of `"model-discipline"`, `"escalation"`, or `null` when no advisory fired — the bool `advisory_emitted` answers "did anything fire", the string `advisory_kind` answers "which one". Read with `jq -c .` or `tail -f`. Blocked calls are NOT logged — only allowed dispatches reach the audit phase.
+`.claude/delegation-audit.jsonl` (gitignored, append-only). Read with `jq -c .` or `tail -f`. Blocked calls are NOT logged — only allowed dispatches reach the audit phase. Two row shapes coexist in the same file, distinguished by the `event` field (absent on dispatch rows, `"subagent-stop"` on close rows).
+
+### Dispatch row (written by `delegation-gate.sh` at PreToolUse(Agent))
+
+Twelve fields: `ts`, `session_id`, `tool_use_id`, `subagent_type`, `model`, `model_specified`, `formatted`, `override`, `advisory_emitted`, `advisory_kind`, `escalation_signals`, `task_summary`. `advisory_kind` is one of `"model-discipline"`, `"escalation"`, or `null` when no advisory fired — the bool `advisory_emitted` answers "did anything fire", the string `advisory_kind` answers "which one". `tool_use_id` is the harness-supplied `toolu_*` identifier and acts as the join key into the close row (see below) — spec 061 added this field as the prerequisite for exact dispatch↔stop correlation under parallel same-type dispatches.
+
+### Close row (written by `delegation-stop.sh` at SubagentStop, spec 061)
+
+Thirteen fields: `ts`, `event` (always `"subagent-stop"`), `session_id`, `agent_id`, `tool_use_id`, `agent_type`, `exit`, `duration_ms`, `edit_count`, `last_assistant_message_head`, `agent_transcript_path`, `correlation`, `stop_hook_active`. Denormalised — `agent_type` mirrors the dispatch row's `subagent_type` and the 200-char `last_assistant_message_head` is inlined so standalone `jq` queries (`select(.event == "subagent-stop" and .exit == "loop-budget-exceeded")`) work without a join.
+
+- `exit` — `"ok"` for normal completion, `"loop-budget-exceeded"` when the per-agent `consecutive_failures` state file (maintained by the post-edit validator) ≥ `CLAUDE_DELEGATION_LOOP_BUDGET` (default 5)
+- `duration_ms` — client-computed (close_ts − dispatch_ts), `null` when the dispatch row can't be located (orphan stop)
+- `edit_count` — counted from the per-sub-agent transcript JSONL (`agent_transcript_path`) by filtering `assistant.message[].tool_use` blocks with `.name ∈ {Edit, Write, MultiEdit}`. `null` on any read/jq error
+- `correlation` — `"tool_use_id"` when the bridge resolved via the sidecar `.meta.json.toolUseId` lookup (preferred), `"heuristic-session-type"` for the `(session_id, agent_type)` fallback under missing sidecar, `"unmatched"` when no dispatch row matched at all
+- `agent_transcript_path` — pointer to the full per-sub-agent transcript for verbose forensics
+
+### Bridge mechanism (dispatch ↔ stop)
+
+`PreToolUse(Agent)` payload carries `tool_use_id` (no `agent_id` yet — sub-agent doesn't exist), while `SubagentStop` payload carries `agent_id` (no `tool_use_id`). The two identifiers are disjoint. Bridge: Claude Code writes a per-sub-agent transcript at `<cc-storage>/<session_id>/subagents/agent-<agent_id>.jsonl` with a sidecar `agent-<agent_id>.meta.json` that contains `{ agentType, description, toolUseId }`. The `toolUseId` field matches the dispatch row's `tool_use_id`. The close hook reads the sidecar at SubagentStop time to obtain both identifiers and joins exactly.
+
+### Example queries
+
+Pair every dispatch with its close row (when present):
+
+```bash
+jq -s 'group_by(.tool_use_id) | map({
+  tool_use_id: .[0].tool_use_id,
+  open: (.[]? | select((.event // "") == "")),
+  close: (.[]? | select(.event == "subagent-stop"))
+})' .claude/delegation-audit.jsonl
+```
+
+Find loop-budget exhaustions in the last 24 hours:
+
+```bash
+tail -10000 .claude/delegation-audit.jsonl | jq -c '
+  select(.event == "subagent-stop" and .exit == "loop-budget-exceeded")
+'
+```
+
+Find sub-agents that dispatched but never closed (orphans — session crash or hook failure):
+
+```bash
+jq -s '
+  group_by(.tool_use_id)
+  | map(select(length == 1 and ((.[0].event // "") == "")))
+  | .[]
+' .claude/delegation-audit.jsonl
+```
 
 ## Advisories
 

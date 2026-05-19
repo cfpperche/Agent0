@@ -82,6 +82,10 @@ For all PreToolUse/PostToolUse/PostToolUseFailure events, stdin JSON includes:
 - `tool_response` — present on PostToolUse / PostToolUseFailure; shape varies by tool
 - `tool_use_id` — unique per tool call; lets PreToolUse and PostToolUse correlate (used by `.claude/hooks/runtime-pre-mark.sh` for duration measurement)
 - `duration_ms` — present on PostToolUse / PostToolUseFailure (real wall-clock ms, harness-provided)
+- `effort` — object `{level: "low"|"medium"|"high"|"xhigh"|"max"}`, present on `PreToolUse`, `PostToolUse`, `Stop`, `SubagentStop` when the model supports effort levels (Opus 4.x family). Verified 2026-05-19 via cc-platform-audit second-run.
+- `agent_id`, `agent_type` — present when running under `--agent` flag OR inside a sub-agent dispatched via the `Agent` tool. `agent_type` is the dispatched subagent name (e.g. `"Explore"`, `"general-purpose"`). Used by `.claude/hooks/delegation-gate.sh` for parent-vs-subagent attribution and by `.claude/hooks/session-track-edits.sh` to scope edits per actor.
+
+For `SessionStart`, `Setup`, `CwdChanged`, `FileChanged`: also supports `CLAUDE_ENV_FILE` env-var bridging — hooks can write `KEY=value` lines to `$CLAUDE_ENV_FILE` for persistence across subsequent Bash command shells in the same session. Documented at canonical docs 2026-05-19; Agent0 does not currently use this mechanism but it's a candidate surface for cross-Bash-call state propagation.
 
 **Bash `tool_response` shape (verified live-dogfood):**
 

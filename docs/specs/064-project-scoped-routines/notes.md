@@ -72,4 +72,14 @@ Verified end-to-end via `bash sync-harness.sh --check` against an isolated test 
 
 _Questions surfaced during build that the implementer couldn't resolve alone. Owner (who decides) or path to resolution if known. Promote answered questions to `spec.md` § Open questions or as retroactive acceptance scenarios when the spec is updated._
 
-_(none yet)_
+### 2026-05-19 — parent — routine prompt specificity affects "what's drift"
+
+Dogfood finding from 2nd `/routine run cc-platform-audit` invocation. The 1st run reported "drift-detected: 29 → 32 events" and applied event-table edits — but missed payload-shape drift (`effort` / `agent_id` / `agent_type` / `CLAUDE_ENV_FILE` field additions) that a deeper WebFetch + comparison surfaced on the 2nd run. The 2nd run was NOT a false-positive — those fields are genuinely undocumented in the memo's *Payload shape* section.
+
+The 2nd run reported drift not because the routine is non-idempotent, but because the **routine's prompt was underspecified about WHICH dimensions to audit**. "Compare against memo" is too broad; "compare event names" naturally surfaces tabular drift first; "compare payload shapes" requires explicit re-direction.
+
+**Question for future iteration**: should routine prompts be MORE specific (enumerate audit dimensions: events / payload shape / exit-code semantics / matcher coverage), accepting that they become longer/harder to author? Or should the prompt stay terse and accept that "convergence to no-drift" may take 2-3 runs as the agent's attention naturally rotates through dimensions?
+
+**Owner**: founder, after observing 3-5 more cc-platform-audit cycles. If convergence consistently takes 2+ runs, tighten the prompt. If 1 run reliably catches everything, leave terse.
+
+This isn't a bug in spec 064's mechanism — the routine prompt + idempotency mandate work as designed. It IS a finding about routine-author discipline that's worth documenting for the next person writing a routine.

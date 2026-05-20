@@ -8,15 +8,20 @@
 #
 # `[extend].useDefault = true` inherits gitleaks' built-in detector ruleset
 # (AWS keys, GitHub tokens, private keys, JWTs, etc.). Project-specific
-# allowlists go in the `[[allowlists]]` block(s) below.
+# allowlists go in the `[allowlist]` table below.
 
 [extend]
 useDefault = true
 
-# Add allowlists below. See .claude/rules/secrets-scan.md for grammar.
-# The block below is a starter placeholder — replace `paths` / `regexes` /
-# `commits` with real exemptions, or delete the block entirely if not needed.
-# Reference: https://github.com/gitleaks/gitleaks#configuration
-[[allowlists]]
-description = "starter placeholder, replace as needed"
-paths = []
+# Singular `[allowlist]` — NOT `[[allowlists]]`. The plural array-of-tables form
+# is silently ignored by gitleaks 8.21.x (it parses without error but the
+# paths/regexes/commits exemptions never apply); do not "modernise" it.
+# See .claude/rules/secrets-scan.md § Allowlist mechanics for grammar.
+#
+# The secrets-scan.md exemption below is required by every fork: that rule doc
+# ships synthetic AKIA/ghp fake credentials that gitleaks flags, so without the
+# exemption a fresh fork's first commit blocks on a false positive. Add more
+# `paths` / `regexes` / `commits` as real exemptions arise.
+[allowlist]
+description = "secrets-scan rule doc contains synthetic fake credentials documenting the discipline itself — not real secrets"
+paths = ['''secrets-scan\.md''']

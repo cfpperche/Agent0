@@ -52,13 +52,13 @@ Override semantics are surgical: the marker skips ONLY the preflight shape rejec
 
 Two complementary suppression mechanisms, both honored by gitleaks at scan time:
 
-**`.gitleaks.toml` at repo root.** The starter uses `[extend].useDefault = true` to inherit gitleaks' built-in detectors, then a `[[allowlists]]` block exposes the three suppression dimensions:
+**`.gitleaks.toml` at repo root.** The starter uses `[extend].useDefault = true` to inherit gitleaks' built-in detectors, then a singular `[allowlist]` table exposes the three suppression dimensions:
 
-- `paths = ["tests/fixtures/**/*", "examples/secrets-demo.md"]` — glob patterns. Anything matching is skipped wholesale.
+- `paths = ['''tests/fixtures/.*''', '''secrets-scan\.md''']` — regular expressions matched against each file path (NOT globs — `.*` not `**/*`). Anything matching is skipped wholesale.
 - `regexes = ['''AKIA[0-9A-Z]{16}''', '''ghp_[A-Za-z0-9]{36}''']` — TOML triple-quoted regex strings; matches in any file are suppressed.
 - `commits = ["abc123def456..."]` — full SHAs. Useful when a historical commit is known-clean and the scan keeps re-flagging it via amend or rebase.
 
-Multiple `[[allowlists]]` blocks compose as logical OR. Schema: <https://github.com/gitleaks/gitleaks/blob/master/config/allowlist.go>. Starter ships `paths = []` as placeholder — replace or delete. Do **not** ship a `.secrets.baseline` (detect-secrets pattern); non-goal since Agent0 is a new-repo template with no legacy to freeze.
+Use the singular `[allowlist]` table, **not** the plural `[[allowlists]]` array-of-tables — gitleaks 8.21.x silently ignores the plural form (it parses without error but no exemption ever applies; empirically verified 2026-05-19 against gitleaks 8.21.2). The starter ships one real entry — `paths = ['''secrets-scan\.md''']` — because this rule doc itself carries synthetic fake credentials (see § *Gotchas*, the `AKIA…`-class fakes) that gitleaks would otherwise flag on a fresh fork's first commit; replace or extend that entry, do not delete it. Schema: <https://github.com/gitleaks/gitleaks/blob/master/config/allowlist.go>. Do **not** ship a `.secrets.baseline` (detect-secrets pattern); non-goal since Agent0 is a new-repo template with no legacy to freeze.
 
 **Inline `gitleaks:allow`.** A comment containing `gitleaks:allow` on the same line as a high-entropy string suppresses that single finding without modifying `.gitleaks.toml`. Comment form is language-appropriate — `# gitleaks:allow` (shell/Python/TOML), `// gitleaks:allow` (JS/TS/Rust), `<!-- gitleaks:allow -->` (Markdown/HTML). Prefer inline for one-off lines; prefer `.gitleaks.toml` paths for whole directories.
 

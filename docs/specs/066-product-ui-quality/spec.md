@@ -6,70 +6,82 @@ _Created 2026-05-20._
 
 ## Intent
 
-The `/product` skill generates a complete v1 product foundation including a working Next.js/Expo prototype, but its visual-contract phase (Step 15) produces UI below 2026 baseline quality. The 2026-05-19/20 **mei-saas dogfood** — a full `/product` run for "Simplis", 36 routes, pushed to `github.com/cfpperche/mei-saas` — exposed eight concrete flaws. The headline one: the pipeline never instructs any sub-agent to produce **mobile-first / responsive** layouts, and the screen-writer brief actively sanctions React inline `style={{}}` objects, which physically cannot express media queries. Compounding it: there is no visual-rendering gate anywhere (the entire quality bar is `tsc` + `biome` + HTTP-200, so glaring chrome bugs — a wordmark rendered twice — ship undetected); the shared route-group chrome is produced by one unvalidated dispatch; no step builds a shared component layer, so 36 screens re-implement primitives inline (30-54 KB files); and the Step 15 template is desynced from the live 15-step pipeline. This spec fixes the **skill** so a fresh run produces responsive, consistent, visually-verified screens. It serves every founder who runs `/product`; the mei-saas prototype is the first re-validation target.
+The `/product` skill's visual-contract phase (Step 15) generates a 36-route Next.js prototype via a parallel screen-writer fan-out — and that fan-out is where output quality collapses. The 2026-05-19/20 **mei-saas dogfood** (a full `/product` run for "Simplis"), plus a follow-up report from the mei-saas agent, exposed nine flaws; eight live inside the screen-writer fan-out (F8 is a stale-template issue), while the atlas and the 14 planning artifacts came out clean. Rather than fix a structurally-broken step — making a blind parallel fan-out produce responsive, consistent, visually-verified UI is a hard problem the original `/product` design lost — this spec **restructures** `/product`: the visual-contract phase ends at `screen-atlas.md` plus a small brand-applied hi-fi killer-flow mood (static HTML, the proven Step 02 mechanism), and `/product` then **mandatorily hands off to SDD** — it scaffolds an umbrella spec plus the foundation child spec, with the remaining children listed in the umbrella's matrix. The 36-route screen-writer fan-out is **deleted**. The actual app build moves to the SDD workflow, which is built for deliberate, harness-disciplined, visually-fed implementation. `/product` keeps its genuine strength — design synthesis → a visual contract — and stops doing the thing it does badly. This serves every founder who runs `/product`; the mei-saas prototype is the first re-validation target.
 
 ## Acceptance criteria
 
-- [ ] **Scenario: generated web screens are mobile-first responsive**
-  - **Given** a `/product --stack=next` run has completed
-  - **When** a representative screen renders at a 375 px viewport
-  - **Then** content reflows to a single column with no horizontal scroll and no clipped or overlapping elements, and the same screen at 1280 px shows the intended desktop layout
+- [ ] **Scenario: `/product` ends at the visual contract, not a built app**
+  - **Given** a `/product --stack=next` run
+  - **When** the pipeline reaches its end
+  - **Then** it has produced `docs/screen-atlas.md` + a hi-fi killer-flow mood (3-5 static HTML screens) + the Step 02 lo-fi mood, and has **not** produced an `app/**/page.tsx` screen set or run any screen-writer fan-out
 
-- [ ] **Scenario: the pipeline gates on rendered pixels, not only static checks**
-  - **Given** Step 15 / Phase 4 of a `/product` run
-  - **When** the build-verification stage runs
-  - **Then** each representative route is rendered headlessly at ≥2 viewports (mobile + desktop) via Playwright, screenshots are captured, and a visual-check result is recorded in `docs/REPORT.md`
+- [ ] **Scenario: mandatory SDD handoff scaffolds the umbrella**
+  - **Given** `/product` has completed the visual-contract phase
+  - **When** the run finishes
+  - **Then** it has scaffolded a filled umbrella spec under `docs/specs/` (`**Type:** umbrella`, with a child-spec matrix sliced by roadmap phase) plus the foundation child spec (child #1, ready to start); children #2..N are listed in the umbrella matrix, not pre-scaffolded
 
-- [ ] **Scenario: shared chrome is validated before screens inherit it**
-  - **Given** the atlas has written the route-group layout(s) (`app/(<chrome>)/layout.tsx`)
-  - **When** the orchestrator processes the atlas output
-  - **Then** the chrome is checked for composition defects (brand wordmark rendered more than once, unfilled placeholder text/comments, empty declared regions) and any defect is flagged before the screen-writer fan-out
+- [ ] **Scenario: the hi-fi mood is the rendered half of the contract**
+  - **Given** the visual-contract phase
+  - **When** the atlas step runs
+  - **Then** it produces 3-5 brand+tokens-applied killer-flow screens as self-contained, mobile-first static HTML — a `<style>` block with `@media` breakpoints, never `style=` attributes for layout — giving the SDD children a rendered visual target, not only prose
 
-- [ ] **Scenario: screens reuse a shared component layer**
-  - **Given** the design-system step produced `components.md`
-  - **When** the screen-writers run
-  - **Then** the components named in `components.md` exist as shared modules under `app/_components/` and screens import them instead of re-implementing primitives inline
+- [ ] **Scenario: `components.md` becomes a real input spec**
+  - **Given** the umbrella has been scaffolded
+  - **When** the component-library child spec (child #2) is created
+  - **Then** its `spec.md` derives from Step 14's `components.md` + `tokens.css` — the design-system spec is the upstream contract, no longer a decorative doc
 
-- [ ] The Next.js screen-writer brief in `references/delegation-briefs.md` mandates responsive layout via breakpoint-aware utility classes and forbids inline `style={{}}` for layout/positioning; both CONSTRAINTS and DONE_WHEN reflect this.
+- [ ] **Scenario: shared fixtures are one coherent source**
+  - **Given** `/product` holds the persona (concept brief) and the entity model (system design)
+  - **When** the visual-contract phase produces its artifacts
+  - **Then** it emits a fixture/seed spec (one persona, one coherent entity set, internally consistent dates) that the foundation child implements as a shared `lib/mock-data.ts` — every screen imports it, none invents its own
 
-- [ ] `references/quality-checklist.md` includes a responsive/visual gate criterion (it is currently 100 % static checks — `tsc`, `biome`, grep, file-existence).
-
-- [ ] `templates/pipeline/15-screen-atlas/` (`prompt.md` + `references/`) is resynced with the live 15-step pipeline — no surviving references to pre-spec-045 numbering (`step 8 PRD`, `step 5 brand-book`, `step 6 design-system`, `prototype-v3`) or `.html` screen output.
-
-- [ ] A fresh `/product` smoke run (or a re-run of the mei-saas prototype) reproduces none of the eight dogfood flaws (F1-F8 in `## Context`).
+- [ ] The Next.js screen-writer brief and the screen-writer fan-out are removed from `references/delegation-briefs.md` and `SKILL.md` Phase 4.
+- [ ] The scaffolded umbrella spec encodes a standing styling constraint every child inherits: Tailwind utility classes (the declared stack), no inline `style={{}}` for layout/positioning — closing F1/F2 at the build layer.
+- [ ] Phase 0 seeds `<out>/.mcp.json` with the Playwright MCP block — visual verification is available to every SDD-child session, and best-effort within the `/product` run itself.
+- [ ] If the Playwright MCP is loaded, the hi-fi mood screens are screenshotted at mobile + desktop widths and checked for horizontal overflow, with results in `REPORT.md`; if not, an advisory records the skip (best-effort — never blocks).
+- [ ] `SKILL.md` Phase 5 handoff prints the path to the scaffolded umbrella spec — not a `pnpm dev` instruction.
+- [ ] `templates/pipeline/15-screen-atlas/` is rewritten for the atlas-only role (no screen-writer references, no per-route `.html` output, current 15-step numbering) — closing F8.
+- [ ] Step 14's design-system brief emits the Tailwind v4 `@theme` token block (so the downstream component-library child gets real utilities).
+- [ ] `references/quality-checklist.md` Step 15 criteria are updated for the atlas-only deliverable (atlas completeness + hi-fi mood, not a 36-route fan-out).
+- [ ] A `/product` smoke run on a small idea reproduces none of F1-F9 — verified against the re-mapping in `## Context`.
 
 ## Non-goals
 
-- Hand-fixing the already-shipped mei-saas prototype — that is a downstream re-run that verifies this spec, not part of it. This spec fixes the *skill*.
-- Redesigning the parallel screen-writer fan-out / validator-cascade (F7) — that is spec 057's domain; referenced here, not reworked (a small mitigation may ride along — see Open questions).
-- Expo / React Native mobile-first parity — the dogfood was Next.js; Expo is a fast-follow unless the change is trivially symmetric.
-- Visual *design taste* (color, type pairing, brand feel) — owned by the design-system steps (13/14). This spec is about responsive correctness, cross-screen consistency, and visual verification — not aesthetic judgement.
+- **The SDD-driven app build itself.** `/product` scaffolds the umbrella + child #1; building the app is the founder working the child specs. Out of scope.
+- **The validator-cascade harness flaw (F7's root cause).** Deleting the fan-out makes the cascade moot *for `/product`*, but the underlying harness flaw — `post-edit-validate.sh` typechecking project-wide on every parallel sub-agent edit — is real for any fan-out and is fixed separately in **spec 067** (`parallel-edit-validation`).
+- **Steps 01-14 rework.** The restructure touches only the pipeline tail (Step 15 → Phase 5). Steps 01-14 are unchanged except the Step 14 `@theme` addition.
+- **Expo / React Native.** The same restructure applies symmetrically; verification is Next.js-only this spec.
+- **Visual design taste** (color, type, brand feel) — owned by steps 13/14.
+- **Hand-fixing the shipped mei-saas prototype** — a downstream re-run, the founder's call.
 
 ## Open questions
 
-- [x] **v1 scope** — RESOLVED 2026-05-20 (user): F1-F6 + F8 in scope; F7 referenced-only (spec 057's domain).
-- [x] **Visual-gate severity** — RESOLVED 2026-05-20 (user): advisory for v1 — records the visual-check result in `REPORT.md`, does not fail the run; matches the `tsc`/`biome` smoke-test posture.
-- [x] **Component-layer mechanism** — RESOLVED in `plan.md` (Approach §2): a new component-builder dispatch between the atlas (15a) and the screen-writer fan-out (15b).
-- [x] **Styling mechanism** — RESOLVED in `plan.md` (Approach §1+§4): Tailwind v4 exclusively; Step 14 emits an `@theme` token block; inline `style={{}}` narrowed to runtime-dynamic values only.
-- [x] **Chrome-validation placement** — RESOLVED in `plan.md` (Approach §3): a parent-side orchestrator grep check after the atlas returns, with the Playwright visual gate as backstop.
+- [x] **SDD scaffolding mechanism** — RESOLVED in `plan.md` (Approach §3 + Alternatives): `/product` writes the umbrella + child #1 spec files directly (sdd templates as base), NOT via a `/sdd new` skill-to-skill call — because `/product` must fill them from pipeline artifacts.
+- [x] **Child #1 boundary** — RESOLVED in `plan.md` (OQ resolutions): child #1 owns skeleton + tooling + route-group dirs + thin `layout.tsx` shells; shared chrome *components* belong to child #2 (component library), which wires them into the shells.
+- [x] **Hi-fi mood selection** — RESOLVED in `plan.md`: the hi-fi mood covers the same killer-flow screens Step 02's lo-fi mood selected (visual lineage preserved).
 
 ## Context / references
 
-The eight-flaw matrix, diagnosed this session against the mei-saas dogfood:
+Flaw matrix from the mei-saas dogfood and the mei-saas agent's follow-up report (2026-05-20), and how the restructure resolves each:
 
-| ID | Flaw | Primary evidence |
-|----|------|------------------|
-| F1 | Mobile-first absent from the pipeline | `references/delegation-briefs.md:442-511` (screen-writer brief — zero responsive constraints); `references/quality-checklist.md` (no visual gate) |
-| F2 | Brief sanctions inline `style={{}}` (cannot express `@media`) | `references/delegation-briefs.md:468` ("`var()` inline OR Tailwind") |
-| F3 | No visual-rendering gate — quality bar is 100 % static | `references/quality-checklist.md`; `SKILL.md` Phase 4 smoke-test (HTTP-200 only) |
-| F4 | Shared chrome written by one unvalidated dispatch | `references/delegation-briefs.md:473`; mei-saas `app/(app)/layout.tsx` (wordmark rendered 2×) |
-| F5 | No shared component layer — primitives re-implemented per screen | `references/delegation-briefs.md:467` ("extract … if needed" — optional) |
-| F6 | Inline-style bloat → systematic budget overshoot | mei-saas screen files 30-54 KB vs 8-18 KB target (`pipeline-coverage.md`) |
-| F7 | Validator-cascade degrades quality under fan-out | spec 057; mei-saas transcript Waves 3-5 |
-| F8 | Step 15 template desynced from live pipeline | `templates/pipeline/15-screen-atlas/prompt.md` (pre-spec-045 numbering) |
+| ID | Flaw | Resolution under the restructure |
+|----|------|----------------------------------|
+| F1 | Mobile-first absent (`delegation-briefs.md:442-511`) | Screen-writers deleted. Mobile-first required of the hi-fi mood (`<style>`+`@media`) and of every SDD child via the umbrella's standing constraint. |
+| F2 | Inline `style={{}}` sanctioned (`delegation-briefs.md:468`) | Dissolves — the screen-writer brief is removed. Tailwind-only mandate carried by the umbrella's standing constraint. |
+| F3 | No visual-rendering gate (`quality-checklist.md`) | Fan-out + build-verify deleted. Phase 0 seeds `.mcp.json`; the hi-fi mood gets a best-effort Playwright check; per-route visual verification moves into the SDD children. |
+| F4 | Shared chrome unvalidated (`delegation-briefs.md:473`) | The atlas no longer writes `app/` layouts. Chrome becomes shared components built by the component-library / foundation child. |
+| F5 | No shared component layer (`delegation-briefs.md:467`) | **Fixed.** `components.md` becomes the input spec for the dedicated component-library child (child #2). |
+| F6 | Inline-style bloat / budget overshoot | Dissolves with the fan-out. |
+| F7 | Validator-cascade under fan-out (spec 057) | Moot for `/product` (no fan-out). Root harness flaw fixed in spec 067. |
+| F8 | Step 15 template desynced (`templates/pipeline/15-screen-atlas/`) | Template rewritten for the atlas-only role. |
+| F9 | No shared fixtures — incoherent mock data across screens (mei-saas agent report) | `/product` emits a fixture/seed spec; the foundation child implements `lib/mock-data.ts`; every screen imports it. Same upstream-spec pattern as F5. |
 
-- mei-saas dogfood — `/product` "Simplis" run, 2026-05-19/20, `github.com/cfpperche/mei-saas` (commits `3f40e4c`, `cc1ff59`); CC session transcript `43610f10` under `~/.claude/projects/-home-goat-mei-saas/`.
-- `.claude/skills/product/SKILL.md` — the skill being fixed (v0.3.0, spec 048).
+Net: F2, F6 resolved by removal; F7 moot for `/product` (harness fix → spec 067); F1, F3, F4 converted into SDD-child concerns the harness already disciplines; F5 and F9 fixed by upstream-spec relationships; F8 a template rewrite. F1/F2/F3 and the new F9 were independently re-confirmed by the mei-saas agent's follow-up report — external validation of the diagnosis.
+
+- mei-saas dogfood — `/product` "Simplis" run, 2026-05-19/20, `github.com/cfpperche/mei-saas` (commits `3f40e4c`, `cc1ff59`); CC session transcript `43610f10` under `~/.claude/projects/-home-goat-mei-saas/`. Follow-up report from the mei-saas agent: 2026-05-20.
+- `.claude/skills/product/SKILL.md` — the skill being restructured (v0.3.0, spec 048).
+- `.claude/skills/sdd/` — the handoff target; `.claude/rules/spec-driven.md` § umbrella spec type; `docs/specs/060-harness-gaps-2026/` — the canonical umbrella-spec example.
+- `docs/specs/067-parallel-edit-validation/` — the harness-side fix for F7's root cause (split out of this spec).
 - `docs/specs/048-product-skill-foundation/`, `docs/specs/045-prototype-skill-pipeline-realign/` — pipeline lineage.
-- `docs/specs/057-*` (validator-cascade), `docs/specs/056-pipeline-size-reconciliation` (budget calibration), `docs/specs/065-artifact-budget-discipline`.
-- `.claude/rules/artifact-budgets.md`.
+- `docs/specs/057-*` (validator-cascade workaround), `docs/specs/056-pipeline-size-reconciliation`, `docs/specs/065-artifact-budget-discipline`.
+- Decision lineage: this restructure extends the "`/product` is a design partner, not a generator" principle (`.claude/REMINDERS.md` — full-stack-expansion item, "Caminho B rejected") one layer up: `/product` is not a screen generator either.

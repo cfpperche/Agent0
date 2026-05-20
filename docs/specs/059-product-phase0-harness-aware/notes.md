@@ -14,9 +14,26 @@ Marker chosen: `# --- /product (Next.js) ---`. Alternative considered: `# /produ
 
 Spec 048's existing semantics for "dir has /product artifacts" remain: prompt overwrite → full `rm -r <out>` on `y`. Surgical rm (preserve harness during rm) was considered but rejected for v1. The re-run scenario (re-running /product on a dir with both harness AND prior /product output) is recoverable via `sync-harness.sh` post-rm, just annoying. If it becomes common (≥3 dogfoods), follow-up spec with surgical rm + tested rm-path-list.
 
+### 2026-05-19 — parent — Synthetic smoke test outcomes (task 4)
+
+Manual verification per `plan.md` § *Acceptance verification* executed as synthetic smoke test in `/tmp/test-{empty,harness,artifacts}/` instead of waiting for empirical `/product` invocation. Cenário-a-cenário:
+
+- **Scenario 1 (empty `<out>`)** — PASS. `/tmp/test-empty` created via `mkdir -p`; `<remaining>` = ∅; matches SKILL.md § Phase 0 step 1 "If `<remaining>` is empty: proceed to step 2 (Init) — no prompt, no rm, harness preserved".
+- **Scenario 2 (harness-only `<out>`)** — PASS. `sync-harness.sh --apply /tmp/test-harness` produced exactly 7 top-level entries: `.claude/`, `.git/`, `.githooks/`, `.gitignore`, `.gitleaks.toml`, `.mcp.json.example`, `CLAUDE.md`. All 7 in the inline allowlist; `<remaining>` = ∅ after filter; SKILL.md prose path = proceed-to-init. **Allowlist confirmed without drift vs sync-harness manifest output as of 2026-05-19.**
+- **Scenario 3 (`/product` artifacts present)** — PASS. Copied test-harness to test-artifacts and added `docs/` (with `.state.json`, `concept-brief.md`, `screens/`); top-level = 7 harness + 1 `docs/`; `<remaining>` = `{docs/}` ≠ ∅; with no `--from-step` triggers the overwrite prompt path. Existing spec 048 semantics preserved.
+- **Scenario 4 (`--from-step` resume with harness present)** — VERIFIED BY INSPECTION (not exercised). The harness allowlist is filtered out in step 1 BEFORE the `--from-step` validation in the else-branch evaluates `<remaining>`. By construction, the validation logic only sees non-harness paths (i.e. real `/product` artifacts). End-to-end empirical proof gated on real `/product` orchestration with valid `.state.json` v4 + matching slug/idea/stack — pending mei-saas founder run.
+- **Scenario 5 (`.gitignore` append-with-marker)** — PASS. Simulated the three sub-cases against `/tmp/test-harness/.gitignore` (64-line harness-shipped file):
+  - **5a — fresh append (no marker)**: marker `# --- /product (Next.js) ---` + rules added at EOF; harness rules 1-64 preserved verbatim; 1-line blank separator inserted (intentional readability spacing).
+  - **5b — re-run with marker present**: region below marker REPLACED with fresh rules; harness section 1-64 unchanged (verified by `diff` vs pre-run snapshot — only diff is the deliberate blank separator at line 65).
+  - **5c — marker absent (founder edited it out)**: collapses to fresh-append path; marker recreated.
+
+Verification mechanism: an `awk`-based mirror of the SKILL.md prose (`/tmp/simulate-gitignore-append.sh`) was run against fixtures; the SKILL.md prose is unambiguous enough that a faithful translation behaved as specified. Fixtures cleaned up post-verification.
+
+**Residual gap (intentional):** Scenario 4 lacks end-to-end empirical evidence. Spec scope closure-decision: accept inspection-level verification for scenario 4 since the logic is mechanical (filter-then-evaluate) and the empirical run will happen organically when the mei-saas founder invokes `/product` in their next session. If scenario 4 fails in real use, follow-up patch is local to SKILL.md § Phase 0 step 1 else-branch.
+
 ## Deviations
 
-(None yet — spec is fresh.)
+(None — implementation matches plan.md exactly.)
 
 ## Tradeoffs
 

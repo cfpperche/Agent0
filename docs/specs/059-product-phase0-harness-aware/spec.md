@@ -2,7 +2,7 @@
 
 _Created 2026-05-19._
 
-**Status:** draft
+**Status:** shipped
 
 ## Problem
 
@@ -14,32 +14,32 @@ Empirical trigger 2026-05-19: founder bootstrapping mei-saas (a real product, fu
 
 ## Acceptance criteria
 
-- [ ] **Scenario: empty `<out>` → existing fresh-run path**
+- [x] **Scenario: empty `<out>` → existing fresh-run path**
   - **Given** `<out>` does not exist OR exists but contains zero files
   - **When** `/product` Phase 0 runs
   - **Then** skill proceeds to Phase 0 step 2 (Init) without prompting
 
-- [ ] **Scenario: `<out>` contains only Agent0 harness paths → treat as fresh**
+- [x] **Scenario: `<out>` contains only Agent0 harness paths → treat as fresh**
   - **Given** `<out>` contains a subset of `{.claude/, .githooks/, .gitignore, .gitleaks.toml, .mcp.json.example, CLAUDE.md, .git/}` and nothing else
   - **When** `/product` Phase 0 runs
   - **Then** skill proceeds to Phase 0 step 2 (Init) without prompting; no `rm -r`; harness preserved
 
-- [ ] **Scenario: `<out>` contains `/product` artifacts → existing overwrite logic**
+- [x] **Scenario: `<out>` contains `/product` artifacts → existing overwrite logic**
   - **Given** `<out>` contains `docs/` OR `app/` OR `package.json` OR any path outside the harness allowlist
   - **When** `/product` Phase 0 runs without `--from-step`
   - **Then** prompt `<out> exists and is non-empty. Overwrite? (y/N) ▷` — preserving spec 048 semantics for prior `/product` runs
 
-- [ ] **Scenario: `--from-step=NN` resume with harness present → existing resume path**
+- [x] **Scenario: `--from-step=NN` resume with harness present → existing resume path** *(verified by inspection — empirical run gated on mei-saas founder /product invocation; see notes.md)*
   - **Given** `<out>/docs/.state.json` exists with valid v4 shape AND `<out>` also contains Agent0 harness paths
   - **When** `/product` runs with `--from-step=NN`
   - **Then** state validation runs as today (version + slug + idea + flags.stack match); on pass, skill jumps to step NN; harness paths are transparent to the validation logic
 
-- [ ] **Scenario: `/product` writes `.gitignore` over existing harness `.gitignore` → append, don't replace**
+- [x] **Scenario: `/product` writes `.gitignore` over existing harness `.gitignore` → append, don't replace**
   - **Given** `<out>/.gitignore` already exists (from Agent0 harness)
   - **When** `/product` scaffolds the Next.js / Expo project and would write `.gitignore`
   - **Then** the new rules are appended to the existing file under a `# --- /product (Next.js) ---` marker line; Agent0's existing rules (e.g. `.claude/.runtime-state/`) are preserved verbatim above the marker
 
-- [ ] `.claude/skills/product/SKILL.md` § Phase 0 step 1 lists the Agent0 harness allowlist explicitly so future contributors can see the exempt set without reading spec 059
+- [x] `.claude/skills/product/SKILL.md` § Phase 0 step 1 lists the Agent0 harness allowlist explicitly so future contributors can see the exempt set without reading spec 059
 
 ## Non-goals
 

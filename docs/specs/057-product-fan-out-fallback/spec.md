@@ -36,3 +36,9 @@ SKILL.md § Notes mentions the validator-cascade and prescribes "parent-side bio
 1. Threshold for "degrade": 2 consecutive failures? 50% of wave? First failure in the run?
 2. When degraded, should parent-write use the same brief verbatim, or a simplified version (since parent has more context than sub-agent)?
 3. Should orchestrator pre-emptively biome-write between waves even on success, or only when validator stderr reports dirty siblings?
+
+## Relationship to specs 063 / 067 (added 2026-05-20)
+
+057's mitigations — parent-side `biome check --write` between waves, and degrade-to-parent-write on cascade detection — are the fallback for *genuine* `CLAUDE_DELEGATION_LOOP_BUDGET` exhaustion: a sub-agent that genuinely cannot converge on `ok=true` on its own merits. They are **not** the fix for the *sibling-interference* root cause. That root cause — parallel sub-agents sharing one working tree, each one's project-wide `tsc`/`biome` failing on a sibling's half-written file — is fixed structurally by **worktree isolation** (spec 063: `isolation: "worktree"` gives each sub-agent its own tree, and `post-edit-validate.sh` scopes the validator's cwd to the edited file's git toplevel) plus the **mandate** that any parallel fan-out with overlapping targets declare it (spec 067).
+
+057 is **not superseded** — the layers compose: 063 + 067 remove the sibling-interference trigger so a parallel fan-out stays genuinely parallel; 057 remains the correct degradation path for a sub-agent that exhausts its loop budget for reasons of its own (a hard task, not a sibling). See `docs/specs/067-parallel-edit-validation/` and `.claude/rules/delegation.md` § Post-edit validator loop.

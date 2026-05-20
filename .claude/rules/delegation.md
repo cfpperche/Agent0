@@ -60,6 +60,8 @@ If the validator is missing, non-executable, or emits unparseable output, the ho
 
 The validator may also append a `warnings` array to its JSON output on stack-detected paths. The post-edit hook reads any warnings and echoes each one to stderr with a `tdd-advisory:` prefix on the exit-0 path — non-blocking advisories that surface to the agent on its next turn. This is how TDD test-coverage advisories reach the agent today; see `.claude/rules/tdd.md` for the warning shape and the response convention.
 
+**Parallel fan-out and the validator-cascade.** The validator typechecks and lints the **whole project** — `tsc --noEmit` and `biome check` are both project-wide, not per-file. When a parent dispatches a parallel `Agent` fan-out — ≥2 sub-agents editing one *shared* working tree concurrently — each sub-agent's post-edit validation sees the half-written files of its siblings, and `ok` flips to `false` on errors the sub-agent did not cause. This is the **validator-cascade**: sub-agents burn loop budget on sibling-induced failures, stub over each other to silence the checks, and leave broken code (observed across Waves 3-5 of the mei-saas `/product` dogfood, 2026-05-20). A parent dispatching ≥2 parallel `Agent` calls that may touch overlapping files **MUST declare `isolation: "worktree"`** (see § Worktree isolation) — distinct worktrees give each sub-agent its own tree and its own project-wide check, so siblings never interfere. The validator already scopes its cwd to the edited file's git toplevel, so a worktree-isolated sub-agent is validated against *its own* tree, never a sibling's. Spec: `docs/specs/067-parallel-edit-validation/`.
+
 ## Audit log
 
 `.claude/delegation-audit.jsonl` (gitignored, append-only). Read with `jq -c .` or `tail -f`. Blocked calls are NOT logged — only allowed dispatches reach the audit phase. Two row shapes coexist in the same file, distinguished by the `event` field (absent on dispatch rows, `"subagent-stop"` on close rows).
@@ -134,7 +136,7 @@ This is canonical CC behavior — **Agent0 does NOT mediate the mechanism**. The
 
 ### When parents SHOULD declare `isolation: "worktree"`
 
-- **≥ 2 parallel `Agent` dispatches** that may touch overlapping files (canonical collision case). Without isolation, both sub-agents edit the same working tree concurrently and the last-writer wins.
+- **≥ 2 parallel `Agent` dispatches** that may touch overlapping files (canonical collision case). Without isolation the sub-agents share one working tree: the last writer wins on collisions, AND — the concrete failure mode — each sub-agent's post-edit validator runs a project-wide `tsc`/`biome` that sees the others' half-written files and fails `ok` on errors it did not cause (the **validator-cascade**; see § Post-edit validator loop). This is a **MUST**, not a suggestion, for any parallel fan-out with overlapping targets.
 - **Sub-agent will create new files in unknown locations** — keeps the parent tree clean if the work is exploratory or speculative.
 - **Sub-agent will run destructive operations** (`rm -r`, schema migrations, file rewrites at scale) — worktree provides reversibility via discard-on-exit, parent tree remains untouched.
 - **Long-running sub-agent on a `--worktree` background session** — already isolated via `bgIsolation: "worktree"` config, no extra action needed.

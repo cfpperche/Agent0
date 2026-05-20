@@ -8,37 +8,37 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Session 2026-05-19/20 — secrets-scan hardening. Clean tree.**
+**Session 2026-05-20 — spec 066 implemented + validated. `/product` restructured to v0.4.0.**
 
-- Spec 059 confirmed already shipped + committed (`56e1452`); prior handoff's "awaiting commit" was stale.
-- Native git hooks activated in Agent0 (`git config core.hooksPath .githooks`); mei-saas already activated. Both have `pre-commit` + gitleaks on PATH.
-- secrets-scan dogfooded end-to-end: preflight blocks compound `git add && git commit`; native blocks a non-stopword AKIA fake (exit 1, audit `block`). Both layers verified.
-- `.gitleaks.toml` bug fixed, committed (`c51c967`); `.claude/REMINDERS.md` `.gitleaks.toml` item dismissed.
-- Statusline runtime check (prior "next step #3") — confirmed working by user. Closed.
+- **Spec 066 — shipped.** All 17 tasks in `docs/specs/066-product-ui-quality/tasks.md` done; `spec.md` status → `shipped`, 14/14 acceptance criteria checked. The `/product` skill is now v0.4.0: the v2/v3 36-route per-route screen-writer fan-out is **deleted**; Phase 4 ends at the visual contract (`screen-atlas.md` + hi-fi killer-flow mood at `docs/screens/hifi/` + `fixture-spec.md`); new Phase 5 mandatorily scaffolds the SDD umbrella (`001-<slug>/`) + foundation child (`002-foundation/`) under `<out>/docs/specs/`. No `app/` tree, no `pnpm install`, no build verification — `/product` produces a docs-first foundation, the app build runs as SDD specs.
+- **Validation:** skill validator exits 0 (`rule8-body-token-warn` is a pre-existing non-blocking warn). F1-F9 self-audit + 5-scenario synthetic smoke trace done (method per the spec-059 precedent — recorded in `066/tasks.md § Notes` + `notes.md`). Net skill diff: +514 / −1735 lines (the restructure is mostly subtraction).
+- **Spec 067 — `parallel-edit-validation`** still scaffolded, `draft`, `/sdd plan` deferred (the F7 harness-side fix; untouched this session).
 
 ## WIP (uncommitted)
 
-- 7 PNGs (`v*-*.png`) — untracked carryover (orthogonal). Nothing else pending.
+- **Nothing in progress.** 17 files changed for spec 066 + 1 new file (`sdd-handoff.md`) + the 066 spec artifacts + this SESSION.md — all complete, none mid-edit. Implementation NOT yet committed (awaiting the user's go-ahead).
 
 ## Recent commits (anchors)
 
-- gitleaks fix: `c51c967`; 059 ship: `56e1452`; prior handoff: `4a3396f`
-- Parallel session: 064 `850190c`, 065 `ff35d17`, settings-merge fix `0702c6a`
+- `384fbbe` 067 scaffold · `d00225e` 066 spec rewrite · `9fa8706` 066 original scaffold · `c51c967` gitleaks fix (pushed through `42f0f60`).
+- `d00225e` + `384fbbe` + the 066 implementation are NOT yet pushed — branch is ahead of `origin/main`.
 
 ## Next steps
 
-1. **Spec 064 cron natural fire** — Monday 2026-05-25 09:00 UTC; `cc-platform-audit` should queue without manual intervention.
-2. **Umbrella 060 next batch** — re-evaluate §A4-A8 + §B medium-priority rows; scaffold based on observed dogfood signal.
-3. **Validator-cwd fix exercise** (spec 063) — first real sub-agent Edit/Write dispatch exercises the scoping path; watch validator stderr.
-4. **mei-saas empirical `/product`** — closes residual gap on spec 059 scenario 4 + first real-world test of harness-aware Phase 0.
+1. **Commit the 066 implementation** — 17 product-skill files (incl. `D` of 4 obsolete `15-screen-atlas/references/*`, new `sdd-handoff.md`) + the 066 spec artifacts. Then `git push` (branch well ahead of origin).
+2. **Spec 067 `/sdd plan`** — the validator-cascade harness fix; was deferred behind 066.
+3. **Live `/product` dogfood** — the mei-saas re-run is the downstream real-validation (spec 066 names it "the first re-validation target"). Not a 066 blocker — 066 is shipped on synthetic verification per the spec-059 precedent.
+4. Spec 064 cron natural fire — Monday 2026-05-25 09:00 UTC.
 
 ## Decisions & gotchas
 
-- **gitleaks 8.21.x silently ignores `[[allowlists]]` plural** — only singular `[allowlist]` applies exemptions. Canonical home: `secrets-scan.md` § Allowlist mechanics (fix shipped `c51c967`).
+- **Mood-screen-writer = ONE brief, two modes** (`{{mood_tier}}` lo-fi/hi-fi) — replaced the deleted per-stack `.tsx` screen-writer; serves Step 02 lo-fi + Step 15b hi-fi. See `066/notes.md`.
+- **Phase 4 = Step 15a + 15b + 15c dispatched in parallel** (one message) — distinct output paths, no FS race.
+- **`.state.json` v4 → v5** — behavioral break (Phase 4/5 reshaped), not field-shape; v4 resume refused.
+- **`15-screen-atlas/references/` fully pruned** — all 4 files deleted (step-7/13/MCP cruft); `prompt.md` rewritten self-contained.
+- F-matrix outcome: F2/F6 resolved by removal; F7 moot for `/product` (→ 067); F1/F3/F4 → SDD-child concerns + standing constraints; F5/F9 fixed via upstream-spec relationships; F8 = template rewrite.
 
 ## Carryover (orthogonal — not touched this session)
 
-- Spec 046 dogfood gate due 2026-07-01
-- Spec 029 adoption check due 2026-05-30
-- Spec 026 Phase C/D pending
-- `.claude/REMINDERS.md` items per startup readout
+- Spec 046 dogfood gate due 2026-07-01; spec 029 adoption check due 2026-05-30.
+- `.claude/REMINDERS.md` items per startup readout.

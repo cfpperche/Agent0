@@ -1,6 +1,8 @@
-# Pipeline coverage — 15 steps × 4 phases at "standard" tier (v0.3.0)
+# Pipeline coverage — 15 steps × 5 phases at "standard" tier (v0.4.0)
 
-How `/product` v0.3.0 (spec 048) maps the 15-step industry-aligned product pipeline onto the 4 agile phases. **Single tier — "standard".** Lightening per step is fixed by this doc; no `--fast`/`--deep` flag soup.
+How `/product` v0.4.0 (spec 066) maps the 15-step industry-aligned product pipeline onto the 5 phases. **Single tier — "standard".** Lightening per step is fixed by this doc; no `--fast`/`--deep` flag soup.
+
+**Spec 066 restructure:** Phase 4 no longer runs a per-route screen-writer fan-out — it ends at the visual contract (screen-atlas + hi-fi killer-flow mood + fixture-spec). The new Phase 5 mandatorily scaffolds the SDD umbrella + foundation child the engineering build runs as. `/product` produces a docs-first foundation, never a runnable app.
 
 Industry-aligned per spec 032's 17 decisions ported via spec 045 (`/prototype` v3 — historical name) and renamed + layout-refactored via spec 048 (Cagan/SVPG · Teresa Torres OST · GDPR Art 25 shift-left · Stage-Gate · Lenny Rachitsky 1-pager · April Dunford positioning).
 
@@ -11,9 +13,14 @@ Industry-aligned per spec 032's 17 decisions ported via spec 045 (`/prototype` v
 | **Phase 1 — Discovery** | 01-ideation · 02-prototype (lo-fi) · 03-spec · 04-ux-testing | ✓ AskUserQuestion (`gate_discovery`) | 8-12 min |
 | **Phase 2 — Specification** | 05-prd · 06-ost · 07-sitemap-ia · 08-system-design · 09-legal · 10-roadmap · 11-cost-estimate · 12-gtm-launch | ✓ AskUserQuestion (`gate_specification`) | 18-25 min |
 | **Phase 3 — Identity** | 13-brand · 14-design-system | ✓ AskUserQuestion (`gate_identity`) | 6-10 min |
-| **Phase 4 — Visual contract** | 15-screen-atlas | (no gate; closes with `/sdd new`) | 5-8 min |
+| **Phase 4 — Visual contract** | 15-screen-atlas (15a atlas · 15b hi-fi mood · 15c fixture-spec) | (no gate) | 5-8 min |
+| **Phase 5 — SDD handoff** | scaffolds the umbrella + foundation child spec | (no gate; terminal) | 2-3 min |
 
-**Total target: 35-55 min** end-to-end for a clean run (longer than v2's 30-45 min because Phase 2 grew from 5 steps → 8). Add ~5 min per gate iteration if user picks `iterate`. Realistic worst case ~90-120 min with one iteration per phase + parent-side `biome check --write` mitigation between phases.
+**Total target: 35-55 min** end-to-end for a clean run. Add ~5 min per gate iteration if user picks `iterate`. The spec 066 restructure REMOVES the old worst-case multi-hour tail — there is no per-route screen-writer fan-out, no `pnpm install`, no build verification; Phase 4 is three parallel sub-agents and Phase 5 is local file scaffolding.
+
+## Phase 5 — SDD handoff
+
+Phase 5 has no step number — it is the terminal phase. `/product` scaffolds, under `<out>/docs/specs/`, the **umbrella spec** (`001-<slug>/`, `**Type:** umbrella`, child-spec matrix sliced by `roadmap.md` phases, standing constraints) plus the **foundation child** (`002-foundation/`, skeleton + tooling + route-group dirs + thin layout shells). Children #2..N are matrix rows, not pre-scaffolded. The full contract is `references/sdd-handoff.md`. This is the deliberate fix for the v2/v3 36-route fan-out whose output quality collapsed: `/product` hands a *contract* to SDD, which is built for deliberate harness-disciplined implementation.
 
 ## Per-step output + size targets (standard tier)
 
@@ -43,7 +50,7 @@ Industry-aligned per spec 032's 17 decisions ported via spec 045 (`/prototype` v
 | 12 | GTM-launch | sonnet | `docs/gtm-launch.md` (positioning canvas Dunford + launch plan 4-week sketch + pricing strategy) | 4-7 KB | (legacy) | spec 032 Decision 7 (Stage-Gate stage 6 + April Dunford) |
 | 13 | Brand | sonnet | `docs/brand-book.md` | 4-8 KB (2-3 section snapshot) | (legacy) | spec 032 Decision 3 (moved after Specification — PRD-first) |
 | 14 | Design System | sonnet | `docs/design-system/tokens.css` (imported by `app/globals.css` as `@import "../docs/design-system/tokens.css"`) + `docs/design-system/components.md` + `docs/design-system/README.md` | tokens ≥ 1.5 KB, components ≥ 3 KB, ds ≥ 8 KB | (legacy) | unchanged content; renumbered |
-| 15 | Screen atlas (hi-fi) | sonnet × N (cap=5) | `docs/screen-atlas.md` (with sitemap coverage cross-check + PRD coverage matrix) + `app/**/*.tsx` page files for ALL sitemap routes + `app/_components/*.tsx` (legal-mandatory surfaces from Step 09) + project `REPORT.md` at `<out>/docs/REPORT.md` | atlas **10-28 KB**, REPORT 6-18 KB, screens 8-18 KB each | `15-screen-atlas/schema.md § Target` ✓ 056 | spec 032 Decision 8 + 14 (absorbs deleted Step 7 prototype-v2 work) |
+| 15 | Visual contract (15a atlas · 15b hi-fi mood · 15c fixture-spec) | sonnet × (1 + N + 1) | `docs/screen-atlas.md` (navigable contract — sitemap cross-check + PRD coverage matrix; NO `app/` writes) + `docs/screens/hifi/<NN>-<name>.html` × 3-5 (hi-fi killer-flow mood, mobile-first static HTML) + `docs/fixture-spec.md` (shared mock-data contract) + `docs/REPORT.md` | atlas **10-28 KB**, hi-fi mood 8-18 KB each, fixture-spec 2-6 KB, REPORT 6-18 KB | `15-screen-atlas/schema.md § Target` | spec 066 (delete the screen-writer fan-out; end at the visual contract) |
 
 **Legend:**
 - ✓ 056 = canonical size budget reconciled per spec 056 against 3-dogfood empirical pass (045 / 048 / Vetro)
@@ -65,7 +72,7 @@ Industry-aligned per spec 032's 17 decisions ported via spec 045 (`/prototype` v
 12. **12 GTM-launch:** Positioning canvas Dunford-lite (2-3 lines: who-for / alternative-to / why-better) + launch plan 4-week sketch (week-by-week milestones) + pricing strategy (free/standard/pro tier shape if relevant). Skip full launch playbook (post-PMF concern).
 13. **13 Brand:** 2-3 section snapshot (voice samples + visual direction posture + "we are/we are not" pair). Synthesizes from finalized PRD + sitemap + system-design (no longer from half-formed concept brief like v2). Skip founder-interview turn.
 14. **14 Design System:** Catalog-path PREFERRED (1-2 vendors from `od-catalog-index.json`); custom-derive fallback. Resist token inflation (8-14 colors, 5-7 type scales).
-15. **15 Screen atlas:** Full sitemap coverage (all `required_categories` routes) + legal-mandatory surfaces from Step 09 + PRD coverage matrix. **Absorbs the brand+tokens-applied work of deleted Step 7** — there is no separate intermediate prototype; this IS the hi-fi pass.
+15. **15 Visual contract:** Three sub-agents — (15a) `screen-atlas.md`, a navigable markdown contract indexing every sitemap route + PRD coverage; (15b) the hi-fi killer-flow mood, 3-5 brand+tokens-applied mobile-first static HTML screens; (15c) `fixture-spec.md`, the shared mock-data contract. **No per-route `page.tsx` set is generated** (spec 066) — the runnable app is built by the SDD children scaffolded in Phase 5.
 
 ## Bundled-template provenance + drift discipline
 
@@ -73,23 +80,23 @@ All 15 step prompts + schemas + references live at `.claude/skills/product/templ
 
 **Why bundle (not symlink or runtime-read):** the skill is standalone — must work in any fork. Bundle is the price of portability.
 
-## Two-prototype-pass rationale (v3 — collapsed from v2's three)
+## Two-mood-pass rationale (lo-fi + hi-fi)
 
-Spec 032 Decision 8 collapses the 3-prototype-pass into 2. Spec 045 ports:
+Spec 032 Decision 8 collapsed the 3-prototype-pass into 2; spec 066 keeps both passes as **mood passes** (static HTML, not framework code):
 
-- **Step 02 (Pass 1 — lo-fi):** Which visual direction resonates? Pre-brand, pre-tokens. Killer flow only. Mood HTML.
-- **Step 15 (Pass 2 — hi-fi):** Does the COMPLETE product surface cohere with brand + tokens + audit fixes + PRD coverage? Post-Specification + Identity. Full coverage matrix. Real Next.js / Expo screens.
+- **Step 02 (Pass 1 — lo-fi mood):** Which visual direction resonates? Pre-brand, pre-tokens. Killer flow only. Mood HTML at `docs/screens/`.
+- **Step 15b (Pass 2 — hi-fi mood):** Does the killer flow cohere with brand + tokens + audit fixes? Post-Specification + Identity. 3-5 brand+tokens-applied **mobile-first static HTML** screens at `docs/screens/hifi/` — the rendered half of the visual contract. The `screen-atlas.md` (Step 15a) is the prose half, spanning the full PRD coverage. **Real framework code is the SDD children's job (Phase 5)** — spec 066 deleted the per-route screen-writer fan-out that tried to generate it inline.
 
-The deleted v2 Step 7 (prototype-v2 brand-tuned) was a redundant mid-step (3-stage felt over-engineered per Cagan SVPG "Flavors of Prototypes"). Its work (brand + tokens applied to killer-flow surfaces) is absorbed by Step 15 — the hi-fi atlas IS the brand-tuned pass.
-
-Tombstone: `docs/specs/045-prototype-skill-pipeline-realign/artifacts/deleted-step-7-prototype-v2.md` preserves the v2 content for rollback or reference.
+The deleted v2 Step 7 (prototype-v2 brand-tuned) was a redundant mid-step (3-stage felt over-engineered per Cagan SVPG "Flavors of Prototypes"). Its work (brand + tokens applied to killer-flow surfaces) is the Step 15b hi-fi mood. Tombstone: `docs/specs/045-prototype-skill-pipeline-realign/artifacts/deleted-step-7-prototype-v2.md`.
 
 ## Cross-references
 
-- `state-machine.md` — phase/step progression, `.state.json` v3 shape, resume support
-- `delegation-briefs.md` — 16 sub-agent briefs (15 step + 1 per-stack screen-writer)
+- `state-machine.md` — phase/step progression, `.state.json` v5 shape, resume support
+- `delegation-briefs.md` — 5-field briefs for every sub-agent dispatch (one per step; Step 15 = 15a/15b/15c; shared mood-screen-writer)
+- `sdd-handoff.md` — the Phase 5 umbrella + foundation-child scaffold contract
 - `sitemap-schema.md` — required_categories enforcement (load-bearing for Step 07)
 - `od-catalog-index.json` — Step 14 catalog path vendor index (72 vendors at 2026-05-18 snapshot)
-- `quality-checklist.md` — per-step gate criteria + per-screen 4-dim rubric
-- `docs/specs/045-prototype-skill-pipeline-realign/` — spec/plan/tasks driving this refactor
+- `quality-checklist.md` — per-step gate criteria + the visual-contract + SDD-handoff gates
+- `docs/specs/066-product-ui-quality/` — the restructure spec (this version)
+- `docs/specs/045-prototype-skill-pipeline-realign/` — pipeline lineage
 - `docs/specs/032-pipeline-industry-alignment/` — parent industry-alignment spec (the 17 decisions ported here)

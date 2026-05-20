@@ -2,7 +2,7 @@
 
 _Created 2026-05-20._
 
-**Status:** draft
+**Status:** shipped
 
 ## Intent
 
@@ -10,40 +10,40 @@ The `/product` skill's visual-contract phase (Step 15) generates a 36-route Next
 
 ## Acceptance criteria
 
-- [ ] **Scenario: `/product` ends at the visual contract, not a built app**
+- [x] **Scenario: `/product` ends at the visual contract, not a built app**
   - **Given** a `/product --stack=next` run
   - **When** the pipeline reaches its end
   - **Then** it has produced `docs/screen-atlas.md` + a hi-fi killer-flow mood (3-5 static HTML screens) + the Step 02 lo-fi mood, and has **not** produced an `app/**/page.tsx` screen set or run any screen-writer fan-out
 
-- [ ] **Scenario: mandatory SDD handoff scaffolds the umbrella**
+- [x] **Scenario: mandatory SDD handoff scaffolds the umbrella**
   - **Given** `/product` has completed the visual-contract phase
   - **When** the run finishes
   - **Then** it has scaffolded a filled umbrella spec under `docs/specs/` (`**Type:** umbrella`, with a child-spec matrix sliced by roadmap phase) plus the foundation child spec (child #1, ready to start); children #2..N are listed in the umbrella matrix, not pre-scaffolded
 
-- [ ] **Scenario: the hi-fi mood is the rendered half of the contract**
+- [x] **Scenario: the hi-fi mood is the rendered half of the contract**
   - **Given** the visual-contract phase
   - **When** the atlas step runs
   - **Then** it produces 3-5 brand+tokens-applied killer-flow screens as self-contained, mobile-first static HTML — a `<style>` block with `@media` breakpoints, never `style=` attributes for layout — giving the SDD children a rendered visual target, not only prose
 
-- [ ] **Scenario: `components.md` becomes a real input spec**
+- [x] **Scenario: `components.md` becomes a real input spec**
   - **Given** the umbrella has been scaffolded
   - **When** the component-library child spec (child #2) is created
   - **Then** its `spec.md` derives from Step 14's `components.md` + `tokens.css` — the design-system spec is the upstream contract, no longer a decorative doc
 
-- [ ] **Scenario: shared fixtures are one coherent source**
+- [x] **Scenario: shared fixtures are one coherent source**
   - **Given** `/product` holds the persona (concept brief) and the entity model (system design)
   - **When** the visual-contract phase produces its artifacts
   - **Then** it emits a fixture/seed spec (one persona, one coherent entity set, internally consistent dates) that the foundation child implements as a shared `lib/mock-data.ts` — every screen imports it, none invents its own
 
-- [ ] The Next.js screen-writer brief and the screen-writer fan-out are removed from `references/delegation-briefs.md` and `SKILL.md` Phase 4.
-- [ ] The scaffolded umbrella spec encodes a standing styling constraint every child inherits: Tailwind utility classes (the declared stack), no inline `style={{}}` for layout/positioning — closing F1/F2 at the build layer.
-- [ ] Phase 0 seeds `<out>/.mcp.json` with the Playwright MCP block — visual verification is available to every SDD-child session, and best-effort within the `/product` run itself.
-- [ ] If the Playwright MCP is loaded, the hi-fi mood screens are screenshotted at mobile + desktop widths and checked for horizontal overflow, with results in `REPORT.md`; if not, an advisory records the skip (best-effort — never blocks).
-- [ ] `SKILL.md` Phase 5 handoff prints the path to the scaffolded umbrella spec — not a `pnpm dev` instruction.
-- [ ] `templates/pipeline/15-screen-atlas/` is rewritten for the atlas-only role (no screen-writer references, no per-route `.html` output, current 15-step numbering) — closing F8.
-- [ ] Step 14's design-system brief emits the Tailwind v4 `@theme` token block (so the downstream component-library child gets real utilities).
-- [ ] `references/quality-checklist.md` Step 15 criteria are updated for the atlas-only deliverable (atlas completeness + hi-fi mood, not a 36-route fan-out).
-- [ ] A `/product` smoke run on a small idea reproduces none of F1-F9 — verified against the re-mapping in `## Context`.
+- [x] The Next.js screen-writer brief and the screen-writer fan-out are removed from `references/delegation-briefs.md` and `SKILL.md` Phase 4.
+- [x] The scaffolded umbrella spec encodes a standing styling constraint every child inherits: Tailwind utility classes (the declared stack), no inline `style={{}}` for layout/positioning — closing F1/F2 at the build layer.
+- [x] Phase 0 seeds `<out>/.mcp.json` with the Playwright MCP block — visual verification is available to every SDD-child session, and best-effort within the `/product` run itself.
+- [x] If the Playwright MCP is loaded, the hi-fi mood screens are screenshotted at mobile + desktop widths and checked for horizontal overflow, with results in `REPORT.md`; if not, an advisory records the skip (best-effort — never blocks).
+- [x] `SKILL.md` Phase 5 handoff prints the path to the scaffolded umbrella spec — not a `pnpm dev` instruction.
+- [x] `templates/pipeline/15-screen-atlas/` is rewritten for the atlas-only role (no screen-writer references, no per-route `.html` output, current 15-step numbering) — closing F8.
+- [x] Step 14's design-system brief emits the Tailwind v4 `@theme` token block (so the downstream component-library child gets real utilities).
+- [x] `references/quality-checklist.md` Step 15 criteria are updated for the atlas-only deliverable (atlas completeness + hi-fi mood, not a 36-route fan-out).
+- [x] A `/product` smoke run on a small idea reproduces none of F1-F9 — verified against the re-mapping in `## Context`.
 
 ## Non-goals
 

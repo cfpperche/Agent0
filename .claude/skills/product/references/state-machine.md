@@ -1,14 +1,14 @@
-# State machine — `/product` v0.3.0 (`.state.json` v4)
+# State machine — `/product` v0.4.0 (`.state.json` v5)
 
-Defines `.state.json` shape, phase/step progression, gate semantics, and resume support via `--from-step=NN`. Spec source: `docs/specs/048-product-skill-foundation/` (v0.3.0, state v4) — supersedes spec 045 (v0.2.0, state v3). v2 + v3 shapes preserved for compatibility detection (orchestrator aborts cleanly when older state file found, rather than silently corrupting it).
+Defines `.state.json` shape, phase/step progression, gate semantics, and resume support via `--from-step=NN`. Spec source: `docs/specs/066-product-ui-quality/` (v0.4.0, state v5) — supersedes spec 048 (v0.3.0, state v4). v2 / v3 / v4 shapes are preserved for compatibility detection (orchestrator aborts cleanly when an older state file is found, rather than silently corrupting it).
 
-## `.state.json` shape (v4)
+## `.state.json` shape (v5)
 
-Written at `<out-dir>/docs/.state.json`. Initialized by Phase 0, updated at each step boundary, finalized at Phase 4 close.
+Written at `<out-dir>/docs/.state.json`. Initialized by Phase 0, updated at each step boundary, finalized at Phase 5 close.
 
 ```json
 {
-  "version": 4,
+  "version": 5,
   "slug": "erp-saloes-beleza",
   "idea": "ERP para salões de beleza",
   "flags": {
@@ -45,25 +45,26 @@ Written at `<out-dir>/docs/.state.json`. Initialized by Phase 0, updated at each
 
 Field semantics:
 
-- **`version`** — schema version of `.state.json` itself. Current: `4`. Increments when shape changes.
+- **`version`** — schema version of `.state.json` itself. Current: `5`. Increments when shape changes.
   - v1 (spec 034) — single `phase` int 0-5, no step tracking.
   - v2 (spec 036) — 13-step tracking, `phase` int 0-5, `iterations` keyed by `discovery`/`identity`/`specification`.
   - v3 (spec 045) — 15-step tracking, `phase` string enum, NN-flat artifact paths under `docs/`.
-  - v4 (spec 048) — same 15-step pipeline as v3; artifact paths refactored to semantic-named (no `NN-` prefix); PRD release-scoped via `docs/prd/v1.md`; design system grouped at `docs/design-system/`; `step_label` enum unchanged from v3 (`06-ost`, `07-sitemap-ia`, etc. — these are STEP names, not artifact names).
+  - v4 (spec 048) — same 15-step pipeline as v3; artifact paths refactored to semantic-named (no `NN-` prefix); PRD release-scoped via `docs/prd/v1.md`; design system grouped at `docs/design-system/`.
+  - v5 (spec 066) — same 15-step pipeline; Phase 4 reshaped (no per-route screen-writer fan-out — Step 15 is atlas + hi-fi mood + fixture-spec); Phase 5 is now the mandatory SDD handoff; `phase` enum gains `sdd-handoff`. The v4→v5 break is behavioral (Phase 4/5 produce different artifacts), not a field-shape change — but resume across the break would mis-orchestrate, so v4 is refused.
 - **`slug`** — kebab-case product slug derived from `idea`. Computed once at Phase 0; immutable thereafter.
 - **`idea`** — verbatim user input from `/product "<idea>"`. Immutable.
 - **`flags`** — captured from invocation; `out` is required, others default. Immutable post-Phase 0 except `from_step` (cleared after resume completes).
-- **`phase`** — current phase as string enum. One of `discovery | specification | identity | visual-contract`. Updated at phase boundary.
-- **`step`** — current step number, int 1-15 (or 0 during Phase 0 setup).
+- **`phase`** — current phase as string enum. One of `discovery | specification | identity | visual-contract | sdd-handoff`. Updated at phase boundary. `sdd-handoff` is Phase 5 (spec 066) — set when the run scaffolds the umbrella + foundation child; `step` stays `15` through it (Phase 5 has no step number).
+- **`step`** — current step number, int 1-15 (or 0 during Phase 0 setup). Stays `15` during Phase 5.
 - **`step_label`** — human-readable step name matching bundled template dir name (e.g. `09-legal`, `12-gtm-launch`, `15-screen-atlas`).
 - **`started_at`** — UTC ISO-8601 timestamp from Phase 0.
 - **`gates_passed`** — list of phase names with `continue` choice at gate. Order matters (cannot be in `specification` if `discovery` not first). Valid values: `discovery`, `specification`, `identity`.
 - **`completed_steps`** — list of step labels that finished cleanly. Append-only.
 - **`blocked_steps`** — list of objects `{step_label, reason, artifacts_partial?}` for steps that returned BLOCKED. Empty list when no blocks.
 - **`iterations`** — count of `iterate` gate-pass choices per phase. Each `iterate` increments; `continue` does not. Used to cap runaway iteration (soft cap = 3 per phase; warn at 3, soft-abort at 5).
-- **`completed_at`** — UTC ISO-8601 set when Phase 4 closes successfully. Null otherwise.
+- **`completed_at`** — UTC ISO-8601 set when Phase 5 (the SDD handoff) closes successfully. Null otherwise.
 
-## Phase progression (v3)
+## Phase progression (v5)
 
 ```
 Phase 0 (setup) → step 0
@@ -90,15 +91,19 @@ Phase 3 (identity) → steps 13-14
   gate_identity [AskUserQuestion: continue / iterate / abort]
   ↓
 Phase 4 (visual-contract) → step 15
-  step 15 atlas-writer + per-route screen-writers (parallel cap=5)
-    + stitch step (token import verify) + build verification
+  step 15a atlas-writer + 15b hi-fi mood-writers (cap=5) + 15c fixture-spec writer
+    — three sub-agents dispatched in parallel (one message); NO per-route fan-out,
+      NO app/ tree, NO build verification (spec 066)
+  + best-effort Playwright visual check + author REPORT.md
   ↓
-  Phase 5 (handoff message)
+Phase 5 (sdd-handoff)
+  scaffold docs/specs/001-<slug>/ (umbrella) + docs/specs/002-foundation/ (child #1)
+  print handoff message
   ↓
   completed_at set
 ```
 
-Phase 0 has no gate (idempotency check is local). Phase 4 has no gate (final synthesis; `/sdd new` handoff is the implicit "next" gate). Note phase ORDER CHANGED vs v2: Specification (was Phase 3 in v2) is now Phase 2 (PRD-first per spec 045 Decision 3); Identity (was Phase 2) is now Phase 3.
+Phase 0 has no gate (idempotency check is local). Phase 4 + Phase 5 have no gate (Phase 5's SDD-spec scaffold is the terminal handoff). Note phase ORDER vs v2: Specification (was Phase 3 in v2) is Phase 2 (PRD-first per spec 045 Decision 3); Identity (was Phase 2) is Phase 3.
 
 ## Step ordering within Phase 2 — Specification (most complex)
 
@@ -143,7 +148,7 @@ Iteration soft cap: warn at `iterations.<phase> >= 3`, force-abort at `>= 5`. Pr
 Behavior:
 
 1. Phase 0 reads `.state.json` from `<out-dir>/docs/`.
-2. **Validates `version`** — must be `4`. If `version == 3` (pre-spec-048 from spec 045 run), abort with `state v3 found — pre-spec-048 run; clear --out dir or run fresh /product`. If `version < 3` (v1 or v2 from older runs), abort with `state v<N> found — pre-spec-045 run; clear --out dir or run fresh /product`. Conservative: refuse to silently upgrade an older state file, because (1) v3→v4 changes artifact paths (NN-prefix dropped); (2) v2→v3 changed step numbering (v2's `08-prd` is v3's `05-prd`).
+2. **Validates `version`** — must be `5`. If `version == 4` (pre-spec-066 from spec 048 run), abort with `state v4 found — pre-spec-066 run; clear --out dir or run fresh /product`. If `version == 3` (pre-spec-048 run), abort with `state v3 found — pre-spec-048 run; clear --out dir or run fresh /product`. If `version < 3` (v1 or v2), abort with `state v<N> found — pre-spec-045 run; clear --out dir or run fresh /product`. Conservative: refuse to silently upgrade an older state file, because (1) v4→v5 reshapes Phase 4/5 (a v4 resume into Phase 4 would expect the deleted screen-writer fan-out); (2) v3→v4 changed artifact paths (NN-prefix dropped); (3) v2→v3 changed step numbering.
 3. Validates: `slug` matches argument-derived slug; `idea` matches verbatim (case-sensitive); `flags.stack` matches; if mismatch, abort with `state mismatch — clear --out dir or pick different --from-step`.
 4. Jumps to step NN. All `completed_steps` entries with step number < NN remain trusted (artifacts on disk are used as inputs to downstream).
 5. Continues from there through remaining steps + phases.
@@ -155,7 +160,7 @@ Behavior:
 
 Sub-agent dispatch returns BLOCKED (DELIVERABLE not met OR sub-agent explicit can't-do):
 
-- **Step 01 (concept brief) or Step 15 (screen-atlas) blocks** → ABORT the run. These steps are upstream-of-everything (01) or final-deliverable (15); continuing without them produces incomplete artifacts the rest of the pipeline can't reason about.
+- **Step 01 (concept brief) or Step 15a (screen-atlas) blocks** → ABORT the run. Step 01 is upstream-of-everything; Step 15a IS the visual contract — Phase 5's SDD handoff has nothing to hand off without it. Step 15b (hi-fi mood) or 15c (fixture-spec) blocking does NOT abort — those degrade gracefully (the atlas alone is a usable contract; a missing hi-fi mood or fixture-spec is a documented gap, logged to `blocked_steps` + REPORT.md, and Phase 5 still runs).
 - **Step 07 (sitemap-IA) blocks via schema-enforcement** → AUTO-RETRY with augmented brief naming the uncovered category(ies). Up to 2 retries before falling through to user `iterate` choice at Phase 2 gate.
 - **Any other step blocks** → degrade gracefully:
   - Append `{step_label, reason, artifacts_partial: <list>}` to `blocked_steps`.
@@ -170,26 +175,25 @@ Phase 0 checks if `<out-dir>` exists and is non-empty (any file present):
 <out-dir> exists and is non-empty. Overwrite? (y/N) ▷
 ```
 
-- `y` → `rm -r <out-dir>` (NOT `rm -rf` — governance-gate blocks combined flags); then `mkdir -p <out-dir>/docs/screens` + init `<out-dir>/docs/.state.json`.
+- `y` → `rm -r <out-dir>` (NOT `rm -rf` — governance-gate blocks combined flags); then `mkdir -p <out-dir>/docs/screens/hifi <out-dir>/docs/prd <out-dir>/docs/design-system <out-dir>/docs/specs` + init `<out-dir>/docs/.state.json`.
 - `n` / no answer / anything else → abort with `aborted; pick a different --out or rm the existing dir yourself`. Exit 0.
 
 No `--force` flag; the prompt is the gate.
 
-## Migration from v2 (spec 036) to v3 (spec 045)
+## Migration to v5 (spec 066)
 
-The shape change is breaking:
-- `phase` int → string enum
-- step numbering shift (8 vs 5 for PRD; 13 vs 15 for atlas; new steps 06/07/12; deleted step 7)
-- `iterations` keys reordered
+The v4→v5 change is breaking at the behavioral level: Phase 4 no longer runs a per-route screen-writer fan-out (Step 15 = atlas + hi-fi mood + fixture-spec) and Phase 5 is now the mandatory SDD handoff (was a chat message). A v4 state file resumed under v5 would mis-orchestrate Phase 4/5, so v4 is refused at resume.
 
-No automatic migration. Founders with in-flight v2 prototypes must complete those runs before upgrading the skill (or accept rm + restart). New runs after upgrade always start at v3.
+No automatic migration. Founders with an in-flight v4 (or older) run must complete it on the prior skill version, or `rm -r <out>` and restart. New runs after the upgrade always start at v5.
 
 ## Cross-references
 
 - `pipeline-coverage.md` — what each step produces at standard tier
-- `delegation-briefs.md` — sub-agent dispatch shape per step
-- `quality-checklist.md` — per-step gate criteria
+- `delegation-briefs.md` — sub-agent dispatch shape per step (Step 15 = 15a/15b/15c)
+- `sdd-handoff.md` — the Phase 5 umbrella + foundation-child scaffold contract
+- `quality-checklist.md` — per-step gate criteria + visual-contract + SDD-handoff gates
 - `sitemap-schema.md` — Step 07's required_categories binding
 - `SKILL.md` — orchestration body that operates this state machine
 - `.claude/rules/delegation.md` — 5-field handoff discipline
-- `docs/specs/045-prototype-skill-pipeline-realign/` — spec source
+- `docs/specs/066-product-ui-quality/` — spec source (the restructure)
+- `docs/specs/045-prototype-skill-pipeline-realign/` — pipeline lineage

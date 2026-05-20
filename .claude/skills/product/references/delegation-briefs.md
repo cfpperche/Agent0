@@ -1,8 +1,8 @@
-# Delegation briefs — 5-field templates per sub-agent (v3)
+# Delegation briefs — 5-field templates per sub-agent (v0.4.0)
 
-Every `Agent` tool call dispatched by `/product` v0.3.0 MUST use the 5-field handoff per `.claude/rules/delegation.md` (TASK / CONTEXT / CONSTRAINTS / DELIVERABLE / DONE_WHEN). The delegation-gate hook returns exit 2 otherwise.
+Every `Agent` tool call dispatched by `/product` v0.4.0 MUST use the 5-field handoff per `.claude/rules/delegation.md` (TASK / CONTEXT / CONSTRAINTS / DELIVERABLE / DONE_WHEN). The delegation-gate hook returns exit 2 otherwise.
 
-**16 briefs total:** 15 step-specific (one per pipeline step) + 1 per-stack screen-writer template (reused by Step 02 lo-fi screens + Step 15 hi-fi screens).
+**Briefs cover every `/product` sub-agent dispatch** — one per pipeline step (Step 02 = direction-writer; Step 15 = the three visual-contract sub-agents 15a-atlas / 15b-hi-fi-mood / 15c-fixture-spec) plus the shared **§ Mood-screen-writer** template, used by Step 02 (lo-fi mode) and Step 15b (hi-fi mode). Per spec 066 the v2/v3 per-route Next.js/Expo `.tsx` screen-writer is **deleted** — `/product` ends at the visual contract; the runnable app is built by the SDD children scaffolded in Phase 5.
 
 **Per-step model assignment** (per spec 036 Q1 resolution preserved in spec 045): Step 01 = `opus` (concept brief multi-source synthesis); Steps 02-15 = `sonnet` (mechanical with dense brief + bundled template).
 
@@ -57,14 +57,14 @@ CONSTRAINTS:
 - **Do NOT produce sitemap.yaml** — that's Step 07's deliverable per spec 045 (sitemap-IA promoted to own step).
 - Size budget: per `.claude/skills/product/templates/pipeline/02-prototype/schema.md § Target` (currently 10-30 KB for direction-a.html).
 - Overshoot cascade per `.claude/rules/artifact-budgets.md`: `max × 1.2` → partial-result with `oversize_reason` (sub-agent agency); `max × 1.8` → STOP, partial-result, no further production. DO NOT trim-loop, DO NOT re-emit at smaller scope (both are forbidden antipatterns).
-- Write file DIRECTLY to {{out}}/docs/direction-a.html. The 3-5 killer-flow mood screens are produced by separate per-stack screen-writer dispatches (sub-agent b — see § Per-stack screen-writer below).
+- Write file DIRECTLY to {{out}}/docs/direction-a.html. The 3-5 killer-flow lo-fi mood screens are produced by separate § Mood-screen-writer dispatches in lo-fi mode (sub-agent b — see § Mood-screen-writer below).
 
 DELIVERABLE: {{out}}/docs/direction-a.html (+ killer-flow HTML mood screens at {{out}}/docs/screens/NN-<name>.html produced by sub-agent b in parallel)
 
 DONE_WHEN: File exists; size within schema target range (see schema.md § Target); contains :root + --background + --foreground + --primary tokens; contains "Most Popular"; ≥1 `<svg`; cites ≥1 OD vendor in HTML comment header.
 ```
 
-**(b) Screen writer — reused by Step 02 (mood HTML) + Step 15 (real Next.js/Expo).** See § Per-stack screen-writer below.
+**(b) Mood-screen-writer (lo-fi mode)** — produces the 3-5 killer-flow lo-fi mood screens at `{{out}}/docs/screens/NN-<name>.html`. The same § Mood-screen-writer brief in hi-fi mode produces the Step 15b hi-fi mood. See § Mood-screen-writer below.
 
 ### Step 03 — Spec (functional + architecture; extended with problem-validation interviews per Decision 6)
 
@@ -375,7 +375,8 @@ CONSTRAINTS:
 - Standard tier: catalog path PREFERRED — if 1-2 vendors match, inherit their tokens with brand-tuned overrides. Custom path fallback only.
 - Semantic token names ONLY — `--color-primary` not `--color-blue-500`; `--space-md` not `--space-12`. NO visual naming.
 - **tokens.css written to {{out}}/docs/design-system/tokens.css** (NOT root — root reserved for runtime per spec 036 finding #7 iter-2). The skeleton's `app/globals.css` imports it relative as `@import "../docs/design-system/tokens.css"`.
-- tokens.css: dark-first :root block + @media (prefers-color-scheme: light) overrides for color tokens. Includes color (8-14 colors) + spacing (5-7 scale) + radius (3) + font (sans + mono + 5-7 size scale).
+- **tokens.css registers tokens under a Tailwind v4 `@theme` block (spec 066)** — NOT only a bare `:root` block. The `@theme` directive is what makes the tokens generate real utility classes (`bg-primary`, `text-fg`, `p-md`, `rounded-lg`, `font-sans`) — the downstream component-library SDD child consumes utilities, not raw vars. Use Tailwind v4 theme namespaces: `--color-*` (colors), `--text-*` (font sizes), `--radius-*` (radii), `--font-*` (families), `--spacing` / `--spacing-*` (scale). Dark-first posture unchanged: declare the dark values inside `@theme`; the light-mode `@media (prefers-color-scheme: light)` block overrides the `--color-*` vars in a following `:root` (Tailwind v4's theme-override pattern). Token coverage: color (8-14) + spacing (5-7 scale) + radius (3) + font (sans + mono + 5-7 size scale).
+- tokens.css opens with a one-line comment `/* Tailwind v4 @theme — import after `@import "tailwindcss"` in the app's globals.css */` so the foundation SDD child wires the import order correctly.
 - components.md: per-component anatomy + variants + states for at least Button / Input / Card / Table / Badge / Dialog / EmptyState. 3+ KB.
 - README.md (design-system overview): overview + tokens narrative + audit-response section (which step-04 findings applied as token tunes) + catalog lineage citations. 8+ KB. Required H2: "Audit Response".
 - Overshoot cascade per `.claude/rules/artifact-budgets.md` (applies to ceilings on each file — read per-file max from `14-design-system/schema.md § Target`): `file_max × 1.2` → partial-result with `oversize_reason` (sub-agent agency); `file_max × 1.8` → STOP, partial-result, no further production. DO NOT trim-loop, DO NOT re-emit at smaller scope (both are forbidden antipatterns). Floors above remain enforced via schema Layer 1.
@@ -383,161 +384,140 @@ CONSTRAINTS:
 
 DELIVERABLE: 3 files at {{out}}/docs/design-system/: tokens.css + components.md + README.md
 
-DONE_WHEN: tokens.css ≥ 1.5 KB valid CSS with :root block + light-mode @media override; components.md ≥ 3 KB; README.md ≥ 8 KB + contains "Audit Response" section header + cites OD vendor name + vendor_path.
+DONE_WHEN: tokens.css ≥ 1.5 KB valid CSS with a Tailwind v4 `@theme` block (registering `--color-*` / `--text-*` / `--radius-*` / `--font-*` tokens) + a light-mode `@media (prefers-color-scheme: light)` override; components.md ≥ 3 KB; README.md ≥ 8 KB + contains "Audit Response" section header + cites OD vendor name + vendor_path.
 ```
 
 ## Phase 4 — Visual contract
 
-### Step 15 — Screen atlas (renamed from v2 Step 13; absorbs deleted v2 Step 7 per Decision 8 + 14)
+Phase 4 is Step 15 — the **visual contract**. Per spec 066 the v2/v3 per-route screen-writer fan-out is **deleted**: `/product` no longer generates an `app/**/page.tsx` screen set, writes no route-group layouts, runs no build verification. The runnable app is built by the SDD children scaffolded in Phase 5. Step 15 dispatches **three sub-agents — parallelizable in ONE message** (all inputs are on disk from Phases 1-3, distinct output paths, no FS race): (15a) the atlas-writer, (15b) the hi-fi mood-screen-writer, (15c) the fixture-spec-writer.
 
-Two-part dispatch — **SERIALIZED per spec 052**: (a) atlas writer runs FIRST and writes the route-group layout files + atlas index; (b) N screen writers fan-out AFTER the atlas returns (they consume the layout files atlas just wrote, so atlas-before-writers is mandatory).
-
-**(a) Atlas writer — model:** `sonnet`  ·  **subagent_type:** `general-purpose`
-
-```
-TASK: Produce screen-atlas.md AND the route-group layout files (`app/(app)/layout.tsx` for shared chrome of primary+admin routes; optional `app/(marketing)/layout.tsx` for marketing nav if sitemap declares ≥3 marketing routes) for the complete prototype of "{{idea}}".
-
-CONTEXT: Read ALL prior artifacts at {{out}}/docs/ (semantic-named per spec 048; pipeline order via REPORT.md):
-- Phase 1 (Discovery): concept-brief.md, functional-spec.md, validation-report.md
-- Phase 2 (Specification): prd/v1.md (US-NN inventory — load-bearing for PRD coverage), ost.md, sitemap.yaml (route inventory — load-bearing for screen coverage; **and source-of-truth for which routes go under `app/(app)/` vs flat**), system-design.md + security.md + data-flow.json, legal-posture.md (legal-mandatory surfaces — consent dialog if DPIA fires), roadmap.md, cost-estimate.md, gtm-launch.md
-- Phase 3 (Identity): brand-book.md, design-system/tokens.css, design-system/components.md, design-system/README.md
-Read .claude/skills/product/templates/pipeline/15-screen-atlas/prompt.md + schema.md for atlas shape.
-
-CONSTRAINTS:
-- Size budget: per `.claude/skills/product/templates/pipeline/15-screen-atlas/schema.md § Target` (10-28 KB for screen-atlas.md). NOT a re-render of any single screen — the atlas IS the index.
-- Overshoot cascade per `.claude/rules/artifact-budgets.md`: `max × 1.2` → partial-result with `oversize_reason` (sub-agent agency); `max × 1.8` → STOP, partial-result, no further production. DO NOT trim-loop, DO NOT re-emit at smaller scope (both are forbidden antipatterns).
-- Required H2 sections (verbatim): Overview / Screens Index / Sitemap Coverage Cross-Check / PRD Coverage Matrix / Design Fidelity / States Coverage Matrix / User Flow Walkthrough / Open Decisions.
-- **Sitemap Coverage Cross-Check** (NEW per spec 045) — for every route in sitemap.yaml, atlas confirms the corresponding `app/<route>/page.tsx` was actually generated. Missing screens listed as `[GAP — re-dispatch screen-writer]`.
-- **Screens Index** — table: filename | route path | category | covers_us | states implemented.
-- **PRD Coverage Matrix** — list EVERY US-NN from prd.md. For each: covered → screen filename(s) OR deferred → one-line reason.
-- **Design Fidelity** — 4-dim per screen: Token Hygiene / Voice Match / Component Reuse / Brief Fit; score 1-5 per dim; Min column gates ≥ 3.
-- **States Coverage Matrix** — screens × {loading/empty/error/disabled/success}; cells: ✓/—/`[gap]`.
-- **User Flow Walkthrough** — killer flow end-to-end with copy snippets at each step.
-- **Open Decisions** — 4-6 v1→v2 decisions deferred.
-- This atlas IS the brand+tokens-applied hi-fi pass (Step 7 prototype-v2 from v2 was deleted per spec 045 Decision 8). The screens MUST consume var(--*) tokens from `docs/design-system/tokens.css`, NOT raw hex.
-- Write atlas file DIRECTLY to {{out}}/docs/screen-atlas.md.
-- **Route-group layouts (spec 052 + 055):** Inspect sitemap.yaml and write ONE `app/(<chrome>)/layout.tsx` PER DISTINCT `chrome` value that has ≥1 route assigned to it (use the default-inference table from `sitemap-schema.md § chrome` for routes missing explicit `chrome:`). Concrete layouts to consider:
-  - `app/(app)/layout.tsx` — shared sidebar + topbar for the authenticated product surfaces (`chrome: app` routes; typically primary + admin categories). Links derived from sitemap, labels from display name or kebab-to-Title-case.
-  - `app/(marketing)/layout.tsx` — marketing nav (header + footer) for `chrome: marketing` routes.
-  - `app/(booking)/layout.tsx` — minimal white-label shell for `chrome: booking` routes (e.g. clinic-branded tutor portals, public funnels). Clinic/product brand header only; no nav back to authenticated app.
-  - `app/(auth)/layout.tsx` — auth shell for `chrome: auth` routes (logo, language switcher, "back to marketing" link).
-  - `chrome: chromeless` routes get NO layout file — they sit flat at `app/<path>/page.tsx`.
-
-  All layouts are Server Components (NO `'use client'` at top — interactive children handle their own client boundaries per spec 051). Tokens-only (NO hex/px except 1px borders). Each layout's specific shell content (which links / what header shape) is the atlas's design call, anchored against `docs/brand-book.md` voice + `docs/design-system/components.md` for visual primitives.
-- The root `app/layout.tsx` stays untouched by atlas — it's the HTML/body shell with metadata only (spec 051 covers its placeholder substitution).
-
-DELIVERABLE: {{out}}/docs/screen-atlas.md + {{out}}/app/(app)/layout.tsx + optionally {{out}}/app/(marketing)/layout.tsx
-
-DONE_WHEN: All 3 files exist (atlas + (app)/layout.tsx + optional (marketing)/layout.tsx); atlas size within schema target range (see schema.md § Target — currently 10-28 KB); atlas contains all 8 H2 section headers; Sitemap Coverage Cross-Check lists every route from sitemap.yaml with status; PRD coverage matrix lists every US-NN from prd.md; design-fidelity table has 4-dim Min column; `(app)/layout.tsx` exists with sidebar nav matching sitemap primary+admin categories, tokens-only, no `'use client'` directive.
-```
-
-**(b) Screen writer:** see § Per-stack screen-writer below. N = all sitemap.yaml routes (NOT killer-flow only — full sitemap coverage at standard tier per spec 045 Decision 13 sitemap schema enforcement).
-
-## Per-stack screen-writer (reused by Step 02 lo-fi mood + Step 15 hi-fi atlas)
-
-Dispatched ONCE PER ROUTE, capped at 5 concurrent. Brief is templated per stack + step-context.
-
-**Brief is execution-strategy-agnostic (spec 057).** The same brief body works whether the parent dispatches it to a sub-agent (`Agent` call) OR writes it directly (parent-write fallback when fan-out degrades per spec 057). Sub-agent vs parent is an orchestration choice; the brief contract (what to produce + how to verify done) does not change. When a wave triggers the fan-out fallback (N=1 same-wave loop-budget exhaustion), the parent reads this brief and emits `page.tsx` directly via `Write`; the brief's CONTEXT / CONSTRAINTS / DONE_WHEN apply identically.
-
-### Next.js stack
+### Step 15a — Screen atlas (the navigable visual contract)
 
 **model:** `sonnet`  ·  **subagent_type:** `general-purpose`
 
 ```
-TASK: Write the Next.js page file for route {{path}} in the {{slug}} prototype ({{step_label}} pass).
+TASK: Produce screen-atlas.md — the navigable visual-contract document for the complete v1 surface of "{{idea}}". The atlas is a MARKDOWN INDEX. Write NO `app/` files, NO layout.tsx, NO page.tsx, NO HTML — the atlas DESCRIBES the screens the SDD children will build; it does not build them.
 
-CONTEXT:
-- Pipeline step context: {{step_label}} (02 = lo-fi pre-brand mood HTML at {{out}}/docs/screens/, 15 = hi-fi brand-tuned page.tsx in {{out}}/app/).
-- Sitemap entry source: {{out}}/docs/sitemap.yaml (route fields: path / category / states / covers_us / components)
-- Tokens (Step 15 only): {{out}}/docs/design-system/tokens.css (consumed via the `app/globals.css` `@import "../docs/design-system/tokens.css"` line — use `var(--color-*)` inline / Tailwind utility-classes that resolve to the token names)
-- Voice (Step 15 only): {{out}}/docs/brand-book.md (match ON-brand voice for copy) — **specifically read `## Language` for `target_language` + `## Glossary § We say / We don't say` for the term-replacement lookup (spec 054)**
-- Components reference (Step 15 only): {{out}}/docs/design-system/components.md
-- Stack defaults: .claude/skills/product/references/stack-defaults.md § Next.js
-- Target file (Step 15 — **`chrome` field determines route-group per spec 055**; orthogonal to `category` which is PRD-coverage semantic only):
-  - `chrome: app` → `{{out}}/app/(app){{path_to_file_path}}/page.tsx` (shared sidebar+topbar inherited from `app/(app)/layout.tsx`)
-  - `chrome: marketing` → `{{out}}/app/(marketing){{path_to_file_path}}/page.tsx` (marketing header+footer from `app/(marketing)/layout.tsx`)
-  - `chrome: booking` → `{{out}}/app/(booking){{path_to_file_path}}/page.tsx` (minimal/white-label shell from `app/(booking)/layout.tsx`)
-  - `chrome: auth` → `{{out}}/app/(auth){{path_to_file_path}}/page.tsx` (auth shell — logo + lang switcher — from `app/(auth)/layout.tsx`)
-  - `chrome: chromeless` → flat `{{out}}/app{{path_to_file_path}}/page.tsx` (no shared layout; root marketing landing `/`, error pages, etc)
-  - Dynamic routes like `/check-in/[appointmentId]` → preserve the bracketed segment in the route-group path: `{{out}}/app/(app)/check-in/[appointmentId]/page.tsx`
-  - **Sitemap missing `chrome:` field?** Apply default-inference table from `sitemap-schema.md § chrome — orthogonal to category` (`primary/admin → app`, `marketing → marketing`, `auth → auth`, `error → chromeless`). Back-compat ONLY; new sitemaps should always emit `chrome`.
-- Target file (Step 02): {{out}}/docs/screens/{{NN}}-{{name}}.html (self-contained HTML, inline styles, mood-only — route groups don't apply to lo-fi mood phase)
+CONTEXT: Read ALL prior artifacts at {{out}}/docs/ (semantic-named per spec 048; pipeline order via REPORT.md):
+- Phase 1 (Discovery): concept-brief.md, functional-spec.md, validation-report.md, direction-a.html + screens/ (lo-fi mood — visual lineage)
+- Phase 2 (Specification): prd/v1.md (US-NN inventory — load-bearing for PRD coverage), ost.md, sitemap.yaml (route inventory — load-bearing for the Screens Index), system-design.md + security.md + data-flow.json, legal-posture.md (legal-mandatory surfaces — consent dialog if DPIA fires), roadmap.md, cost-estimate.md, gtm-launch.md
+- Phase 3 (Identity): brand-book.md, design-system/tokens.css, design-system/components.md, design-system/README.md
+Read .claude/skills/product/templates/pipeline/15-screen-atlas/prompt.md + schema.md + references/ for the atlas shape.
+The hi-fi killer-flow mood screens at {{out}}/docs/screens/hifi/ (Step 15b, produced in parallel) are the RENDERED half of this contract — reference them in § Design Fidelity, do not reproduce their markup.
 
 CONSTRAINTS:
-- ≤ 3 component definitions per file (extract to {{out}}/app/_components/ if needed).
-- Token reads via var(--color-*) inline OR Tailwind utility classes that map to tokens — NO hard-coded #hex or px values (1px borders idiomatic CSS exception).
-- Mock data inline OR in {{out}}/lib/mock-data.ts.
-- Soft token budget: 4000 tokens output.
-- Overshoot cascade per `.claude/rules/artifact-budgets.md` (artifact size — max comes from step context: Step 02 lo-fi screens 4-12 KB, Step 15 hi-fi screens 8-18 KB per `pipeline-coverage.md` § Per-step table): `max × 1.2` → partial-result with `oversize_reason` (sub-agent agency); `max × 1.8` → STOP, partial-result, no further production. DO NOT trim-loop, DO NOT re-emit at smaller scope (both are forbidden antipatterns).
-- Buttons: explicit type attribute (Biome a11y).
-- **Chrome inheritance via route-group layout (spec 052) — DO NOT REINVENT.** The shared sidebar + topbar lives in `{{out}}/app/(app)/layout.tsx` (written by the atlas before this dispatch). Your `page.tsx` renders the route's UNIQUE content body ONLY — no sidebar, no topbar, no app-wide navigation chrome. If you find yourself writing `<Sidebar>` or `<TopNav>` inside `page.tsx`, stop: the layout already provides them. Pages whose category routes them outside `app/(app)/` (marketing/auth/booking) similarly inherit from `app/(marketing)/layout.tsx` or no layout (chromeless) — adapt accordingly.
-- **State rendering — use Next.js sibling files, NOT inline mode chips (spec 052).** Sitemap entry `states: [loading]` → emit `<route>/loading.tsx` (Server Component skeleton, fallback for the route's Suspense boundary). `states: [error]` → emit `<route>/error.tsx` (Client Component with `'use client'`, accepts `{ error, reset }` props, includes a "Try again" button calling `reset()`). `states: [404]` or `states: [not-found]` → emit `<route>/not-found.tsx` (rendered when the page calls `notFound()` from `next/navigation`). **Empty state is page-internal rendering logic** (data-driven `if (items.length === 0) return <EmptyState />` branch) — NOT a developer-mode toggle. Skeleton root-level defaults at `app/{loading,error,not-found}.tsx` are inherited when no per-route override exists (nearest-wins per Next.js convention).
-- **DO NOT embed `default | loading | empty | error` toggle chips in production page bodies (spec 052).** Anti-pattern caught in 2026-05-18 audit: sub-agents had been adding `useState<"default" | "loading" | "empty" | "error">` plus a chip row showing those words as developer-mode switches, bleeding dev-mode UI into the product surface. The chips MUST NOT appear in shipped pages. State demonstration belongs in the sibling files above (Next.js handles when to render them); developer-mode state inspection happens via the dev server's HMR, not embedded controls.
-- **Per-route `metadata` export REQUIRED (spec 053 — Step 15 only).** Every `page.tsx` (Step 15 hi-fi) MUST export `export const metadata: Metadata = { title, description }` where `title` matches the route's human-readable display name (derived from sitemap path + category) and `description` matches its purpose (one sentence, on-brand voice). Root marketing page (`app/page.tsx`) inherits from `app/layout.tsx` — exception. Reason: dogfood-2 (Vetro) shipped 22/24 routes inheriting root title, hurting browser-tab orientation + SEO. Self-check before DONE: `grep -L "export const metadata" <target>/page.tsx` MUST be empty (file is missing the export) only for `/`. Lo-fi mood HTML at Step 02 is exempt (HTML files have `<title>` tag instead).
-- **States implementation evidence REQUIRED (spec 053 — Step 15 only).** Every state declared in the sitemap entry's `states[]` MUST have implementation evidence in the produced file set: `loading` → `<route>/loading.tsx` sibling exists; `error` → `<route>/error.tsx` sibling exists; `empty` → page-internal render branch (`if (items.length === 0) return <EmptyState …/>` OR `<EmptyState>` component referenced); `default` is always implicit (the page body). States listed in `deferred_states[]` (with reason) are skipped — DO NOT invent empty-state copy for a degenerate case the product doesn't have; instead, ask the parent to flip the state to `deferred_states`. Reason: dogfood-2 shipped `/estoque` declaring `[default, loading, empty, error]` but emitted only `default + loading` (no empty branch, no error sibling). The acceptance criterion is mechanical-checkable: every declared state has a visible code surface.
-- **Biome anti-pattern checklist — DO NOT VIOLATE (spec 053 — Step 15 only).** These shapes break the fork's `biome.json` (a11y / correctness rules) and force the founder to relax the config to unblock the build. Sub-agent self-check before DONE — none of these should appear in the produced file:
-  - `key={i}` from `.map((_, i) =>` or `.map((item, i) =>` — use a stable id from the data OR a derived stable string. Skeleton-loading lists are the recurring offender; use `key={\`skeleton-${i}\`}` only if data has no usable id AND skeleton is throwaway.
-  - `<div role="status">`, `<div role="article">`, `<div role="region">` — use semantic HTML: `<output>` (for status/live messages), `<article>`, `<section>`. Biome's `useSemanticElements` rule fires on these.
-  - `dangerouslySetInnerHTML={…}` — never. Render Markdown via a sanitized renderer or render the structured content directly.
-  - `<button>` without explicit `type="button"` (or `type="submit"`/`type="reset"`) — Biome's `useButtonType` rule fires. Default browser `type` is `submit` which submits the nearest form unintentionally.
-  - `<img>` without `alt={…}` — use empty string `alt=""` for decorative images (signals "decorative" to screen readers); never omit the attribute entirely.
+- **The atlas markdown file is the ONLY deliverable. Write NO `app/`, NO `.tsx`, NO `.html`.** The atlas is a contract document, not an implementation.
+- Size budget: per `.claude/skills/product/templates/pipeline/15-screen-atlas/schema.md § Target` (10-28 KB for screen-atlas.md).
+- Overshoot cascade per `.claude/rules/artifact-budgets.md`: `max × 1.2` → partial-result with `oversize_reason` (sub-agent agency); `max × 1.8` → STOP, partial-result, no further production. DO NOT trim-loop, DO NOT re-emit at smaller scope (both are forbidden antipatterns).
+- **Target language: `{{target_language}}`** (BCP-47). All prose, screen descriptions, and the user-flow walkthrough in this language; H2 section headers stay English-canonical.
+- Required H2 sections (verbatim, in order): Overview / Screens Index / Sitemap Coverage Cross-Check / PRD Coverage Matrix / Design Fidelity / States Coverage Matrix / User Flow Walkthrough / Open Decisions.
+- **Screens Index** — markdown table covering EVERY route in sitemap.yaml: `| Route | Category | Chrome | Covers (US-NN) | States | Screen intent |`. One row per route — this is the full inventory the SDD children build against.
+- **Sitemap Coverage Cross-Check** — confirm every sitemap.yaml route appears in the Screens Index; confirm every `required_categories` member is represented; list any gap.
+- **PRD Coverage Matrix** — markdown table listing EVERY US-NN from prd.md: `| US-NN | Priority | Screen(s) | Status |`. Each US-NN is `covered → <route(s)>` or `deferred — <reason>`. Silent omission is the regression mode the matrix exists to catch.
+- **Design Fidelity** — for the 3-5 killer-flow screens, name the matching `docs/screens/hifi/<NN>-<name>.html` as the rendered fidelity reference; for every other route, state the intended fidelity in prose (tokens from `design-system/tokens.css` applied, brand voice from `brand-book.md`, components reused from `design-system/components.md`). NO numeric per-screen scoring table — there are no built screens to score.
+- **States Coverage Matrix** — markdown table, routes × {loading/empty/error/disabled/success}; cells ✓ (required) / — (n/a) / `[gap]`.
+- **User Flow Walkthrough** — the killer flow end-to-end with copy snippets at each step, anchored to a named persona from concept-brief.md. Carry the literal phrase "Closed-beta partner" in the named-human acceptance clause.
+- **Open Decisions** — 2-5 integration-shape decisions the SDD children resolve at build time; each row carries a deciding signal.
+- Write the atlas DIRECTLY to {{out}}/docs/screen-atlas.md. ONE file. Nothing else.
 
-  Inline here on purpose — these shapes are React/Next-specific and don't belong in a generic `.claude/rules/` rule that propagates to non-JS forks. (Extract-if-reused decision deferred: not reused outside this brief.)
-- **Primary metric prominence — render as MetricTile/hero, NOT badge (spec 053 — Step 15 only).** If the sitemap entry declares `primary_metric: "<label>"`, the value MUST render at hero-level: full-width MetricTile (per `<out>/docs/design-system/components.md`), large-numeric tile in a metrics grid row, OR a dashboard-card sized component. It MUST NOT render as a small badge in a page corner or a sub-line in a header. Reason: dogfood-2 shipped `/vendas` with "Caixa atual R$ 1.450,00" as a 12px top-right badge despite being the route's load-bearing value the user comes to check. If the route has no `primary_metric` field, ignore this constraint.
-- **Glossary obligation — replace `### We don't say` terms with `### We say` equivalents (spec 054 — Step 15 only).** Before declaring DONE, scan the produced `page.tsx` for every term listed in brand-book `## Glossary § We don't say`. For each match, replace with the row's `Replacement` value UNLESS the route's surface scope falls under the entry's `Applies to` exemption (e.g. an entry marked `applies_to: marketing, pricing` does NOT apply to `/settings/integrations`). Example from dogfood-2 (Vetro): brand-book declared `Most Popular | Mais escolhido | English in pt-BR product | marketing, pricing`; pricing page MUST render `Mais escolhido` (NOT `Most Popular`) on the pricing badge. Sub-agent self-check before DONE: for each glossary `We don't say` entry whose `applies_to` matches the route's chrome/category, `grep -L "<term>" <target>/page.tsx` MUST return the file (term absent). If `## Glossary` is empty, no constraint applies.
-- **Next.js 16+ async params + `'use client'` separation (spec 051 — DO NOT VIOLATE).** Dynamic-route segments (`[id]`, `[slug]`) deliver `params` as `Promise<{...}>` that MUST be `await`ed. Awaiting a Promise can ONLY happen in a Server Component. Therefore: **`'use client'` MUST NOT appear at the top of an `async` page component.** Next.js explicitly blocks this combination — the runtime error is verbatim `<PageName> is an async Client Component. Only Server Components can be async at the moment. This error is often caused by accidentally adding 'use client' to a module that was originally written for the server.` Canonical pattern when the page needs client interactivity (useState/useEffect/event handlers/hooks):
-  ```tsx
-  // app/<route>/page.tsx  — Server Component, NO directive
-  import { <Name>Client } from "./_<Name>Client";
-  export default async function <Name>Page({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = await params;
-    return <<Name>Client id={id} />;
-  }
-  ```
-  ```tsx
-  // app/<route>/_<Name>Client.tsx  — Client Component, owns hooks
-  "use client";
-  import { useState } from "react";
-  export function <Name>Client({ id }: { id: string }) {
-    const [state, setState] = useState(...);
-    return (<div>...</div>);
-  }
-  ```
-  If the page is purely presentational (no hooks, no state, no event handlers), it can stay a single Server Component and skip the split entirely. Sub-agent self-check before declaring DONE: `grep -l "'use client'" app/<route>/page.tsx` MUST return nothing if `page.tsx` is async.
+DELIVERABLE: {{out}}/docs/screen-atlas.md
 
-DELIVERABLE: The target file at the path above; if mock-data.ts was added or extended, that too. If the canonical Server+Client split is applied, the sibling `_<Name>Client.tsx` file too.
-
-DONE_WHEN: File exists at deliverable path; valid TypeScript (Step 15 — Phase-4-verified by tsc); declared states visibly implemented (sibling files for loading/error; render branch for empty; deferred_states skipped per sitemap); uses tokens via var() or Tailwind utility classes (NO hex/px violations); buttons have type attribute; **per-route `export const metadata: Metadata` is present** (Step 15 only, except for root `/`); **Biome anti-pattern checklist self-passes** (no `key={i}`, no `<div role="status|article|region">`, no `dangerouslySetInnerHTML`, no `<img>` without `alt`); **if `primary_metric` declared in sitemap entry, the value renders as MetricTile/hero (not a corner badge)**; **all user-facing copy matches brand-book `## Language` target_language and respects `## Glossary § We don't say` term replacements where applies_to scope hits**; **if dynamic-segment route, `page.tsx` is either a non-async pure Server Component OR an async Server Component (no `'use client'` at top) with the client interactivity split into a sibling `_<Name>Client.tsx`**.
+DONE_WHEN: File exists; size within schema target range (see schema.md § Target — currently 10-28 KB); contains all 8 required H2 headers verbatim; Screens Index table has one row per sitemap.yaml route; PRD Coverage Matrix lists every US-NN from prd.md; § User Flow Walkthrough contains the literal "Closed-beta partner"; NO `app/` / `.tsx` / `.html` file was written.
 ```
 
-### Expo stack
+### Step 15b — Hi-fi killer-flow mood
 
-Same shape as Next.js brief above, with React Native components (View / Text / Pressable / TextInput / FlatList) instead of HTML; className via NativeWind for styling (NOT StyleSheet.create); target file path is `{{out}}/app{{path}}.tsx` (Expo router file convention, no `/page.tsx` suffix).
+The hi-fi mood is 3-5 brand+tokens-applied killer-flow screens as self-contained mobile-first static HTML — the **rendered half** of the visual contract (the atlas being the prose half). Dispatch the **§ Mood-screen-writer** brief (below) in **hi-fi mode**: `{{mood_tier}} = hi-fi`, the screens being the same killer-flow surfaces Step 02's lo-fi mood selected. See § Mood-screen-writer for the brief body.
+
+### Step 15c — Fixture spec
+
+**model:** `sonnet`  ·  **subagent_type:** `general-purpose`
+
+```
+TASK: Produce fixture-spec.md — the single coherent mock-data contract for "{{idea}}". Every SDD-built screen will import ONE shared fixture set (foundation child implements it as `lib/mock-data.ts`); this spec defines it so no screen invents its own incoherent data.
+
+CONTEXT: Read concept-brief.md at {{out}}/docs/concept-brief.md for the primary persona. Read system-design.md at {{out}}/docs/system-design.md § Data Model for the entity set + relationships. Read prd/v1.md at {{out}}/docs/prd/v1.md for the user-story surfaces the data must populate. Read sitemap.yaml at {{out}}/docs/sitemap.yaml for which screens consume which entities.
+
+CONSTRAINTS:
+- ONE persona (the primary persona from concept-brief.md — name, role, the account they own) — every screen renders that one persona's view.
+- ONE coherent entity set: for each entity in system-design § Data Model, define 2-5 example records with realistic, internally-consistent field values.
+- **Internal consistency is the whole point.** Dates form a plausible timeline (a record's `created_at` precedes its `updated_at`; an invoice's due date follows its issue date). Foreign keys resolve (every record referencing the persona's account uses the same account id). Money/counts/statuses across screens tell ONE story — a dashboard total equals the sum of the line items a detail screen shows.
+- **Target language: `{{target_language}}`** (BCP-47). Persona name, entity labels, and all example string values in this language.
+- 2-6 KB hard ceiling.
+- Overshoot cascade per `.claude/rules/artifact-budgets.md`: `max × 1.2` → partial-result with `oversize_reason` (sub-agent agency); `max × 1.8` → STOP, partial-result, no further production. DO NOT trim-loop, DO NOT re-emit at smaller scope (both are forbidden antipatterns).
+- Required H2 sections: Persona / Entities (one H3 per entity, each with an example-records table) / Cross-Screen Consistency Notes (the timeline + the totals that must agree across screens).
+- Write file DIRECTLY to {{out}}/docs/fixture-spec.md.
+
+DELIVERABLE: {{out}}/docs/fixture-spec.md
+
+DONE_WHEN: File exists; size 2-6 KB; contains "## Persona" + "## Entities" + "## Cross-Screen Consistency Notes"; every system-design § Data Model entity has an example-records table; one persona only; dates and foreign keys are internally consistent.
+```
+
+## Mood-screen-writer (lo-fi mood for Step 02 · hi-fi mood for Step 15b)
+
+ONE brief, two modes. Produces self-contained static HTML **mood screens** — a rendered visual exploration of the killer flow. Per spec 066 this REPLACES the deleted per-route Next.js/Expo `.tsx` screen-writer: `/product` produces mood HTML, never an `app/**/page.tsx` screen set. Dispatched per screen, capped at 5 concurrent (see § Concurrency cap). The orchestrator substitutes `{{mood_tier}}` (`lo-fi` or `hi-fi`), the per-screen `{{NN}}` / `{{name}}` / `{{screen_intent}}`, and the output path before dispatch.
+
+| Mode | Step | Pre/post brand | Output path | Tokens source |
+|---|---|---|---|---|
+| `lo-fi` | 02 | pre-brand exploration | `{{out}}/docs/screens/{{NN}}-{{name}}.html` | exploratory `:root` custom properties copied from `direction-a.html` |
+| `hi-fi` | 15b | brand+tokens applied | `{{out}}/docs/screens/hifi/{{NN}}-{{name}}.html` | `:root` block copied verbatim from `docs/design-system/tokens.css`; brand voice from `docs/brand-book.md` |
+
+**model:** `sonnet`  ·  **subagent_type:** `general-purpose`
+
+```
+TASK: Write the {{mood_tier}} mood screen `{{NN}}-{{name}}.html` for "{{idea}}" — a self-contained static HTML rendering of the "{{screen_intent}}" surface.
+
+CONTEXT:
+- Mode: {{mood_tier}}. lo-fi = Step 02 pre-brand visual exploration; hi-fi = Step 15b brand+tokens-applied killer-flow screen (the rendered half of the visual contract).
+- concept-brief.md at {{out}}/docs/concept-brief.md — product persona + mechanics + the killer flow.
+- direction-a.html at {{out}}/docs/direction-a.html — the picked visual direction (lo-fi: copy its `:root` tokens; hi-fi: visual lineage only).
+- hi-fi mode ALSO reads: design-system/tokens.css at {{out}}/docs/design-system/tokens.css (copy the `:root` token VALUES verbatim into this screen's `<style>` so it renders self-contained); brand-book.md at {{out}}/docs/brand-book.md (`## Language` for target language + `## Glossary` for the `We don't say` term-replacement lookup + voice samples for copy); design-system/components.md for component anatomy; fixture-spec.md at {{out}}/docs/fixture-spec.md for the mock data this screen renders.
+- Step 02 template references: .claude/skills/product/templates/pipeline/02-prototype/references/{visual-constraints,a11y-checklist,anti-patterns}.md.
+
+CONSTRAINTS:
+- **Self-contained static HTML** — single file, one `<style>` block in `<head>`, inline `<svg>` for any chart/icon. NO external CSS/JS, NO build step, NO framework. The file opens directly via `file://`.
+- **MOBILE-FIRST IS MANDATORY (spec 066 — closes F1).** Author the base CSS for the 375 px viewport; layer wider layouts via `@media (min-width: …)` breakpoints inside the `<style>` block. The screen MUST reflow with NO horizontal overflow at 375 px AND read correctly at 1280 px.
+- **NEVER use `style=` attributes for layout/positioning.** All layout (flex, grid, spacing, sizing) lives in the `<style>` block as classes — an inline `style=` cannot carry a media query, which is exactly why it breaks mobile-first. A `style=` attribute carrying `display` / `width` / `margin` / `padding` / `position` is a hard violation. (A `style=` carrying ONLY a single dynamic value — e.g. a progress-bar `width` — is the lone tolerated exception.)
+- **Tokens, not raw values.** Declare a `:root` block. lo-fi: exploratory custom properties from `direction-a.html`. hi-fi: copy the `:root` values verbatim from `design-system/tokens.css`. Every color / spacing / radius / font reads `var(--token)` — no bare `#hex`, no hard-coded `px` for layout (1px borders are the idiomatic exception).
+- **hi-fi copy is real, on-brand, fixture-grounded.** Every user-facing string matches `brand-book.md` voice and respects `## Glossary § We don't say`. Every datum (names, numbers, dates) comes from `fixture-spec.md` — no lorem ipsum, no invented incoherent data. **Target language: `{{target_language}}`.**
+- Buttons carry an explicit `type` attribute; every `<input>` / `<select>` has a matching `<label for>`; interactive elements get a `:focus-visible` outline.
+- Size budget: lo-fi 4-12 KB, hi-fi 8-18 KB per `pipeline-coverage.md` § Per-step table.
+- Overshoot cascade per `.claude/rules/artifact-budgets.md`: `max × 1.2` → partial-result with `oversize_reason` (sub-agent agency); `max × 1.8` → STOP, partial-result, no further production. DO NOT trim-loop, DO NOT re-emit at smaller scope (both are forbidden antipatterns).
+- Write the file DIRECTLY to the output path the orchestrator named.
+
+DELIVERABLE: the {{mood_tier}} mood screen HTML file at the orchestrator-named path.
+
+DONE_WHEN: File exists; valid self-contained HTML with one `<style>` block + a `:root` token block; size within the mode's budget; the `<style>` block carries ≥1 `@media (min-width: …)` breakpoint and the base CSS targets 375 px (mobile-first); NO `style=` layout attributes; no horizontal overflow at 375 px; hi-fi screens read `var(--token)` from tokens.css + render `fixture-spec.md` data + carry on-brand copy.
+```
 
 ## Concurrency cap
 
-Phase 1 Step 02 screen writers (lo-fi mood HTML) + Phase 4 Step 15 screen writers (hi-fi page.tsx): **MAX 5 concurrent `Agent` calls** each. If sitemap has >5 routes, queue rest and dispatch as earlier ones return.
+The Step 02 lo-fi mood-screen-writers and the Step 15b hi-fi mood-screen-writers fan out: **MAX 5 concurrent `Agent` calls** each. Both phases produce 3-5 mood screens (killer flow only), so the cap is rarely hit — it stands as the guardrail. Step 15a (atlas) + 15b (hi-fi mood) + 15c (fixture-spec) are three distinct sub-agents dispatched together in one message; that trio plus a 5-screen 15b fan-out is well within the cap.
 
-**Cap=5 was proven non-OOM** on spec 034's 17-route dogfood (2026-05-17). Re-evaluate only if a Phase 4 dogfood with 12+ atlas screens surfaces context pressure.
+**Cap=5 was proven non-OOM** on spec 034's 17-route dogfood (2026-05-17).
 
 ## Failure handling
 
-Per spec 045 (port of spec 036 Q4 resolution):
+Per spec 045 (port of spec 036 Q4 resolution), updated for the spec 066 restructure:
 
-- **Step 01 BLOCKED** or **Step 15 BLOCKED** → ABORT the entire run (upstream-of-everything or final deliverable).
+- **Step 01 BLOCKED** → ABORT the entire run (upstream-of-everything).
+- **Step 15a (atlas) BLOCKED** → ABORT the entire run (the atlas IS the visual contract; Phase 5's SDD handoff has nothing to hand off without it).
 - **Step 07 BLOCKED** via schema enforcement → AUTO-RETRY with augmented brief naming missing required_categories. Up to 2 retries before falling through to user `iterate` at Phase 2 gate.
-- **Any other step BLOCKED** → degrade gracefully: append `{step_label, reason, artifacts_partial}` to `.state.json.blocked_steps`; log to REPORT.md `## Blocked steps`; continue to next step.
+- **Step 15b (hi-fi mood) or 15c (fixture-spec) BLOCKED** → degrade gracefully: log to REPORT.md `## Blocked steps`; Phase 5 still runs (the atlas alone is a usable contract; a missing hi-fi mood or fixture-spec is a documented gap, not an abort).
+- **Any other step BLOCKED** → degrade gracefully: append `{step_label, reason, artifacts_partial}` to `.state.json.blocked_steps`; log to REPORT.md `## Blocked steps`; continue.
 
-Screen-writer (per-route) failures within a single step (02/15): mark the specific route as BLOCKED in `.state.json`; continue with remaining routes. The whole step does NOT fail on one bad screen.
+Mood-screen-writer (per-screen) failures within Step 02 or Step 15b: mark the specific screen BLOCKED in `.state.json`; continue with the remaining screens. The whole step does NOT fail on one bad screen.
 
 ## Cross-references
 
-- `pipeline-coverage.md` — phase/step map + size targets per step (15 steps v3)
-- `state-machine.md` — `.state.json` v3 shape + gate semantics + resume support
+- `pipeline-coverage.md` — phase/step map + size targets per step (15 steps)
+- `state-machine.md` — `.state.json` v5 shape + gate semantics + resume support
 - `sitemap-schema.md` — Step 07's load-bearing required_categories enforcement
+- `sdd-handoff.md` — the Phase 5 umbrella + foundation-child scaffold contract
 - `quality-checklist.md` — per-step gate criteria the skill checks before declaring complete
 - `SKILL.md` — orchestration body that dispatches these briefs
 - `.claude/rules/delegation.md` — 5-field handoff discipline
 - `templates/pipeline/<step>/prompt.md` — canonical step brief (sub-agents read this directly)
-- `docs/specs/045-prototype-skill-pipeline-realign/` — spec source
+- `docs/specs/066-product-ui-quality/` — the restructure spec (delete the screen-writer fan-out; end at the visual contract + SDD handoff)
+- `docs/specs/045-prototype-skill-pipeline-realign/` — pipeline lineage
 - `docs/specs/032-pipeline-industry-alignment/` — parent industry-alignment (17 decisions ported here)

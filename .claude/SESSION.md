@@ -8,37 +8,38 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Spec 065 (artifact-budget-discipline) shipped + dogfooded; harness-sync settings-merge bug fixed across 3 repos.**
+**Top-3 picks from umbrella 060 closed out today** (post-research session 2026-05-19):
 
-Spec 065: behavioral fix to /product trim-loop antipattern (empirical case: mei-saas 2026-05-19 Step 02 produced 69→41.8 KB across 6+ iterations against 30 KB target). Canonical rule at `.claude/rules/artifact-budgets.md`: two-threshold overshoot cascade (≤1.2× → DONE, 1.2-1.8× → partial-result with agency, >1.8× → hard-abort, no agency); trim-loop AND re-emit-at-smaller-scope explicitly forbidden; `oversize_reason` field names bloat dimension. Inlined uniformly into all 16 /product briefs. Empirical Step 02 retry in mei-saas: done.
+- **Spec 061 (SubagentStop hook): in-progress.** Backbone shipped — close rows pairing with dispatch via `tool_use_id`. Mid-session probe-fire confirmed bridge: `agent-<id>.meta.json.toolUseId` matches PreToolUse's `tool_use_id`. Loop-budget detection, `edit_count` from per-sub-agent transcript JSONL. Tests deferred per rule-of-three.
+- **Spec 062 (/goal skill): superseded.** Empirical pre-flight on CC 2.1.144 binary (`strings | grep ^/goal`) found native `/goal` already shipped with full surface (`/goal <cond>`, `/goal clear`, `goal-command-nudge` internal). Building wrapper = accidental complexity. Closed with design memory preserved.
+- **Spec 063 (worktree-isolation): in-progress.** Pre-flight found CC ships rich native worktree stack (`Agent.isolation`, `EnterWorktree`/`ExitWorktree` tools, `.claude/worktrees/` convention, `--worktree` CLI). Option B redirect: dropped 6th brief field; added (a) `tool_input.isolation` audit (13th dispatch field), (b) validator scoping via `git rev-parse --show-toplevel` in post-edit-validate.sh, (c) rule § Worktree isolation. E2e verified for audit field; validator-cwd fix not exercised (Explore probes don't edit).
 
-Harness-sync fix: `merge_settings_json` was dropping non-hooks top-level keys (`$schema`, `statusLine`, `permissions`, `env`, `model`) on every `--apply`. Rewrote jq to use fork's settings as base + explicit Agent0-owned-key whitelist override. Regression test `23-settings-merge-toplevel-keys.sh` added (5 assertions). All 23 harness-sync tests pass.
+**Parallel session work** (in git log, not touched by me): 064 (project-scoped routines), 065 (artifact-budget discipline), harness-sync settings-merge bug fix across 3 repos.
 
 ## WIP (uncommitted)
 
-- `M docs/specs/059-product-phase0-harness-aware/tasks.md` — orthogonal carryover, not touched
-- mei-saas has `?? docs/` — `/product` Step 02 dogfood output from 2026-05-19, not committed by founder yet
+- `M docs/specs/059-product-phase0-harness-aware/tasks.md` — orthogonal carryover, untouched
+- 7 PNGs (`v*-*.png`) — untracked carryover
 
 ## Recent commits (anchors for the day)
 
-- Agent0 `0702c6a` — settings.json non-hooks key preservation fix
-- mei-saas `b128f76` / acmeyard `1dd71a2` — fix landed across forks
-- Agent0 `ff35d17` — spec 065 ship (artifact-budget discipline)
-- Agent0 `265772a` / `850190c` — spec 064 (project-scoped routines)
-
-Older context in `git log --oneline -20`.
+- 063 ship: `9f8d24c` (audit + scoping + rule)
+- 062 closure: `9bbba4e` (superseded by CC native /goal)
+- 061 cluster: `ef8c501 → 608729a` (4 commits: pre-flight → gate ext → stop hook → docs)
+- Parallel session: 064 `850190c`, 065 `ff35d17`, settings-merge fix `0702c6a`
 
 ## Next steps
 
-1. **Statusline runtime check (deferred to next interactive session in either fork)** — open a fresh CC session in `/home/goat/mei-saas` or `/home/goat/acmeyard`; the terminal should render the statusline from `.claude/presence/statusline.mjs`. If it does, the settings.json fix is validated end-to-end. If it doesn't, residual bug somewhere — diagnose then.
-2. **Spec 064 cron natural fire** — Monday 2026-05-25 09:00 UTC. `cc-platform-audit` should queue without manual intervention.
-3. **3rd cc-platform-audit run** (after natural fire) — should report `no-drift-detected` IFF no new platform changes since 2026-05-19. If still finds drift, signal to tighten the routine prompt per `docs/specs/064-project-scoped-routines/notes.md` § Open questions.
+1. **Spec 064 cron natural fire** — Monday 2026-05-25 09:00 UTC; `cc-platform-audit` should queue without manual intervention.
+2. **Statusline runtime check** — open fresh CC in mei-saas/acmeyard; statusline from `.claude/presence/statusline.mjs` should render. Validates settings.json non-hooks-keys fix end-to-end.
+3. **Umbrella 060 next batch** — re-evaluate §A4-A8 + §B medium-priority rows; scaffold based on observed dogfood signal.
+4. **Validator-cwd fix exercise** — first real sub-agent Edit/Write dispatch will exercise the spec 063 scoping path; watch validator stderr for any toplevel-derivation issues.
 
 ## Decisions & gotchas
 
-- **Statusline bug had two sub-bugs** (A: presence/ not in manifest, fixed 2026-05-12; B: `merge_settings_json` dropped non-hooks keys, fixed today). A masked B for 7 days. Both documented in `.claude/rules/harness-sync.md` § Gotchas.
-- **3-repo sync via `--force-except`** preserves fork-specific files (open-design MANIFEST, prompt tunings, `.mcp.json.example`, `.gitleaks.toml`). Normal flow when Agent0 evolves post-bootstrap.
-- Spec 065 details — see `docs/specs/065-artifact-budget-discipline/notes.md` (rule table bug caught in walkthrough; "re-emit at smaller scope" appears 16× as antipattern label not directive).
+- **Pre-flight empirical pattern PAID 3/3** (specs 061/062/063): probe CC binary + tool surface BEFORE design saves substantial work (062 closed entirely; 063 redirected to ~50% of original scope; 061 found hook payload bridge that locked the design). Candidate for `.claude/memory/feedback_*.md` discipline entry — "for specs touching CC primitives, sondar binary/tools first".
+- **Mid-session hook reg ATIVOU** in settings.local.json for both 061 and 063 probes — contradicts `session-handoff.md`'s "Hooks only register on next session". Likely a `settings.local.json` vs `settings.json` distinction or behavior change in 2.1.144. Orthogonal observation; cleanup deferred.
+- **Audit row schema growth**: dispatch row 11 → 12 (tool_use_id, 061) → 13 (isolation, 063). Documented in `.claude/rules/delegation.md` § Audit log.
 
 ## Carryover (orthogonal — not touched this session)
 

@@ -4,8 +4,11 @@ module.exports = {
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
-      // tokens.css is consumed by Phase 4 stitch — tokens map into this config via the
-      // skill substituting per-token entries here. Default keys mirror tokens.css semantic names.
+      // The SDD foundation child (002-foundation) translates docs/design-system/tokens.css
+      // into the entries below. Expo runs Tailwind 3 via NativeWind 4 (the current stable RN
+      // path — NativeWind 5 / Tailwind 4 is pre-release as of 2026-05), so it does NOT consume
+      // the v4 @theme tokens.css directly the way the Next stack does. The var(--token, fallback)
+      // form lets the skeleton render with the fallback palette until the child fills real values.
       colors: {
         primary: "var(--color-primary, #2563eb)",
         secondary: "var(--color-secondary, #64748b)",

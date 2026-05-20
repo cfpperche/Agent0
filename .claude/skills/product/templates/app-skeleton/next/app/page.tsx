@@ -4,7 +4,7 @@ export default function Page() {
       <div className="max-w-2xl space-y-4">
         <h1 className="text-4xl font-semibold">PROTOTYPE_SLUG</h1>
         <p className="text-base opacity-80">
-          Placeholder home — Phase 3 screen-writer subagents replace this with route-specific content.
+          Placeholder home — the SDD feature children (per the umbrella spec's child-spec matrix) replace this with route-specific screens.
         </p>
       </div>
     </main>

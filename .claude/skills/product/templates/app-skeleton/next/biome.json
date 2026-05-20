@@ -1,8 +1,8 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.0/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.0/schema.json",
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
-  "files": { "ignore": [".expo", "node_modules", "dist", "web-build"] },
-  "organizeImports": { "enabled": true },
+  "files": { "includes": ["**", "!**/.next", "!**/node_modules", "!**/out", "!**/build", "!**/public"] },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
     "rules": {

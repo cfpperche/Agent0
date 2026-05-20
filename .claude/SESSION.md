@@ -8,33 +8,38 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Session 2026-05-20 — spec 068 scaffolded on branch `068-harness-sync-baseline-reconciliation`. Implementation NOT started.**
+**Session 2026-05-20 — spec 068 IMPLEMENTED, tested, verified on branch `068-harness-sync-baseline-reconciliation`. Uncommitted.**
 
-Spec 068 (`harness-sync-baseline-reconciliation`) — fixes the `sync-harness` **stale-vs-customized** gap (Bug 1) and the **can't-delete-orphans** gap (Gap E), both surfaced while prepping the mei-saas `/product` dogfood. Adds a recorded sync baseline (`.claude/harness-sync-baseline.json` — git-tracked, per-file sha manifest + `agent0_commit`) → 3-way reconciliation (`fork` vs `baseline` vs `agent0-current`) in the plain-file path. `spec.md` / `plan.md` / `tasks.md` filled; `notes.md` empty. Q1-Q4 resolved in `plan.md`.
+Spec 068 (`harness-sync-baseline-reconciliation`) is done — all 10 impl tasks + 6 verification checks complete. `sync-harness.sh` now does 3-way reconciliation on the plain-file path (fork vs recorded baseline vs Agent0-current): *stale* files auto-update without `--force`, genuinely *customized* files still refuse, upstream-*removed* files are deleted when the fork copy is clean. Baseline lives at `<fork>/.claude/harness-sync-baseline.json` (git-tracked in the fork, per-file sha manifest). Bug 1 (stale-vs-customized) and Gap E (orphan deletion) both fixed.
+
+`spec.md` Status → `shipped`; `tasks.md`/`spec.md` boxes checked; `notes.md` filled (1 deviation: conditional `write_baseline`).
 
 ## WIP (uncommitted)
 
-- None — spec 068 scaffold committed on the branch with this handoff.
+All on branch `068-harness-sync-baseline-reconciliation`, not yet committed:
+- `.claude/tools/sync-harness.sh` — baseline globals + trap; `load_baseline`/`baseline_sha_for`/`record_manifest`/`reconcile_deletions`/`prune_empty_parents`/`write_baseline`; 3-way `process_file`; manifest-recording `walk_copy_check`; 2 new counters; `main` wiring.
+- `.claude/tests/harness-sync/24..31-*.sh` — 8 new regression tests; `run-all.sh` loop extended to `01..31`.
+- `.claude/rules/harness-sync.md`, `CLAUDE.md` § Harness sync — baseline mechanism documented.
+- `docs/specs/068-*/{spec,tasks,notes}.md` — closed out.
 
 ## Recent commits (anchors)
 
-- This session committed the spec 068 scaffold on branch `068-harness-sync-baseline-reconciliation` (branched off `3ea53d5`).
-- `origin/main` is at `3ea53d5` — earlier this session pushed `d87e04a` (067) + `3ea53d5` (`/product` hygiene).
+- `ae8524c` — spec 068 scaffold (this branch, off `3ea53d5`).
+- `origin/main` at `3ea53d5`.
 
 ## Next steps
 
-1. **Implement spec 068** — work `docs/specs/068-harness-sync-baseline-reconciliation/tasks.md` top-to-bottom on this branch. 10 impl tasks; task 1 = recon (`.claude/tests/harness-sync/` pattern + `sync-harness.sh` line ranges).
-2. After 068 ships: the deferred `/product` dogfood.
+1. **Commit spec 068** — review `git diff`, commit on this branch (no auto-commit done — project posture). Suggested: `feat(068): harness-sync 3-way baseline reconciliation — stale-vs-customized + orphan deletion`.
+2. **Deferred `/product` dogfood** — spec 068 was its prerequisite, now unblocked. Scratch path `/tmp/mei-saas-066-dogfood`, `--stack=next`, original mei-saas idea string. NOT in-repo — mei-saas fork has uncommitted `app/` work.
 3. Spec 064 cron natural fire — Mon 2026-05-25 09:00 UTC.
 
 ## Decisions & gotchas
 
-- **`/product` dogfood is DEFERRED behind spec 068** — founder chose to fix Agent0 first. When it resumes: scratch path `/tmp/mei-saas-066-dogfood`, run from an Agent0 session, `--stack=next`, original mei-saas idea string. **NOT in-repo** — the mei-saas fork has uncommitted `app/` work (`app/_components/`, `app/icon.svg` are untracked) that must not be destroyed.
-- **mei-saas fork is on the OLD `/product` skill** (v0.3.0, spec 048). `sync-harness` cannot update it cleanly today — that *is* Bug 1, which spec 068 fixes.
-- **Spec 068 Q2** — baseline is a per-file sha manifest, deliberately diverging from copier/cruft's git-ref model (Agent0's harness is verbatim-copied, no template variables). Flagged to the founder as the main judgment call; approved.
+- **mei-saas catch-up sync now has a clean path** — verified empirically: a baseline seeded from mei-saas's real `/product` bytes relabels its drifted tree as 15 stale / 0 customized / 27 orphan-removed (was: all `customized`, would-refuse). One-time bootstrap is `--apply --force --force-except='<real customizations>'`, then 3-way from there.
+- **`write_baseline` is conditional** — skips the write when the files-map is byte-identical to the existing baseline, so a no-op re-apply leaves `harness-sync-baseline.json` untouched (idempotency). Deviation from `plan.md`'s "write on every --apply"; see `notes.md`.
+- Stray untracked files at repo root (`bo-*.png`, `gta6-thread.png`) — not ours, leave them.
 
 ## Carryover (orthogonal — not touched this session)
 
 - Spec 046 dogfood gate due 2026-07-01; spec 029 adoption check due 2026-05-30.
 - `.claude/REMINDERS.md` items per startup readout.
-- `gta6-thread.png` — stray untracked file at repo root, not ours.

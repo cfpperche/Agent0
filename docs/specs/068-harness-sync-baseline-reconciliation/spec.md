@@ -2,7 +2,7 @@
 
 _Created 2026-05-20._
 
-**Status:** draft
+**Status:** shipped
 
 ## Intent
 
@@ -14,45 +14,45 @@ This spec adds the missing primitive — a **recorded sync baseline** (the Agent
 
 ## Acceptance criteria
 
-- [ ] **Scenario: a stale plain file auto-updates without `--force`**
+- [x] **Scenario: a stale plain file auto-updates without `--force`**
   - **Given** a fork with a recorded baseline, and a plain file whose fork copy still matches that baseline (the fork never edited it)
   - **When** Agent0's version of that file has since changed and `sync-harness --apply` runs **without** `--force`
   - **Then** the file is updated in the fork and reported as `stale` (updated), not `customized`, and the run is not refused on its account
 
-- [ ] **Scenario: a genuinely customized file is still refused**
+- [x] **Scenario: a genuinely customized file is still refused**
   - **Given** a fork with a recorded baseline, and a plain file whose fork copy differs from **both** the baseline and Agent0's current version
   - **When** `sync-harness --apply` runs without `--force`
   - **Then** the file is reported `!! customized`, counted in `customized-refused`, left untouched, and the run exits non-zero — identical to today's behavior for real customizations
 
-- [ ] **Scenario: an upstream-removed file is deleted from the fork**
+- [x] **Scenario: an upstream-removed file is deleted from the fork**
   - **Given** a file present in the recorded baseline that no longer exists in Agent0's manifest, and whose fork copy still matches the baseline
   - **When** `sync-harness --apply` runs
   - **Then** the file is removed from the fork and reported as `removed` (canonical case: `templates/monorepo-skeleton/` after the `app-skeleton` rename)
 
-- [ ] **Scenario: an upstream-removed file the fork customized is NOT deleted**
+- [x] **Scenario: an upstream-removed file the fork customized is NOT deleted**
   - **Given** a baseline file absent from Agent0's current manifest, but whose fork copy differs from the baseline (the fork customized it)
   - **When** `sync-harness --apply` runs
   - **Then** the file is preserved, reported as customized-and-upstream-removed, and the operator is told to resolve it manually — no silent deletion of fork work
 
-- [ ] **Scenario: `--check` distinguishes stale from customized**
+- [x] **Scenario: `--check` distinguishes stale from customized**
   - **Given** a drifted fork with a recorded baseline
   - **When** `sync-harness --check` runs
   - **Then** each plain file is labeled `up to date` / `stale` (would update) / `customized` (would refuse) / `removed` (would delete), so the operator sees the real catch-up picture before applying, and the exit code reflects drift
 
-- [ ] **Scenario: the baseline is recorded on every `--apply`**
+- [x] **Scenario: the baseline is recorded on every `--apply`**
   - **Given** any `sync-harness --apply` run that completes (clean or with refusals)
   - **When** the run finishes
   - **Then** a baseline file exists in the fork capturing Agent0's managed-file sha-set as of this sync, so the next sync reconciles 3-way
 
-- [ ] **Scenario: a fully-synced fork is idempotent**
+- [x] **Scenario: a fully-synced fork is idempotent**
   - **Given** a fork whose baseline is current and whose files all match Agent0
   - **When** `sync-harness --apply` runs again with no Agent0 changes
   - **Then** zero files are mutated, every plain file reports `up to date`, and the baseline file is unchanged
 
-- [ ] An existing fork with **no baseline file** does not error: the first `--apply` degrades gracefully (per the bootstrap behavior resolved in Open Q1) and writes a baseline so subsequent syncs are 3-way.
-- [ ] The `settings.json`, `CLAUDE.md`, and `.gitignore` merge paths are unchanged — this spec touches only the plain-file path (`process_file` and the walk).
-- [ ] `.claude/tests/harness-sync/` gains regression tests covering each new state (`stale`, `removed`, customized-upstream-removed, bootstrap, idempotency).
-- [ ] `.claude/rules/harness-sync.md` § Customization detection, § Manifest scope, § Audit, and § Gotchas are updated; the `## Harness sync` section of `CLAUDE.md` reflects the baseline mechanism.
+- [x] An existing fork with **no baseline file** does not error: the first `--apply` degrades gracefully (per the bootstrap behavior resolved in Open Q1) and writes a baseline so subsequent syncs are 3-way.
+- [x] The `settings.json`, `CLAUDE.md`, and `.gitignore` merge paths are unchanged — this spec touches only the plain-file path (`process_file` and the walk).
+- [x] `.claude/tests/harness-sync/` gains regression tests covering each new state (`stale`, `removed`, customized-upstream-removed, bootstrap, idempotency).
+- [x] `.claude/rules/harness-sync.md` § Customization detection, § Manifest scope, § Audit, and § Gotchas are updated; the `## Harness sync` section of `CLAUDE.md` reflects the baseline mechanism.
 
 ## Non-goals
 
@@ -64,10 +64,10 @@ This spec adds the missing primitive — a **recorded sync baseline** (the Agent
 
 ## Open questions
 
-- [ ] **Q1 — Bootstrap behavior for a fork with no baseline.** On the first sync under the new mechanism, files that *match* Agent0 trivially seed `baseline = agent0_sha`. Files that *differ* are the pre-baseline ambiguity — we cannot tell stale from customized. Options: (a) treat all differing files as `customized` on the first run (current behavior), record the baseline, let the *second* sync be fully 3-way; (b) add an `--adopt` flag where the operator declares "the fork is clean, take Agent0 wholesale and seed the baseline"; (c) if `--agent0-path` is a git repo, infer the baseline commit by best-match against Agent0 history. Resolve in `plan.md` after the copier/cruft research — copier's `copier update --vcs-ref` is direct prior art. _Owner: decided in plan._
-- [ ] **Q2 — Baseline format.** Per-file sha manifest (`{path: agent0_sha_at_last_sync}`, self-contained, no git dependency — cruft-style) vs a single Agent0 git commit ref (lighter, but needs Agent0 history reachable to do `git show <ref>:<path>` — copier-style). Lean toward the per-file manifest for robustness; confirm against prior art in `plan.md`. _Owner: decided in plan._
-- [ ] **Q3 — Baseline file location and git-tracking.** Likely `.claude/.harness-sync-baseline.json`. Git-tracked (travels on clone, like `.copier-answers.yml`) vs gitignored (per-machine sync bookkeeping)? Tracked seems right — a fresh clone of the fork should know its baseline — but it then appears in fork PR diffs. _Owner: decided in plan._
-- [ ] **Q4 — Exit-code and counter semantics for the new states.** Does `stale`/`removed` count as drift in `--check` (yes, presumably)? New counters (`UPDATED`, `REMOVED`) vs folding into `COPIED`/`MERGED`? _Owner: decided in plan._
+- [x] **Q1 — Bootstrap behavior for a fork with no baseline.** On the first sync under the new mechanism, files that *match* Agent0 trivially seed `baseline = agent0_sha`. Files that *differ* are the pre-baseline ambiguity — we cannot tell stale from customized. Options: (a) treat all differing files as `customized` on the first run (current behavior), record the baseline, let the *second* sync be fully 3-way; (b) add an `--adopt` flag where the operator declares "the fork is clean, take Agent0 wholesale and seed the baseline"; (c) if `--agent0-path` is a git repo, infer the baseline commit by best-match against Agent0 history. Resolve in `plan.md` after the copier/cruft research — copier's `copier update --vcs-ref` is direct prior art. _Owner: decided in plan._
+- [x] **Q2 — Baseline format.** Per-file sha manifest (`{path: agent0_sha_at_last_sync}`, self-contained, no git dependency — cruft-style) vs a single Agent0 git commit ref (lighter, but needs Agent0 history reachable to do `git show <ref>:<path>` — copier-style). Lean toward the per-file manifest for robustness; confirm against prior art in `plan.md`. _Owner: decided in plan._
+- [x] **Q3 — Baseline file location and git-tracking.** Likely `.claude/.harness-sync-baseline.json`. Git-tracked (travels on clone, like `.copier-answers.yml`) vs gitignored (per-machine sync bookkeeping)? Tracked seems right — a fresh clone of the fork should know its baseline — but it then appears in fork PR diffs. _Owner: decided in plan._
+- [x] **Q4 — Exit-code and counter semantics for the new states.** Does `stale`/`removed` count as drift in `--check` (yes, presumably)? New counters (`UPDATED`, `REMOVED`) vs folding into `COPIED`/`MERGED`? _Owner: decided in plan._
 
 ## Context / references
 

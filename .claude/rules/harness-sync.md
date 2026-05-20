@@ -6,7 +6,7 @@ paths:
 
 # Harness sync
 
-A one-way sync tool (`.claude/tools/sync-harness.sh <fork-path>`) that brings a fork's harness state up to date with this Agent0 repo. Hooks, rules, tools, validators, skills, tests, `.mcp.json.example` plus structured merges of `.claude/settings.json` and `CLAUDE.md`. Conservative by design: `--check` is the default (read-only), customized files are detected via hash-compare and refused without `--force`, product code (`src/`, fork's `tests/`, package manifests, `.mcp.json`) is never touched. Spec: `docs/specs/016-harness-sync/`.
+A one-way sync tool (`.claude/tools/sync-harness.sh <fork-path>`) that brings a fork's harness state up to date with this Agent0 repo. Hooks, rules, tools, validators, skills, tests, `.mcp.json.example` plus structured merges of `.claude/settings.json` and `CLAUDE.md`. Conservative by design: `--check` is the default (read-only); the plain-file path does 3-way reconciliation against a recorded baseline (spec 068) so *stale* files (fork untouched, Agent0 moved) auto-update while genuinely *customized* files are refused without `--force`; product code (`src/`, fork's `tests/`, package manifests, `.mcp.json`) is never touched. Specs: `docs/specs/016-harness-sync/` (origin), `docs/specs/068-harness-sync-baseline-reconciliation/` (3-way baseline + deletion propagation).
 
 ## What fires
 
@@ -45,16 +45,47 @@ The tool refuses to guess the source path — there is no auto-detection. Refusa
 | `--apply --dry-run` | Agent0 + fork | nothing | 0 always (decisions only) |
 | `--apply --force` | Agent0 + fork | fork (incl. customized) | 0 = clean, customizations overwritten with warning |
 
-## Customization detection
+## Customization detection — 3-way reconciliation
 
-Hash-compare. For each file in scope:
+For plain files (the `COPY_CHECK_*` manifest — hooks, rules, tools, validators, skills, tests, agents, `.mcp.json.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.gitkeep` sentinels), the sync reconciles **three** reference points: the fork's copy, the recorded **baseline** (Agent0's version of the file as of the fork's last `--apply` — see § Sync baseline), and Agent0's current version. Three points let the tool tell a file the fork *deliberately edited* apart from one it simply *hasn't caught up on* — the gap the original 2-state `sha256` compare could not close (spec 068).
 
-1. Compute `sha256sum` of the Agent0 version and the fork version.
-2. If fork's version is **missing** → copy (no customization check; treated as new file).
-3. If hashes **match** → up-to-date (no-op).
-4. If hashes **differ** AND fork's file exists → **customized**. In `--apply` (no `--force`): refuse with `!! customized <path>` on stderr; in `--check`: same line on stdout, marked as drift; in `--apply --force`: overwrite with `! overwritten <path>` warning.
+For each plain file:
 
-No marker file in the fork tracks "this came from Agent0" — hash-compare is the single source of truth. If a fork ran a formatter (`prettier`, `shfmt`) over a hook script, the resulting whitespace-only diff is treated as customization (false-positive). Fix: revert the formatter pass, or use `--force` consciously after reviewing the diff.
+1. Fork's copy **missing** → copy (treated as a new file; no reconciliation).
+2. Fork sha **==** Agent0 sha → `= up to date` (no-op).
+3. Fork sha **!=** Agent0 sha → consult the baseline:
+
+| `baseline` entry | relation to fork | verdict | behavior |
+| --- | --- | --- | --- |
+| present, `== fork sha` | fork untouched since last sync, Agent0 moved on | **stale** | `~ stale` → auto-update, **no `--force` needed**; counts as drift in `--check` |
+| present, `!= fork sha` | fork edited the file | **customized** | `!! customized` → refuse (`--apply`) / drift (`--check`); `--force` overwrites |
+| absent (no entry) | first sync, or file added to the manifest after the fork's last sync — the genuine pre-baseline ambiguity | **customized (no baseline)** | `!! customized <path> (no baseline)` → refuse; `--force` overwrites |
+
+The `stale` verdict is the spec-068 fix: a fork that fell behind several specs no longer sees *every* upstream change as `!! customized`. Stale files auto-update on a plain `--apply` — the catch-up path that was missing. The summary line gains `N stale-updated, N removed` counters; exit codes are unchanged (`--check`: stale/removed count as drift → exit 1; `--apply`: only genuine refusals flip the exit code — stale updates and removals are successful actions).
+
+Whitespace-only diffs are still customization. A fork that ran `shfmt`/`prettier` over a hook has `fork sha != baseline sha` → `customized`. 3-way does not normalize whitespace (that would mask real customizations). Fix: revert the formatter, or `--force` after reviewing the diff.
+
+**Upstream deletions.** A file recorded in the baseline that is no longer in Agent0's manifest is an *orphan*. The deletion pass removes it when the fork copy still matches the baseline (`- removed <path>`, with now-empty parent dirs pruned bottom-up), and refuses it when the fork customized it (`!! customized <path> (upstream-removed)` — fork work is never silently destroyed; `--force` overrides into a delete). Canonical case: `templates/monorepo-skeleton/` after the `app-skeleton` rename. This mirrors, for the file tree, the symmetric ADD/REMOVE propagation spec 058 gave `CLAUDE.md`.
+
+## Sync baseline
+
+`<fork>/.claude/harness-sync-baseline.json` records Agent0's managed-file sha-set as of the fork's last `--apply`. It is the third reference point that powers the 3-way reconciliation above. Shape:
+
+```json
+{
+  "agent0_commit": "<git HEAD of the Agent0 source, or null>",
+  "synced_at": "<ISO-8601 UTC>",
+  "tool_version": 1,
+  "files": { "<relpath>": "<Agent0 sha at last sync>", "...": "..." }
+}
+```
+
+- **Per-file sha manifest, not a git ref.** Agent0's harness is verbatim-copied (no template variables), so a stored per-file sha answers "what did this file look like at last sync" *directly* — no `git show <ref>:<path>`, no dependency on Agent0's history being present or reachable (works from a tarball or shallow clone). This deliberately diverges from copier/cruft, whose git-ref model exists to re-render Jinja templates at the old ref. `agent0_commit` is recorded as a human-readable audit breadcrumb only; reconciliation never depends on it (`null` when the Agent0 source is not a git repo).
+- **Git-tracked in the fork.** The non-dotted filename dodges the `.claude/.*` gitignore globs by design — a fresh `git clone` of the fork must know its baseline (same posture copier/cruft take toward `.copier-answers.yml` / `.cruft.json`). It appears in the fork's post-sync `git diff`; that diff *is* the "harness baseline bumped" record.
+- **Written on every `--apply`** (not `--check`, not `--dry-run`), after all passes, atomically (`mktemp` + `mv`). Skipped when the resulting files-map is byte-identical to the existing baseline's — a no-op re-sync must leave the file untouched (idempotency), so `synced_at` is not churned.
+- **Never shipped by Agent0.** It is a fork-side runtime artifact; not in any `COPY_CHECK_*` array, so the sync walk never visits it and it never appears as drift in another fork.
+
+**First sync (bootstrap).** A fork that has never run a post-068 `--apply` has no baseline. On that first run, files that *match* Agent0 trivially seed their baseline entry; files that *differ* are the genuine pre-baseline ambiguity (stale vs customized is unknowable with no recorded history) and are refused as `!! customized (no baseline)`. The operator does a **one-time** reconciliation — review the diffs, then `--apply --force` (adopt Agent0 wholesale) or `--apply --force --force-except='<globs of real customizations>'`. After that first run the baseline is fully seeded and every subsequent sync is clean 3-way. The friction is unavoidable (there is no history to consult) but is paid exactly once per fork.
 
 ## settings.json merge strategy
 
@@ -168,6 +199,8 @@ Encoded in three arrays at the top of `sync-harness.sh`:
 
 The walk only reads from Agent0 manifest paths. Out-of-scope fork content (`src/`, fork's `tests/` outside `.claude/tests/`, `docs/`, `package.json`, `Cargo.toml`, `pyproject.toml`, `.mcp.json`, `.env*`, `target/`, `node_modules/`, `.venv/`, `dist/`, `build/`) is **implicitly invisible** — no denylist guard fires because nothing in the manifest points at those paths. This means adding a new path to the manifest is the only way to extend scope; the safety floor is the manifest itself.
 
+**Deletion propagation (spec 068).** The walk also accumulates Agent0's *current* manifest into a sha-set; the deletion pass compares that set against the recorded baseline's file list. A path present in the baseline but absent from the current set is an upstream removal, propagated per § Customization detection § *Upstream deletions*. Out-of-scope fork content stays invisible to this pass too — it only ever considers paths that were *previously* in the manifest (and therefore recorded in the baseline), never arbitrary fork files. A fork with no baseline skips the deletion pass entirely.
+
 ## Escape hatches
 
 - `--force` — overwrites customized files. Use after reviewing the diff (`diff <fork>/file <agent0>/file`) and confirming the fork's edits are not load-bearing.
@@ -179,20 +212,24 @@ There is no `CLAUDE_SKIP_HARNESS_SYNC` env var — the tool is developer-invoked
 
 ## Audit
 
-None. The sync is a one-shot developer-invoked operation; the `git diff` in the fork after a sync IS the audit trail. The fork developer reviews the diff and commits manually — no auto-commit. Same posture as every other harness primitive that mutates fork state.
+The recorded baseline (`<fork>/.claude/harness-sync-baseline.json`) is the sync audit record. It is git-tracked in the fork, so `git log -- .claude/harness-sync-baseline.json` shows every sync the fork ever applied, each commit's diff shows which managed files changed sha, and `agent0_commit` names the Agent0 revision synced against (when the source was a git repo). Combined with the post-sync `git diff` of the rest of the tree, this is the full audit trail — no separate log, no auto-commit. The fork developer reviews the diff and commits manually. Same posture as every other harness primitive that mutates fork state.
 
-If forensic queries become a real need ("which forks ran sync, when, against which Agent0 SHA"), add a `.claude/harness-sync.jsonl` audit log in a v2 spec. v1 keeps the surface minimal.
+Spec 016 originally deferred a `.claude/harness-sync.jsonl` audit log to "a v2 spec"; spec 068's baseline file subsumes that need — it is both the reconciliation input and the audit record, so a separate log is not built.
 
 ## Gotchas
 
 - **`## Compact Instructions` anchor missing.** The CLAUDE.md merge looks for this line as the insertion point. A fork that has removed or renamed it will trigger the EOF-fallback warning; capacity sections land at EOF, which may not be the right place. Fix: restore the anchor in fork's CLAUDE.md, or reorganize after sync.
 - **Whitespace-only customization false-positive.** A fork that ran `shfmt` / `prettier` over a hook script will have hash-mismatch despite semantic equivalence. The sync flags it as customized. Fix: revert the formatter, OR use `--force` consciously after reviewing the diff. The tool does NOT normalize whitespace (would mask real customizations).
 - **`settings.json` array growth on hook renames.** When Agent0 renames a hook, both old and new entries land in the fork's settings.json (different dedup keys). The fork developer must prune manually post-sync. The `git diff` makes this visible; auto-prune deferred to v2.
-- **Fork-only test files survive.** A fork that added `.claude/tests/<capacity>/12-fork-extra.sh` keeps that file after sync — sync writes but never deletes. Acceptable: the fork's extra tests survive across syncs.
+- **Fork-only files survive the deletion pass.** The deletion pass (spec 068) only removes paths recorded in the baseline — files Agent0 once shipped and has since dropped. A fork-authored file that was never in Agent0's manifest (e.g. `.claude/tests/<capacity>/99-fork-extra.sh`) has no baseline entry, so the deletion pass never considers it. Fork-only additions survive every sync.
 - **`core.hooksPath` activation is NOT automatic.** Sync writes `.githooks/pre-commit` but does NOT run `git config core.hooksPath .githooks` in the fork. Same Lazarus-vector reasoning as in `.claude/rules/secrets-scan.md` § Gotchas — the fork developer activates consciously, post-sync.
 - **Concurrent `--apply` from two terminals.** No locking. Second writer overwrites first's output. Unlikely in practice; the operation is a deliberate developer action, not a hot loop.
 - **Bash 3.2 / macOS portability.** The script uses `mapfile`-free patterns (`while IFS= read -r ... done < <(...)` instead of `mapfile`) and avoids `declare -A`. Same baseline every other hook in this repo follows.
 - **First sync on a long-stale fork produces a large diff.** A fork that skipped specs 008-012 will see ~30+ new files in one apply. Review the diff section-by-section, not as one giant blob: hooks first, rules second, tools third, then settings.json + CLAUDE.md. Commit in one go (`chore(harness-sync): adopt Agent0 specs NNN-MMM`) so the audit trail is clean.
+- **One-time first-sync reconciliation for pre-068 forks.** A fork with no `harness-sync-baseline.json` cannot tell stale from customized on its first post-068 `--apply` — every differing file is refused as `!! customized (no baseline)`. Resolve once with `--force` / `--force-except`; the baseline is then seeded and every subsequent sync is clean 3-way. See § Sync baseline § *First sync*.
+- **Baseline lookup is Bash-3.2-safe.** No `declare -A` (repo-wide constraint). `load_baseline` dumps the baseline's `.files` map to a sorted `relpath<TAB>sha` temp file via one `jq` call; per-file lookup is an `awk` exact-match scan against that file — no per-file `jq` fork (a 500-file fork would be slow). The deletion pass likewise reads the manifest/baseline as sorted temp files.
+- **Hand-editing `harness-sync-baseline.json` is a footgun.** A wrong sha just mislabels one file stale-vs-customized — recoverable on the next sync, lower-severity than copier's `.copier-answers.yml` warning, but the file is still tool-owned: let `--apply` maintain it.
+- **A malformed baseline fails open.** If the JSON is unreadable, the sync logs `!! harness-sync-baseline.json unreadable/malformed — treating as no baseline` and proceeds 2-state for that run, then rewrites a clean baseline on `--apply`. A broken baseline never blocks a sync.
 - **No bidirectional sync.** Improvements made in a fork do NOT flow back to Agent0 via this tool. Fork developers PR-review their improvements upstream. The tool is deliberately one-way to keep the dependency graph clean (Agent0 is upstream-of-everything).
 - **`settings.json` references files OUTSIDE the manifest cause silent breakage in forks.** Two distinct sub-bugs surfaced through statusline dogfood, both shipped fixes:
   - **Sub-bug A (shrnk-mono 2026-05-12):** `settings.json.statusLine.command` referenced `.claude/presence/statusline.mjs`, but `.claude/presence/` was missing from `COPY_CHECK_GLOBS`. Fix: `.claude/presence|*.mjs` added to `COPY_CHECK_GLOBS`.

@@ -112,6 +112,31 @@ if [ ! -d "$FORK_ROOT" ]; then
 fi
 
 # ---------------------------------------------------------------------------
+# sync baseline (spec 068)
+# ---------------------------------------------------------------------------
+
+# The recorded sync baseline lives in the fork at
+# .claude/harness-sync-baseline.json and captures Agent0's managed-file sha-set
+# as of the fork's last --apply. It is the third reference point that lets the
+# plain-file path tell *stale* (auto-update) apart from *customized* (refuse),
+# and lets the deletion pass propagate upstream removals safely. Git-tracked in
+# the fork (travels on clone); never shipped by Agent0 itself.
+BASELINE_TOOL_VERSION=1
+BASELINE_FILE="$FORK_ROOT/.claude/harness-sync-baseline.json"
+BASELINE_PRESENT=0
+BASELINE_TSV=""          # temp: sorted "relpath<TAB>sha" of the recorded baseline
+MANIFEST_RAW=""          # temp: unsorted "relpath<TAB>sha" of Agent0's current set
+MANIFEST_TSV=""          # temp: sorted+uniq MANIFEST_RAW
+
+_sync_cleanup() {
+  rm -f "$BASELINE_TSV" "$MANIFEST_RAW" "$MANIFEST_TSV" 2>/dev/null || true
+}
+trap _sync_cleanup EXIT
+
+MANIFEST_RAW="$(mktemp -t sync-manifest-raw-XXXXXX)"
+MANIFEST_TSV="$(mktemp -t sync-manifest-XXXXXX)"
+
+# ---------------------------------------------------------------------------
 # manifest
 # ---------------------------------------------------------------------------
 
@@ -165,6 +190,8 @@ CUSTOMIZED_REFUSED=0
 OVERWRITTEN=0
 MERGED=0
 DRIFT=0
+STALE_UPDATED=0   # spec 068: stale plain files auto-updated (fork == baseline, Agent0 moved)
+REMOVED=0         # spec 068: upstream-removed files deleted from the fork
 
 # ---------------------------------------------------------------------------
 # copy / check
@@ -191,6 +218,40 @@ matches_force_except() {
     esac
   done
   return 1
+}
+
+# ---------------------------------------------------------------------------
+# baseline load + lookup (spec 068)
+# ---------------------------------------------------------------------------
+
+# Load the fork's recorded sync baseline (if present) into a sorted TSV temp
+# file. One jq call dumps the .files map to "relpath<TAB>sha" lines; per-file
+# lookup is then a Bash-3.2-safe awk scan (no declare -A). A malformed or
+# unreadable baseline fails open — treated as no baseline.
+load_baseline() {
+  if [ ! -f "$BASELINE_FILE" ]; then
+    BASELINE_PRESENT=0
+    return
+  fi
+  BASELINE_TSV="$(mktemp -t sync-baseline-XXXXXX)"
+  if jq -r '.files // {} | to_entries[] | "\(.key)\t\(.value)"' "$BASELINE_FILE" 2>/dev/null \
+       | sort > "$BASELINE_TSV"; then
+    BASELINE_PRESENT=1
+  else
+    printf '!! harness-sync-baseline.json unreadable/malformed — treating as no baseline\n' >&2
+    BASELINE_PRESENT=0
+  fi
+}
+
+# Echo the baseline sha recorded for a relpath, or empty string if absent.
+# Exact-match the first tab-delimited field — no prefix-match footgun.
+baseline_sha_for() {
+  local rel="$1"
+  if [ "$BASELINE_PRESENT" -ne 1 ]; then
+    echo ""
+    return
+  fi
+  awk -F'\t' -v k="$rel" '$1 == k { print $2; exit }' "$BASELINE_TSV"
 }
 
 process_file() {
@@ -230,9 +291,38 @@ process_file() {
     return
   fi
 
-  # Hash mismatch: customized.
+  # Hash mismatch — 3-way reconciliation: fork vs baseline vs Agent0 (spec 068).
+  local baseline_sha
+  baseline_sha="$(baseline_sha_for "$rel")"
+
+  if [ -n "$baseline_sha" ] && [ "$baseline_sha" = "$dst_sha" ]; then
+    # STALE: fork never touched this file since last sync; Agent0 moved on.
+    # Auto-update — no --force needed.
+    if [ "$MODE" = "check" ]; then
+      printf '~ stale %s (would update)\n' "$rel"
+      DRIFT=1
+      return
+    fi
+    if [ "$DRY_RUN" -eq 1 ]; then
+      printf '~ stale %s -> updated (dry-run)\n' "$rel"
+    else
+      cp -p "$src" "$dst"
+      printf '~ stale %s -> updated\n' "$rel"
+    fi
+    STALE_UPDATED=$((STALE_UPDATED + 1))
+    return
+  fi
+
+  # CUSTOMIZED: fork edited the file (baseline present but != fork copy), OR no
+  # baseline entry exists (first sync / file added to manifest after the fork's
+  # last sync — the genuine pre-baseline ambiguity). Refuse; --force overrides.
+  local nobaseline=""
+  if [ -z "$baseline_sha" ]; then
+    nobaseline=" (no baseline)"
+  fi
+
   if [ "$MODE" = "check" ]; then
-    printf '!! customized %s\n' "$rel"
+    printf '!! customized %s%s\n' "$rel" "$nobaseline"
     DRIFT=1
     return
   fi
@@ -246,18 +336,33 @@ process_file() {
     fi
     OVERWRITTEN=$((OVERWRITTEN + 1))
   else
-    printf '!! customized %s\n' "$rel" >&2
+    printf '!! customized %s%s\n' "$rel" "$nobaseline" >&2
     CUSTOMIZED_REFUSED=$((CUSTOMIZED_REFUSED + 1))
   fi
 }
 
+# Append a managed file + its current Agent0 sha to the running manifest
+# (spec 068). The accumulated MANIFEST_TSV is consumed by the deletion pass
+# (orphan detection) and the baseline write.
+record_manifest() {
+  local rel="$1"
+  local src="$AGENT0_ROOT/$rel"
+  if [ -f "$src" ]; then
+    printf '%s\t%s\n' "$rel" "$(sha_of "$src")" >> "$MANIFEST_RAW"
+  fi
+}
+
 walk_copy_check() {
-  local base pattern dir relfile
+  local base pattern dir relfile entry
+  : > "$MANIFEST_RAW"
 
   for base in "${COPY_CHECK_RECURSIVE[@]}"; do
     if [ -d "$AGENT0_ROOT/$base" ]; then
       while IFS= read -r relfile; do
-        [ -n "$relfile" ] && process_file "$relfile"
+        if [ -n "$relfile" ]; then
+          record_manifest "$relfile"
+          process_file "$relfile"
+        fi
       done < <(cd "$AGENT0_ROOT" && find "$base" -type f 2>/dev/null | sort)
     fi
   done
@@ -267,14 +372,168 @@ walk_copy_check() {
     pattern="${entry#*|}"
     if [ -d "$AGENT0_ROOT/$dir" ]; then
       while IFS= read -r relfile; do
-        [ -n "$relfile" ] && process_file "$relfile"
+        if [ -n "$relfile" ]; then
+          record_manifest "$relfile"
+          process_file "$relfile"
+        fi
       done < <(cd "$AGENT0_ROOT" && find "$dir" -maxdepth 1 -type f -name "$pattern" 2>/dev/null | sort)
     fi
   done
 
   for relfile in "${COPY_CHECK_FILES[@]}"; do
+    record_manifest "$relfile"
     process_file "$relfile"
   done
+
+  sort -u "$MANIFEST_RAW" > "$MANIFEST_TSV"
+}
+
+# ---------------------------------------------------------------------------
+# deletion reconciliation (spec 068)
+# ---------------------------------------------------------------------------
+
+# Remove now-empty parent directories of a just-deleted file, bottom-up,
+# stopping at the first non-empty dir. Never ascends past the fork root.
+prune_empty_parents() {
+  local rel="$1"
+  local dir
+  dir="$(dirname "$rel")"
+  while [ -n "$dir" ] && [ "$dir" != "." ] && [ "$dir" != "/" ]; do
+    if [ -d "$FORK_ROOT/$dir" ] && [ -z "$(ls -A "$FORK_ROOT/$dir" 2>/dev/null)" ]; then
+      rmdir "$FORK_ROOT/$dir" 2>/dev/null || break
+      dir="$(dirname "$dir")"
+    else
+      break
+    fi
+  done
+}
+
+# For every path in the recorded baseline NOT in Agent0's current manifest,
+# propagate the upstream removal: delete clean orphans (fork copy still matches
+# baseline), refuse fork-customized ones (unless --force). Requires a baseline;
+# first-sync forks (no baseline) skip this pass entirely.
+reconcile_deletions() {
+  if [ "$BASELINE_PRESENT" -ne 1 ]; then
+    return
+  fi
+
+  local manifest_paths
+  manifest_paths="$(mktemp -t sync-mpaths-XXXXXX)"
+  cut -f1 "$MANIFEST_TSV" | sort -u > "$manifest_paths"
+
+  local rel baseline_sha dst dst_sha
+  while IFS=$'\t' read -r rel baseline_sha; do
+    if [ -z "$rel" ]; then
+      continue
+    fi
+    # Still in Agent0's current manifest — not an orphan, handled by the walk.
+    if grep -Fxq "$rel" "$manifest_paths"; then
+      continue
+    fi
+    dst="$FORK_ROOT/$rel"
+    # Fork no longer has it — nothing to delete.
+    if [ ! -f "$dst" ]; then
+      continue
+    fi
+    dst_sha="$(sha_of "$dst")"
+
+    if [ "$dst_sha" = "$baseline_sha" ]; then
+      # Clean orphan: fork copy untouched since sync — safe to remove.
+      if [ "$MODE" = "check" ]; then
+        printf -- '- removed %s (would delete)\n' "$rel"
+        DRIFT=1
+      elif [ "$DRY_RUN" -eq 1 ]; then
+        printf -- '- removed %s (dry-run)\n' "$rel"
+        REMOVED=$((REMOVED + 1))
+      else
+        rm -f "$dst"
+        prune_empty_parents "$rel"
+        printf -- '- removed %s\n' "$rel"
+        REMOVED=$((REMOVED + 1))
+      fi
+      continue
+    fi
+
+    # Fork customized a file Agent0 has since removed — never silently delete
+    # fork work. Refuse and advise manual resolution; --force overrides.
+    if [ "$MODE" = "check" ]; then
+      printf '!! customized %s (upstream-removed)\n' "$rel"
+      DRIFT=1
+    elif [ "$FORCE" -eq 1 ] && ! matches_force_except "$rel"; then
+      if [ "$DRY_RUN" -eq 1 ]; then
+        printf -- '! removed %s (customized, upstream-removed, --force, dry-run)\n' "$rel" >&2
+      else
+        rm -f "$dst"
+        prune_empty_parents "$rel"
+        printf -- '! removed %s (customized, upstream-removed, --force)\n' "$rel" >&2
+      fi
+      REMOVED=$((REMOVED + 1))
+    else
+      printf '!! customized %s (upstream-removed — resolve manually)\n' "$rel" >&2
+      CUSTOMIZED_REFUSED=$((CUSTOMIZED_REFUSED + 1))
+    fi
+  done < "$BASELINE_TSV"
+
+  rm -f "$manifest_paths"
+}
+
+# ---------------------------------------------------------------------------
+# baseline write (spec 068)
+# ---------------------------------------------------------------------------
+
+# Record Agent0's current managed-file sha-set as the fork's new sync baseline.
+# Runs only on --apply (not --check, not --dry-run). Skipped when the resulting
+# files-map is byte-identical to the existing baseline's — a no-op re-sync must
+# leave the file untouched (idempotency), so synced_at is not churned. Atomic
+# write via mktemp + mv, mirroring merge_settings_json.
+write_baseline() {
+  if [ "$MODE" != "apply" ] || [ "$DRY_RUN" -eq 1 ]; then
+    return
+  fi
+  if [ ! -f "$MANIFEST_TSV" ]; then
+    return
+  fi
+
+  local files_obj
+  files_obj="$(jq -R -s -c '
+    split("\n") | map(select(length > 0) | split("\t") | {(.[0]): .[1]}) | add // {}
+  ' "$MANIFEST_TSV" 2>/dev/null || echo '{}')"
+
+  # Idempotency: if the existing baseline already records this exact files-map,
+  # leave the file untouched (a rewrite would only bump synced_at).
+  if [ -f "$BASELINE_FILE" ]; then
+    local old_files new_files
+    old_files="$(jq -S -c '.files // {}' "$BASELINE_FILE" 2>/dev/null || echo '')"
+    new_files="$(printf '%s' "$files_obj" | jq -S -c '.' 2>/dev/null || echo '')"
+    if [ -n "$old_files" ] && [ "$old_files" = "$new_files" ]; then
+      printf '= baseline up-to-date .claude/harness-sync-baseline.json\n' >&2
+      return
+    fi
+  fi
+
+  local agent0_commit synced_at tmp
+  agent0_commit="$(cd "$AGENT0_ROOT" 2>/dev/null && git rev-parse HEAD 2>/dev/null || true)"
+  synced_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  tmp="$(mktemp -t sync-baseline-write-XXXXXX)"
+
+  if jq -n \
+       --argjson files "$files_obj" \
+       --arg commit "$agent0_commit" \
+       --arg synced "$synced_at" \
+       --argjson ver "$BASELINE_TOOL_VERSION" \
+       '{
+          agent0_commit: (if $commit == "" then null else $commit end),
+          synced_at: $synced,
+          tool_version: $ver,
+          files: $files
+        }' > "$tmp" 2>/dev/null; then
+    mkdir -p "$(dirname "$BASELINE_FILE")"
+    mv "$tmp" "$BASELINE_FILE"
+    printf '~ baseline recorded .claude/harness-sync-baseline.json\n' >&2
+  else
+    rm -f "$tmp"
+    printf '!! failed to write .claude/harness-sync-baseline.json (jq error)\n' >&2
+  fi
 }
 
 # ---------------------------------------------------------------------------
@@ -970,16 +1229,19 @@ merge_gitignore() {
 # main
 # ---------------------------------------------------------------------------
 
+load_baseline
 walk_copy_check
+reconcile_deletions
 merge_settings_json
 merge_claude_md
 merge_gitignore
+write_baseline
 
 # Summary on stderr so stdout stays parseable per-file decisions.
 {
   printf '\n'
-  printf 'synced: %d copied, %d merged, %d up-to-date, %d customized-refused, %d overwritten\n' \
-    "$COPIED" "$MERGED" "$UP_TO_DATE" "$CUSTOMIZED_REFUSED" "$OVERWRITTEN"
+  printf 'synced: %d copied, %d stale-updated, %d removed, %d merged, %d up-to-date, %d customized-refused, %d overwritten\n' \
+    "$COPIED" "$STALE_UPDATED" "$REMOVED" "$MERGED" "$UP_TO_DATE" "$CUSTOMIZED_REFUSED" "$OVERWRITTEN"
 } >&2
 
 # Exit code policy

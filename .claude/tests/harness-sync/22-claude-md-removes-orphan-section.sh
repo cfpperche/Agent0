@@ -1,21 +1,87 @@
 #!/usr/bin/env bash
-# Spec 058 — Canonical motivating case: fork's region carries ORPHAN section that
-# Agent0 source no longer has. After managed-block sync, orphan removed wholesale.
-# Mirrors the empirical acmeyard scenario (## Prototype skill renamed away in spec 048).
+# Spec 071 — Canonical motivating case: the fork's managed block carries a section
+# Agent0 later removed. With the block matching the baseline (fork untouched), the
+# next sync is STALE → block replaced wholesale → orphan section gone, no --force.
 
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 TOOL="$AGENT0_ROOT/.claude/tools/sync-harness.sh"
 
-TMPDIR="$(mktemp -d -t spec-058-22-XXXXXX)"
+TMPDIR="$(mktemp -d -t spec-071-22-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 SRC="$TMPDIR/agent0"
 FORK="$TMPDIR/fork"
 mkdir -p "$SRC/.claude" "$FORK/.claude"
+printf '{"hooks":{}}\n' > "$SRC/.claude/settings.json"
+printf '{"hooks":{}}\n' > "$FORK/.claude/settings.json"
 
-# Source region: A, B, C (3 sections; D was removed in a hypothetical prior rename).
+# Phase 1: SRC region == FORK region {A, B, D-ORPHAN, C}. --apply seeds the baseline.
+cat > "$SRC/CLAUDE.md" <<'EOF'
+# Agent0
+
+## Overview
+
+placeholder.
+
+<!-- AGENT0:BEGIN -->
+
+## A
+
+body of A.
+
+## B
+
+body of B.
+
+## D-ORPHAN
+
+orphan body — Agent0 still has this title for now.
+
+## C
+
+body of C.
+
+<!-- AGENT0:END -->
+EOF
+
+cat > "$FORK/CLAUDE.md" <<'EOF'
+# MyFork
+
+## Overview
+
+my overview.
+
+<!-- AGENT0:BEGIN -->
+
+## A
+
+body of A.
+
+## B
+
+body of B.
+
+## D-ORPHAN
+
+orphan body — Agent0 still has this title for now.
+
+## C
+
+body of C.
+
+<!-- AGENT0:END -->
+EOF
+
+e=0
+bash "$TOOL" --apply --agent0-path="$SRC" "$FORK" >/dev/null 2>&1 || e=$?
+if [ "$e" -ne 0 ]; then
+  printf 'FAIL(1): seed --apply expected exit 0, got %d\n' "$e"
+  exit 1
+fi
+
+# Phase 2: Agent0 removes ## D-ORPHAN. Fork region untouched → stale → replace.
 cat > "$SRC/CLAUDE.md" <<'EOF'
 # Agent0
 
@@ -40,43 +106,11 @@ body of C.
 <!-- AGENT0:END -->
 EOF
 
-# Fork's region carries the orphan D between B and C (legacy state from old sync).
-cat > "$FORK/CLAUDE.md" <<'EOF'
-# MyFork
-
-## Overview
-
-my overview.
-
-<!-- AGENT0:BEGIN -->
-
-## A
-
-body of A.
-
-## B
-
-body of B.
-
-## D-ORPHAN
-
-orphan body — Agent0 already removed this title.
-
-## C
-
-body of C.
-
-<!-- AGENT0:END -->
-EOF
-
-printf '{"hooks":{}}\n' > "$SRC/.claude/settings.json"
-printf '{"hooks":{}}\n' > "$FORK/.claude/settings.json"
-
-err_log="$(mktemp -t spec-058-22-err-XXXXXX)"
-actual_exit=0
-bash "$TOOL" --apply --agent0-path="$SRC" "$FORK" >/dev/null 2>"$err_log" || actual_exit=$?
-if [ "$actual_exit" -ne 0 ]; then
-  printf 'FAIL: --apply expected exit 0, got %d\n' "$actual_exit"
+err_log="$(mktemp)"
+e=0
+bash "$TOOL" --apply --agent0-path="$SRC" "$FORK" >/dev/null 2>"$err_log" || e=$?
+if [ "$e" -ne 0 ]; then
+  printf 'FAIL(2): stale --apply expected exit 0, got %d\n' "$e"
   cat "$err_log"
   exit 1
 fi

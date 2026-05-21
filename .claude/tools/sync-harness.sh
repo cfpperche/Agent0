@@ -696,6 +696,27 @@ _extract_region() {
   ' "$file"
 }
 
+# sha256 of an in-memory region string. Consistent newline handling so the
+# managed-block baseline record and the 3-way check compute the SAME digest.
+_region_sha() {
+  printf '%s\n' "$1" | sha256sum | awk '{print $1}'
+}
+
+# Record CLAUDE.md's Agent0-managed block (between AGENT0:BEGIN/END) as a
+# baseline-tracked unit under the synthetic key "CLAUDE.md#managed-block" — `#`
+# cannot appear in a real managed relpath, so no collision. Appended to the
+# running manifest so write_baseline persists it and reconcile_deletions, which
+# only acts on baseline entries ABSENT from the manifest, never orphans it.
+record_managed_block_manifest() {
+  local src="$AGENT0_ROOT/CLAUDE.md"
+  # return 0 on the skip paths — a bare `return` propagates the failed test's
+  # exit code, which under `set -e` would abort main mid-run.
+  [ -f "$src" ] || return 0
+  [ "$(detect_marker_state "$src")" = "paired" ] || return 0
+  printf '%s\t%s\n' "CLAUDE.md#managed-block" "$(_region_sha "$(_extract_region "$src")")" >> "$MANIFEST_RAW"
+  sort -u "$MANIFEST_RAW" > "$MANIFEST_TSV"
+}
+
 # For each H2 heading in BOTH files (intersection), compare section bodies.
 # Outputs diverged section titles, one per line.
 _check_section_divergence() {
@@ -917,32 +938,46 @@ _merge_claude_md_managed_block() {
     return
   fi
 
-  # Region differs. Check for body divergence (edits to shared section bodies).
-  local diverged_titles
-  diverged_titles="$(_check_region_divergence "$src" "$dst")"
+  # Region differs — 3-way reconciliation of the managed block as a single
+  # baseline-tracked unit (spec 071, reusing the spec-068 baseline machinery).
+  # The AGENT0:BEGIN/END contract makes the whole block Agent0-owned, so any
+  # edit inside it is customization — no per-section granularity is needed.
+  local region_baseline_sha dst_region_sha is_stale=0
+  region_baseline_sha="$(baseline_sha_for "CLAUDE.md#managed-block")"
+  dst_region_sha="$(_region_sha "$dst_region")"
+  if [ -n "$region_baseline_sha" ] && [ "$region_baseline_sha" = "$dst_region_sha" ]; then
+    is_stale=1
+  fi
 
-  if [ -n "$diverged_titles" ] && [ "$FORCE" -ne 1 ]; then
-    local count
-    count="$(printf '%s\n' "$diverged_titles" | grep -c . || true)"
+  if [ "$is_stale" -ne 1 ] && { [ "$FORCE" -ne 1 ] || matches_force_except "$rel"; }; then
+    # CUSTOMIZED: fork edited its managed block (baseline present but != fork
+    # region), OR no baseline entry yet (a pre-071 fork's first sync — the
+    # genuine pre-baseline ambiguity). Refuse; --force overrides.
+    local nobaseline=""
+    [ -z "$region_baseline_sha" ] && nobaseline=" (no baseline)"
     if [ "$MODE" = "check" ]; then
-      printf '!! customized %s (region body diverged in %s section(s))\n' "$rel" "$count"
+      printf '!! customized %s (managed block%s)\n' "$rel" "$nobaseline"
       DRIFT=1
       return
     fi
     if [ "$DRY_RUN" -eq 1 ]; then
-      printf '!! claude-md: managed region diverged — %s section(s) body differs (dry-run: no report written)\n' "$count" >&2
+      printf '!! claude-md: managed block customized%s — refused (dry-run: no report written)\n' "$nobaseline" >&2
       CUSTOMIZED_REFUSED=$((CUSTOMIZED_REFUSED + 1))
       return
     fi
-    _write_region_divergence_report "$src" "$dst" "$diverged_titles"
-    printf '!! claude-md: managed region diverged — %s section(s) body differs (see .claude/CLAUDE.md.diverged-region.md)\n' "$count" >&2
-    printf '   Move project customizations OUTSIDE markers, or accept Agent0 replacement via --force\n' >&2
+    _write_region_divergence_report "$src" "$dst" "$(_check_region_divergence "$src" "$dst")"
+    printf '!! claude-md: managed block customized%s — refused (see .claude/CLAUDE.md.diverged-region.md)\n' "$nobaseline" >&2
+    printf '   Move project customizations OUTSIDE the markers, or accept Agent0 replacement via --force\n' >&2
     CUSTOMIZED_REFUSED=$((CUSTOMIZED_REFUSED + 1))
     return
   fi
 
   if [ "$MODE" = "check" ]; then
-    printf '~ would merge %s\n' "$rel"
+    if [ "$is_stale" -eq 1 ]; then
+      printf '~ stale %s (managed block — would update)\n' "$rel"
+    else
+      printf '~ would merge %s (managed block)\n' "$rel"
+    fi
     DRIFT=1
     return
   fi
@@ -959,30 +994,25 @@ _merge_claude_md_managed_block() {
   fi
   tail -n +"$end_line" "$dst" >> "$tmp"
 
-  local forced_overwrite=0
-  if [ "$FORCE" -eq 1 ] && [ -n "$diverged_titles" ]; then
-    forced_overwrite=1
-  fi
-
   if [ "$DRY_RUN" -eq 1 ]; then
     rm -f "$tmp"
-    if [ "$forced_overwrite" -eq 1 ]; then
-      printf '! overwritten %s (region replaced under --force, dry-run)\n' "$rel" >&2
-      OVERWRITTEN=$((OVERWRITTEN + 1))
+    if [ "$is_stale" -eq 1 ]; then
+      printf '~ stale %s (managed block -> updated, dry-run)\n' "$rel"
+      STALE_UPDATED=$((STALE_UPDATED + 1))
     else
-      printf '~ merged %s (dry-run)\n' "$rel"
-      MERGED=$((MERGED + 1))
+      printf '! overwritten %s (managed block replaced under --force, dry-run)\n' "$rel" >&2
+      OVERWRITTEN=$((OVERWRITTEN + 1))
     fi
     return
   fi
 
   mv "$tmp" "$dst"
-  if [ "$forced_overwrite" -eq 1 ]; then
-    printf '! overwritten %s (region replaced under --force)\n' "$rel" >&2
-    OVERWRITTEN=$((OVERWRITTEN + 1))
+  if [ "$is_stale" -eq 1 ]; then
+    printf '~ stale %s (managed block -> updated)\n' "$rel"
+    STALE_UPDATED=$((STALE_UPDATED + 1))
   else
-    printf '~ merged %s\n' "$rel"
-    MERGED=$((MERGED + 1))
+    printf '! overwritten %s (managed block replaced under --force)\n' "$rel" >&2
+    OVERWRITTEN=$((OVERWRITTEN + 1))
   fi
 }
 
@@ -1231,6 +1261,7 @@ merge_gitignore() {
 
 load_baseline
 walk_copy_check
+record_managed_block_manifest
 reconcile_deletions
 merge_settings_json
 merge_claude_md

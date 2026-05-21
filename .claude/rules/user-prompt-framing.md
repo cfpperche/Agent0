@@ -2,7 +2,7 @@
 
 The delegation gate (`.claude/rules/delegation.md`) enforces a 5-field handoff at the main→sub boundary because under-specified briefs cause sub-agent drift. The same risk exists one level up — at the user→main boundary — where no hook can intervene because the main agent IS the actor being disciplined. This rule encodes the discipline the main agent applies to every incoming prompt: a lightweight 3-question mental check, a threshold that decides whether to act or clarify, and explicit carve-outs so the discipline doesn't burn cycles on prompts that don't need it.
 
-The capacity is rule-only by design — no hook, no audit log. Per `.claude/memory/feedback_speculative_observability.md`, observability is built when drift has been observed at least three times, not before. If the dogfood window surfaces ≥3 missed-clarification sessions, a `UserPromptSubmit` hook becomes the next step.
+The capacity is rule-only by design — no hook, no audit log. Observability is built when drift has been observed at least three times, not before. If the dogfood window surfaces ≥3 missed-clarification sessions, a `UserPromptSubmit` hook becomes the next step.
 
 ## Summary (read this if nothing else)
 
@@ -74,5 +74,4 @@ The override does NOT silence the discipline elsewhere in the same turn; if the 
 
 - `.claude/rules/delegation.md` — the symmetric 5-field handoff at the main→sub boundary; same `# OVERRIDE:` grammar
 - `.claude/rules/spec-driven.md` § *When SDD applies* — overlapping trigger set (vague request needing decomposition, 3+ files, public API change)
-- `.claude/memory/MEMORY.md` → `feedback_speculative_observability.md` — the rule-of-three demand-test that gates the v1 hook decision
 - `CLAUDE.md` — exploratory-prompt guidance ("respond in 2-3 sentences with a recommendation and the main tradeoff") that the exploratory carve-out preserves

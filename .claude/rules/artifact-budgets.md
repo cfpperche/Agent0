@@ -2,7 +2,7 @@
 
 When a sub-agent dispatch produces an artifact with a declared size budget, the budget is a **scope proxy, not a byte cap**. A budget of 30 KB means "an artifact whose job fits in ~30 KB"; an overshoot is a signal that the artifact's scope drifted, not an invitation to compress. The recurrence pattern this rule exists to prevent: sub-agent generates oversized output → enters a silent trim-loop → burns tokens compressing what should have been re-scoped → ships either a smaller-but-bloated artifact or never converges.
 
-The discipline is **rule-only** by design in v1. No hook intercepts, no validator enforces — the sub-agent reads this rule (via the brief CONSTRAINTS that inline its cascade) and decides. If sub-agents ignore the rule ≥3 times in dogfood, the next step is a PostToolUse(Write) detector hook (deferred per `.claude/memory/feedback_speculative_observability.md`'s rule-of-three demand-test).
+The discipline is **rule-only** by design in v1. No hook intercepts, no validator enforces — the sub-agent reads this rule (via the brief CONSTRAINTS that inline its cascade) and decides. If sub-agents ignore the rule ≥3 times in dogfood, the next step is a PostToolUse(Write) detector hook (deferred per the rule-of-three demand-test).
 
 ## Summary
 
@@ -94,4 +94,3 @@ State-file budgets (`SESSION.md` ≤4KB, `COMPACT_NOTES.md` 12 turns, `MEMORY.md
 - `.claude/rules/tdd.md` — `tdd-exempt:` prefix convention precedent for `budget-exempt:`
 - `.claude/skills/product/references/pipeline-coverage.md` § Per-step table — the canonical multiplier values
 - `.claude/skills/product/references/delegation-briefs.md` — the 15 step briefs that inline this discipline
-- `.claude/memory/feedback_speculative_observability.md` — rule-of-three demand-test gating the deferred trim-loop detector hook

@@ -28,7 +28,7 @@ If both `/remind` and `/routine` seem to fit, the cadence question disambiguates
 
 **Phase 1 (v1, ships today):** cron renders the routine prompt with fresh temporal context and writes it to `.claude/.routines-state/<slug>/queue/<unix-ts>.md`. The next interactive Claude Code session reads the queue via the `routines-readout.sh` `SessionStart` hook and surfaces a `=== ROUTINES ===` block; the human or Claude dispatches each pending routine via `/routine run <slug>`. **No Anthropic API key required.** The cron-side is purely a "render + enqueue" primitive; actual LLM execution happens in the next session.
 
-**Phase 2 (future, when API key available):** `autonomous: true` opt-in frontmatter; cron-side invokes `claude -p` directly with the rendered prompt and writes output to PR / issue / file per the routine's `output:` declaration. Deferred per `.claude/memory/feedback_speculative_observability.md`'s rule-of-three demand test — built when ≥3 routines have demonstrated value in Phase 1 mode.
+**Phase 2 (future, when API key available):** `autonomous: true` opt-in frontmatter; cron-side invokes `claude -p` directly with the rendered prompt and writes output to PR / issue / file per the routine's `output:` declaration. Deferred per the rule-of-three demand test — built when ≥3 routines have demonstrated value in Phase 1 mode.
 
 The Phase 1 design is deliberately human-in-loop. A routine that auto-commits without review is a foot-gun; surfacing the queue at SessionStart and requiring an explicit dispatch keeps the contract-not-promise discipline (see `.claude/rules/delegation.md` § *Why DONE_WHEN exists*) intact for every recurring action.
 
@@ -193,4 +193,3 @@ The marker is scoped — it skips the named check, not all validation:
 - `.claude/rules/harness-sync.md` — how the capacity propagates to forks (`.claude/{tools,hooks,rules,skills}/` glob coverage).
 - `.claude/rules/delegation.md` § *Why DONE_WHEN exists* — the contract-not-promise discipline that motivates the human-in-loop dispatch.
 - `.claude/skills/skill/references/portability-tiers.md` — the tier definitions; `/routine` targets `cc-native` (depends on CC's slash-command surface for dispatch).
-- `.claude/memory/feedback_speculative_observability.md` — rule-of-three demand test; gates Phase 2 (`claude -p` autonomous) work.

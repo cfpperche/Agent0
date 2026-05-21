@@ -8,36 +8,38 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Session 2026-05-20 — spec 068 IMPLEMENTED, tested, verified on branch `068-harness-sync-baseline-reconciliation`. Uncommitted.**
+**Session 2026-05-21 — specs 070 + 071 shipped and committed on `main`. Working tree clean.**
 
-Spec 068 (`harness-sync-baseline-reconciliation`) is done — all 10 impl tasks + 6 verification checks complete. `sync-harness.sh` now does 3-way reconciliation on the plain-file path (fork vs recorded baseline vs Agent0-current): *stale* files auto-update without `--force`, genuinely *customized* files still refuse, upstream-*removed* files are deleted when the fork copy is clean. Baseline lives at `<fork>/.claude/harness-sync-baseline.json` (git-tracked in the fork, per-file sha manifest). Bug 1 (stale-vs-customized) and Gap E (orphan deletion) both fixed.
+**070 (`propagation-hygiene`, `de676b6`)** — de-leaked Agent0-internal spec pointers (`docs/specs/0NN`, `Spec NNN`, hyphenated `spec-NNN`/`pre-NNN`/`post-NNN`) from every fork-bound file: CLAUDE.md, 16 `.claude/rules/*.md`, and the 4 root config files (`.mcp.json.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.gitignore`). Deleted the per-stack `## PHP / Laravel` CLAUDE.md section (PHP detection folded inline into the capacity sections). Relocated the capacity↔spec linkage to `.claude/memory/capacity-spec-index.md` and recorded the maintainer discipline in `.claude/memory/propagation-hygiene.md` (memory, not a rule — it must not propagate).
 
-`spec.md` Status → `shipped`; `tasks.md`/`spec.md` boxes checked; `notes.md` filled (1 deviation: conditional `write_baseline`).
+**071 (`claude-md-capacity-index`, `b3b6004`)** — compressed CLAUDE.md's `AGENT0:BEGIN/END` managed block from ~2795 → ~727 words (~3.6K → ~0.9K tokens, −74%): each capacity is now a one-line index entry pointing at its rule. Changed `sync-harness.sh` so the managed block is reconciled as a single baseline-tracked 3-way unit (synthetic key `CLAUDE.md#managed-block`) — stale block auto-updates, customized refuses. harness-sync suite **32/32 pass**.
 
 ## WIP (uncommitted)
 
-All on branch `068-harness-sync-baseline-reconciliation`, not yet committed:
-- `.claude/tools/sync-harness.sh` — baseline globals + trap; `load_baseline`/`baseline_sha_for`/`record_manifest`/`reconcile_deletions`/`prune_empty_parents`/`write_baseline`; 3-way `process_file`; manifest-recording `walk_copy_check`; 2 new counters; `main` wiring.
-- `.claude/tests/harness-sync/24..31-*.sh` — 8 new regression tests; `run-all.sh` loop extended to `01..31`.
-- `.claude/rules/harness-sync.md`, `CLAUDE.md` § Harness sync — baseline mechanism documented.
-- `docs/specs/068-*/{spec,tasks,notes}.md` — closed out.
+None. 069 (`e45161a`), 070 (`de676b6`), 071 (`b3b6004`) all committed on `main`. `git status` is clean apart from this file.
 
 ## Recent commits (anchors)
 
-- `ae8524c` — spec 068 scaffold (this branch, off `3ea53d5`).
-- `origin/main` at `3ea53d5`.
+- `b3b6004` feat(071) claude-md-capacity-index.
+- `de676b6` feat(070) propagation-hygiene.
+- `e45161a` fix(069) /product overwrite preserves .git + harness.
+- `b170015` fix(068) gitleaks exemption — was `origin/main` at session start.
+- 070+071 are **local commits** — not pushed; push `main` if origin tracking is wanted.
 
 ## Next steps
 
-1. **Commit spec 068** — review `git diff`, commit on this branch (no auto-commit done — project posture). Suggested: `feat(068): harness-sync 3-way baseline reconciliation — stale-vs-customized + orphan deletion`.
-2. **Deferred `/product` dogfood** — spec 068 was its prerequisite, now unblocked. Scratch path `/tmp/mei-saas-066-dogfood`, `--stack=next`, original mei-saas idea string. NOT in-repo — mei-saas fork has uncommitted `app/` work.
-3. Spec 064 cron natural fire — Mon 2026-05-25 09:00 UTC.
+1. **Push `main`** if desired — 069/070/071 are local-only.
+2. **070 follow-ups** (deferred, recorded in `.claude/memory/propagation-hygiene.md` § Not-yet-cleaned surfaces): (a) memory cross-references — rules/CLAUDE.md still point at specific `.claude/memory/<file>.md` which forks don't have; (b) spec citations in `.claude/hooks|tools|skills` code comments. Clean opportunistically; neither is spec-worthy alone yet.
+3. **Already-synced forks + 071** — the managed-block merge went append-only → 3-way; a pre-071 fork hits a one-time `--force` first-sync (documented in `harness-sync.md` § CLAUDE.md managed-block merge).
+4. **`/product` dogfood** — Gap F (069) fixed, so it is safe to run directly against the mei-saas repo (`clear-target.sh` preserves `.git/` + harness). `--stack=next`, original mei-saas idea string.
+5. Spec 064 cron natural fire — Mon 2026-05-25 09:00 UTC.
 
 ## Decisions & gotchas
 
-- **mei-saas catch-up sync now has a clean path** — verified empirically: a baseline seeded from mei-saas's real `/product` bytes relabels its drifted tree as 15 stale / 0 customized / 27 orphan-removed (was: all `customized`, would-refuse). One-time bootstrap is `--apply --force --force-except='<real customizations>'`, then 3-way from there.
-- **`write_baseline` is conditional** — skips the write when the files-map is byte-identical to the existing baseline, so a no-op re-apply leaves `harness-sync-baseline.json` untouched (idempotency). Deviation from `plan.md`'s "write on every --apply"; see `notes.md`.
-- Stray untracked files at repo root (`bo-*.png`, `gta6-thread.png`) — not ours, leave them.
+- **Stale branch `070-propagation-hygiene`** exists (created early in the session before work was redirected to `main`, matching the repo's 068/069 → main practice). Harmless; `git branch -d` it if tidiness wanted.
+- **The CLAUDE.md merge was never "append-only".** `_merge_claude_md_managed_block` already wholesale-replaced the region; the real bug 071 fixed was that it had no baseline, so it refused on any section-body divergence. Fixed via baseline 3-way.
+- **`sync-harness.sh` + `set -euo pipefail`** — any new bare-statement function called from `main` MUST `return 0` on its skip paths; a bare `return <non-zero>` aborts the whole script (cost 22/31 test failures before the one-char fix).
+- **propagation-hygiene is a maintainer discipline in memory, not a rule** — a rule would ship to forks where it is inert, reproducing the leak it forbids.
 
 ## Carryover (orthogonal — not touched this session)
 

@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 # .githooks/pre-commit
-# Native git pre-commit hook — secrets-scan capacity (spec 007).
+# Native git pre-commit hook — secrets-scan capacity.
 #
 # This hook runs in git commit's own process, AFTER staging is finalised, so
 # `gitleaks git --pre-commit --staged` always sees the real index — even when
 # the user ran a compound `git add ... && git commit ...` invocation. That
-# timing correction is the primary fix for the spec-006 bug; see
-# docs/specs/007-secrets-scan-timing/ for full design rationale.
+# timing correction is the primary fix for the original staging-timing bug.
 #
 # Companion / dependency:
 #   The override-marker grammar (`# OVERRIDE: <reason ≥10 chars>`) lives in the
@@ -20,8 +19,6 @@
 #
 # Reference:
 #   .claude/rules/secrets-scan.md   — full discipline, both layers
-#   docs/specs/007-secrets-scan-timing/   — design, alternatives, risks
-#   docs/specs/006-secrets-scan/    — original spec this extends
 #
 # Lazarus vector note:
 #   This script is activated via `git config core.hooksPath .githooks` (a
@@ -149,7 +146,7 @@ fi
 # Count staged files via git diff --cached --name-only. Empty output means an
 # allow-empty commit (e.g. `git commit --allow-empty`); record that separately
 # so the audit log can distinguish "nothing to scan" from "scanned, found
-# nothing" — the spec-006 silent-failure mode produced the latter shape for
+# nothing" — the original silent-failure mode produced the latter shape for
 # compound commands that staged nothing before the commit; this shape makes
 # that unreproducible.
 staged_files_count="$(git diff --cached --name-only 2>/dev/null | wc -l | tr -d ' ')"
@@ -177,7 +174,7 @@ fi
 # Phase 4: Gitleaks scan
 # ---------------------------------------------------------------------------
 # Use the current invocation shape: `gitleaks git --pre-commit --staged`
-# (the deprecated `gitleaks protect --staged` from spec 006 is NOT used here).
+# (the deprecated `gitleaks protect --staged` is NOT used here).
 # Run from repo root so relative file paths in the report are repo-relative.
 GITLEAKS_REPORT="$(mktemp -t gitleaks-XXXXXX.json 2>/dev/null || mktemp)"
 GITLEAKS_OUT="$(mktemp -t gitleaks-out-XXXXXX 2>/dev/null || mktemp)"
@@ -252,7 +249,7 @@ To bypass for a legitimate fixture or test vector, use one of:
        git commit -m "..." # OVERRIDE: <reason ≥10 chars explaining why>
      (The preflight hook parses the marker and injects CLAUDE_SECRETS_OVERRIDE_REASON.)
 
-See .claude/rules/secrets-scan.md and docs/specs/007-secrets-scan-timing/ for the full discipline.
+See .claude/rules/secrets-scan.md for the full discipline.
 EOF
 
 rm -f "$GITLEAKS_REPORT" "$GITLEAKS_OUT" 2>/dev/null || true

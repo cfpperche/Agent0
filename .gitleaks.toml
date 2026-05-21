@@ -21,7 +21,7 @@ useDefault = true
 # Two path exemptions, both required by every fork:
 #  1. secrets-scan.md ships synthetic AKIA/ghp fake credentials documenting the
 #     discipline itself — a fresh fork's first commit would block without this.
-#  2. harness-sync-baseline.json (spec 068) is a machine-generated manifest of
+#  2. harness-sync-baseline.json is a machine-generated manifest of
 #     sha256 content hashes; gitleaks' generic-API-key rule flags 64-hex strings.
 #     The file is git-tracked by design (travels on clone) and re-committed on
 #     every harness sync, so the exemption is permanent, not one-off.

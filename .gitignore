@@ -22,7 +22,7 @@ CLAUDE.local.md
 .claude/.brainstorm-state/
 .claude/.routines-state/
 
-# Spec 058 — sync-harness CLAUDE.md migration artifacts (ephemeral; ratified via mv,
+# sync-harness CLAUDE.md migration artifacts (ephemeral; ratified via mv,
 # divergence reports re-generated each sync until resolved)
 .claude/CLAUDE.md.migration-candidate.md
 .claude/CLAUDE.md.diverged-region.md
@@ -34,7 +34,7 @@ CLAUDE.local.md
 # Exploratory prototypes (not yet promoted to docs/specs/ or src/)
 prototypes/
 
-# Spec 007 scenario tests run in mktemp /tmp dirs by default, but reserve a
+# Secrets-scan scenario tests run in mktemp /tmp dirs by default, but reserve a
 # scratchpad path in case a future test variant needs in-repo state.
 .claude/tests/secrets-scan/.tmp/
 

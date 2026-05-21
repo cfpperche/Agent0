@@ -20,9 +20,11 @@ When saving a learning, fact, or rule, route it by **what kind of knowledge** it
 
 **For forks of Agent0:** this same rule applies. Each fork has its own `.claude/memory/` that accumulates its own factual knowledge (e.g. pyshrnk might memorize "Starlette form parsing without python-multipart uses urllib.parse.parse_qs"). Agent0's memory entries (about CC platform internals, sync-harness design rationale, etc.) do NOT travel to forks — and reciprocally, fork-specific memories do NOT propagate back upstream. The sync tool is one-way for capacities; memory content is one-source.
 
-**Use when:** the knowledge is project-specific factual reference, not behavioral mandate. "Claude Code has 29 hook events", "we chose hash-compare because alternatives X/Y had problems Z", "spec 011 was shipped with a foundational gap because the designer had partial CC platform knowledge". The agent reads these on demand when starting relevant work — discovery is via the `## Memory` block in CLAUDE.md (lazy-read of `.claude/memory/MEMORY.md` index) and via cross-references from specific rule docs.
+**Use when:** the knowledge is project-specific factual reference, not behavioral mandate. "Claude Code has 29 hook events", "we chose hash-compare because alternatives X/Y had problems Z". The agent reads these on demand when starting relevant work — discovery is via the `## Memory` block in CLAUDE.md (lazy-read of `.claude/memory/MEMORY.md` index) and via cross-references from specific rule docs.
 
 **Do NOT use for:** behavioral mandates ("the agent must do X") — those are rules. Capacity operational documentation ("how the supply-chain hook works") — those are rules. Work-specific design context — that lives in the corresponding `docs/specs/NNN-*/` dir.
+
+**One narrow exception** to "no behavioral mandates here": a mandate that binds the Agent0 *maintainer* rather than the agent working in any fork. Rules ship to forks, so a maintainer-only discipline placed in a rule would be inert cruft in every fork that consumes the harness but never extends it. Such disciplines route to project memory despite being mandate-shaped — `propagation-hygiene.md` (how fork-bound files must be written so they carry no Agent0-internal pointers) is the canonical case; `agent0-purpose.md` is a softer precedent.
 
 **Concrete examples currently in this bucket:** `agent0-purpose.md` (Agent0 is a template-forever project; do not list empty placeholders as gaps), `visibility-intent.md` (next visibility wedge is agent-self-debug, not human dashboards), `cc-platform-hooks.md` (the canonical 29 events of the CC platform).
 
@@ -70,9 +72,9 @@ When in doubt, route to project memory (`.claude/memory/`). Demoting from rule �
 
 ## Why three buckets, not two
 
-The previous version of this rule had only two buckets: project-shared (rules) and per-user (preferences). That model conflates two distinct kinds of project-shared knowledge: behavioral mandates that should ride with capacities into forks, and factual reference that's Agent0-internal design context. The empirical trigger for the split was discovering that Claude Code has 29 hook events (not the ~9 the spec 011 author assumed). That knowledge:
+The previous version of this rule had only two buckets: project-shared (rules) and per-user (preferences). That model conflates two distinct kinds of project-shared knowledge: behavioral mandates that should ride with capacities into forks, and factual reference that's Agent0-internal design context. The empirical trigger for the split was discovering that Claude Code has 29 hook events (not the ~9 originally assumed). That knowledge:
 - Is project-shared (other Agent0 contributors benefit)
 - Is NOT a behavioral mandate (it's reference data)
 - Should NOT ship to forks (forks consume capacities, they don't extend the harness)
 
-No existing bucket fit. The new `.claude/memory/` bucket covers this gap. See `docs/specs/019-project-memory/` for the design rationale.
+No existing bucket fit. The new `.claude/memory/` bucket covers this gap.

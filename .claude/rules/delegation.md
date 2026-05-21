@@ -5,8 +5,6 @@ Sub-agent dispatches via the `Agent` tool are gated. Two cooperating hooks enfor
 - **`PreToolUse(Agent)`** → `.claude/hooks/delegation-gate.sh` validates a 5-field handoff, honours an `# OVERRIDE:` marker, appends an audit line, and may attach a complexity advisory.
 - **`PostToolUse(Edit|Write|MultiEdit)`** → `.claude/hooks/post-edit-validate.sh` re-runs the project validator after a *delegated* agent edits a file. Parent edits are exempt by design.
 
-Spec: `docs/specs/002-delegation/`.
-
 ## The 5-field handoff
 
 Every `Agent` prompt must include four required fields and one of two outcome fields. Field names are case-insensitive; order is free; any text after the colon counts. Missing fields → `exit 2` with the canonical template printed to stderr below.
@@ -39,7 +37,7 @@ The verifier in this project is `.claude/hooks/post-edit-validate.sh` plus the r
 
 ## Override marker
 
-Same shape as the governance gate (see `docs/specs/001-governance-gate/`): a line `# OVERRIDE: <reason ≥10 chars>`, case-sensitive, terminated by end-of-line. The reason is the audit trail — write something a future maintainer can grep for. "skip", "bypass", "n/a" are not reasons. A reason shorter than 10 chars after trimming is rejected and the gate blocks as if no marker were present (with a hint that the reason is too short).
+Same shape as the governance gate: a line `# OVERRIDE: <reason ≥10 chars>`, case-sensitive, terminated by end-of-line. The reason is the audit trail — write something a future maintainer can grep for. "skip", "bypass", "n/a" are not reasons. A reason shorter than 10 chars after trimming is rejected and the gate blocks as if no marker were present (with a hint that the reason is too short).
 
 The marker skips ONLY the 5-field validation. It does NOT skip the audit append (the marker reason is recorded in the `override` field) and does NOT skip the escalation-advisory pass. There is no silent bypass.
 
@@ -60,7 +58,7 @@ If the validator is missing, non-executable, or emits unparseable output, the ho
 
 The validator may also append a `warnings` array to its JSON output on stack-detected paths. The post-edit hook reads any warnings and echoes each one to stderr with a `tdd-advisory:` prefix on the exit-0 path — non-blocking advisories that surface to the agent on its next turn. This is how TDD test-coverage advisories reach the agent today; see `.claude/rules/tdd.md` for the warning shape and the response convention.
 
-**Parallel fan-out and the validator-cascade.** The validator typechecks and lints the **whole project** — `tsc --noEmit` and `biome check` are both project-wide, not per-file. When a parent dispatches a parallel `Agent` fan-out — ≥2 sub-agents editing one *shared* working tree concurrently — each sub-agent's post-edit validation sees the half-written files of its siblings, and `ok` flips to `false` on errors the sub-agent did not cause. This is the **validator-cascade**: sub-agents burn loop budget on sibling-induced failures, stub over each other to silence the checks, and leave broken code (observed across Waves 3-5 of the mei-saas `/product` dogfood, 2026-05-20). A parent dispatching ≥2 parallel `Agent` calls that may touch overlapping files **MUST declare `isolation: "worktree"`** (see § Worktree isolation) — distinct worktrees give each sub-agent its own tree and its own project-wide check, so siblings never interfere. The validator already scopes its cwd to the edited file's git toplevel, so a worktree-isolated sub-agent is validated against *its own* tree, never a sibling's. Spec: `docs/specs/067-parallel-edit-validation/`.
+**Parallel fan-out and the validator-cascade.** The validator typechecks and lints the **whole project** — `tsc --noEmit` and `biome check` are both project-wide, not per-file. When a parent dispatches a parallel `Agent` fan-out — ≥2 sub-agents editing one *shared* working tree concurrently — each sub-agent's post-edit validation sees the half-written files of its siblings, and `ok` flips to `false` on errors the sub-agent did not cause. This is the **validator-cascade**: sub-agents burn loop budget on sibling-induced failures, stub over each other to silence the checks, and leave broken code (observed across Waves 3-5 of the mei-saas `/product` dogfood, 2026-05-20). A parent dispatching ≥2 parallel `Agent` calls that may touch overlapping files **MUST declare `isolation: "worktree"`** (see § Worktree isolation) — distinct worktrees give each sub-agent its own tree and its own project-wide check, so siblings never interfere. The validator already scopes its cwd to the edited file's git toplevel, so a worktree-isolated sub-agent is validated against *its own* tree, never a sibling's.
 
 ## Audit log
 
@@ -68,9 +66,9 @@ The validator may also append a `warnings` array to its JSON output on stack-det
 
 ### Dispatch row (written by `delegation-gate.sh` at PreToolUse(Agent))
 
-Thirteen fields: `ts`, `session_id`, `tool_use_id`, `subagent_type`, `model`, `model_specified`, `isolation`, `formatted`, `override`, `advisory_emitted`, `advisory_kind`, `escalation_signals`, `task_summary`. `advisory_kind` is one of `"model-discipline"`, `"escalation"`, or `null` when no advisory fired — the bool `advisory_emitted` answers "did anything fire", the string `advisory_kind` answers "which one". `tool_use_id` is the harness-supplied `toolu_*` identifier and acts as the join key into the close row (see below) — spec 061 added this field as the prerequisite for exact dispatch↔stop correlation under parallel same-type dispatches. `isolation` mirrors the value of `tool_input.isolation` (e.g. `"worktree"` or `""` when unset) — spec 063 added this field for forensic visibility into worktree-isolation choices; see § Worktree isolation below.
+Thirteen fields: `ts`, `session_id`, `tool_use_id`, `subagent_type`, `model`, `model_specified`, `isolation`, `formatted`, `override`, `advisory_emitted`, `advisory_kind`, `escalation_signals`, `task_summary`. `advisory_kind` is one of `"model-discipline"`, `"escalation"`, or `null` when no advisory fired — the bool `advisory_emitted` answers "did anything fire", the string `advisory_kind` answers "which one". `tool_use_id` is the harness-supplied `toolu_*` identifier and acts as the join key into the close row (see below) — this field is the prerequisite for exact dispatch↔stop correlation under parallel same-type dispatches. `isolation` mirrors the value of `tool_input.isolation` (e.g. `"worktree"` or `""` when unset) — this field provides forensic visibility into worktree-isolation choices; see § Worktree isolation below.
 
-### Close row (written by `delegation-stop.sh` at SubagentStop, spec 061)
+### Close row (written by `delegation-stop.sh` at SubagentStop)
 
 Thirteen fields: `ts`, `event` (always `"subagent-stop"`), `session_id`, `agent_id`, `tool_use_id`, `agent_type`, `exit`, `duration_ms`, `edit_count`, `last_assistant_message_head`, `agent_transcript_path`, `correlation`, `stop_hook_active`. Denormalised — `agent_type` mirrors the dispatch row's `subagent_type` and the 200-char `last_assistant_message_head` is inlined so standalone `jq` queries (`select(.event == "subagent-stop" and .exit == "loop-budget-exceeded")`) work without a join.
 
@@ -114,7 +112,7 @@ jq -s '
 ' .claude/delegation-audit.jsonl
 ```
 
-## Worktree isolation (spec 063)
+## Worktree isolation
 
 Claude Code 2.1.144+ ships native worktree primitives that the `Agent` tool exposes via the `isolation` parameter. When a parent sets `isolation: "worktree"` in the `Agent` tool call, CC's harness handles the rest:
 
@@ -132,7 +130,7 @@ This is canonical CC behavior — **Agent0 does NOT mediate the mechanism**. The
   jq -c 'select(.isolation == "" and (.escalation_signals | length) >= 2)' \
     .claude/delegation-audit.jsonl
   ```
-- **Validator scoping** — `post-edit-validate.sh` derives the validator's cwd from the git toplevel of the edit's `tool_input.file_path`. Parent-tree edits resolve to `$PROJECT_DIR` (no change vs pre-063 behavior); worktree-isolated edits resolve to the worktree path, so the validator runs against the isolated tree state, not stale parent state. Fail-open: `git rev-parse` failure (non-git scratch dir, etc.) falls back to `$PROJECT_DIR`.
+- **Validator scoping** — `post-edit-validate.sh` derives the validator's cwd from the git toplevel of the edit's `tool_input.file_path`. Parent-tree edits resolve to `$PROJECT_DIR` (no change from the prior behavior); worktree-isolated edits resolve to the worktree path, so the validator runs against the isolated tree state, not stale parent state. Fail-open: `git rev-parse` failure (non-git scratch dir, etc.) falls back to `$PROJECT_DIR`.
 
 ### When parents SHOULD declare `isolation: "worktree"`
 
@@ -149,7 +147,7 @@ This is canonical CC behavior — **Agent0 does NOT mediate the mechanism**. The
 
 ### Why no brief field
 
-The original spec 063 draft proposed a 6th optional `ISOLATION:` field in the 5-field handoff. Empirical pre-flight (2026-05-19) showed the canonical mechanism is already `tool_input.isolation` set by the parent. Adding a brief field would duplicate intent (once verbally in CONSTRAINTS/DELIVERABLE, once mechanically in tool params) without enforcement value — the gate cannot mutate the tool call payload from the brief. The audit row records the canonical signal; the rule documents the discipline; the validator scoping fix mitigates the cross-cwd risk regardless of declaration. See `docs/specs/063-worktree-isolated-subagents/notes.md` § Design decisions for the full redirect rationale.
+The original worktree-isolation draft proposed a 6th optional `ISOLATION:` field in the 5-field handoff. Empirical pre-flight (2026-05-19) showed the canonical mechanism is already `tool_input.isolation` set by the parent. Adding a brief field would duplicate intent (once verbally in CONSTRAINTS/DELIVERABLE, once mechanically in tool params) without enforcement value — the gate cannot mutate the tool call payload from the brief. The audit row records the canonical signal; the rule documents the discipline; the validator scoping fix mitigates the cross-cwd risk regardless of declaration.
 
 ## Advisories
 

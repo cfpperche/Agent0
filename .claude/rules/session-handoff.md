@@ -4,8 +4,6 @@ paths:
   - ".claude/hooks/session-start.sh"
   - ".claude/hooks/session-stop.sh"
   - ".claude/.session-state/**"
-  - "docs/specs/017-*/**"
-  - "docs/specs/023-*/**"
 ---
 
 # Session handoff
@@ -85,30 +83,30 @@ Set `CLAUDE_SKIP_SESSION_HOOKS=1` in the environment to disable Stop-hook enforc
 
 ## State files
 
-`.claude/.session-state/<session_id>/` holds four ephemeral artifacts per Claude Code session: `started-at` (touched by `SessionStart`), `nagged` (touched by `Stop` when it blocks), `start-porcelain.txt` (a snapshot of `git status --porcelain` captured by `SessionStart` — spec 023), and `edited-files.txt` (per-session list of Edit/Write/MultiEdit `file_path`s, append-only with dedup, populated by the `session-track-edits.sh` `PostToolUse` hook — spec 030; the file is also seeded as empty by `SessionStart` so its mere presence is the "tracker-enabled" marker). Gitignored — do not commit. Spec 017 introduced the per-`session_id` subdir layout to isolate parallel sessions; before that, both markers lived directly under `.claude/.session-state/` and any SessionStart fire from any session would `rm -f` the shared `nagged` marker, leading to spurious re-blocks of unrelated sessions.
+`.claude/.session-state/<session_id>/` holds four ephemeral artifacts per Claude Code session: `started-at` (touched by `SessionStart`), `nagged` (touched by `Stop` when it blocks), `start-porcelain.txt` (a snapshot of `git status --porcelain` captured by `SessionStart`), and `edited-files.txt` (per-session list of Edit/Write/MultiEdit `file_path`s, append-only with dedup, populated by the `session-track-edits.sh` `PostToolUse` hook; the file is also seeded as empty by `SessionStart` so its mere presence is the "tracker-enabled" marker). Gitignored — do not commit. The per-`session_id` subdir layout isolates parallel sessions; before it landed, both markers lived directly under `.claude/.session-state/` and any SessionStart fire from any session would `rm -f` the shared `nagged` marker, leading to spurious re-blocks of unrelated sessions.
 
 `session_id` comes from the stdin payload Claude Code passes to every hook (`$.session_id`). When absent (older payload shapes, future variants, manual fixtures), or when it contains characters outside `^[a-zA-Z0-9_-]+$`, both hooks fall to the literal subdir `unknown` — predictable degradation, no path traversal possible.
 
 `SessionStart` also runs a best-effort cleanup at the end: `find .claude/.session-state -mindepth 1 -maxdepth 1 -type d -mtime +7 -exec rm -rf {} +`. Crashed sessions leave orphan subdirs; this sweep removes them within a week without manual intervention. Cleanup failures are silenced — never block the hook. The porcelain snapshot rides inside the same subdir, so the 7-day sweep removes it atomically with the rest of the state — no separate TTL.
 
-### Edit attribution (spec 030 — primary signal)
+### Edit attribution (primary signal)
 
-Spec 023's porcelain-compare answered "did the worktree change during this session?" — observation of the tree, not attribution to the session. The signal misfires for **bystander sessions** (research-only, read-only Bash) when a sibling Claude Code session or an out-of-band process modifies the tree during the bystander's lifetime: porcelain at Stop differs from `start-porcelain.txt` and the bystander gets nagged for someone else's edits. The canonical example, 2026-05-16 in this very project: a research-only session sat from 13:23 to 13:27 doing zero Edit/Write tool calls; a sibling session modified step-09 templates at 13:26/13:27; the research session's Stop fired the nag at 13:27:48 even though the transcript shows no edits.
+The porcelain-compare answers "did the worktree change during this session?" — observation of the tree, not attribution to the session. The signal misfires for **bystander sessions** (research-only, read-only Bash) when a sibling Claude Code session or an out-of-band process modifies the tree during the bystander's lifetime: porcelain at Stop differs from `start-porcelain.txt` and the bystander gets nagged for someone else's edits. The canonical example, 2026-05-16 in this very project: a research-only session sat from 13:23 to 13:27 doing zero Edit/Write tool calls; a sibling session modified step-09 templates at 13:26/13:27; the research session's Stop fired the nag at 13:27:48 even though the transcript shows no edits.
 
-Spec 030 fixes this structurally with **per-session edit attribution**. A `PostToolUse(Edit|Write|MultiEdit)` hook (`.claude/hooks/session-track-edits.sh`) appends each tool-call's `file_path` (project-relative, deduped) to `<state-dir>/edited-files.txt`. `SessionStart` seeds the file as empty at session boundary so its **presence** means "tracker is installed and active for this session" and its **emptiness** means "the tracker fired zero times". Stop reads it as the primary signal:
+The edit attribution fix uses **per-session edit attribution**. A `PostToolUse(Edit|Write|MultiEdit)` hook (`.claude/hooks/session-track-edits.sh`) appends each tool-call's `file_path` (project-relative, deduped) to `<state-dir>/edited-files.txt`. `SessionStart` seeds the file as empty at session boundary so its **presence** means "tracker is installed and active for this session" and its **emptiness** means "the tracker fired zero times". Stop reads it as the primary signal:
 
 - **File present, empty** → session edited nothing the tracker could see → `exit 0` silently. Bystander or Bash-only-edit case (see § Trade below).
 - **File present, non-empty, every listed path is clean in `git status --porcelain`** (committed or reverted) → `exit 0` silently.
-- **File present, non-empty, at least one listed path still dirty** → fall through to the block-unless-SESSION-updated path. Spec 023's porcelain-compare is skipped on this branch — the tracker has already decided we have own WIP, re-running the compare would be redundant.
-- **File absent** → legacy session (started before spec 030 deployed, or SessionStart somehow skipped) → fall through to spec 023's porcelain-compare path unchanged.
+- **File present, non-empty, at least one listed path still dirty** → fall through to the block-unless-SESSION-updated path. The porcelain-compare is skipped on this branch — the tracker has already decided we have own WIP, re-running the compare would be redundant.
+- **File absent** → legacy session (started before the tracker deployed, or SessionStart somehow skipped) → fall through to the porcelain-compare path unchanged.
 
-**Trade**: file-present-and-empty collapses two real-world classes — pure bystander AND Bash-only-edit sessions — into the same silent-pass branch. Sessions that edit exclusively via `sed -i`, `cat > file`, IDE saves, or external scripts produce no tracker entries, and Stop will not nag even if SESSION.md is stale. Accepted because the bystander quiet was the primary goal driving the spec, the dominant agent edit path is Edit/Write/MultiEdit which IS tracked, and Bash-argument parsing for path attribution is fragile (see `docs/specs/030-session-edit-attribution/plan.md` § Alternatives considered). Users who rely on Bash-driven edits must remember to update SESSION.md themselves.
+**Trade**: file-present-and-empty collapses two real-world classes — pure bystander AND Bash-only-edit sessions — into the same silent-pass branch. Sessions that edit exclusively via `sed -i`, `cat > file`, IDE saves, or external scripts produce no tracker entries, and Stop will not nag even if SESSION.md is stale. Accepted because the bystander quiet was the primary goal, the dominant agent edit path is Edit/Write/MultiEdit which IS tracked, and Bash-argument parsing for path attribution is fragile. Users who rely on Bash-driven edits must remember to update SESSION.md themselves.
 
-### Carryover discrimination (spec 023 — fallback)
+### Carryover discrimination (fallback)
 
-Pre-023 the Stop hook treated `git status --porcelain` returning non-empty as "this session has WIP that needs a SESSION.md handoff" — but the signal conflates three cases: real WIP, pre-existing carryover from prior sessions (already documented), and pure no-op sessions (greeting / Q&A / read-only Bash). Spec 023 closes the false-positive on cases (2)/(3): SessionStart writes `start-porcelain.txt` (best-effort — guarded by `git rev-parse --git-dir` plus `|| true` on the redirect; absent if git is unavailable or the filesystem is read-only); Stop compares the current porcelain against the snapshot via bash string equality before applying the SESSION.md mtime check. Byte-identical → nothing changed this session → exit 0 silently. Different → fall through to today's block-unless-SESSION-updated path.
+Previously the Stop hook treated `git status --porcelain` returning non-empty as "this session has WIP that needs a SESSION.md handoff" — but the signal conflates three cases: real WIP, pre-existing carryover from prior sessions (already documented), and pure no-op sessions (greeting / Q&A / read-only Bash). The carryover-discrimination fix closes the false-positive on cases (2)/(3): SessionStart writes `start-porcelain.txt` (best-effort — guarded by `git rev-parse --git-dir` plus `|| true` on the redirect; absent if git is unavailable or the filesystem is read-only); Stop compares the current porcelain against the snapshot via bash string equality before applying the SESSION.md mtime check. Byte-identical → nothing changed this session → exit 0 silently. Different → fall through to today's block-unless-SESSION-updated path.
 
-Spec 023 remains **shipped**, not superseded — its mechanism is still load-bearing on the legacy-session branch above. The primary path (spec 030) handles modern sessions; spec 023 handles every session that started before spec 030 deployed plus any session where `SessionStart` couldn't seed `edited-files.txt` (read-only fs, etc).
+The porcelain-compare mechanism remains **shipped**, not superseded — it is still load-bearing on the legacy-session branch above. The primary path (edit attribution) handles modern sessions; the porcelain-compare handles every session that started before the tracker deployed plus any session where `SessionStart` couldn't seed `edited-files.txt` (read-only fs, etc).
 
 Missing snapshot (older session that started before 023 landed, or git/fs failure at SessionStart) is the safe-fallback case: Stop skips the comparison and the original mtime-only logic runs. Same conservative posture as the rest of the session-state machinery.
 
@@ -133,10 +131,9 @@ Shape:
 ```markdown
 ## Parallel WIP
 
-- session opened 2026-05-12 11:00 — curating spec 021 browser-auth-workflow
-  (touching `.claude/rules/mcp-recipes.md`, `.claude/rules/secrets-scan.md`,
-  `docs/specs/021-*/`). Other sessions: defer these paths until this block
-  is removed.
+- session opened 2026-05-12 11:00 — curating browser-auth-workflow
+  (touching `.claude/rules/mcp-recipes.md`, `.claude/rules/secrets-scan.md`).
+  Other sessions: defer these paths until this block is removed.
 ```
 
 Conventions:
@@ -153,8 +150,8 @@ When the convention is enough vs when it isn't:
 - Two concurrent sessions racing on the SAME file → convention is advisory; coordinate via the user or pause one session.
 - More than two concurrent sessions → still works but the bullet count grows; if this becomes routine, that's the empirical signal to consider richer machinery (a follow-up spec). Don't pre-build.
 
-This is deliberately a behavioural convention rather than a code-enforced one. Spec 017 (`session-state-isolation`) gave each session its own state directory; this convention closes the remaining gap (cross-session intent visibility) at zero code cost. If real-world use surfaces collisions the convention can't catch — recurring forgotten bullets, fixed-on-merge surprises, sessions that genuinely need to touch the same paths — that's the trigger to revisit; until then, keep the surface tiny.
+This is deliberately a behavioural convention rather than a code-enforced one. The per-session state directory isolation gave each session its own state directory; this convention closes the remaining gap (cross-session intent visibility) at zero code cost. If real-world use surfaces collisions the convention can't catch — recurring forgotten bullets, fixed-on-merge surprises, sessions that genuinely need to touch the same paths — that's the trigger to revisit; until then, keep the surface tiny.
 
 ## Cross-capacity dependency
 
-`.claude/tools/probe.sh` (spec 011 runtime-introspect) reads `started-at` as the "session boundary" signal to detect stale snapshots. Post-017 it does NOT read a specific subdir — instead it scans `.claude/.session-state/*/started-at` and takes the maximum mtime as the conservative boundary. Single-session use: identical behavior to pre-017. Parallel sessions: `stale=true` may trigger earlier in the older session (a conservative false positive — agent re-runs the verifier, safe direction).
+`.claude/tools/probe.sh` reads `started-at` as the "session boundary" signal to detect stale snapshots. It does NOT read a specific subdir — instead it scans `.claude/.session-state/*/started-at` and takes the maximum mtime as the conservative boundary. Single-session use: identical behavior to a single-subdir layout. Parallel sessions: `stale=true` may trigger earlier in the older session (a conservative false positive — agent re-runs the verifier, safe direction).

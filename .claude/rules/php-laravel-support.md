@@ -7,12 +7,11 @@ paths:
   - "phpunit.xml"
   - "phpunit.xml.dist"
   - "Pest.php"
-  - "docs/specs/047-*/**"
 ---
 
 # PHP / Laravel support
 
-This rule is an **index**, not the canonical source. Each Agent0 capacity — validator, supply-chain, runtime-introspect, TDD, lint, MCP recipes — has its own rule doc that documents the per-stack behavior in full. This page exists so a new reader on a Laravel fork can find every PHP-aware touchpoint in one place. The canonical per-capacity docs are linked under each section below; read them when you need depth, this page for orientation. Spec: `docs/specs/047-php-laravel-support/`.
+This rule is an **index**, not the canonical source. Each Agent0 capacity — validator, supply-chain, runtime-introspect, TDD, lint, MCP recipes — has its own rule doc that documents the per-stack behavior in full. This page exists so a new reader on a Laravel fork can find every PHP-aware touchpoint in one place. The canonical per-capacity docs are linked under each section below; read them when you need depth, this page for orientation.
 
 PHP detection in Agent0 is triggered by **`composer.json` at the project root** (validator + supply-chain) or **`artisan` file at the root** (Laravel canonical signal, used by mcp-recipes). The seven capacities below ship dormant in a non-PHP fork and activate the moment those signals exist — no env-var to set, no opt-in.
 
@@ -80,13 +79,13 @@ Canonical doc: `.claude/rules/mcp-recipes.md` § *Laravel Boost MCP*.
 
 ## 7. CLAUDE.md capacity index
 
-CLAUDE.md's `## PHP / Laravel` section names this rule doc and the six capacity touchpoints, mirroring the existing capacity-section convention (Spec-driven, Delegation, Secrets scan, Supply chain, etc.). New forks read CLAUDE.md first; the section gives them a one-paragraph orientation and a pointer here.
+CLAUDE.md folds PHP/Laravel detection inline into the capacity sections that enumerate stacks (validator, supply-chain, runtime-introspect, lint) — it carries no dedicated PHP/Laravel chapter. This rule doc is the canonical PHP/Laravel reference; it is path-scoped (frontmatter `paths:` on `composer.json` / `artisan` / `phpunit.xml` / `Pest.php`) and auto-loads the moment a fork's PHP signals are touched, so a fork needs no CLAUDE.md pointer to discover it.
 
 ## What this does NOT add
 
 - **No new validator stack other than PHP.** Symfony, CodeIgniter, Yii, Laminas, etc. — all out of scope for v1. A future spec can extend detection if the demand surfaces.
 - **No php-cs-fixer detection separate from Pint.** Pint wraps php-cs-fixer; supporting both would duplicate signal. Pure php-cs-fixer projects (no Pint dependency) hit silent-skip on lint.
-- **No PHP-aware monorepo walk.** The validator's "first lockfile wins" remains — a fork with composer.json AND package.json routes to whichever elif matches first (currently JS first, PHP late). Multi-stack monorepo PHP+JS is spec 015 territory.
+- **No PHP-aware monorepo walk.** The validator's "first lockfile wins" remains — a fork with composer.json AND package.json routes to whichever elif matches first (currently JS first, PHP late). Multi-stack monorepo PHP+JS is a future spec territory.
 - **No editor-time / on-save integration.** Same posture as every other Agent0 capacity — validator runs at sub-agent edit boundaries via hooks, not in real time.
 - **No managed `composer install` orchestration.** Agent0 surfaces missing binaries as advisories; the human (or agent under override) decides when to install.
 
@@ -99,12 +98,11 @@ CLAUDE.md's `## PHP / Laravel` section names this rule doc and the six capacity 
 - `.claude/rules/mcp-recipes.md` — Laravel Boost MCP recipe
 - `.claude/validators/run.sh` — the validator's PHP elif
 - `.claude/hooks/{supply-chain-scan,supply-chain-advise,runtime-capture,mcp-recipes-hint}.sh` — the four hooks PHP touches
-- `docs/specs/047-php-laravel-support/` — design memory + tasks
 - `.claude/tests/{validator-php,supply-chain-composer,runtime-capture-php,mcp-recipes-laravel}/` — the test surface that locks the behavior
 
 ## Gotchas
 
-- **Lockfile precedence vs PHP.** The validator's elif chain is `bun → pnpm → npm → python → go → rust → php`. A monorepo with `bun.lock` at root and `composer.json` in `services/api/` routes to bun (first match wins). The PHP detection only fires when `composer.json` is at root AND no JS/Python/Go/Rust manifest precedes it. This is the documented limitation; spec 015 covers proper multi-stack walking.
+- **Lockfile precedence vs PHP.** The validator's elif chain is `bun → pnpm → npm → python → go → rust → php`. A monorepo with `bun.lock` at root and `composer.json` in `services/api/` routes to bun (first match wins). The PHP detection only fires when `composer.json` is at root AND no JS/Python/Go/Rust manifest precedes it. This is the documented limitation; proper multi-stack walking is a future capacity.
 - **Pest detection trumps PHPUnit.** Pest declares `phpstunit/phpunit` as a transitive dep (Pest is built on PHPUnit). Both will appear in `composer.lock`. The validator's check on the *direct* declaration of `pestphp/pest` in composer.json correctly picks Pest in that case; if a fork wants the bare PHPUnit invocation despite having Pest installed, drop the Pest declaration from composer.json (the precedent: a single test runner per project).
 - **`vendor/bin/*` checks are filesystem probes.** A fork that ran `composer install` but later moved its `vendor/` dir (or is using a non-standard installer like `composer-bin-plugin`) will see "declared but missing" advisories. Symlink `vendor/bin/<tool>` to the actual binary or accept the noise. Same shape as Biome's "missing under monorepo hoisting" gotcha.
 - **`composer install` is a lockfile resolve.** Bare `composer install` with no packages is treated as "apply pending declarations from composer.json" — same semantics as `bun install` / `pnpm install`. It does NOT block (no packages → not a mutation), but emits the `advisory-bare-install` advisory when `composer.json` is uncommitted-modified at hook time.

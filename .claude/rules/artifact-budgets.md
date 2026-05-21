@@ -1,6 +1,6 @@
 # Artifact budgets
 
-When a sub-agent dispatch produces an artifact with a declared size budget, the budget is a **scope proxy, not a byte cap**. A budget of 30 KB means "an artifact whose job fits in ~30 KB"; an overshoot is a signal that the artifact's scope drifted, not an invitation to compress. The recurrence pattern this rule exists to prevent: sub-agent generates oversized output → enters a silent trim-loop → burns tokens compressing what should have been re-scoped → ships either a smaller-but-bloated artifact or never converges. Spec: `docs/specs/065-artifact-budget-discipline/`.
+When a sub-agent dispatch produces an artifact with a declared size budget, the budget is a **scope proxy, not a byte cap**. A budget of 30 KB means "an artifact whose job fits in ~30 KB"; an overshoot is a signal that the artifact's scope drifted, not an invitation to compress. The recurrence pattern this rule exists to prevent: sub-agent generates oversized output → enters a silent trim-loop → burns tokens compressing what should have been re-scoped → ships either a smaller-but-bloated artifact or never converges.
 
 The discipline is **rule-only** by design in v1. No hook intercepts, no validator enforces — the sub-agent reads this rule (via the brief CONSTRAINTS that inline its cascade) and decides. If sub-agents ignore the rule ≥3 times in dogfood, the next step is a PostToolUse(Write) detector hook (deferred per `.claude/memory/feedback_speculative_observability.md`'s rule-of-three demand-test).
 
@@ -16,7 +16,7 @@ A budget is the **scope proxy**, not the artifact. Three zones of overshoot, eac
 
 Between 1.2× and 1.8× the sub-agent is in the soft zone — it must decide whether to wrap up cleanly as partial-result or push toward 1.8× hard-abort. The decision is the sub-agent's, but the floor on `oversize_reason` exists in both. **Trim-loop and re-emit-at-smaller-scope are forbidden in every zone above 1.2×.**
 
-The multipliers (`soft_overshoot_multiplier = 1.2`, `hard_abort_multiplier = 1.8`) are declared per-step in `.claude/skills/product/references/pipeline-coverage.md` § Per-step table and inlined into each brief's CONSTRAINTS at dispatch time. v1 uses uniform values across all `/product` steps; per-step calibration is deferred until empirical data justifies (see spec 056 for the calibration discipline).
+The multipliers (`soft_overshoot_multiplier = 1.2`, `hard_abort_multiplier = 1.8`) are declared per-step in `.claude/skills/product/references/pipeline-coverage.md` § Per-step table and inlined into each brief's CONSTRAINTS at dispatch time. v1 uses uniform values across all `/product` steps; per-step calibration is deferred until empirical data justifies.
 
 ## Forbidden antipatterns
 
@@ -28,7 +28,7 @@ Sub-agent produces an oversized artifact, then writes the same artifact path aga
 
 ### Re-emit at smaller scope
 
-Sub-agent receives the brief, produces an oversized artifact, then re-executes the brief from scratch with a narrower self-imposed scope. Mechanically distinct from trim-loop (full re-execution, not incremental compression) but the failure mode is identical: the sub-agent treats the overshoot as a "redo" cue rather than a "stop and report" cue. This pattern previously shipped in Step 01 (Ideation) brief language as `"going over by ≥50% means re-emit at smaller scope"` and is being removed per spec 065 Acceptance Criterion #3.
+Sub-agent receives the brief, produces an oversized artifact, then re-executes the brief from scratch with a narrower self-imposed scope. Mechanically distinct from trim-loop (full re-execution, not incremental compression) but the failure mode is identical: the sub-agent treats the overshoot as a "redo" cue rather than a "stop and report" cue. This pattern previously shipped in Step 01 (Ideation) brief language as `"going over by ≥50% means re-emit at smaller scope"` and is being removed.
 
 ### Why both are banned
 
@@ -90,9 +90,6 @@ State-file budgets (`SESSION.md` ≤4KB, `COMPACT_NOTES.md` 12 turns, `MEMORY.md
 
 ## Cross-references
 
-- `docs/specs/065-artifact-budget-discipline/` — spec source for this rule
-- `docs/specs/056-pipeline-size-reconciliation/` — empirical calibration discipline for budget *values*; this rule owns the *semantics*
-- `docs/specs/002-delegation/` — `# OVERRIDE: <reason ≥10 chars>` grammar lineage
 - `.claude/rules/delegation.md` § The 5-field handoff — briefs producing budgeted artifacts inline the cascade in CONSTRAINTS
 - `.claude/rules/tdd.md` — `tdd-exempt:` prefix convention precedent for `budget-exempt:`
 - `.claude/skills/product/references/pipeline-coverage.md` § Per-step table — the canonical multiplier values

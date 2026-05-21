@@ -8,8 +8,6 @@
 
 The capacity exists because recurring project work otherwise leaks into the founder's head, a personal calendar, or `TODO` comments in code — all of which fail the "another developer cloning the repo on a fresh machine should inherit it" test. Routines pass that test by construction.
 
-See spec `docs/specs/064-project-scoped-routines/` for design rationale and acceptance scenarios.
-
 ## When to use vs `/remind` vs `/schedule`
 
 | Capacity | Cadence | Scope | Storage | Best for |
@@ -190,7 +188,6 @@ The marker is scoped — it skips the named check, not all validation:
 
 ## Cross-references
 
-- `docs/specs/064-project-scoped-routines/` — design spec, plan, tasks, in-flight notes.
 - `.claude/rules/reminders.md` — sibling capacity (one-shot deferred); shares the user/project/shipped 3-bucket model.
 - `.claude/rules/memory-placement.md` — the 3-bucket model this rule extends to routines.
 - `.claude/rules/harness-sync.md` — how the capacity propagates to forks (`.claude/{tools,hooks,rules,skills}/` glob coverage).

@@ -6,12 +6,11 @@ paths:
   - "**/pyproject.toml"
   - "**/package.json"
   - "**/requirements*.txt"
-  - "docs/specs/013-*/**"
 ---
 
 # Lint validator
 
-The post-edit validator (`.claude/validators/run.sh`) extends to lint enforcement when the fork's manifest declares the linter idiomatic to the detected stack. JS/TS uses [Biome](https://biomejs.dev) (`@biomejs/biome` in `devDependencies` or `dependencies`); Python uses [Ruff](https://docs.astral.sh/ruff) (declared in `pyproject.toml` or `requirements*.txt`). Three states keep the discipline tight without prescribing tooling Agent0 doesn't ship: (a) declared + installed → linter runs and contributes to `ok`; (b) declared + missing → actionable advisory on stderr, no block; (c) not declared → silent skip. Spec: `docs/specs/013-lint-validator-extension/`.
+The post-edit validator (`.claude/validators/run.sh`) extends to lint enforcement when the fork's manifest declares the linter idiomatic to the detected stack. JS/TS uses [Biome](https://biomejs.dev) (`@biomejs/biome` in `devDependencies` or `dependencies`); Python uses [Ruff](https://docs.astral.sh/ruff) (declared in `pyproject.toml` or `requirements*.txt`). Three states keep the discipline tight without prescribing tooling Agent0 doesn't ship: (a) declared + installed → linter runs and contributes to `ok`; (b) declared + missing → actionable advisory on stderr, no block; (c) not declared → silent skip.
 
 ## What fires, what advises
 
@@ -45,7 +44,7 @@ The trade-off: a fork that copies a `biome.json` from another repo without addin
 
 ## Advisory format
 
-Both stacks emit single stderr lines with the same shape as supply-chain's corrected-form template (`docs/specs/009-supply-chain-block/`):
+Both stacks emit single stderr lines with the same shape as supply-chain's corrected-form template:
 
 ```
 lint-advisory: biome declared in package.json but not installed — run `bun install`
@@ -54,7 +53,7 @@ lint-advisory: ruff declared in pyproject.toml but not installed — run `poetry
 
 The install command is verbatim copy-paste — the agent (or the operator reading post-edit-validate stderr) runs it and the next validator firing transitions to state (a). Advisories are NEVER blocking; they NEVER increment the delegation loop budget (see `.claude/rules/delegation.md` § *Post-edit validator loop*). Mirrors `tdd-advisory:` and `secrets-advisory:` semantics.
 
-The advisory reaches the agent's next-turn context via `post-edit-validate.sh`, which captures validator stderr separately from stdout (the JSON contract) and surfaces it to its own stderr. Pre-013 the validator was silent on its own stderr so a `2>&1` merge did no harm; once it started emitting advisories the merge would prepend non-JSON text and break `jq` parsing. The hook update is additive: stdout still carries the JSON contract; stderr is now a real channel.
+The advisory reaches the agent's next-turn context via `post-edit-validate.sh`, which captures validator stderr separately from stdout (the JSON contract) and surfaces it to its own stderr. Before this extension the validator was silent on its own stderr so a `2>&1` merge did no harm; once it started emitting advisories the merge would prepend non-JSON text and break `jq` parsing. The hook update is additive: stdout still carries the JSON contract; stderr is now a real channel.
 
 ## Opt-out
 
@@ -64,7 +63,7 @@ Missing `jq` falls through `emit_no_stack` early — the lint extension is never
 
 ## Single-stack v1
 
-The validator's existing stack-detect is monolithic — first `if/elif` match wins. Spec 013 inherits this: a monorepo with both `bun.lock` AND `pyproject.toml` runs only the JS lint extension (bun branch wins). Multi-stack monorepo lint is a property of the validator's stack-detect, not of 013. Spec 015 (monorepo-stack-detect, prerequisite) extends the validator to walk multiple stacks; when 015 lands, 013 inherits multi-stack lint automatically with no re-implementation. Documented as explicit non-goal in spec.md to prevent duplicating walk logic in 013.
+The validator's existing stack-detect is monolithic — first `if/elif` match wins. A monorepo with both `bun.lock` AND `pyproject.toml` runs only the JS lint extension (bun branch wins). Multi-stack monorepo lint is a property of the validator's stack-detect, not of this extension. The monorepo-stack-detect extension extends the validator to walk multiple stacks; when it lands, this lint extension inherits multi-stack lint automatically with no re-implementation. Documented as explicit non-goal in spec.md to prevent duplicating walk logic.
 
 ## Gotchas
 
@@ -72,9 +71,9 @@ The validator's existing stack-detect is monolithic — first `if/elif` match wi
 - **Python regex is pragmatic, not exhaustive.** The grep covers poetry, PEP 621, `[tool.uv]`, requirements.txt. Edge cases NOT covered: `[tool.hatch.envs.<name>.dependencies]` (hatch nested-env shape), `[tool.poetry.group.*.dependencies]` (poetry group syntax — the regex matches the `ruff = "x"` line itself even inside a group section, so this MAY work depending on the indent; verify if a fork hits a false negative). False positive in a comment line (`# ruff is great but we removed it`) is acceptable — only triggers an advisory, never a block. Extend the regex if a real-world fork hits a gap.
 - **`requirements*.txt` glob.** The validator scans `requirements.txt` AND `requirements*.txt` (covers `dev-requirements.txt`, `requirements-dev.txt`, etc.). Glob expansion in bash with no match returns the literal pattern; `[ -f "$f" ]` skips it.
 - **`uv tool install ruff` (global) is invisible.** A fork that installs ruff globally via uv but does NOT declare it in pyproject deps will hit silent-skip (manifest-as-intent → no declaration → no advisory). Acceptable since the alternative (filesystem-only probe) re-introduces the config-file noise the design pivoted away from.
-- **`node_modules/@biomejs/biome/` hoisting in monorepos.** A workspace setup may hoist biome to a parent `node_modules/`. The validator's filesystem check is at the cwd's `node_modules/`, which can miss hoisted installs. False negative manifests as a spurious advisory; the agent can either install biome into the workspace's local `node_modules/` or set `CLAUDE_VALIDATOR_SKIP_LINT=1` for that session. Spec 015 (monorepo) may revisit.
-- **Validator stderr is now a real channel.** Pre-013: validator emitted nothing to its own stderr; the inner pipeline's stderr was captured into the JSON `.stderr` field. Post-013: validator may emit `lint-advisory:` lines to its own stderr (see § Advisory format). Anyone consuming the validator outside `post-edit-validate.sh` (custom hooks, manual invocations) needs to be aware of this — `2>&1` will merge advisories into stdout and break JSON parsing.
-- **No audit log.** Coherent with spec 011 runtime-introspect's "snapshot-as-truth, no per-call audit". The advisory IS the signal; volume of supply-chain's per-Bash audit log is the cautionary tale (`.claude/rules/supply-chain.md` § Gotchas). If forensic queries on lint-advisory frequency become a real need, add in a follow-up spec.
+- **`node_modules/@biomejs/biome/` hoisting in monorepos.** A workspace setup may hoist biome to a parent `node_modules/`. The validator's filesystem check is at the cwd's `node_modules/`, which can miss hoisted installs. False negative manifests as a spurious advisory; the agent can either install biome into the workspace's local `node_modules/` or set `CLAUDE_VALIDATOR_SKIP_LINT=1` for that session. The monorepo-stack-detect extension may revisit.
+- **Validator stderr is now a real channel.** Before this extension: validator emitted nothing to its own stderr; the inner pipeline's stderr was captured into the JSON `.stderr` field. After it: validator may emit `lint-advisory:` lines to its own stderr (see § Advisory format). Anyone consuming the validator outside `post-edit-validate.sh` (custom hooks, manual invocations) needs to be aware of this — `2>&1` will merge advisories into stdout and break JSON parsing.
+- **No audit log.** Coherent with runtime-introspect's "snapshot-as-truth, no per-call audit". The advisory IS the signal; volume of supply-chain's per-Bash audit log is the cautionary tale (`.claude/rules/supply-chain.md` § Gotchas). If forensic queries on lint-advisory frequency become a real need, add in a follow-up spec.
 - **`bunx biome check` / `pnpm exec biome check` / `npx biome check` semantics.** All three runners invoke the local `node_modules/.bin/biome`. `npx` and `pnpm exec` will fall back to a global install if the local is missing — but the filesystem check above gates on local presence, so that fallback shouldn't fire. `bunx` checks local-first too. If a fork moves binaries via custom `.bin/` paths, this may break; document in fork's CLAUDE.md.
 - **`CLAUDE_VALIDATOR_SKIP_LINT` is the only opt-out.** No `CLAUDE_LINT_ADVISORY_OFF=1` (advisory is the whole point); no `CLAUDE_LINT_BLOCK_ON_MISSING=1` (advisory-not-block is by design). One env var, one knob.
 - **Agent0 base ships zero linter config.** `git ls-files | grep -E '(biome\.json|ruff\.toml)'` returns empty. Forks own their config. The detection is intent-via-manifest; rule customization is the fork's responsibility.
@@ -84,5 +83,5 @@ The validator's existing stack-detect is monolithic — first `if/elif` match wi
   { "files": { "ignore": [".claude/**", "node_modules/**", "dist/**", "build/**", "coverage/**"] } }
   ```
   Symmetric advice for ruff is usually unnecessary — `.claude/` rarely contains `.py` files in any current fork; ruff's `extend-exclude` defaults already cover `.venv/`, `__pycache__/`, etc. Caught in 2026-05-12 shrnk dogfood.
-- **Biome's defaults are opinionated.** Biome 1.x uses tabs and its own style ruleset by default. A fork adopting biome with zero config commits to biome's worldview wholesale — the first `biome check --write` may reformat many files. To preserve existing conventions, ship a `biome.json` with explicit `formatter.indentStyle` / `indentWidth` and any rule overrides. Not a spec 013 concern, but worth knowing before the first `bun install && bunx biome check --write`.
-- **State-a transition needs a supply-chain OVERRIDE marker.** The advisory message ends with `run \`bun install\`` (or equivalent). Acting on that advisory hits spec 009's supply-chain block on dep-mutating commands. The operator (or agent) must add a multi-line `# OVERRIDE: <reason ≥10 chars>` on its own line — the supply-chain start-of-line anchor rejects inline trailing markers. Documented behavior; no spec 013 fix needed.
+- **Biome's defaults are opinionated.** Biome 1.x uses tabs and its own style ruleset by default. A fork adopting biome with zero config commits to biome's worldview wholesale — the first `biome check --write` may reformat many files. To preserve existing conventions, ship a `biome.json` with explicit `formatter.indentStyle` / `indentWidth` and any rule overrides. Not a concern here, but worth knowing before the first `bun install && bunx biome check --write`.
+- **State-a transition needs a supply-chain OVERRIDE marker.** The advisory message ends with `run \`bun install\`` (or equivalent). Acting on that advisory hits the supply-chain block on dep-mutating commands. The operator (or agent) must add a multi-line `# OVERRIDE: <reason ≥10 chars>` on its own line — the supply-chain start-of-line anchor rejects inline trailing markers. Documented behavior; no fix needed here.

@@ -4,14 +4,11 @@ paths:
   - ".mcp.json.example"
   - ".claude/hooks/mcp-recipes-hint.sh"
   - ".claude/.browser-state/**"
-  - "docs/specs/012-*/**"
-  - "docs/specs/015-*/**"
-  - "docs/specs/021-*/**"
 ---
 
 # MCP recipes
 
-A curated, opt-in set of `.mcp.json` server blocks for four mature external MCPs that complement spec 011's runtime-introspect. The recipes are documentation + a copy-paste example file at repo root; a `SessionStart` companion hook detects the fork's stack and emits a one-block hint naming the applicable recipes when matches exist. Pure recommendation capacity — no auto-installs, no audit log, no blocks. Spec: `docs/specs/012-mcp-recipes/`.
+A curated, opt-in set of `.mcp.json` server blocks for four mature external MCPs that complement the runtime-introspect capacity. The recipes are documentation + a copy-paste example file at repo root; a `SessionStart` companion hook detects the fork's stack and emits a one-block hint naming the applicable recipes when matches exist. Pure recommendation capacity — no auto-installs, no audit log, no blocks.
 
 ## How it works
 
@@ -34,9 +31,9 @@ The hint hook fires when any signal matches. Multiple signals can fire; the sugg
 | DB | Any of `schema.prisma`, `drizzle.config.{js,ts,mjs}`, `alembic.ini`, `database/migrations/`, `db/migrate/` exists, OR `.env.example` has a `^DATABASE_URL=` line | `dbhub` |
 | Laravel | `artisan` executable file at root (canonical), OR `composer.json` declares `laravel/framework` in `require` / `require-dev` | `laravel-boost-mcp` + `playwright-mcp` |
 
-The list is deliberately small. Same lesson as spec 011's detector allowlist and spec 008's supply-chain manager table: ship a strict shape, extend on real-world signal.
+The list is deliberately small. Same lesson as the runtime-introspect detector allowlist and the supply-chain manager table: ship a strict shape, extend on real-world signal.
 
-### Walk scope (spec 015)
+### Walk scope
 
 Detection runs at `$CLAUDE_PROJECT_DIR` root AND one level deep into common monorepo workspace dirs. Default set: `apps packages services workspaces` (covers pnpm workspaces, Turborepo, Nx apps, Yarn workspaces — the dominant JS/TS monorepo conventions). For each workspace dir that exists, the hook walks its direct children (depth-1) and runs the same signal table at each. Workspace-detected signals carry a path prefix (e.g. `apps/web/next.config.js`) so the agent can see which workspace fired; root-detected signals stay bare (e.g. `next.config.js`). Recipe set is the deduplicated union across all walked paths.
 
@@ -46,7 +43,7 @@ Override via `CLAUDE_MCP_RECIPES_WORKSPACE_DIRS` (space-separated, **replaces** 
 | --- | --- |
 | Unset | Default set: `apps packages services workspaces` |
 | `"modules subprojects"` | Walks `modules/*` and `subprojects/*` only; default set NOT scanned |
-| `""` (set, empty) | Walk disabled entirely; root-only detection (equivalent to spec 012's pre-015 behaviour) |
+| `""` (set, empty) | Walk disabled entirely; root-only detection |
 
 The walk is strictly depth-1: `apps/web/next.config.js` fires; `apps/web/nested/deep/next.config.js` does NOT (forks with deeper nesting point the env var directly at the workspace root). Cargo `crates/` is omitted from the default set in v1; revisit if a real-world Cargo monorepo with JS/Python sub-projects surfaces.
 
@@ -250,7 +247,7 @@ Many sites require a logged-in session to return meaningful content. `WebFetch` 
 
 ### Prerequisites — activating Playwright MCP
 
-The Playwright MCP recipe (spec 012) ships as `.mcp.json.example` — opt-in by design. Forks that have never enabled it will see the agent emit `BROWSER_AUTH_REQUIRED: <host>` correctly, but the suggested next step ("open Playwright MCP in headed mode") cannot run until the MCP is wired up. One-time setup per fork:
+The Playwright MCP recipe ships as `.mcp.json.example` — opt-in by design. Forks that have never enabled it will see the agent emit `BROWSER_AUTH_REQUIRED: <host>` correctly, but the suggested next step ("open Playwright MCP in headed mode") cannot run until the MCP is wired up. One-time setup per fork:
 
 ```bash
 cp .mcp.json.example .mcp.json
@@ -396,7 +393,7 @@ Chrome DevTools MCP is the right choice when you need **observation**, not **dri
 
 - **`.mcp.json.example` is JSON-with-comments.** Strict JSON parsers reject `//` line comments. The `.example` suffix is the universal "this is a template, do not parse directly" signal. The header comment in the file explicitly says: copy, rename, remove `//` markers before activation. Do NOT just `mv .mcp.json.example .mcp.json` — the result wouldn't parse.
 - **Package-name drift.** MCP packages are early-stage (most v0.x). A package can rename or restructure across minor releases. Each recipe section links to the upstream's source-of-truth README; if your `.mcp.json` block stops working after `@latest` resolves to a newer version, **check the upstream README first**, then update the recipe block. v1 of this spec uses `@latest` throughout; forks that hit churn pain can pin manually (e.g. `@playwright/mcp@0.0.30`) — Agent0 does not maintain a version manifest.
-- **Monorepo walk is depth-1 only (spec 015).** The stack detector scans `CLAUDE_PROJECT_DIR` at the top level AND walks depth-1 into the workspace dirs listed in § Walk scope (default `apps packages services workspaces`). A file at depth-2+ — e.g. `apps/web/nested/deep/next.config.js` — does NOT trigger the hint. Workarounds for deeply nested setups: (a) symlink the relevant config up to a depth-1 child, (b) point `CLAUDE_PROJECT_DIR` at the workspace you're actively working in, (c) `CLAUDE_MCP_RECIPES_WORKSPACE_DIRS="<deeper-roots>"` if the deep parent is a stable convention. The depth cap is intentional — arbitrary tree walks scale poorly on large repos.
+- **Monorepo walk is depth-1 only.** The stack detector scans `CLAUDE_PROJECT_DIR` at the top level AND walks depth-1 into the workspace dirs listed in § Walk scope (default `apps packages services workspaces`). A file at depth-2+ — e.g. `apps/web/nested/deep/next.config.js` — does NOT trigger the hint. Workarounds for deeply nested setups: (a) symlink the relevant config up to a depth-1 child, (b) point `CLAUDE_PROJECT_DIR` at the workspace you're actively working in, (c) `CLAUDE_MCP_RECIPES_WORKSPACE_DIRS="<deeper-roots>"` if the deep parent is a stable convention. The depth cap is intentional — arbitrary tree walks scale poorly on large repos.
 - **Workspace-walk default set is JS/TS-flavored.** Default `apps packages services workspaces` covers pnpm/Turborepo/Nx/Yarn conventions but not Cargo (`crates/`), Python `src/<pkg>/` layouts, or Bazel `//...` paths. Forks with non-JS monorepos point `CLAUDE_MCP_RECIPES_WORKSPACE_DIRS` at their convention. Revisit the default set when/if a Cargo monorepo with embedded JS/Python sub-projects surfaces — until then, scope creep deferred.
 - **Bring-your-own-bundler blind spot.** A fork using esbuild / rollup / parcel / swc without React / Vue / Svelte / Vite / Astro deps in `package.json` won't trigger the "browser-stack non-Next" branch. Acceptable — the recipe doc is one click away. The hint is a convenience, not a contract.
 - **Chrome DevTools MCP needs Chrome installed.** Headless CI runners and minimal Linux containers usually lack it. The hint blindly suggests the recipe based on stack; if your environment can't run Chrome, ignore the suggestion and stick with Playwright (which manages its own binaries).

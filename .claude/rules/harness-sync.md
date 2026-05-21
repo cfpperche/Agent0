@@ -1,12 +1,11 @@
 ---
 paths:
   - ".claude/tools/sync-harness.sh"
-  - "docs/specs/016-*/**"
 ---
 
 # Harness sync
 
-A one-way sync tool (`.claude/tools/sync-harness.sh <fork-path>`) that brings a fork's harness state up to date with this Agent0 repo. Hooks, rules, tools, validators, skills, tests, `.mcp.json.example` plus structured merges of `.claude/settings.json` and `CLAUDE.md`. Conservative by design: `--check` is the default (read-only); the plain-file path does 3-way reconciliation against a recorded baseline (spec 068) so *stale* files (fork untouched, Agent0 moved) auto-update while genuinely *customized* files are refused without `--force`; product code (`src/`, fork's `tests/`, package manifests, `.mcp.json`) is never touched. Specs: `docs/specs/016-harness-sync/` (origin), `docs/specs/068-harness-sync-baseline-reconciliation/` (3-way baseline + deletion propagation).
+A one-way sync tool (`.claude/tools/sync-harness.sh <fork-path>`) that brings a fork's harness state up to date with this Agent0 repo. Hooks, rules, tools, validators, skills, tests, `.mcp.json.example` plus structured merges of `.claude/settings.json` and `CLAUDE.md`. Conservative by design: `--check` is the default (read-only); the plain-file path does 3-way reconciliation against a recorded baseline so *stale* files (fork untouched, Agent0 moved) auto-update while genuinely *customized* files are refused without `--force`; product code (`src/`, fork's `tests/`, package manifests, `.mcp.json`) is never touched.
 
 ## What fires
 
@@ -47,7 +46,7 @@ The tool refuses to guess the source path — there is no auto-detection. Refusa
 
 ## Customization detection — 3-way reconciliation
 
-For plain files (the `COPY_CHECK_*` manifest — hooks, rules, tools, validators, skills, tests, agents, `.mcp.json.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.gitkeep` sentinels), the sync reconciles **three** reference points: the fork's copy, the recorded **baseline** (Agent0's version of the file as of the fork's last `--apply` — see § Sync baseline), and Agent0's current version. Three points let the tool tell a file the fork *deliberately edited* apart from one it simply *hasn't caught up on* — the gap the original 2-state `sha256` compare could not close (spec 068).
+For plain files (the `COPY_CHECK_*` manifest — hooks, rules, tools, validators, skills, tests, agents, `.mcp.json.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.gitkeep` sentinels), the sync reconciles **three** reference points: the fork's copy, the recorded **baseline** (Agent0's version of the file as of the fork's last `--apply` — see § Sync baseline), and Agent0's current version. Three points let the tool tell a file the fork *deliberately edited* apart from one it simply *hasn't caught up on* — the gap the original 2-state `sha256` compare could not close.
 
 For each plain file:
 
@@ -61,11 +60,11 @@ For each plain file:
 | present, `!= fork sha` | fork edited the file | **customized** | `!! customized` → refuse (`--apply`) / drift (`--check`); `--force` overwrites |
 | absent (no entry) | first sync, or file added to the manifest after the fork's last sync — the genuine pre-baseline ambiguity | **customized (no baseline)** | `!! customized <path> (no baseline)` → refuse; `--force` overwrites |
 
-The `stale` verdict is the spec-068 fix: a fork that fell behind several specs no longer sees *every* upstream change as `!! customized`. Stale files auto-update on a plain `--apply` — the catch-up path that was missing. The summary line gains `N stale-updated, N removed` counters; exit codes are unchanged (`--check`: stale/removed count as drift → exit 1; `--apply`: only genuine refusals flip the exit code — stale updates and removals are successful actions).
+The `stale` verdict is the 3-way-reconciliation fix: a fork that fell behind several upstream releases no longer sees *every* upstream change as `!! customized`. Stale files auto-update on a plain `--apply` — the catch-up path that was missing. The summary line gains `N stale-updated, N removed` counters; exit codes are unchanged (`--check`: stale/removed count as drift → exit 1; `--apply`: only genuine refusals flip the exit code — stale updates and removals are successful actions).
 
 Whitespace-only diffs are still customization. A fork that ran `shfmt`/`prettier` over a hook has `fork sha != baseline sha` → `customized`. 3-way does not normalize whitespace (that would mask real customizations). Fix: revert the formatter, or `--force` after reviewing the diff.
 
-**Upstream deletions.** A file recorded in the baseline that is no longer in Agent0's manifest is an *orphan*. The deletion pass removes it when the fork copy still matches the baseline (`- removed <path>`, with now-empty parent dirs pruned bottom-up), and refuses it when the fork customized it (`!! customized <path> (upstream-removed)` — fork work is never silently destroyed; `--force` overrides into a delete). Canonical case: `templates/monorepo-skeleton/` after the `app-skeleton` rename. This mirrors, for the file tree, the symmetric ADD/REMOVE propagation spec 058 gave `CLAUDE.md`.
+**Upstream deletions.** A file recorded in the baseline that is no longer in Agent0's manifest is an *orphan*. The deletion pass removes it when the fork copy still matches the baseline (`- removed <path>`, with now-empty parent dirs pruned bottom-up), and refuses it when the fork customized it (`!! customized <path> (upstream-removed)` — fork work is never silently destroyed; `--force` overrides into a delete). Canonical case: `templates/monorepo-skeleton/` after the `app-skeleton` rename. This mirrors, for the file tree, the symmetric ADD/REMOVE propagation the managed-block merge gave `CLAUDE.md`.
 
 ## Sync baseline
 
@@ -85,7 +84,7 @@ Whitespace-only diffs are still customization. A fork that ran `shfmt`/`prettier
 - **Written on every `--apply`** (not `--check`, not `--dry-run`), after all passes, atomically (`mktemp` + `mv`). Skipped when the resulting files-map is byte-identical to the existing baseline's — a no-op re-sync must leave the file untouched (idempotency), so `synced_at` is not churned.
 - **Never shipped by Agent0.** It is a fork-side runtime artifact; not in any `COPY_CHECK_*` array, so the sync walk never visits it and it never appears as drift in another fork.
 
-**First sync (bootstrap).** A fork that has never run a post-068 `--apply` has no baseline. On that first run, files that *match* Agent0 trivially seed their baseline entry; files that *differ* are the genuine pre-baseline ambiguity (stale vs customized is unknowable with no recorded history) and are refused as `!! customized (no baseline)`. The operator does a **one-time** reconciliation — review the diffs, then `--apply --force` (adopt Agent0 wholesale) or `--apply --force --force-except='<globs of real customizations>'`. After that first run the baseline is fully seeded and every subsequent sync is clean 3-way. The friction is unavoidable (there is no history to consult) but is paid exactly once per fork.
+**First sync (bootstrap).** A fork that has never run an `--apply` under the baseline mechanism has no baseline. On that first run, files that *match* Agent0 trivially seed their baseline entry; files that *differ* are the genuine pre-baseline ambiguity (stale vs customized is unknowable with no recorded history) and are refused as `!! customized (no baseline)`. The operator does a **one-time** reconciliation — review the diffs, then `--apply --force` (adopt Agent0 wholesale) or `--apply --force --force-except='<globs of real customizations>'`. After that first run the baseline is fully seeded and every subsequent sync is clean 3-way. The friction is unavoidable (there is no history to consult) but is paid exactly once per fork.
 
 ## settings.json merge strategy
 
@@ -99,7 +98,7 @@ Whitespace-only diffs are still customization. A fork that ran `shfmt`/`prettier
    - `unique_by(.matcher + "|" + (.hooks[].command | join("##")))` — dedup tuple is `(matcher, ordered list of inner commands)`.
 5. Write the merged JSON atomically (`mktemp + mv`).
 
-Result: fork-only hook entries (e.g. a fork-specific custom hook) are preserved; Agent0 entries already in fork are not duplicated; new Agent0 entries are appended. Order within an event array is "fork's entries first, Agent0's appended" after dedup — non-binding since hooks run independently. `statusLine` propagates from Agent0 to fork on every sync, so the harness's canonical statusline-script registration always lands — paired with the file copy under `COPY_CHECK_GLOBS` for `.claude/presence|*.mjs`, the statusline works end-to-end after `--apply`. `permissions` is intentionally NOT in the override set (per-fork allow/deny lists differ; spec 016 v1 leaves permissions reconciliation to the fork developer post-sync).
+Result: fork-only hook entries (e.g. a fork-specific custom hook) are preserved; Agent0 entries already in fork are not duplicated; new Agent0 entries are appended. Order within an event array is "fork's entries first, Agent0's appended" after dedup — non-binding since hooks run independently. `statusLine` propagates from Agent0 to fork on every sync, so the harness's canonical statusline-script registration always lands — paired with the file copy under `COPY_CHECK_GLOBS` for `.claude/presence|*.mjs`, the statusline works end-to-end after `--apply`. `permissions` is intentionally NOT in the override set (per-fork allow/deny lists differ; permissions reconciliation is left to the fork developer post-sync).
 
 **Limitations:**
 - When Agent0 renames a hook (e.g. `supply-chain-scan.sh` → `supply-chain-block.sh`), the dedup key changes, so the old entry stays alongside the new one in the fork. The fork's `git diff` post-sync surfaces both; the developer prunes manually. Auto-prune deferred to v2 pending real evidence of this hurting.
@@ -122,7 +121,7 @@ Result: a Laravel fork's `.gitignore` keeps `/vendor`, `/node_modules`, `.env`, 
 
 ## CLAUDE.md managed-block merge strategy
 
-Primary strategy (spec 058). The fork's `CLAUDE.md` declares an explicit Agent0-owned region via paired HTML comment markers:
+Primary strategy. The fork's `CLAUDE.md` declares an explicit Agent0-owned region via paired HTML comment markers:
 
 ```markdown
 # Fork title
@@ -153,11 +152,11 @@ Markers MUST be on their own lines and match exactly: `<!-- AGENT0:BEGIN -->` an
 | `mismatched` | one of BEGIN/END present, not both | Refuse the file's merge with `!! claude-md: markers mismatched`; increments `customized-refused`. |
 | `nested-invalid` | more than one BEGIN or END, or END before BEGIN | Refuse with `!! claude-md: nested or out-of-order markers`; increments `customized-refused`. |
 
-**Region replacement semantics** — on `paired` state, the lines between markers are extracted from Agent0 source and substitute the fork's region wholesale. Project-narrative sections above BEGIN (and any trailing content after END) are preserved verbatim. The marker lines themselves are preserved exactly. This propagates Agent0 ADDs AND REMOVALs symmetrically — a section dropped upstream is gone on the next sync, fixing the legacy heading-set merge's append-only orphan bug (canonical case: `## Prototype skill` orphaning in forks after spec 048 renamed it to `## Product skill`).
+**Region replacement semantics** — on `paired` state, the lines between markers are extracted from Agent0 source and substitute the fork's region wholesale. Project-narrative sections above BEGIN (and any trailing content after END) are preserved verbatim. The marker lines themselves are preserved exactly. This propagates Agent0 ADDs AND REMOVALs symmetrically — a section dropped upstream is gone on the next sync, fixing the legacy heading-set merge's append-only orphan bug (canonical case: `## Prototype skill` orphaning in forks after it was renamed to `## Product skill`).
 
 **Body divergence guard** — before replacement, the merge inspects each section title in both fork's region and Agent0's region (intersection); if the body of any shared title differs, divergence is detected. Without `--force`, the merge writes `.claude/CLAUDE.md.diverged-region.md` (per-section list + unified diff), refuses with `customized-refused` increment, and exits non-zero in apply mode. With `--force`, the region is overwritten wholesale and `OVERWRITTEN` increments. Heading-only diffs (fork has sections Agent0 doesn't, or vice versa) are NOT divergence — they are the intended target of the wholesale replace, including orphan removal.
 
-**Migration candidate flow** — when the fork has no markers (state `absent`), spec 058's primary mechanism is to propose the wrapped layout via `.claude/CLAUDE.md.migration-candidate.md`. The candidate file has:
+**Migration candidate flow** — when the fork has no markers (state `absent`), the primary mechanism is to propose the wrapped layout via `.claude/CLAUDE.md.migration-candidate.md`. The candidate file has:
 
 1. A leading HTML comment block explaining itself + Agent0 source SHA at generation time
 2. Fork preamble (lines before first `## ` heading)
@@ -166,11 +165,11 @@ Markers MUST be on their own lines and match exactly: `<!-- AGENT0:BEGIN -->` an
 5. Agent0's region content, sourced verbatim from Agent0 source
 6. `<!-- AGENT0:END -->` marker
 
-The operator reviews the candidate; if it matches intent, they ratify with `mv .claude/CLAUDE.md.migration-candidate.md CLAUDE.md`. Subsequent syncs route via the `paired` state and apply managed-block semantics. There is no `--migrate-claude-md` flag — the operator's `mv` IS the ratification step (deliberate, per spec 058 Open-Q resolution).
+The operator reviews the candidate; if it matches intent, they ratify with `mv .claude/CLAUDE.md.migration-candidate.md CLAUDE.md`. Subsequent syncs route via the `paired` state and apply managed-block semantics. There is no `--migrate-claude-md` flag — the operator's `mv` IS the ratification step (deliberate design decision).
 
 **Per-section divergence blocks migration** — candidate generation runs `_check_section_divergence` against Agent0's region first; if the fork rewrote the body of any Agent0-region-titled section, the candidate is NOT written. Instead `.claude/CLAUDE.md.diverged-sections.md` is written listing the diverged titles. Legacy fallback merge still runs (zero disruption — fork keeps its custom body, gets new capacity sections appended). The operator either renames the heading (removing it from the Agent0-managed namespace) or accepts Agent0's body, then re-runs sync.
 
-**Source must be wrapped for candidate generation** — `_generate_migration_candidate` no-ops when Agent0 source itself has no markers. Markers define the "Agent0-managed namespace"; without them, every `## ` in Agent0 source would be treated as Agent0-owned, falsely flagging fork's `## Overview` body customization as divergence. Agent0's own `CLAUDE.md` ships wrapped from spec 058 onward.
+**Source must be wrapped for candidate generation** — `_generate_migration_candidate` no-ops when Agent0 source itself has no markers. Markers define the "Agent0-managed namespace"; without them, every `## ` in Agent0 source would be treated as Agent0-owned, falsely flagging fork's `## Overview` body customization as divergence. Agent0's own `CLAUDE.md` ships wrapped.
 
 **Mode interaction** — `--check` and `--apply --dry-run` both detect drift but write no files; the dispatcher emits the same advisory shape on stderr ("would write candidate" / "would diverge"). Only `--apply` (no dry-run) writes the candidate or diverged-* reports.
 
@@ -178,7 +177,7 @@ The operator reviews the candidate; if it matches intent, they ratify with `mv .
 
 ## CLAUDE.md heading-set merge strategy (legacy fallback)
 
-Spec 016's original strategy. Active only when the fork's `CLAUDE.md` lacks paired markers (state `absent` in the dispatcher). Heading-set comparison, **not** full-file hash. Fork-authored sections (Overview, Stack, Conventions, Gotchas, etc.) intentionally diverge from Agent0; a full-hash compare would always flag CLAUDE.md as customized and break the workflow. Algorithm:
+The legacy fallback strategy. Active only when the fork's `CLAUDE.md` lacks paired markers (state `absent` in the dispatcher). Heading-set comparison, **not** full-file hash. Fork-authored sections (Overview, Stack, Conventions, Gotchas, etc.) intentionally diverge from Agent0; a full-hash compare would always flag CLAUDE.md as customized and break the workflow. Algorithm:
 
 1. Extract `^## <Title>` lines from Agent0's and fork's CLAUDE.md.
 2. Compute the set of headings in Agent0 missing from fork.
@@ -186,7 +185,7 @@ Spec 016's original strategy. Active only when the fork's `CLAUDE.md` lacks pair
 4. Else: locate the line containing `## Compact Instructions` in fork's CLAUDE.md (the canonical "always last" anchor). Insert the missing sections (full body extracted from Agent0 via awk) immediately before that line.
 5. If `## Compact Instructions` is absent in fork: emit `!! claude-md: missing "## Compact Instructions" anchor — appending at EOF` warning, append at EOF. Developer reorganizes manually if EOF placement is wrong.
 
-Fork-authored sections are always preserved verbatim — the sync only writes Agent0-sourced sections that fork is missing. Append-only is the structural limitation that spec 058's managed-block merge supersedes: a section REMOVED from Agent0 stays as an orphan in fork CLAUDE.md until that fork migrates to the wrapped layout.
+Fork-authored sections are always preserved verbatim — the sync only writes Agent0-sourced sections that fork is missing. Append-only is the structural limitation that the managed-block merge supersedes: a section REMOVED from Agent0 stays as an orphan in fork CLAUDE.md until that fork migrates to the wrapped layout.
 
 ## Manifest scope
 
@@ -199,7 +198,7 @@ Encoded in three arrays at the top of `sync-harness.sh`:
 
 The walk only reads from Agent0 manifest paths. Out-of-scope fork content (`src/`, fork's `tests/` outside `.claude/tests/`, `docs/`, `package.json`, `Cargo.toml`, `pyproject.toml`, `.mcp.json`, `.env*`, `target/`, `node_modules/`, `.venv/`, `dist/`, `build/`) is **implicitly invisible** — no denylist guard fires because nothing in the manifest points at those paths. This means adding a new path to the manifest is the only way to extend scope; the safety floor is the manifest itself.
 
-**Deletion propagation (spec 068).** The walk also accumulates Agent0's *current* manifest into a sha-set; the deletion pass compares that set against the recorded baseline's file list. A path present in the baseline but absent from the current set is an upstream removal, propagated per § Customization detection § *Upstream deletions*. Out-of-scope fork content stays invisible to this pass too — it only ever considers paths that were *previously* in the manifest (and therefore recorded in the baseline), never arbitrary fork files. A fork with no baseline skips the deletion pass entirely.
+**Deletion propagation.** The walk also accumulates Agent0's *current* manifest into a sha-set; the deletion pass compares that set against the recorded baseline's file list. A path present in the baseline but absent from the current set is an upstream removal, propagated per § Customization detection § *Upstream deletions*. Out-of-scope fork content stays invisible to this pass too — it only ever considers paths that were *previously* in the manifest (and therefore recorded in the baseline), never arbitrary fork files. A fork with no baseline skips the deletion pass entirely.
 
 ## Escape hatches
 
@@ -214,19 +213,19 @@ There is no `CLAUDE_SKIP_HARNESS_SYNC` env var — the tool is developer-invoked
 
 The recorded baseline (`<fork>/.claude/harness-sync-baseline.json`) is the sync audit record. It is git-tracked in the fork, so `git log -- .claude/harness-sync-baseline.json` shows every sync the fork ever applied, each commit's diff shows which managed files changed sha, and `agent0_commit` names the Agent0 revision synced against (when the source was a git repo). Combined with the post-sync `git diff` of the rest of the tree, this is the full audit trail — no separate log, no auto-commit. The fork developer reviews the diff and commits manually. Same posture as every other harness primitive that mutates fork state.
 
-Spec 016 originally deferred a `.claude/harness-sync.jsonl` audit log to "a v2 spec"; spec 068's baseline file subsumes that need — it is both the reconciliation input and the audit record, so a separate log is not built.
+The sync baseline file subsumes the need for a separate audit log — it is both the reconciliation input and the audit record, so a separate log is not built.
 
 ## Gotchas
 
 - **`## Compact Instructions` anchor missing.** The CLAUDE.md merge looks for this line as the insertion point. A fork that has removed or renamed it will trigger the EOF-fallback warning; capacity sections land at EOF, which may not be the right place. Fix: restore the anchor in fork's CLAUDE.md, or reorganize after sync.
 - **Whitespace-only customization false-positive.** A fork that ran `shfmt` / `prettier` over a hook script will have hash-mismatch despite semantic equivalence. The sync flags it as customized. Fix: revert the formatter, OR use `--force` consciously after reviewing the diff. The tool does NOT normalize whitespace (would mask real customizations).
 - **`settings.json` array growth on hook renames.** When Agent0 renames a hook, both old and new entries land in the fork's settings.json (different dedup keys). The fork developer must prune manually post-sync. The `git diff` makes this visible; auto-prune deferred to v2.
-- **Fork-only files survive the deletion pass.** The deletion pass (spec 068) only removes paths recorded in the baseline — files Agent0 once shipped and has since dropped. A fork-authored file that was never in Agent0's manifest (e.g. `.claude/tests/<capacity>/99-fork-extra.sh`) has no baseline entry, so the deletion pass never considers it. Fork-only additions survive every sync.
+- **Fork-only files survive the deletion pass.** The deletion pass only removes paths recorded in the baseline — files Agent0 once shipped and has since dropped. A fork-authored file that was never in Agent0's manifest (e.g. `.claude/tests/<capacity>/99-fork-extra.sh`) has no baseline entry, so the deletion pass never considers it. Fork-only additions survive every sync.
 - **`core.hooksPath` activation is NOT automatic.** Sync writes `.githooks/pre-commit` but does NOT run `git config core.hooksPath .githooks` in the fork. Same Lazarus-vector reasoning as in `.claude/rules/secrets-scan.md` § Gotchas — the fork developer activates consciously, post-sync.
 - **Concurrent `--apply` from two terminals.** No locking. Second writer overwrites first's output. Unlikely in practice; the operation is a deliberate developer action, not a hot loop.
 - **Bash 3.2 / macOS portability.** The script uses `mapfile`-free patterns (`while IFS= read -r ... done < <(...)` instead of `mapfile`) and avoids `declare -A`. Same baseline every other hook in this repo follows.
-- **First sync on a long-stale fork produces a large diff.** A fork that skipped specs 008-012 will see ~30+ new files in one apply. Review the diff section-by-section, not as one giant blob: hooks first, rules second, tools third, then settings.json + CLAUDE.md. Commit in one go (`chore(harness-sync): adopt Agent0 specs NNN-MMM`) so the audit trail is clean.
-- **One-time first-sync reconciliation for pre-068 forks.** A fork with no `harness-sync-baseline.json` cannot tell stale from customized on its first post-068 `--apply` — every differing file is refused as `!! customized (no baseline)`. Resolve once with `--force` / `--force-except`; the baseline is then seeded and every subsequent sync is clean 3-way. See § Sync baseline § *First sync*.
+- **First sync on a long-stale fork produces a large diff.** A fork that skipped several upstream releases will see ~30+ new files in one apply. Review the diff section-by-section, not as one giant blob: hooks first, rules second, tools third, then settings.json + CLAUDE.md. Commit in one go (`chore(harness-sync): adopt Agent0 specs NNN-MMM`) so the audit trail is clean.
+- **One-time first-sync reconciliation for forks with no baseline.** A fork with no `harness-sync-baseline.json` cannot tell stale from customized on its first `--apply` — every differing file is refused as `!! customized (no baseline)`. Resolve once with `--force` / `--force-except`; the baseline is then seeded and every subsequent sync is clean 3-way. See § Sync baseline § *First sync*.
 - **Baseline lookup is Bash-3.2-safe.** No `declare -A` (repo-wide constraint). `load_baseline` dumps the baseline's `.files` map to a sorted `relpath<TAB>sha` temp file via one `jq` call; per-file lookup is an `awk` exact-match scan against that file — no per-file `jq` fork (a 500-file fork would be slow). The deletion pass likewise reads the manifest/baseline as sorted temp files.
 - **Hand-editing `harness-sync-baseline.json` is a footgun.** A wrong sha just mislabels one file stale-vs-customized — recoverable on the next sync, lower-severity than copier's `.copier-answers.yml` warning, but the file is still tool-owned: let `--apply` maintain it.
 - **A malformed baseline fails open.** If the JSON is unreadable, the sync logs `!! harness-sync-baseline.json unreadable/malformed — treating as no baseline` and proceeds 2-state for that run, then rewrites a clean baseline on `--apply`. A broken baseline never blocks a sync.

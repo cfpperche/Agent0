@@ -1,6 +1,6 @@
 # Test-driven development
 
-Production code lands with a test that exercises it. The discipline is cultural, not enforced by a blocking gate — the validator notices when prod files moved without test files in the same diff and emits a non-blocking advisory. The agent (or human) reading the advisory decides whether the change was genuinely test-exempt or whether the test was forgotten. Spec: `docs/specs/005-tdd/`.
+Production code lands with a test that exercises it. The discipline is cultural, not enforced by a blocking gate — the validator notices when prod files moved without test files in the same diff and emits a non-blocking advisory. The agent (or human) reading the advisory decides whether the change was genuinely test-exempt or whether the test was forgotten.
 
 ## Red → Green → Refactor
 
@@ -47,13 +47,13 @@ The advisory message names the prod files that triggered it (the `files` field o
 
 ## When to override
 
-Same shape as the governance and delegation gates (see `.claude/hooks/governance-gate.sh` and `docs/specs/001-governance-gate/`): a line `# OVERRIDE: <reason ≥10 chars>` in the brief or commit context. By convention for TDD-exempt work, the reason text starts with `tdd-exempt:` so reviewers can grep the audit log for deliberate skips — for example `# OVERRIDE: tdd-exempt: rename only, no behavior change`. The prefix is a soft, human-readable convention; no script parses it.
+Same shape as the governance and delegation gates (see `.claude/hooks/governance-gate.sh`): a line `# OVERRIDE: <reason ≥10 chars>` in the brief or commit context. By convention for TDD-exempt work, the reason text starts with `tdd-exempt:` so reviewers can grep the audit log for deliberate skips — for example `# OVERRIDE: tdd-exempt: rename only, no behavior change`. The prefix is a soft, human-readable convention; no script parses it.
 
 The validator may still emit the advisory because the heuristic is purely diff-shape — it does not read commit messages or briefs. That is fine. The override marker plus the recorded reason in the delegation audit log (`override` field on the dispatch entry, see `.claude/rules/delegation.md` § *Audit log*) is the documentation that the warning was deliberate. Reviewers correlate the two when auditing — match a `tdd-advisory:` in session output against the `tdd-exempt:` reason in the audit row, confirm the decision was made consciously, move on.
 
 ## Gotchas
 
-- **`git diff --name-only` lumps parent and sub-agent edits together.** The validator sees one diff per session, not per actor. A sub-agent that edits prod while the parent edits the corresponding tests in the same diff produces no warning (correct outcome — coverage exists). The inverse — sub-agent edits prod while the parent edits docs or unrelated tests — also produces no warning (false negative — the sub-agent should have written its own test). The first iteration accepts this imprecision; per-agent edit tracking was considered and deferred (see `docs/specs/005-tdd/plan.md` § *Alternatives considered*). Revisit if real usage shows the false negative happening often enough to matter.
+- **`git diff --name-only` lumps parent and sub-agent edits together.** The validator sees one diff per session, not per actor. A sub-agent that edits prod while the parent edits the corresponding tests in the same diff produces no warning (correct outcome — coverage exists). The inverse — sub-agent edits prod while the parent edits docs or unrelated tests — also produces no warning (false negative — the sub-agent should have written its own test). The first iteration accepts this imprecision; per-agent edit tracking was considered and deferred. Revisit if real usage shows the false negative happening often enough to matter.
 - **`CLAUDE_TDD_TEST_PATTERNS` overrides the language defaults.** Set to a space-separated list of globs when the project's test naming does not match the built-in table (e.g., `Foo.tests.ts` next to source, or `spec/` instead of `tests/`). When set, the env var fully replaces the per-language defaults — include every pattern the project considers a test file, not just the additions, otherwise the default table is gone and ordinary `*.test.ts` files start being classified as prod.
 - **The validator is inert in this base repo.** No language stack is detected, so no warnings fire. The discipline ships dormant; it activates as soon as a real project plugs in a stack.
 - **No git repo, no warning.** If `git rev-parse --git-dir` fails, the validator skips the diff classification entirely. Acceptable for throwaway scratch dirs; do not rely on it as a way to silence the advisory in real projects.

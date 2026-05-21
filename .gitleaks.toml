@@ -18,10 +18,17 @@ useDefault = true
 # paths/regexes/commits exemptions never apply); do not "modernise" it.
 # See .claude/rules/secrets-scan.md § Allowlist mechanics for grammar.
 #
-# The secrets-scan.md exemption below is required by every fork: that rule doc
-# ships synthetic AKIA/ghp fake credentials that gitleaks flags, so without the
-# exemption a fresh fork's first commit blocks on a false positive. Add more
-# `paths` / `regexes` / `commits` as real exemptions arise.
+# Two path exemptions, both required by every fork:
+#  1. secrets-scan.md ships synthetic AKIA/ghp fake credentials documenting the
+#     discipline itself — a fresh fork's first commit would block without this.
+#  2. harness-sync-baseline.json (spec 068) is a machine-generated manifest of
+#     sha256 content hashes; gitleaks' generic-API-key rule flags 64-hex strings.
+#     The file is git-tracked by design (travels on clone) and re-committed on
+#     every harness sync, so the exemption is permanent, not one-off.
+# Add more `paths` / `regexes` / `commits` as real exemptions arise.
 [allowlist]
-description = "secrets-scan rule doc contains synthetic fake credentials documenting the discipline itself — not real secrets"
-paths = ['''secrets-scan\.md''']
+description = "false-positive exemptions — synthetic fake credentials in docs, machine-generated hash manifests"
+paths = [
+  '''secrets-scan\.md''',
+  '''harness-sync-baseline\.json''',
+]

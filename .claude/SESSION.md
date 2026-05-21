@@ -8,39 +8,27 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Session 2026-05-21 — specs 068–071 shipped + pushed (`e14a0ee`); 072 shipped, committed local (`3d76f9f`, unpushed). Three streams: 068/069 + 070/071 + mei-saas-validation/072.**
+**Session 2026-05-21 — specs 068–072 all shipped + pushed; `main` clean and in sync with `origin`.**
 
-- **068 (`harness-sync-baseline-reconciliation`, `ea56cbe`)** — `sync-harness` plain-file path now does 3-way reconciliation (fork vs recorded baseline vs Agent0): stale auto-updates, customized refuses, upstream-removed orphans delete. Baseline at `<fork>/.claude/harness-sync-baseline.json`.
-- **069 (`product-overwrite-git-safety`, `e45161a`)** — `/product` Phase 0 overwrite no longer `rm -r <out>`; new tested `clear-target.sh` clears only non-harness `<remaining>`, preserving `.git/` + harness (Gap F).
-- **070 (`propagation-hygiene`, `de676b6`)** — de-leaked Agent0-internal spec pointers from fork-bound files (CLAUDE.md, 16 rules, 4 root configs); deleted the `## PHP / Laravel` CLAUDE.md section; capacity↔spec linkage moved to `.claude/memory/capacity-spec-index.md`.
-- **071 (`claude-md-capacity-index`, `b3b6004`)** — compressed CLAUDE.md managed block ~2795→~727 words (−74%); `sync-harness.sh` reconciles the block as a baseline-tracked 3-way unit. harness-sync suite 32/32.
-- **072 (`sync-harness-self-overwrite`, `3d76f9f`)** — `sync-harness.sh` syncs itself, so a stale `--apply` overwrote the running script → bash read-offset crash (hit in the mei-saas validation). Fix: `_self_rebootstrap` re-execs from a temp copy. Suite 33/33.
+- **072 (`sync-harness-self-overwrite`)** — `sync-harness.sh` had a latent self-overwrite crash (it is in its own propagation manifest; an `--apply` overwrote the running script → bash read-offset corruption). Fix: `_self_rebootstrap` pre-flight re-execs from a temp copy. harness-sync suite 33/33.
+- The **mei-saas fork** was caught up to Agent0's full harness (specs 069–072) via `sync-harness.sh`, committed + pushed (`98a899f`). Validation suites passed; the pre-072→072 transitional crash was observed live and self-healed on re-run, exactly as the `harness-sync.md` gotcha documents.
 
 ## WIP (uncommitted)
 
-- `SESSION.md` + `.claude/REMINDERS.md` dirty — uncommitted (REMINDERS.md awaits founder review; SESSION.md: coordinate with the parallel session).
-- **mei-saas fork**: 27 modified + 3 new from the 069/070/071 validation sync, uncommitted there; checkpoint `a2c8ec2` local to mei-saas.
-
-## Recent commits (anchors)
-
-- `3d76f9f` feat(072) · `e14a0ee` chore(session) · `b3b6004` feat(071) · `de676b6` feat(070) · `e45161a` fix(069) · `b170015` fix(068 gitleaks) · `ea56cbe` feat(068).
-- `main` is **1 ahead of `origin/main`** — `3d76f9f` (072) unpushed; 068–071 are at `e14a0ee`. Stale branches `068-*` and `070-propagation-hygiene` deleted this session.
+- None. Agent0 working tree is clean.
 
 ## Next steps
 
-1. **`/product` dogfood** — unblocked (Gap F fixed → safe directly against the mei-saas repo; `clear-target.sh` preserves `.git/` + checkpoint `a2c8ec2`). `--out=/home/goat/mei-saas`, `--stack=next`; needs the mei-saas idea string (or pull it from the fork's `docs/REPORT.md` / `.state.json`).
-2. **070 follow-ups** (deferred — `.claude/memory/propagation-hygiene.md` § Not-yet-cleaned): memory cross-refs in rules/CLAUDE.md; spec citations in hooks/tools/skills code comments. Opportunistic, not spec-worthy yet.
-3. **Pre-071 forks + managed block** — first sync after 071 hits a one-time `--force` (managed-block append-only → 3-way); documented in `harness-sync.md`.
-4. Spec 064 cron natural fire — Mon 2026-05-25 09:00 UTC.
-5. **Push `main`** — `3d76f9f` (072) is committed but unpushed.
+1. **070 follow-up #1 — memory-ref de-leak (→ spec 073, or direct: it is mechanical).** 11 dangling `.claude/memory/<file>.md` pointers across 8 fork-bound files (7 `.claude/rules/*.md` + CLAUDE.md) — `MEMORY.md`, `feedback_speculative_observability.md`, `cc-platform-hooks.md`. A fork gets only `.claude/memory/.gitkeep`, so each path is a dangling pointer — same class as spec 070's spec-citation leak, distinct cause. Recorded in `.claude/memory/propagation-hygiene.md` § Not-yet-cleaned. **This is the designated next Agent0 task.**
+2. **`/product` dogfood of mei-saas** — queued; runs in a mei-saas-rooted session (kickoff prompt prepared 2026-05-21). Live-validates spec 069's Phase 0 overwrite (`clear-target.sh` must preserve `.git/` + harness). mei-saas baseline is clean + pushed; checkpoint `a2c8ec2` is the safety net.
+3. Dated reminders (not yet due): spec 029 adoption 2026-05-30 · spec 035 missed-clarification count 2026-06-07 · spec 046 gate 2026-07-01 · spec 060 §A/§B review 2026-07-19.
 
 ## Decisions & gotchas
 
-- **`sync-harness.sh` + `set -euo pipefail`** — any new bare-statement function called from `main` MUST `return 0` on skip paths; a bare `return <non-zero>` aborts the whole script.
-- **CLAUDE.md merge was never "append-only"** — `_merge_claude_md_managed_block` already wholesale-replaced; 071's real fix was giving it a baseline so it stops refusing on section-body divergence.
+- **`sync-harness.sh` + `set -euo pipefail`** — any new bare-statement function called from the orchestration tail MUST `return 0` on its skip paths; a bare non-zero `return` aborts the whole script.
+- **070 follow-up #2 (spec citations in hook/tool code comments) is deliberately OUT of scope** — code comments are not instruction-context, low harm; 070 deferred them on purpose. Do not bundle into 073.
 
 ## Carryover (orthogonal — not touched this session)
 
-- Spec 046 dogfood gate due 2026-07-01; spec 029 adoption check due 2026-05-30.
 - `.claude/REMINDERS.md` items per startup readout.
-- Stray untracked `bo-*.png` at repo root — not ours.
+- Discussion items parked: SOUL.md per sub-agent (delegation brief); `/product` full-stack expansion (caminhos A/B/C).

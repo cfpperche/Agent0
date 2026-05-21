@@ -43,7 +43,7 @@ The CLAUDE.md sync merge is **append-only**: it adds missing `## ` sections, it 
 Spec 070 cleaned CLAUDE.md, `.claude/rules/*.md`, and the four root config/hook files (`.mcp.json.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.gitignore`). Two adjacent leaks remain:
 
 - **Memory cross-references** — some rule files and CLAUDE.md point at a specific `.claude/memory/<file>.md` (e.g. `feedback_speculative_observability.md`). `.claude/memory/` ships only `.gitkeep`, so a named memory file is dangling in a fork too — same shape as the spec-citation leak, distinct cause. Not in spec 070's scope.
-- **`.claude/hooks/*.sh` / `.claude/tools/*.sh` / `.claude/skills/` comments** — spec citations in those shell-script comments and `SKILL.md` bodies. Lower harm (code comments, not instruction context loaded the way CLAUDE.md and rules are).
+- **Code comments in `.claude/hooks/*.sh` / `.claude/tools/*.sh` / `.claude/skills/`** — `#`-style spec citations in shell-script comments and `SKILL.md` bodies. Lower harm: code comments, not instruction context loaded the way CLAUDE.md and rules are. (The *generated-output* citations in `sync-harness.sh` — `printf` text emitting `(spec 058)` into a fork's migration-candidate banner and diverged-sections report — were a genuine leak, not mere comments, since the generated content lands in fork-loaded context; cleaned 2026-05-21 alongside spec 072. Only inert code comments now remain.)
 
 When a fork-bound file is next touched, clean these in passing if cheap.
 

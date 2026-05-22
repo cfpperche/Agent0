@@ -138,6 +138,21 @@ describe('buildReportHtml — full run', () => {
     expect(sitemap.parts[0].kind).toBe('code');
     expect(sitemap.parts[0].lang).toBe('yaml');
   });
+
+  test('step 15 leads with the hi-fi screens, before screen-atlas.md', async () => {
+    await writeFixture(tmpRoot, FULL_FIXTURE);
+    const payload = extractPayload(buildReportHtml(tmpRoot, template, { now: 'FIXED' }));
+
+    // Visual-before-prose: the hi-fi iframe parts must precede the long
+    // screen-atlas.md so the rendered screens are not buried below ~10k px of
+    // markdown (regression guard — fix 2026-05-22).
+    const visualContract = payload.artifacts.find((a: any) => a.id === '15');
+    const kinds = visualContract.parts.map((p: any) => p.kind);
+    const firstIframe = kinds.indexOf('iframe');
+    const firstMd = kinds.indexOf('md');
+    expect(firstIframe).toBeGreaterThanOrEqual(0);
+    expect(firstIframe).toBeLessThan(firstMd);
+  });
 });
 
 describe('buildReportHtml — partial run at a gate', () => {

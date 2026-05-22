@@ -93,10 +93,13 @@ export const ARTIFACT_MANIFEST: ManifestEntry[] = [
       { label: 'design-system/README.md', path: 'design-system/README.md', kind: 'md' },
     ] },
 
+  // Visual artifacts lead: the hi-fi screens render *before* screen-atlas.md so
+  // they are not buried below ~10k px of rendered markdown. Within a step,
+  // iframe parts precede long prose — mirrors Step 02 (fix 2026-05-22).
   { id: '15', step: '15', phase: 4, phaseName: 'Phase 4 · Visual contract', title: 'Visual contract',
     parts: [
-      { label: 'screen-atlas.md', path: 'screen-atlas.md', kind: 'md' },
       { label: 'screens/hifi/ (hi-fi killer flow)', path: 'screens/hifi', kind: 'iframe-dir' },
+      { label: 'screen-atlas.md', path: 'screen-atlas.md', kind: 'md' },
       { label: 'fixture-spec.md', path: 'fixture-spec.md', kind: 'md' },
     ] },
 

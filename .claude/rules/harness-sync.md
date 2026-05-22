@@ -9,31 +9,28 @@ A one-way sync tool (`.claude/tools/sync-harness.sh <fork-path>`) that brings a 
 
 ## What fires
 
-Nothing automatically. The sync runs only when the developer invokes it explicitly from the Agent0 repo:
+Nothing automatically. The sync runs only when a developer invokes it explicitly. The Agent0 source path is **always required** — passed via `--agent0-path=PATH` or the `AGENT0_HARNESS_PATH` env var. The tool never infers it from the current directory or from the script's own location (see *Why no auto-detection* below) — the invocation is identical whether you run it standing in the Agent0 repo or anywhere else.
 
 ```bash
 # Read-only drift survey (default)
-bash .claude/tools/sync-harness.sh --check ~/some-fork
+bash .claude/tools/sync-harness.sh --agent0-path=/home/goat/Agent0 --check ~/some-fork
 
 # Apply changes
-bash .claude/tools/sync-harness.sh --apply ~/some-fork
+bash .claude/tools/sync-harness.sh --agent0-path=/home/goat/Agent0 --apply ~/some-fork
 
 # Dry-run (apply-shaped output, no writes)
-bash .claude/tools/sync-harness.sh --apply --dry-run ~/some-fork
+bash .claude/tools/sync-harness.sh --agent0-path=/home/goat/Agent0 --apply --dry-run ~/some-fork
 
 # Force-overwrite fork customizations
-bash .claude/tools/sync-harness.sh --apply --force ~/some-fork
+bash .claude/tools/sync-harness.sh --agent0-path=/home/goat/Agent0 --apply --force ~/some-fork
+
+# Env-var form — convenient when scripting several fork syncs
+AGENT0_HARNESS_PATH=/home/goat/Agent0 bash .claude/tools/sync-harness.sh --apply ~/some-fork
 ```
 
-When invoked from a fork (not Agent0 itself), the Agent0 source path must be specified:
+If neither `--agent0-path` nor `AGENT0_HARNESS_PATH` is given, the tool refuses with exit code 2 and a usage hint naming both.
 
-```bash
-bash sync-harness.sh --agent0-path=/home/goat/Agent0 --apply ~/some-fork
-# OR
-AGENT0_HARNESS_PATH=/home/goat/Agent0 bash sync-harness.sh --apply ~/some-fork
-```
-
-The tool refuses to guess the source path — there is no auto-detection. Refusal exits with code 2 and a usage hint naming both `--agent0-path` and `AGENT0_HARNESS_PATH`.
+**Why no auto-detection.** `sync-harness.sh` is in its own propagation manifest (§ Self-rebootstrap) — an identical copy lives at `.claude/tools/sync-harness.sh` inside *every fork*. So neither the current directory nor `$BASH_SOURCE` can distinguish the Agent0 source from a fork: the script's location only reveals "which repo this copy lives in", never "is this repo Agent0". Inferring the source from either would silently sync a fork onto itself whenever a fork's own copy is run. The explicit-path requirement is the deliberate safe floor — a clean refusal beats a wrong-source sync.
 
 ## Modes
 

@@ -191,7 +191,7 @@ No automatic migration. Founders with an in-flight v4 (or older) run must comple
 - `pipeline-coverage.md` — what each step produces at standard tier
 - `delegation-briefs.md` — sub-agent dispatch shape per step (Step 15 = 15a/15b/15c)
 - `sdd-handoff.md` — the Phase 5 umbrella + foundation-child scaffold contract
-- `quality-checklist.md` — per-step gate criteria + visual-contract + SDD-handoff gates
+- `quality-checklist.md` — the quality judge's semantic rubric (per-step + visual-contract criteria) + the deterministic orchestrator gates
 - `sitemap-schema.md` — Step 07's required_categories binding
 - `SKILL.md` — orchestration body that operates this state machine
 - `.claude/rules/delegation.md` — 5-field handoff discipline

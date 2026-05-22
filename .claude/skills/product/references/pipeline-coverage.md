@@ -94,7 +94,7 @@ The deleted v2 Step 7 (prototype-v2 brand-tuned) was a redundant mid-step (3-sta
 - `sdd-handoff.md` — the Phase 5 umbrella + foundation-child scaffold contract
 - `sitemap-schema.md` — required_categories enforcement (load-bearing for Step 07)
 - `od-catalog-index.json` — Step 14 catalog path vendor index (72 vendors at 2026-05-18 snapshot)
-- `quality-checklist.md` — per-step gate criteria + the visual-contract + SDD-handoff gates
+- `quality-checklist.md` — the quality judge's semantic rubric (per-step + visual-contract criteria) + the deterministic orchestrator gates
 - `docs/specs/066-product-ui-quality/` — the restructure spec (this version)
 - `docs/specs/045-prototype-skill-pipeline-realign/` — pipeline lineage
 - `docs/specs/032-pipeline-industry-alignment/` — parent industry-alignment spec (the 17 decisions ported here)

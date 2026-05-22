@@ -514,7 +514,7 @@ Mood-screen-writer (per-screen) failures within Step 02 or Step 15b: mark the sp
 - `state-machine.md` — `.state.json` v5 shape + gate semantics + resume support
 - `sitemap-schema.md` — Step 07's load-bearing required_categories enforcement
 - `sdd-handoff.md` — the Phase 5 umbrella + foundation-child scaffold contract
-- `quality-checklist.md` — per-step gate criteria the skill checks before declaring complete
+- `quality-checklist.md` — the quality judge's semantic rubric (per-step + visual-contract criteria) + the deterministic orchestrator gates
 - `SKILL.md` — orchestration body that dispatches these briefs
 - `.claude/rules/delegation.md` — 5-field handoff discipline
 - `templates/pipeline/<step>/prompt.md` — canonical step brief (sub-agents read this directly)

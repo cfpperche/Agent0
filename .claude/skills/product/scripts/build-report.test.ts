@@ -14,6 +14,7 @@ import {
   buildReportHtml,
   classifyArtifact,
   escapeForScriptTag,
+  tabSlugFor,
 } from './build-report.js';
 
 const TEMPLATE_PATH = join(import.meta.dir, '..', 'templates', 'report.html.tmpl');
@@ -106,6 +107,18 @@ describe('classifyArtifact', () => {
   });
 });
 
+describe('tabSlugFor', () => {
+  test('drops the extension and slugifies the path', () => {
+    expect(tabSlugFor({ label: 'x', path: 'screen-atlas.md', kind: 'md' })).toBe('screen-atlas');
+    expect(tabSlugFor({ label: 'x', path: 'screens/hifi', kind: 'iframe-dir' })).toBe('screens-hifi');
+    expect(tabSlugFor({ label: 'x', path: 'design-system/tokens.css', kind: 'code' }))
+      .toBe('design-system-tokens');
+  });
+  test('a glob segment collapses to a dash, not a literal star', () => {
+    expect(tabSlugFor({ label: 'x', path: 'specs/001-*/spec.md', kind: 'md' })).toBe('specs-001-spec');
+  });
+});
+
 describe('buildReportHtml — full run', () => {
   test('renders all 15 steps as ok with 15/15 coverage', async () => {
     await writeFixture(tmpRoot, FULL_FIXTURE);
@@ -152,6 +165,25 @@ describe('buildReportHtml — full run', () => {
     const firstMd = kinds.indexOf('md');
     expect(firstIframe).toBeGreaterThanOrEqual(0);
     expect(firstIframe).toBeLessThan(firstMd);
+  });
+
+  test('each artifact carries a tabs list; a multi-part step gets one tab per part', async () => {
+    await writeFixture(tmpRoot, FULL_FIXTURE);
+    const payload = extractPayload(buildReportHtml(tmpRoot, template, { now: 'FIXED' }));
+
+    // single-part step → exactly one tab (the client renders no tab row)
+    const ideation = payload.artifacts.find((a: any) => a.id === '01');
+    expect(ideation.tabs.length).toBe(1);
+
+    // Step 15 has three manifest parts → three sub-tabs, in render order
+    const visualContract = payload.artifacts.find((a: any) => a.id === '15');
+    expect(visualContract.tabs.map((t: any) => t.slug))
+      .toEqual(['screens-hifi', 'screen-atlas', 'fixture-spec']);
+
+    // every hi-fi iframe part is filed under the first tab's slug
+    const hifi = visualContract.parts.filter((p: any) => p.kind === 'iframe');
+    expect(hifi.length).toBeGreaterThan(0);
+    expect(hifi.every((p: any) => p.tabSlug === 'screens-hifi')).toBe(true);
   });
 });
 
@@ -263,5 +295,13 @@ describe('report template — responsive + hash-nav wiring (QA 073)', () => {
     expect(html.includes('id="nav-toggle"')).toBe(true);
     expect(html.includes('id="backdrop"')).toBe(true);
     expect(html.includes('class="navtoggle"')).toBe(true);
+  });
+
+  test('generated HTML carries the sub-tab rendering wiring', async () => {
+    await writeFixture(tmpRoot, FULL_FIXTURE);
+    const html = buildReportHtml(tmpRoot, template, { now: 'FIXED' });
+    expect(html.includes('function parseHash')).toBe(true);
+    expect(html.includes("tabRow.className = 'tabs'")).toBe(true);
+    expect(html.includes('.tab.active')).toBe(true);
   });
 });

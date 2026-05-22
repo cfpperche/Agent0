@@ -56,7 +56,7 @@ export const ARTIFACT_MANIFEST: ManifestEntry[] = [
   { id: '02', step: '02', phase: 1, phaseName: 'Phase 1 · Discovery', title: 'Prototype v1 (lo-fi mood)',
     parts: [
       { label: 'direction-a.html', path: 'direction-a.html', kind: 'iframe-file' },
-      { label: 'screens/ (lo-fi killer flow)', path: 'screens', kind: 'iframe-dir' },
+      { label: 'Lo-fi screens', path: 'screens', kind: 'iframe-dir' },
     ] },
   { id: '03', step: '03', phase: 1, phaseName: 'Phase 1 · Discovery', title: 'Functional spec',
     parts: [{ label: 'functional-spec.md', path: 'functional-spec.md', kind: 'md' }] },
@@ -98,7 +98,7 @@ export const ARTIFACT_MANIFEST: ManifestEntry[] = [
   // iframe parts precede long prose — mirrors Step 02 (fix 2026-05-22).
   { id: '15', step: '15', phase: 4, phaseName: 'Phase 4 · Visual contract', title: 'Visual contract',
     parts: [
-      { label: 'screens/hifi/ (hi-fi killer flow)', path: 'screens/hifi', kind: 'iframe-dir' },
+      { label: 'Hi-fi screens', path: 'screens/hifi', kind: 'iframe-dir' },
       { label: 'screen-atlas.md', path: 'screen-atlas.md', kind: 'md' },
       { label: 'fixture-spec.md', path: 'fixture-spec.md', kind: 'md' },
     ] },
@@ -122,6 +122,20 @@ const PIPELINE_STEP_IDS = ['01', '02', '03', '04', '05', '06', '07', '08',
  */
 export function escapeForScriptTag(json: string): string {
   return json.replace(/</g, '\\u003c');
+}
+
+/**
+ * tabSlugFor — derive a stable, URL-safe slug for a manifest part. Each
+ * manifest part becomes one sub-tab in the report; the slug is the deep-link
+ * fragment after the step id (`#15/screens-hifi`). Deterministic, so a deep
+ * link survives report regeneration as long as the manifest path is stable.
+ */
+export function tabSlugFor(part: ManifestPart): string {
+  return part.path
+    .replace(/\.[a-z0-9]+$/i, '')   // drop file extension
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')    // any run of non-alphanumerics → one dash
+    .replace(/^-+|-+$/g, '');       // trim leading/trailing dashes
 }
 
 /** classifyArtifact — pure status derivation from on-disk presence + blocked flag. */
@@ -168,6 +182,8 @@ function listHtmlFiles(dir: string): string[] {
 interface ResolvedPart {
   label: string;
   kind: 'md' | 'code' | 'iframe' | 'missing';
+  /** url slug of the sub-tab this part belongs to — see tabSlugFor */
+  tabSlug: string;
   content?: string;
   lang?: string;
   src?: string;
@@ -180,6 +196,8 @@ interface ResolvedEntry {
   phaseName: string;
   title: string;
   status: Status;
+  /** distinct sub-tabs in render order — one per manifest part */
+  tabs: { label: string; slug: string }[];
   parts: ResolvedPart[];
 }
 
@@ -194,21 +212,28 @@ function isStepBlocked(stepId: string, blocked: unknown[]): boolean {
 /** Resolve one manifest entry against the on-disk docs/ tree. */
 export function resolveEntry(entry: ManifestEntry, docsDir: string, blocked: unknown[]): ResolvedEntry {
   const parts: ResolvedPart[] = [];
+  const tabs: { label: string; slug: string }[] = [];
   let present = 0;
   let total = 0;
 
   for (const part of entry.parts) {
     total++;
+    // Each manifest part is one sub-tab. Every resolved part it produces (an
+    // iframe-dir fans out to several) carries that tab's slug, so the client
+    // can render one tab's parts at a time.
+    const tabSlug = tabSlugFor(part);
+    tabs.push({ label: part.label, slug: tabSlug });
+
     if (part.kind === 'iframe-dir') {
       const dir = path.join(docsDir, part.path);
       const files = listHtmlFiles(dir);
       if (files.length > 0) {
         present++;
         for (const f of files) {
-          parts.push({ label: `${part.path}/${f}`, kind: 'iframe', src: `${part.path}/${f}` });
+          parts.push({ label: `${part.path}/${f}`, kind: 'iframe', src: `${part.path}/${f}`, tabSlug });
         }
       } else {
-        parts.push({ label: part.label, kind: 'missing' });
+        parts.push({ label: part.label, kind: 'missing', tabSlug });
       }
       continue;
     }
@@ -216,9 +241,9 @@ export function resolveEntry(entry: ManifestEntry, docsDir: string, blocked: unk
       const abs = path.join(docsDir, part.path);
       if (existsSync(abs)) {
         present++;
-        parts.push({ label: part.label, kind: 'iframe', src: part.path });
+        parts.push({ label: part.label, kind: 'iframe', src: part.path, tabSlug });
       } else {
-        parts.push({ label: part.label, kind: 'missing' });
+        parts.push({ label: part.label, kind: 'missing', tabSlug });
       }
       continue;
     }
@@ -237,16 +262,17 @@ export function resolveEntry(entry: ManifestEntry, docsDir: string, blocked: unk
           kind: part.kind === 'code' ? 'code' : 'md',
           content,
           lang: part.lang,
+          tabSlug,
         });
       }
     } else {
-      parts.push({ label: part.label, kind: 'missing' });
+      parts.push({ label: part.label, kind: 'missing', tabSlug });
     }
   }
 
   const status = classifyArtifact(present, total, isStepBlocked(entry.step, blocked));
   return { id: entry.id, step: entry.step, phase: entry.phase, phaseName: entry.phaseName,
-    title: entry.title, status, parts };
+    title: entry.title, status, tabs, parts };
 }
 
 /** Build the pre-rendered sidebar nav HTML from resolved entries. */
@@ -306,9 +332,9 @@ export function buildReportHtml(docsDir: string, template: string, opts: BuildOp
     coverage_pct: coveragePct,
     artifacts: entries.map((e) => ({
       id: e.id, step: e.step, phase: e.phase, phaseName: e.phaseName,
-      title: e.title, status: e.status,
+      title: e.title, status: e.status, tabs: e.tabs,
       parts: e.parts.map((p) => ({
-        label: p.label, kind: p.kind,
+        label: p.label, kind: p.kind, tabSlug: p.tabSlug,
         ...(p.content !== undefined ? { content: p.content } : {}),
         ...(p.lang ? { lang: p.lang } : {}),
         ...(p.src ? { src: p.src } : {}),

@@ -72,6 +72,22 @@
   .nav-item[data-status="pending"] .ico { color: var(--pending); }
   .pane { flex: 1; padding: 28px 40px; max-width: 920px; overflow-x: auto; }
   .pane .placeholder { color: var(--fg-dim); padding: 40px 0; font-style: italic; }
+  /* spec 073 follow-up — sub-tabs split a multi-part step so no step is one
+     giant scroll; only the active tab's parts are in the DOM. */
+  .tabs {
+    display: flex; flex-wrap: wrap; gap: 4px;
+    border-bottom: 1px solid var(--border); margin-bottom: 4px;
+  }
+  .tab {
+    border: 1px solid transparent; border-bottom: 0; background: none;
+    color: var(--fg-dim); cursor: pointer; font: 600 13px/1.4 inherit;
+    padding: 7px 13px; border-radius: 7px 7px 0 0; margin-bottom: -1px;
+  }
+  .tab:hover { color: var(--fg); background: var(--bg-alt); }
+  .tab.active {
+    color: var(--accent); background: var(--bg);
+    border-color: var(--border); border-bottom-color: var(--bg);
+  }
   .part-label {
     font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
     color: var(--fg-dim); margin: 28px 0 8px; padding-bottom: 4px;
@@ -229,7 +245,7 @@
   }
   document.addEventListener('mermaid-ready', runMermaid);
 
-  function render(id) {
+  function render(id, tabSlug) {
     var a = byId[id];
     pane.innerHTML = '';
     if (!a) { pane.innerHTML = '<div class="placeholder">Artifact not found.</div>'; return; }
@@ -238,7 +254,29 @@
         ' — not yet generated. Re-run the report after this step completes.</div>';
       return;
     }
+
+    // sub-tabs: a step with >1 part shows a tab row; only the active tab's
+    // parts render, so a long step is never one giant scroll.
+    var tabs = a.tabs || [];
+    var activeTab = null;
+    if (tabs.length > 1) {
+      var known = tabs.some(function (t) { return t.slug === tabSlug; });
+      activeTab = known ? tabSlug : tabs[0].slug;
+      var tabRow = document.createElement('div');
+      tabRow.className = 'tabs';
+      tabs.forEach(function (t) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'tab' + (t.slug === activeTab ? ' active' : '');
+        btn.textContent = t.label;
+        btn.addEventListener('click', function () { location.hash = id + '/' + t.slug; });
+        tabRow.appendChild(btn);
+      });
+      pane.appendChild(tabRow);
+    }
+
     (a.parts || []).forEach(function (part) {
+      if (activeTab && part.tabSlug !== activeTab) return;
       var label = document.createElement('div');
       label.className = 'part-label';
       label.textContent = part.label || '';
@@ -263,10 +301,18 @@
   function setActive(id) {
     items.forEach(function (b) { b.classList.toggle('active', b.dataset.id === id); });
   }
-  function openArtifact(id) {
+  // hash grammar: '#<artifact-id>' or '#<artifact-id>/<tab-slug>'
+  function parseHash() {
+    var raw = (location.hash || '').replace(/^#/, '');
+    var slash = raw.indexOf('/');
+    return slash === -1
+      ? { id: raw, tab: null }
+      : { id: raw.slice(0, slash), tab: raw.slice(slash + 1) };
+  }
+  function openArtifact(id, tab) {
     if (!byId[id]) return false;
     setActive(id);
-    render(id);
+    render(id, tab);
     window.scrollTo(0, 0);
     return true;
   }
@@ -278,17 +324,18 @@
       closeNav();
       // setting location.hash fires 'hashchange', which does the render;
       // re-clicking the current artifact won't fire it, so render directly.
-      if (location.hash === '#' + id) openArtifact(id);
+      // a sidebar click resets to the step's first tab ('#id', no tab slug).
+      if (location.hash === '#' + id) openArtifact(id, null);
       else location.hash = id;
     });
   });
 
   // QA finding #2 — hashchange covers back/forward + manual address-bar edits
   window.addEventListener('hashchange', function () {
-    var id = (location.hash || '').replace('#', '');
-    if (!openArtifact(id)) {
+    var h = parseHash();
+    if (!openArtifact(h.id, h.tab)) {
       var fb = document.querySelector('.nav-item');
-      if (fb) openArtifact(fb.dataset.id);
+      if (fb) openArtifact(fb.dataset.id, null);
     }
   });
 
@@ -312,14 +359,14 @@
       (dark ? '' : '-dark') + '.min.css';
   });
 
-  // initial view: the artifact named in the URL hash, else the first available one
-  var initial = (location.hash || '').replace('#', '');
-  if (byId[initial]) {
-    openArtifact(initial);
+  // initial view: the artifact (+tab) named in the URL hash, else the first available one
+  var initial = parseHash();
+  if (byId[initial.id]) {
+    openArtifact(initial.id, initial.tab);
   } else {
     var first = document.querySelector('.nav-item[data-status="ok"]') || document.querySelector('.nav-item');
     if (first) {
-      openArtifact(first.dataset.id);
+      openArtifact(first.dataset.id, null);
       if (history.replaceState) history.replaceState(null, '', '#' + first.dataset.id);
     }
   }

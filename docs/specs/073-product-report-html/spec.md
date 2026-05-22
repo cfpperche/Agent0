@@ -50,6 +50,11 @@ _Created 2026-05-21._
   - **When** the page loads
   - **Then** the sidebar collapses to an off-canvas drawer toggled by a `☰` button (with a tap-to-close backdrop), the content pane is full-width, and there is no horizontal document overflow
 
+- [x] **Scenario: a multi-part step is navigated by sub-tabs** _(post-ship, 2026-05-22)_
+  - **Given** a step with more than one artifact part (e.g. Step 15 — Hi-fi screens, screen-atlas, fixture-spec)
+  - **When** that step is opened in `REPORT.html`
+  - **Then** a sub-tab row renders at the top of the pane, only the active tab's parts are in the DOM (a long step is never one giant scroll), and each tab is deep-linkable via a `#<step>/<tab-slug>` hash that survives back / forward
+
 - [ ] `.claude/skills/product/scripts/build-report.ts` exists and runs with the same runtime as `sync-open-design.ts`, with **zero npm dependencies** (Node/Bun stdlib only — no markdown parsing at build time)
 - [ ] `.claude/skills/product/templates/report.html.tmpl` exists — the HTML shell (CSS + client JS + pinned CDN `<script>` tags + placeholders)
 - [ ] `.claude/skills/product/scripts/build-report.test.ts` exists and passes

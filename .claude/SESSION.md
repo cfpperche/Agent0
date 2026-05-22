@@ -8,32 +8,35 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Session 2026-05-22 — mei-saas `/product` dogfood → 3 specs.** The dogfood produced a 10-finding triage; this session shipped one spec, scaffolded two, and began implementing one.
+**Session 2026-05-22 (cont.) — spec 075 Move 1 complete.** Active spec is `docs/specs/075-product-quality-audit/` — replacing the `/product` size-budget *instrument* with a rubric quality judge.
 
-- **073 product-report-html — shipped, committed (`06c2c2a`).** `/product` now generates `docs/REPORT.html` (navigable rendered reading surface). Done — no follow-up.
-- **075 product-quality-audit — IN PROGRESS.** Replaces the `/product` size-budget *instrument* with a rubric quality judge. The dogfood proved the per-step KB ceiling is a scope-blind constant (10/10 overshoots, 0 true positives). spec/plan/tasks drafted + 4 OQs resolved (`a124424`); **Move 1 partial committed (`22aae4b`)** — tasks 1-2 of 14.
-- **076 product-dogfood-fixes — scaffolded, committed (`e8ff256`).** The 6 non-budget dogfood findings (#2-sections, #3, #4, #5, #9 + harness #8). spec.md filled; plan/tasks NOT drafted; has 1 open question.
+- **075 Move 1 — retire the size ceiling — DONE (tasks 1-4).** Tasks 1-2 committed earlier (`22aae4b`). **Tasks 3-4 done this session, UNCOMMITTED.**
+  - task 3 — `references/delegation-briefs.md` full ceiling scrub (~37 edits): 17 brief blocks' "Overshoot cascade" boilerplate → one-line 200 KB catastrophe-cap note; 6 stale `schema.md § Target` pointers → `§ Size floor`; ~10 inline "X-Y KB hard ceiling" → `≥ N KB` anti-stub floors; every `DONE_WHEN` size range → floor-only check.
+  - task 4 — `references/pipeline-coverage.md`: "Overshoot cascade" section → catastrophe-cap + "right-sizing is judged" paragraphs; per-step table `Size target` column → `Size floor (anti-stub)`; section retitled; legend + 2 "Lightening op" ceiling mentions scrubbed.
+  - task 3 was **extended** from the literal scope (cascade-strip only) to a full scrub per the user's 2026-05-22 decision — see `075/notes.md § Deviations`.
+- **073 product-report-html — shipped (`06c2c2a`).** Done, no follow-up.
+- **076 product-dogfood-fixes — scaffolded (`e8ff256`).** spec.md filled; plan/tasks NOT drafted; 1 open question (#8) blocks `/sdd plan`.
 
 ## WIP — resume point for 075
 
-**Active build = 075. Work `docs/specs/075-product-quality-audit/tasks.md` top-to-bottom from task 3.** Done: 1-2 (cascade retired from `artifact-budgets.md` + `CLAUDE.md`; `max_size` swept from the 6 schemas that carried it — 02/03/08/09/10/15). Remaining:
+**Move 1 complete. Next = Move 2 (tasks 5-11) — add the quality judge.** Work `docs/specs/075-product-quality-audit/tasks.md` from task 5.
 
-- **task 3** — strip the "Overshoot cascade per artifact-budgets.md" boilerplate from the ~16 brief blocks in `references/delegation-briefs.md` (15 step briefs + § Mood-screen-writer) → one-line catastrophe-cap note.
-- **task 4** — `references/pipeline-coverage.md` — the "Overshoot cascade" section + the per-step size-target table → catastrophe cap + judge pointer.
-- **Move 2 (tasks 5-11)** — the rubric judge: verdict shape + the v5/v6 `.state.json` decision (task 5), reposition `quality-checklist.md`, write `references/quality-judge.md`, the judge brief, `SKILL.md` wiring, `state-machine.md`, `## Quality concerns` in `report.md.tmpl`.
-- **Verification 12-14** — incl. a dogfood run.
+- **task 5** — decide + document the verdict JSON shape (per-criterion `pass`/`concern`/`fail` + scope assessment) + the `.state.json` `quality_verdicts` field. **Resolve v5-additive vs v6-bump** (`plan.md` § Risks) — needs reading `references/state-machine.md` to see how strict the resume version-gate is; record the call in `notes.md`.
+- tasks 6-11 — reposition `quality-checklist.md` as the judge rubric contract; write `references/quality-judge.md`; add the § quality-judge brief to `delegation-briefs.md` (`model: opus`, pointwise CoT, anti-verbosity); wire `SKILL.md` (per-step `wc -c` pre-filter + judge dispatch + verdict routing); update `state-machine.md`; add `## Quality concerns` to `templates/report.md.tmpl`.
+- Verification 12-14 — incl. a dogfood run.
 
 ## Next steps
 
-1. **Continue 075** from task 3 (above). The design is locked in `075/spec.md` — implement it, don't re-litigate.
-2. **076** — needs the founder to resolve the #8 open question (`076/spec.md` § Open questions) before `/sdd plan`.
-3. Dated reminders: spec 029 05-30 · spec 035 06-07 · spec 046 07-01 · spec 060 07-19.
+1. **Commit Move 1** (tasks 3-4 uncommitted) — natural unit, `feat(075)`-shaped.
+2. **Continue 075 Move 2** from task 5. Design is locked in `075/spec.md` — implement, don't re-litigate.
+3. **076** — needs the founder to resolve the #8 open question (`076/spec.md` § Open questions) before `/sdd plan`.
+4. Dated reminders: spec 029 05-30 · spec 035 06-07 · spec 046 07-01 · spec 060 07-19.
 
 ## Decisions & gotchas
 
-- **075 design is locked (`075/spec.md`):** Design A — single `opus` judge, pointwise CoT; rubric = `schema.md` + `quality-checklist.md` + a scope-aware right-sizing criterion; **no autonomous hard-BLOCK** (gate-flag teeth — `fail` pre-populates the phase gate's `iterate`, or in gate-less Phase 4 the handoff); catastrophe cap = uniform 200 KB.
-- **The "15-schema sweep" was 6** — only 02/03/08/09/10/15 carried `max_size`. See `075/notes.md`.
-- **Bash cwd drifts** after Skill invocations (lands in skill dirs) — `cd /home/goat/Agent0` defensively, or use absolute paths.
+- **075 design is locked (`075/spec.md`):** Design A — single `opus` judge, pointwise CoT; rubric = `schema.md` + `quality-checklist.md` + a scope-aware right-sizing criterion; **no autonomous hard-BLOCK** (`fail` pre-populates the phase gate's `iterate`, or in gate-less Phase 4 the handoff); catastrophe cap = uniform 200 KB.
+- **The producer briefs deliberately do NOT mention the judge** — avoids writing-to-the-judge bias; the judge evaluates after the fact.
+- **Bash cwd drifts** after Skill invocations — `cd /home/goat/Agent0` defensively, or use absolute paths.
 - **`secrets-scan` hook blocks compound `git add && git commit`** — run them as separate Bash calls.
 - **`governance-gate` blocks `rm -rf`** (combined `-r`+`-f`) — use `mktemp -d` for fixtures, `rm -r` without `-f`.
 
@@ -41,4 +44,4 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 - `.claude/REMINDERS.md` items per startup readout.
 - `docs/specs/074-subagent-personas/` — untracked, another session's draft spec; not ours, leave it.
-- Parked discussion: SOUL.md per sub-agent (delegation brief); `/product` full-stack expansion (caminhos A/B/C).
+- Parked: SOUL.md per sub-agent (delegation brief); `/product` full-stack expansion (caminhos A/B/C).

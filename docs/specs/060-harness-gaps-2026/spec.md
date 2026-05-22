@@ -77,7 +77,7 @@ The audit ran 2026-05-19; sources cited in `plan.md` § Research. The frame is t
 | B1 | `SubagentStart`/`SubagentStop` lifecycle hooks (related to A3 but broader) | Claude Code 2026 | Alta | S | folded into 061 — close as duplicate |
 | B2 | InstructionsLoaded-driven rule analytics (histogram of rule load frequency) | (extension of own `rule-load-debug.sh`) | Baixa | S | deferred: re-evaluate when rule count > 30 |
 | B3 | Agent-as-peer / pub-sub channels | Claude Code Channels Q1 2026 | Baixa | L | deferred: rule-of-three on orchestration demand |
-| B4 | Persona/SOUL.md per sub-agent (`.claude/personas/<role>.md`) | Hermes Agent SOUL.md | Média | S | **recommended next spec** (re-eval 2026-05-21): concrete, S effort, already flagged in REMINDERS.md |
+| B4 | Persona/SOUL.md per sub-agent (`.claude/personas/<role>.md`) | Hermes Agent SOUL.md | Média | S | **closed** (2026-05-22): explored as spec 074 (`subagent-personas`, drafted then killed). Web research — persona/role-prompting does not improve performance and over-constrains capable models; the 2026 frame is context-engineering, which Agent0's 5-field handoff already is. The legitimate kernel (role-appropriate output) is served by per-dispatch `CONSTRAINTS`. Reasoning + sources in notes.md (2026-05-22). |
 | B5 | Honcho-style dialectic memory (peer-modeling, background reasoning loop) | Honcho | Baixa | L | **closed**: heavy infra (FastAPI server) conflicts with bash-zero-dep frame |
 | B6 | Cross-fork bidirectional memory sync | (no canonical) | Baixa | M | **closed**: one-way is conscious design (see `memory-placement.md`) |
 | B7 | `UserPromptExpansion` hook (rewrites prompt with DONE-state inline) | Claude Code 2026 | Baixa-Média | S | folded into 062 — natural surface for `/goal` |

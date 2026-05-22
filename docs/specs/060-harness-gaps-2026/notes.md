@@ -32,6 +32,19 @@ Existing 59 specs use bolded inline `**Status:**` near the top — no YAML front
 
 Progress: of the 7 rows re-evaluated, 3 reach a terminal/holding outcome (A6 + A8 closed, B8 deferred); A4/A5/A7 stay pending for the 07-19 batch; B4 is the recommended-next. The umbrella stays `draft` until every §A row is →NNN/closed and every §B row is →NNN/closed/deferred.
 
+### 2026-05-22 — parent — B4 closed: subagent-personas (spec 074) killed on research grounds
+
+B4 was the 2026-05-21 recommended-next-spec. It was scaffolded as spec 074 (`subagent-personas`); its `spec.md` was drafted twice — first voice-only, then reshaped after studying Anthill's 50-`soul.md` scheme into a fuller persona spec (Role/Personality/Rules + a named phase-2 evolution loop plugging into spec 061's `delegation-audit.jsonl` corpus). Before `plan.md` was written, the user pushed back: fast model progress means a static persona system risks staleness, disuse, and over-rigidifying the sub-agents. Web research (2026-05-22) confirmed it:
+
+- *"When 'A Helpful Assistant' Is Not Really Helpful"* (EMNLP 2024) — 162 personas × 4 LLM families × 2410 questions: personas in system prompts do **not** improve performance, sometimes mildly hurt; a randomly chosen persona does as well as a domain-matched one.
+- 2026 consensus: over-specified prompting that helped GPT-3-era models now *interferes* with capable ones — "instructions define how the model can think, limiting how it might want to think." The field moved from role-prompting to **context-engineering** (scope the information, constrain the output, free the process).
+- Agent0's 5-field handoff is already a context-engineering instrument — `CONTEXT` scopes the info window, `DONE_WHEN` constrains the output. A persona system would be a regression toward role-prompting, the thing the research buries.
+- Corroborating signal from the source itself: Anthill ships an `issue-425-pastiche-llm-voice-detection` plus a `[voice]` correction hook and corpus — i.e. its souls *caused* a generic-voice problem that needed a correction apparatus. The souls were the disease, not the cure.
+
+The legitimate kernel — research/review/writing sub-agents want different output style — is real but small, and is already served by a per-dispatch `CONSTRAINTS` line. The persona-file apparatus (versioned files + attach mechanism + phase-2 evolution loop) was heavier than the problem. Spec 074 was deleted (never committed — zero git footprint); the originating `.claude/REMINDERS.md` item was dismissed. B4 → closed; this supersedes the "recommended-next" status from the 2026-05-21 entry above.
+
+Sources: `aclanthology.org/2024.findings-emnlp.888` · `anthropic.com/engineering/effective-context-engineering-for-ai-agents` · `honeycomb.io/blog/if-it-wanted-to-it-would-bitter-lesson-llm-users`
+
 ## Deviations
 
 _(none yet — spec was just scaffolded)_

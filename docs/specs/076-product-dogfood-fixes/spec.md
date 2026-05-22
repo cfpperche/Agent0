@@ -33,7 +33,10 @@ The 2026-05-22 triage of the mei-saas `/product` dogfood produced 10 findings, e
   - **When** `/product` dispatches those steps
   - **Then** Step 15c completes before Step 15b is dispatched, and Step 03 before Step 04 — they are not in the same parallel message; and `SKILL.md` / `delegation-briefs.md` / `state-machine.md` no longer assert "all inputs on disk from Phases 1-3" for those pairs
 
-- [ ] **#8** — the model-escalation advisory no longer fires spuriously on skill-directed dispatches (exact mechanism per the resolved open question below)
+- [ ] **Scenario: #8 — escalation advisory suppressed on skill-directed dispatches**
+  - **Given** a `/product` (or any skill-directed) dispatch whose prompt carries `# SKILL-DIRECTED: <slug>` (≥10-char slug, mirroring `# OVERRIDE:` grammar) AND declares a non-opus `model`
+  - **When** `delegation-gate.sh` scores ≥2 complexity signals
+  - **Then** the `escalation` advisory does NOT fire (the marker is the skill's explicit signal that the model choice was deliberate); `model-discipline` still fires when no `model` is declared (the marker does not excuse undeclared models); the audit row records `skill_directed: "<slug>" | null`; a parent ad-hoc dispatch without the marker still receives `escalation` as before (true-positive preserved)
 
 ## Non-goals
 
@@ -42,7 +45,7 @@ The 2026-05-22 triage of the mei-saas `/product` dogfood produced 10 findings, e
 
 ## Open questions
 
-- [ ] **#8 resolution approach** — three candidates: (a) accept the advisory as informational noise (it never blocks — advisories are always allowed); (b) the skill sets an explicit signal at dispatch so the gate recognizes a deliberate skill-chosen model and suppresses `escalation`; (c) `delegation-gate.sh` learns to skip `escalation` when the dispatch carries a brief-declared model. Note this is harness-core (`delegation-gate.sh` + `.claude/rules/delegation.md`), the only finding in this spec that ships beyond the `/product` skill. _Owner: founder, before `plan.md` locks._
+- [x] **#8 resolution approach** — **resolved 2026-05-22 as a (b)+(c) synthesis.** The skill adds a `# SKILL-DIRECTED: <slug>` marker (≥10-char slug, mirroring `# OVERRIDE:` grammar) to each dispatched brief; `delegation-gate.sh` learns to recognize the marker and suppresses **only** the `escalation` advisory when present. `model-discipline` keeps firing on undeclared models (the marker does not excuse forgetting to declare a model — it only certifies that a declared non-opus choice was deliberate). Parent ad-hoc dispatches without the marker continue to receive `escalation` as before, preserving the true-positive case. Audit row gains a `skill_directed: "<slug>" | null` field for greppable adoption tracking. Rejected: (a) — advisory rot accumulates; (c) puro — inverting on `MODEL_SPECIFIED=true` alone would silence the true-positive of an ad-hoc parent that picked sonnet when it should have picked opus.
 
 ## Context / references
 

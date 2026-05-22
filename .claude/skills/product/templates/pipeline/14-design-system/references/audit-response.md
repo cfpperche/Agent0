@@ -1,6 +1,6 @@
 # Step 6 — Consuming Step-4 Audit Frontmatter
 
-The structured handoff that closes the audit→token-edit loop. When step 4 emits YAML frontmatter (measurable mode, see `04-ux-testing/schema.md` § "Optional YAML frontmatter — structured findings handoff"), step 6 reads it and applies `fix_skill_hint: "design-system"` findings inline. This page is the consumer-side spec.
+The structured handoff that closes the audit→token-edit loop. When step 4 emits YAML frontmatter (measurable mode, see `04-validation/schema.md` § "Optional YAML frontmatter — structured findings handoff"), step 6 reads it and applies `fix_skill_hint: "design-system"` findings inline. This page is the consumer-side spec.
 
 ## What step 4 hands over (the contract)
 

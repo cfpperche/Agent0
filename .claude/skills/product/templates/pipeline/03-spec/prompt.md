@@ -83,7 +83,7 @@ Whichever you choose, it must be *derivable from* `architecture.md` — same mod
 
 Call `product_step_submit` with `filename: "functional-spec.md"`, `content: <full functional spec>`, and `extra_files: [{ path: "architecture.md", content: ... }, { path: "architecture.html", content: ... }]` (or `architecture.json`). Layer 1 validates all three atomically — nothing is written unless every file passes. On `schema-incomplete`, the `failures` list names exactly which file failed which check (missing path / undersized / missing substring); fix and resubmit.
 
-After a clean submit, call `product_advance` — step 3 is mid-Discovery, no gate, advances to step 4 (ux-testing). No human checkpoint: the synthesis is auditable in the artifacts themselves.
+After a clean submit, call `product_advance` — step 3 is mid-Discovery, no gate, advances to step 4 (validation). No human checkpoint: the synthesis is auditable in the artifacts themselves.
 
 ---
 
@@ -121,7 +121,7 @@ The functional-spec MUST include a `## Problem-Validation Interviews` H2 section
 - **Full system design** — scale assumptions, deployment topology, security/threat-model, stack-specific decisions. That's step 8 (renumbered per spec 045). `architecture.md` here is the *preliminary* skeleton step 8 deepens; the `## Open Architecture Questions` section is the explicit handoff.
 - **Visual / brand decisions** — step 13 (brand), step 14 (design-system) — moved AFTER Specification per spec 045 PRD-first ordering.
 - **Pricing, business model details** — step 5 (PRD 1-pager) + step 11 (cost-estimate) + step 12 (gtm-launch).
-- **Test execution** — step 4 (ux-testing). But the success criteria and acceptance scenarios written here ARE the inputs to step 4's tests.
+- **Test execution** — step 4 (validation). But the success criteria and acceptance scenarios written here ARE the inputs to step 4's tests.
 - **Sitemap / full screen inventory** — step 7 (sitemap-IA). This step's § Pages & Surfaces is a sketch; Step 7 is the canonical inventory.
 - **Comprehensive screen atlas** — step 15 (screen-atlas).
 

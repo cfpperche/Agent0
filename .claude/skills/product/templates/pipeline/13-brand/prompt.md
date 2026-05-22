@@ -50,7 +50,7 @@ Once the interview is captured, the parent calls `product_get_delegation_brief(5
 - The captured interview transcript (parent inlines it in the brief or writes it to a temp file referenced in CONTEXT)
 - The 5 references (full set; the sub-agent reads them as the writing template)
 
-The sub-agent produces the brand-book.md artifact synthesising founder voice → brand-book sections. This shape mirrors step 4 (UX testing): parent gathers user input, sub-agent does the writing.
+The sub-agent produces the brand-book.md artifact synthesising founder voice → brand-book sections. This shape mirrors step 4 (Validation): parent gathers user input, sub-agent does the writing.
 
 ### 4. Synthesise — what the brand-book covers
 

@@ -90,14 +90,14 @@ DELIVERABLE: {{out}}/docs/functional-spec.md
 DONE_WHEN: File exists; size ≥ the `schema.md § Size floor` `min_size`; contains **Given** / **When** / **Then** keywords; contains "Pages & Surfaces" + "Features" + "Preliminary Architecture" + "Problem-Validation Interviews" section headers; ≥ 3 Gherkin scenarios; ≥ 3 interview summaries.
 ```
 
-### Step 04 — UX Testing (heuristic audit)
+### Step 04 — Validation (heuristic audit)
 
 **model:** `sonnet`  ·  **subagent_type:** `general-purpose`
 
 ```
 TASK: Produce validation-report.md — heuristic audit (Nielsen's 10 + WCAG 2.1 AA) on the Phase 1 prototype surfaces + validation mode declaration.
 
-CONTEXT: Read direction-a.html at {{out}}/docs/direction-a.html + screens at {{out}}/docs/screens/ for rendered surfaces (PROJECTED-mode audit at standard tier). Read functional-spec.md at {{out}}/docs/functional-spec.md for declared behavior. Read .claude/skills/product/templates/pipeline/04-ux-testing/prompt.md + schema.md.
+CONTEXT: Read direction-a.html at {{out}}/docs/direction-a.html + screens at {{out}}/docs/screens/ for rendered surfaces (PROJECTED-mode audit at standard tier). Read functional-spec.md at {{out}}/docs/functional-spec.md for declared behavior. Read .claude/skills/product/templates/pipeline/04-validation/prompt.md + schema.md.
 
 CONSTRAINTS:
 - Standard tier: PROJECTED mode. Audit infers contrast / tab order / a11y from spec + HTML inspection.

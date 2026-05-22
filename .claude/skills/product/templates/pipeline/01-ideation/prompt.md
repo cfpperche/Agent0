@@ -185,7 +185,7 @@ This section is the lightweight upstream signal a heavier pipeline would dedicat
 
 - High-fidelity visual prototype. Step 2 (prototype lo-fi) renders 1 mood direction + 3-5 killer-flow HTML screens.
 - Functional spec (edge cases, validation rules). Step 3 (spec).
-- User testing. Step 4 (ux-testing) validates the prototype with real users (tested mode) or articulates intuition (intuition mode).
+- User testing. Step 4 (validation) validates the prototype with real users (tested mode) or articulates intuition (intuition mode).
 - PRD 1-pager / OST / sitemap / system-design / legal / roadmap / cost / GTM. Specification phase, steps 5-12.
 - Brand voice / design system. Steps 13 / 14 in the Identity phase (moved after Specification per spec 045 PRD-first ordering).
 - Comprehensive screen atlas. Step 15 (screen-atlas) synthesizes the full surface.

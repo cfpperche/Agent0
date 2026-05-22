@@ -167,7 +167,7 @@ At least one row per major section SHOULD anchor to a real human role — "Outsi
 
 ### 8. Step-4 finding-ID lineage (inherited from step-11)
 
-The § Privacy Posture data-categories table MAY cite step-4 (ux-testing) finding IDs in a `Source` column when the row resolves a finding — e.g. a clarity-of-consent UI finding from step 4 (`F-08: users didn't understand the consent dialog; recommended explicit purpose breakdown`) traces forward to the § Privacy Posture row that names per-purpose consent. Citation shape: `step 4 § Findings § F-08 resolved`. Opportunistic — skip when no step-4 finding applies.
+The § Privacy Posture data-categories table MAY cite step-4 (validation) finding IDs in a `Source` column when the row resolves a finding — e.g. a clarity-of-consent UI finding from step 4 (`F-08: users didn't understand the consent dialog; recommended explicit purpose breakdown`) traces forward to the § Privacy Posture row that names per-purpose consent. Citation shape: `step 4 § Findings § F-08 resolved`. Opportunistic — skip when no step-4 finding applies.
 
 ### 9. Submit + gate
 

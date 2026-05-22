@@ -7,7 +7,7 @@ The full shape for the primary step-3 artifact. Every section traces to the conc
 
 **Generated:** {date} | **Pipeline step:** 3 (spec) | **Mode:** synthesis
 **Source artifacts:** `01-ideation/04-concept-brief.md`, `02-prototype/<slug>/`
-**Status:** Draft — behavioral contract for steps 4 (ux-testing) + 8 (PRD)
+**Status:** Draft — behavioral contract for steps 4 (validation) + 8 (PRD)
 
 ## Product Overview
 

@@ -353,7 +353,7 @@ Call `product_advance` to move to step 3 (spec). Step 2 carries a Layer 3 checkp
 - Framework code (.tsx / .vue / .svelte). Step 13 (prototype-v3) synthesizes the picked direction into stack-native code when the spec demands it
 - Brand voice deep-dive. Step 5 (brand) covers voice, copy patterns, illustration style
 - Design tokens for code consumption. Step 6 (design-system) emits the `tokens.css` consumed by step 7 + step 13
-- User testing of the mockups. Step 4 (ux-testing) validates via intuition-mode or tested-mode
+- User testing of the mockups. Step 4 (validation) validates via intuition-mode or tested-mode
 
 ## What this step replaces
 

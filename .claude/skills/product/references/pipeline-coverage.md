@@ -10,7 +10,7 @@ Industry-aligned per spec 032's 17 decisions ported via spec 045 (`/prototype` v
 
 | Phase | Pipeline steps | Gate at end? | Bulk wall-clock target |
 |---|---|---|---|
-| **Phase 1 — Discovery** | 01-ideation · 02-prototype (lo-fi) · 03-spec · 04-ux-testing | ✓ AskUserQuestion (`gate_discovery`) | 8-12 min |
+| **Phase 1 — Discovery** | 01-ideation · 02-prototype (lo-fi) · 03-spec · 04-validation | ✓ AskUserQuestion (`gate_discovery`) | 8-12 min |
 | **Phase 2 — Specification** | 05-prd · 06-ost · 07-sitemap-ia · 08-system-design · 09-legal · 10-roadmap · 11-cost-estimate · 12-gtm-launch | ✓ AskUserQuestion (`gate_specification`) | 18-25 min |
 | **Phase 3 — Identity** | 13-brand · 14-design-system | ✓ AskUserQuestion (`gate_identity`) | 6-10 min |
 | **Phase 4 — Visual contract** | 15-screen-atlas (15a atlas · 15b hi-fi mood · 15c fixture-spec) | (no gate) | 5-8 min |
@@ -35,7 +35,7 @@ Phase 5 has no step number — it is the terminal phase. `/product` scaffolds, u
 | 01 | Ideation | **opus** | `docs/concept-brief.md` (includes § Market Sizing TAM/SAM/SOM) | ≥ 4 KB | (legacy — 056 phase 2) | extends per spec 032 Decision 6 |
 | 02 | Prototype v1 (lo-fi) | sonnet × N | `docs/direction-a.html` (1 only at standard) + `docs/screens/<NN>-<name>.html` × 3-5 (killer flow) | direction ≥ 10 KB, screens ≥ 4 KB each | `02-prototype/schema.md § Size floor` ✓ 056 | unchanged content; sitemap moved to Step 07 |
 | 03 | Spec | sonnet | `docs/functional-spec.md` (includes § Problem-Validation Interviews) | ≥ 12 KB | `03-spec/schema.md § Size floor` ✓ 056 | extends per spec 032 Decision 6 |
-| 04 | UX Testing | sonnet | `docs/validation-report.md` (YAML frontmatter) | ≥ 5 KB | (legacy — 056 phase 2) | unchanged from v2 |
+| 04 | Validation | sonnet | `docs/validation-report.md` (YAML frontmatter) | ≥ 5 KB | (legacy — 056 phase 2) | unchanged from v2 |
 | 05 | PRD (1-pager hybrid) | sonnet | `docs/prd/v1.md` (Lenny 1-pager bones + 3 our-specific sections; US-NN stable IDs; NSM slot) | ≥ 4 KB | (legacy) | spec 032 Decisions 1 + 9 + 15 |
 | 06 | OST | sonnet | `docs/ost.md` (Opportunity Solution Tree — 1 outcome root → 3-5 opportunities → 2-3 solutions per) | ≥ 3 KB | `06-ost/schema.md § Size floor` ✓ 075 | spec 032 Decision 12 (Torres) |
 | 07 | Sitemap-IA | sonnet | `docs/sitemap.yaml` (schema-bound to `references/sitemap-schema.md` — `required_categories: [marketing, auth, primary, admin, error]` enforced) | ≥ 2 KB | `07-sitemap-ia/schema.md § Size floor` ✓ 075 | spec 032 Decisions 5 + 13 (load-bearing root-cause fix) |
@@ -59,7 +59,7 @@ Phase 5 has no step number — it is the terminal phase. `/product` scaffolds, u
 1. **01 Ideation:** 5-8 web searches (vs 15-25 canonical); skip `critique mode`. **NEW (Decision 6):** § Market Sizing — TAM/SAM/SOM as 1-paragraph each, NOT primary research, desk research with 1-2 cited sources per number.
 2. **02 Prototype v1 (lo-fi):** ONE direction only (vs 3 mood boards); 3-5 killer-flow screens; **sitemap NO LONGER produced here** (moved to dedicated Step 07).
 3. **03 Spec:** Combined `functional-spec.md` (no separate architecture.md). **NEW (Decision 6):** § Problem-Validation Interviews — 3-5 summaries, synthetic OK at standard tier, seeds OST opportunities.
-4. **04 UX Testing:** Heuristic-only (Nielsen 10 + WCAG 2.1 AA top issues). Projected-mode default. Validation mode declaration required.
+4. **04 Validation:** Heuristic-only (Nielsen 10 + WCAG 2.1 AA top issues). Projected-mode default. Validation mode declaration required.
 5. **05 PRD (1-pager):** Lenny bones (Problem · Why now · Success metrics · Solution sketch · User stories · Anti-goals) + 3 our-specific (Release scope · NSM-dedicated-slot · Upstream/downstream refs). TIGHT — each section ≤3 bullets to preserve 1-pager honesty. US-NN stable IDs (P0/P1/P2). ONE NSM in dedicated slot.
 6. **06 OST:** 1 desired outcome (the NSM from PRD) → 3-5 opportunities (user problems discovered/inferred) → 2-3 solutions per opportunity (the "how"). Sibling artifact to PRD, NOT embedded — feeds the post-launch-review sibling tool when MCP-side ships it.
 7. **07 Sitemap-IA:** YAML with schema-enforced `required_categories: [marketing, auth, primary, admin, error]`. Each route has `path / category / states / covers_us / components`. Top-level `deferred_categories: [{name, reason}]` escape clause for genuinely-out-of-v1 categories (must include reason). Orchestrator parses + BLOCKS step if uncovered category found without deferral. **Mechanical fix for atlas under-cover (Pass E silent gap on auth/admin/error).**

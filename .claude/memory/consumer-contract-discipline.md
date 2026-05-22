@@ -47,7 +47,7 @@ This is project-internal knowledge, not a behavioral rule. Future ports (steps 9
 
 ## Canonical examples in current codebase
 
-- `.claude/skills/product/templates/pipeline/04-ux-testing/schema.md` § "Optional YAML frontmatter — structured findings handoff" — consumer contract for steps 08/14/15
+- `.claude/skills/product/templates/pipeline/04-validation/schema.md` § "Optional YAML frontmatter — structured findings handoff" — consumer contract for steps 08/14/15
 - `.claude/skills/product/templates/pipeline/14-design-system/prompt.md` § tokens — tokens.css consumer contract for step 15 (screen atlas)
 - `.claude/skills/product/templates/pipeline/05-prd/prompt.md` § user stories — US-NN consumer contract for step 07 (sitemap) + step 15 (screen atlas)
 

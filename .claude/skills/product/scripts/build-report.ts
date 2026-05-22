@@ -60,7 +60,7 @@ export const ARTIFACT_MANIFEST: ManifestEntry[] = [
     ] },
   { id: '03', step: '03', phase: 1, phaseName: 'Phase 1 · Discovery', title: 'Functional spec',
     parts: [{ label: 'functional-spec.md', path: 'functional-spec.md', kind: 'md' }] },
-  { id: '04', step: '04', phase: 1, phaseName: 'Phase 1 · Discovery', title: 'UX testing',
+  { id: '04', step: '04', phase: 1, phaseName: 'Phase 1 · Discovery', title: 'Validation',
     parts: [{ label: 'validation-report.md', path: 'validation-report.md', kind: 'md' }] },
 
   { id: '05', step: '05', phase: 2, phaseName: 'Phase 2 · Specification', title: 'PRD (1-pager)',

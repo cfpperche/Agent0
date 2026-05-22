@@ -27,7 +27,7 @@ Written at `<out-dir>/docs/.state.json`. Initialized by Phase 0, updated at each
     "01-ideation",
     "02-prototype",
     "03-spec",
-    "04-ux-testing",
+    "04-validation",
     "05-prd",
     "06-ost",
     "07-sitemap-ia",

@@ -41,7 +41,7 @@ priority_fixes:
 ---
 # {Product Name} — UX Validation Report
 
-**Generated:** {date} | **Pipeline step:** 4 (ux-testing) | **Auditor:** product-pipeline step 4
+**Generated:** {date} | **Pipeline step:** 4 (validation) | **Auditor:** product-pipeline step 4
 **Source artifact:** `02-prototype/<slug>/`
 **Status:** Discovery-phase gate artifact
 

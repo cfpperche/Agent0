@@ -31,7 +31,7 @@ Each criterion has a stable `id` (the **bold label**) — the quality judge's ve
 - **gherkin** — `**Given**` / `**When**` / `**Then**` present; ≥ 3 Gherkin scenarios
 - **problem-validation** — `§ Problem-Validation Interviews` present
 
-### 04 — UX Testing → `docs/validation-report.md`
+### 04 — Validation → `docs/validation-report.md`
 - **heuristics** — references both `Nielsen` and `WCAG`
 - **validation-mode** — a `validation_mode:` line is present
 - **findings** — YAML `findings[]` ≥ 3, each carrying `severity` + `fix_skill_hint`
@@ -101,6 +101,7 @@ Step 15 dispatches three parallel sub-agents; each is a separate judge-unit with
 - **self-contained** — each file is self-contained HTML: one `<style>` block + a `:root` token block (values copied from `docs/design-system/tokens.css`)
 - **mobile-first** — the `<style>` block carries ≥ 1 `@media (min-width: …)` breakpoint, the base CSS targets 375 px, and there are NO `style=` layout attributes (lone exception: a single dynamic value like a progress-bar width)
 - **on-brand-copy** — copy matches `brand-book.md` voice, respects `## Glossary § We don't say`, and is fixture-grounded (data from `docs/fixture-spec.md`, no lorem ipsum)
+- **contrast** — body text, large text, and interactive UI components meet WCAG 2.1 AA contrast against the screen's own `:root` token values (≥ 4.5:1 body text, ≥ 3:1 large text + UI components); the judge samples real rendered text/background token pairs. A screen shipping text or UI below its AA floor is a `fail`. This is the **shift-right verification** of step 04 (Validation)'s projected-mode accessibility `warn`s — step 04 audits the pre-token lo-fi prototype and can only *project* contrast; step 15b is the first surface where real brand tokens render, so it is where each projection is confirmed or refuted.
 
 ### 15c — Fixture spec → `docs/fixture-spec.md`
 - **structure** — `## Persona` + `## Entities` + `## Cross-Screen Consistency Notes` present

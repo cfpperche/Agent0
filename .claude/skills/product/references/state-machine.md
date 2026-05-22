@@ -39,13 +39,23 @@ Written at `<out-dir>/docs/.state.json`. Initialized by Phase 0, updated at each
     "specification": 0,
     "identity": 0
   },
+  "quality_verdicts": {
+    "01-ideation": {
+      "step": "01-ideation", "judged_at": "2026-05-18T14:35:00Z", "model": "opus",
+      "criteria": [
+        { "id": "structure", "verdict": "pass", "note": "9 H2 incl § Market Sizing" },
+        { "id": "right-sizing", "verdict": "pass", "note": "depth matches the declared MVP scope" }
+      ],
+      "scope_assessment": "Correctly scoped for the declared MVP.", "outcome": "pass"
+    }
+  },
   "completed_at": null
 }
 ```
 
 Field semantics:
 
-- **`version`** — schema version of `.state.json` itself. Current: `5`. Increments when shape changes.
+- **`version`** — schema version of `.state.json` itself. Current: `5`. Increments when a resume across the change would **mis-orchestrate** — a behavioral phase/step break, or a non-back-compatible field change. A purely additive field that an older reader can ignore and a newer reader can treat as absent does NOT bump: `quality_verdicts` (spec 075) was added and the schema stayed v5, because the resume gate trusts `completed_steps`, never the verdicts, so there is no mis-orchestration risk. The version-history below records past bumps — each was a mis-orchestration break, not a mere field touch.
   - v1 (spec 034) — single `phase` int 0-5, no step tracking.
   - v2 (spec 036) — 13-step tracking, `phase` int 0-5, `iterations` keyed by `discovery`/`identity`/`specification`.
   - v3 (spec 045) — 15-step tracking, `phase` string enum, NN-flat artifact paths under `docs/`.
@@ -62,6 +72,7 @@ Field semantics:
 - **`completed_steps`** — list of step labels that finished cleanly. Append-only.
 - **`blocked_steps`** — list of objects `{step_label, reason, artifacts_partial?}` for steps that returned BLOCKED. Empty list when no blocks.
 - **`iterations`** — count of `iterate` gate-pass choices per phase. Each `iterate` increments; `continue` does not. Used to cap runaway iteration (soft cap = 3 per phase; warn at 3, soft-abort at 5).
+- **`quality_verdicts`** — map keyed by judge-unit label (`01-ideation` … `15c-fixture-spec`) → the quality judge's verdict object for that step (spec 075). Each verdict carries `step` / `judged_at` / `model` / `criteria[]` (per-criterion `pass`/`concern`/`fail` + one-line `note`) / `scope_assessment` / `outcome` (the max-severity rollup `fail` > `concern` > `pass`). A map, not a list — a re-judged step (gate `iterate`) overwrites its key; a missing key = not yet judged. Initialized `{}` by Phase 0. **Additive in v5** — see `version` above. Full verdict shape + the verdict→gate routing: `quality-judge.md`.
 - **`completed_at`** — UTC ISO-8601 set when Phase 5 (the SDD handoff) closes successfully. Null otherwise.
 
 ## Phase progression (v5)
@@ -103,6 +114,8 @@ Phase 5 (sdd-handoff)
   completed_at set
 ```
 
+**Quality judge (spec 075).** After each phase's steps complete — and before the phase gate — the orchestrator runs the quality judge over that phase's steps (`SKILL.md § Quality judge`). Verdicts land in `.state.json` `quality_verdicts`. A `fail` verdict pre-sets the phase gate's recommended option to `iterate`; Phase 4 (no gate) surfaces a `fail` in the terminal handoff + `REPORT.md § Quality concerns`. The judge never autonomously BLOCKs or aborts — see `quality-judge.md`.
+
 Phase 0 has no gate (idempotency check is local). Phase 4 + Phase 5 have no gate (Phase 5's SDD-spec scaffold is the terminal handoff). Note phase ORDER vs v2: Specification (was Phase 3 in v2) is Phase 2 (PRD-first per spec 045 Decision 3); Identity (was Phase 2) is Phase 3.
 
 ## Step ordering within Phase 2 — Specification (most complex)
@@ -137,6 +150,8 @@ At end of Phase 1, 2, 3:
    - **`iterate`** → user names which step(s) to re-dispatch (sub-prompt). Re-dispatches with augmented brief. Increments `iterations.<phase>` counter. Re-prompts gate after re-dispatch.
    - **`abort`** → exit cleanly. Sets `flags.from_step` = current step for resume hint. Prints `Run /product "<idea>" --from-step=<NN> --out=<same-path>` to resume.
 
+**Quality-judge pre-set (spec 075):** if any of the phase's `quality_verdicts` has `outcome: "fail"`, the gate's recommended option is `iterate`, pre-filled with the failed steps + their failed criteria — the human still chooses. See `quality-judge.md § Verdict → gate routing`.
+
 Iteration soft cap: warn at `iterations.<phase> >= 3`, force-abort at `>= 5`. Prevents infinite loops.
 
 ## Resume via `--from-step=NN`
@@ -167,6 +182,8 @@ Sub-agent dispatch returns BLOCKED (DELIVERABLE not met OR sub-agent explicit ca
   - Log to REPORT.md `## Blocked steps` section.
   - Continue to next step. Downstream steps that depend on this one note the gap.
 
+**Quality-judge `fail` is not BLOCKED.** A judge `fail` (spec 075) means the artifact is present and DELIVERABLE-complete but quality-deficient — the step stays in `completed_steps`, not `blocked_steps`. It routes to the phase gate's `iterate` recommendation, never to a BLOCK or abort. `completed_steps` / `blocked_steps` / `quality_verdicts` are three independent records. See `quality-judge.md`.
+
 ## Output dir collision
 
 Phase 0 checks if `<out-dir>` exists and is non-empty (any file present):
@@ -192,6 +209,7 @@ No automatic migration. Founders with an in-flight v4 (or older) run must comple
 - `delegation-briefs.md` — sub-agent dispatch shape per step (Step 15 = 15a/15b/15c)
 - `sdd-handoff.md` — the Phase 5 umbrella + foundation-child scaffold contract
 - `quality-checklist.md` — the quality judge's semantic rubric (per-step + visual-contract criteria) + the deterministic orchestrator gates
+- `quality-judge.md` — the quality judge (spec 075): when it runs, rubric assembly, the verdict shape, the verdict→gate routing
 - `sitemap-schema.md` — Step 07's required_categories binding
 - `SKILL.md` — orchestration body that operates this state machine
 - `.claude/rules/delegation.md` — 5-field handoff discipline

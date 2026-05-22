@@ -2,9 +2,9 @@
 
 Every `Agent` tool call dispatched by `/product` v0.4.0 MUST use the 5-field handoff per `.claude/rules/delegation.md` (TASK / CONTEXT / CONSTRAINTS / DELIVERABLE / DONE_WHEN). The delegation-gate hook returns exit 2 otherwise.
 
-**Briefs cover every `/product` sub-agent dispatch** — one per pipeline step (Step 02 = direction-writer; Step 15 = the three visual-contract sub-agents 15a-atlas / 15b-hi-fi-mood / 15c-fixture-spec) plus the shared **§ Mood-screen-writer** template, used by Step 02 (lo-fi mode) and Step 15b (hi-fi mode). Per spec 066 the v2/v3 per-route Next.js/Expo `.tsx` screen-writer is **deleted** — `/product` ends at the visual contract; the runnable app is built by the SDD children scaffolded in Phase 5.
+**Briefs cover every `/product` sub-agent dispatch** — one per pipeline step (Step 02 = direction-writer; Step 15 = the three visual-contract sub-agents 15a-atlas / 15b-hi-fi-mood / 15c-fixture-spec) plus the shared **§ Mood-screen-writer** template, used by Step 02 (lo-fi mode) and Step 15b (hi-fi mode). Per spec 066 the v2/v3 per-route Next.js/Expo `.tsx` screen-writer is **deleted** — `/product` ends at the visual contract; the runnable app is built by the SDD children scaffolded in Phase 5. The **§ Quality judge** brief (spec 075) is dispatched once per judge-unit AFTER the producer returns — an evaluator, not a producer.
 
-**Per-step model assignment** (per spec 036 Q1 resolution preserved in spec 045): Step 01 = `opus` (concept brief multi-source synthesis); Steps 02-15 = `sonnet` (mechanical with dense brief + bundled template).
+**Per-step model assignment** (per spec 036 Q1 resolution preserved in spec 045): Step 01 = `opus` (concept brief multi-source synthesis); Steps 02-15 = `sonnet` (mechanical with dense brief + bundled template). The post-step **§ Quality judge** runs on `opus` (evaluation reasoning + a within-family asymmetry against the `sonnet` producers).
 
 **Substitution placeholders** ({{...}}) are replaced inline by the orchestrator (SKILL.md) before dispatch. The orchestrator reads `<out>/docs/.state.json` for `slug`, `idea`, `out`, `flags.stack`, `target_language` (resolved at Phase 0.5 per spec 054), and the prior-step outputs by path.
 
@@ -488,6 +488,38 @@ CONSTRAINTS:
 DELIVERABLE: the {{mood_tier}} mood screen HTML file at the orchestrator-named path.
 
 DONE_WHEN: File exists; valid self-contained HTML with one `<style>` block + a `:root` token block; size ≥ the 4 KB anti-stub floor; the `<style>` block carries ≥1 `@media (min-width: …)` breakpoint and the base CSS targets 375 px (mobile-first); NO `style=` layout attributes; no horizontal overflow at 375 px; hi-fi screens read `var(--token)` from tokens.css + render `fixture-spec.md` data + carry on-brand copy.
+```
+
+## Quality judge (dispatched after every step — spec 075)
+
+ONE brief, one dispatch per **judge-unit** (steps 01-14 = the step; Step 15 = `15a-screen-atlas` / `15b-hifi-mood` / `15c-fixture-spec`, judged separately). Dispatched by the orchestrator AFTER a step's producer returns and the `wc -c` anti-stub pre-filter passes — an independent-context sub-agent that grades the step's artifact(s) against the step's rubric and emits a structured verdict. It is spec 075's replacement for the retired size-budget instrument. The full operational contract — rubric assembly, the verdict shape, the verdict→gate routing — is `references/quality-judge.md`; this is the dispatch template. The orchestrator substitutes `{{step_label}}`, `{{artifact_paths}}`, `{{schema_dir}}`, `{{rubric_section}}`, `{{verdict_path}}`, `{{out}}` before dispatch.
+
+The step producers' briefs deliberately do **not** mention the judge — telling a producer it will be graded invites writing-to-the-judge bias. The judge evaluates after the fact.
+
+**model:** `opus`  ·  **subagent_type:** `general-purpose`
+
+```
+TASK: Grade the artifact(s) of pipeline judge-unit "{{step_label}}" against the step's rubric and emit a structured quality verdict. You are an evaluator only — you do NOT edit the artifact, BLOCK, or abort.
+
+CONTEXT:
+- The artifact(s) to grade: {{artifact_paths}}.
+- .claude/skills/product/references/quality-judge.md — the operational contract: rubric assembly, the right-sizing criterion, the verdict JSON shape, the routing. READ THIS FIRST.
+- .claude/skills/product/references/quality-checklist.md {{rubric_section}} — the per-step semantic criteria (each a stable `id`) that form the rubric's semantic layer. Some steps have none — then the rubric is right-sizing + schema context only.
+- {{schema_dir}}schema.md + {{schema_dir}}prompt.md — the step's required shape + job; CONTEXT for "what this artifact is for", NOT a checklist to re-run (the deterministic anchor check already ran at submit).
+- {{out}}/docs/.state.json — the run's declared scope: `idea`, `flags`, and the roadmap phase count where present. The right-sizing criterion is judged against THIS, not a fixed size.
+
+CONSTRAINTS:
+- Pointwise, chain-of-thought. Grade ONE artifact-set against ONE rubric; reason criterion-by-criterion before emitting each `verdict`. Never compare or rank two artifacts.
+- The rubric = the `quality-checklist.md {{rubric_section}}` criteria + the universal `right-sizing` criterion. Grade each `pass` / `concern` / `fail` with a one-line `note`. On `concern`/`fail` the `note` MUST name the section + dimension — never just "missing" or "too long".
+- **right-sizing — the anti-verbosity criterion. DO NOT REWARD LENGTH.** A longer artifact is not a better artifact. Judge whether every section pulls weight for the artifact's declared job at THIS run's declared scope (read `.state.json`). A correctly-scoped large artifact for a large declared product is `pass`; a padded artifact for a small one is `fail`; a section too thin for its job is `fail`. Grade scope-fit, never byte count. Full criterion text: `quality-judge.md § The right-sizing criterion`.
+- Grade quality, not presence. The `schema.md` anchors were already deterministically checked at submit — your job is whether the present sections are substantive and load-bearing.
+- You NEVER BLOCK, abort, trim, or edit the artifact. Your strongest signal is `outcome: "fail"`, which the orchestrator routes to a phase-gate `iterate` recommendation — the human decides. Deterministic BLOCK/abort is not yours.
+- Emit the verdict in the exact JSON shape of `quality-judge.md § The verdict`: `step` / `judged_at` (UTC ISO-8601) / `model` (`opus`) / `criteria[]` / `scope_assessment` / `outcome`. `outcome` = max-severity rollup (`fail` > `concern` > `pass`).
+- Catastrophe cap per `.claude/rules/artifact-budgets.md`: a uniform 200 KB ceiling — a verdict never approaches it; if you somehow do, STOP and emit a partial-result.
+
+DELIVERABLE: the verdict JSON object written to {{verdict_path}}; plus a 1-2 line plain-text summary as your final message (the human-readable trace — `outcome` + `scope_assessment`).
+
+DONE_WHEN: {{verdict_path}} exists and parses as JSON; carries `step` = "{{step_label}}", `criteria[]` with one row per rubric criterion (each `id` + `verdict` ∈ pass/concern/fail + `note`), a `right-sizing` criterion, a one-line `scope_assessment`, and `outcome` = the max-severity rollup; no artifact file was modified.
 ```
 
 ## Concurrency cap

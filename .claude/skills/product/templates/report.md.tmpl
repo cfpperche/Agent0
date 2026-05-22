@@ -36,6 +36,12 @@ _Generated {{DATE}} · stack {{STACK}} · pipeline coverage {{N_STEPS_COMPLETED}
 | 4 — Visual contract | (no gate) | — | — |
 | 5 — SDD handoff | (no gate; terminal) | — | — |
 
+## Quality concerns
+
+_The quality judge (spec 075) grades each step's artifact(s) against the step's rubric — structure, completeness, and scope-aware right-sizing. This section lists every `concern` and `fail` verdict (clean `pass` verdicts are omitted); each entry names the judge-unit, the flagged criterion, and the judge's one-line `note`, alongside the unit's `scope_assessment`. A `fail` pre-set the phase gate's recommended option to `iterate`; a Phase 4 `fail` (15a/15b/15c — no gate) surfaces here only. Empty when every judge-unit passed clean._
+
+{{quality_concerns_section}}
+
 ## Blocked steps
 
 _Empty when no steps blocked. Each entry: step label + reason + partial artifacts (if any)._

@@ -28,9 +28,9 @@ The audit ran 2026-05-19; sources cited in `plan.md` § Research. The frame is t
   - **When** the umbrella is reviewed
   - **Then** §C requires no action — discards are documentation, not work items
 
-- [ ] `.claude/rules/spec-driven.md` documents the `**Type:** <value>` convention: omitted = default feature/refinement spec, `umbrella` = aggregator (no implementation; tracks closure of child rows)
+- [x] `.claude/rules/spec-driven.md` documents the `**Type:** <value>` convention: omitted = default feature/refinement spec, `umbrella` = aggregator (no implementation; tracks closure of child rows)
 
-- [ ] Follow-up specs 061/062/063 are scaffolded (top-3 picks by ROI: small esforço + high priority)
+- [x] Follow-up specs 061/062/063 are scaffolded (top-3 picks by ROI: small esforço + high priority)
 
 ## Non-goals
 
@@ -49,9 +49,9 @@ The audit ran 2026-05-19; sources cited in `plan.md` § Research. The frame is t
 
 - Audit conversation 2026-05-19 (research delegated via general-purpose agent, opus model)
 - Top-3 picks (alta prioridade + esforço S/M):
-  - **061** → SubagentStop hook (closes delegation audit row) — _in-progress, shipped backbone 2026-05-19_
+  - **061** → SubagentStop hook (closes delegation audit row) — _shipped 2026-05-21_
   - **062** → `/goal` skill — _closed 2026-05-19: superseded by CC native `/goal` (2.1.144+)_
-  - **063** → worktree-isolated sub-agents (collision prevention via 6th handoff field) — _draft_
+  - **063** → worktree-isolated sub-agents — _shipped 2026-05-21 (Option B redesign — discipline on top of CC native worktrees)_
 - `.claude/rules/spec-driven.md` § The four artifacts — convention being extended
 - `.claude/memory/feedback_speculative_observability.md` — gates re-evaluation of §B deferrals
 
@@ -62,13 +62,13 @@ The audit ran 2026-05-19; sources cited in `plan.md` § Research. The frame is t
 | # | Gap | Canonized by | Priority | Esforço | Outcome |
 |---|---|---|---|---|---|
 | A1 | `/goal` primitive (done-state contract + auto-loop at user→main) | Codex CLI 0.128+; Claude Code v2.1.139+ | Alta | M | **closed**: superseded by CC native `/goal` (2.1.144+ binary confirms surface); see `docs/specs/062-goal-skill/spec.md` § Closure |
-| A2 | Worktree-isolated sub-agents (6th handoff field `ISOLATION: worktree`) | Claude Code native | Alta | M | **→ 063** |
-| A3 | `SubagentStop` hook closing delegation audit row | Claude Code 2026 (27+ events) | Alta | S | **→ 061** |
-| A4 | `AGENTS.md` cross-tool standard (CLAUDE.md ↔ AGENTS.md sync) | Linux Foundation Agentic AI | Média | S | pending follow-up spec |
-| A5 | `PermissionRequest` hook (dynamic GREEN/YELLOW/RED policy) | Claude Code 2.0.45+ | Média | S | pending follow-up spec |
-| A6 | Cost/token observability per-delegação in audit JSONL | Hermes Agent; Claude Code `/cost` v2.1.92+ | Média | S | pending follow-up spec |
-| A7 | Eval/golden-test harness for `/product`/`/sdd` regression | DeepEval, Promptfoo, Braintrust | Média | M | pending follow-up spec |
-| A8 | Delta-spec tracking convention (ADDED/MODIFIED/REMOVED in `spec.md`) | OpenSpec | Baixa | S | pending follow-up spec |
+| A2 | Worktree-isolated sub-agents (6th handoff field `ISOLATION: worktree`) | Claude Code native | Alta | M | **→ 063** — shipped 2026-05-21 |
+| A3 | `SubagentStop` hook closing delegation audit row | Claude Code 2026 (27+ events) | Alta | S | **→ 061** — shipped 2026-05-21 |
+| A4 | `AGENTS.md` cross-tool standard (CLAUDE.md ↔ AGENTS.md sync) | Linux Foundation Agentic AI | Média | S | pending — keep (re-eval 2026-05-21); cross-tool interop is a real gap, 07-19 review batch |
+| A5 | `PermissionRequest` hook (dynamic GREEN/YELLOW/RED policy) | Claude Code 2.0.45+ | Média | S | pending — keep (re-eval 2026-05-21); Média/S, no urgency — 07-19 review batch |
+| A6 | Cost/token observability per-delegação in audit JSONL | Hermes Agent; Claude Code `/cost` v2.1.92+ | Média | S | **closed** (2026-05-21): `SubagentStop` payload carries no cost/token field (spec 061 notes § payload matrix), so this is not the "S" effort estimated; CC `/cost` covers the user-facing need; rule-of-three unmet. Reopen via a fresh spec if real demand surfaces |
+| A7 | Eval/golden-test harness for `/product`/`/sdd` regression | DeepEval, Promptfoo, Braintrust | Média | M | pending — keep (re-eval 2026-05-21); ROI rising as `/product` is actively dogfooded — strongest §A candidate |
+| A8 | Delta-spec tracking convention (ADDED/MODIFIED/REMOVED in `spec.md`) | OpenSpec | Baixa | S | **closed** (2026-05-21): delta-spec tracking already covered by the OpenSpec escalation path in `spec-driven.md` § Escalation path |
 
 ### §B — Emerging, worth watching (9 rows)
 
@@ -77,11 +77,11 @@ The audit ran 2026-05-19; sources cited in `plan.md` § Research. The frame is t
 | B1 | `SubagentStart`/`SubagentStop` lifecycle hooks (related to A3 but broader) | Claude Code 2026 | Alta | S | folded into 061 — close as duplicate |
 | B2 | InstructionsLoaded-driven rule analytics (histogram of rule load frequency) | (extension of own `rule-load-debug.sh`) | Baixa | S | deferred: re-evaluate when rule count > 30 |
 | B3 | Agent-as-peer / pub-sub channels | Claude Code Channels Q1 2026 | Baixa | L | deferred: rule-of-three on orchestration demand |
-| B4 | Persona/SOUL.md per sub-agent (`.claude/personas/<role>.md`) | Hermes Agent SOUL.md | Média | S | pending follow-up spec (already in REMINDERS.md) |
+| B4 | Persona/SOUL.md per sub-agent (`.claude/personas/<role>.md`) | Hermes Agent SOUL.md | Média | S | **recommended next spec** (re-eval 2026-05-21): concrete, S effort, already flagged in REMINDERS.md |
 | B5 | Honcho-style dialectic memory (peer-modeling, background reasoning loop) | Honcho | Baixa | L | **closed**: heavy infra (FastAPI server) conflicts with bash-zero-dep frame |
 | B6 | Cross-fork bidirectional memory sync | (no canonical) | Baixa | M | **closed**: one-way is conscious design (see `memory-placement.md`) |
 | B7 | `UserPromptExpansion` hook (rewrites prompt with DONE-state inline) | Claude Code 2026 | Baixa-Média | S | folded into 062 — natural surface for `/goal` |
-| B8 | `notes.md` sub-agent integration enforcement (validator checks append) | Spec 046 (parcial) | Média | S | pending follow-up spec |
+| B8 | `notes.md` sub-agent integration enforcement (validator checks append) | Spec 046 (parcial) | Média | S | **deferred** (2026-05-21): enforcement is contingent on spec 046's 2026-07-01 `notes.md` dogfood gate — re-evaluate after it resolves |
 | B9 | Constitution / immutable principles as transversal gate | Spec-Kit | Baixa | S | **closed**: cerimônia risk; Agent0 prefers skip-categories + `# OVERRIDE` |
 
 ### §C — Investigated and discarded (8 rows, informational only)

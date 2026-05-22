@@ -18,6 +18,20 @@ Considered `epic` (Agile/Jira), `tracking` (Rust/Kubernetes OSS convention), `um
 
 Existing 59 specs use bolded inline `**Status:**` near the top — no YAML frontmatter anywhere in `docs/specs/`. Adopting frontmatter for the new field would force migrating 59 specs OR live with mixed shapes. The bolded line matches the existing convention, costs one line, is grep-able (`grep -l "Type: umbrella" docs/specs/*/spec.md`), and avoids parser dependencies.
 
+### 2026-05-21 — parent — re-evaluation after 061 + 063 shipped (umbrella task 6)
+
+061 and 063 shipped 2026-05-21 (062 was closed earlier). With the top-3 rows resolved, task 6 called for re-evaluating the still-`pending` rows and deciding the next batch. The live re-eval scope was A4-A8 + B4 + B8 — the original task-6 list also named §B1/B7, but both were already resolved (folded into 061/062). Outcomes, now recorded in § Gap matrix:
+
+- **A8 → closed.** Delta-spec tracking (ADDED/MODIFIED/REMOVED) is already covered by the OpenSpec escalation path that `spec-driven.md` § Escalation path documents as the opt-in upgrade. Baking a half-version into Agent0 duplicates it.
+- **A6 → closed.** Cost/token observability has no payload source — spec 061's empirical payload matrix shows `SubagentStop` carries neither cost nor token fields, so A6 is not the "S" effort the audit estimated. CC's native `/cost` covers the user-facing need; the forensic-audit angle is what `feedback_speculative_observability.md`'s rule-of-three flags. Marked `closed` rather than `deferred` because §A's acceptance scenario only admits →NNN or closed — "reopen via a fresh spec if real demand surfaces" is the standing escape hatch.
+- **B8 → deferred.** `notes.md` enforcement is contingent on spec 046's 2026-07-01 dogfood gate — that gate decides whether `notes.md` becomes mandatory at all. Building enforcement now pre-empts the gate. §B admits `deferred`, so the row holds rather than closes.
+- **A4 / A5 / A7 → kept pending.** All Média priority, no urgency; folded into the existing 2026-07-19 review-batch reminder. A7 (eval/golden-test harness) is the strongest of the three — ROI rises as `/product` gets real dogfood use.
+- **B4 → recommended next spec.** Persona/SOUL.md per sub-agent: concrete, S effort, already user-flagged in REMINDERS.md. The standing recommendation for the next spec slot.
+
+**No bulk-scaffold.** Task 6's literal "scaffold the next batch" is deliberately not executed as a sweep of empty draft specs — the 2026-05-19 § Tradeoffs entry already established that empty drafts rot and the umbrella matrix is the single source of truth for "what's pending." A follow-up spec is scaffolded only when it becomes the actively-worked next unit.
+
+Progress: of the 7 rows re-evaluated, 3 reach a terminal/holding outcome (A6 + A8 closed, B8 deferred); A4/A5/A7 stay pending for the 07-19 batch; B4 is the recommended-next. The umbrella stays `draft` until every §A row is →NNN/closed and every §B row is →NNN/closed/deferred.
+
 ## Deviations
 
 _(none yet — spec was just scaffolded)_

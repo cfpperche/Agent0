@@ -26,6 +26,11 @@ _Generated from `plan.md` on 2026-05-21. Work top-to-bottom. Check boxes as task
 - [x] 14. QA finding #2 — `hashchange` listener: nav restructured so the URL hash is the single source of truth (cold load + address-bar edit + back/forward all re-render). Browser-verified.
 - [x] 15. QA finding #1 — responsive `@media (max-width: 720px)` drawer: sidebar collapses to an off-canvas drawer with `☰` toggle + tap-to-close backdrop; pane full-width; no horizontal overflow. Browser-verified at 390px; desktop layout unchanged. Suite 16→18 (2 regression tests for the wiring).
 
+## Post-ship fixes (2026-05-22)
+
+- [x] 16. Step 15 ordering fix — reorder the Step 15 `ARTIFACT_MANIFEST` parts so the `screens/hifi/` iframe-dir leads `screen-atlas.md` (on the mei-saas run the hi-fi screens were buried ~10,429 px below the fold). One regression test; suite 18→19. Committed `675c3da`.
+- [x] 17. Per-step sub-tabs — a multi-part step renders a sub-tab row; only the active tab's parts enter the DOM; the hash grammar extends to `#<id>/<tab-slug>` so tabs are deep-linkable and back/forward cycle them. Playwright-verified (Step 15 20,797 px → 4,186 px); 4 tests, suite 19→23. Committed `43f9d9f`.
+
 ## Notes
 
 _Populated during execution — see `notes.md` for in-flight design decisions._

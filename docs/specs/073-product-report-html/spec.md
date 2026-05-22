@@ -10,32 +10,32 @@ _Created 2026-05-21._
 
 ## Acceptance criteria
 
-- [ ] **Scenario: terminal report renders the full pipeline**
+- [x] **Scenario: terminal report renders the full pipeline**
   - **Given** a completed `/product` run with all 15 artifacts present under `<out>/docs/`
   - **When** `build-report.ts --out=<out>/docs` runs
   - **Then** `<out>/docs/REPORT.html` exists, opens in a browser with no server/build, and its sidebar lists all 15 steps grouped by the 5 phases in pipeline order
 
-- [ ] **Scenario: partial run at a gate**
+- [x] **Scenario: partial run at a gate**
   - **Given** a `/product` run paused at gate 1 with only steps 01-04 artifacts present
   - **When** `build-report.ts` runs
   - **Then** `REPORT.html` renders the steps 01-04 artifacts and shows steps 05-15 as a greyed-out "not yet generated" placeholder — no error, no crash
 
-- [ ] **Scenario: regeneration is idempotent**
+- [x] **Scenario: regeneration is idempotent**
   - **Given** `REPORT.html` already exists from a prior run
   - **When** `build-report.ts` runs again against the same unchanged `docs/`
   - **Then** the regenerated `REPORT.html` is byte-identical to the previous one, except for the single declared `generated_at` field (no duplication, no other churn)
 
-- [ ] **Scenario: markdown is rendered, not raw**
+- [x] **Scenario: markdown is rendered, not raw**
   - **Given** an artifact such as `concept-brief.md` containing headings, tables, and fenced code
   - **When** that artifact is selected in `REPORT.html`
   - **Then** it displays as rendered HTML — headings, tables, syntax-highlighted code — not raw markdown text
 
-- [ ] **Scenario: visual-contract HTML embedded inline**
+- [x] **Scenario: visual-contract HTML embedded inline**
   - **Given** `docs/screens/*.html` (lo-fi) and `docs/screens/hifi/*.html` (hi-fi) exist
   - **When** the Step 02 / Step 15 entries are selected
   - **Then** the mood screens render inline via `<iframe>` with a relative `src`
 
-- [ ] **Scenario: blocked step surfaced**
+- [x] **Scenario: blocked step surfaced**
   - **Given** `docs/.state.json` lists a step in `blocked_steps`
   - **When** `REPORT.html` loads
   - **Then** that step's nav entry shows the `✗` blocked status icon, consistent with `REPORT.md` § Pipeline coverage
@@ -55,11 +55,11 @@ _Created 2026-05-21._
   - **When** that step is opened in `REPORT.html`
   - **Then** a sub-tab row renders at the top of the pane, only the active tab's parts are in the DOM (a long step is never one giant scroll), and each tab is deep-linkable via a `#<step>/<tab-slug>` hash that survives back / forward
 
-- [ ] `.claude/skills/product/scripts/build-report.ts` exists and runs with the same runtime as `sync-open-design.ts`, with **zero npm dependencies** (Node/Bun stdlib only — no markdown parsing at build time)
-- [ ] `.claude/skills/product/templates/report.html.tmpl` exists — the HTML shell (CSS + client JS + pinned CDN `<script>` tags + placeholders)
-- [ ] `.claude/skills/product/scripts/build-report.test.ts` exists and passes
-- [ ] `.claude/skills/product/SKILL.md` invokes `build-report.ts` at all four moments: before gates after steps 04 / 12 / 14, and at the terminal Step 15.4 alongside `REPORT.md`
-- [ ] Non-markdown artifacts (`sitemap.yaml`, `data-flow.json`, `tokens.css`) render as syntax-highlighted code blocks
+- [x] `.claude/skills/product/scripts/build-report.ts` exists and runs with the same runtime as `sync-open-design.ts`, with **zero npm dependencies** (Node/Bun stdlib only — no markdown parsing at build time)
+- [x] `.claude/skills/product/templates/report.html.tmpl` exists — the HTML shell (CSS + client JS + pinned CDN `<script>` tags + placeholders)
+- [x] `.claude/skills/product/scripts/build-report.test.ts` exists and passes
+- [x] `.claude/skills/product/SKILL.md` invokes `build-report.ts` at all four moments: before gates after steps 04 / 12 / 14, and at the terminal Step 15.4 alongside `REPORT.md`
+- [x] Non-markdown artifacts (`sitemap.yaml`, `data-flow.json`, `tokens.css`) render as syntax-highlighted code blocks
 
 ## Non-goals
 

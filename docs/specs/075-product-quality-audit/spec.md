@@ -2,7 +2,7 @@
 
 _Created 2026-05-22._
 
-**Status:** draft
+**Status:** in-progress _(Moves 1-2 implemented + committed; task 14 dogfood partial — slice validated scenarios 1-2, full `/product` dogfood deferred)_
 
 ## Intent
 

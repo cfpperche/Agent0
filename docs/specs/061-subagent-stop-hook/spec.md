@@ -2,7 +2,7 @@
 
 _Created 2026-05-19._
 
-**Status:** in-progress
+**Status:** shipped
 
 ## Intent
 
@@ -17,40 +17,40 @@ Claude Code's `SubagentStop` hook event fires when a sub-agent task ends. This s
 
 ## Acceptance criteria
 
-- [ ] **Scenario: sub-agent completes normally**
+- [x] **Scenario: sub-agent completes normally**
   - **Given** a `PreToolUse(Agent)` audit row was appended by the delegation gate at dispatch (now also recording `tool_use_id` per spec resolution)
   - **When** `SubagentStop` fires for the same sub-agent invocation
   - **Then** a sibling JSONL row is appended to `.claude/delegation-audit.jsonl` with `event: "subagent-stop"`, `agent_id`, `tool_use_id` (read from per-sub-agent `.meta.json` sidecar), `agent_type`, `duration_ms` (close_ts − dispatch_ts client-computed), `exit: "ok"`, `edit_count` (counted from `agent_transcript_path` JSONL `tool_use` entries), `last_assistant_message_head` (200 chars), `agent_transcript_path`
 
-- [ ] **Scenario: sub-agent stopped due to loop-budget exhaustion**
+- [x] **Scenario: sub-agent stopped due to loop-budget exhaustion**
   - **Given** `.claude/.delegation-state/agents/<agent_id>` recorded `CLAUDE_DELEGATION_LOOP_BUDGET` consecutive validator failures
   - **When** `SubagentStop` fires
   - **Then** the closing row records `exit: "loop-budget-exceeded"` and `last_validator_exit: <int>`
 
-- [ ] **Scenario: pure-research sub-agent (no edits)**
+- [x] **Scenario: pure-research sub-agent (no edits)**
   - **Given** the dispatched sub-agent produced only a return text (no Edit/Write/MultiEdit calls)
   - **When** `SubagentStop` fires
   - **Then** the closing row records `exit: "ok"`, `edit_count: 0`
 
-- [ ] **Scenario: failure-safe — missing dependencies or unparseable payload**
+- [x] **Scenario: failure-safe — missing dependencies or unparseable payload**
   - **Given** `jq` is absent, or the hook payload lacks expected fields, or the audit log path is non-writable
   - **When** the hook runs
   - **Then** it exits 0 silently; the harness continues; partial audit log degradation is acceptable
 
-- [ ] **Scenario: parent-edit dispatch (no sub-agent — false positive)**
+- [x] **Scenario: parent-edit dispatch (no sub-agent — false positive)**
   - **Given** the harness fires `SubagentStop` for a non-Agent tool (defensive case)
   - **When** the hook parses the payload
   - **Then** it exits 0 without appending; no spurious rows
 
-- [ ] `.claude/hooks/delegation-stop.sh` exists, executable (`chmod +x`), follows the same bash conventions as `delegation-gate.sh` (jq with guarded `// empty`, no sticky `exec` redirects, fail-open on missing deps)
+- [x] `.claude/hooks/delegation-stop.sh` exists, executable (`chmod +x`), follows the same bash conventions as `delegation-gate.sh` (jq with guarded `// empty`, no sticky `exec` redirects, fail-open on missing deps)
 
-- [ ] `.claude/hooks/delegation-gate.sh` extended to capture `tool_use_id` in the dispatch row (one new `jq -r` call + one new audit field). Existing 11 fields preserved; `tool_use_id` becomes the 12th.
+- [x] `.claude/hooks/delegation-gate.sh` extended to capture `tool_use_id` in the dispatch row (one new `jq -r` call + one new audit field). Existing 11 fields preserved; `tool_use_id` becomes the 12th.
 
-- [ ] `.claude/settings.json` registers the hook under the `SubagentStop` event surface
+- [x] `.claude/settings.json` registers the hook under the `SubagentStop` event surface
 
-- [ ] Tests in `.claude/tests/` cover the four success scenarios + failure-safe path + orphan-stop (no matching dispatch row) + gate-extension regression (existing dispatch tests still pass with new field)
+- [x] Tests in `.claude/tests/` cover the four success scenarios + failure-safe path + orphan-stop (no matching dispatch row) + gate-extension regression (existing dispatch tests still pass with new field)
 
-- [ ] `.claude/rules/delegation.md` § Audit log updated to reflect both the new dispatch field (`tool_use_id`) AND the new row event schema; § The 5-field handoff unchanged (the parser doesn't expose `tool_use_id` to the handoff brief — it's harness-internal)
+- [x] `.claude/rules/delegation.md` § Audit log updated to reflect both the new dispatch field (`tool_use_id`) AND the new row event schema; § The 5-field handoff unchanged (the parser doesn't expose `tool_use_id` to the handoff brief — it's harness-internal)
 
 ## Non-goals
 

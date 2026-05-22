@@ -157,7 +157,8 @@ close_row="$(jq -c -n \
   --arg correlation "$CORRELATION" \
   --argjson stop_hook_active "$STOP_HOOK_ACTIVE" \
   '{ts:$ts, event:$event, session_id:$session_id, agent_id:$agent_id,
-    tool_use_id:$tool_use_id, agent_type:$agent_type, exit:$exit,
+    tool_use_id:(if $tool_use_id == "" then null else $tool_use_id end),
+    agent_type:$agent_type, exit:$exit,
     duration_ms:$duration_ms, edit_count:$edit_count,
     last_assistant_message_head:$last_assistant_message_head,
     agent_transcript_path:$agent_transcript_path,

@@ -8,26 +8,27 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Session 2026-05-21 (cont.) — 070 follow-up #1 done: memory-ref de-leak. `main` clean + in sync; follow-up edits uncommitted.**
+**Session 2026-05-21 (cont.) — 070 follow-up #1 shipped+pushed; spec 061 closed.**
 
-- **070 follow-up #1 — memory-ref de-leak (done, direct, no spec).** Stripped 9 `.claude/memory/<file>.md` path-pointer citations (`feedback_speculative_observability.md`, `cc-platform-hooks.md`) from 6 rule files: `spec-driven`, `runtime-introspect`, `rule-load-debug`, `routines`, `user-prompt-framing`, `artifact-budgets`. Pointer dropped, operational concept kept — per spec 070's resolved OQ1.
-- **Scope correction vs. handoff estimate:** the prior handoff said "11 pointers / 8 files". Actual: 9 genuine leaks / 6 files. The 2 remaining `.claude/memory/MEMORY.md` mentions (CLAUDE.md § Memory, `memory-placement.md`) are the index-file-*name* convention — kept, same carve-out as the literal `NNN` in `docs/specs/NNN-<slug>/`. Consequential staleness fix rode along: dropped `memory-placement.md`'s "discovery via cross-references from specific rule docs" clause.
-- Earlier this session: specs 068–072 shipped + pushed; mei-saas fork synced (`98a899f`).
+- **070 follow-up #1 — memory-ref de-leak** — committed + pushed (`18fe9f7`). Stripped 9 `.claude/memory/<file>.md` path-pointer citations from 6 rules; 2 `MEMORY.md` index-name refs kept as convention.
+- **Spec 061 (subagent-stop-hook) — CLOSED, status → shipped.** Impl was already done (hook, gate extension, settings, delegation.md); the gap was the missing test suite — a TDD violation. Wrote `.claude/tests/061-delegation-stop/` (9 scenario scripts + run-all + README), 9/9 PASS. Adjacent `parallel-edit-validation` regression 2/2 PASS. One 1-line hook fix (`tool_use_id` empty→`null`) surfaced by the missing-sidecar test.
 
 ## WIP (uncommitted)
 
-- 7 fork-bound files edited (6 rule de-leaks + `memory-placement.md` staleness fix) + `.claude/memory/propagation-hygiene.md` § Not-yet-cleaned updated. Not committed — awaiting review.
+- Spec 061 closure: `.claude/hooks/delegation-stop.sh` (1-line fix), `.claude/tests/061-delegation-stop/` (new — 11 files), `docs/specs/061-*/{spec,tasks,notes}.md`, SESSION.md. Not committed — awaiting review.
 
 ## Next steps
 
-1. **Commit the 070 follow-up #1 de-leak** (8 files; suggested: `chore(070): follow-up #1 — strip .claude/memory/ path-pointer leaks from 6 rules`).
-2. **`/product` dogfood of mei-saas** — queued; runs in a mei-saas-rooted session (kickoff prompt prepared 2026-05-21). Live-validates spec 069's Phase 0 overwrite (`clear-target.sh` must preserve `.git/` + harness). mei-saas baseline is clean + pushed; checkpoint `a2c8ec2` is the safety net.
-3. Dated reminders (not yet due): spec 029 adoption 2026-05-30 · spec 035 missed-clarification count 2026-06-07 · spec 046 gate 2026-07-01 · spec 060 §A/§B review 2026-07-19.
+1. **Commit spec 061 closure** (suggested: `test(061): subagent-stop-hook test suite — close spec, status→shipped`).
+2. **Audit spec 063 (worktree-isolated-subagents).** `in-progress`, tasks 0/29 — but `delegation.md § Worktree isolation` describes the capacity (audit field 13, validator scoping) as shipped. Doc-vs-reality contradiction: verify if it is done-but-unclosed (cheap close) or a genuine 29-task build.
+3. **`/product` dogfood of mei-saas** — in progress in a parallel mei-saas-rooted session. After it: live-validate spec 069 Phase 0 overwrite (`clear-target.sh` preserves `.git/` + harness).
+4. Dated reminders: spec 029 05-30 · spec 035 06-07 · spec 046 07-01 · spec 060 07-19.
 
 ## Decisions & gotchas
 
-- **Memory basenames-as-examples — newly-surfaced residual leak, deferred.** `routines.md` + `memory-placement.md` use bare memory-file basenames (`cc-platform-hooks.md`, `agent0-purpose.md`, …) as illustrative examples. Distinct softer class from the path-pointer citations; cleaning = editorial rewrite. Recorded in `propagation-hygiene.md` § Not-yet-cleaned.
-- **070 follow-up #2 (spec citations in hook/tool code comments) is deliberately OUT of scope** — code comments are not instruction-context, low harm; 070 deferred them on purpose.
+- **Spec 061 test convention** — payloads generated inline (`jq -cn`), not a `fixtures/` dir: the `SubagentStop` payload's `agent_transcript_path` must be a real per-run tmp path. Matches existing Agent0 test dirs.
+- **Spec 035 is `in-progress` at 6/6 by design** — capacity built, status held open only for the missed-clarification dogfood window (reminder 06-07). Not a stale status.
+- **Memory basenames-as-examples — residual leak, deferred.** `routines.md` + `memory-placement.md` use bare memory-file basenames as examples. Recorded in `propagation-hygiene.md` § Not-yet-cleaned.
 
 ## Carryover (orthogonal — not touched this session)
 

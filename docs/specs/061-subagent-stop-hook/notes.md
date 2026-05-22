@@ -97,6 +97,14 @@ Original spec said the stop hook would be additive and not modify `delegation-ga
 
 Plan.md updated to reflect this: § Approach now starts with the gate extension, then the stop hook, then validator update for the consecutive_failures state path. Files to touch grew by one (`.claude/hooks/delegation-gate.sh`), but the patch is ~3 lines.
 
+### 2026-05-21 — parent — test suite uses inline payload generation, not a `fixtures/` dir
+
+tasks.md task 7 sketched a `fixtures/*.json` layout (one static JSON per scenario). Implementation diverged: each of the 9 scripts in `.claude/tests/061-delegation-stop/` generates its `SubagentStop` payload **inline** (`jq -cn` / heredoc). Reason: the payload's `agent_transcript_path` field must point at a real transcript file inside the per-run `mktemp` dir, and a static fixture cannot encode a path that does not exist until test time. Inline generation is also the established Agent0 test convention — `secrets-scan`, `harness-sync`, `parallel-edit-validation` all build inputs inline; no test dir uses a `fixtures/` subdir. The plan's literal layout was a pre-implementation sketch; the divergence is mechanical, not a design change.
+
+### 2026-05-21 — parent — `tool_use_id: ""` → `null` hook fix surfaced by the missing-sidecar test
+
+Writing `06-missing-sidecar.sh` against spec.md's contract ("close row records `tool_use_id: null`", stated three times across the spec) exposed an impl gap: `delegation-stop.sh` built the field with `jq --arg tool_use_id "$TOOL_USE_ID"`, which yields `""` (empty string) when no sidecar `.meta.json` supplies a `toolUseId` — not `null`. The happy-path e2e (task 10) never caught this because there `tool_use_id` is always non-empty. Fix: the jq object builder maps empty→null inline (`tool_use_id:(if $tool_use_id == "" then null else $tool_use_id end)`) — one line, no new subprocess, `--arg` unchanged. A genuine red→green: the spec is the contract, the test named the contracted behavior, the impl was corrected to match. `null` is also the more correct JSON semantics for an absent identifier than `""`.
+
 ## Tradeoffs
 
 ### 2026-05-19 — parent — left mid-session hook activation finding for a follow-up memory update, not this spec

@@ -8,34 +8,35 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Session 2026-05-22 — spec 075 Moves 1-2 complete; task 14 dogfood partial.** Active spec `docs/specs/075-product-quality-audit/` — replaced the `/product` size-budget instrument with a rubric quality judge.
+**Session 2026-05-22 — spec 077 shipped & committed; spec 078 planned.** Branch `spec-077-product-validation-framing` (off `main`, not pushed, not merged).
 
-- **075 — Moves 1+2 DONE + committed.** `22aae4b`+`6c31e8c` (Move 1, tasks 1-4 — retire the size ceiling); `d8e8671` (Move 2 tasks 5-7 — the judge spec: verdict shape, `quality-judge.md`, repositioned `quality-checklist.md`); `0496a3b` (Move 2 tasks 8-13 — the § Quality judge brief + `SKILL.md`/`state-machine.md`/`report.md.tmpl` wiring + a 3-schema prose-ceiling fix task 12 caught); `54a6342` (task 14 partial).
-- **075 task 14 — PARTIAL.** Representative slice done — the judge was dispatched against 2 real mei-saas artifacts (functional-spec 66 KB, cost-estimate 30 KB); scenarios 1-2 validated (verdict shape ✓; correctly-scoped large artifact → `right-sizing: pass` ✓✓ — the core false-positive regression is killed). Scenarios 3-6 + the full end-to-end run deferred.
-- **073 — FULLY CLOSED.** Four post-ship commits this session: `675c3da` (Step 15 reorder — hi-fi screens lead), `43f9d9f` (per-step sub-tabs — multi-part step no longer one giant scroll), `7aa8553` (`docs` — tick acceptance + log fixes), `42b11f0` (HTML artifacts inlined via `<iframe srcdoc>` — REPORT.html survives a filesystem move). Spec `shipped`, acceptance 15/15 `[x]`, tasks 18/18, no open questions, `plan.md` § Alternatives amended. Suite `build-report.test.ts` 25/25. mei-saas REPORT.html regenerated (769 KB). Done — no follow-up.
-- **076 product-dogfood-fixes — scaffolded (`e8ff256`).** spec.md filled; plan/tasks NOT drafted; OQ#8 blocks `/sdd plan`.
+- **077 — SHIPPED + COMMITTED.** Commit `89d81f2` (`feat`, 28 files): `/product` step 4 renamed "UX Testing" → "Validation" (`git mv 04-ux-testing` → `04-validation`, history preserved) + a new `contrast` quality-criterion on step 15b. Dogfooded in an ephemeral `/tmp` project (3 real `Agent` dispatches); `build-report.test.ts` 25/25. Spec `shipped`, 7/7 acceptance.
+- **078 — PLANNED, not implemented.** `docs/specs/078-product-validation-findings-criterion/` — `spec.md` + `plan.md` filled, status `draft`. Fixes a pre-existing `/product` bug the 077 dogfood surfaced: `quality-checklist.md § 04`'s `findings` criterion demands YAML frontmatter unconditionally, but projected-mode audits are told to omit it → every standard-tier (projected) run false-fails the `04-validation` judge. `tasks.md` NOT generated yet.
+- **075** — task 14 still partial (carryover, untouched this session).
 
 ## WIP — resume point
 
-**075 is implementation-complete. One task left: 14's full dogfood.**
-
-- Run a full `/product` invocation (35-55 min, needs an `--out` dir) to validate scenarios 3-6 — bloat flagged by dimension, verdict→gate `iterate` pre-population, Phase 4 handoff surfacing, anti-stub pre-filter short-circuit, catastrophe cap. Then tick `075/spec.md § Acceptance` scenarios 3-6 and bump status `in-progress` → `shipped`. Pairs with the pending "069 live validation" reminder (`/product` vs `/home/goat/mei-saas`).
+**078 is planned, not implemented.** Next: `/sdd tasks` on 078, then implement — a single-file reword of the `findings` criterion in `quality-checklist.md § 04` (grade the unconditional markdown `## Findings` table as the core; scope the YAML-frontmatter expectation to measurable-mode audits). Validate via a dogfood: dispatch the `04-validation` judge against a projected report (expect `findings: pass`) + a measurable report missing frontmatter (expect `concern`/`fail`).
 
 ## Next steps
 
-1. **075 task 14** — the full `/product` dogfood. Last task before `shipped`.
-2. **076** — founder must resolve OQ#8 (`076/spec.md § Open questions`) before `/sdd plan`.
-3. Dated reminders: spec 029 05-30 · spec 035 06-07 · spec 046 07-01 · spec 060 07-19.
+1. **078** — `/sdd tasks`, then implement + dogfood-validate.
+2. **Branch `spec-077-product-validation-framing`** carries 077 (committed) + the 078 spec scaffold — decide merge to `main` / open a PR when 078 lands too, or split.
+3. **075 task 14** — full `/product` dogfood (carryover).
+4. **076** — founder resolves OQ#8 before `/sdd plan`.
+5. Dated reminders: 029 05-30 · 035 06-07 · 046 07-01 · 060 07-19.
 
 ## Decisions & gotchas
 
-- **075 quality judge:** independent `opus` sub-agent per step; rubric = `quality-checklist.md` semantic criteria + `schema.md` structural context + a scope-aware right-sizing criterion; verdict = per-criterion pass/concern/fail + `scope_assessment` + `outcome` rollup; `fail` pre-sets the phase gate's `iterate` (Phase 4 → handoff). `quality_verdicts` is **v5-additive** (no v6 bump). Never autonomous hard-BLOCK.
-- **`SKILL.md` body-token warning** (~8414 vs 5000 recommended) — non-blocking, pre-existing, worsened by the 075 wiring. A `SKILL.md` trim is a candidate follow-up (not 075 scope).
-- **Bash cwd drifts** after Skill invocations — `cd /home/goat/Agent0` or use absolute paths.
-- **`secrets-scan` hook blocks compound `git add && git commit`** — run them as separate Bash calls.
-- **`governance-gate` blocks `rm -rf`** (combined `-r`+`-f`) — use `mktemp -d`, `rm -r` without `-f`.
+- **078 is a single-file fix.** Reword the `findings` criterion in `quality-checklist.md § 04`; the YAML frontmatter stays `schema.md`-optional. Rejected alternative: making the frontmatter unconditional (contradicts the deliberate projected-mode design). See `078/plan.md`.
+- **077 dogfood method** — representative slice: 3 real `Agent` dispatches in an ephemeral `/tmp` project, not a full 15-step run. Spec scenario 3 sanctions the representative-advance form. See `077/notes.md`.
+- **Verification grep must use a broader pattern than the site-list grep** — the 077 sweep's lowercase-`ux-testing` site list missed `(UX testing)` capitalized; the case-insensitive verification grep caught it.
+- **`secrets-scan` hook blocks compound `git add && git commit`** — run them as separate Bash calls. `git commit -F-` heredoc works fine.
+- **`governance-gate` blocks `rm -rf`** (combined `-r`+`-f`) — use `rm -r` without `-f`.
 
 ## Carryover (orthogonal — not touched this session)
 
+- **075 task 14** — full `/product` dogfood pending (scenarios 3-6); pairs with the "069 live validation" reminder.
+- **076 product-dogfood-fixes** — scaffolded, OQ#8 blocks `/sdd plan`.
+- `docs/specs/074-subagent-personas/` — untracked draft (persona/role-prompting killed on research grounds; another session's WIP — leave it).
 - `.claude/REMINDERS.md` items per startup readout.
-- `docs/specs/074-subagent-personas/` — untracked draft (spec 074 — persona/role-prompting killed on research grounds; another session's WIP — leave it).

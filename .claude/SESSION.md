@@ -12,6 +12,7 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 - **077 — SHIPPED + COMMITTED** (`89d81f2`). `/product` step 4 renamed "UX Testing" → "Validation" (`git mv 04-ux-testing` → `04-validation`) + a new `contrast` quality-criterion on step 15b. Dogfooded in `/tmp`; `build-report.test.ts` 25/25. Spec `shipped`, 7/7 acceptance.
 - **078 — SHIPPED + COMMITTED** (`857a2d9` scaffold + the `fix(078)` commit). Reworded the step-04 `findings` quality-criterion in `quality-checklist.md`: projected-mode audits are no longer false-failed for omitting the optional YAML frontmatter; measurable-mode audits still owe it. One-file fix. Dogfooded in `/tmp`: projected report → `findings: pass`, measurable report missing frontmatter → `findings: fail`. Spec `shipped`, 4/4 acceptance.
+- **mei-saas fork resynced to this Agent0 main** (separate repo at `/home/goat/mei-saas`; 3 commits made there this session, not yet pushed). `bash .claude/tools/sync-harness.sh --apply --agent0-path=/home/goat/Agent0 /home/goat/mei-saas` ran clean — 22 copied + 35 updated + 7 removed, 0 customizations refused. The fork's `docs/` (Tino `/product` v0.4.0 run) was also realigned to the 077 step-4 rename — `.state.json` + `REPORT.md` patched, `REPORT.html` regenerated via `bun build-report.ts`. Fork's `SESSION.md` was rewritten with a fresh handoff for the next session there. Fork is `[ahead 4]` of `origin/main` — push pending in the fork.
 - **075** — task 14 still partial (carryover, untouched this session).
 
 ## WIP — resume point

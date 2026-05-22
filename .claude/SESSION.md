@@ -8,34 +8,29 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Session 2026-05-22 — specs 077 + 078 both shipped & committed.** Branch `spec-077-product-validation-framing` (off `main`, **not pushed, not merged**), 4 commits.
+**Session 2026-05-22 (cont.) — 076 OQ#8 resolved, plan.md still empty.** Founder picked the (b)+(c) synthesis: a `# SKILL-DIRECTED: <slug>` marker (mirroring `# OVERRIDE:` grammar, ≥10 chars) that the skill adds to each brief and `delegation-gate.sh` reads to suppress *only* the `escalation` advisory — `model-discipline` keeps firing on undeclared models, ad-hoc parent dispatches without the marker still get `escalation` (true-positive preserved). Audit row gains `skill_directed: "<slug>" | null`. Decision recorded with rejection reasoning in `076/notes.md`; acceptance criterion #8 in `076/spec.md` rewritten as a Given/When/Then scenario; OQ#8 marked resolved inline.
 
-- **077 — SHIPPED + COMMITTED** (`89d81f2`). `/product` step 4 renamed "UX Testing" → "Validation" (`git mv 04-ux-testing` → `04-validation`) + a new `contrast` quality-criterion on step 15b. Dogfooded in `/tmp`; `build-report.test.ts` 25/25. Spec `shipped`, 7/7 acceptance.
-- **078 — SHIPPED + COMMITTED** (`857a2d9` scaffold + the `fix(078)` commit). Reworded the step-04 `findings` quality-criterion in `quality-checklist.md`: projected-mode audits are no longer false-failed for omitting the optional YAML frontmatter; measurable-mode audits still owe it. One-file fix. Dogfooded in `/tmp`: projected report → `findings: pass`, measurable report missing frontmatter → `findings: fail`. Spec `shipped`, 4/4 acceptance.
-- **mei-saas fork resynced to this Agent0 main** (separate repo at `/home/goat/mei-saas`; 3 commits made there this session, not yet pushed). `bash .claude/tools/sync-harness.sh --apply --agent0-path=/home/goat/Agent0 /home/goat/mei-saas` ran clean — 22 copied + 35 updated + 7 removed, 0 customizations refused. The fork's `docs/` (Tino `/product` v0.4.0 run) was also realigned to the 077 step-4 rename — `.state.json` + `REPORT.md` patched, `REPORT.html` regenerated via `bun build-report.ts`. Fork's `SESSION.md` was rewritten with a fresh handoff for the next session there. Fork is `[ahead 4]` of `origin/main` — push pending in the fork.
-- **075** — task 14 still partial (carryover, untouched this session).
+Uncommitted: `076/spec.md` + `076/notes.md` + this SESSION.md.
 
 ## WIP — resume point
 
-**Nothing mid-flight.** Both 077 and 078 are shipped and committed. The branch `spec-077-product-validation-framing` carries both. Next session's first decision: push the branch + open a PR to `main`, or merge directly.
+**076 is unblocked for `/sdd plan`.** No code touched yet — only spec.md + notes.md edits. Next action is `/sdd plan` to draft the implementation approach across the 6 findings (5 `/product` skill bugs + 1 harness-core marker mechanism).
 
 ## Next steps
 
-1. **Push `spec-077-product-validation-framing` + open a PR to `main`** (the branch carries both 077 and 078) — or merge directly.
-2. **075 task 14** — full `/product` dogfood, last task before 075 ships (carryover).
-3. **076** — founder must resolve OQ#8 before `/sdd plan`.
-4. Dated reminders: 029 05-30 · 035 06-07 · 046 07-01 · 060 07-19.
+1. Commit the OQ#8 resolution (spec.md + notes.md) as a single `docs(076)` row before planning, so plan.md lands on top of a resolved spec.
+2. Run `/sdd plan` for 076. The marker mechanism (#8) is the only cross-cutting change — it touches `delegation-gate.sh`, the audit-row builder, `.claude/rules/delegation.md` § Advisories, and adds 1 line per Step 02-15 brief in `delegation-briefs.md`. The other 5 findings are local to `/product` skill files.
+3. **075 task 14** — `/product` dogfood scenarios 3-6 still pending (carryover, pairs with "069 live validation" reminder).
+4. Dated reminders coming due: 029 05-30 · 035 06-07 · 046 07-01 · 060 07-19.
 
 ## Decisions & gotchas
 
-- **078 = a one-file fix.** Only `quality-checklist.md § 04`'s `findings` criterion was reworded; the YAML frontmatter stays `schema.md`-optional. The optional prompt/schema cross-reference was deliberately skipped (spec-075 principle — don't leak judge-awareness into producer-facing templates). See `078/notes.md`.
-- **077 + 078 dogfood method** — representative slice: real `Agent` dispatches (step producers + the `04-validation` / `15b-hifi-mood` quality judges) against hand-built fixtures in an ephemeral `/tmp` project, not a full 15-step run. See `077/notes.md`, `078/notes.md`.
-- **`secrets-scan` hook blocks compound `git add && git commit`** — run them as two separate Bash calls. `git commit -F-` heredoc works fine.
-- **`governance-gate` blocks `rm -rf`** (combined `-r`+`-f`) — use `rm -r` without `-f`.
+- **`secrets-scan` hook blocks compound `git add && git commit`** — run them as two separate Bash calls; `git commit -F-` heredoc works fine.
+- **`governance-gate` blocks `rm -rf`** — use `rm -r` without `-f`.
+- **OQ#8 (c)-puro is a foot-gun.** Inverting the gate on `MODEL_SPECIFIED=true` alone silences the legitimate ad-hoc case (parent picked sonnet for multi-signal task). The marker is the discriminator that preserves the true-positive — don't let plan.md regress to (c)-puro.
 
 ## Carryover (orthogonal — not touched this session)
 
-- **075 task 14** — full `/product` dogfood pending (scenarios 3-6); pairs with the "069 live validation" reminder.
-- **076 product-dogfood-fixes** — scaffolded, OQ#8 blocks `/sdd plan`.
-- `docs/specs/074-subagent-personas/` — untracked draft (persona/role-prompting killed on research grounds; another session's WIP — leave it).
+- **075 task 14** — `/product` dogfood scenarios 3-6 pending.
+- `docs/specs/074-subagent-personas/` — untracked draft (persona/role-prompting killed on research grounds; leave it for the originating session).
 - `.claude/REMINDERS.md` items per startup readout.

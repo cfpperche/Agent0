@@ -2,15 +2,15 @@
 
 The submitted `roadmap.md` MUST contain the level-2 markdown headings below + meet the Layer 1 size/content floor in the JSON fenced block. Both checks fire on submit; missing sections OR Layer 1 failures produce `code: "schema-incomplete"` with the failure list. Single-artifact step — no `extra_files`.
 
-## Target (canonical size budget — reconciled per spec 056)
+## Size floor (anti-stub — spec 075)
 
-This schema is the **single source of truth** for Step 10 size budgets. `delegation-briefs.md` and `pipeline-coverage.md` REFERENCE these numbers.
+Per spec 075 the size **ceiling** is retired — artifact scope is judged by the quality judge (`references/quality-judge.md`), not a byte count. Only the `min_size` **floor** remains, enforced at submit by the Layer 1 block below.
 
-| Artifact | `min_size` | `max_size` | Calibration source |
-|---|---|---|---|
-| `roadmap.md` | 6 KB | 18 KB | 3-dogfood pass (045/048/Vetro) landed 7.9-14.6 KB; floor LOWERED from spec 026's 8 KB (compact products legitimately land below); ceiling 18 KB accommodates 3-4 phase deep version with dependency graph + per-phase risks |
+| Artifact | `min_size` floor | Floor rationale |
+|---|---|---|
+| `roadmap.md` | 6 KB | below this the 8 required sections are not at honest depth |
 
-**Soft overshoot:** exceeding `max_size × 1.2` (≈ 22 KB) triggers sub-agent partial-result with `oversize_reason` naming what bloated.
+A uniform 200 KB catastrophe cap applies per `.claude/rules/artifact-budgets.md`.
 
 ## Required sections (roadmap.md markdown headings)
 
@@ -40,7 +40,6 @@ The schema does NOT structurally enforce the operating-mode (canonical timeline-
     {
       "path": "roadmap.md",
       "min_size": 6144,
-      "max_size": 18432,
       "contains": [
         "## Overview",
         "## Horizon",

@@ -6,8 +6,8 @@ _Generated from `plan.md` on 2026-05-22. Work top-to-bottom. Check boxes as task
 
 ### Move 1 — retire the size ceiling
 
-- [ ] 1. Rewrite `.claude/rules/artifact-budgets.md` — remove the `max × 1.2` / `max × 1.8` overshoot cascade; rewrite the rule around the single uniform catastrophe byte cap (≈200 KB, finalize the exact value here); drop the "scope proxy" framing. Decide and document the fate of the `# OVERRIDE: budget-exempt:` grammar (retire, or keep for the catastrophe cap).
-- [ ] 2. Sweep all 15 `.claude/skills/product/templates/pipeline/*/schema.md` — remove or raise `max_size` in the Layer 1 JSON block + the `## Target` table; **keep every `min_size` floor untouched.** List the 15 files touched in `notes.md`.
+- [x] 1. Rewrite `.claude/rules/artifact-budgets.md` — cascade removed; rewritten around the uniform 200 KB catastrophe cap; "scope proxy" framing dropped; `# OVERRIDE: budget-exempt:` kept, now scoped to the cap. Also updated `CLAUDE.md` § (the cascade summary there would otherwise be stale — see `notes.md`).
+- [x] 2. Schema sweep — **only 6 of 15 schemas carried `max_size`** (02/03/08/09/10/15); the `## Target` sections became `## Size floor` (anti-stub framing), `max_size` removed from tables + Layer 1 JSON; every `min_size` floor intact. `grep` confirms zero residual `max_size`. See `notes.md`.
 - [ ] 3. In `references/delegation-briefs.md` — strip the per-step "Overshoot cascade per artifact-budgets.md" boilerplate from all 15 step briefs + the § Mood-screen-writer brief; replace with the one-line catastrophe-cap note.
 - [ ] 4. Update `references/pipeline-coverage.md` — rewrite the "Overshoot cascade" section as the catastrophe cap + a pointer to the new quality-judge step.
 

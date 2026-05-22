@@ -96,9 +96,9 @@ Every first-party `.claude/skills/*/SKILL.md` must pass the agentskills.io front
 
 `.claude/routines/<slug>.md` git-tracks recurring project work; an opt-in leader machine's cron enqueues each run for the next interactive session to dispatch via `/routine run <slug>`. See `.claude/rules/routines.md`.
 
-## Artifact budgets
+## Artifact size cap
 
-A declared artifact size budget is a scope proxy, not a byte cap: overshoot past `target_max × 1.2` → partial-result with `oversize_reason`, past `× 1.8` → hard-abort; trim-loops are forbidden. See `.claude/rules/artifact-budgets.md`.
+Artifact size is not a scope/quality signal — scope and quality are judged by the `/product` quality judge (spec 075). The only size mechanism is a uniform 200 KB catastrophe cap (a dumb token-runaway circuit-breaker) plus the retained per-step `min_size` anti-stub floors; trim-loop and re-emit-at-smaller-scope stay forbidden. See `.claude/rules/artifact-budgets.md`.
 
 ## Compact Instructions
 

@@ -2,25 +2,18 @@
 
 The submitted `legal-posture.md` MUST contain the level-2 markdown headings below + meet the Layer 1 size/content floor in the JSON fenced block. Both checks fire on submit; missing sections OR Layer 1 failures produce `code: "schema-incomplete"` with the failure list. Single-artifact step — no `extra_files`.
 
-## Target (canonical size budget — reconciled per spec 056; CONDITIONAL model)
+## Size floor (anti-stub — spec 075; CONDITIONAL model)
 
-This schema is the **single source of truth** for Step 09 size budgets. `delegation-briefs.md` and `pipeline-coverage.md` REFERENCE these numbers. Legal-posture is unique in the pipeline because its size depends on which **conditional sections fire**: DPIA (sensitive data categories in `data-flow.json`), AI-Specific (LLM in stack), Regulated Aspects (vertical-specific regimes — HIPAA / LGPD / FINRA / etc).
+Per spec 075 the size **ceiling** is retired — artifact scope is judged by the quality judge (`references/quality-judge.md`), not a byte count. Only the `min_size` **floor** remains. Legal-posture is unique: its floor is conditional on which sections fire — DPIA (sensitive data categories in `data-flow.json`), AI-Specific (LLM in stack), Regulated Aspects (vertical-specific regimes — HIPAA / LGPD / FINRA / etc).
 
-| Profile | `min_size` add | `max_size` add | Notes |
-|---|---|---|---|
-| **Base** (no conditional fires) | 5 KB | 10 KB | terms + privacy + licensing + sub-processor + open-decisions only |
-| **+ DPIA** | +5 KB | +12 KB | when `data-flow.json` declares sensitive categories (PII, PHI, financial, etc) |
-| **+ AI-Specific** | +2 KB | +5 KB | when system-design integration list contains LLM provider |
-| **+ Regulated Aspects** | +2 KB | +8 KB | when vertical hits a named regime (HIPAA / LGPD / FINRA / PCI-DSS / etc) |
+| Profile | `min_size` floor add | Notes |
+|---|---|---|
+| **Base** (no conditional fires) | 5 KB | terms + privacy + licensing + sub-processor + open-decisions only |
+| **+ DPIA** | +5 KB | when `data-flow.json` declares sensitive categories (PII, PHI, financial, etc) |
+| **+ AI-Specific** | +2 KB | when system-design integration list contains LLM provider |
+| **+ Regulated Aspects** | +2 KB | when vertical hits a named regime (HIPAA / LGPD / FINRA / PCI-DSS / etc) |
 
-**Computation:** orchestrator sums `min_size` and `max_size` across base + each firing condition to produce the effective range. Example: a healthtech-adjacent product with PII (DPIA) + LLM (AI) lands at 5+5+2 = 12 KB floor → 10+12+5 = 27 KB ceiling.
-
-**Empirical calibration (3-dogfood pass):**
-- dogfood-v3 (ClaudeOps, AI-native, no DPIA): 6.9 KB → fits **base + AI = 7-15 KB** ✓
-- dogfood-erp (SalãoOS, no AI, no DPIA): 6.8 KB → fits **base = 5-10 KB** ✓
-- dogfood-vet (VetUno, sensitive PII triggers DPIA, no AI): 18.8 KB → fits **base + DPIA = 10-22 KB** ✓
-
-**Soft overshoot:** exceeding `effective max_size × 1.2` triggers sub-agent partial-result with `oversize_reason` field naming which section bloated. The Layer 1 JSON `min_size` below is the OPERATIONAL floor (kept at 9 KB to catch obviously-truncated docs across profiles; full conditional check happens orchestrator-side per the formula above).
+**Computation:** the orchestrator sums the `min_size` floor adds across base + each firing condition to produce the effective floor (e.g. a healthtech product with PII + LLM lands at 5+5+2 = 12 KB floor). The Layer 1 JSON `min_size` below is the OPERATIONAL base floor; the full conditional floor check happens orchestrator-side. A uniform 200 KB catastrophe cap applies per `.claude/rules/artifact-budgets.md`.
 
 ## Required sections (legal-posture.md markdown headings)
 
@@ -51,7 +44,6 @@ The schema does NOT structurally enforce the product-class calibration (Consumer
     {
       "path": "legal-posture.md",
       "min_size": 5120,
-      "max_size": 30720,
       "contains": [
         "## Overview",
         "## Privacy Posture",

@@ -2,13 +2,15 @@
 
 `screen-atlas.md` is the single deliverable of Step 15a. This schema is the size-budget + required-section reference; the Step 15a brief's `DONE_WHEN` points here. Per spec 066 the atlas is a **prose-only markdown contract** — no embedded screens, no `extra_files`, no `app/`.
 
-## Target (canonical size budget — reconciled per spec 056)
+## Size floor (anti-stub — spec 075)
 
-| Artifact | `min_size` | `max_size` | Calibration source |
-|---|---|---|---|
-| `screen-atlas.md` | 10 KB | 28 KB | 3-dogfood pass (045 / 048 / Vetro) landed 13.9-25.3 KB; the spec 066 restructure keeps the budget — the content is now the 8 contract sections rather than an index over an embedded screen bundle |
+Per spec 075 the size **ceiling** is retired — artifact scope is judged by the quality judge (`references/quality-judge.md`), not a byte count. Only the `min_size` **floor** remains.
 
-**Overshoot cascade** per `.claude/rules/artifact-budgets.md`: `max_size × 1.2` (≈ 34 KB) → partial-result with `oversize_reason` naming the bloat dimension; `max_size × 1.8` → STOP, partial-result, no further production. Trim-loop and re-emit-at-smaller-scope are forbidden.
+| Artifact | `min_size` floor | Floor rationale |
+|---|---|---|
+| `screen-atlas.md` | 10 KB | below this the 8 contract sections are not at honest depth |
+
+A uniform 200 KB catastrophe cap applies per `.claude/rules/artifact-budgets.md`.
 
 ## Required sections
 

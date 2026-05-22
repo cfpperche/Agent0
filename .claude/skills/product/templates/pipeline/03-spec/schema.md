@@ -7,16 +7,16 @@ Step 3 submits a **three-artifact bundle**: `functional-spec.md` (primary `conte
 
 A failure in either layer produces `code: "schema-incomplete"` with the precise failure list; nothing is written until the whole bundle passes.
 
-## Target (canonical size budget — reconciled per spec 056)
+## Size floor (anti-stub — spec 075)
 
-This schema is the **single source of truth** for Step 03 size budgets. `delegation-briefs.md` and `pipeline-coverage.md` REFERENCE these numbers.
+Per spec 075 the size **ceiling** is retired — artifact scope is judged by the quality judge (`references/quality-judge.md`), not a byte count. Only the `min_size` **floor** remains, enforced at submit by the Layer 1 block below.
 
-| Artifact | `min_size` | `max_size` | Calibration source |
-|---|---|---|---|
-| `functional-spec.md` (combined v3 layout) | 12 KB | 30 KB | 3-dogfood pass (045/048/Vetro) landed 22-65 KB; floor LOWERED from spec 026's 15 KB (compact products were hitting incorrect BLOCKED); ceiling at 30 KB; outlier dogfood-erp at 64.8 KB would trigger partial-result |
-| `architecture.md` (skeleton) | 4 KB | 12 KB | unchanged |
+| Artifact | `min_size` floor | Floor rationale |
+|---|---|---|
+| `functional-spec.md` (combined v3 layout) | 12 KB | below this, pages / states / features are missing |
+| `architecture.md` (skeleton) | 4 KB | the skeleton must still cover all four sections |
 
-**Soft overshoot:** exceeding `max_size × 1.2` (≈ 36 KB for `functional-spec.md`) triggers sub-agent partial-result with `oversize_reason` naming what bloated.
+A uniform 200 KB catastrophe cap applies per `.claude/rules/artifact-budgets.md`.
 
 ## Required sections (markdown headings in `functional-spec.md`)
 
@@ -40,7 +40,6 @@ Each name slugifies by lowercasing + dashing the H2 title — `## Pages & Surfac
     {
       "path": "functional-spec.md",
       "min_size": 12288,
-      "max_size": 30720,
       "contains": [
         "## Pages & Surfaces",
         "## Features",

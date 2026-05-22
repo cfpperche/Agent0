@@ -2,40 +2,28 @@
 
 _Created 2026-05-22._
 
-_In-flight design memory for this spec — decisions, deviations, tradeoffs, and open questions surfaced **while building** that weren't pre-empted by `spec.md` or `plan.md`. Append-only by convention. See `.claude/rules/spec-driven.md` § The four artifacts for purpose, and `.claude/rules/delegation.md` § The 5-field handoff for how sub-agents integrate._
-
-**Entry shape:** `### YYYY-MM-DD — <author> — <one-line title>` followed by free-prose body. `<author>` is `parent` for the orchestrating agent, or the `subagent_type` (e.g. `general-purpose`, `Explore`) for delegated work.
-
-**Routing rubric:** decision made under ambiguity → §1 Design decisions. Intentional departure from `plan.md` → §2 Deviations. Alternative weighed and chosen mid-flight → §3 Tradeoffs. Question surfaced during build, no answer yet → §4 Open questions. Sections may stay empty; the rubric is a guide, not a quota.
+_In-flight design memory for this spec — decisions, deviations, tradeoffs, and open questions surfaced **while building** that weren't pre-empted by `spec.md` or `plan.md`. Append-only by convention._
 
 ## Design decisions
 
-_Choices made where the spec/plan was ambiguous. The decision itself + why this option over others considered in the moment._
+### 2026-05-22 — parent — `## Target` schema sections renamed `## Size floor`, not column-edited
 
-### {{YYYY-MM-DD}} — {{author}} — {{one-line title}}
-
-{{free-prose body — what was ambiguous, what was decided, why}}
+Task 2 could have surgically removed the `max_size` column from each schema's `## Target` table. Instead each `## Target (canonical size budget…)` section was replaced wholesale with a `## Size floor (anti-stub — spec 075)` section: a 2-3-column table carrying only `min_size` + a floor rationale, plus a one-line pointer to the 200 KB catastrophe cap. Rationale: the whole *framing* of `## Target` — "canonical size budget", "single source of truth for budgets" — is what spec 075 retires; a column deletion would leave the stale framing. A section replacement is cleaner and self-documents the retirement.
 
 ## Deviations
 
-_Places where implementation intentionally departed from `plan.md`. The departure + the reason it was necessary or better._
+### 2026-05-22 — parent — the "15-schema sweep" was a 6-schema sweep
 
-### {{YYYY-MM-DD}} — {{author}} — {{one-line title}}
+`plan.md` and `tasks.md` task 2 said "sweep all 15 `schema.md`". A `grep` survey showed **only 6 of the 15 carried `max_size`** — `02-prototype`, `03-spec`, `08-system-design`, `09-legal`, `10-roadmap`, `15-screen-atlas`. The other 9 schemas only ever had `min_size` floors (no ceiling to retire). So task 2 touched 6 files, not 15. No plan change needed — the outcome (no `max_size` anywhere) is identical; the count was just over-stated out of caution.
 
-{{free-prose body — what the plan said, what was done instead, why}}
+### 2026-05-22 — parent — task 1 also updated `CLAUDE.md`
+
+`tasks.md` task 1 named only `.claude/rules/artifact-budgets.md`. But `CLAUDE.md` § Artifact budgets carried a 1-sentence summary of the `× 1.2 / × 1.8` cascade — leaving it would be a doc-vs-reality contradiction the moment the rule changed. So task 1 also rewrote that `CLAUDE.md` block (now § "Artifact size cap"). Recorded so the reviewer expects the `CLAUDE.md` diff.
 
 ## Tradeoffs
 
-_Alternatives weighed during implementation (not at plan time). The chosen path + what was given up + why the tradeoff was worth it._
-
-### {{YYYY-MM-DD}} — {{author}} — {{one-line title}}
-
-{{free-prose body — options considered in-flight, chosen path, accepted cost}}
+_None surfaced beyond those weighed at plan time._
 
 ## Open questions
 
-_Questions surfaced during build that the implementer couldn't resolve alone. Owner (who decides) or path to resolution if known. Promote answered questions to `spec.md` § Open questions or as retroactive acceptance scenarios when the spec is updated._
-
-### {{YYYY-MM-DD}} — {{author}} — {{one-line title}}
-
-{{free-prose body — the question, why it surfaced, what's blocked on it, who can decide}}
+_None open — the four `spec.md` open questions were resolved 2026-05-22 before `plan.md` locked._

@@ -7,17 +7,17 @@ Step 9 submits a **three-artifact bundle**: `system-design.md` (primary `content
 
 A failure in either layer produces `code: "schema-incomplete"` with the precise failure list; nothing is written until the whole bundle passes.
 
-## Target (canonical size budget — reconciled per spec 056)
+## Size floor (anti-stub — spec 075)
 
-This schema is the **single source of truth** for Step 08 size budgets. `delegation-briefs.md` and `pipeline-coverage.md` REFERENCE these numbers.
+Per spec 075 the size **ceiling** is retired — artifact scope is judged by the quality judge (`references/quality-judge.md`), not a byte count. Only the `min_size` **floor** remains, enforced at submit by the Layer 1 block below.
 
-| Artifact | `min_size` | `max_size` | Calibration source |
-|---|---|---|---|
-| `system-design.md` (bridge-floor + RACI + Risk Register) | 15 KB | 42 KB | 3-dogfood pass (045/048/Vetro) landed 15-40 KB; floor LOWERED from spec 026's 20 KB (dogfood-v3 legitimately landed at 15.2 KB); ceiling 42 KB accommodates the 8 required H2 sections + RACI + risk register at venture-scale depth |
-| `architecture.json` | 256 B | (unbounded) | unchanged — compact JSON graph |
-| `security.md` | 3 KB | 10 KB | unchanged floor; ceiling added for STRIDE-lite + AI section combined |
+| Artifact | `min_size` floor | Floor rationale |
+|---|---|---|
+| `system-design.md` (bridge-floor + RACI + Risk Register) | 15 KB | below this the 11 required sections are not at honest depth |
+| `architecture.json` | 256 B | catches `{}` / near-empty graph regressions |
+| `security.md` | 3 KB | below this the threat model was punted |
 
-**Soft overshoot:** exceeding `max_size × 1.2` (≈ 50 KB for `system-design.md`) triggers sub-agent partial-result with `oversize_reason` naming what bloated.
+A uniform 200 KB catastrophe cap applies per `.claude/rules/artifact-budgets.md`.
 
 ## Required sections (markdown headings in `system-design.md`)
 
@@ -49,7 +49,6 @@ Section names slugify by lowercasing + dashing the H2 title — `## Data Model` 
     {
       "path": "system-design.md",
       "min_size": 15360,
-      "max_size": 43008,
       "contains": [
         "## Overview",
         "## Stack",

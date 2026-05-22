@@ -33,7 +33,7 @@ _Created 2026-05-21._
 - [x] **Scenario: visual-contract HTML embedded inline**
   - **Given** `docs/screens/*.html` (lo-fi) and `docs/screens/hifi/*.html` (hi-fi) exist
   - **When** the Step 02 / Step 15 entries are selected
-  - **Then** the mood screens render inline via `<iframe>` with a relative `src`
+  - **Then** the mood screens render inline via `<iframe srcdoc>` — the artifact HTML is inlined verbatim, not linked by a relative path
 
 - [x] **Scenario: blocked step surfaced**
   - **Given** `docs/.state.json` lists a step in `blocked_steps`
@@ -54,6 +54,11 @@ _Created 2026-05-21._
   - **Given** a step with more than one artifact part (e.g. Step 15 — Hi-fi screens, screen-atlas, fixture-spec)
   - **When** that step is opened in `REPORT.html`
   - **Then** a sub-tab row renders at the top of the pane, only the active tab's parts are in the DOM (a long step is never one giant scroll), and each tab is deep-linkable via a `#<step>/<tab-slug>` hash that survives back / forward
+
+- [x] **Scenario: REPORT.html survives a filesystem move** _(post-ship, 2026-05-22)_
+  - **Given** a generated `REPORT.html` is copied on its own to a directory holding none of its sibling artifacts
+  - **When** it is opened there
+  - **Then** every step renders — the visual steps 02 / 15 included — because text and HTML artifacts are both inlined (text as a string, HTML as `<iframe srcdoc>`); only the CDN-loaded libraries still need network
 
 - [x] `.claude/skills/product/scripts/build-report.ts` exists and runs with the same runtime as `sync-open-design.ts`, with **zero npm dependencies** (Node/Bun stdlib only — no markdown parsing at build time)
 - [x] `.claude/skills/product/templates/report.html.tmpl` exists — the HTML shell (CSS + client JS + pinned CDN `<script>` tags + placeholders)

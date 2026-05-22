@@ -39,9 +39,9 @@ Rejected for v1. Inlining `marked` (~12 KB) is cheap, but `mermaid` is ~3 MB —
 
 Rejected. The 15-step pipeline is fixed; it only changes via a spec that already touches the script. A separate JSON file adds an indirection and a second thing to keep in sync with `pipeline-coverage.md`. A typed `const ARTIFACT_MANIFEST` inside `build-report.ts` is the single source; `pipeline-coverage.md` gets a one-line pointer to it.
 
-### Mood screens base64-inlined via `<iframe srcdoc>` instead of relative `src`
+### Mood screens inlined via `<iframe srcdoc>` instead of relative `src`
 
-Rejected. It would make `REPORT.html` portable in isolation, but the whole `docs/` tree already travels together and `REPORT.html` lives inside it. Relative-path `<iframe src>` is simpler and avoids escaping a full HTML document into an attribute.
+Rejected for v1, **reversed 2026-05-22 — now adopted.** The v1 reasoning: the whole `docs/` tree travels together and `REPORT.html` lives inside it, so relative-path `<iframe src>` is simpler. The mei-saas dogfood showed the premise fails — `REPORT.html` is treated as a shareable single-file deliverable, and when moved away from its siblings the visual steps (02, 15) break *silently* (blank iframe, no error) while the 13 text steps survive. That partial self-containment is a foot-gun. `srcdoc` inlines the HTML verbatim, restoring symmetry with the text artifacts. The "escape a full HTML document into an attribute" worry did not materialise: the client sets `iframe.srcdoc` as a DOM property, so the browser handles the attribute — the existing `JSON.stringify` + `escapeForScriptTag` layers are the only escaping needed. Scope note: this closes filesystem-move portability; the CDN library dependency (a separate, deferred non-goal) means `REPORT.html` is still not offline-portable. See `notes.md`.
 
 ## Risks and unknowns
 

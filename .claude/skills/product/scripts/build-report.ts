@@ -179,6 +179,11 @@ function listHtmlFiles(dir: string): string[] {
     .sort();
 }
 
+/** Read a file's text, or '' on any error — used to inline an artifact verbatim. */
+function readArtifact(abs: string): string {
+  try { return readFileSync(abs, 'utf8'); } catch { return ''; }
+}
+
 interface ResolvedPart {
   label: string;
   kind: 'md' | 'code' | 'iframe' | 'missing';
@@ -186,7 +191,8 @@ interface ResolvedPart {
   tabSlug: string;
   content?: string;
   lang?: string;
-  src?: string;
+  /** verbatim HTML of an iframe artifact, inlined so REPORT.html stays portable */
+  srcdoc?: string;
 }
 
 interface ResolvedEntry {
@@ -224,13 +230,16 @@ export function resolveEntry(entry: ManifestEntry, docsDir: string, blocked: unk
     const tabSlug = tabSlugFor(part);
     tabs.push({ label: part.label, slug: tabSlug });
 
+    // HTML artifacts are inlined verbatim as `srcdoc` (not linked by relative
+    // path) — REPORT.html then survives a move away from its sibling files.
     if (part.kind === 'iframe-dir') {
       const dir = path.join(docsDir, part.path);
       const files = listHtmlFiles(dir);
       if (files.length > 0) {
         present++;
         for (const f of files) {
-          parts.push({ label: `${part.path}/${f}`, kind: 'iframe', src: `${part.path}/${f}`, tabSlug });
+          parts.push({ label: `${part.path}/${f}`, kind: 'iframe',
+            srcdoc: readArtifact(path.join(dir, f)), tabSlug });
         }
       } else {
         parts.push({ label: part.label, kind: 'missing', tabSlug });
@@ -241,7 +250,7 @@ export function resolveEntry(entry: ManifestEntry, docsDir: string, blocked: unk
       const abs = path.join(docsDir, part.path);
       if (existsSync(abs)) {
         present++;
-        parts.push({ label: part.label, kind: 'iframe', src: part.path, tabSlug });
+        parts.push({ label: part.label, kind: 'iframe', srcdoc: readArtifact(abs), tabSlug });
       } else {
         parts.push({ label: part.label, kind: 'missing', tabSlug });
       }
@@ -255,8 +264,7 @@ export function resolveEntry(entry: ManifestEntry, docsDir: string, blocked: unk
       present++;
       for (const abs of matches) {
         const rel = path.relative(docsDir, abs);
-        let content = '';
-        try { content = readFileSync(abs, 'utf8'); } catch { content = ''; }
+        const content = readArtifact(abs);
         parts.push({
           label: matches.length > 1 ? rel : part.label,
           kind: part.kind === 'code' ? 'code' : 'md',
@@ -337,7 +345,7 @@ export function buildReportHtml(docsDir: string, template: string, opts: BuildOp
         label: p.label, kind: p.kind, tabSlug: p.tabSlug,
         ...(p.content !== undefined ? { content: p.content } : {}),
         ...(p.lang ? { lang: p.lang } : {}),
-        ...(p.src ? { src: p.src } : {}),
+        ...(p.srcdoc !== undefined ? { srcdoc: p.srcdoc } : {}),
       })),
     })),
   };

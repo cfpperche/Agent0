@@ -223,17 +223,29 @@
     return pre;
   }
 
-  function renderFrame(src) {
+  function renderFrame(srcdoc, label) {
     var wrap = document.createElement('div');
     var f = document.createElement('iframe');
     f.className = 'frame';
-    f.src = src;
     f.loading = 'lazy';
-    f.setAttribute('sandbox', 'allow-same-origin');
+    // srcdoc inlines the artifact HTML — REPORT.html stays portable when moved
+    // away from its sibling files. allow-scripts (never paired with
+    // allow-same-origin) lets a screen's own JS run in an opaque-origin sandbox.
+    f.setAttribute('sandbox', 'allow-scripts');
+    f.srcdoc = srcdoc;
     wrap.appendChild(f);
     var link = document.createElement('p');
     link.className = 'frame-link';
-    link.innerHTML = '<a href="' + src + '" target="_blank" rel="noopener">open ' + src + ' ↗</a>';
+    var a = document.createElement('a');
+    a.href = '#';
+    a.textContent = 'open ' + (label || 'screen') + ' ↗';
+    // open full-size via a blob URL — portable, no dependency on a sibling file
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      var url = URL.createObjectURL(new Blob([srcdoc], { type: 'text/html' }));
+      window.open(url, '_blank', 'noopener');
+    });
+    link.appendChild(a);
     wrap.appendChild(link);
     return wrap;
   }
@@ -283,7 +295,7 @@
       pane.appendChild(label);
       if (part.kind === 'md') pane.appendChild(renderMarkdown(part.content || ''));
       else if (part.kind === 'code') pane.appendChild(renderCode(part.content || '', part.lang));
-      else if (part.kind === 'iframe') pane.appendChild(renderFrame(part.src || ''));
+      else if (part.kind === 'iframe') pane.appendChild(renderFrame(part.srcdoc || '', part.label));
       else {
         var miss = document.createElement('div');
         miss.className = 'placeholder';

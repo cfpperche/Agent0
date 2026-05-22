@@ -144,12 +144,27 @@ describe('buildReportHtml — full run', () => {
 
     const proto = payload.artifacts.find((a: any) => a.id === '02');
     const frames = proto.parts.filter((p: any) => p.kind === 'iframe');
-    expect(frames.map((f: any) => f.src)).toContain('direction-a.html');
-    expect(frames.map((f: any) => f.src)).toContain('screens/01-home.html');
+    // HTML artifacts are inlined as srcdoc (portable), never linked via src
+    expect(frames.every((f: any) => f.src === undefined)).toBe(true);
+    const srcdocs = frames.map((f: any) => f.srcdoc);
+    expect(srcdocs.some((s: string) => s.includes('<title>dir-a</title>'))).toBe(true);
+    expect(srcdocs.some((s: string) => s.includes('<title>home</title>'))).toBe(true);
 
     const sitemap = payload.artifacts.find((a: any) => a.id === '07');
     expect(sitemap.parts[0].kind).toBe('code');
     expect(sitemap.parts[0].lang).toBe('yaml');
+  });
+
+  test('HTML artifacts are inlined as iframe srcdoc, never a relative src', async () => {
+    await writeFixture(tmpRoot, FULL_FIXTURE);
+    const payload = extractPayload(buildReportHtml(tmpRoot, template, { now: 'FIXED' }));
+    const iframes = payload.artifacts
+      .flatMap((a: any) => a.parts)
+      .filter((p: any) => p.kind === 'iframe');
+    expect(iframes.length).toBeGreaterThan(0);
+    // every iframe carries the verbatim file content; none a bare src path
+    expect(iframes.every((p: any) => typeof p.srcdoc === 'string' && p.srcdoc.length > 0)).toBe(true);
+    expect(iframes.every((p: any) => p.src === undefined)).toBe(true);
   });
 
   test('step 15 leads with the hi-fi screens, before screen-atlas.md', async () => {
@@ -236,6 +251,22 @@ describe('buildReportHtml — <script>-tag safety', () => {
     // and the content still round-trips
     const overview = JSON.parse(block).artifacts.find((a: any) => a.id === 'overview');
     expect(overview.parts[0].content).toContain('</script>');
+  });
+
+  test('an HTML artifact containing </script> stays inside the data block', async () => {
+    await writeFixture(tmpRoot, {
+      'REPORT.md': '# overview',
+      'concept-brief.md': '# brief',
+      'direction-a.html': '<!doctype html><body>x</script><script>alert(1)</script></body>',
+    });
+    const html = buildReportHtml(tmpRoot, template, { now: 'FIXED' });
+    const m = html.match(/<script type="application\/json" id="report-data">([\s\S]*?)<\/script>/);
+    expect(m).not.toBeNull();
+    expect(m![1].includes('</script>')).toBe(false);
+    // the screen HTML round-trips intact into its iframe srcdoc
+    const proto = JSON.parse(m![1]).artifacts.find((a: any) => a.id === '02');
+    const frame = proto.parts.find((p: any) => p.kind === 'iframe');
+    expect(frame.srcdoc).toContain('</script>');
   });
 });
 

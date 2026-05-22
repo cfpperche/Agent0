@@ -30,6 +30,7 @@ _Generated from `plan.md` on 2026-05-21. Work top-to-bottom. Check boxes as task
 
 - [x] 16. Step 15 ordering fix — reorder the Step 15 `ARTIFACT_MANIFEST` parts so the `screens/hifi/` iframe-dir leads `screen-atlas.md` (on the mei-saas run the hi-fi screens were buried ~10,429 px below the fold). One regression test; suite 18→19. Committed `675c3da`.
 - [x] 17. Per-step sub-tabs — a multi-part step renders a sub-tab row; only the active tab's parts enter the DOM; the hash grammar extends to `#<id>/<tab-slug>` so tabs are deep-linkable and back/forward cycle them. Playwright-verified (Step 15 20,797 px → 4,186 px); 4 tests, suite 19→23. Committed `43f9d9f`.
+- [x] 18. Filesystem portability — HTML artifacts (`direction-a.html`, `screens/`, `screens/hifi/`) inlined via `<iframe srcdoc>` instead of relative `src`, matching the text-artifact inlining. Closes the silent blank-iframe foot-gun when `REPORT.html` is moved/shared alone; sandbox `allow-scripts`; "open ↗" → blob URL. Reverses a locked `plan.md` alternative (dogfood-triggered). Playwright-verified incl. a copy-to-bare-dir move test; 2 new tests + 1 updated, suite 23→25.
 
 ## Notes
 

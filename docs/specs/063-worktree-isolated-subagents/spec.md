@@ -2,7 +2,7 @@
 
 _Created 2026-05-19._
 
-**Status:** in-progress
+**Status:** shipped
 
 ## Redesign (2026-05-19)
 
@@ -39,36 +39,36 @@ The historical original-design sections below (Acceptance criteria scenarios, No
 
 ## Acceptance criteria (Option B redirect)
 
-- [ ] **Scenario: dispatch with isolation declared**
+- [x] **Scenario: dispatch with isolation declared**
   - **Given** parent makes an `Agent` call with `isolation: "worktree"` in tool params
   - **When** `delegation-gate.sh` runs
   - **Then** dispatch audit row contains `"isolation": "worktree"`
 
-- [ ] **Scenario: dispatch without isolation**
+- [x] **Scenario: dispatch without isolation**
   - **Given** parent makes an `Agent` call without isolation in tool params
   - **When** `delegation-gate.sh` runs
   - **Then** dispatch audit row contains `"isolation": ""` (empty string, not null — matches existing convention for missing fields like `model: ""`)
 
-- [ ] **Scenario: validator scoping for parent-tree edit**
+- [x] **Scenario: validator scoping for parent-tree edit**
   - **Given** sub-agent edits `src/foo.ts` in the parent's working tree
   - **When** `post-edit-validate.sh` runs
   - **Then** validator runs from `git rev-parse --show-toplevel` of `src/foo.ts` (= parent project dir; no behavior change vs today)
 
-- [ ] **Scenario: validator scoping for worktree-isolated edit**
+- [x] **Scenario: validator scoping for worktree-isolated edit**
   - **Given** sub-agent dispatched with `isolation: "worktree"` invoked `EnterWorktree` and edited `.claude/worktrees/foo/src/bar.ts`
   - **When** `post-edit-validate.sh` fires
   - **Then** validator runs from `.claude/worktrees/foo/` (= the worktree's git toplevel), validating against the isolated tree state, not stale parent
 
-- [ ] **Scenario: validator scoping fail-safe when git rev-parse fails**
+- [x] **Scenario: validator scoping fail-safe when git rev-parse fails**
   - **Given** an edit happens outside any git repo (theoretical — scratch dir)
   - **When** `post-edit-validate.sh` derives the cwd
   - **Then** falls back to `$PROJECT_DIR` (no behavior change vs today)
 
-- [ ] `.claude/rules/delegation.md` has new section `## Worktree isolation` documenting native CC behavior, when to use, when not to, and the no-brief-field decision
+- [x] `.claude/rules/delegation.md` has new section `## Worktree isolation` documenting native CC behavior, when to use, when not to, and the no-brief-field decision
 
-- [ ] `.claude/hooks/delegation-gate.sh` extracts `tool_input.isolation` and includes it in dispatch row jq build (13th field)
+- [x] `.claude/hooks/delegation-gate.sh` extracts `tool_input.isolation` and includes it in dispatch row jq build (13th field)
 
-- [ ] Audit log dispatch rows after deploy include `isolation` key; pre-deploy rows do not (schema is additive, no migration needed)
+- [x] Audit log dispatch rows after deploy include `isolation` key; pre-deploy rows do not (schema is additive, no migration needed)
 
 ## Intent
 

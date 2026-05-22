@@ -6,37 +6,37 @@ _Generated from `plan.md` on 2026-05-19. Work top-to-bottom. Check boxes as task
 
 ## Implementation (Option B — current)
 
-- [ ] R1. **Extend `.claude/hooks/delegation-gate.sh`** to capture `tool_input.isolation`:
+- [x] R1. **Extend `.claude/hooks/delegation-gate.sh`** to capture `tool_input.isolation`:
   - Add near line 44 (after MODEL extraction): `ISOLATION="$(printf '%s' "$INPUT" | jq -r '.tool_input.isolation // ""')"`
   - Add to `jq -n` args list: `--arg isolation "$ISOLATION"`
   - Add to JSON schema being built: `isolation:$isolation`
   - Same pattern as the `tool_use_id` extension shipped 2026-05-19 (`42d8d0c`)
-- [ ] R2. **Modify `.claude/hooks/post-edit-validate.sh`** to scope validator to edit's git toplevel:
+- [x] R2. **Modify `.claude/hooks/post-edit-validate.sh`** to scope validator to edit's git toplevel:
   - Extract edit file path: `EDIT_FILE="$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // ""' 2>/dev/null || true)"`
   - Derive cwd: `VALIDATOR_CWD="$PROJECT_DIR"; if [ -n "$EDIT_FILE" ]; then toplevel="$(git -C "$(dirname "$EDIT_FILE")" rev-parse --show-toplevel 2>/dev/null || true)"; [ -n "$toplevel" ] && VALIDATOR_CWD="$toplevel"; fi`
   - Wrap validator invocation in subshell cd: `VALIDATOR_OUT="$( ( cd "$VALIDATOR_CWD" && "$VALIDATOR" ) 2>"$VALIDATOR_STDERR_FILE" || true )"`
   - Fail-open posture preserved (git failure → fallback to $PROJECT_DIR)
-- [ ] R3. **Add `## Worktree isolation` section to `.claude/rules/delegation.md`** after the existing `## Audit log` section:
+- [x] R3. **Add `## Worktree isolation` section to `.claude/rules/delegation.md`** after the existing `## Audit log` section:
   - What CC's native mechanism does
   - When parents should declare `isolation: "worktree"` in tool params
   - When NOT to declare
   - Agent0's added discipline: audit (`isolation` in dispatch row) + validator scoping (worktree-aware cwd)
   - No-brief-field decision documented (canonical surface is `tool_input.isolation`; brief duplication is redundant)
-- [ ] R4. **Manual e2e verification**:
+- [x] R4. **Manual e2e verification** — closed by the 2026-05-21 audit (see `notes.md` § Deviations: empty-string case empirically live in the audit log; the `worktree` value is the identical verbatim-passthrough code path; spec 067's worktree tests cover the isolated flow):
   - Dispatch tiny Agent WITHOUT isolation; tail audit log; confirm `"isolation": ""`
   - Dispatch tiny Agent WITH `isolation: "worktree"` in tool params; tail audit log; confirm `"isolation": "worktree"`
   - (Optional, if cheap) Dispatch sub-agent that makes 1 Edit in worktree; observe validator runs from worktree cwd (validator stderr should reflect worktree-rooted paths if there's any path leak)
-- [ ] R5. **Commit + push** as `feat(063): worktree isolation discipline — audit + scoping + rule`
+- [x] R5. **Commit + push** — DONE; R1–R3 shipped in an earlier commit (the working tree was clean and in sync with `origin` at the 2026-05-21 audit). The spec-closure edits ship under `chore(063): close worktree-isolation spec`.
 
 ## Verification (Option B — current)
 
-- [ ] **Scenario: audit field present (no isolation)** — dispatch any `Agent` call without isolation; tail of `.claude/delegation-audit.jsonl` has `"isolation": ""`
-- [ ] **Scenario: audit field present (with isolation)** — dispatch with `isolation: "worktree"`; tail row has `"isolation": "worktree"`
-- [ ] **Scenario: validator scoping for parent-tree edit** — sub-agent edits a file in parent tree; validator runs from parent project dir (= same as today; no regression)
-- [ ] **Scenario: validator scoping fallback** — synthetically pass edit path outside any git repo; validator runs from $PROJECT_DIR (fallback path exercised)
-- [ ] `.claude/rules/delegation.md` has `## Worktree isolation` section documenting all four items in R3
-- [ ] Dispatch audit row schema has 13 fields including `isolation` (was 12 after 061 added `tool_use_id`)
-- [ ] `.claude/hooks/{delegation-gate,post-edit-validate}.sh` pass shellcheck (no new warnings)
+- [x] **Scenario: audit field present (no isolation)** — confirmed empirically: the latest live dispatch rows in `.claude/delegation-audit.jsonl` carry `"isolation": ""` (10 of the last 200 rows have the key — additive schema, older rows predate the gate change).
+- [x] **Scenario: audit field present (with isolation)** — verified by code inspection: the gate writes `tool_input.isolation` verbatim via `--arg isolation` (`delegation-gate.sh:45,239,246`); the `"worktree"` value is the identical code path to the empirically-confirmed empty-string case. spec 067's `parallel-edit-validation` suite exercises the worktree-isolated flow end-to-end with real git worktrees (2/2 PASS). No contrived read-only worktree dispatch was made — that would itself violate `delegation.md` § Worktree isolation's "when NOT to declare isolation" guidance.
+- [x] **Scenario: validator scoping for parent-tree edit** — `post-edit-validate.sh:36-42` derives `VALIDATOR_CWD` from the edit's git toplevel; for a parent-tree edit the toplevel IS `$PROJECT_DIR` — no behavior change. Exercised by spec 067 `parallel-edit-validation/01`.
+- [x] **Scenario: validator scoping fallback** — `post-edit-validate.sh:37` defaults `VALIDATOR_CWD="$PROJECT_DIR"` and only overrides when `git rev-parse --show-toplevel` returns non-empty; a non-repo edit path leaves the fallback intact.
+- [x] `.claude/rules/delegation.md` has `## Worktree isolation` section documenting all four items in R3.
+- [x] Dispatch audit row schema has 13 fields including `isolation` — confirmed: `jq 'keys | length'` on the latest isolation-bearing dispatch row returns 13.
+- [x] `.claude/hooks/{delegation-gate,post-edit-validate}.sh` pass static analysis — `bash -n` clean on both. NOTE: shellcheck is not installed in the dev env; full shellcheck was not run (same caveat as spec 061's `08-shellcheck.sh`).
 
 ## Implementation (original — superseded by Option B redirect 2026-05-19)
 

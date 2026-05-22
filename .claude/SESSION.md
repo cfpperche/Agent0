@@ -8,26 +8,26 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Session 2026-05-21 (cont.) — 070 follow-up #1 shipped+pushed; spec 061 closed.**
+**Session 2026-05-21 (cont.) — 070 follow-up #1 + spec 061 shipped; spec 063 closed by audit.**
 
-- **070 follow-up #1 — memory-ref de-leak** — committed + pushed (`18fe9f7`). Stripped 9 `.claude/memory/<file>.md` path-pointer citations from 6 rules; 2 `MEMORY.md` index-name refs kept as convention.
-- **Spec 061 (subagent-stop-hook) — CLOSED, status → shipped.** Impl was already done (hook, gate extension, settings, delegation.md); the gap was the missing test suite — a TDD violation. Wrote `.claude/tests/061-delegation-stop/` (9 scenario scripts + run-all + README), 9/9 PASS. Adjacent `parallel-edit-validation` regression 2/2 PASS. One 1-line hook fix (`tool_use_id` empty→`null`) surfaced by the missing-sidecar test.
+- **070 follow-up #1 — memory-ref de-leak** — committed + pushed (`18fe9f7`).
+- **Spec 061 (subagent-stop-hook)** — closed, status → shipped; committed (`7fbacbb`). Impl was already done; the gap was the missing test suite (TDD violation). `.claude/tests/061-delegation-stop/` 9/9 PASS + a 1-line hook fix (`tool_use_id` empty→`null`).
+- **Spec 063 (worktree-isolated-subagents)** — closed by audit, status → shipped. Was `in-progress` with stale 0/29 checkboxes, but the Option B R1–R5 capacity was already shipped (gate `isolation` field, validator git-toplevel scoping, `delegation.md § Worktree isolation`). Audit verified each against the live tree + audit log; only the checkboxes were never flipped. No code change — audit-only close.
 
 ## WIP (uncommitted)
 
-- Spec 061 closure: `.claude/hooks/delegation-stop.sh` (1-line fix), `.claude/tests/061-delegation-stop/` (new — 11 files), `docs/specs/061-*/{spec,tasks,notes}.md`, SESSION.md. Not committed — awaiting review.
+- Spec 063 closure: `docs/specs/063-*/{spec,tasks,notes}.md` + SESSION.md. Docs only. Not committed.
 
 ## Next steps
 
-1. **Commit spec 061 closure** (suggested: `test(061): subagent-stop-hook test suite — close spec, status→shipped`).
-2. **Audit spec 063 (worktree-isolated-subagents).** `in-progress`, tasks 0/29 — but `delegation.md § Worktree isolation` describes the capacity (audit field 13, validator scoping) as shipped. Doc-vs-reality contradiction: verify if it is done-but-unclosed (cheap close) or a genuine 29-task build.
-3. **`/product` dogfood of mei-saas** — in progress in a parallel mei-saas-rooted session. After it: live-validate spec 069 Phase 0 overwrite (`clear-target.sh` preserves `.git/` + harness).
-4. Dated reminders: spec 029 05-30 · spec 035 06-07 · spec 046 07-01 · spec 060 07-19.
+1. **Commit spec 063 closure** (suggested: `chore(063): close worktree-isolation spec — audit confirms R1–R5 shipped`).
+2. **`/product` dogfood of mei-saas** — in progress in a parallel mei-saas-rooted session. After it: live-validate spec 069 Phase 0 overwrite (`clear-target.sh` preserves `.git/` + harness).
+3. Dated reminders: spec 029 05-30 · spec 035 06-07 · spec 046 07-01 · spec 060 07-19.
 
 ## Decisions & gotchas
 
-- **Spec 061 test convention** — payloads generated inline (`jq -cn`), not a `fixtures/` dir: the `SubagentStop` payload's `agent_transcript_path` must be a real per-run tmp path. Matches existing Agent0 test dirs.
-- **Spec 035 is `in-progress` at 6/6 by design** — capacity built, status held open only for the missed-clarification dogfood window (reminder 06-07). Not a stale status.
+- **Stale `in-progress` specs are a recurring pattern.** 061 + 063 both shipped their capacity but stayed `in-progress` because the spec status + tasks checkboxes were never flipped when the code landed. (035 is `in-progress` *by design* — held for a dogfood window.) Discipline for future work: flip spec status + tasks boxes in the same commit as the code.
+- **Spec 061 test convention** — payloads generated inline (`jq -cn`), not a `fixtures/` dir: the `SubagentStop` payload's `agent_transcript_path` must be a real per-run tmp path.
 - **Memory basenames-as-examples — residual leak, deferred.** `routines.md` + `memory-placement.md` use bare memory-file basenames as examples. Recorded in `propagation-hygiene.md` § Not-yet-cleaned.
 
 ## Carryover (orthogonal — not touched this session)

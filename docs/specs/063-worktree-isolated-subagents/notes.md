@@ -51,9 +51,19 @@ The pattern across 061/062/063 is now clear: **pre-flight verify the competitive
 
 ## Deviations
 
-## Deviations
+### 2026-05-21 — parent — spec closed by audit: all R-tasks were done-but-unclosed
 
-_(none yet)_
+A session audit found spec 063 sitting `in-progress` with `tasks.md` showing 0/29 checked, yet the capacity was already shipped. The 0/29 was a stale-checkbox artifact, not incomplete work — the Option B redesign tasks (R1–R5) never had their boxes flipped after the code landed. Verified each against the live tree:
+
+- **R1** (gate captures `tool_input.isolation`) — `delegation-gate.sh:45` extracts it, `:239`/`:246` write it to the dispatch row. ✓
+- **R2** (validator scoping) — `post-edit-validate.sh:30-42,86` derives `VALIDATOR_CWD` from the edit's git toplevel with a `$PROJECT_DIR` fallback. ✓
+- **R3** (`## Worktree isolation` rule section) — present in `.claude/rules/delegation.md`. ✓
+- **R4** (manual e2e) — the audit log carries `"isolation": ""` on real recent dispatch rows (additive schema: 10 of the last 200 rows have the key, older rows predate the gate change); the `"worktree"` value is the identical verbatim-passthrough path. Closed on this evidence rather than a contrived read-only worktree dispatch, which would itself violate § Worktree isolation's "when NOT to declare isolation" guidance.
+- **R5** (commit + push) — R1–R3 were committed in an earlier session; the working tree was clean and in sync with `origin` at audit time.
+
+The 29 original-outline tasks (`tasks.md` § Implementation (original)) were superseded by the 2026-05-19 Option B redesign and were never the live worklist — counting them as "0/29 incomplete" overstated the gap. spec 067 (`parallel-edit-validation`) later built tests that exercise R2's worktree-aware scoping with real git worktrees (2/2 PASS) — independent coverage that 063's own Option B scope never required.
+
+Lesson: flip the checkboxes when the code lands. A spec left `in-progress` after shipping reads as unfinished work and invites a re-audit cost that the 30-second checkbox update would have prevented.
 
 ## Tradeoffs
 

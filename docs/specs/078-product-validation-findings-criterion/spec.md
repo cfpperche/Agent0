@@ -2,7 +2,7 @@
 
 _Created 2026-05-22._
 
-**Status:** draft
+**Status:** shipped
 
 ## Intent
 
@@ -16,22 +16,22 @@ The fix reconciles the rubric with the template. The `findings` criterion must g
 
 ## Acceptance criteria
 
-- [ ] **Scenario: a projected-mode report is not false-failed on `findings`**
+- [x] **Scenario: a projected-mode report is not false-failed on `findings`**
   - **Given** a `validation-report.md` produced in projected mode — no YAML frontmatter, a populated severity-rated `## Findings` table with ≥ 3 findings
   - **When** the `04-validation` quality judge grades it
   - **Then** the `findings` criterion verdict is `pass` — the markdown findings table satisfies it; the absent frontmatter is not held against a projected-mode audit
 
-- [ ] **Scenario: a measurable-mode report still owes the structured frontmatter**
+- [x] **Scenario: a measurable-mode report still owes the structured frontmatter**
   - **Given** a `validation-report.md` produced in measurable mode — HTML inputs, real measured contrast ratios in the `## Accessibility Review` table
   - **When** the judge grades it
   - **Then** the `findings` criterion still expects the YAML `findings[]` block (≥ 3 entries, each with `severity` + `fix_skill_hint`); a measurable-mode report that omits it is a `concern` or `fail`
 
-- [ ] **Scenario: a genuinely thin findings set still fails, in either mode**
+- [x] **Scenario: a genuinely thin findings set still fails, in either mode**
   - **Given** a report with fewer than 3 findings, or a `## Findings` table of stubs
   - **When** the judge grades it
   - **Then** `findings` is `fail` regardless of audit mode — the fix does not weaken the floor, it only stops punishing a correct projected-mode omission
 
-- [ ] The `findings` criterion text in `quality-checklist.md § 04 — Validation` no longer contradicts `04-validation/prompt.md` step 7 + `04-validation/schema.md § Optional YAML frontmatter` — a reader holding the rubric and the template sees one consistent contract.
+- [x] The `findings` criterion text in `quality-checklist.md § 04 — Validation` no longer contradicts `04-validation/prompt.md` step 7 + `04-validation/schema.md § Optional YAML frontmatter` — a reader holding the rubric and the template sees one consistent contract.
 
 ## Non-goals
 

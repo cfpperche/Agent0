@@ -34,7 +34,7 @@ Each criterion has a stable `id` (the **bold label**) — the quality judge's ve
 ### 04 — Validation → `docs/validation-report.md`
 - **heuristics** — references both `Nielsen` and `WCAG`
 - **validation-mode** — a `validation_mode:` line is present
-- **findings** — YAML `findings[]` ≥ 3, each carrying `severity` + `fix_skill_hint`
+- **findings** — the `## Findings` table carries ≥ 3 substantive, severity-rated findings (each row a concrete issue + an actionable recommendation). **Additionally, for a measurable-mode audit** — HTML inputs, the `## Accessibility Review` table carrying real measured contrast ratios rather than projected `warn`s — the YAML `findings[]` frontmatter must mirror the table (≥ 3 entries, each with `severity` + `fix_skill_hint`); a measurable-mode report that omits it is a `concern`/`fail`. A **projected-mode** audit legitimately omits the frontmatter (per `04-validation/prompt.md` step 7) — grade it on the markdown table alone; do NOT fail it for the absent frontmatter.
 
 ### 05 — PRD → `docs/prd/v1.md`
 - **user-stories** — at least one literal `| US-NN |` table row

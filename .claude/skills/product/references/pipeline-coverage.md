@@ -56,6 +56,8 @@ Phase 5 has no step number — it is the terminal phase. `/product` scaffolds, u
 - ✓ 056 = canonical size budget reconciled per spec 056 against 3-dogfood empirical pass (045 / 048 / Vetro)
 - (legacy) = unchanged from pre-056 declaration; awaiting phase 2 calibration when next dogfood data accumulates
 
+**HTML report manifest (spec 073):** the per-step artifact list above is mirrored — for rendering order only — by `ARTIFACT_MANIFEST` in `scripts/build-report.ts`, which generates the navigable `docs/REPORT.html` reading surface at each gate + the terminal step. That `const` is the single source of truth for the report's nav order; adding or removing a pipeline step means editing it alongside this table.
+
 ## Lightening op applied per step (single-tier "standard" decisions)
 
 1. **01 Ideation:** 5-8 web searches (vs 15-25 canonical); ~10KB brief target; skip `critique mode`. **NEW (Decision 6):** § Market Sizing — TAM/SAM/SOM as 1-paragraph each, NOT primary research, desk research with 1-2 cited sources per number.

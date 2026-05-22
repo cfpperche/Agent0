@@ -11,7 +11,7 @@ argument-hint: "<idea>" --out=<path> [--stack=<next|expo>] [--from-step=NN] [--s
 
 # /product — 15-step foundation generator + design partner
 
-Takes a founder's one-line idea and produces a complete v1-ready product foundation at `<--out>`: concept brief (with market sizing) → lo-fi prototype (mood + killer flow) → functional spec (with problem-validation interviews) → UX audit → PRD 1-pager → OST (Opportunity Solution Tree) → sitemap-IA (full screen inventory with required_categories enforcement) → system design (with RACI + risk + data-flow inventory) → legal posture (DPIA-triggered by data-flow, NOT end-of-pipeline) → roadmap (defines phases) → cost estimate (per-phase using roadmap) → GTM-launch → brand book → design system → **visual contract** (navigable screen-atlas + hi-fi killer-flow mood + fixture-spec) → **mandatory SDD handoff** (scaffolds the umbrella + foundation child spec the engineering build runs as). 5 phases with 3 condensed user gates. **`/product` produces a docs-first foundation, NOT a runnable app** — semantic naming (no NN- prefix), PRD release-scoped at `docs/prd/v1.md`, design system grouped at `docs/design-system/`. The app build is the SDD workflow working the scaffolded specs. Founder reads `docs/REPORT.md` for the temporal narrative; the structure supports v2/v3/vN evolution without manual reorg.
+Takes a founder's one-line idea and produces a complete v1-ready product foundation at `<--out>`: concept brief (with market sizing) → lo-fi prototype (mood + killer flow) → functional spec (with problem-validation interviews) → UX audit → PRD 1-pager → OST (Opportunity Solution Tree) → sitemap-IA (full screen inventory with required_categories enforcement) → system design (with RACI + risk + data-flow inventory) → legal posture (DPIA-triggered by data-flow, NOT end-of-pipeline) → roadmap (defines phases) → cost estimate (per-phase using roadmap) → GTM-launch → brand book → design system → **visual contract** (navigable screen-atlas + hi-fi killer-flow mood + fixture-spec) → **mandatory SDD handoff** (scaffolds the umbrella + foundation child spec the engineering build runs as). 5 phases with 3 condensed user gates. **`/product` produces a docs-first foundation, NOT a runnable app** — semantic naming (no NN- prefix), PRD release-scoped at `docs/prd/v1.md`, design system grouped at `docs/design-system/`. The app build is the SDD workflow working the scaffolded specs. Founder reads `docs/REPORT.html` — a navigable, rendered reading surface regenerated at every gate (spec 073) — or `docs/REPORT.md` for the plain temporal narrative; the structure supports v2/v3/vN evolution without manual reorg.
 
 **v0.4.0 — spec 066 product-ui-quality** — see `docs/specs/066-product-ui-quality/` for the restructure: the v2/v3 36-route per-route screen-writer fan-out is **deleted**. `/product`'s visual-contract phase now ends at `screen-atlas.md` + a hi-fi killer-flow mood (static HTML) + `fixture-spec.md`, then **mandatorily hands off to SDD** — Phase 5 scaffolds an umbrella spec + the foundation child spec, the rest of the children listed in the umbrella's matrix. `/product` keeps its strength (design synthesis → visual contract) and stops doing what it did badly (blind-fan-out screen generation). Inherits the 15-step pipeline from spec 048 (v0.3.0 — rename + semantic layout) ← spec 045 ← spec 032's 17 decisions. v0.3.0 and earlier are superseded.
 
@@ -80,7 +80,8 @@ Resolves `target_language` BEFORE Step 01 dispatches so every downstream sub-age
 2. **Step 02 — Prototype v1 (lo-fi)** — dispatch direction-writer per § Step 02 brief. Returns `<out>/docs/direction-a.html` + 3-5 killer-flow HTML mood screens at `<out>/docs/screens/NN-<name>.html`. Note: sitemap is NO LONGER produced at Step 02 (moved to its own Step 07 — sitemap-IA). Step 02 outputs are pure mood/visual exploration of the killer flow.
 3. **Steps 03 + 04 — parallel fan-out** — once Step 02 returns (both need `direction-a.html` + `screens/`), dispatch TWO sub-agents in ONE MESSAGE (parallel tool calls) per § Step 03 + § Step 04 briefs. All `sonnet`. Step 03 (functional-spec) extends with § Problem-Validation Interviews per Decision 6.
 4. **Update `.state.json`** — append to `completed_steps`; any BLOCKED to `blocked_steps`.
-5. **Gate — `gate_discovery`** — `AskUserQuestion` with 3 options:
+5. **Build the HTML report (spec 073)** — run `bun .claude/skills/product/scripts/build-report.ts --out=<out> --slug=<slug> --stack=<stack>`. Regenerates `<out>/docs/REPORT.html` — the navigable reading surface for every artifact produced so far (steps not yet run render as greyed-out "not yet generated"). Best-effort: if `bun` is unavailable or the script errors, emit a one-line `report-html-skipped: <reason>` advisory and continue — this never blocks the gate.
+6. **Gate — `gate_discovery`** — `AskUserQuestion` with 3 options. Tell the user to review the artifacts in `<out>/docs/REPORT.html` (open in a browser) before choosing:
    - `continue` → proceed to Phase 2 — Specification (append `discovery` to `gates_passed`).
    - `iterate` → user names which step(s) to re-dispatch (sub-prompt). Re-dispatches with augmented brief. Increment `iterations.discovery`. Re-gate after.
    - `abort` → exit cleanly; set `flags.from_step = current_step`; print resume command.
@@ -97,7 +98,8 @@ The biggest phase (8 steps). Internal dispatch DAG follows dependency order; som
 6. **Step 10 — Roadmap** (depends on Step 05 PRD priorities + Step 08 dependencies). Dispatch per § Step 10 brief. Returns `<out>/docs/roadmap.md` with phase definitions that **drive** the next step's cost calculation. **Cost↔roadmap swap per spec 045 — roadmap dispatches BEFORE cost so cost calculates per-phase from real phase boundaries instead of inventing implicit ones.**
 7. **Steps 11 + 12 — parallel fan-out** — dispatch TWO sub-agents in ONE MESSAGE per § Step 11 (cost) + § Step 12 (gtm-launch) briefs. Step 11 reads Step 10 roadmap (for phase boundaries) + Step 09 legal (for review budget) + Step 08 system-design (for integration line items). Step 12 reads Step 10 (for launch timing) + Step 09 (for compliance signals).
 8. **Update `.state.json`**.
-9. **Gate — `gate_specification`** — `AskUserQuestion` (same 3-option shape).
+9. **Build the HTML report (spec 073)** — run `build-report.ts` as in Phase 1 step 5; regenerates `<out>/docs/REPORT.html`. Best-effort, never blocks.
+10. **Gate — `gate_specification`** — `AskUserQuestion` (same 3-option shape). Point the user at `<out>/docs/REPORT.html` to review before choosing.
 
 ## Phase 3 — Identity (pipeline steps 13-14)
 
@@ -106,7 +108,8 @@ Strictly serial — design system depends on brand.
 1. **Step 13 — Brand book.** Dispatch per § Step 13 brief. Returns `<out>/docs/brand-book.md`. If `--skip-brand`: skip dispatch, `cp templates/default-tokens.css <out>/docs/design-system/tokens.css` + write minimal `<out>/docs/brand-book.md` with neutral tone. **Brand moves to Phase 3 per Decision 3 (PRD-first ordering)** — brand-book now consumes a finalized PRD + sitemap + system-design, NOT a half-formed concept brief.
 2. **Step 14 — Design system.** Dispatch per § Step 14 brief. Reads brand-book + audit findings (Step 04) + sitemap inventory (Step 07). Returns 3 files: `docs/design-system/tokens.css`, `docs/design-system/components.md`, `docs/design-system/README.md`.
 3. **Update `.state.json`**.
-4. **Gate — `gate_identity`** — `AskUserQuestion`.
+4. **Build the HTML report (spec 073)** — run `build-report.ts` as in Phase 1 step 5; regenerates `<out>/docs/REPORT.html`. Best-effort, never blocks.
+5. **Gate — `gate_identity`** — `AskUserQuestion`. Point the user at `<out>/docs/REPORT.html` to review before choosing.
 
 ## Phase 4 — Visual contract (pipeline step 15)
 
@@ -130,13 +133,15 @@ Per spec 066 the v2/v3 per-route screen-writer fan-out is **deleted**. `/product
 2. **Scaffold the foundation child** at `<out>/docs/specs/002-foundation/` — copy the four templates, substitute `{{NNN}}=002` / `{{SLUG}}=foundation` / `{{DATE}}`, then FILL `spec.md` per `sdd-handoff.md § Child #1` (skeleton + tooling + route-group dirs + thin `layout.tsx` shells; child #1 owns the skeleton, child #2 owns the chrome components). `plan.md` / `tasks.md` / `notes.md` stay as scaffolds — the founder runs `/sdd plan` then `/sdd tasks` on this child.
 3. **Children #2..N are matrix rows only** — listed in the umbrella's child-spec matrix, NOT pre-scaffolded. Child #2 (component-library) names `docs/design-system/components.md` as its input spec. If `docs/roadmap.md` has no usable phase structure, fall back to a single `app-build` child per `sdd-handoff.md § Fallback`.
 4. **Finalize `<out>/docs/.state.json`** — set `phase="sdd-handoff"`, `completed_at=<ISO timestamp>`.
-5. **Print the handoff message:**
+5. **Build the terminal HTML report (spec 073)** — run `bun .claude/skills/product/scripts/build-report.ts --out=<out> --slug=<slug> --stack=<stack>`. This is the final regeneration — `<out>/docs/REPORT.html` now covers the full 15-step pipeline plus the SDD-handoff specs. Best-effort: a `bun`/script failure emits a one-line `report-html-skipped: <reason>` advisory and does not abort the run.
+6. **Print the handoff message:**
 
 ```
 Product foundation ready at <out>/.
 
   Pipeline coverage: 15/15 steps completed (or N/15 if any BLOCKED — see docs/REPORT.md § Blocked steps).
   Report:        <out>/docs/REPORT.md
+  Report (HTML): <out>/docs/REPORT.html          <-- navigable reading surface (open in a browser)
   Concept brief: <out>/docs/concept-brief.md
   PRD:           <out>/docs/prd/v1.md
   Sitemap:       <out>/docs/sitemap.yaml

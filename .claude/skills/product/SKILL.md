@@ -147,7 +147,20 @@ Per spec 066 the v2/v3 per-route screen-writer fan-out is **deleted**. `/product
    **Wave B — after Step 15c returns, dispatch Step 15b:**
    - **Step 15b — Hi-fi killer-flow mood** — dispatch the § Mood-screen-writer brief in **hi-fi mode** (`{{mood_tier}}=hi-fi`), once per killer-flow screen. The screens are the same 3-5 the Step 02 lo-fi mood covered — read them from `<out>/docs/screens/` + Step 02's REPORT § Turn 2 Plan. The hi-fi brief reads `fixture-spec.md` for on-brand data, which is why 15b runs after 15c (not parallel with it). Cap 5 concurrent across the killer-flow screens themselves. Returns `<out>/docs/screens/hifi/<NN>-<name>.html` × 3-5 — brand+tokens-applied, mobile-first static HTML.
 2. **Update `.state.json`, then run the quality judge** — append `15-screen-atlas` to `completed_steps`; record any BLOCKED to `blocked_steps` (per `delegation-briefs.md § Failure handling`: 15a BLOCKED → ABORT the run; 15b / 15c BLOCKED → degrade gracefully, Phase 5 still runs). Then run the **quality judge** over the three judge-units `15a-screen-atlas` / `15b-hifi-mood` / `15c-fixture-spec` per § Quality judge. Phase 4 has no gate — a `fail` surfaces in `REPORT.md § Quality concerns` + the Phase 5 handoff message, not a gate `iterate`.
-3. **Best-effort visual check.** If the Playwright MCP is loaded this session (`mcp__playwright__*` tools available): for each `<out>/docs/screens/hifi/*.html`, `browser_navigate` to its `file://` URL, `browser_resize` to 375×812 then 1280×800, `browser_take_screenshot` at each width, and run a horizontal-overflow probe via `browser_evaluate` — `document.documentElement.scrollWidth > document.documentElement.clientWidth`. Record pass/fail per screen for REPORT.md § Visual check. If the Playwright MCP is NOT loaded, emit a one-line `visual-gate-skipped: Playwright MCP not loaded — <out>/.mcp.json seeded for the next session` advisory and record the skip in REPORT.md. **Best-effort — never blocks, never aborts.**
+3. **Best-effort visual check.** If the Playwright MCP is loaded this session (`mcp__playwright__*` tools available): the Playwright MCP refuses local-file URLs (spec 076 #4), so serve `<out>/docs/screens/hifi/` over a localhost HTTP server first. Background-launch the helper script and read the `READY <port>` line it prints on stdout:
+
+   ```bash
+   bash .claude/skills/product/scripts/serve-hifi.sh <out>/docs/screens/hifi/ &
+   SERVE_PID=$!
+   # block until first stdout line — `READY <port>` on success, non-zero exit on failure
+   read -r READY_LINE
+   ```
+
+   Two outcomes:
+   - **`READY <port>`** — for each `<out>/docs/screens/hifi/<NN>-<name>.html`, `browser_navigate` to `http://127.0.0.1:<port>/<NN>-<name>.html`, `browser_resize` to 375×812 then 1280×800, `browser_take_screenshot` at each width, and run a horizontal-overflow probe via `browser_evaluate` — `document.documentElement.scrollWidth > document.documentElement.clientWidth`. Record pass/fail per screen for REPORT.md § Visual check. After the loop, `kill $SERVE_PID` to release the port (the script's signal trap reaps the child `python3 -m http.server`).
+   - **Non-zero exit + `not-available: <reason>` on stderr** — `python3` missing, port-bind failed, or server didn't bind within 5s. Fold into the existing skip advisory: `visual-gate-skipped: serve-hifi.sh — <reason>` and record in REPORT.md.
+
+   If the Playwright MCP is NOT loaded at all, emit `visual-gate-skipped: Playwright MCP not loaded — <out>/.mcp.json seeded for the next session` and record the skip in REPORT.md. **Best-effort — never blocks, never aborts.**
 4. **Author `<out>/docs/REPORT.md` inline.** Read `templates/report.md.tmpl`, substitute placeholders from `<out>/docs/.state.json` + the phase outputs. Fill the `## Quality concerns` section from `.state.json` `quality_verdicts` — every `concern`/`fail` criterion with its `note`, plus each judge-unit's `scope_assessment` (per `quality-judge.md § Verdict → gate routing`). See `quality-judge.md` + `quality-checklist.md` for the rubric.
 
 ## Phase 5 — Mandatory SDD handoff

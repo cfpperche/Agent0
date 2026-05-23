@@ -12,6 +12,21 @@ _In-flight design memory for this spec — decisions, deviations, tradeoffs, and
 
 _Choices made where the spec/plan was ambiguous. The decision itself + why this option over others considered in the moment._
 
+### 2026-05-23 — parent — stack-aware matrix validated live: Expo matrix is genuinely Expo-shaped, not relabeled-Next
+
+The 079 ship moment was the SKILL.md/template rewrite + the static spec-079 test suite. The remaining question was empirical: does the Phase 5 matrix that comes out the other end actually reflect the declared `--stack` at the level of integration choices, not just at the level of the `--stack` label? Validated 2026-05-23 as part of the spec-075 task-14 dogfood (`/product "habit tracker" --stack=expo --out=/tmp/product-dogfood-2026-05-23-expo`). The umbrella spec at `docs/specs/001-habit-tracker/spec.md` came out with **13 children, infra block-precede shape intact**:
+
+- Child #1 `002-foundation` — scaffolded; **explicitly cites `.claude/rules/research-before-proposing.md`** with the verbatim phrasing "no Agent0-bundled template is consumed — none ships" + mandates web research at `/sdd plan` time for the declared Expo stack. This is the spec-079 contract front-and-center in the only spec the founder reads first.
+- Child #2 `component-library` — matrix-only, named.
+- Children #3..#10 (8 infra rows) — every one is Expo-specific: `schema-rls` (Postgres + Drizzle), `auth-foundation` (Apple OAuth + Google OAuth + JWT rotation), `anthropic-coach-integration` (Claude Sonnet via SSE + Whisper), `iap-validation` (**Apple StoreKit 2 + Google Play Billing**), `railway-deploy` (Hono on Railway + Postgres + Redis), `observability-floor`, `eas-pipeline` (**EAS Build + EAS Submit + TestFlight + Play Console**), `reflection-encryption` (libsodium HKDF). Every row labeled "Phase 1 — infra (**block-precedes #11**)" per the contract.
+- Children #11..#13 — per-phase visual children sliced by `docs/roadmap.md` phases verbatim, each scoped to the screens whose `covers_us` maps to that phase's US-NN tier.
+- `## Open questions` populated with the system-design § Trade-off Triggers + § Open Decisions rows, each prefixed `**Architecture — <topic>:**` per `sdd-handoff.md § Open questions migration`.
+- `## Standing constraints` lists the 5 standing constraints from `sdd-handoff.md § Standing constraints` (stack-conditional styling / no inline style for layout / mobile-first 375 px / fixture coherence via `docs/fixture-spec.md` / Playwright visual verification).
+
+The integration-shape choices are the load-bearing test. A `--stack=next` run would produce a fundamentally different infra set — no IAP child (web payments use Stripe, not native receipt validation), no EAS pipeline (Vercel deploy + Next build), no expo-sqlite local-only reflection storage (Web Storage API + IndexedDB), `auth-foundation` uses NextAuth.js or Auth.js conventions. The Expo run's matrix is a real artifact of the declared stack, not a Next.js matrix wearing Expo labels.
+
+Skipped the side-by-side `--stack=next` second run (user decision 2026-05-23) — the existence of stack-specific integration choices in this run already proves the mechanism. A second-stack run is a "comparative data" follow-up worth doing when the first real user needs the other stack, not a validation gate.
+
 ### {{YYYY-MM-DD}} — {{author}} — {{one-line title}}
 
 {{free-prose body — what was ambiguous, what was decided, why}}

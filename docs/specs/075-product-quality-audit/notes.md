@@ -79,6 +79,19 @@ Fix (done here, inside task 12 — a verification task that uncovers a defect mu
 
 Lesson for any future ceiling-scrub: grep the *prose* (`Ceiling`, `Size targets`, `N-M KB`), not just the JSON token. Net outcome unchanged — all 15 schemas now carry a floor and zero ceilings.
 
+### 2026-05-23 — parent — ship on partial: scenarios 1-2-3 live, 4-5-6 mechanically wired but unexercised
+
+End-to-end Expo dogfood (`/product "habit tracker" --stack=expo --out=/tmp/product-dogfood-2026-05-23-expo`) ran clean: 15/15 steps, 3 gates `continue` first-pass, 17/17 judges fired (8 pass · 9 concern · 0 fail). Reconfirmed scenarios 1-2 (judge dispatched per step, valid JSON shape; correctly-scoped large artifacts pass right-sizing — `system-design.md` 41 KB passed `structure`/`security-doc`/`data-flow` even with right-sizing concern). **Freshly validated scenario 3:** all 9 concerns named the bloat dimension specifically — e.g. `08-system-design: "41 KB vs self-declared 20 KB target — 2× misalignment between depth-band label and SMB-SaaS-shaped surface"`; `09-legal: "subprocessor count drift (8 vs 5)"`; `11-cost-estimate: "under-developed — missing § Sensitivity / § Unit Economics / § Projections for a freemium subscription with high-variance drivers"` (under-development is the symmetric anti-pattern to bloat — the criterion catches both, an observed strength).
+
+Scenarios 4-5-6 did not exercise their negative-path arms because the run produced no failures, no stubs, and no near-cap artifacts:
+- **Scenario 4** (`fail` → gate `iterate` pre-set) — mechanism wired in `SKILL.md § Phase 1/2/3 step "Gate"` per task 9; not triggered because 0 verdicts were `fail`.
+- **Scenario 5** (anti-stub pre-filter short-circuit) — mechanism wired in `SKILL.md § Quality judge step 1` per task 9; not triggered because every artifact landed at or above its `schema.md § Size floor` `min_size`.
+- **Scenario 6** (200 KB catastrophe-cap circuit-break) — mechanism wired in every producer brief's CONSTRAINTS per task 3; not triggered because max producer artifact was `functional-spec.md` 82 KB (~40% of cap).
+
+Decision (user, 2026-05-23): **ship 075 on this partial rather than synthesize adversarial fixtures.** Reasoning: (a) the unexercised arms are simple boolean wire-ups whose code was already inspection-validated at tasks 9+10 (no novel logic to test); (b) synthesizing a stub / a forced fail / a deliberate runaway is "test the test" theater — the value of the dogfood was confirming the happy-path mechanism behaves correctly under real load, which it did; (c) real exercise of scenarios 4-5-6 will happen naturally when a future dirty run produces a genuine fail/stub/runaway, and at that moment the wire-up either works (no action) or it doesn't (a real bug surfaces). Synthetic exercise pre-empts neither outcome.
+
+Empirical baseline saved to `.claude/memory/product-pipeline-empirical-baseline.md` — first measured cost+shape envelope for a full Expo run (~3.1M tokens / ~83min compute / 44 dispatches / 0 loop-budget / 0 validator-cascade). Two follow-up signals surfaced for separate future scope: (a) judge cost dominates ~50% of token spend → opus-vs-sonnet judge model is a tunable worth measuring on a budget-conscious run; (b) the escalation advisory fires 100% on schema+security sub-agents declared `sonnet` (steps 03/04/05/07/08/09/10/11) but every one of those sub-agents passed the judge — the advisory may be over-eager; calibrate against a side-by-side opus-vs-sonnet measurement before tightening or loosening its trigger.
+
 ## Tradeoffs
 
 _None surfaced beyond those weighed at plan time._

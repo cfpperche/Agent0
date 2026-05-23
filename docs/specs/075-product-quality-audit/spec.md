@@ -2,7 +2,7 @@
 
 _Created 2026-05-22._
 
-**Status:** in-progress _(Moves 1-2 implemented + committed; task 14 dogfood partial — slice validated scenarios 1-2, full `/product` dogfood deferred)_
+**Status:** shipped _(Moves 1-2 implemented + committed; task 14 dogfood validated scenarios 1-2-3 live on 2026-05-23 Expo full-run; scenarios 4-5-6 mechanically wired via tasks 9+10 but their negative-path arms — fail / stub / runaway — were not exercised because the run was clean. See `notes.md` § 2026-05-23 for the ship-on-partial rationale.)_
 
 ## Intent
 

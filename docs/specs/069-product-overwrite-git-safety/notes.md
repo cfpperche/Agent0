@@ -14,6 +14,10 @@ _In-flight design memory for this spec — decisions, deviations, tradeoffs, and
 
 `.claude/tests/harness-sync/run-all.sh` enumerates its tests via a hardcoded `for n in 01 02 … 31` list, which has to be hand-extended for every new test (it was extended twice during spec 068). The new `.claude/tests/product-overwrite/run-all.sh` globs `[0-9][0-9]-*.sh` instead — new scenario scripts are auto-discovered, no orchestrator edit needed. `plan.md` specified only "a `run-all.sh` orchestrator"; the glob shape was the implementation-time choice as the lower-maintenance option. Not retrofitted to harness-sync's run-all — out of scope for this spec.
 
+### 2026-05-23 — parent — live preservation validated end-to-end against fresh ephemeral target
+
+The static test suite (`.claude/tests/product-overwrite/`) covered the script-level promise; the Híbrido 2026-05-21 validation strategy still wanted a "live" arm — observe `clear-target.sh` running inside a real `/product` invocation against a pre-seeded target. Done 2026-05-23 as part of the spec-075 task-14 dogfood (`/product "habit tracker" --stack=expo --out=/tmp/product-dogfood-2026-05-23-expo`): the target was pre-seeded with 5 sentinels covering all 3 preservation categories — `.git/` (defense-in-depth never-remove), `.claude/rules/sentinel-survives.md` (defense-in-depth via `.claude/`), `CLAUDE.md` (allowlist), `sentinel-should-be-cleared.md` (non-harness file), `docs-old-stale/legacy.md` (non-harness dir). Phase 0 fired the overwrite prompt as designed → `y` → `bash .claude/skills/product/scripts/clear-target.sh /tmp/product-dogfood-2026-05-23-expo` ran inside the skill execution → result: **5/5 sentinels passed**. The 2 non-harness entries surfaced verbatim as `removed docs-old-stale` + `removed sentinel-should-be-cleared.md` in the script's stderr (the audit trail this spec's Gap F replacement promised). The blunt `rm -r <out>` foot-gun is empirically dead. The reminder list item "069 live validation" can be dismissed.
+
 ## Deviations
 
 _None — implementation followed `plan.md`._

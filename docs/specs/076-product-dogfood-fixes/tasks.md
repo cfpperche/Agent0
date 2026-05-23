@@ -12,7 +12,8 @@ _Generated from `plan.md` on 2026-05-22. Work top-to-bottom. Check boxes as task
 
 ### #3 — Mood-screen single-nav rule
 
-- [ ] 3. In `delegation-briefs.md` § Mood-screen-writer → CONSTRAINTS, add one bullet immediately after the mobile-first / no-horizontal-overflow rules: *"Exactly one nav renders at any viewport width. The desktop nav/sidebar is `display:none` below the mobile breakpoint (a wrapped nav is a hard violation, not just an overflow concern — the SKILL.md overflow probe cannot catch a wrap)."*
+- [x] 3. In `delegation-briefs.md` § Mood-screen-writer → CONSTRAINTS, add one bullet immediately after the mobile-first / no-horizontal-overflow rules: *"Exactly one nav renders at any viewport width. The desktop nav/sidebar is `display:none` below the mobile breakpoint (a wrapped nav is a hard violation, not just an overflow concern — the SKILL.md overflow probe cannot catch a wrap)."*
+  - **Done 2026-05-23.** Bullet placed at line 496 (immediately after the mobile-first rule), framed symmetrically (desktop hidden below breakpoint AND mobile hidden above — "pick one per breakpoint"), citing spec 076 #3 for traceability.
 - [ ] 4. Commit as `fix(076): mood-screen brief carries explicit single-nav rule (#3)`.
 
 ### #2-sections — Step 11 brief vs schema alignment
@@ -83,7 +84,8 @@ _Generated from `plan.md` on 2026-05-22. Work top-to-bottom. Check boxes as task
   - **Done 2026-05-23.** Post-edit grep returns 3 matches — all legitimate path references to the `templates/pipeline/08-system-design/` directory (canonical dir name) on the CONTEXT, CONSTRAINTS, and DONE_WHEN lines. ZERO matches in the "Write 3 files" line (now uses semantic `system-design.md + security.md + data-flow.json`). DELIVERABLE line unchanged — already used semantic names.
 - [ ] 28. **Scenario #4** — manual: run the helper script against a directory of 2-3 sample HTML files; `curl http://127.0.0.1:<port>/<file>` returns the bytes; kill the server; `ss -ltn` shows no leaked port. `SKILL.md` no longer contains the string `file://` in the Phase 4 section (`grep -nF 'file://' .claude/skills/product/SKILL.md` returns nothing inside Phase 4; matches elsewhere are fine).
 - [ ] 29. **Scenario #2-sections** — `grep -A1 'Required H2 sections' .claude/skills/product/references/delegation-briefs.md | grep -A0 'Step 11'` covers every required section the schema enforces at Layer 1; the substring `SKIP unit economics + sensitivity + scenario analysis` no longer appears in the Step 11 brief.
-- [ ] 30. **Scenario #3** — `grep -i 'exactly one nav\|display:none.*mobile' .claude/skills/product/references/delegation-briefs.md` matches a CONSTRAINTS bullet inside § Mood-screen-writer.
+- [x] 30. **Scenario #3** — `grep -i 'exactly one nav\|display:none.*mobile' .claude/skills/product/references/delegation-briefs.md` matches a CONSTRAINTS bullet inside § Mood-screen-writer.
+  - **Done 2026-05-23.** Grep returns 1 match at line 496 (inside § Mood-screen-writer CONSTRAINTS).
 - [ ] 31. **Scenario #5** — `grep -n '03+04\|15a + 15b + 15c\|all inputs.*on disk' .claude/skills/product/SKILL.md .claude/skills/product/references/delegation-briefs.md .claude/skills/product/references/state-machine.md` returns nothing (or only struck-through historical context if any). The same files' updated language correctly names the serial dependencies (`grep -n '03.*alone.*04 alone\|15a + 15c.*then 15b'` matches in each).
 - [ ] 32. **Scenario #8** — re-run the three-payload test from task 21; results unchanged: markered dispatch → `escalation` suppressed + `skill_directed` populated; markerless multi-signal → `escalation` still fires; markerless no-model → `model-discipline` still fires.
 - [ ] 33. Final sweep: bump `spec.md` `**Status:**` from `draft` to `shipped`; verify every `## Acceptance criteria` checkbox is `- [x]`; run `bash .claude/tools/probe.sh last-run` if any validator runs touched the delegation gate (sanity check it didn't regress).

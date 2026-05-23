@@ -8,7 +8,7 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Session 2026-05-23 — memory-system evolution scoped + scaffolded.** Specs 080 (umbrella) + 081 (first child, MS-3 compact-history + MS-6 runtime-state README) committed at `978bedd`. Deep research at `/tmp/research/{obsidian,opencode,hermes,anthill,synthesis}.md` (~2.5k lines, 5 files) motivated the design. 079 live re-run + 076 implementation still pending from prior sessions — not touched.
+**Session 2026-05-23 — memory-system 080+081 scaffolded (parallel session) + 079 live re-run resolved (this session).** Specs 080 (umbrella) + 081 (first child, MS-3 + MS-6) committed at `978bedd`; research at `/tmp/research/{obsidian,opencode,hermes,anthill,synthesis}.md` (~2.5k lines). 079 validated via manual Phase 5 against mei-saas: `dbcb6d1` (harness sync) + `e68f087` (manual rewrite) pushed to `cfpperche/mei-saas origin/main`. 076 still pending.
 
 ## WIP — resume point
 
@@ -20,7 +20,7 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 1. `/sdd plan` on 081 (recommended next-session opener).
 2. After 081 ships, scaffold 082 (foundation for 083+085) → 083 → 084/085 parallel-safe.
-3. **Carryover deferred again:** 079 live re-run (`cd /home/goat/mei-saas && /product "<idea>" --out=. --stack=next`); 076 implementation (plan + tasks drafted); 075 task 14 (`/product` dogfood scenarios 3-6).
+3. **Carryover:** 076 implementation (plan + tasks drafted); 075 task 14 (`/product` dogfood scenarios 3-6). _(079 live re-run resolved this session — see Current state.)_
 4. Dated reminders due: 029 05-30 · 035 06-07 · 046 07-01 · 060 07-19.
 
 ## Decisions & gotchas
@@ -33,8 +33,11 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Carryover (orthogonal — not touched this session)
 
-- **079 live re-run** — pending from prior session.
 - **076** — plan + tasks drafted, ready to implement.
 - **075 task 14** — `/product` dogfood scenarios 3-6 pending.
 - `docs/specs/074-subagent-personas/` — untracked draft; leave for originating session.
 - `.claude/REMINDERS.md` items per startup readout.
+
+## 079 live re-run — resolved this session
+
+Manual Phase 5 (não full `/product`) contra mei-saas: matriz 10 → 14 rows (4 infra children block-precedem 8 per-Fase visual); foundation reescrito stack-neutral research-driven; `{plan,tasks}.md` STALE. Validados ao vivo: scenarios #1, #3, #5 ✓; #4 N/A (mei-saas sem `§ Trade-off Triggers`); #2/#6 só num full-run futuro. Entrypoint mei-saas: `cd /home/goat/mei-saas && /sdd plan` em `002-foundation/`.

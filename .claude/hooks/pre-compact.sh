@@ -1,15 +1,24 @@
 #!/usr/bin/env bash
 # PreCompact hook: snapshot the last N real user turns + assistant text/tool_use
-# into COMPACT_NOTES.md so the SessionStart hook (source=compact) can re-inject
-# the raw signal that /compact's summarizer would otherwise compress away.
+# into a per-event file under .claude/.compact-history/ so the SessionStart
+# hook (source=compact) can re-inject the raw signal that /compact's summarizer
+# would otherwise compress away.
 #
 # Captures verbatim: user messages, assistant text, tool names + truncated args.
 # Drops: tool_result bodies (stale post-compact), assistant thinking blocks.
+#
+# Filename shape: <ISO-second>-<pid>-<rand5>.md — lex order equals chrono order
+# across seconds; the pid+random5 suffix is the tie-breaker for the (rare)
+# case of two compactions in the same UTC second. Bash 3.2 / BSD-compatible
+# (no GNU-only `date +%N`). Retention: compactHistory.keepLast in
+# .claude/settings.json (default 20).
 
 set -euo pipefail
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
-NOTES_FILE="$PROJECT_DIR/.claude/COMPACT_NOTES.md"
+HISTORY_DIR="$PROJECT_DIR/.claude/.compact-history"
+printf -v RAND_PAD '%05d' "$RANDOM"
+NOTES_FILE="$HISTORY_DIR/$(date -u +%Y-%m-%dT%H-%M-%SZ)-$$-$RAND_PAD.md"
 TURNS_TO_KEEP=12
 
 INPUT="$(cat 2>/dev/null || true)"
@@ -59,6 +68,8 @@ TURNS_MD="$(jq -rs --argjson n "$TURNS_TO_KEEP" '
   | join("")
 ' "$TRANSCRIPT_PATH" 2>/dev/null || true)"
 
+mkdir -p "$HISTORY_DIR"
+
 {
   echo "# Pre-compact snapshot"
   echo
@@ -91,5 +102,15 @@ TURNS_MD="$(jq -rs --argjson n "$TURNS_TO_KEEP" '
   echo "---"
   printf '%s\n' "$TURNS_MD"
 } > "$NOTES_FILE"
+
+# Retention: prune oldest snapshots beyond compactHistory.keepLast (default 20).
+# Per-write trim — no continuous sweep. ls -1t sorts by mtime descending; we
+# delete tail entries past the cap. xargs -r is a no-op when the pipe is empty
+# (guards against `rm -f` with zero args on some platforms).
+KEEP_LAST="$(jq -r '.compactHistory.keepLast // 20' "$PROJECT_DIR/.claude/settings.json" 2>/dev/null || echo 20)"
+if ! [[ "$KEEP_LAST" =~ ^[0-9]+$ ]] || [[ "$KEEP_LAST" -lt 1 ]]; then
+  KEEP_LAST=20
+fi
+ls -1t "$HISTORY_DIR"/*.md 2>/dev/null | tail -n +$((KEEP_LAST + 1)) | xargs -r rm -f 2>/dev/null || true
 
 exit 0

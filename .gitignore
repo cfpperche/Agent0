@@ -6,10 +6,11 @@ CLAUDE.local.md
 
 # Ephemeral state under .claude/ — per-machine runtime, never commit
 .claude/.runtime/
-.claude/.runtime-state/
+.claude/.runtime-state/*
+!.claude/.runtime-state/README.md
 .claude/.session-state/
 .claude/.delegation-state/
-.claude/COMPACT_NOTES.md
+.claude/.compact-history/
 .claude/delegation-audit.jsonl
 .claude/delegation-audit.jsonl.lock
 .claude/secrets-audit.jsonl

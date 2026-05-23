@@ -2,7 +2,9 @@
 # SessionStart hook: inject context appropriate to the start source.
 #
 # - startup / resume / clear → SESSION.md (cross-session handoff)
-# - compact                  → COMPACT_NOTES.md (in-session WIP at moment of compact)
+# - compact                  → lex-greatest .claude/.compact-history/*.md
+#                              (the latest pre-compact snapshot; spec 081
+#                              superseded the single-file COMPACT_NOTES.md model)
 #
 # State is isolated per-session_id (spec 017): markers live at
 # `<.session-state>/<session_id>/{started-at,nagged}`. Parallel Claude Code
@@ -15,7 +17,7 @@ set -euo pipefail
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 SESSION_STATE_ROOT="$PROJECT_DIR/.claude/.session-state"
 SESSION_FILE="$PROJECT_DIR/.claude/SESSION.md"
-NOTES_FILE="$PROJECT_DIR/.claude/COMPACT_NOTES.md"
+COMPACT_HISTORY_DIR="$PROJECT_DIR/.claude/.compact-history"
 
 # Read stdin payload FIRST so we can extract session_id before any state ops.
 INPUT="$(cat 2>/dev/null || true)"
@@ -54,10 +56,20 @@ if git -C "$PROJECT_DIR" rev-parse --git-dir >/dev/null 2>&1; then
   git -C "$PROJECT_DIR" status --porcelain >"$STATE_DIR/start-porcelain.txt" 2>/dev/null || true
 fi
 
-if [[ "$SOURCE" == "compact" && -f "$NOTES_FILE" ]]; then
-  printf '=== COMPACT_NOTES.md (pre-compact snapshot — raw signal /compact would have lost) ===\n'
-  cat "$NOTES_FILE"
-  printf '\n=== end COMPACT_NOTES.md ===\n'
+if [[ "$SOURCE" == "compact" ]]; then
+  # Read the lex-greatest .compact-history/*.md — equals chronologically-latest
+  # because filenames are fixed-width ISO-second prefixes. Graceful no-op when
+  # the dir is missing or empty (no banner, no error). `|| true` is scoped to
+  # the ls step so an unmatched glob does NOT trip set -e + pipefail.
+  LATEST_SNAPSHOT=""
+  if [[ -d "$COMPACT_HISTORY_DIR" ]]; then
+    LATEST_SNAPSHOT="$({ ls -1 "$COMPACT_HISTORY_DIR"/*.md 2>/dev/null || true; } | tail -1)"
+  fi
+  if [[ -n "$LATEST_SNAPSHOT" && -f "$LATEST_SNAPSHOT" ]]; then
+    printf '=== compact-history (pre-compact snapshot — raw signal /compact would have lost) ===\n'
+    cat "$LATEST_SNAPSHOT"
+    printf '\n=== end compact-history ===\n'
+  fi
 elif [[ -f "$SESSION_FILE" ]]; then
   printf '=== SESSION.md (handoff from prior session) ===\n'
   cat "$SESSION_FILE"

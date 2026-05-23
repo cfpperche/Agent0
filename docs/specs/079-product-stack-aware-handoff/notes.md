@@ -20,9 +20,13 @@ _Choices made where the spec/plan was ambiguous. The decision itself + why this 
 
 _Places where implementation intentionally departed from `plan.md`. The departure + the reason it was necessary or better._
 
-### {{YYYY-MM-DD}} — {{author}} — {{one-line title}}
+### 2026-05-23 — parent — historical mention of `app-skeleton` retained in SKILL.md v0.5.0 changelog paragraph
 
-{{free-prose body — what the plan said, what was done instead, why}}
+Task 12 said `grep -n 'app-skeleton' .claude/skills/product/SKILL.md` should return nothing. The v0.5.0 paragraph I added in task 11 names the deleted dirs explicitly ("the bundled `templates/app-skeleton/{next,expo}/` directories and `references/stack-defaults.md` snapshot are deleted") to mirror the v0.4.0 paragraph shape ("the v2/v3 36-route per-route screen-writer fan-out is **deleted**"). The match is historical-context, not a live consumer reference — readers landing on the changelog see what changed and why.
+
+Equally, the description in the frontmatter was tightened to "No stack code ships — Phase 5 reads system-design + roadmap to compute a stack-aware umbrella matrix; the foundation child's `/sdd plan` researches the declared stack." (replacing "Standalone (bundled templates)."), and the version pointer bumped from "v0.4.0 per spec 066." to "v0.5.0 per spec 079." — both correctness fixes not explicitly in tasks.md but follow-through on the version bump.
+
+The verification at task 33 (`rg -F 'app-skeleton' .claude/ docs/specs/`) accepts historical specs as known matches; the SKILL.md changelog paragraph belongs in the same category — past-behavior reference in living documentation. No corrective action taken.
 
 ## Tradeoffs
 

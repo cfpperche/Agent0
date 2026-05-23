@@ -8,20 +8,17 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Session 2026-05-22 (cont.) — 076 OQ#8 resolved, plan.md still empty.** Founder picked the (b)+(c) synthesis: a `# SKILL-DIRECTED: <slug>` marker (mirroring `# OVERRIDE:` grammar, ≥10 chars) that the skill adds to each brief and `delegation-gate.sh` reads to suppress *only* the `escalation` advisory — `model-discipline` keeps firing on undeclared models, ad-hoc parent dispatches without the marker still get `escalation` (true-positive preserved). Audit row gains `skill_directed: "<slug>" | null`. Decision recorded with rejection reasoning in `076/notes.md`; acceptance criterion #8 in `076/spec.md` rewritten as a Given/When/Then scenario; OQ#8 marked resolved inline.
-
-Uncommitted: `076/spec.md` + `076/notes.md` + this SESSION.md.
+**Session 2026-05-22 (cont.) — 076 plan.md + tasks.md written, ready to implement.** OQ#8 resolved in prior commits (`a64b319` + `90c1453`, pushed). Plan groups the 6 findings into 6 sequential commits ordered easiest→cross-cutting: #9 typo → #3 nav rule → #2-sections schema-align → #5 serialize 03→04 and 15c→15b → #4 HTTP-serve helper (`scripts/serve-hifi.sh`) → #8 SKILL-DIRECTED marker (5-line gate edit + audit field + rule docs + 16 brief inserts). 33 tasks total, last 7 are verification (grep checks + stdin payload re-tests + status bump).
 
 ## WIP — resume point
 
-**076 is unblocked for `/sdd plan`.** No code touched yet — only spec.md + notes.md edits. Next action is `/sdd plan` to draft the implementation approach across the 6 findings (5 `/product` skill bugs + 1 harness-core marker mechanism).
+**Ready to implement task 1.** Working tree clean once these 2 files (plan.md + tasks.md) commit. Next action is task 1 (`delegation-briefs.md` § Step 08 typo fix — one-line edit), then walk the list top-to-bottom committing per finding-block.
 
 ## Next steps
 
-1. Commit the OQ#8 resolution (spec.md + notes.md) as a single `docs(076)` row before planning, so plan.md lands on top of a resolved spec.
-2. Run `/sdd plan` for 076. The marker mechanism (#8) is the only cross-cutting change — it touches `delegation-gate.sh`, the audit-row builder, `.claude/rules/delegation.md` § Advisories, and adds 1 line per Step 02-15 brief in `delegation-briefs.md`. The other 5 findings are local to `/product` skill files.
-3. **075 task 14** — `/product` dogfood scenarios 3-6 still pending (carryover, pairs with "069 live validation" reminder).
-4. Dated reminders coming due: 029 05-30 · 035 06-07 · 046 07-01 · 060 07-19.
+1. Walk `076/tasks.md` top-to-bottom. 6 implementation commits + 1 status-bump commit at the end.
+2. After 076 ships, **075 task 14** — `/product` dogfood scenarios 3-6 (carryover, pairs with "069 live validation" reminder).
+3. Dated reminders coming due: 029 05-30 · 035 06-07 · 046 07-01 · 060 07-19.
 
 ## Decisions & gotchas
 

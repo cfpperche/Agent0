@@ -2,7 +2,7 @@
 
 _Created 2026-05-23._
 
-**Status:** draft
+**Status:** shipped
 
 ## Intent
 
@@ -12,41 +12,41 @@ The fix is principled: Agent0 stops shipping stack code. Phase 5 reads `system-d
 
 ## Acceptance criteria
 
-- [ ] **Scenario: full-stack architecture produces infra children**
+- [x] **Scenario: full-stack architecture produces infra children**
   - **Given** a `/product` run whose `docs/system-design.md` § Stack locks a monorepo + multiple backend services (e.g. mei-saas D-03: Turborepo + Bun + 9 packages: `shared, db, core, integrations, llm, notifications, api, workers, web`) AND whose `docs/roadmap.md` Fase 1 lists deliverables like "monorepo backbone", "schema + RLS", "auth", "BrasilAPI integration"
   - **When** Phase 5 runs
   - **Then** the umbrella `spec.md` § Child-spec matrix carries (a) child #1 foundation, (b) child #2 component-library, **(c) one infra child per Fase 1 deliverable that has no owner among the per-phase visual children** — e.g. `003-monorepo-backbone`, `004-schema-rls`, `005-auth-foundation`, `006-brasilapi-integration` — sliced before the per-phase visual children (which renumber accordingly); the foundation child #1 `spec.md` § Acceptance is stack-neutral and references `docs/system-design.md § Stack` as the source of truth (not a bundled template path)
 
-- [ ] **Scenario: simple visual-only product keeps the lean matrix**
+- [x] **Scenario: simple visual-only product keeps the lean matrix**
   - **Given** a `/product` run whose `docs/system-design.md` § Stack declares a single Next.js (or Expo) frontend with no backend services beyond a BaaS dependency, AND whose `docs/roadmap.md` Fase 1 deliverables are visual/UX-shaped
   - **When** Phase 5 runs
   - **Then** the umbrella matrix carries only child #1 foundation + child #2 component-library + N per-phase visual children (no infra children inserted); identical to the current behavior for that input shape — no regression on the simple case
 
-- [ ] **Scenario: roadmap Fase 1 deliverables get owner-or-deferral**
+- [x] **Scenario: roadmap Fase 1 deliverables get owner-or-deferral**
   - **Given** any `/product` run with a non-degenerate `docs/roadmap.md`
   - **When** Phase 5 runs
   - **Then** every row of `roadmap.md` Fase 1's `| Deliverable | Owner | Status |` table either (a) maps to a child in the umbrella matrix (named explicitly in that child's scope cell), or (b) is documented in the umbrella's `## Open questions` with `**Deferral reason:**` prose — no Fase 1 deliverable is silently orphaned
 
-- [ ] **Scenario: system-design Open Decisions become umbrella OQs**
+- [x] **Scenario: system-design Open Decisions become umbrella OQs**
   - **Given** `docs/system-design.md § Trade-off Triggers → Open Decisions` carries N undecided architectural rows
   - **When** Phase 5 runs
   - **Then** the umbrella `spec.md § Open questions` carries one bullet per undecided row, prefixed `**Architecture — <topic>:**`, so the build picks them up before the relevant child is implemented
 
-- [ ] **Scenario: foundation child is research-driven, not template-driven**
+- [x] **Scenario: foundation child is research-driven, not template-driven**
   - **Given** the Phase-5-scaffolded `002-foundation/spec.md`
   - **When** the founder later runs `/sdd plan` on it
   - **Then** the spec's § Context section points at `docs/system-design.md § Stack` (not at `.claude/skills/product/templates/app-skeleton/<stack>/`); the spec's § Acceptance criteria are stack-neutral (`dev server starts clean`, `typecheck exits 0`, `lint exits 0`, `token utilities resolve`) and name no package manager / framework version / config file path; `/sdd plan` invokes web research per `.claude/rules/research-before-proposing.md` to determine the current canonical setup for the declared stack and cites sources
 
-- [ ] **Scenario: `--stack` flag becomes upstream hint**
+- [x] **Scenario: `--stack` flag becomes upstream hint**
   - **Given** a `/product` run invoked with `--stack=expo`
   - **When** Phase 2 Step 8 (system-design) runs
   - **Then** Step 8's brief receives the flag value as a `**Stack hint from invocation:**` line; the producer treats it as a default the product class should justify or override (e.g. a B2B internal-tool product class may still override to `next` even when `--stack=expo` was passed); the final `system-design.md § Stack` is the binding contract; Phase 5 reads ONLY system-design (the flag is not re-read downstream)
 
-- [ ] `.claude/skills/product/templates/app-skeleton/next/` and `.claude/skills/product/templates/app-skeleton/expo/` directories are removed; no broken references remain (`rg -F 'app-skeleton' .claude/ docs/specs/ --files-with-matches` returns only spec 079 itself and historical specs that reference past behavior)
+- [x] `.claude/skills/product/templates/app-skeleton/next/` and `.claude/skills/product/templates/app-skeleton/expo/` directories are removed; no broken references remain (`rg -F 'app-skeleton' .claude/ docs/specs/ --files-with-matches` returns only spec 079 itself and historical specs that reference past behavior)
 
-- [ ] `.claude/skills/product/references/sdd-handoff.md § Child #1` and § Standing constraints are reworded: the child #1 § Context section now points at `docs/system-design.md § Stack` and mandates research; § Standing constraints' "Styling: Tailwind utility classes" paragraph is rewritten to be stack-conditional ("the styling system declared in `system-design.md § Stack`; if Tailwind, then v4 with `@theme` block from `docs/design-system/tokens.css`; if styled-components / vanilla-extract / Panda CSS / etc., the foundation child's `/sdd plan` researches the canonical token-binding pattern for that system")
+- [x] `.claude/skills/product/references/sdd-handoff.md § Child #1` and § Standing constraints are reworded: the child #1 § Context section now points at `docs/system-design.md § Stack` and mandates research; § Standing constraints' "Styling: Tailwind utility classes" paragraph is rewritten to be stack-conditional ("the styling system declared in `system-design.md § Stack`; if Tailwind, then v4 with `@theme` block from `docs/design-system/tokens.css`; if styled-components / vanilla-extract / Panda CSS / etc., the foundation child's `/sdd plan` researches the canonical token-binding pattern for that system")
 
-- [ ] The `.claude/REMINDERS.md` item "Re-research `/product` stack defaults quarterly" (currently dated 2026-08-20) is dismissed in the same PR that ships 079 (the reminder is obsoleted by the templates-removal; research happens at `/sdd plan` time per-fork, not centrally per-quarter in Agent0)
+- [x] The `.claude/REMINDERS.md` item "Re-research `/product` stack defaults quarterly" (currently dated 2026-08-20) is dismissed in the same PR that ships 079 (the reminder is obsoleted by the templates-removal; research happens at `/sdd plan` time per-fork, not centrally per-quarter in Agent0)
 
 ## Non-goals
 
@@ -58,13 +58,13 @@ The fix is principled: Agent0 stops shipping stack code. Phase 5 reads `system-d
 
 ## Open questions
 
-- [ ] **Granularity ceiling on infra children — is there a sane cap?** mei-saas Fase 1 has 4-5 backend deliverables → 4-5 infra children plus foundation + component-library + per-phase = ~10-14 child rows. Acceptable for that product. A hypothetical massive enterprise system-design could declare 15+ infra deliverables — at what point does the matrix become noise vs signal? Default proposal: no cap (let the matrix reflect reality; the founder can dismiss-or-merge rows in the umbrella before starting). _Owner: founder before `plan.md` locks._
+- [x] **Granularity ceiling on infra children — is there a sane cap?** mei-saas Fase 1 has 4-5 backend deliverables → 4-5 infra children plus foundation + component-library + per-phase = ~10-14 child rows. Acceptable for that product. A hypothetical massive enterprise system-design could declare 15+ infra deliverables — at what point does the matrix become noise vs signal? Default proposal: no cap (let the matrix reflect reality; the founder can dismiss-or-merge rows in the umbrella before starting). _Owner: founder before `plan.md` locks._ **Resolved 2026-05-23 with the default:** no cap. Documented in `sdd-handoff.md § Child-spec matrix` ("no granularity cap").
 
-- [ ] **Should infra children numbering interleave or block-precede the visual children?** Two shapes possible: (a) `001-umbrella`, `002-foundation`, `003-component-library`, `004-monorepo-backbone`, `005-schema-rls`, `006-auth`, `007-brasilapi`, `008-fase-1-cnpj-dashboard`, ... (infra block-precedes visual); (b) interleaved per implementation-order dependency. Default proposal: (a) — block-precede, because every infra child unblocks ALL downstream visual children, so they need to land first regardless. _Owner: founder before `plan.md` locks._
+- [x] **Should infra children numbering interleave or block-precede the visual children?** Two shapes possible: (a) `001-umbrella`, `002-foundation`, `003-component-library`, `004-monorepo-backbone`, `005-schema-rls`, `006-auth`, `007-brasilapi`, `008-fase-1-cnpj-dashboard`, ... (infra block-precedes visual); (b) interleaved per implementation-order dependency. Default proposal: (a) — block-precede, because every infra child unblocks ALL downstream visual children, so they need to land first regardless. _Owner: founder before `plan.md` locks._ **Resolved 2026-05-23 with the default:** block-precede. Documented in `sdd-handoff.md` (children #3..M = infra, then #(M+1)..N = per-phase visual) and `SKILL.md § Phase 5` Step 1.
 
-- [ ] **Does the `--stack` flag get renamed (e.g. `--stack-hint`, `--target-platform`) since it's no longer a template selector?** Default proposal: keep the name `--stack` (rename is a breaking-CLI change for marginal clarity benefit; the change in meaning is documented in `SKILL.md` § Usage); add a `## Notes` paragraph clarifying the new semantics. _Owner: founder before `plan.md` locks._
+- [x] **Does the `--stack` flag get renamed (e.g. `--stack-hint`, `--target-platform`) since it's no longer a template selector?** Default proposal: keep the name `--stack` (rename is a breaking-CLI change for marginal clarity benefit; the change in meaning is documented in `SKILL.md` § Usage); add a `## Notes` paragraph clarifying the new semantics. _Owner: founder before `plan.md` locks._ **Resolved 2026-05-23 with the default:** keep `--stack`. The new semantics (upstream hint, not template selector) are documented in `SKILL.md` v0.5.0 changelog paragraph + `delegation-briefs.md § Step 08` brief.
 
-- [ ] **Migration messaging for users with in-flight foundation children** scaffolded from the old templates — does the `/sdd plan` skill emit a one-line advisory when it sees an `002-foundation/spec.md` whose § Context still points at `app-skeleton/<stack>/`? Default proposal: yes, a one-line `migration-advisory: foundation spec references the deleted app-skeleton template; re-run research at /sdd plan time per spec 079` is cheap and surfaces the situation. _Owner: founder before `plan.md` locks._
+- [x] **Migration messaging for users with in-flight foundation children** scaffolded from the old templates — does the `/sdd plan` skill emit a one-line advisory when it sees an `002-foundation/spec.md` whose § Context still points at `app-skeleton/<stack>/`? Default proposal: yes, a one-line `migration-advisory: foundation spec references the deleted app-skeleton template; re-run research at /sdd plan time per spec 079` is cheap and surfaces the situation. _Owner: founder before `plan.md` locks._ **Resolved 2026-05-23 with the default:** advisory emitted. Implemented as step 2.5 in `.claude/skills/sdd/SKILL.md § Subcommand: plan`.
 
 ## Context / references
 

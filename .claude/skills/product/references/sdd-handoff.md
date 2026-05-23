@@ -15,6 +15,8 @@ Two spec directories under `<out>/docs/specs/`, written **directly** (NOT via a 
 
 Children #2..N are **matrix rows in the umbrella's `spec.md` only** — NOT pre-scaffolded. Eight empty child dirs that sit untouched for months are clutter; the founder materializes each via `/sdd new <phase-slug>` when reaching it (the spec-060 umbrella pattern).
 
+When `docs/system-design.md § Stack` declares non-trivial backend services or a monorepo, Phase 5 emits additional **infra children** between child #2 component-library and the per-phase visual children — one per `docs/roadmap.md` Fase 1 deliverable that has no owner among the per-phase visual children. Children #3..M are infra (block-precede); children #(M+1)..N are the per-phase visual children, renumbered accordingly.
+
 Use `.claude/skills/sdd/templates/{spec,plan,tasks,notes}.md.tmpl` as the base for every file. Substitute `{{NNN}}` / `{{SLUG}}` / `{{DATE}}` as `/sdd new` would; then overwrite the body sections `/product` fills.
 
 ## The umbrella spec — `001-<slug>/spec.md`
@@ -42,20 +44,26 @@ A markdown table, one row per child spec. Child #1 + #2 are fixed; children #3..
 |---|---|---|---|---|
 | 1 | `002-foundation` | App skeleton + tooling (Biome, tsc, Tailwind + tokens.css wiring) + route-group dirs per sitemap `chrome` + thin `layout.tsx` shells | (pre-phase — unblocks all) | scaffolded → `002-foundation/` |
 | 2 | component-library | Build the shared component set from `docs/design-system/components.md` + `tokens.css`; wire components into the foundation's `layout.tsx` shells | (pre-phase — unblocks all) | matrix-only — `/sdd new component-library` |
-| 3 | <roadmap phase 1 title> | Screens for the user stories in roadmap phase 1 | Phase 1 | matrix-only — `/sdd new <slug>` |
-| 4 | <roadmap phase 2 title> | Screens for roadmap phase 2 | Phase 2 | matrix-only |
+| 3 | monorepo-backbone | Turborepo + Bun workspaces + 9 packages per `docs/system-design.md § Stack` (shared, db, core, integrations, llm, notifications, api, workers, web) | Fase 1 — infra | matrix-only — `/sdd new monorepo-backbone` |
+| 4 | schema-rls | Postgres schema + RLS policies per `docs/system-design.md § Services` | Fase 1 — infra | matrix-only |
+| 5 | auth-foundation | Auth flow (provider + session) per `docs/system-design.md § Services` | Fase 1 — infra | matrix-only |
+| 6 | brasilapi-integration | BrasilAPI client + caching layer per `docs/roadmap.md` Fase 1 | Fase 1 — infra | matrix-only |
+| 7 | <roadmap phase 1 title> | Screens for the user stories in roadmap phase 1 | Phase 1 | matrix-only — `/sdd new <slug>` |
 | … | … | … | … | … |
 ```
 
+Infra children are derived from `docs/roadmap.md § Phases § Fase 1 | Deliverable | Owner | Status |` rows that don't map to any per-phase visual child. Their slugs are short kebab-case names extracted from the deliverable prose (e.g. "Monorepo Turborepo + Bun workspaces" → `monorepo-backbone`). One infra child per unmatched deliverable; no granularity cap (the founder can dismiss-or-merge rows in the umbrella before starting per OQ#1 default).
+
 - **Child #1 = foundation** — always. Scaffolded by `/product`.
 - **Child #2 = component-library** — always. Its input spec is `docs/design-system/components.md` + `tokens.css` (so `components.md` becomes a real upstream spec, not a decorative doc — this closes F5). It wires the components into child #1's `layout.tsx` shells, so the shared chrome (sidebar, topbar, marketing header) lives in ONE child rather than being re-invented per screen (closes F4).
-- **Children #3..N** — one per `docs/roadmap.md` phase. Each owns the screens whose `covers_us` (from `docs/sitemap.yaml`) maps to that phase's user stories.
+- **Children #3..M = infra children** — one per `docs/roadmap.md` Fase 1 deliverable that doesn't map to a per-phase visual child. Zero when the system-design declares a simple single-app frontend with no backend services (visual-only product). Block-precede the per-phase visual children because every infra child unblocks downstream visual work.
+- **Children #(M+1)..N = per-phase visual children** — one per `docs/roadmap.md` phase. Each owns the screens whose `covers_us` (from `docs/sitemap.yaml`) maps to that phase's user stories.
 
 ### Standing constraints
 
 Every child spec inherits these — state them once in the umbrella's `## Standing constraints` section so each `/sdd new <child>` reads them as the build contract:
 
-- **Styling: Tailwind utility classes** (the declared stack). The token source is `docs/design-system/tokens.css` (a Tailwind v4 `@theme` block). **Next stack:** Tailwind v4 — `app/globals.css` `@import`s `tokens.css` directly, so the `@theme` block resolves to real utilities (`bg-primary` / `p-md`). **Expo stack:** Tailwind v3 via NativeWind v4 — the current stable React Native path (NativeWind v5 / Tailwind v4 is pre-release as of 2026-05); the foundation child translates `tokens.css`'s token values into `tailwind.config.js` `theme.extend`, because NativeWind 4 cannot consume a v4 `@theme` file directly. Either way the utility names are the same. **No inline `style={{}}` for layout or positioning** — inline style cannot carry a breakpoint and is how mobile-first dies. (A single dynamic value — a computed bar width — is the lone exception.) This closes F1 (mobile-first) and F2 (sanctioned inline style) at the build layer.
+- **Styling.** The styling system is whatever `docs/system-design.md § Stack` declares. If Tailwind, then v4 with `@theme` from `docs/design-system/tokens.css` (Next: `app/globals.css` `@import`s `tokens.css` directly; Expo/NativeWind v4: translate to `tailwind.config.js` `theme.extend` because NativeWind 4 cannot consume a v4 `@theme` file directly — NativeWind v5 / Tailwind v4 is pre-release as of 2026-05). If styled-components / vanilla-extract / Panda CSS / etc., the foundation child's `/sdd plan` researches the canonical token-binding pattern for that system and cites sources per `.claude/rules/research-before-proposing.md`. **No inline `style={{}}` for layout or positioning** regardless of styling system — inline style cannot carry a breakpoint and is how mobile-first dies. (A single dynamic value — a computed bar width — is the lone exception.) This closes F1 (mobile-first) and F2 (sanctioned inline style) at the build layer.
 - **Mobile-first.** Author for the 375 px viewport; layer wider layouts via Tailwind responsive prefixes (`sm:` / `md:` / `lg:`). Every screen reflows with no horizontal overflow at 375 px. The hi-fi mood screens at `docs/screens/hifi/` are the rendered mobile-first reference.
 - **Fixture coherence.** Every screen imports the ONE shared fixture set the foundation child implements as `lib/mock-data.ts` from `docs/fixture-spec.md`. No screen invents its own mock data (closes F9).
 - **Visual verification.** Each child verifies its screens against the atlas + hi-fi mood with the Playwright MCP (seeded into `<out>/.mcp.json` at Phase 0). Screenshot at 375 px + 1280 px; check horizontal overflow.
@@ -64,16 +72,22 @@ Every child spec inherits these — state them once in the umbrella's `## Standi
 
 Header: `# 002 — foundation`, `**Status:** draft` (no `Type:` line — it is a normal feature spec).
 
-- **Intent** — scaffold the runnable skeleton so the component-library and per-phase children have a place to land: the Next.js (or Expo) app skeleton, the tooling (Biome, `tsc`, and Tailwind wired to `docs/design-system/tokens.css` — Next `@import`s the v4 `@theme` file directly, Expo translates it into `tailwind.config.js`; see § Standing constraints), the route-group directories (one `app/(<chrome>)/` per distinct `chrome` value in `docs/sitemap.yaml`), and **thin** `layout.tsx` shells per route group (structural placeholders — the real shared chrome components are child #2's job; child #2 wires them into these shells).
+- **Intent** — scaffold the runnable skeleton so the component-library and per-phase children have a place to land: the app skeleton for the stack declared in `docs/system-design.md § Stack`, the tooling (typechecker + linter the stack uses + the styling system declared in § Stack wired to `docs/design-system/tokens.css`; see § Standing constraints), the route-group directories (one per distinct `chrome` value in `docs/sitemap.yaml`), and **thin** layout shells per route group (structural placeholders — the real shared chrome components are child #2's job; child #2 wires them into these shells).
 - **Acceptance criteria** — Given/When/Then scenarios + static facts:
-  - `pnpm install && pnpm dev` starts the dev server clean; `tsc --noEmit` and `biome check .` both exit 0.
-  - Token wiring resolves — Next: `app/globals.css` imports `docs/design-system/tokens.css` and a token utility (`bg-primary`) resolves; Expo: `tailwind.config.js` carries the translated token values and a token utility (`bg-primary`) resolves.
-  - One `app/(<chrome>)/` directory exists per distinct `chrome` value in `docs/sitemap.yaml`; each has a thin `layout.tsx` Server Component shell.
-  - `lib/mock-data.ts` implements the `docs/fixture-spec.md` entity set.
+  - Dev server starts clean per the declared stack's canonical command (researched at `/sdd plan` time and recorded in `plan.md`).
+  - Typecheck exits 0 (the typechecker the declared stack uses).
+  - Lint exits 0 (the linter the declared stack uses).
+  - A token utility (`bg-primary` or the styling-system equivalent identified during research) resolves to the value in `docs/design-system/tokens.css`.
+  - One route-group directory exists per distinct `chrome` value in `docs/sitemap.yaml`; each has a thin layout shell appropriate to the declared stack.
+  - `lib/mock-data.ts` (or the stack-equivalent location identified during research) implements the `docs/fixture-spec.md` entity set.
 - **Non-goals** — the shared chrome *components* (sidebar, topbar, marketing header) — those belong to child #2; the feature screens — those belong to children #3..N.
-- **Context / references** — the bundled skeleton at `.claude/skills/product/templates/app-skeleton/<stack>/`, `docs/sitemap.yaml`, `docs/design-system/tokens.css`, `docs/fixture-spec.md`. Scaffold the app at the `<out>/` root (sibling to `docs/`) so the skeleton's `app/globals.css` relative `@import "../docs/design-system/tokens.css"` resolves.
+- **Context / references** — `docs/system-design.md § Stack` (the binding stack contract — read it BEFORE planning), `docs/sitemap.yaml`, `docs/design-system/tokens.css`, `docs/fixture-spec.md`. **The foundation child's `/sdd plan` runs web research per `.claude/rules/research-before-proposing.md`** to determine the current canonical setup (package manager, framework version pins, config files, dev scripts) for the declared stack; cites sources in `plan.md § Research / citations`. No Agent0-bundled template is consumed — none ships. Scaffold the app at the `<out>/` root (sibling to `docs/`) so the styling system's relative imports of `docs/design-system/tokens.css` resolve.
 
 `plan.md` / `tasks.md` / `notes.md` for child #1 stay as template scaffolds — the founder runs `/sdd plan` then `/sdd tasks` to fill them. (`/product` fills `spec.md` only because intent is the part that derives mechanically from the pipeline artifacts; the *how* is the founder's engineering judgment.)
+
+## Open questions migration
+
+Phase 5 copies every row from `docs/system-design.md § Trade-off Triggers → Open Decisions` into the umbrella `spec.md § Open questions`, prefixed `**Architecture — <topic>:**`, so undecided architectural choices surface before any child consumes them. The umbrella's existing OQs from `docs/screen-atlas.md § Open Decisions` remain (integration-shape decisions); the two sources interleave by topic. No de-duplication — if the same decision appears in both, leave both rows so the build sees both surfaces.
 
 ## Fallback — roadmap has no usable phase structure
 

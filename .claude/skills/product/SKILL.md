@@ -101,7 +101,7 @@ The judge never autonomously BLOCKs or aborts — deterministic structural BLOCK
 
 1. **Step 01 — Ideation** (BLOCKING) — dispatch Sub-agent A per § Step 01 brief. **model: opus.** Returns `<out>/docs/concept-brief.md` (includes market sizing TAM/SAM/SOM section per Decision 6). If BLOCKED: ABORT the entire run.
 2. **Step 02 — Prototype v1 (lo-fi)** — dispatch direction-writer per § Step 02 brief. Returns `<out>/docs/direction-a.html` + 3-5 killer-flow HTML mood screens at `<out>/docs/screens/NN-<name>.html`. Note: sitemap is NO LONGER produced at Step 02 (moved to its own Step 07 — sitemap-IA). Step 02 outputs are pure mood/visual exploration of the killer flow.
-3. **Steps 03 + 04 — parallel fan-out** — once Step 02 returns (both need `direction-a.html` + `screens/`), dispatch TWO sub-agents in ONE MESSAGE (parallel tool calls) per § Step 03 + § Step 04 briefs. All `sonnet`. Step 03 (functional-spec) extends with § Problem-Validation Interviews per Decision 6.
+3. **Step 03 alone, then Step 04 alone** (spec 076 #5 — NOT parallel). Step 03 produces `functional-spec.md`; Step 04's CONTEXT explicitly reads `functional-spec.md` (audit input), so the two dispatches MUST NOT share a single message. Dispatch Step 03 per § Step 03 brief (`sonnet`; extends with § Problem-Validation Interviews per Decision 6); after Step 03 returns, dispatch Step 04 per § Step 04 brief (`sonnet`).
 4. **Update `.state.json`, then run the quality judge** — append to `completed_steps`; any BLOCKED to `blocked_steps`; then run the **quality judge** over Steps 01-04 per § Quality judge (anti-stub pre-filter → judge dispatch → merge verdicts into `quality_verdicts` → route).
 5. **Build the HTML report (spec 073)** — run `bun .claude/skills/product/scripts/build-report.ts --out=<out> --slug=<slug> --stack=<stack>`. Regenerates `<out>/docs/REPORT.html` — the navigable reading surface for every artifact produced so far (steps not yet run render as greyed-out "not yet generated"). Best-effort: if `bun` is unavailable or the script errors, emit a one-line `report-html-skipped: <reason>` advisory and continue — this never blocks the gate.
 6. **Gate — `gate_discovery`** — `AskUserQuestion` with 3 options. Tell the user to review the artifacts in `<out>/docs/REPORT.html` (open in a browser) before choosing. Per § Quality judge, if any Step 01-04 `quality_verdicts` entry has `outcome: "fail"`, the **recommended** option is pre-set to `iterate` (citing the failed step + criterion); otherwise `continue` is recommended:
@@ -138,12 +138,14 @@ Strictly serial — design system depends on brand.
 
 NO GATE — Phase 4 closes the visual-contract phase; Phase 5 (the mandatory SDD handoff) is the pipeline's terminal step.
 
-Per spec 066 the v2/v3 per-route screen-writer fan-out is **deleted**. `/product` writes NO `app/` tree, NO `page.tsx` / `layout.tsx`, runs NO `pnpm install` / build verification / dev-server smoke-test. The runnable app is built by the SDD children scaffolded in Phase 5. Step 15 dispatches **three sub-agents in ONE message** (parallel — distinct output paths, all inputs already on disk from Phases 1-3, no FS race), then runs a best-effort visual check, then authors REPORT.md.
+Per spec 066 the v2/v3 per-route screen-writer fan-out is **deleted**. `/product` writes NO `app/` tree, NO `page.tsx` / `layout.tsx`, runs NO `pnpm install` / build verification / dev-server smoke-test. The runnable app is built by the SDD children scaffolded in Phase 5. Step 15 dispatches the three sub-agents in **two waves** (spec 076 #5): wave A = 15a + 15c **in one message** (parallel — distinct output paths, no shared inputs); wave B = 15b after 15c returns (the Mood-screen-writer brief in hi-fi mode reads `fixture-spec.md`, so 15b CANNOT share a message with 15c). Then run a best-effort visual check, then authors REPORT.md.
 
-1. **Dispatch Step 15a + 15b + 15c in one message** (three parallel `Agent` calls per `references/delegation-briefs.md § Phase 4`):
+1. **Wave A — dispatch Step 15a + Step 15c in one message** (two parallel `Agent` calls per `references/delegation-briefs.md § Phase 4`):
    - **Step 15a — Screen atlas** — per § Step 15a brief. Returns `<out>/docs/screen-atlas.md` — the navigable visual-contract document indexing every sitemap route, PRD coverage, states coverage, the killer-flow walkthrough. **No `app/` writes, no layout files.**
-   - **Step 15b — Hi-fi killer-flow mood** — dispatch the § Mood-screen-writer brief in **hi-fi mode** (`{{mood_tier}}=hi-fi`), once per killer-flow screen. The screens are the same 3-5 the Step 02 lo-fi mood covered — read them from `<out>/docs/screens/` + Step 02's REPORT § Turn 2 Plan. Cap 5 concurrent. Returns `<out>/docs/screens/hifi/<NN>-<name>.html` × 3-5 — brand+tokens-applied, mobile-first static HTML.
    - **Step 15c — Fixture spec** — per § Step 15c brief. Returns `<out>/docs/fixture-spec.md` — one persona, one coherent entity set, internally consistent dates.
+
+   **Wave B — after Step 15c returns, dispatch Step 15b:**
+   - **Step 15b — Hi-fi killer-flow mood** — dispatch the § Mood-screen-writer brief in **hi-fi mode** (`{{mood_tier}}=hi-fi`), once per killer-flow screen. The screens are the same 3-5 the Step 02 lo-fi mood covered — read them from `<out>/docs/screens/` + Step 02's REPORT § Turn 2 Plan. The hi-fi brief reads `fixture-spec.md` for on-brand data, which is why 15b runs after 15c (not parallel with it). Cap 5 concurrent across the killer-flow screens themselves. Returns `<out>/docs/screens/hifi/<NN>-<name>.html` × 3-5 — brand+tokens-applied, mobile-first static HTML.
 2. **Update `.state.json`, then run the quality judge** — append `15-screen-atlas` to `completed_steps`; record any BLOCKED to `blocked_steps` (per `delegation-briefs.md § Failure handling`: 15a BLOCKED → ABORT the run; 15b / 15c BLOCKED → degrade gracefully, Phase 5 still runs). Then run the **quality judge** over the three judge-units `15a-screen-atlas` / `15b-hifi-mood` / `15c-fixture-spec` per § Quality judge. Phase 4 has no gate — a `fail` surfaces in `REPORT.md § Quality concerns` + the Phase 5 handoff message, not a gate `iterate`.
 3. **Best-effort visual check.** If the Playwright MCP is loaded this session (`mcp__playwright__*` tools available): for each `<out>/docs/screens/hifi/*.html`, `browser_navigate` to its `file://` URL, `browser_resize` to 375×812 then 1280×800, `browser_take_screenshot` at each width, and run a horizontal-overflow probe via `browser_evaluate` — `document.documentElement.scrollWidth > document.documentElement.clientWidth`. Record pass/fail per screen for REPORT.md § Visual check. If the Playwright MCP is NOT loaded, emit a one-line `visual-gate-skipped: Playwright MCP not loaded — <out>/.mcp.json seeded for the next session` advisory and record the skip in REPORT.md. **Best-effort — never blocks, never aborts.**
 4. **Author `<out>/docs/REPORT.md` inline.** Read `templates/report.md.tmpl`, substitute placeholders from `<out>/docs/.state.json` + the phase outputs. Fill the `## Quality concerns` section from `.state.json` `quality_verdicts` — every `concern`/`fail` criterion with its `note`, plus each judge-unit's `scope_assessment` (per `quality-judge.md § Verdict → gate routing`). See `quality-judge.md` + `quality-checklist.md` for the rubric.
@@ -188,12 +190,16 @@ Product foundation ready at <out>/.
 
 ## Worked example — parallel dispatch in a single message
 
-True parallelism (no FS race) happens at: Phase 1 Step 03+04 (both read Step 02 output that's already on disk), Phase 2 Step 06+07 (both read Step 05 PRD), Phase 2 Step 11+12 (both read Step 09 legal + Step 10 roadmap), and **Phase 4 Step 15a+15b+15c** (atlas / hi-fi mood / fixture-spec — all read Phase 1-3 outputs already on disk, distinct output paths). Steps with strict serial dependencies (05 → 06+07 → 08 → 09 → 10 → 11+12) must NOT be dispatched together — they'd race the FS.
+True parallelism (no FS race) happens when sub-agents have **no shared input AND distinct output paths**: Phase 2 Step 06+07 (both read Step 05 PRD only), Phase 2 Step 11+12 (both read Step 09 legal + Step 10 roadmap), and **Phase 4 wave A — Step 15a + Step 15c** (atlas / fixture-spec — no shared input, distinct output paths). Steps with strict serial dependencies (05 → 06+07 → 08 → 09 → 10 → 11+12) must NOT be dispatched together — they'd race the FS.
 
-Example (3 calls, Phase 4 Step 15a+15b+15c):
+**Anti-parallelism — sub-agents whose CONTEXT names another's DELIVERABLE** (spec 076 #5):
+- **Step 03 → Step 04**: Step 04's brief CONTEXT explicitly reads `functional-spec.md` (Step 03's deliverable). Dispatch Step 03 alone first; after it returns, dispatch Step 04 alone.
+- **Step 15c → Step 15b**: the Mood-screen-writer brief in hi-fi mode CONTEXT explicitly reads `fixture-spec.md` (Step 15c's deliverable). Dispatch Step 15a + Step 15c in one message (wave A — safe); after Step 15c returns, dispatch Step 15b (wave B — serial).
+
+Example (Phase 4 wave A — 2 parallel calls for Step 15a + 15c):
 
 ```
-[single assistant message with three+ <tool_use> blocks]:
+[single assistant message with two <tool_use> blocks]:
   <tool_use name="Agent" id="A1">
     subagent_type: general-purpose
     model: sonnet
@@ -206,15 +212,21 @@ Example (3 calls, Phase 4 Step 15a+15b+15c):
     description: Step 15c — fixture-spec
     prompt: <... per § Step 15c>
   </tool_use>
-  <tool_use name="Agent" id="A3..A7">
+```
+
+Then in a SECOND message (after A2 returns), wave B dispatches the killer-flow fan-out:
+
+```
+[single assistant message with up to 5 <tool_use> blocks — one per killer-flow screen]:
+  <tool_use name="Agent" id="B1..B5">
     description: Step 15b — hi-fi mood screen <NN> (one call per killer-flow screen, cap 5)
-    prompt: <... per § Mood-screen-writer, {{mood_tier}}=hi-fi>
+    prompt: <... per § Mood-screen-writer, {{mood_tier}}=hi-fi — reads fixture-spec.md from A2>
   </tool_use>
 ```
 
-Dispatching serially (one Agent call per message) is a v1 orchestration bug. Wall-time penalty alone (~3x for a quad) makes parallel-where-safe critical.
+Dispatching serially when safe to parallelize (one Agent call per message for sub-agents with no shared input) is a v1 orchestration bug. Wall-time penalty alone (~3× for a quad) makes parallel-where-safe critical.
 
-**Anti-pattern**: do NOT dispatch Step 02 + Step 03 + Step 04 in one message (spec 036 SKILL.md had this false-positive worked example). Step 03 and Step 04 CONTEXT both reference `<out>/docs/direction-a.html` + `<out>/docs/screens/` — those files don't exist when Step 02 hasn't returned. The de-facto-correct dispatch is Step 02 alone first, then Step 03+04 parallel.
+**Anti-pattern**: do NOT dispatch Step 02 + Step 03 + Step 04 in one message (spec 036 SKILL.md had this false-positive worked example). Step 03 and Step 04 CONTEXT both reference `<out>/docs/direction-a.html` + `<out>/docs/screens/` — those files don't exist when Step 02 hasn't returned. The de-facto-correct dispatch is Step 02 alone first, then Step 03 alone, then Step 04 alone (per spec 076 #5 — Step 04 reads Step 03's `functional-spec.md`).
 
 ## Unknown / extra subcommand
 

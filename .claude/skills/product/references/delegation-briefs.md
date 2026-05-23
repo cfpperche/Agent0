@@ -402,7 +402,7 @@ DONE_WHEN: tokens.css ≥ 1.5 KB valid CSS with a Tailwind v4 `@theme` block (re
 
 ## Phase 4 — Visual contract
 
-Phase 4 is Step 15 — the **visual contract**. Per spec 066 the v2/v3 per-route screen-writer fan-out is **deleted**: `/product` no longer generates an `app/**/page.tsx` screen set, writes no route-group layouts, runs no build verification. The runnable app is built by the SDD children scaffolded in Phase 5. Step 15 dispatches **three sub-agents — parallelizable in ONE message** (all inputs are on disk from Phases 1-3, distinct output paths, no FS race): (15a) the atlas-writer, (15b) the hi-fi mood-screen-writer, (15c) the fixture-spec-writer.
+Phase 4 is Step 15 — the **visual contract**. Per spec 066 the v2/v3 per-route screen-writer fan-out is **deleted**: `/product` no longer generates an `app/**/page.tsx` screen set, writes no route-group layouts, runs no build verification. The runnable app is built by the SDD children scaffolded in Phase 5. Step 15 dispatches the three sub-agents in **two waves** (spec 076 #5): wave A = **(15a) the atlas-writer + (15c) the fixture-spec-writer in one message** (parallel — no shared input, distinct output paths, no FS race); wave B = **(15b) the hi-fi mood-screen-writer after 15c returns** (the Mood-screen-writer brief in hi-fi mode reads `fixture-spec.md` — 15c's deliverable — so 15b CANNOT share a message with 15c).
 
 ### Step 15a — Screen atlas (the navigable visual contract)
 
@@ -542,7 +542,7 @@ DONE_WHEN: {{verdict_path}} exists and parses as JSON; carries `step` = "{{step_
 
 ## Concurrency cap
 
-The Step 02 lo-fi mood-screen-writers and the Step 15b hi-fi mood-screen-writers fan out: **MAX 5 concurrent `Agent` calls** each. Both phases produce 3-5 mood screens (killer flow only), so the cap is rarely hit — it stands as the guardrail. Step 15a (atlas) + 15b (hi-fi mood) + 15c (fixture-spec) are three distinct sub-agents dispatched together in one message; that trio plus a 5-screen 15b fan-out is well within the cap.
+The Step 02 lo-fi mood-screen-writers and the Step 15b hi-fi mood-screen-writers fan out: **MAX 5 concurrent `Agent` calls** each. Both phases produce 3-5 mood screens (killer flow only), so the cap is rarely hit — it stands as the guardrail. Step 15a (atlas) + 15c (fixture-spec) are dispatched together in wave A (one message, 2 calls); Step 15b (hi-fi mood) is wave B (after 15c returns — see § Phase 4) and fans out up to 5 concurrent killer-flow calls. Wave A's 2 calls + wave B's 5-screen fan-out are sequential waves, both well within the per-wave cap.
 
 **Cap=5 was proven non-OOM** on spec 034's 17-route dogfood (2026-05-17).
 

@@ -81,7 +81,9 @@ Field semantics:
 Phase 0 (setup) → step 0
   ↓
 Phase 1 (discovery) → steps 01-04
-  steps 01 (blocking, opus) → 02 alone → 03+04 parallel
+  steps 01 (blocking, opus) → 02 alone → 03 alone → 04 alone
+    (Steps 03 and 04 are NOT parallel — Step 04 reads functional-spec.md,
+     Step 03's deliverable; spec 076 #5)
   ↓
   gate_discovery [AskUserQuestion: continue / iterate / abort]
     continue → Phase 2
@@ -101,10 +103,13 @@ Phase 3 (identity) → steps 13-14
   ↓
   gate_identity [AskUserQuestion: continue / iterate / abort]
   ↓
-Phase 4 (visual-contract) → step 15
-  step 15a atlas-writer + 15b hi-fi mood-writers (cap=5) + 15c fixture-spec writer
-    — three sub-agents dispatched in parallel (one message); NO per-route fan-out,
-      NO app/ tree, NO build verification (spec 066)
+Phase 4 (visual-contract) → step 15 (two waves — spec 076 #5)
+  wave A: 15a atlas-writer + 15c fixture-spec writer
+    — dispatched in parallel (one message); no shared input, distinct outputs
+  wave B: 15b hi-fi mood-writers (cap=5) — after 15c returns
+    — hi-fi Mood-screen-writer reads fixture-spec.md (15c's deliverable),
+      so 15b CANNOT share a message with 15c
+  NO per-route fan-out, NO app/ tree, NO build verification (spec 066)
   + best-effort Playwright visual check + author REPORT.md
   ↓
 Phase 5 (sdd-handoff)

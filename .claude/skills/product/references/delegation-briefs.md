@@ -224,7 +224,7 @@ CONSTRAINTS:
 - Decisions Locked: 6-10 architectural decisions with one-line rationale.
 - security.md: STRIDE-lite threat model + auth/authz + data classification + secrets handling + AI-specific section if LLM in stack. Size floor: per `schema.md § Size floor` (no scope ceiling).
 - **data-flow.json: structured machine-readable inventory.** Schema: `{"flows": [{"from": "<source>", "to": "<sink>", "data_categories": ["pii" | "health" | "minors" | "financial" | "behavioral" | "credentials" | "session" | "telemetry"], "encryption_at_rest": bool, "encryption_in_transit": bool, "retention_days": int | null, "sub_processor": string | null}]}`. Cover ALL data flows the system handles. Consumed by Step 09 legal — if ANY flow includes `pii | health | minors | financial`, Step 09 fires DPIA section as mandatory.
-- Write 3 files DIRECTLY to {{out}}/docs/: 08-system-design.md + 08-security.md + 08-data-flow.json.
+- Write 3 files DIRECTLY to {{out}}/docs/: system-design.md + security.md + data-flow.json.
 
 DELIVERABLE: 3 files: {{out}}/docs/system-design.md + {{out}}/docs/security.md + {{out}}/docs/data-flow.json
 

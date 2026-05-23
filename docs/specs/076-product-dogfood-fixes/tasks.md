@@ -6,7 +6,8 @@ _Generated from `plan.md` on 2026-05-22. Work top-to-bottom. Check boxes as task
 
 ### #9 — Step 08 NN-prefix typo
 
-- [ ] 1. In `.claude/skills/product/references/delegation-briefs.md` § Step 08, change the "Write 3 files DIRECTLY to {{out}}/docs/" CONSTRAINTS line: `08-system-design.md + 08-security.md + 08-data-flow.json` → `system-design.md + security.md + data-flow.json`. DELIVERABLE line is already correct — do NOT touch it.
+- [x] 1. In `.claude/skills/product/references/delegation-briefs.md` § Step 08, change the "Write 3 files DIRECTLY to {{out}}/docs/" CONSTRAINTS line: `08-system-design.md + 08-security.md + 08-data-flow.json` → `system-design.md + security.md + data-flow.json`. DELIVERABLE line is already correct — do NOT touch it.
+  - **Done 2026-05-23.**
 - [ ] 2. Commit as `docs(076): fix Step 08 NN-prefix typo in delegation-briefs (#9)`.
 
 ### #3 — Mood-screen single-nav rule
@@ -78,7 +79,8 @@ _Generated from `plan.md` on 2026-05-22. Work top-to-bottom. Check boxes as task
 
 ## Verification
 
-- [ ] 27. **Scenario #9** — `grep -E '08-(system-design|security|data-flow)' .claude/skills/product/references/delegation-briefs.md` returns ONLY the CONSTRAINTS-block reference (none in the "Write 3 files" line); semantic filenames are present in both the CONSTRAINTS and DELIVERABLE lines.
+- [x] 27. **Scenario #9** — `grep -E '08-(system-design|security|data-flow)' .claude/skills/product/references/delegation-briefs.md` returns ONLY the CONSTRAINTS-block reference (none in the "Write 3 files" line); semantic filenames are present in both the CONSTRAINTS and DELIVERABLE lines.
+  - **Done 2026-05-23.** Post-edit grep returns 3 matches — all legitimate path references to the `templates/pipeline/08-system-design/` directory (canonical dir name) on the CONTEXT, CONSTRAINTS, and DONE_WHEN lines. ZERO matches in the "Write 3 files" line (now uses semantic `system-design.md + security.md + data-flow.json`). DELIVERABLE line unchanged — already used semantic names.
 - [ ] 28. **Scenario #4** — manual: run the helper script against a directory of 2-3 sample HTML files; `curl http://127.0.0.1:<port>/<file>` returns the bytes; kill the server; `ss -ltn` shows no leaked port. `SKILL.md` no longer contains the string `file://` in the Phase 4 section (`grep -nF 'file://' .claude/skills/product/SKILL.md` returns nothing inside Phase 4; matches elsewhere are fine).
 - [ ] 29. **Scenario #2-sections** — `grep -A1 'Required H2 sections' .claude/skills/product/references/delegation-briefs.md | grep -A0 'Step 11'` covers every required section the schema enforces at Layer 1; the substring `SKIP unit economics + sensitivity + scenario analysis` no longer appears in the Step 11 brief.
 - [ ] 30. **Scenario #3** — `grep -i 'exactly one nav\|display:none.*mobile' .claude/skills/product/references/delegation-briefs.md` matches a CONSTRAINTS bullet inside § Mood-screen-writer.

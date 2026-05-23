@@ -8,13 +8,13 @@ _Generated from `plan.md` on 2026-05-22. Work top-to-bottom. Check boxes as task
 
 - [x] 1. In `.claude/skills/product/references/delegation-briefs.md` § Step 08, change the "Write 3 files DIRECTLY to {{out}}/docs/" CONSTRAINTS line: `08-system-design.md + 08-security.md + 08-data-flow.json` → `system-design.md + security.md + data-flow.json`. DELIVERABLE line is already correct — do NOT touch it.
   - **Done 2026-05-23.**
-- [ ] 2. Commit as `docs(076): fix Step 08 NN-prefix typo in delegation-briefs (#9)`.
+- [x] 2. Commit as `docs(076): fix Step 08 NN-prefix typo in delegation-briefs (#9)`.
 
 ### #3 — Mood-screen single-nav rule
 
 - [x] 3. In `delegation-briefs.md` § Mood-screen-writer → CONSTRAINTS, add one bullet immediately after the mobile-first / no-horizontal-overflow rules: *"Exactly one nav renders at any viewport width. The desktop nav/sidebar is `display:none` below the mobile breakpoint (a wrapped nav is a hard violation, not just an overflow concern — the SKILL.md overflow probe cannot catch a wrap)."*
   - **Done 2026-05-23.** Bullet placed at line 496 (immediately after the mobile-first rule), framed symmetrically (desktop hidden below breakpoint AND mobile hidden above — "pick one per breakpoint"), citing spec 076 #3 for traceability.
-- [ ] 4. Commit as `fix(076): mood-screen brief carries explicit single-nav rule (#3)`.
+- [x] 4. Commit as `fix(076): mood-screen brief carries explicit single-nav rule (#3)`.
 
 ### #2-sections — Step 11 brief vs schema alignment
 
@@ -24,7 +24,7 @@ _Generated from `plan.md` on 2026-05-22. Work top-to-bottom. Check boxes as task
   - Delete the line `SKIP unit economics + sensitivity + scenario analysis`.
   - Replace the existing `Required H2 sections: Assumptions / Build Cost / Run Cost / Legal & Audit Budget / Risks / Recommendations.` with two lines: `Required H2 sections (always): Overview / Pricing Model / Assumptions / Build Cost / Run Cost / Sensitivity / Risks / Recommendations.` AND `Required H2 sections (conditional — revenue products only): Unit Economics / Projections / Scenarios. Free / not-for-profit / internal products MUST declare the pricing model explicitly in running prose (per schema § Layer 1 any_of_contains).`
   - **Done 2026-05-23.** SKIP line removed; required H2 list rewritten to mirror schema (8 required Layer-1-enforced + 4 conditional discursively-enforced for revenue-generating). Also updated DONE_WHEN to check all 8 required headers verbatim (was checking 5 stale ones); the "Legal & Audit Budget" H2 invention was dropped per schema discipline — legal cost stays as a line item under Build Cost / Run Cost per the existing CONSTRAINTS rule above.
-- [ ] 7. Commit as `fix(076): align Step 11 brief required sections with schema (#2-sections)`.
+- [x] 7. Commit as `fix(076): align Step 11 brief required sections with schema (#2-sections)`.
 
 ### #5 — False-parallelism in dispatch claims
 
@@ -60,7 +60,7 @@ _Generated from `plan.md` on 2026-05-22. Work top-to-bottom. Check boxes as task
   - **Done 2026-05-23.** Step 3 rewritten as two outcomes (`READY <port>` → http navigate / `not-available:` → fold into existing `visual-gate-skipped:` advisory). Teardown done via `kill $SERVE_PID` after the per-screen loop; the helper script's signal trap reaps the underlying http.server child. Explanatory mention of why http (not local-file) cites spec 076 #4 without using the literal `file://` token (preserves task 28's regression-detector grep).
 - [x] 17. Smoke-test the helper script in isolation: `mkdir -p /tmp/serve-test && echo '<html>ok</html>' > /tmp/serve-test/index.html && bash .claude/skills/product/scripts/serve-hifi.sh /tmp/serve-test &` — confirm `READY <port>` appears, `curl http://127.0.0.1:<port>/index.html` returns `<html>ok</html>`, then `kill %1`. Verify no port leaks (`ss -ltn | grep <port>` empty after kill).
   - **Done 2026-05-23.** Smoke test green end-to-end: READY 45305 printed; `curl http://127.0.0.1:45305/index.html` returned `<html>ok</html>`; `kill $SCRIPT_PID` released the port (`ss -ltn` clean). Also ran negative tests: missing serve dir → `not-available: serve directory missing (arg: '/nonexistent...')` + exit 1; no arg → same with empty arg string. Both fail-fast cleanly. Test fixtures under `/tmp/serve-test/` cleaned up.
-- [ ] 18. Commit as `fix(076): serve hi-fi screens over HTTP so the Playwright visual check actually runs (#4)`.
+- [x] 18. Commit as `fix(076): serve hi-fi screens over HTTP so the Playwright visual check actually runs (#4)`.
 
 ### #8 — SKILL-DIRECTED marker mechanism
 
@@ -88,7 +88,7 @@ _Generated from `plan.md` on 2026-05-22. Work top-to-bottom. Check boxes as task
   - **Done 2026-05-23.** 17 markers inserted (Step 02-15c covers 15 briefs not 14 — 15a + 15c count separately, only Step 15b has no own brief block because it routes to Mood-screen-writer in hi-fi mode; plus Mood-screen-writer + Quality judge = 17). Idempotent awk transform skipped Step 01 (out of scope per task) and pre-flight verified no marker already existed; post-flight verified exactly 17 markers on `^# SKILL-DIRECTED: product$` pattern.
 - [x] 25. Run one real-world end-to-end check by dispatching any `/product` Step's brief via the `Agent` tool (e.g., a no-op trial). Tail `.claude/delegation-audit.jsonl`; confirm the row carries `"skill_directed":"product"` and `"advisory_kind":null`.
   - **Done 2026-05-23.** Two-pass: first dispatch caught the ≥10-char slug bug (see notes.md § Deviations); after lowering the slug minimum to ≥3 the retest produced exactly the expected audit row — `model:"sonnet"`, `model_specified:true`, `advisory_kind:null`, `skill_directed:"product"`, `escalation_signals:["multi-integration","cross-domain","schema-data"]`. The 3 signals + non-opus model would normally trigger escalation; the marker suppressed it (verified end-to-end through the real CC harness, not just local stdin piping).
-- [ ] 26. Commit as `feat(076): SKILL-DIRECTED marker suppresses escalation on skill-chosen models (#8)`.
+- [x] 26. Commit as `feat(076): SKILL-DIRECTED marker suppresses escalation on skill-chosen models (#8)`.
 
 ## Verification
 
@@ -102,8 +102,10 @@ _Generated from `plan.md` on 2026-05-22. Work top-to-bottom. Check boxes as task
   - **Done 2026-05-23.** Grep returns 1 match at line 496 (inside § Mood-screen-writer CONSTRAINTS).
 - [x] 31. **Scenario #5** — `grep -n '03+04\|15a + 15b + 15c\|all inputs.*on disk' .claude/skills/product/SKILL.md .claude/skills/product/references/delegation-briefs.md .claude/skills/product/references/state-machine.md` returns nothing (or only struck-through historical context if any). The same files' updated language correctly names the serial dependencies (`grep -n '03.*alone.*04 alone\|15a + 15c.*then 15b'` matches in each).
   - **Done 2026-05-23.** Negative grep clean (zero matches across all 3 files). Positive grep matches: SKILL.md line 104 ("Step 03 alone, then Step 04 alone"), line 143 ("Wave A — dispatch Step 15a + Step 15c in one message"), line 197 ("Dispatch Step 15a + Step 15c in one message (wave A — safe); after Step 15c returns, dispatch Step 15b"); delegation-briefs.md line 405 ("wave A = ... 15a ... + ... 15c ... ; wave B = ... 15b ... after 15c returns"); state-machine.md line 84 ("02 alone → 03 alone → 04 alone").
-- [ ] 32. **Scenario #8** — re-run the three-payload test from task 21; results unchanged: markered dispatch → `escalation` suppressed + `skill_directed` populated; markerless multi-signal → `escalation` still fires; markerless no-model → `model-discipline` still fires.
-- [ ] 33. Final sweep: bump `spec.md` `**Status:**` from `draft` to `shipped`; verify every `## Acceptance criteria` checkbox is `- [x]`; run `bash .claude/tools/probe.sh last-run` if any validator runs touched the delegation gate (sanity check it didn't regress).
+- [x] 32. **Scenario #8** — re-run the three-payload test from task 21; results unchanged: markered dispatch → `escalation` suppressed + `skill_directed` populated; markerless multi-signal → `escalation` still fires; markerless no-model → `model-discipline` still fires.
+  - **Done 2026-05-23.** Re-run against the live gate with the slug-min lowered from ≥10 → ≥3 chars (the marker now uses `product` — 7 chars — verbatim from delegation-briefs.md). All 3 payloads produce the expected audit rows: (a) `advisory_kind:"escalation"`, `skill_directed:null`; (b) `advisory_kind:null`, `skill_directed:"product"`; (c) `advisory_kind:"model-discipline"`, `skill_directed:null`. Behavior identical to the original task 21 run except (b) now uses the real `product` slug instead of the 15-char `product-dogfood` placeholder (the bug-find that drove the ≥3-char correction).
+- [x] 33. Final sweep: bump `spec.md` `**Status:**` from `draft` to `shipped`; verify every `## Acceptance criteria` checkbox is `- [x]`; run `bash .claude/tools/probe.sh last-run` if any validator runs touched the delegation gate (sanity check it didn't regress).
+  - **Done 2026-05-23.** Status flipped + 6 acceptance criteria all `[x]`. Stale `≥10-char` mentions in OQ#8 + Scenario #8 corrected to `≥3-char` with notes.md cross-reference. probe.sh last-run inspected — no regression.
 
 ## Notes
 

@@ -2,7 +2,7 @@
 
 _Created 2026-05-22._
 
-**Status:** draft
+**Status:** shipped _(All 6 findings closed across commits aa0b12b…2ea1060 on 2026-05-23; #8 marker mechanism corrected the slug-min rule from ≥10 → ≥3 chars post-live-test, see notes.md § Deviations. Verification scenarios 27-32 all run + green.)_
 
 ## Intent
 
@@ -17,24 +17,24 @@ The 2026-05-22 triage of the mei-saas `/product` dogfood produced 10 findings, e
 
 ## Acceptance criteria
 
-- [ ] **#9** — `delegation-briefs.md § Step 08` uses semantic filenames consistently (`system-design.md` / `security.md` / `data-flow.json`); no `08-` NN-prefix remains in the "Write 3 files" line
+- [x] **#9** — `delegation-briefs.md § Step 08` uses semantic filenames consistently (`system-design.md` / `security.md` / `data-flow.json`); no `08-` NN-prefix remains in the "Write 3 files" line
 
-- [ ] **Scenario: #4 — visual check runs over HTTP, not `file://`**
+- [x] **Scenario: #4 — visual check runs over HTTP, not `file://`**
   - **Given** the Phase 4 best-effort visual check on the hi-fi screens
   - **When** `SKILL.md` runs it
   - **Then** it serves `<out>/docs/screens/hifi/` over a local HTTP server and `browser_navigate`s to `http://127.0.0.1:<port>/...` — never a `file://` URL — so the check actually executes
 
-- [ ] **#2-sections** — `delegation-briefs.md § Step 11` and `templates/pipeline/11-cost-estimate/schema.md` declare the **same** required-section set: no "SKIP X" in the brief for a section the schema's Layer 1 enforces
+- [x] **#2-sections** — `delegation-briefs.md § Step 11` and `templates/pipeline/11-cost-estimate/schema.md` declare the **same** required-section set: no "SKIP X" in the brief for a section the schema's Layer 1 enforces
 
-- [ ] **#3** — the § Mood-screen-writer brief carries an explicit single-nav rule: exactly one nav renders at any viewport width; the desktop nav/sidebar is `display:none` below the mobile breakpoint (a wrapped nav is a hard violation, not just an overflow concern)
+- [x] **#3** — the § Mood-screen-writer brief carries an explicit single-nav rule: exactly one nav renders at any viewport width; the desktop nav/sidebar is `display:none` below the mobile breakpoint (a wrapped nav is a hard violation, not just an overflow concern)
 
-- [ ] **Scenario: #5 — dependent steps are not dispatched in parallel**
+- [x] **Scenario: #5 — dependent steps are not dispatched in parallel**
   - **Given** Step 15b consumes `fixture-spec.md` (Step 15c's output) and Step 04 consumes `functional-spec.md` (Step 03's output)
   - **When** `/product` dispatches those steps
   - **Then** Step 15c completes before Step 15b is dispatched, and Step 03 before Step 04 — they are not in the same parallel message; and `SKILL.md` / `delegation-briefs.md` / `state-machine.md` no longer assert "all inputs on disk from Phases 1-3" for those pairs
 
-- [ ] **Scenario: #8 — escalation advisory suppressed on skill-directed dispatches**
-  - **Given** a `/product` (or any skill-directed) dispatch whose prompt carries `# SKILL-DIRECTED: <slug>` (≥10-char slug, mirroring `# OVERRIDE:` grammar) AND declares a non-opus `model`
+- [x] **Scenario: #8 — escalation advisory suppressed on skill-directed dispatches**
+  - **Given** a `/product` (or any skill-directed) dispatch whose prompt carries `# SKILL-DIRECTED: <slug>` (≥3-char slug, mirroring `# OVERRIDE:` anchoring grammar; ≥3 not ≥10 because the payload is a machine slug, not human prose — see notes.md § Deviations 2026-05-23) AND declares a non-opus `model`
   - **When** `delegation-gate.sh` scores ≥2 complexity signals
   - **Then** the `escalation` advisory does NOT fire (the marker is the skill's explicit signal that the model choice was deliberate); `model-discipline` still fires when no `model` is declared (the marker does not excuse undeclared models); the audit row records `skill_directed: "<slug>" | null`; a parent ad-hoc dispatch without the marker still receives `escalation` as before (true-positive preserved)
 
@@ -45,7 +45,7 @@ The 2026-05-22 triage of the mei-saas `/product` dogfood produced 10 findings, e
 
 ## Open questions
 
-- [x] **#8 resolution approach** — **resolved 2026-05-22 as a (b)+(c) synthesis.** The skill adds a `# SKILL-DIRECTED: <slug>` marker (≥10-char slug, mirroring `# OVERRIDE:` grammar) to each dispatched brief; `delegation-gate.sh` learns to recognize the marker and suppresses **only** the `escalation` advisory when present. `model-discipline` keeps firing on undeclared models (the marker does not excuse forgetting to declare a model — it only certifies that a declared non-opus choice was deliberate). Parent ad-hoc dispatches without the marker continue to receive `escalation` as before, preserving the true-positive case. Audit row gains a `skill_directed: "<slug>" | null` field for greppable adoption tracking. Rejected: (a) — advisory rot accumulates; (c) puro — inverting on `MODEL_SPECIFIED=true` alone would silence the true-positive of an ad-hoc parent that picked sonnet when it should have picked opus.
+- [x] **#8 resolution approach** — **resolved 2026-05-22 as a (b)+(c) synthesis; slug-min refined 2026-05-23 post-live-test.** The skill adds a `# SKILL-DIRECTED: <slug>` marker (≥3-char slug `[A-Za-z0-9_-]+`, mirroring `# OVERRIDE:` anchoring — but NOT its ≥10-char rule, which targets human prose; real skill slugs are short — `product` is 7 chars; see notes.md § Deviations 2026-05-23) to each dispatched brief; `delegation-gate.sh` learns to recognize the marker and suppresses **only** the `escalation` advisory when present. `model-discipline` keeps firing on undeclared models (the marker does not excuse forgetting to declare a model — it only certifies that a declared non-opus choice was deliberate). Parent ad-hoc dispatches without the marker continue to receive `escalation` as before, preserving the true-positive case. Audit row gains a `skill_directed: "<slug>" | null` field for greppable adoption tracking. Rejected: (a) — advisory rot accumulates; (c) puro — inverting on `MODEL_SPECIFIED=true` alone would silence the true-positive of an ad-hoc parent that picked sonnet when it should have picked opus.
 
 ## Context / references
 

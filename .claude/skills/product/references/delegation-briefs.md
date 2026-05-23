@@ -303,13 +303,13 @@ CONSTRAINTS:
 - Assumptions table required — every input has source + confidence (high/med/low).
 - Top 5 financial risks (one-liner each).
 - 3-5 Recommendations with action verbs + "flip if" deciding signal.
-- SKIP unit economics + sensitivity analysis + scenario analysis.
-- Required H2 sections: Assumptions / Build Cost / Run Cost / Legal & Audit Budget / Risks / Recommendations.
+- Required H2 sections (Layer 1 enforced — all 8, unconditional): Overview / Pricing Model / Assumptions / Build Cost / Run Cost / Sensitivity / Risks / Recommendations. The brief MUST NOT instruct skipping any of these — they're the schema's hard floor (see `11-cost-estimate/schema.md § Required sections`). The legal-review + audit-cost rule above lives as a Build Cost / Run Cost line item, not its own H2.
+- Conditional H2 sections (required ONLY when pricing-model is revenue-generating; omit for free / not-for-profit / internal): Unit Economics / Projections / Scenarios / Break-even. Schema does not Layer-1-enforce these (would require pricing-model-aware validation); discursively enforced — a revenue-product cost-estimate.md missing them is caught at review time.
 - Write file DIRECTLY to {{out}}/docs/cost-estimate.md.
 
 DELIVERABLE: {{out}}/docs/cost-estimate.md
 
-DONE_WHEN: File exists; size ≥ 5 KB (anti-stub floor); contains "Assumptions" + "Build Cost" + "Run Cost" + "Legal & Audit Budget" + "Recommendations" section headers; build cost rows reference Step 10 roadmap phase names; run-cost vendor count matches system-design integration count.
+DONE_WHEN: File exists; size ≥ 5 KB (anti-stub floor); contains all 8 required H2 headers verbatim (Overview / Pricing Model / Assumptions / Build Cost / Run Cost / Sensitivity / Risks / Recommendations); build cost rows reference Step 10 roadmap phase names; run-cost vendor count matches system-design integration count; for revenue-generating pricing-model, the 4 conditional H2s (Unit Economics / Projections / Scenarios / Break-even) are also present.
 ```
 
 ### Step 12 — GTM-launch (new per Decision 7 — positioning + launch + pricing)

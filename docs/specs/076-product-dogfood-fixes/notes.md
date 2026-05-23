@@ -50,6 +50,14 @@ Resolution (chosen 2026-05-23 via AskUserQuestion, options 3/2/no-min): **min �
 
 Why the 3-payload local test (task 21) didn't catch this: the test payload used `product-dogfood` (15 chars), which passed the ≥10 trivially. A real `# SKILL-DIRECTED: product` test would've caught it. **Lesson:** synthetic test payloads should mirror real-world usage, not chase coverage of arbitrary edge cases. Logging here so the next harness-test author writes payloads that look like real briefs.
 
+### 2026-05-23 — parent — #2-sections: schema has 4 conditional H2s (not 3) + dropped invented "Legal & Audit Budget" H2
+
+`plan.md` + `tasks.md` task 5 both said "8 required + 3 conditional" with the conditional list as Unit Economics / Projections / Scenarios. The schema actually carries **4 conditional sections** — adds **Break-even** ("at what user count revenue covers run cost") to the three the plan named. Cross-checked against `templates/pipeline/11-cost-estimate/schema.md § Conditional sections` (lines 18-23): four bullets, not three. Followed schema as canonical truth — the spec's acceptance criterion is "brief mirrors schema", so the brief now lists all 4 conditional H2s (Unit Economics / Projections / Scenarios / Break-even) for revenue-generating products.
+
+Separately: the pre-edit brief invented a `Legal & Audit Budget` H2 that the schema does not require. The legal-review + audit-cost rule it was tracking is content-level discipline (a Build Cost / Run Cost line item — already captured by the existing CONSTRAINTS rule "Legal review + audit costs in their own table row"), not its own H2. Dropped the H2 from the required list; kept the line-item rule. DONE_WHEN updated to check all 8 schema-required headers verbatim (was previously checking 5 stale ones including the invented Legal H2).
+
+No `plan.md` rewrite needed — the spec's acceptance still holds and is more strictly met now ("schema enforces at Layer 1" → brief lists all 8 plus the 4 conditional). Plan's "3 conditional" was a stale count from earlier schema drafts; the production schema's 4-conditional shape is what's enforced.
+
 ### 2026-05-23 — parent — task 19 anchor mirrors `# OVERRIDE:` exactly (looser than tasks.md prescribed)
 
 `tasks.md` task 19 prescribed `grep -m1 -oE '^# SKILL-DIRECTED: [A-Za-z0-9_-]{10,}'` — strict line-start (no leading whitespace) with the slug-length check fused into the regex. Implementation used `'^[[:space:]]*# SKILL-DIRECTED: '` instead (mirrors the existing `# OVERRIDE:` extraction on line 57 of the gate, including its optional leading whitespace), and moved the ≥10-char + slug-shape check into the shell (`[ ${#slug} -ge 10 ] && printf '%s' "$slug" | grep -qE '^[A-Za-z0-9_-]+$'`).

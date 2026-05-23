@@ -43,6 +43,7 @@ Two sub-agent dispatches: (a) one direction-writer for the visual mood board; (b
 **(a) Direction writer — model:** `sonnet`  ·  **subagent_type:** `general-purpose`
 
 ```
+# SKILL-DIRECTED: product
 TASK: Produce direction-a.html — a single HTML mood board proposing the visual direction for "{{idea}}".
 
 CONTEXT: Read concept-brief.md at {{out}}/docs/concept-brief.md for product persona + mechanics. Read .claude/skills/product/templates/pipeline/02-prototype/prompt.md for the canonical mood-board structure (ONE direction at standard tier). Read .claude/skills/product/references/od-catalog-index.json for the 72-vendor catalog; pick 1-2 vendors whose mood matches the product and cite by name + vendor_path. Read .claude/skills/product/templates/pipeline/02-prototype/schema.md for the 8 mandatory sections.
@@ -71,6 +72,7 @@ DONE_WHEN: File exists; size ≥ the `schema.md § Size floor` `min_size`; conta
 **model:** `sonnet`  ·  **subagent_type:** `general-purpose`
 
 ```
+# SKILL-DIRECTED: product
 TASK: Produce functional-spec.md decomposing "{{idea}}" into pages, components, interactions, states, features with Gherkin acceptance scenarios + preliminary architecture skeleton + problem-validation interview summaries (seeds OST at Step 06).
 
 CONTEXT: Read concept-brief.md at {{out}}/docs/concept-brief.md for product scope. Read direction-a.html at {{out}}/docs/direction-a.html + screens at {{out}}/docs/screens/ for surface inventory. Read .claude/skills/product/templates/pipeline/03-spec/prompt.md for canonical structure (standard tier combines spec + architecture into a single file). Read .claude/skills/product/templates/pipeline/03-spec/schema.md § Size floor for the `min_size` anti-stub floor + required sections.
@@ -95,6 +97,7 @@ DONE_WHEN: File exists; size ≥ the `schema.md § Size floor` `min_size`; conta
 **model:** `sonnet`  ·  **subagent_type:** `general-purpose`
 
 ```
+# SKILL-DIRECTED: product
 TASK: Produce validation-report.md — heuristic audit (Nielsen's 10 + WCAG 2.1 AA) on the Phase 1 prototype surfaces + validation mode declaration.
 
 CONTEXT: Read direction-a.html at {{out}}/docs/direction-a.html + screens at {{out}}/docs/screens/ for rendered surfaces (PROJECTED-mode audit at standard tier). Read functional-spec.md at {{out}}/docs/functional-spec.md for declared behavior. Read .claude/skills/product/templates/pipeline/04-validation/prompt.md + schema.md.
@@ -121,6 +124,7 @@ DONE_WHEN: File exists; size ≥ 5 KB (anti-stub floor); contains `Nielsen` + `W
 **model:** `sonnet`  ·  **subagent_type:** `general-purpose`
 
 ```
+# SKILL-DIRECTED: product
 TASK: Produce prd.md — Lenny Rachitsky 1-pager hybrid for "{{idea}}". This is a TIGHT 1-pager, NOT a multi-page PRD.
 
 CONTEXT: Read concept-brief.md + functional-spec.md + validation-report.md frontmatter + direction-a.html + screens at {{out}}/docs/ for product scope. Read .claude/skills/product/templates/pipeline/05-prd/prompt.md + schema.md for the Lenny hybrid shape.
@@ -148,6 +152,7 @@ DONE_WHEN: File exists; size ≥ 4 KB (anti-stub floor); contains literal table-
 **model:** `sonnet`  ·  **subagent_type:** `general-purpose`
 
 ```
+# SKILL-DIRECTED: product
 TASK: Produce ost.md — Opportunity Solution Tree (Teresa Torres methodology) for "{{idea}}", consuming Step 05's PRD NSM as the desired outcome root.
 
 CONTEXT: Read prd.md at {{out}}/docs/prd/v1.md for NSM (desired outcome) + user stories + anti-goals. Read functional-spec.md at {{out}}/docs/functional-spec.md § Problem-Validation Interviews for raw problem signal. Read concept-brief.md at {{out}}/docs/concept-brief.md for persona context. Read .claude/skills/product/templates/pipeline/06-ost/prompt.md for canonical OST shape. Reference: Teresa Torres, Continuous Discovery Habits (Product Talk Academy).
@@ -172,6 +177,7 @@ DONE_WHEN: File exists; size ≥ 3 KB (anti-stub floor); tree structure with 1 o
 **model:** `sonnet`  ·  **subagent_type:** `general-purpose`
 
 ```
+# SKILL-DIRECTED: product
 TASK: Produce sitemap.yaml — full screen inventory + IA decomposition for "{{idea}}", schema-bound to references/sitemap-schema.md's required_categories enforcement.
 
 CONTEXT: Read prd.md at {{out}}/docs/prd/v1.md for US-NN inventory. Read functional-spec.md at {{out}}/docs/functional-spec.md § Pages & Surfaces for surface inventory. Read concept-brief.md at {{out}}/docs/concept-brief.md for product class (B2C / B2B / internal-tool / etc — drives which required_categories apply). Read .claude/skills/product/references/sitemap-schema.md for the binding schema. Read .claude/skills/product/templates/pipeline/07-sitemap-ia/prompt.md + schema.md for canonical shape.
@@ -203,6 +209,7 @@ NOTE: Orchestrator parses this YAML after sub-agent returns and BLOCKS step + re
 **model:** `sonnet`  ·  **subagent_type:** `general-purpose`
 
 ```
+# SKILL-DIRECTED: product
 TASK: Produce system-design.md + security.md + data-flow.json for "{{idea}}". System-design includes RACI matrix + risk register per spec 045. Data-flow.json is the structured inventory consumed by Step 09 legal for DPIA trigger.
 
 CONTEXT: Read prd.md at {{out}}/docs/prd/v1.md (scope drives scale assumption) + sitemap.yaml at {{out}}/docs/sitemap.yaml (route inventory drives integration list + auth requirements) + functional-spec.md at {{out}}/docs/functional-spec.md (preliminary architecture) + concept-brief.md at {{out}}/docs/concept-brief.md (product class + audience). **Stack hint from invocation:** `{{stack_hint}}` — the founder passed `--stack={{stack_hint}}` at invocation. Treat as a default the product class either justifies (record in § Stack rationale) or overrides (record the rationale for override in § Alternatives Considered). The final § Stack section is the binding contract — Phase 5 reads only what you write there; the flag is not re-read downstream. Read .claude/skills/product/templates/pipeline/08-system-design/prompt.md + schema.md.
@@ -229,6 +236,7 @@ DONE_WHEN: system-design.md meets the `08-system-design/schema.md § Size floor`
 **model:** `sonnet`  ·  **subagent_type:** `general-purpose`
 
 ```
+# SKILL-DIRECTED: product
 TASK: Produce legal-posture.md — founder's articulated legal posture briefing for v1 of "{{idea}}". This is BRIEFING for counsel, NOT the actual Terms/Privacy/DPA documents. Includes DPIA section IF Step 08 data-flow includes sensitive categories.
 
 CONTEXT: Read prd.md at {{out}}/docs/prd/v1.md (audience drives jurisdiction exposure) + system-design.md at {{out}}/docs/system-design.md (Integrations name every sub-processor) + **data-flow.json at {{out}}/docs/data-flow.json (parses flows[]; if any flow has data_categories ⊃ {pii, health, minors, financial}, DPIA section is MANDATORY)** + concept-brief.md at {{out}}/docs/concept-brief.md (audience). Read .claude/skills/product/templates/pipeline/09-legal/prompt.md + schema.md.
@@ -255,6 +263,7 @@ DONE_WHEN: File exists; size ≥ the `schema.md § Size floor` conditional `min_
 **model:** `sonnet`  ·  **subagent_type:** `general-purpose`
 
 ```
+# SKILL-DIRECTED: product
 TASK: Produce roadmap.md — 3-phase MVP/Growth/Polish sketch for v1 of "{{idea}}". Phase boundaries defined HERE drive Step 11's per-phase cost calculation.
 
 CONTEXT: Read prd.md at {{out}}/docs/prd/v1.md (user stories + priorities) + system-design.md at {{out}}/docs/system-design.md (dependencies + integrations driving build sequence) + concept-brief.md at {{out}}/docs/concept-brief.md (product class) + validation-report.md at {{out}}/docs/validation-report.md (validation_mode drives canonical-vs-bridge mode). Read .claude/skills/product/templates/pipeline/10-roadmap/prompt.md + schema.md.
@@ -280,6 +289,7 @@ DONE_WHEN: File exists; size ≥ the `schema.md § Size floor` `min_size`; 3 pha
 **model:** `sonnet`  ·  **subagent_type:** `general-purpose`
 
 ```
+# SKILL-DIRECTED: product
 TASK: Produce cost-estimate.md — single-scenario burn rate + run-cost line items for v1 of "{{idea}}", calculated PER PHASE using Step 10's roadmap phase boundaries (spec 045 cost↔roadmap swap).
 
 CONTEXT: Read **roadmap.md at {{out}}/docs/roadmap.md (phase boundaries drive cost calculation — load-bearing for per-phase breakdown)** + system-design.md at {{out}}/docs/system-design.md (stack + integrations drive line items) + legal-posture.md at {{out}}/docs/legal-posture.md (DPIA + counsel review budget) + prd.md at {{out}}/docs/prd/v1.md (success metric drives scale assumption). Read .claude/skills/product/templates/pipeline/11-cost-estimate/prompt.md + schema.md.
@@ -307,6 +317,7 @@ DONE_WHEN: File exists; size ≥ 5 KB (anti-stub floor); contains "Assumptions" 
 **model:** `sonnet`  ·  **subagent_type:** `general-purpose`
 
 ```
+# SKILL-DIRECTED: product
 TASK: Produce gtm-launch.md — positioning canvas (April Dunford methodology) + 4-week launch plan sketch + pricing strategy for v1 of "{{idea}}".
 
 CONTEXT: Read prd.md at {{out}}/docs/prd/v1.md (NSM + audience for positioning) + concept-brief.md at {{out}}/docs/concept-brief.md (competitive positioning + monetization tier hints) + roadmap.md at {{out}}/docs/roadmap.md (launch timing aligns with roadmap Phase 1 close) + legal-posture.md at {{out}}/docs/legal-posture.md (compliance signals affect launch claims). Read .claude/skills/product/templates/pipeline/12-gtm-launch/prompt.md + schema.md. Reference: April Dunford, Obviously Awesome.
@@ -339,6 +350,7 @@ DONE_WHEN: File exists; size ≥ 4 KB (anti-stub floor); contains all 4 H2 secti
 **model:** `sonnet`  ·  **subagent_type:** `general-purpose`
 
 ```
+# SKILL-DIRECTED: product
 TASK: Produce brand-book.md — voice + visual direction posture + we-are/we-are-not contrast pair for "{{idea}}".
 
 CONTEXT: Read prd.md at {{out}}/docs/prd/v1.md (finalized scope + NSM + persona) + gtm-launch.md at {{out}}/docs/gtm-launch.md (positioning canvas already locked — brand voice should reinforce, not contradict) + concept-brief.md at {{out}}/docs/concept-brief.md (audience + product class) + direction-a.html at {{out}}/docs/direction-a.html (visual lineage). Read .claude/skills/product/templates/pipeline/13-brand/prompt.md for canonical 7-section structure (we target 2-3 section snapshot at standard tier).
@@ -367,6 +379,7 @@ DONE_WHEN: File exists; size ≥ 4 KB (anti-stub floor); contains **Version:** +
 **model:** `sonnet`  ·  **subagent_type:** `general-purpose`
 
 ```
+# SKILL-DIRECTED: product
 TASK: Produce tokens.css + components.md + README.md (3 files inside `{{out}}/docs/design-system/`) applying the brand-book to concrete semantic design tokens for "{{idea}}". Catalog-path PREFERRED (cite 1-2 OD vendors).
 
 CONTEXT: Read brand-book.md at {{out}}/docs/brand-book.md for posture + voice. Read sitemap.yaml at {{out}}/docs/sitemap.yaml for component scope (what surfaces need styling). Read concept-brief.md at {{out}}/docs/concept-brief.md for product class. Read .claude/skills/product/references/od-catalog-index.json for the 72-vendor catalog — pick 1-2 vendors whose mood + category match the brand-book; their DESIGN.md path (vendor_path field) is the lineage citation source. Read validation-report.md at {{out}}/docs/validation-report.md frontmatter `findings[]` and filter `fix_skill_hint: "design-system"` — these are token tunes to apply. Read .claude/skills/product/templates/pipeline/14-design-system/prompt.md + schema.md.
@@ -396,6 +409,7 @@ Phase 4 is Step 15 — the **visual contract**. Per spec 066 the v2/v3 per-route
 **model:** `sonnet`  ·  **subagent_type:** `general-purpose`
 
 ```
+# SKILL-DIRECTED: product
 TASK: Produce screen-atlas.md — the navigable visual-contract document for the complete v1 surface of "{{idea}}". The atlas is a MARKDOWN INDEX. Write NO `app/` files, NO layout.tsx, NO page.tsx, NO HTML — the atlas DESCRIBES the screens the SDD children will build; it does not build them.
 
 CONTEXT: Read ALL prior artifacts at {{out}}/docs/ (semantic-named per spec 048; pipeline order via REPORT.md):
@@ -434,6 +448,7 @@ The hi-fi mood is 3-5 brand+tokens-applied killer-flow screens as self-contained
 **model:** `sonnet`  ·  **subagent_type:** `general-purpose`
 
 ```
+# SKILL-DIRECTED: product
 TASK: Produce fixture-spec.md — the single coherent mock-data contract for "{{idea}}". Every SDD-built screen will import ONE shared fixture set (foundation child implements it as `lib/mock-data.ts`); this spec defines it so no screen invents its own incoherent data.
 
 CONTEXT: Read concept-brief.md at {{out}}/docs/concept-brief.md for the primary persona. Read system-design.md at {{out}}/docs/system-design.md § Data Model for the entity set + relationships. Read prd/v1.md at {{out}}/docs/prd/v1.md for the user-story surfaces the data must populate. Read sitemap.yaml at {{out}}/docs/sitemap.yaml for which screens consume which entities.
@@ -465,6 +480,7 @@ ONE brief, two modes. Produces self-contained static HTML **mood screens** — a
 **model:** `sonnet`  ·  **subagent_type:** `general-purpose`
 
 ```
+# SKILL-DIRECTED: product
 TASK: Write the {{mood_tier}} mood screen `{{NN}}-{{name}}.html` for "{{idea}}" — a self-contained static HTML rendering of the "{{screen_intent}}" surface.
 
 CONTEXT:
@@ -499,6 +515,7 @@ The step producers' briefs deliberately do **not** mention the judge — telling
 **model:** `opus`  ·  **subagent_type:** `general-purpose`
 
 ```
+# SKILL-DIRECTED: product
 TASK: Grade the artifact(s) of pipeline judge-unit "{{step_label}}" against the step's rubric and emit a structured quality verdict. You are an evaluator only — you do NOT edit the artifact, BLOCK, or abort.
 
 CONTEXT:

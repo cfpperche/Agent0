@@ -66,6 +66,22 @@ if [ -n "$override_line" ]; then
   fi
 fi
 
+# --- Phase 1b: SKILL-DIRECTED marker ---
+# Mirrors `# OVERRIDE:` anchoring grammar but NOT its ≥10-char rule — OVERRIDE
+# requires a human-prose reason (10 chars rejects `skip` / `bypass`), while
+# SKILL-DIRECTED carries a machine slug (real skill names like `product` / `sdd`
+# / `run` / `verify` are short by design). Min ≥3 chars rejects typos like
+# `# SKILL-DIRECTED: x` while accepting every real skill slug. See rules/delegation.md.
+SKILL_DIRECTED=""
+skill_directed_line="$(printf '%s' "$PROMPT" | grep -E '^[[:space:]]*# SKILL-DIRECTED: ' | head -1 | sed -e 's/^[[:space:]]*//' || true)"
+if [ -n "$skill_directed_line" ]; then
+  slug="${skill_directed_line#'# SKILL-DIRECTED: '}"
+  slug="$(printf '%s' "$slug" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+  if [ ${#slug} -ge 3 ] && printf '%s' "$slug" | grep -qE '^[A-Za-z0-9_-]+$'; then
+    SKILL_DIRECTED="$slug"
+  fi
+fi
+
 # --- Phase 2: 5-field validation (always runs; override only suppresses block) ---
 # Audit `formatted` reflects the actual check, so a future analyst can
 # distinguish defensive override use (formatted=true, override=set) from
@@ -210,7 +226,9 @@ advisory_kind="null"
 if [ "$MODEL_SPECIFIED" = "false" ] && [ "$score" -ge 1 ]; then
   advisory_emitted="true"
   advisory_kind="\"model-discipline\""
-elif [ "$score" -ge 2 ] && [ "$MODEL" != "opus" ]; then
+elif [ -z "$SKILL_DIRECTED" ] && [ "$score" -ge 2 ] && [ "$MODEL" != "opus" ]; then
+  # SKILL-DIRECTED marker suppresses ONLY this branch — model-discipline above is
+  # untouched (the marker doesn't excuse an undeclared model). See rules/delegation.md.
   advisory_emitted="true"
   advisory_kind="\"escalation\""
 fi
@@ -229,6 +247,13 @@ else
   model_field="null"
 fi
 
+# skill_directed field: emit slug string if marker matched + validated, else null.
+if [ -n "$SKILL_DIRECTED" ]; then
+  skill_directed_field="$(printf '%s' "$SKILL_DIRECTED" | jq -R -s -c 'rtrimstr("\n")')"
+else
+  skill_directed_field="null"
+fi
+
 audit_line="$(jq -c -n \
   --arg ts "$ts" \
   --arg session_id "$SESSION_ID" \
@@ -241,9 +266,10 @@ audit_line="$(jq -c -n \
   --argjson override "$override_field" \
   --argjson advisory_emitted "$advisory_emitted" \
   --argjson advisory_kind "$advisory_kind" \
+  --argjson skill_directed "$skill_directed_field" \
   --argjson escalation_signals "$signals_json" \
   --arg task_summary "$task_summary" \
-  '{ts:$ts, session_id:$session_id, tool_use_id:$tool_use_id, subagent_type:$subagent_type, model:$model, model_specified:$model_specified, isolation:$isolation, formatted:$formatted, override:$override, advisory_emitted:$advisory_emitted, advisory_kind:$advisory_kind, escalation_signals:$escalation_signals, task_summary:$task_summary}')"
+  '{ts:$ts, session_id:$session_id, tool_use_id:$tool_use_id, subagent_type:$subagent_type, model:$model, model_specified:$model_specified, isolation:$isolation, formatted:$formatted, override:$override, advisory_emitted:$advisory_emitted, advisory_kind:$advisory_kind, skill_directed:$skill_directed, escalation_signals:$escalation_signals, task_summary:$task_summary}')"
 
 printf '%s\n' "$audit_line" >> "$AUDIT_LOG"
 

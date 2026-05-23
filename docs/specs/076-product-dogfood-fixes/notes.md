@@ -22,13 +22,41 @@ Why this over (b) puro with some other mechanism: the `Agent` tool surface only 
 
 Implementation footprint: ~5 lines in `delegation-gate.sh` (grep for marker before the `score >= 2 && model != opus` branch), 1 line per brief in `.claude/skills/product/references/delegation-briefs.md` (Steps 02-15), one new field in the audit-row builder, and a § Advisories update in `.claude/rules/delegation.md` documenting the marker. Other skills opt in by adding the same marker line; no skill is forced to adopt.
 
+### 2026-05-23 — parent — task 21 3-payload gate test (all 3 scenarios pass)
+
+Ran the prescribed 3-payload local gate test against the live `.claude/hooks/delegation-gate.sh` after the task-19 + task-20 edits. Test script + outputs lived under `/tmp/` and were cleaned up post-verification (with `# OVERRIDE:` since the gov-gate flags `rm -rf` against any path).
+
+Test pollution: because `CLAUDE_PROJECT_DIR` wasn't exported in the test shell, the gate's `PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"` fallback resolved to `/tmp` (where the test ran from), and the 3 audit rows landed at `/tmp/.claude/delegation-audit.jsonl` — *not* the real `/home/goat/Agent0/.claude/delegation-audit.jsonl`. Initially looked like a write-failure (grep against the real log returned nothing), but it was correct isolation behavior. Documenting because anyone re-running the test should expect the same and either `export CLAUDE_PROJECT_DIR=/home/goat/Agent0` to direct writes at the real log, or accept the `/tmp` sandbox.
+
+Verbatim outcomes (per the 3 audit rows captured):
+
+- (a) markerless multi-signal `sonnet` brief → `advisory_kind:"escalation"`, `skill_directed:null` ✓ (advisory text: "Delegation appears complex (signals: cross-domain, schema-data, security). Consider re-issuing with model: \"opus\" for stronger reasoning.")
+- (b) same brief with `# SKILL-DIRECTED: product-dogfood` prepended → `advisory_kind:null`, `skill_directed:"product-dogfood"` ✓ (no `additionalContext` emitted — gate exits silently)
+- (c) markerless brief WITHOUT a `model` field → `advisory_kind:"model-discipline"`, `skill_directed:null` ✓ (marker absent or not — `model-discipline` branch is independent of `SKILL_DIRECTED`)
+
+Confirms the spec's two-branch invariant: marker suppresses *only* escalation; model-discipline keeps firing on undeclared models regardless. `bash -n` syntax-check passes on the edited gate.
+
 ## Deviations
 
 _Places where implementation intentionally departed from `plan.md`. The departure + the reason it was necessary or better._
 
-### {{YYYY-MM-DD}} — {{author}} — {{one-line title}}
+### 2026-05-23 — parent — SKILL-DIRECTED slug min length lowered ≥10 → ≥3 (caught by task 25 live test)
 
-{{free-prose body — what the plan said, what was done instead, why}}
+The plan + tasks.md + initial implementation all said the slug rule mirrors `# OVERRIDE:`'s ≥10-char check verbatim. Task 25 (real-world dispatch through the Claude Code harness, not the synthetic 3-payload local test from task 21) caught the bug: the `/product` skill's actual slug is `product` — **7 chars** — which fails the ≥10-char check. The gate silently dropped the marker (`skill_directed: null` in the audit row) and `model-discipline` fired against an undeclared model, which was correct gate behavior given the dropped marker but the wrong outcome for the validation.
+
+Root cause: copying `# OVERRIDE:`'s minimum without thinking about payload semantics. `# OVERRIDE:`'s payload is *human prose* explaining *why* — the ≥10 rejects lazy reasons like `skip` / `bypass` / `n/a`. `# SKILL-DIRECTED:`'s payload is a *machine slug* — and real Agent0 skill names are short by design: `product` (7), `sdd` (3), `run` (3), `verify` (6), `brainstorm` (10), `routine` (7), `remind` (6), `schedule` (8). The ≥10-char rule excluded most of them.
+
+Resolution (chosen 2026-05-23 via AskUserQuestion, options 3/2/no-min): **min ≥3 chars** — distinguishes real skill names from typo-shaped junk (`# SKILL-DIRECTED: x`, `# SKILL-DIRECTED: ab`) while accepting every shipped skill slug. The slug-shape check (`^[A-Za-z0-9_-]+$`) still applies. Updated three places: gate code comment + length check; rule paragraph (explicitly says "mirrors `# OVERRIDE:` *anchoring*; slug is `[A-Za-z0-9_-]+` ≥3 chars — NOT the ≥10 of `# OVERRIDE:`"); tasks.md 19 + 22 carry the correction note pointing here.
+
+Why the 3-payload local test (task 21) didn't catch this: the test payload used `product-dogfood` (15 chars), which passed the ≥10 trivially. A real `# SKILL-DIRECTED: product` test would've caught it. **Lesson:** synthetic test payloads should mirror real-world usage, not chase coverage of arbitrary edge cases. Logging here so the next harness-test author writes payloads that look like real briefs.
+
+### 2026-05-23 — parent — task 19 anchor mirrors `# OVERRIDE:` exactly (looser than tasks.md prescribed)
+
+`tasks.md` task 19 prescribed `grep -m1 -oE '^# SKILL-DIRECTED: [A-Za-z0-9_-]{10,}'` — strict line-start (no leading whitespace) with the slug-length check fused into the regex. Implementation used `'^[[:space:]]*# SKILL-DIRECTED: '` instead (mirrors the existing `# OVERRIDE:` extraction on line 57 of the gate, including its optional leading whitespace), and moved the ≥10-char + slug-shape check into the shell (`[ ${#slug} -ge 10 ] && printf '%s' "$slug" | grep -qE '^[A-Za-z0-9_-]+$'`).
+
+Reason: the rule paragraph (task 22) states the marker "mirrors `# OVERRIDE:` grammar" — if the gate anchors strictly while override anchors loosely, that one sentence is wrong. Mirroring exactly keeps the rule load-bearing and lets a maintainer use the override extraction as the canonical pattern. The shell-side length check is a small ergonomic gain too (the rule "≥10 chars" stays a single statement instead of split across regex + check, easier to update if the threshold changes).
+
+No `plan.md` rewrite needed — outcome matches Move-1 intent ("suppress escalation only when marker present"); only the regex micro-shape differs from the literal task wording.
 
 ## Tradeoffs
 

@@ -1,8 +1,12 @@
 ---
 name: Capacity → spec index
-description: Which Agent0 spec(s) designed each capacity — Agent0-internal index relocated by spec 070 to keep fork-bound files free of docs/specs/ pointers.
+description: Which Agent0 spec(s) designed each capacity — Agent0-internal index relocated
+  by spec 070 to keep fork-bound files free of docs/specs/ pointers.
 metadata:
   type: reference
+  created_at: '2026-05-21T12:01:55-03:00'
+  last_accessed: '2026-05-24'
+  confirmed_count: 0
 ---
 # Capacity → spec index
 

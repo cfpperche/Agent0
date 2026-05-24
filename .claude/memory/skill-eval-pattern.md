@@ -1,8 +1,12 @@
 ---
 name: Skill-eval pattern (observed externally)
-description: 5 industry posts converged on the same skill-eval recipe in early 2026; not adopted in Agent0 yet — wait for rule-of-three regression demand before building
+description: 5 industry posts converged on the same skill-eval recipe in early 2026;
+  not adopted in Agent0 yet — wait for rule-of-three regression demand before building
 metadata:
   type: project
+  created_at: '2026-05-13T11:00:06-03:00'
+  last_accessed: '2026-05-24'
+  confirmed_count: 0
 ---
 
 In early 2026 five industry posts converged on essentially the same recipe for evaluating Agent Skills (the SKILL.md format that emerged in 2025):

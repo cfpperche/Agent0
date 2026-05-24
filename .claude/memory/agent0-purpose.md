@@ -1,8 +1,12 @@
 ---
 name: Agent0 base repo purpose
-description: /home/goat/Agent0 is the user's base/template repository for all new software projects
+description: /home/goat/Agent0 is the user's base/template repository for all new
+  software projects
 metadata:
   type: project
+  created_at: '2026-05-11T19:33:20-03:00'
+  last_accessed: '2026-05-24'
+  confirmed_count: 0
 ---
 `/home/goat/Agent0` is a **reusable base/template repository** for starting new software projects. "Agent0" is a generic placeholder name — it is not a specific product. Bootstrapped on 2026-05-10 with minimal Claude Code config: placeholder `CLAUDE.md` at the root, `.claude/settings.json` with `defaultMode: "bypassPermissions"`, empty `.claude/skills/` and `.claude/agents/` directories, `.gitignore` for `settings.local.json` / `CLAUDE.local.md` / `.claude/projects/`. Renamed from "atelier" to "Agent0" on the same day, all artifacts switched to English.
 

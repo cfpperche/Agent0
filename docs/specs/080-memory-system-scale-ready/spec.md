@@ -2,7 +2,7 @@
 
 _Created 2026-05-23._
 
-**Status:** draft
+**Status:** shipped
 **Type:** umbrella
 
 ## Intent
@@ -21,23 +21,23 @@ This umbrella is **shipped** when every row in the gap matrix below has its chil
 
 | MS | Capacity | Child spec | Status | Notes |
 |---|---|---|---|---|
-| MS-1 | Frontmatter schema (3 required + 3 optional) + validator hook (PostToolUse advisory) | 082 | pending | Foundation for MS-2, MS-5, MS-7 |
-| MS-2 | Event-sourced memory always-on + raw-edit gate + projection helper | 083 | pending | Requires 082; rejects parallel-session clobber |
+| MS-1 | Frontmatter schema (3 required + 3 optional) + validator hook (PostToolUse advisory) | 082 | ✓ shipped | Foundation for MS-2, MS-5, MS-7 |
+| MS-2 | Event-sourced memory always-on + raw-edit gate + projection helper | 083 | ✓ shipped | Requires 082; rejects parallel-session clobber |
 | MS-3 | Per-compaction snapshot history (`.claude/.compact-history/<ISO>.md`) | 081 | ✓ shipped | Fixed documented gotcha in compaction-continuity.md (2026-05-23) |
 | MS-4 | `.claude/reminders.yaml` refactor + `check_command` + snooze | 084 | ✓ shipped | Manual migration of existing bullets; no migration tooling |
-| MS-5 | Index-line length cap (250 chars) + `memory-query.sh` | 085 | pending | Requires 082+083; paired with MS-7 |
+| MS-5 | Index-line length cap (250 chars) + `memory-query.sh` | 086 | ✓ shipped | Requires 082+083; paired with MS-7. (Originally slotted as 085; slot 085 occupied by an unrelated draft from another session, so MS-5+MS-7 child renumbered to 086 on 2026-05-24.) |
 | MS-6 | Runtime-state subsystem README (`.claude/.runtime-state/README.md`) | 081 | ✓ shipped | Enumerates 6 existing state subsystems with rule pointers (2026-05-23) |
-| MS-7 | Decay engine (advisory-default) + confirm/archive helpers + readout hook | 085 | pending | Default formula transparent + overridable; `auto_archive: false` |
+| MS-7 | Decay engine (advisory-default) + confirm/archive helpers + readout hook | 086 | ✓ shipped | Default formula transparent + overridable; `auto_archive: false`. (Renumbered 085 → 086 — see MS-5 note.) |
 
-Estimated total: ~1.440 LOC across 4 child specs (081, 082, 083, 084, 085).
+Estimated total: ~1.440 LOC across 4 child specs (081, 082, 083, 084, 086).
 
 ### Closure scenarios
 
 - [x] **Scenario: 081 closure** — **Given** child spec 081 covering MS-3 + MS-6 exists; **When** 081 status flips to `shipped`; **Then** rows MS-3 and MS-6 in the gap matrix above flip to ✓ and `081 status: shipped`.
-- [ ] **Scenario: 082 closure** — **Given** child spec 082 covering MS-1 exists; **When** 082 ships; **Then** the MS-1 row flips to ✓.
-- [ ] **Scenario: 083 closure** — **Given** child spec 083 covering MS-2 exists AND 082 is shipped; **When** 083 ships; **Then** the MS-2 row flips to ✓ and dependency is satisfied.
+- [x] **Scenario: 082 closure** — **Given** child spec 082 covering MS-1 exists; **When** 082 ships; **Then** the MS-1 row flips to ✓.
+- [x] **Scenario: 083 closure** — **Given** child spec 083 covering MS-2 exists AND 082 is shipped; **When** 083 ships; **Then** the MS-2 row flips to ✓ and dependency is satisfied.
 - [x] **Scenario: 084 closure** — **Given** child spec 084 covering MS-4 exists; **When** 084 ships; **Then** the MS-4 row flips to ✓.
-- [ ] **Scenario: 085 closure** — **Given** child spec 085 covering MS-5 + MS-7 exists AND 082+083 are shipped; **When** 085 ships; **Then** rows MS-5 and MS-7 flip to ✓.
+- [x] **Scenario: 086 closure** — **Given** child spec 086 covering MS-5 + MS-7 exists AND 082+083 are shipped; **When** 086 ships; **Then** rows MS-5 and MS-7 flip to ✓.
 - [ ] All 4 non-goals (NG-1..NG-4) are documented in `.claude/rules/memory-placement.md` as explicit boundaries; at least one mechanism's child spec text cross-references the NG it respects.
 
 ## Non-goals
@@ -54,8 +54,8 @@ Four explicit boundaries — Agent0 ships mechanisms, not policies. Each NG docu
 
 ## Open questions
 
-- [ ] **OQ-1** `confirmed_count` increment mechanism — manual via `memory-confirm.sh <name>` helper (founder/agent calls explicitly when re-validating), or auto-increment via read-detection hook? Tentative: manual-via-helper (Anthill's read-detection was fragile). Re-visit in 085 if usage shows systemic under-incrementing.
-- [ ] **OQ-2** Decay scoring axis — wall-clock time (`days_since_last_accessed`) or session-count (`sessions_without_access`)? Wall-clock is simpler; session-count is more honest for bursty cadences. Default: wall-clock; fork overrides formula in `memory.config.json`. Locked in 085.
+- [ ] **OQ-1** `confirmed_count` increment mechanism — manual via `memory-confirm.sh <name>` helper (founder/agent calls explicitly when re-validating), or auto-increment via read-detection hook? Tentative: manual-via-helper (Anthill's read-detection was fragile). Re-visit in 086 if usage shows systemic under-incrementing.
+- [ ] **OQ-2** Decay scoring axis — wall-clock time (`days_since_last_accessed`) or session-count (`sessions_without_access`)? Wall-clock is simpler; session-count is more honest for bursty cadences. Default: wall-clock; fork overrides formula in `memory.config.json`. Locked in 086.
 - [ ] **OQ-3** MS-2 raw-edit gate scope — gate only `MEMORY.md` (the projection), or also individual `.claude/memory/*.md` files? Tentative: only `MEMORY.md`. Individual files stay hand-editable; their write triggers a PostToolUse event append to `memory-events.jsonl`. Locked in 083.
 - [ ] **OQ-4** Should the `.claude/memory.config.json` template ship with Agent0 (as a starter forks customize) or be absent (forks create on demand)? Lean ship-as-template — discoverability beats minimalism for a config that forks will inevitably want.
 - [x] **OQ-5** Migration timing for existing 13 Agent0 memories — at MS-2 ship time, append events for each entry manually in one commit, or let them remain "pre-event-sourcing" entries (file exists but no journal record)? Decision: manual append at ship time, single commit titled `chore(080): backfill memory-events.jsonl from existing entries`. Idempotent if the event journal has unique `entry_id` per add. **RESOLVED 2026-05-24 by 083:** journal is gitignored per-machine (overrides the "single commit" framing); backfill lives in `.claude/tools/memory-backfill.sh` as a per-machine one-shot, not a git history commit. Rationale: git-tracked append-only JSONL produces merge conflicts on every concurrent commit across multi-contributor forks; entry files themselves are git-tracked and carry the durable record via `git log --follow`. See `docs/specs/083-memory-events-journal/spec.md` § Non-goals.

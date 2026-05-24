@@ -1,8 +1,12 @@
 ---
 name: Anthill archived
-description: anthill (the skill/agent harness Agent0 ports content from) is archived as of 2026-05-13; no longer evolves; quality reference, not a moving target
+description: anthill (the skill/agent harness Agent0 ports content from) is archived
+  as of 2026-05-13; no longer evolves; quality reference, not a moving target
 metadata:
   type: project
+  created_at: '2026-05-13T13:19:18-03:00'
+  last_accessed: '2026-05-24'
+  confirmed_count: 0
 ---
 
 `/home/goat/anthill` is archived. It will not receive further updates. Its skills proved high-quality content for product/SDLC pipelines (instruction depth, multi-artifact outputs, executable HTML prototypes, design tokens, etc.) and serve as the *quality benchmark* for what our own MCP-based ports should match or exceed.

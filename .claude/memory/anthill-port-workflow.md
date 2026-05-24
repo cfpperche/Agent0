@@ -1,8 +1,14 @@
 ---
 name: Anthill-port workflow
-description: Observed stable workflow that emerged from porting anthill skills (steps 5-8 of spec 026 Phase B) — port → audit smells → write template → dogfood (opus sub-agent) → fold gaps same-session → validator → commit → SESSION.md handoff. Pattern, not rule; future ports may deviate when justified.
+description: Observed stable workflow that emerged from porting anthill skills (steps
+  5-8 of spec 026 Phase B) — port → audit smells → write template → dogfood (opus
+  sub-agent) → fold gaps same-session → validator → commit → SESSION.md handoff. Pattern,
+  not rule; future ports may deviate when justified.
 metadata:
   type: project
+  created_at: '2026-05-16T12:25:58-03:00'
+  last_accessed: '2026-05-24'
+  confirmed_count: 0
 ---
 
 The pattern that emerged consistently across [[anthill-archived]] ports of steps 5 (brand), 6 (design-system), 7 (prototype-v2), and 8 (PRD) in spec 026 Phase B. Each step followed the same 7-phase loop and produced commits with similar structure. Worth memorializing as a reference for future ports; **NOT a rule** — it's an observed pattern that future steps may deviate from when the deviation is justified.

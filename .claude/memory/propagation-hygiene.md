@@ -1,8 +1,13 @@
 ---
 name: Propagation hygiene
-description: Maintainer discipline — fork-bound files (CLAUDE.md, .claude/rules/, sync manifest) must carry no Agent0-internal pointers. Read before editing CLAUDE.md or a rule.
+description: Maintainer discipline — fork-bound files (CLAUDE.md, .claude/rules/,
+  sync manifest) must carry no Agent0-internal pointers. Read before editing CLAUDE.md
+  or a rule.
 metadata:
   type: project
+  created_at: '2026-05-21T12:01:55-03:00'
+  last_accessed: '2026-05-24'
+  confirmed_count: 0
 ---
 # Propagation hygiene
 

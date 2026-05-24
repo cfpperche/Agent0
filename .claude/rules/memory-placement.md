@@ -151,6 +151,62 @@ A human running `vim .claude/memory/MEMORY.md && git commit` bypasses the tool-s
 - `.claude/memory/cc-platform-hooks.md` — hook event semantics + `agent_id` / `agent_type` payload conventions
 - `.claude/rules/delegation.md` § *Advisories* / *Audit log* — `memory-journal-advisory:` follows the project advisory grammar; the JSONL shape mirrors `.claude/delegation-audit.jsonl`
 
+## Cap / query / decay
+
+Three scale-handling surfaces shipped by spec [086](../../docs/specs/086-memory-cap-query-decay/). Together they let the bucket operate at 100-500 entries without the index becoming unreadable or stale entries crowding the active set.
+
+### 1. Index-line cap
+
+`memory-project.sh` checks each projected `MEMORY.md` line against `cap.max_line_chars` (default 250) read from `.claude/memory.config.json`. Overflow emits a `memory-cap-advisory: <file> projects to <N> chars (cap <M>) — shorten description` line to stderr; the bullet is still written (no auto-truncation — the cap is a writing discipline, not a silent edit). The advisory surfaces every projection until the founder shortens the entry's `description:` frontmatter.
+
+### 2. `memory-query.sh`
+
+Search + filter helper for entry bodies and frontmatter. Four subcommands, all routed through `.claude/tools/memory-query-helper.py` (Python + PyYAML; mirrors the `reminders-helper.py` pattern from spec 084):
+
+- **`search <pattern>`** — case-insensitive grep across all `.claude/memory/*.md` (body + frontmatter). One line per hit: `<path>: <first matching line>`.
+- **`list [--type=T] [--stale=Nd|Nw|Nm]`** — filter the index. `--type` matches `metadata.type` exactly; `--stale` accepts the same duration grammar as `/remind snooze` and lists entries whose `last_accessed` is older than `today − duration`.
+- **`confirm <name1> [<name2> ...]`** — bumps `metadata.last_accessed` to today + increments `metadata.confirmed_count`. Variadic; reports the resolved file path per name. Refuses with exit 2 on unknown names. The edit is captured by the existing memory-events-journal hook (spec 083) as an `update` event.
+- **`decay [--readout]`** — computes staleness for each entry and lists ones above the threshold. The `--readout` flag wraps output in a `=== MEMORY DECAY ===` framed block for SessionStart injection.
+
+### 3. Decay engine
+
+Formula (default, transparent + overridable):
+
+```
+score = (today − last_accessed_or_created_at).days − confirmed_count × confirm_boost_days
+```
+
+Entries with `score > threshold_days` are listed as stale. Defaults: `threshold_days = 60`, `confirm_boost_days = 14` (each confirm discounts ~2 weeks from the staleness clock). The `.claude/hooks/memory-decay-readout.sh` SessionStart hook fires `memory-query.sh decay --readout` every session — always-fire with `(no stale entries)` empty-case keeps the capacity discoverable.
+
+The engine never auto-archives, auto-deletes, or otherwise mutates entry files. Decay is observation, not removal — the founder (or agent) decides whether to `confirm`, manually edit, or move the entry. This is the load-bearing distinction vs Anthill's `auto_archive: true` posture (umbrella [080](../../docs/specs/080-memory-system-scale-ready/) NG-4).
+
+### Config — `.claude/memory.config.json`
+
+```json
+{
+  "cap": { "max_line_chars": 250 },
+  "decay": { "threshold_days": 60, "confirm_boost_days": 14 }
+}
+```
+
+Shipped as a starter template. Forks override values directly. Missing keys fall back to documented defaults. Malformed JSON emits a one-line `memory-config-advisory:` and the defaults run; never blocks. Out-of-spec keys are ignored silently.
+
+### Gotchas
+
+- **`confirm` triggers the journal hook + index regen.** The mutation is a regular file edit, so the spec 083 `PostToolUse` hook captures it as an `update` event in `.claude/.memory-events.jsonl` AND `memory-project.sh` re-runs. Side effect: every confirm rewrites `MEMORY.md` too (the projection might shift if descriptions vary). Correct behavior; document if it surprises future readers.
+- **`last_accessed` is honest only after the founder uses `confirm`.** Backfilled values for pre-spec-086 entries default to "today at backfill time" (no honest read signal exists pre-spec). Decay won't surface anyone for ~60 days after the backfill ship unless the founder confirms (and thus moves the timestamp) some entries first.
+- **Cap counts the projected bullet length, not the raw description.** The check is on `- [<name>](<slug>.md) — <description>` after assembly. Tightening `name` (rare) is one lever; the usual fix is shortening `description`.
+- **Folded YAML strings in the entries can confuse non-Python tooling.** PyYAML's `safe_dump` folds long values across lines for readability. The Python helper handles this; the degraded awk projection path in `memory-project.sh` (used when python3+yaml absent) emits a `memory-project-advisory:` warning and may truncate folded descriptions at the first line. Forks without PyYAML get a degraded but still-functional projection.
+
+### Files
+
+- `.claude/memory.config.json` — config (cap + decay numerics)
+- `.claude/tools/memory-query.sh` — bash dispatcher (4 subcommands)
+- `.claude/tools/memory-query-helper.py` — Python helper (YAML mutation + filtering + projection)
+- `.claude/tools/memory-backfill-metadata.sh` — one-shot helper to populate `created_at` / `last_accessed` / `confirmed_count` for pre-spec-086 entries
+- `.claude/tools/memory-project.sh` — extended with cap-advisory check
+- `.claude/hooks/memory-decay-readout.sh` — SessionStart hook
+
 ## Cross-cutting artifacts (not buckets, but related)
 
 - **`CLAUDE.md`** — first-contact orientation, capacity inventory, always loaded. Points at memory/rules/specs as needed.

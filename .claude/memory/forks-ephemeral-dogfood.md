@@ -1,8 +1,13 @@
 ---
 name: Forks are ephemeral dogfood
-description: Capacity docs' "forks" framing is forward-looking; current reality is all forks are spun-up-then-archived dogfood projects. Hard-cutover is the default back-compat posture.
+description: Capacity docs' "forks" framing is forward-looking; current reality is
+  all forks are spun-up-then-archived dogfood projects. Hard-cutover is the default
+  back-compat posture.
 metadata:
   type: project
+  created_at: '2026-05-17T22:14:43-03:00'
+  last_accessed: '2026-05-24'
+  confirmed_count: 0
 ---
 # Forks are ephemeral dogfood projects
 

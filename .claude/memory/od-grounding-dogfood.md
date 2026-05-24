@@ -1,8 +1,13 @@
 ---
 name: OD grounding dogfood
-description: Spec 027 step-2 dogfood (2026-05-14) — citation-by-path real, but grounding alone does not buy visual quality. Blind judge result was confounded (1-pass OD vs 4x-refined baseline).
+description: Spec 027 step-2 dogfood (2026-05-14) — citation-by-path real, but grounding
+  alone does not buy visual quality. Blind judge result was confounded (1-pass OD
+  vs 4x-refined baseline).
 metadata:
   type: project
+  created_at: '2026-05-14T19:59:56-03:00'
+  last_accessed: '2026-05-24'
+  confirmed_count: 0
 ---
 # OD grounding dogfood — what spec 027 actually buys
 

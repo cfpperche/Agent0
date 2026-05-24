@@ -1,8 +1,12 @@
 ---
 name: Claude Code platform hooks
-description: Canonical surface of 32 Claude Code hook events and the exit-zero PostToolUse gotcha; consult before designing any hook-based capacity
+description: Canonical surface of 32 Claude Code hook events and the exit-zero PostToolUse
+  gotcha; consult before designing any hook-based capacity
 metadata:
   type: reference
+  created_at: '2026-05-11T19:33:20-03:00'
+  last_accessed: '2026-05-24'
+  confirmed_count: 0
 ---
 
 The Claude Code hook system exposes **32 event names**, not the ~9 commonly cited. This memory captures the canonical surface, the event semantics (success vs failure), and the meta-lesson behind why this file exists.

@@ -1,8 +1,12 @@
 ---
 name: Visibility capacity intent
-description: User's stated goal for the next visibility/introspection capacity in Agent0 — agent self-debugging, not human dashboards
+description: User's stated goal for the next visibility/introspection capacity in
+  Agent0 — agent self-debugging, not human dashboards
 metadata:
   type: project
+  created_at: '2026-05-11T19:33:20-03:00'
+  last_accessed: '2026-05-24'
+  confirmed_count: 0
 ---
 User's articulated intent (2026-05-11): the next "visibility" wedge in Agent0 should let the **agent itself** see/debug what it's implementing at runtime, so it does NOT depend on human ratification and does NOT rely solely on static-code reading.
 

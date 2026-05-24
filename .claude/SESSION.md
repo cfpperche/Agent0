@@ -8,25 +8,26 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Session 2026-05-23 — closed.** 076 (product-dogfood-fixes) shipped end-to-end: 6 findings across 7 commits (a2d4ed6 → 2e10a6b close). Harness propagated to both forks via `sync-harness.sh --apply` (mei-saas `a689604` clean 18-file sync; codexeng `6271101` large 99-file catch-up including 31 deletes from spec 066/077 retired template dirs + 2 customizations preserved). Tree clean. 11 commits to push on Agent0 main.
+**Session 2026-05-23 (late) — closed.** Shipped `session-start.sh` dual-emit refactor (commit `05a5ec8`): hook now emits one JSON with both `hookSpecificOutput.additionalContext` (model) and `systemMessage` (user-visible banner), so SESSION.md / compact-history / runtime-introspect / githooks-activation render as a banner at session boot instead of being invisible until the agent's first turn. Pattern lifted from Anthill's `reminder-surfacer.sh`; root cause is CC v2.1.0+ silently dropping SessionStart stdout from the user-visible surface. Tree clean. 12 commits to push on Agent0 main.
 
 ## WIP — resume point
 
-**No active WIP.** All work shipped + committed. Next session starts cold on 082 scaffolding (umbrella 080 MS-1).
+**Pending empirical confirmation** that the banner actually renders visibly on next session boot. The user will reopen Claude Code immediately after this session ends — expected to see SESSION.md content as a banner before typing anything.
 
 ## Next steps
 
-1. **`/sdd new memory-frontmatter-schema`** → scaffold umbrella-080 child **082** (MS-1 frontmatter schema + PostToolUse advisory validator). Foundation for 083 (MS-2 event-sourcing) and 085 (MS-5+MS-7 cap+query+decay). All three unscaffolded.
-2. 5 remaining 076 findings from the original 10-finding triage table (#1, #2-byte-window, #6, #7, #10) were covered by spec 075 — no follow-up specs pending unless dogfood surfaces new findings.
-3. Dated reminders due: 029 05-30 · 035 06-07 · 046 07-01 · 060 07-19.
-4. Push pending commits: `git push origin main` (Agent0 11 + mei-saas 1 + codexeng 6).
+1. **Confirm banner renders.** If yes → propagate dual-emit pattern to `.claude/hooks/reminders-readout.sh` and `.claude/hooks/routines-readout.sh` (same root cause, mechanical change, ~10 lines each). User explicitly scoped this session to handoff only; reminders+routines deferred pending confirmation.
+2. **If banner does NOT render** → investigate JSON shape, CC version compatibility, or whether multiple SessionStart hooks merge `systemMessage` correctly.
+3. **`/sdd new memory-frontmatter-schema`** → scaffold umbrella-080 child **082** (MS-1 frontmatter schema + PostToolUse advisory validator). Foundation for 083 (MS-2 event-sourcing) and 085 (MS-5+MS-7 cap+query+decay). All three unscaffolded.
+4. Dated reminders due: 029 05-30 · 035 06-07 · 046 07-01 · 060 07-19.
+5. Push pending commits: `git push origin main` (Agent0 12 + mei-saas 1 + codexeng 6).
 
 ## Decisions & gotchas
 
-- **076 — SKILL-DIRECTED slug min ≥3 chars, NOT ≥10.** The ≥10 was copied from `# OVERRIDE:` whose payload is human prose; SKILL-DIRECTED carries machine slugs (`product` is 7 chars). Live task-25 test caught it. Logged in `docs/specs/076-product-dogfood-fixes/notes.md` § Deviations 2026-05-23.
-- **`CLAUDE_PROJECT_DIR` fallback ≠ project dir for ad-hoc gate runs.** Gate uses `${CLAUDE_PROJECT_DIR:-$PWD}`; piping a payload from `/tmp` writes audit rows to `/tmp/.claude/delegation-audit.jsonl`, NOT the real log. `export CLAUDE_PROJECT_DIR=/home/goat/Agent0` or accept the sandbox. Logged in 076 notes.md.
-- **sync-harness customizations refused:** codexeng's `.mcp.json.example` + `.claude/rules/mcp-recipes.md` are intentional fork-locals; sync skipped them as expected. Use `--force-except=GLOB` to keep specific paths customized while force-syncing others, never blanket `--force`.
+- **CC v2.1.0+ drops SessionStart stdout from the user-visible banner.** Plain `printf` in a SessionStart hook only reaches the model's `additionalContext`. To render a banner the user sees before typing, emit JSON with `systemMessage` at top level (NOT documented in CC schema but proven by `/home/goat/anthill/.claude/hooks/reminder-surfacer.sh:106-112`). Use the dual-emit pattern (additionalContext + systemMessage with identical content) so model and user both get the same view.
+- **claude-code-guide research can be wrong on undocumented behavior.** The agent reported `systemMessage` is "documented but NOT supported at SessionStart" — Anthill's working hook contradicts that. When platform behavior matters, dogfood/grep real working examples before trusting doc-citations.
 
 ## Carryover (orthogonal — not touched this session)
 
 - `docs/specs/074-subagent-personas/` — untracked draft; leave for originating session.
+- 5 remaining 076 findings from the original 10-finding triage table (#1, #2-byte-window, #6, #7, #10) covered by spec 075 — no follow-up specs pending unless dogfood surfaces new findings.

@@ -2,7 +2,7 @@
 # .claude/tests/supply-chain/12-cargo-install-coverage.sh
 # V12 — Scenario: `cargo install <bin>` is detected as a supply-chain action.
 #
-# Surfaced by the rshrnk live-dogfood pass (2026-05-11): `cargo install
+# Surfaced by the cargo-stack live-dogfood pass (2026-05-11): `cargo install
 # ripgrep` ran without a block because the cargo verb whitelist only covered
 # `add` and `update`. Asymmetric with npm/pip/yarn/bun/pnpm whose `install`
 # verb IS detected (e.g. `npm install -g foo` blocks). `cargo install` pulls

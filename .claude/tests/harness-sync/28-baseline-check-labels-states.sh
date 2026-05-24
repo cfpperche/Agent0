@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 068 — Scenario: --check distinguishes stale from customized.
+# Scenario: --check distinguishes stale from customized.
 # Asserts a drifted fork with a baseline gets each plain file labelled
 # up-to-date / stale / customized / removed, --check exits 1, and --check
 # performs no writes.

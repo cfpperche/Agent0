@@ -4,8 +4,8 @@
 # `bun install` with no positional args) + uncommitted manifest at hook time
 # triggers a non-blocking advisory naming the dirty manifest basename.
 #
-# Closes the parent-edit + bare-install coverage gap surfaced via shrnk-mono
-# spec 013 dogfood 2026-05-12: parent edits package.json (PostToolUse Edit
+# Closes the parent-edit + bare-install coverage gap surfaced via dogfood
+# dogfood 2026-05-12: parent edits package.json (PostToolUse Edit
 # advisory is sub-agent-only → silent for parent), then runs `bun install`
 # (bare → existing skip-not-install path). Net pre-fix: zero signal despite
 # new dep entering the lockfile. Post-fix: bash hook detects the dirty manifest

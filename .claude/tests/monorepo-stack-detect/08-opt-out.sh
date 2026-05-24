@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/monorepo-stack-detect/08-opt-out.sh
-# V8 — Scenario: opt-out still works (regression guard for spec 012's escape hatch).
+# V8 — Scenario: opt-out still works (regression guard for the existing escape hatch).
 #
 # Monorepo with strong workspace signals + CLAUDE_SKIP_MCP_RECIPES=1.
 # Asserts hint silent.

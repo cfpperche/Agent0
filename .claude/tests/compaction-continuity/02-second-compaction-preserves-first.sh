@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/compaction-continuity/02-second-compaction-preserves-first.sh
-# Spec 081 — Scenario 2: second compaction preserves the first.
+# Scenario 2: second compaction preserves the first.
 #
 # Given one snapshot already exists, when pre-compact fires again, then two
 # distinct files exist (the old one is NOT overwritten — the design failure of

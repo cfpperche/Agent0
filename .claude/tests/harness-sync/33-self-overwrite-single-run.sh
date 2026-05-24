@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Spec 072 — Scenario: a self the run will overwrite does not crash the run.
+# Scenario: a self the run will overwrite does not crash the run.
 #
 # The fork's own sync-harness.sh is stale; running it makes walk_copy_check
 # overwrite that very file mid-run. Without the self-rebootstrap pre-flight,
 # bash reads the orchestration tail from the replaced file at a misaligned
-# byte offset and the run crashes (the 2026-05-21 mei-saas failure:
+# byte offset and the run crashes (the 2026-05-21 dogfood failure:
 # `line 1234: src: unbound variable`). Asserts the fixed tool completes the
 # sync in a single invocation — exit 0, no crash, fork copy updated.
 

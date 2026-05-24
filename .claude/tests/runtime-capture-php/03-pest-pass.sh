@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/runtime-capture-php/03-pest-pass.sh
-# Spec 047 V3 — Scenario: vendor/bin/pest clean run → detector=pest, PASS.
+# Scenario: vendor/bin/pest clean run → detector=pest, PASS.
 
 set -euo pipefail
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"

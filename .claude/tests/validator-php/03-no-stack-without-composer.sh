@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/validator-php/03-no-stack-without-composer.sh
-# Spec 047 V1 — Regression: empty dir → no-stack-detected (PHP branch doesn't fire spuriously).
+# Regression: empty dir → no-stack-detected (PHP branch doesn't fire spuriously).
 #
 # Asserts:
 #   (a) JSON .command == "no-stack-detected"

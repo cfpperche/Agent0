@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 016 — Scenario: explicit --agent0-path required.
+# Scenario: explicit --agent0-path required.
 # Asserts:
 #   (a) invoking without --agent0-path AND without AGENT0_HARNESS_PATH → exit 2
 #   (b) stderr names both --agent0-path and AGENT0_HARNESS_PATH

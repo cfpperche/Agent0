@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # .claude/tests/mcp-recipes/05-co-exists-with-011.sh
-# V5 — Scenario: hint co-exists with spec 011's probe hint.
+# V5 — Scenario: hint co-exists with runtime-introspect's probe hint.
 #
-# When a fork has BOTH a stack signal (e.g. next.config.js) AND spec 011
+# When a fork has BOTH a stack signal (e.g. next.config.js) AND runtime-introspect
 # installed (`.claude/tools/probe.sh` exists), the SessionStart context
 # should contain BOTH `=== runtime-introspect ===` AND `=== mcp-recipes ===`
 # blocks.
@@ -27,7 +27,7 @@ touch "$TMPDIR/next.config.js"
 # Fake probe.sh (executable) so the runtime-introspect hint fires
 printf '#!/usr/bin/env bash\necho probe-stub\n' > "$TMPDIR/.claude/tools/probe.sh"
 chmod +x "$TMPDIR/.claude/tools/probe.sh"
-# Spec 017: session-state is per-session_id, so the marker lives in a subdir.
+# session-state is per-session_id, so the marker lives in a subdir.
 touch "$TMPDIR/.claude/.session-state/V5-test-session/started-at"
 
 export CLAUDE_PROJECT_DIR="$TMPDIR"

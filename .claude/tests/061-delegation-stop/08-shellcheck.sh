@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/061-delegation-stop/08-shellcheck.sh
-# Spec 061 — static analysis of the two delegation hooks.
+# static analysis of the two delegation hooks.
 #
 # delegation-stop.sh (new) and delegation-gate.sh (extended with tool_use_id)
 # must be lint-clean. When shellcheck is installed it runs in full; when it is

@@ -31,7 +31,7 @@ typecheck_advisory_msg=""
 #   (c) neither                              → omit typecheck step + advisory
 # State (c) replaces the pre-fix hard-failure path where `<runner> run typecheck`
 # always landed in the pipeline, breaking validators on early-stage forks
-# without typecheck infrastructure (surfaced by shrnk-mono dogfood 2026-05-12).
+# without typecheck infrastructure (surfaced by dogfood 2026-05-12).
 has_typecheck_script() {
   [ -f "package.json" ] && jq -e '.scripts.typecheck // empty' package.json >/dev/null 2>&1
 }
@@ -307,7 +307,7 @@ if git rev-parse --git-dir >/dev/null 2>&1; then
   # template with `# node_modules/` commented; forks must uncomment per
   # stack). Without this filter, an un-ignored node_modules can dump 15k+
   # paths into the per-file shell loop, hanging the validator for minutes.
-  # Surfaced via shrnk-mono dogfood 2026-05-12.
+  # Surfaced via dogfood 2026-05-12.
   changed_files="$(
     ( git diff --name-only 2>/dev/null
       git ls-files --others --exclude-standard 2>/dev/null
@@ -334,7 +334,7 @@ if git rev-parse --git-dir >/dev/null 2>&1; then
   # subsequent `case "$f" in $g)` becomes a literal compare that misses
   # nested workspace manifests (`apps/api/package.json`) entirely. The case
   # pattern matcher correctly handles globs against `/`-containing paths once
-  # the unexpanded pattern reaches it. Surfaced via shrnk-mono dogfood
+  # the unexpanded pattern reaches it. Surfaced via dogfood
   # validation pass 2026-05-12, commit `d4eada2`.
   case "$-" in *f*) prev_f_set=1 ;; *) prev_f_set=0 ;; esac
   set -f

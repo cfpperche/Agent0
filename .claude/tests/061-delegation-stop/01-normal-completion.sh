@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/061-delegation-stop/01-normal-completion.sh
-# Spec 061 — Scenario: sub-agent completes normally.
+# Scenario: sub-agent completes normally.
 #
 # Given an open PreToolUse(Agent) dispatch row + a matching transcript sidecar
 # .meta.json, When SubagentStop fires, Then a sibling close row is appended

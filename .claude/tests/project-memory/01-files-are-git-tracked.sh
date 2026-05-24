@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 019 — Scenario: factual project memory is git-tracked.
+# Scenario: factual project memory is git-tracked.
 # Asserts:
 #   (a) .claude/memory/ exists as a directory
 #   (b) git ls-files includes the migrated agent0-purpose.md + visibility-intent.md

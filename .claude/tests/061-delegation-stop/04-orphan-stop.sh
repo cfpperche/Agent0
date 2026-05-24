@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/061-delegation-stop/04-orphan-stop.sh
-# Spec 061 — Scenario: orphan stop (no matching dispatch row).
+# Scenario: orphan stop (no matching dispatch row).
 #
 # Given a SubagentStop payload whose tool_use_id / (session_id, agent_type)
 # match no open dispatch row in the audit log, When the hook runs, Then the

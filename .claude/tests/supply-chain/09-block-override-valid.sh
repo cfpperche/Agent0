@@ -5,7 +5,7 @@
 # A line matching `^[[:space:]]*# OVERRIDE: <reason>` (≥10 chars after trim)
 # in tool_input.command bypasses the block: hook exits 0 silently, no
 # stderr template, audit records decision="block-override" with the
-# captured reason. Same shape as spec 008's advisory-override path but
+# captured reason. Same shape as the prior advisory-override path but
 # under block mode.
 #
 # Asserts:
@@ -24,7 +24,7 @@ trap 'rm -rf "$TMPDIR"' EXIT
 
 mkdir -p "$TMPDIR/.claude"
 export CLAUDE_PROJECT_DIR="$TMPDIR"
-# Default mode (no CLAUDE_SUPPLY_CHAIN_BLOCK set) — block mode under spec 009.
+# Default mode (no CLAUDE_SUPPLY_CHAIN_BLOCK set) — block mode under block mode.
 unset CLAUDE_SUPPLY_CHAIN_BLOCK 2>/dev/null || true
 
 REASON="documented chart-library upgrade per spec-009 verification"

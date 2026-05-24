@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/lint-validator/05-ruff-not-declared-skips.sh
-# Spec 013 V5 — Scenario: Python project without ruff in manifests → silent skip.
+# Scenario: Python project without ruff in manifests → silent skip.
 #
 # Asserts:
 #   (a) JSON .command does NOT include 'ruff'

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 016 — Scenario: apply mode copies missing files.
+# Scenario: apply mode copies missing files.
 # Asserts:
 #   (a) --apply exits 0 on clean apply
 #   (b) every missing file gets a `+ copied` line

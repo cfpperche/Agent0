@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/session-state-isolation/07-session-id-sanitization.sh
-# Spec 017 V7 — Scenario: malicious or malformed session_id values fall to
+# Scenario: malicious or malformed session_id values fall to
 # "unknown" subdir — no path traversal, no special-char filenames.
 #
 # Defense for Q4 resolution: regex ^[a-zA-Z0-9_-]+$ only. Anything outside

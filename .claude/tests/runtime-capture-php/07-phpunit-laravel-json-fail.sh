@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/runtime-capture-php/07-phpunit-laravel-json-fail.sh
-# Spec 047 dogfood finding (2026-05-18) — Laravel 11+ phpunit JSON FAIL shape.
+# dogfood finding (2026-05-18) — Laravel 11+ phpunit JSON FAIL shape.
 
 set -euo pipefail
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"

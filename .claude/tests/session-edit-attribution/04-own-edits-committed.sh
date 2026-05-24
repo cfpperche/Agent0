@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/session-edit-attribution/04-own-edits-committed.sh
-# Spec 030 — Scenario "own edits committed".
+# Scenario "own edits committed".
 #
 # Given session A tracked an edit to foo.ts and then committed it, when A's
 # Stop fires, the block must NOT fire because the path is no longer dirty.

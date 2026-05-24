@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/session-handoff/05-snapshot-missing-fallback.sh
-# Spec 023 — Scenario 6: snapshot missing → fallback to today's mtime logic.
+# Scenario 6: snapshot missing → fallback to today's mtime logic.
 #
 # Given a session-state subdir with `started-at` but NO `start-porcelain.txt`
 # (older session, or git/fs failure at SessionStart), when porcelain is

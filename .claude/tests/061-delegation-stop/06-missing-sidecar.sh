@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/061-delegation-stop/06-missing-sidecar.sh
-# Spec 061 — Scenario: missing transcript sidecar .meta.json.
+# Scenario: missing transcript sidecar .meta.json.
 #
 # Given the transcript exists but its sidecar .meta.json does not (so no
 # toolUseId bridge key is reachable), When SubagentStop fires, Then the close

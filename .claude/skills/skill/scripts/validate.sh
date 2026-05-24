@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# validate.sh — agentskills.io frontmatter validator (Agent0 spec 033)
+# validate.sh — agentskills.io frontmatter validator
 #
 # Zero-dep bash. Defers to `skills-ref validate` when on PATH.
 # Implements the hard rules from `../references/frontmatter-validation-rules.md`.

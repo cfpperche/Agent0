@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/image-gen/02-brand-text-workflow.sh
-# Spec 085 acceptance Scenario 2 — brand-text tier workflow.
+# acceptance Scenario 2 — brand-text tier workflow.
 #
 # Same shape as 01-draft-tier-workflow.sh — exercises the SKILL'S BEHAVIOR
 # (script + output flow) by mocking the MCP response. See file header in 01
@@ -78,4 +78,4 @@ if [ "$TIER_VAL" != "brand-text" ] || [ "$OUTPUT_VAL" != "$EXPECTED" ]; then
   exit 1
 fi
 
-echo "PASS: spec 085 Scenario 2 (brand-text tier workflow + --name override)"
+echo "PASS: Scenario 2 (brand-text tier workflow + --name override)"

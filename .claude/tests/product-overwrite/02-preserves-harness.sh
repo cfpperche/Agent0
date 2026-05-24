@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 069 — Scenario: overwrite preserves the Agent0 harness.
+# Scenario: overwrite preserves the Agent0 harness.
 # Asserts every harness-allowlist entry survives clear-target.sh, so no
 # post-overwrite sync-harness re-bootstrap is needed.
 

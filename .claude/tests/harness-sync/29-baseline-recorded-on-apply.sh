@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 068 — Scenario: the baseline is recorded on every --apply.
+# Scenario: the baseline is recorded on every --apply.
 # Asserts that after --apply the fork has a valid harness-sync-baseline.json
 # capturing Agent0's managed-file sha-set, with all required top-level keys.
 

@@ -3,7 +3,7 @@
 # V16 — Scenario: ANSI escape sequences in runner output don't degrade
 # inference to the weak `pass/ok` heuristic.
 #
-# Bug surfaced via shrnk-mono dogfood 2026-05-12: bun's test runner
+# Bug surfaced via dogfood 2026-05-12: bun's test runner
 # emits ANSI color codes (e.g. `\e[32m 0 fail\e[0m`) that prefix the
 # canonical line-anchored regex `^[[:space:]]*0 fail[[:space:]]*$` and
 # force the inference table to fall through to the weak heuristic
@@ -33,7 +33,7 @@ export CLAUDE_PROJECT_DIR="$TMPDIR"
 
 state_file="$TMPDIR/.claude/.runtime-state/last-run.json"
 
-# ANSI-colored bun test output — modeled on real shrnk-mono session output.
+# ANSI-colored bun test output — modeled on real bun test session output.
 # `\e[0m`, `\e[32m`, `\e[2m`, `\e[1m` are typical SGR codes bun emits.
 ansi_stdout=$'\e[1mbun test \e[0m\e[2mv1.3.10 (30e609e0)\e[0m\n\n\e[0m\e[32m 7 pass\e[0m\n\e[0m\e[2m 0 fail\e[0m\n 7 expect() calls\nRan 7 tests across 1 file. \e[0m\e[2m[\e[1m7.00ms\e[0m\e[2m]\e[0m\n'
 

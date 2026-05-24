@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/secrets-scan/04-override-allows.sh
-# V4 — Scenario: override marker preserves spec 006 semantics, end-to-end.
+# V4 — Scenario: override marker preserves the original secrets-scan semantics, end-to-end.
 #
 # A two-line Bash command string — line 1 is the compound invocation,
 # line 2 is the override marker on its own line (start-of-line anchor).
@@ -57,7 +57,7 @@ export CLAUDE_PROJECT_DIR="$TMPDIR"
 # Two-line command: line 1 is the compound invocation, line 2 is the marker.
 # bash treats the second line as a comment (no-op) when it actually runs the
 # command; the preflight sees it as start-of-line text and matches.
-REASON="documentation test vector for spec 007"
+REASON="documentation test vector for secrets-scan timing"
 # Build a JSON string with an embedded newline. jq -Rs reads it as-is.
 CMD_LINE1='git add fixture.env && git commit -m "add test vector"'
 CMD_LINE2="# OVERRIDE: ${REASON}"

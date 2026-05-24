@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/061-delegation-stop/09-settings-registration.sh
-# Spec 061 — .claude/settings.json registers the SubagentStop hook.
+# .claude/settings.json registers the SubagentStop hook.
 #
 # Asserts the settings file round-trips through jq (valid JSON after the edit)
 # and that a SubagentStop hook command pointing at delegation-stop.sh exists.

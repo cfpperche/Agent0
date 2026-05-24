@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/mcp-recipes-laravel/01-artisan-file-detected.sh
-# Spec 047 V6 — Scenario: artisan file at root → suggests laravel-boost-mcp + playwright-mcp.
+# Scenario: artisan file at root → suggests laravel-boost-mcp + playwright-mcp.
 
 set -euo pipefail
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"

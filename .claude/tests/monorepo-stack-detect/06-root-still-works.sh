@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # .claude/tests/monorepo-stack-detect/06-root-still-works.sh
-# V6 — Scenario: root signals still detected (regression guard for spec 012).
+# V6 — Scenario: root signals still detected (regression guard for the workspace-walk).
 #
 # Root next.config.js (no workspaces). Asserts hint fires unchanged from
-# spec 012 behaviour: bare signal label (no path prefix), recipes correct.
+# the root-detection behaviour: bare signal label (no path prefix), recipes correct.
 
 set -euo pipefail
 

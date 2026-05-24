@@ -4,7 +4,7 @@
 #
 # In block mode the ≥10-char reason floor is HARD-ENFORCED — too-short
 # reasons (`# OVERRIDE: skip` etc.) do NOT silently degrade to advisory
-# the way spec 008 handled them. Instead the hook blocks with a distinct
+# the way the prior advisory-mode handled them. Instead the hook blocks with a distinct
 # corrective stderr template AND preserves the rejected reason in the
 # audit row's `override_reason` field (forensics: distinguishes
 # "no override at all" from "override rejected as too short").

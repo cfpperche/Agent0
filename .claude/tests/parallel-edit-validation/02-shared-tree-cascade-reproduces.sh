@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/parallel-edit-validation/02-shared-tree-cascade-reproduces.sh
-# Spec 067 — Negative control: two concurrent edits in ONE shared working tree
+# Negative control: two concurrent edits in ONE shared working tree
 # DO cascade (spec.md AC4, negative half). This proves the property scenario 01
 # tests is real — without worktree isolation, a clean edit is failed by a
 # sibling's in-flight error, because the project-wide validator sees the whole

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/validator-php/08-phpstan-declared-installed-runs.sh
-# Spec 047 V5 — Scenario: composer.json declares phpstan/phpstan + binary installed → command extends.
+# Scenario: composer.json declares phpstan/phpstan + binary installed → command extends.
 
 set -euo pipefail
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"

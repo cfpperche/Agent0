@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/lint-validator/02-biome-not-declared-skips.sh
-# Spec 013 V2 — Scenario: package.json without @biomejs/biome → silent skip.
+# Scenario: package.json without @biomejs/biome → silent skip.
 #
 # Asserts:
 #   (a) JSON .command does NOT include 'biome'

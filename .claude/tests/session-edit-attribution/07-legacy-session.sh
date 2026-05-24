@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # .claude/tests/session-edit-attribution/07-legacy-session.sh
-# Spec 030 — Scenario "legacy session (pre-030)".
+# Scenario "legacy session (pre-030)".
 #
 # Given a session whose state-dir has NO edited-files.txt at all (started
 # before 030 deployed, or with CLAUDE_SKIP_SESSION_HOOKS during start), when
 # Stop fires with a dirty porcelain that differs from start-porcelain, then
 # the spec-023 fallback path is followed and the nag fires (assuming
 # SESSION.md is stale relative to started-at). This pins the contract:
-# missing tracker file = legacy session = spec 023 fully in charge.
+# missing tracker file = legacy session = porcelain-compare fully in charge.
 
 set -euo pipefail
 
@@ -60,7 +60,7 @@ fi
 stdin_json="{\"session_id\":\"$SESSION_ID\"}"
 stop_output="$(printf '%s' "$stdin_json" | bash "$STOP_HOOK" 2>&1 || true)"
 
-# Spec 023 fallback should fire the block because porcelain differs from
+# fallback should fire the block because porcelain differs from
 # start-porcelain (which was empty) AND SESSION.md is stale.
 if ! printf '%s' "$stop_output" | grep -q '"decision":"block"'; then
   printf 'FAIL: legacy session should have blocked via spec-023 fallback\n'

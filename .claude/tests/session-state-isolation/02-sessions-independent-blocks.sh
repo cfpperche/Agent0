@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/session-state-isolation/02-sessions-independent-blocks.sh
-# Spec 017 V2 — Scenario: parallel sessions each block exactly once.
+# Scenario: parallel sessions each block exactly once.
 #
 # Stop hook signals "block" via stdout JSON `{"decision":"block",...}`. Exit
 # code is always 0 (per Claude Code hook contract). We detect blocks by
@@ -38,12 +38,12 @@ sleep 1
 printf '{"source":"startup","session_id":"sess-B"}' | bash "$START_HOOK" >/dev/null 2>&1
 sleep 1
 
-# Spec 023 — both SessionStarts captured a porcelain snapshot of the same
+# both SessionStarts captured a porcelain snapshot of the same
 # carryover state. To test the nag-isolation contract (each session must
 # block once independently), this scenario needs *real* WIP during the
 # sessions, otherwise 023's snapshot-match early-exit kicks in (correctly:
 # no porcelain delta → no handoff needed) and the test premise dies.
-# Spec 030 — both sessions also need a tracker entry for the file so the
+# both sessions also need a tracker entry for the file so the
 # primary edit-attribution path recognises the work; without a tracker entry
 # the new spec-030 layer would silently exit on "empty tracker" before
 # spec-023 has any chance to run.

@@ -19,7 +19,7 @@ trap 'rm -rf "$TMPDIR"' EXIT
 
 mkdir -p "$TMPDIR/.claude"
 export CLAUDE_PROJECT_DIR="$TMPDIR"
-export CLAUDE_SUPPLY_CHAIN_BLOCK=0  # spec 009: pin advisory mode under block-by-default default
+export CLAUDE_SUPPLY_CHAIN_BLOCK=0  # block-mode default: pin advisory mode under block-by-default default
 
 stdin_json="$(jq -cn '{tool_input:{command:"npm install axios"}, session_id:"V1-session"}')"
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 016 — Scenario: .gitignore merge is idempotent on re-sync.
+# Scenario: .gitignore merge is idempotent on re-sync.
 # Asserts:
 #   (a) First --apply merges; file changes.
 #   (b) Second --apply with no source changes reports "up to date"; file unchanged.

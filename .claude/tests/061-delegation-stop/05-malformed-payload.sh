@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/061-delegation-stop/05-malformed-payload.sh
-# Spec 061 — Scenario: failure-safe on a malformed payload.
+# Scenario: failure-safe on a malformed payload.
 #
 # Two sub-cases, both must exit 0 and append NO row:
 #   (a) empty stdin            — the hook bails before parsing

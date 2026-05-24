@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/lint-validator/03-biome-declared-missing-advisory.sh
-# Spec 013 V3 — Scenario: biome declared but not installed → advisory, no block.
+# Scenario: biome declared but not installed → advisory, no block.
 #
 # Sub-cases cover all 3 JS managers (bun/pnpm/npm) since each yields a
 # different install command in the advisory text.

@@ -13,7 +13,7 @@ argument-hint: <new <slug> [--tier <tier>] | audit [<slug>|--all] | port <slug> 
 
 Scaffolds new Agent0 skills, audits existing ones against the agentskills.io specification, ports non-compliant SKILL.md frontmatter to compliance, and validates individual SKILL.md files. Every Agent0 skill should pass `/skill validate <slug>` before being committed.
 
-See spec `docs/specs/033-skill-compliance-toolkit/` for the rationale; `references/spec-snapshot.md` for the frozen agentskills.io rules; `references/portability-tiers.md` for the 3-tier classification (`cc-native` / `agentskills-portable` / `runtime-agnostic`).
+`references/spec-snapshot.md` for the frozen agentskills.io rules; `references/portability-tiers.md` for the 3-tier classification (`cc-native` / `agentskills-portable` / `runtime-agnostic`).
 
 ## Argument parsing
 
@@ -113,7 +113,7 @@ Apply `port-frontmatter.sh` to bring a skill's frontmatter into spec compliance.
    ```
    If validate still fails, surface stderr — the porter does NOT auto-fix every rule (e.g., `rule3-name-dirname-mismatch` requires an editorial decision: rename the file or rename the directory). Hand back to the user.
 
-5. **Verify body bytes preserved** (acceptance scenario from spec 033):
+5. **Verify body bytes preserved**:
    ```bash
    git diff --stat .claude/skills/<slug>/SKILL.md
    ```

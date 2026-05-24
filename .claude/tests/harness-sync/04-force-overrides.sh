@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 016 — Scenario: --force overrides customization protection.
+# Scenario: --force overrides customization protection.
 # Asserts:
 #   (a) customized file IS overwritten under --force
 #   (b) stderr emits `! overwritten:` warning

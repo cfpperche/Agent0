@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # .claude/tests/parallel-edit-validation/01-worktree-isolated-no-cross-fail.sh
-# Spec 067 — Scenario: worktree-isolated parallel sub-agents do not fail each
+# Scenario: worktree-isolated parallel sub-agents do not fail each
 # other's validation (spec.md AC1 + the positive half of AC4).
 #
 # Models a parallel `Agent` fan-out where each sub-agent runs isolation:"worktree":
 # two git worktrees of one repo, each sub-agent editing its own. Asserts that
 # post-edit-validate.sh — which scopes the validator cwd to the edited file's
-# git toplevel (spec 063, post-edit-validate.sh:30-42) — validates worktree B
+# git toplevel — validates worktree B
 # against ONLY worktree B, so a deliberate type error sitting in worktree A
 # does not flip B's validation to ok=false.
 #

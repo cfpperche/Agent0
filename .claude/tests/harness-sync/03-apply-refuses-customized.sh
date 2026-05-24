@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 016 — Scenario: apply refuses to overwrite customized files.
+# Scenario: apply refuses to overwrite customized files.
 # Asserts:
 #   (a) customized (hash-mismatch + exists) file NOT overwritten
 #   (b) stderr emits `!! customized:` for that file

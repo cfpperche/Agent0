@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/session-edit-attribution/01-tracker-appends.sh
-# Spec 030 — Scenario 1: tracker appends + deduplicates + fails-open.
+# Scenario 1: tracker appends + deduplicates + fails-open.
 #
 # Given a fake CLAUDE_PROJECT_DIR with the tracker hook installed, when a
 # PostToolUse(Edit) payload is piped in, then edited-files.txt must contain

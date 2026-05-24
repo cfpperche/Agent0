@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/session-handoff/04-new-untracked-file.sh
-# Spec 023 — Scenario 4: session adds a new untracked file.
+# Scenario 4: session adds a new untracked file.
 #
 # Given carryover present at start, when the session creates a new untracked
 # file (porcelain grows by one entry), then Stop MUST block — new artifact is

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/image-gen/01-draft-tier-workflow.sh
-# Spec 085 acceptance Scenario 1 — draft tier workflow.
+# acceptance Scenario 1 — draft tier workflow.
 #
 # The scenario as written presupposes a real FAL_KEY + .mcp.json activation.
 # This test exercises the SKILL'S BEHAVIOR (the script + output flow) by
@@ -108,4 +108,4 @@ if [ "$TIER_VAL" != "draft" ]; then
   exit 1
 fi
 
-echo "PASS: spec 085 Scenario 1 (draft tier workflow)"
+echo "PASS: Scenario 1 (draft tier workflow)"

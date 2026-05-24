@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/lint-validator/01-biome-declared-installed-runs.sh
-# Spec 013 V1 — Scenario: biome declared in package.json + installed → runs.
+# Scenario: biome declared in package.json + installed → runs.
 #
 # Asserts:
 #   (a) JSON .command includes 'bunx biome check' (composed pipeline)

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # .claude/tests/session-edit-attribution/08-block-once-invariant.sh
-# Spec 030 — Scenario "block-once invariant preserved".
+# Scenario "block-once invariant preserved".
 #
 # Given a session triggered the nag once (own edits + stale SESSION.md), when
 # Stop fires again WITHOUT resolution, then the second Stop must NOT re-emit
-# a block decision. Spec 030 changes the accuracy of the block decision, not
+# a block decision. changes the accuracy of the block decision, not
 # its cardinality — the existing `nagged` marker short-circuit at line 41-43
 # of session-stop.sh must still win.
 

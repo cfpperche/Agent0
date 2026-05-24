@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 068 — Scenario: a stale plain file auto-updates without --force.
+# Scenario: a stale plain file auto-updates without --force.
 # Asserts:
 #   (a) a file whose fork copy == baseline but != Agent0 is reported `~ stale`
 #   (b) the file is updated to Agent0's version

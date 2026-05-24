@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/061-delegation-stop/07-unwritable-log.sh
-# Spec 061 — Scenario: failure-safe on an unwritable audit log.
+# Scenario: failure-safe on an unwritable audit log.
 #
 # Given the audit log file has write permission removed, When SubagentStop
 # fires, Then the hook's writability probe trips and it exits 0 silently

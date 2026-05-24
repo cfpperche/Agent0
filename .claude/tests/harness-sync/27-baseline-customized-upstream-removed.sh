@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 068 — Scenario: an upstream-removed file the fork customized is NOT deleted.
+# Scenario: an upstream-removed file the fork customized is NOT deleted.
 # Asserts:
 #   (a) a baseline file absent from Agent0's manifest whose fork copy differs
 #       from baseline is preserved (fork work is never silently destroyed)

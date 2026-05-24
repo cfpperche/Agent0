@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 071 — Scenario: paired markers, fork edited its managed block AFTER the
+# Scenario: paired markers, fork edited its managed block AFTER the
 # baseline was recorded → CUSTOMIZED → refuse + diverged-region.md. --force
 # replaces the block wholesale.
 

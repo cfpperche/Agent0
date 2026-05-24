@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/session-handoff/02-edits-without-session-update.sh
-# Spec 023 — Scenario 2: session edits a file, SESSION.md not updated.
+# Scenario 2: session edits a file, SESSION.md not updated.
 #
 # Given a clean session start, when the session edits a tracked file
 # (porcelain changes), then Stop MUST block (today's behavior preserved).
@@ -36,13 +36,13 @@ stdin_json="{\"source\":\"startup\",\"session_id\":\"$SESSION_ID\"}"
 printf '%s' "$stdin_json" | bash "$START_HOOK" >/dev/null 2>&1
 
 # Mid-session edit — porcelain now differs from empty snapshot.
-# Spec 030: record the edit via the tracker so the primary path sees it
+# record the edit via the tracker so the primary path sees it
 # (replaces pre-030 reliance on raw porcelain-delta).
 sleep 1
 echo "edited-mid-session" >tracked.txt
 printf '%s' "{\"session_id\":\"$SESSION_ID\",\"tool_input\":{\"file_path\":\"tracked.txt\"}}" | bash "$TRACK_HOOK"
 
-# SESSION.md NOT bumped — primary path (spec 030) should block
+# SESSION.md NOT bumped — primary path should block
 stop_output="$(printf '%s' "$stdin_json" | bash "$STOP_HOOK" 2>&1 || true)"
 
 if ! printf '%s' "$stop_output" | grep -q '"decision":"block"'; then

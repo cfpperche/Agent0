@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/session-state-isolation/04-stop-reads-from-subdir.sh
-# Spec 017 V4 — Scenario: Stop hook reads only from its own subdir.
+# Scenario: Stop hook reads only from its own subdir.
 #
 # Block signal detected via stdout JSON pattern `{"decision":"block"`.
 

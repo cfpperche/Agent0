@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/compaction-continuity/05-session-start-empty-dir-noop.sh
-# Spec 081 — graceful no-op edge case.
+# graceful no-op edge case.
 #
 # Given source=compact AND no .compact-history/ dir (or empty), when SessionStart
 # fires, then no banner is emitted and exit is 0.

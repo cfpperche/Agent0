@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 016 — Scenario: settings.json merge (additive, no replace).
+# Scenario: settings.json merge (additive, no replace).
 # Asserts:
 #   (a) Agent0 hook entries appended to fork's settings.json
 #   (b) fork's pre-existing entries preserved

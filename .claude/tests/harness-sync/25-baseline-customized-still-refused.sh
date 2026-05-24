@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 068 — Scenario: a genuinely customized file is still refused.
+# Scenario: a genuinely customized file is still refused.
 # Asserts:
 #   (a) a file differing from BOTH baseline and Agent0 is `!! customized`
 #   (b) it is NOT the `(no baseline)` path — a baseline IS present

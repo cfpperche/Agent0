@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/runtime-capture-php/06-phpunit-laravel-json-pass.sh
-# Spec 047 dogfood finding (2026-05-18) — Laravel 11+ phpunit emits JSON output by default.
+# dogfood finding (2026-05-18) — Laravel 11+ phpunit emits JSON output by default.
 # Shape: {"tool":"phpunit","result":"passed",...}
 #
 # Asserts:

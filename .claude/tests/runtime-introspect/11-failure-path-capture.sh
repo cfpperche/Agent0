@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/runtime-introspect/11-failure-path-capture.sh
-# V11 — Scenario: failure-path capture under PostToolUseFailure (spec 020).
+# V11 — Scenario: failure-path capture under PostToolUseFailure.
 #
 # The runtime-capture hook registered on PostToolUse(Bash), but
 # PostToolUse fires only when the underlying Bash command exits 0
@@ -30,7 +30,7 @@
 #
 # DIVERGES from PostToolUse: `tool_response` is ABSENT; failure body is
 # at top-level `.error`; `is_interrupt` replaces `tool_response.interrupted`.
-# Spec 020 hook update keys on `hook_event_name == "PostToolUseFailure"`
+# hook update keys on `hook_event_name == "PostToolUseFailure"`
 # to route reading accordingly and defaults `inferred_status` to FAIL.
 
 set -euo pipefail
@@ -61,7 +61,7 @@ run_case() {
       cwd: ".",
       hook_event_name: "PostToolUseFailure",
       tool_name: "Bash",
-      tool_input: {command: $c, description: "deliberate failure for spec 020 test"},
+      tool_input: {command: $c, description: "deliberate failure for the advisory-mode test"},
       tool_use_id: "tool-use-V11",
       error: $e,
       is_interrupt: false,

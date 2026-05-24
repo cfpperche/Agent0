@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/runtime-capture-php/04-pest-fail.sh
-# Spec 047 V3 — Scenario: pest Tests: N failed → detector=pest, FAIL.
+# Scenario: pest Tests: N failed → detector=pest, FAIL.
 
 set -euo pipefail
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"

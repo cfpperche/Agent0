@@ -2,7 +2,7 @@
 # .claude/tests/typecheck-advisory/01-bun-no-tsconfig-no-script-skips.sh
 # V1 — Scenario: bun fork without tsconfig.json AND without typecheck script.
 #
-# This is the bug surfaced via shrnk-mono dogfood 2026-05-12: pre-fix the
+# This is the bug surfaced via dogfood 2026-05-12: pre-fix the
 # validator unconditionally tried `bun run typecheck`, hard-failing the
 # pipeline on early-stage forks. Post-fix the validator omits the
 # typecheck step entirely and emits `typecheck-advisory:` to stderr.

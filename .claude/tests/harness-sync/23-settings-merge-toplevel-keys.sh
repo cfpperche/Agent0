@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 016 — Scenario: settings.json merge preserves top-level keys beyond .hooks.
+# Scenario: settings.json merge preserves top-level keys beyond .hooks.
 # Regression test for the bug where merge_settings_json only emitted {hooks: ...},
 # dropping $schema / statusLine / permissions / env / model from both sides.
 #

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/session-state-isolation/06-cleanup-old-subdirs.sh
-# Spec 017 V6 — Scenario: SessionStart cleans up subdirs older than TTL.
+# Scenario: SessionStart cleans up subdirs older than TTL.
 #
 # Subdirs whose started-at (or the dir itself) is older than 7 days are
 # removed best-effort. Failure to clean (e.g. permissions) MUST NOT block

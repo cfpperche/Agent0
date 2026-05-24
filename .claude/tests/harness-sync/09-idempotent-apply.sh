@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 016 — Scenario: idempotent apply.
+# Scenario: idempotent apply.
 # Asserts:
 #   (a) running --apply twice → second run all `= up to date` lines
 #   (b) zero file modifications between first and second apply

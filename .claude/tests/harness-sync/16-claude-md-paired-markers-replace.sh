@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 071 — Scenario: paired markers, fork's managed block matches the recorded
+# Scenario: paired markers, fork's managed block matches the recorded
 # baseline (fork untouched), Agent0 added a section → STALE → block replaced
 # wholesale with no --force. Project sections outside the markers preserved.
 

@@ -70,7 +70,7 @@ done
 # ---------------------------------------------------------------------------
 # (b) Advisory mode + valid override → decision="advisory-override", silent
 # ---------------------------------------------------------------------------
-REASON="documented advisory-mode opt-out for spec 009 test"
+REASON="documented advisory-mode opt-out for the advisory-mode test"
 CMD_B="$(printf 'npm install axios\n# OVERRIDE: %s' "$REASON")"
 stdin_json_b="$(jq -cn --arg c "$CMD_B" '{tool_input:{command:$c}, session_id:"V11b-session"}')"
 stderr_b="$TMPDIR/stderr-b.txt"

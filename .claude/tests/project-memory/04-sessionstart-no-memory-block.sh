@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 019 — Scenario: SessionStart does NOT auto-load memory.
+# Scenario: SessionStart does NOT auto-load memory.
 # INVARIANT GUARD: protects against future regression where someone wires
 # SessionStart to inject memory content (re-introduces the scaling problem).
 # Asserts:

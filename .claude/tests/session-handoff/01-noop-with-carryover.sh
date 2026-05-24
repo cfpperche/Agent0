@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/session-handoff/01-noop-with-carryover.sh
-# Spec 023 — Scenario 1: no-op session with pre-existing carryover.
+# Scenario 1: no-op session with pre-existing carryover.
 #
 # Given the repo has uncommitted changes when the session starts, when the
 # session performs no edits during its lifetime, then Stop must NOT block.

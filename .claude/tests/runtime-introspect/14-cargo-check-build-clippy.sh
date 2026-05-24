@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # .claude/tests/runtime-introspect/14-cargo-check-build-clippy.sh
 # V14 — Scenarios C, D, E, F, G: cargo check / build / clippy capture and
-# inference. Spec 022.
+# inference. 
 #
 # Asserts:
 #   (C) `cargo check` clean → detector=cargo-check, status=PASS (Finished line)
@@ -78,32 +78,32 @@ run_case() {
 }
 
 # (C) cargo check clean
-clean_check='   Compiling rshrnk v0.1.0 (/home/goat/rshrnk)
+clean_check='   Compiling sample-crate v0.1.0 (/tmp/sample-crate-fixture)
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.42s
 '
 run_case "C cargo check clean"            "cargo check"        "$clean_check"  "cargo-check"   "PASS"  "Finished"
 
 # (D) cargo check with rustc error[E0xxx]
-fail_check='   Compiling rshrnk v0.1.0 (/home/goat/rshrnk)
+fail_check='   Compiling sample-crate v0.1.0 (/tmp/sample-crate-fixture)
 error[E0425]: cannot find value `foo` in this scope
   --> src/lib.rs:10:5
    |
 10 |     foo
    |     ^^^ not found in this scope
 
-error: could not compile `rshrnk` (lib) due to 1 previous error
+error: could not compile `sample-crate` (lib) due to 1 previous error
 '
 run_case "D cargo check rustc error"      "cargo check"        "$fail_check"   "cargo-check"   "FAIL"  "error\[E"
 
 # (E) cargo clippy -D warnings clean
-clean_clippy='   Compiling rshrnk v0.1.0 (/home/goat/rshrnk)
-    Checking rshrnk v0.1.0 (/home/goat/rshrnk)
+clean_clippy='   Compiling sample-crate v0.1.0 (/tmp/sample-crate-fixture)
+    Checking sample-crate v0.1.0 (/tmp/sample-crate-fixture)
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.50s
 '
 run_case "E cargo clippy clean"           "cargo clippy --all-targets -- -D warnings"  "$clean_clippy"  "cargo-clippy"  "PASS"  "Finished"
 
 # (F) cargo clippy with warning promoted to error (clippy -D warnings emits ^error:)
-fail_clippy='   Compiling rshrnk v0.1.0 (/home/goat/rshrnk)
+fail_clippy='   Compiling sample-crate v0.1.0 (/tmp/sample-crate-fixture)
 error: this function has too many arguments (8/7)
   --> src/lib.rs:5:1
    |
@@ -114,12 +114,12 @@ error: this function has too many arguments (8/7)
    |
    = note: `-D clippy::too-many-arguments` implied by `-D warnings`
 
-error: could not compile `rshrnk` (lib) due to 1 previous error
+error: could not compile `sample-crate` (lib) due to 1 previous error
 '
 run_case "F cargo clippy promoted warn"   "cargo clippy --all-targets -- -D warnings"  "$fail_clippy"   "cargo-clippy"  "FAIL"  "\^error:"
 
 # (G) cargo build clean
-clean_build='   Compiling rshrnk v0.1.0 (/home/goat/rshrnk)
+clean_build='   Compiling sample-crate v0.1.0 (/tmp/sample-crate-fixture)
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.38s
 '
 run_case "G cargo build clean"            "cargo build"        "$clean_build"  "cargo-build"   "PASS"  "Finished"

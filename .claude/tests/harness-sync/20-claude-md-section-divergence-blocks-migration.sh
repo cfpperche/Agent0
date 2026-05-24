@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 058 — Scenario: no markers + fork rewrote an Agent0-region-titled section body
+# Scenario: no markers + fork rewrote an Agent0-region-titled section body
 # → diverged-sections.md written, candidate NOT written; legacy fallback merge still runs.
 
 set -euo pipefail

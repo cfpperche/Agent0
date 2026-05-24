@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/session-edit-attribution/02-bystander.sh
-# Spec 030 — Scenario "parallel session bystander".
+# Scenario "parallel session bystander".
 #
 # Given session A has zero edited-files entries (research-only / bystander),
 # when a sibling process modifies a tracked file during A's lifetime,

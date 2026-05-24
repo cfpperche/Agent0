@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# port-frontmatter.sh — idempotent SKILL.md frontmatter patcher (Agent0 spec 033)
+# port-frontmatter.sh — idempotent SKILL.md frontmatter patcher
 #
 # Adds missing required-by-spec fields (name, license, compatibility, metadata)
 # for agentskills.io compliance. Detects portability tier from body content and
 # fills the canonical compatibility text + metadata.agent0-portability-tier value
 # accordingly.
 #
-# DECISIONS (spec 033 Phase C — see references/portability-tiers.md):
+# DECISIONS (see references/portability-tiers.md):
 # - Tier metadata key is `agent0-portability-tier` (kebab-namespaced) under `metadata:`
 # - `argument-hint:` stays at TOP-LEVEL (CC reads it only there per official docs);
 #   port does NOT migrate it to metadata

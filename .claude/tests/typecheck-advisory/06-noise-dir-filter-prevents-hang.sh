@@ -4,9 +4,9 @@
 # dirs (node_modules, .venv, target, etc.) that escaped a mis-configured
 # fork's .gitignore.
 #
-# Bug surfaced via shrnk-mono dogfood 2026-05-12: Agent0 ships a
+# Bug surfaced via dogfood 2026-05-12: Agent0 ships a
 # stack-agnostic .gitignore template with `# node_modules/` commented;
-# the fork developer must uncomment per-stack. shrnk-mono didn't, so
+# the fork developer must uncomment per-stack. the dogfood fork did not, so
 # `git ls-files --others --exclude-standard` dumped 15,711 paths into
 # the validator's per-file shell pattern-match loop, hanging beyond
 # any reasonable timeout.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/validator-php/07-pint-declared-missing-advisory.sh
-# Spec 047 V5 — Scenario: laravel/pint declared but vendor/bin/pint missing → advisory, no command extension.
+# Scenario: laravel/pint declared but vendor/bin/pint missing → advisory, no command extension.
 
 set -euo pipefail
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"

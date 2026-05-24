@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/validator-php/04-tdd-prod-php-without-test.sh
-# Spec 047 V4 — Scenario: TDD advisory fires when prod-PHP edits land without test edits.
+# Scenario: TDD advisory fires when prod-PHP edits land without test edits.
 #
 # Asserts:
 #   (a) JSON .warnings array contains one no_test_change_for_prod_edit entry

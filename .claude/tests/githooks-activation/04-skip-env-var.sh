@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 018 — Scenario: CLAUDE_SKIP_GITHOOKS_HINT=1 suppresses the advisory.
+# Scenario: CLAUDE_SKIP_GITHOOKS_HINT=1 suppresses the advisory.
 # Asserts:
 #   (a) stdout does NOT contain 'githooks-activation' even with .githooks/ present and config absent
 

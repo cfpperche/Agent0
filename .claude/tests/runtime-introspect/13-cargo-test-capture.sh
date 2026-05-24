@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # .claude/tests/runtime-introspect/13-cargo-test-capture.sh
 # V13 — Scenarios A + B: cargo test capture under PostToolUse (success)
-# and PostToolUseFailure (failure). Spec 022.
+# and PostToolUseFailure (failure). 
 #
 # Asserts:
 #   (A) `cargo test` with `test result: ok` in output → detector=cargo-test,
@@ -35,9 +35,9 @@ test tests::all_chars_safe ... ok
 test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
 '
-stderr_a='   Compiling rshrnk v0.1.0 (/home/goat/rshrnk)
+stderr_a='   Compiling sample-crate v0.1.0 (/tmp/sample-crate-fixture)
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.12s
-     Running unittests src/lib.rs (target/debug/deps/rshrnk-abc)
+     Running unittests src/lib.rs (target/debug/deps/sample-crate-abc)
      Running tests/shortener.rs (target/debug/deps/shortener-def)
 '
 
@@ -85,7 +85,7 @@ fi
 rm -f "$state_file"
 
 # ----- Sub-case B: failing cargo test under PostToolUseFailure -----
-error_b='   Compiling rshrnk v0.1.0 (/home/goat/rshrnk)
+error_b='   Compiling sample-crate v0.1.0 (/tmp/sample-crate-fixture)
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.18s
      Running tests/spec022_dogfood.rs (target/debug/deps/spec022_dogfood-xyz)
 
@@ -118,7 +118,7 @@ stdin_b="$(jq -cn \
     cwd: ".",
     hook_event_name: "PostToolUseFailure",
     tool_name: "Bash",
-    tool_input: {command: $c, description: "deliberate failure for spec 022 test"},
+    tool_input: {command: $c, description: "deliberate failure for the advisory-mode test"},
     tool_use_id: "tool-use-V13-B",
     error: $e,
     is_interrupt: false,

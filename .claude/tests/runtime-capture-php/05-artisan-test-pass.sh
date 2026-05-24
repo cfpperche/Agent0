@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/runtime-capture-php/05-artisan-test-pass.sh
-# Spec 047 V3 — Scenario: php artisan test clean → detector=artisan-test, PASS.
+# Scenario: php artisan test clean → detector=artisan-test, PASS.
 
 set -euo pipefail
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"

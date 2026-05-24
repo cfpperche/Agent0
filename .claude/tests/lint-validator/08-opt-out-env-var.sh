@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/lint-validator/08-opt-out-env-var.sh
-# Spec 013 V8 — Scenario: CLAUDE_VALIDATOR_SKIP_LINT=1 disables lint entirely.
+# Scenario: CLAUDE_VALIDATOR_SKIP_LINT=1 disables lint entirely.
 #
 # Asserts (declared+missing fixture — would normally emit advisory):
 #   (a) JSON .command does NOT include 'biome'

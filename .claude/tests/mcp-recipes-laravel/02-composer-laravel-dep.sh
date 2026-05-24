@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/mcp-recipes-laravel/02-composer-laravel-dep.sh
-# Spec 047 V6 — Scenario: composer.json declares laravel/framework (no artisan file) → suggests laravel-boost-mcp.
+# Scenario: composer.json declares laravel/framework (no artisan file) → suggests laravel-boost-mcp.
 
 set -euo pipefail
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/session-state-isolation/05-missing-session-id-fallback.sh
-# Spec 017 V5 — Scenario: payload without session_id falls to "unknown" subdir.
+# Scenario: payload without session_id falls to "unknown" subdir.
 #
 # When the hook payload lacks .session_id (or is null/empty), the hook must
 # operate against <.session-state>/unknown/ deterministically — no crash, no

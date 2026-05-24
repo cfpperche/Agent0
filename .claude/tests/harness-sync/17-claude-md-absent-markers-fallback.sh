@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 058 — Scenario: absent markers in fork + no section divergence with Agent0 region
+# Scenario: absent markers in fork + no section divergence with Agent0 region
 # → legacy merge runs (back-compat) AND migration candidate written; advisory line on stderr.
 
 set -euo pipefail

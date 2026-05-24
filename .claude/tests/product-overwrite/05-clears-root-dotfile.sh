@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 069 — Scenario: non-harness root dotfiles are cleared, harness dotfiles
+# Scenario: non-harness root dotfiles are cleared, harness dotfiles
 # survive. Guards the dotfile-enumeration risk named in plan.md (`.mcp.json` is
 # a root dotfile in <remaining>; `.gitignore` is a harness dotfile).
 

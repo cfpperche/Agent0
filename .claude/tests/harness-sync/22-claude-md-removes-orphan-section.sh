@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 071 — Canonical motivating case: the fork's managed block carries a section
+# Canonical motivating case: the fork's managed block carries a section
 # Agent0 later removed. With the block matching the baseline (fork untouched), the
 # next sync is STALE → block replaced wholesale → orphan section gone, no --force.
 

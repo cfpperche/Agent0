@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 018 — Scenario: silent when .githooks/ exists AND core.hooksPath is set.
+# Scenario: silent when .githooks/ exists AND core.hooksPath is set.
 # Asserts:
 #   (a) stdout does NOT contain '=== githooks-activation ==='
 

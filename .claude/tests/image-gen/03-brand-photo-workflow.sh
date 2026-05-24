@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/image-gen/03-brand-photo-workflow.sh
-# Spec 085 acceptance Scenario 3 — brand-photo tier workflow.
+# acceptance Scenario 3 — brand-photo tier workflow.
 #
 # Same shape as 01-draft / 02-brand-text. See 01-draft-tier-workflow.sh for
 # the rationale on test-boundary mocking.
@@ -73,4 +73,4 @@ if [ "$COST_VAL" != "0.06" ] && [ "$COST_VAL" != "0.060" ]; then
   exit 1
 fi
 
-echo "PASS: spec 085 Scenario 3 (brand-photo tier workflow + auto-derived slug)"
+echo "PASS: Scenario 3 (brand-photo tier workflow + auto-derived slug)"

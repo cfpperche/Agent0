@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 016 — Scenario: out-of-scope files never touched.
+# Scenario: out-of-scope files never touched.
 # Asserts:
 #   (a) src/, tests/, docs/, package.json, Cargo.toml, pyproject.toml, .mcp.json all byte-identical post-apply
 #   (b) nothing under those paths appears in any decision line

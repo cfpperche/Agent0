@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/validator-php/02-pest-declared-uses-pest.sh
-# Spec 047 V1 — Scenario: composer.json declares pestphp/pest → command uses Pest.
+# Scenario: composer.json declares pestphp/pest → command uses Pest.
 #
 # Asserts:
 #   (a) JSON .command includes 'vendor/bin/pest'

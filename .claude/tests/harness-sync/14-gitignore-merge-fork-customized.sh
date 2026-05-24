@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 016 — Scenario: .gitignore merge when fork has stack-canonical .gitignore.
+# Scenario: .gitignore merge when fork has stack-canonical .gitignore.
 # This is the core motivating case: Laravel/Node/Cargo forks ship their own
 # .gitignore and would lose Agent0 entries under naive overwrite logic.
 # Asserts:

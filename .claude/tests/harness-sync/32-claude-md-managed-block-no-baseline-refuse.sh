@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Spec 071 — Scenario: paired markers, managed block differs from Agent0, but the
+# Scenario: paired markers, managed block differs from Agent0, but the
 # fork has NO recorded baseline (a pre-071 fork's first sync). stale-vs-customized
 # is unknowable with no history → refuse as `customized (no baseline)`; --force
-# overrides. The one-time first-sync friction, mirroring spec 068's plain-file path.
+# overrides. The one-time first-sync friction, mirroring the plain-file path.
 
 set -euo pipefail
 

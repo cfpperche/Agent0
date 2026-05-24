@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/validator-php/05-tdd-no-warning-when-test-edited.sh
-# Spec 047 V4 — Negative: prod-PHP + test-PHP edited together → no warning.
+# Negative: prod-PHP + test-PHP edited together → no warning.
 #
 # Asserts:
 #   (a) JSON .warnings is empty array OR field absent

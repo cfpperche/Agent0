@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/supply-chain-composer/01-composer-require-blocks.sh
-# Spec 047 V2 — Scenario: `composer require <pkg>` exits 2 in block mode without override.
+# Scenario: `composer require <pkg>` exits 2 in block mode without override.
 #
 # Asserts:
 #   (a) hook exit 2

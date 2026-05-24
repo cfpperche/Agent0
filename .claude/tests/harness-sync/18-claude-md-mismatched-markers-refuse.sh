@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 058 — Scenario: mismatched markers (one BEGIN no END, or vice versa) → refuse.
+# Scenario: mismatched markers (one BEGIN no END, or vice versa) → refuse.
 # Also: nested-invalid (multiple BEGIN or END) → refuse.
 
 set -euo pipefail

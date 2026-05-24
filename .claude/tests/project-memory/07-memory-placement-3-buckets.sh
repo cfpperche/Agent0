@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 019 — Scenario: memory-placement.md documents 3 buckets.
+# Scenario: memory-placement.md documents 3 buckets.
 # Asserts:
 #   (a) memory-placement.md mentions all three bucket paths verbatim:
 #       - ~/.claude/projects/

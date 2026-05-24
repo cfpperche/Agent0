@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 018 — Scenario: silent when no .githooks/ directory exists.
+# Scenario: silent when no .githooks/ directory exists.
 # Asserts:
 #   (a) stdout does NOT contain 'githooks-activation' (capacity not installed)
 

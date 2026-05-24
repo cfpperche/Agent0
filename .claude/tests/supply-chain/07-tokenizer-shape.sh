@@ -3,9 +3,9 @@
 # V7 — Scenario: tokenizer stops package collection at shell separators and
 # at known value-taking flags (so the `packages` field stays clean).
 #
-# Surfaced by the live-dogfood pass against /home/goat/pyshrnk (2026-05-11):
-# `uv add requests --directory /home/goat/pyshrnk 2>&1 | tail -20` captured
-# `["requests","/home/goat/pyshrnk","2>&1","|","tail"]`. After the fix:
+# Surfaced by the live-dogfood pass against /tmp/py-fixture (2026-05-11):
+# `uv add requests --directory /tmp/py-fixture 2>&1 | tail -20` captured
+# `["requests","/tmp/py-fixture","2>&1","|","tail"]`. After the fix:
 # only `["requests"]`.
 #
 # Sub-cases:
@@ -18,7 +18,7 @@
 #   (d) regression guard: `cargo update --package tokio` keeps `tokio` as the
 #       package (the value of --package IS the package)
 #   (e) cargo --features / -F values are NOT packages (feature names, not
-#       supply-chain signal) — added after the rshrnk live-dogfood pass
+#       supply-chain signal) — added after the cargo-stack live-dogfood pass
 #       (2026-05-11) surfaced `cargo add tokio --features full` capturing
 #       `["tokio","full"]`. Symmetric short form `-F derive` covered too.
 
@@ -32,7 +32,7 @@ trap 'rm -rf "$TMPDIR"' EXIT
 
 mkdir -p "$TMPDIR/.claude"
 export CLAUDE_PROJECT_DIR="$TMPDIR"
-export CLAUDE_SUPPLY_CHAIN_BLOCK=0  # spec 009: pin advisory mode under block-by-default default
+export CLAUDE_SUPPLY_CHAIN_BLOCK=0  # block-mode default: pin advisory mode under block-by-default default
 
 run_case() {
   local label="$1"
@@ -70,7 +70,7 @@ run_case() {
 
 # (a) Shell separators terminate collection.
 run_case "uv add with pipe and redirect" \
-  "uv add requests --directory /home/goat/pyshrnk 2>&1 | tail -20" \
+  "uv add requests --directory /tmp/py-fixture 2>&1 | tail -20" \
   '["requests"]' "uv" "add"
 
 run_case "npm install with stdout redirect" \

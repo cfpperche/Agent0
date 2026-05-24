@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 016 — Scenario: CLAUDE.md capacity-section append before Compact Instructions.
+# Scenario: CLAUDE.md capacity-section append before Compact Instructions.
 # Asserts:
 #   (a) missing capacity sections appended
 #   (b) fork-authored sections preserved

@@ -7,7 +7,7 @@
 
 set -u
 
-# Resolve script dir → spec 033 skill dir → fixtures dir + validator path
+# Resolve script dir → skill dir → fixtures dir + validator path
 here="$(cd "$(dirname "$0")" && pwd)"
 skill_root="$(dirname "$here")"
 fixtures_dir="$here/fixtures"

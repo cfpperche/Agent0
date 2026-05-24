@@ -2,7 +2,7 @@
 # .claude/tests/runtime-introspect/10-tokenizer-fp-skips.sh
 # V10 — Scenario: leading-command FP skips (commit messages, grep patterns).
 #
-# Surfaced by spec 011 validation pass (2026-05-11): a `git commit -m` with
+# Surfaced by validation pass (2026-05-11): a `git commit -m` with
 # a heredoc'd body containing verifier-shaped tokens (`bun tsc`) had its
 # body tokenised, matched the `bun-tsc` detector, and wrote a false
 # snapshot. Same family for `grep -E 'bun test' file`.

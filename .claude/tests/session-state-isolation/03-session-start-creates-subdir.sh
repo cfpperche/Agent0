@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/session-state-isolation/03-session-start-creates-subdir.sh
-# Spec 017 V3 — Scenario: SessionStart creates only its own subdir.
+# Scenario: SessionStart creates only its own subdir.
 #
 # Running SessionStart with session_id=foo touches <.session-state>/foo/started-at
 # and removes <.session-state>/foo/nagged if present. Other subdirs (bar/) are

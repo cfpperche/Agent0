@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 069 — Scenario: a harness-only or empty target is a no-op.
+# Scenario: a harness-only or empty target is a no-op.
 # Asserts clear-target.sh removes nothing when there is nothing non-harness
 # to remove, and exits 0 on an empty directory.
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/session-state-isolation/01-parallel-isolation.sh
-# Spec 017 V1 — Scenario: parallel sessions don't reset each other's markers.
+# Scenario: parallel sessions don't reset each other's markers.
 #
 # Given Session A has its nagged marker in <.session-state>/session-A/, when
 # SessionStart fires for Session B (parallel), Session A's nagged marker

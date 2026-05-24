@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/supply-chain-composer/03-bare-install-dirty-composer-json.sh
-# Spec 047 V2 — Scenario: bare `composer install` + uncommitted composer.json → advisory.
+# Scenario: bare `composer install` + uncommitted composer.json → advisory.
 #
 # Asserts:
 #   (a) hook exit 0 (advisory, never blocks)

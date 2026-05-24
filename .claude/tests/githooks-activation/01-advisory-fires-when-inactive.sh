@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 018 — Scenario: advisory fires when .githooks/ exists but config absent.
+# Scenario: advisory fires when .githooks/ exists but config absent.
 # Asserts:
 #   (a) stdout contains '=== githooks-activation ==='
 #   (b) stdout contains the literal command 'git config core.hooksPath .githooks'

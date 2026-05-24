@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/lint-validator/07-lint-failure-blocks.sh
-# Spec 013 V7 — Scenario: lint failure (when running) blocks sub-agent.
+# Scenario: lint failure (when running) blocks sub-agent.
 #
 # Asserts:
 #   (a) JSON .ok == false

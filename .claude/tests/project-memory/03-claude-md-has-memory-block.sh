@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 019 — Scenario: agent discovers project memory via CLAUDE.md.
+# Scenario: agent discovers project memory via CLAUDE.md.
 # Asserts:
 #   (a) Agent0 CLAUDE.md contains a `^## Memory$` line
 #   (b) that section mentions `.claude/memory/MEMORY.md` as entry point

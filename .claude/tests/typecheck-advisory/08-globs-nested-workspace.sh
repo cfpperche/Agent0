@@ -4,7 +4,7 @@
 # TDD classification loop even when the validator runs from a populated cwd
 # where bash pathname expansion finds real matches for the exclusion globs.
 #
-# Bug surfaced via shrnk-mono dogfood validation pass 2026-05-12, commit
+# Bug surfaced via dogfood validation pass 2026-05-12, commit
 # d4eada2: the `for g in $excluded_globs; do case "$f" in $g)` loop had
 # unquoted variable expansion. In a populated repo, `*.json` got pathname-
 # expanded to the literal root-level match (`package.json` alone), and the
@@ -72,7 +72,7 @@ EOF
 ( cd "$TMPDIR" && git add . && git commit -q -m baseline )
 
 # Modify every nested manifest + lockfile + .gitignore — exactly the
-# population that triggered the bug in shrnk-mono. Each modification surfaces
+# population that triggered the dogfood bug. Each modification surfaces
 # in `git diff --name-only` as a nested path.
 echo '{"name":"api","mod":true}' > "$TMPDIR/apps/api/package.json"
 echo '{"name":"web","mod":true}' > "$TMPDIR/apps/web/package.json"

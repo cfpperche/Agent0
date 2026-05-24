@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 016 — Scenario: .mcp.json.example synced; .mcp.json never touched.
+# Scenario: .mcp.json.example synced; .mcp.json never touched.
 # Asserts:
 #   (a) .mcp.json.example copied from Agent0 to fork
 #   (b) fork's .mcp.json (with sensitive content) untouched

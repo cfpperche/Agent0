@@ -2,7 +2,7 @@
 # .claude/tests/runtime-introspect/09-status-inference.sh
 # V9 — Scenario: status inference from runner output when tool_response
 # carries no exit_code (Claude Code's actual Bash payload shape, surfaced by
-# the spec-011 live-dogfood pass against /home/goat/shrnk on 2026-05-11).
+# the runtime-introspect live-dogfood pass on 2026-05-11).
 #
 # Asserts:
 #   (a) `bun test` with " 10 pass\n 0 fail\n" → inferred_status=PASS, basis populated

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 068 — Scenario: an upstream-removed file is deleted from the fork.
+# Scenario: an upstream-removed file is deleted from the fork.
 # Asserts:
 #   (a) a baseline file absent from Agent0's manifest, fork copy == baseline,
 #       is removed and reported `- removed`

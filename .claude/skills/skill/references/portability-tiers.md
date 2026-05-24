@@ -93,13 +93,13 @@ metadata:
 ---
 ```
 
-The validator (`scripts/validate.sh`) does NOT verify that the body actually matches the declared tier — declared tier is operator-asserted intent, not mechanically derived. Drift between declared tier and actual body is a documentation bug; report via `/skill audit` flagging mismatches when it detects body signals inconsistent with the declared tier (future enhancement, out of scope for spec 033 v1).
+The validator (`scripts/validate.sh`) does NOT verify that the body actually matches the declared tier — declared tier is operator-asserted intent, not mechanically derived. Drift between declared tier and actual body is a documentation bug; report via `/skill audit` flagging mismatches when it detects body signals inconsistent with the declared tier.
 
 ## Why three tiers and not two
 
 Two tiers (CC-only vs portable) collapses a real distinction: a Linux-bash skill that runs in Hermes is portable to *most* runtimes but not to a Windows-only environment. The third tier holds the OS-portability bar separate so a fork can confidently say "this works on every supported runtime AND every supported OS" without re-auditing.
 
-## Why the namespace is `agent0-` prefixed (spec 033 Open Q #1 resolved)
+## Why the namespace is `agent0-` prefixed
 
 Decision: **use `agent0-portability-tier` (kebab-case namespace), not bare `portability-tier`.**
 
@@ -110,7 +110,7 @@ Evidence (2026-05-17 research, Phase C task #10):
 
 Trade: kebab-namespaced key is 8 chars longer per occurrence but defends. Validator parsing is unaffected (validator only checks the 6 spec fields, not metadata sub-keys). All Agent0 skills and templates use `agent0-portability-tier`.
 
-## On `argument-hint` placement (spec 033 Open Q #4 / plan Risk #1 resolved)
+## On `argument-hint` placement
 
 Decision: **`argument-hint:` stays at top-level of frontmatter; do NOT nest under `metadata:`.**
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 016 — Scenario: dry-run shows actions without performing them.
+# Scenario: dry-run shows actions without performing them.
 # Asserts:
 #   (a) --apply --dry-run emits decision lines like a real apply
 #   (b) zero filesystem changes in fork (sha256 stable)

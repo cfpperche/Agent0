@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/validator-php/06-pint-declared-installed-runs.sh
-# Spec 047 V5 — Scenario: composer.json declares laravel/pint + binary installed → command extends with pint --test.
+# Scenario: composer.json declares laravel/pint + binary installed → command extends with pint --test.
 
 set -euo pipefail
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"

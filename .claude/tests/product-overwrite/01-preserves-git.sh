@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 069 — Scenario: overwrite preserves .git/.
+# Scenario: overwrite preserves .git/.
 # Asserts clear-target.sh leaves .git/ and its history intact while removing
 # the non-harness /product artifacts.
 

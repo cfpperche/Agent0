@@ -60,7 +60,7 @@ fi
 # the end with both `hookSpecificOutput.additionalContext` (model context) and
 # `systemMessage` (user-visible banner). CC v2.1.0+ silently drops SessionStart
 # stdout from the user-visible surface — plain `printf` only reaches the model.
-# The dual-emit pattern (proven by Anthill's reminder-surfacer.sh) restores the
+# The dual-emit pattern restores the
 # banner so the user sees the handoff at session boot without having to type.
 BANNER=""
 

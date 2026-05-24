@@ -2,7 +2,7 @@
 # .claude/tests/supply-chain/08-block-default.sh
 # V8 — Scenario: Bash dep-install in default (block) mode without override.
 #
-# Spec 009 promotes the supply-chain Bash preflight from advisory to a
+# promotes the supply-chain Bash preflight from advisory to a
 # blocking gate by default. Default state (CLAUDE_SUPPLY_CHAIN_BLOCK unset)
 # means: detected dep-install + no valid override marker → exit 2 with a
 # corrective stderr template, audit decision="block".

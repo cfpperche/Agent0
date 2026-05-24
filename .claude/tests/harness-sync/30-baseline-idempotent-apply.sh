@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 068 — Scenario: a fully-synced fork is idempotent.
+# Scenario: a fully-synced fork is idempotent.
 # Asserts a second --apply on an already-synced fork mutates zero files and
 # leaves harness-sync-baseline.json byte-identical.
 

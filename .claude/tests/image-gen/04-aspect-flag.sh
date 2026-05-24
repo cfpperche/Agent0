@@ -73,4 +73,4 @@ if ! printf '%s' "$OUT" | grep -q 'invalid --aspect=panorama'; then
   exit 1
 fi
 
-echo "PASS: spec 085 Scenario --aspect flag (3 valid mappings + 1 invalid rejection)"
+echo "PASS: Scenario --aspect flag (3 valid mappings + 1 invalid rejection)"

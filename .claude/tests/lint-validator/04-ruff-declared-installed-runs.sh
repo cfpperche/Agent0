@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/lint-validator/04-ruff-declared-installed-runs.sh
-# Spec 013 V4 — Scenario: ruff declared in pyproject.toml + installed → runs.
+# Scenario: ruff declared in pyproject.toml + installed → runs.
 #
 # Asserts:
 #   (a) JSON .command includes 'ruff check .'

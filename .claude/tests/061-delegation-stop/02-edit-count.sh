@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/061-delegation-stop/02-edit-count.sh
-# Spec 061 — Scenario: sub-agent makes edits.
+# Scenario: sub-agent makes edits.
 #
 # Given a per-sub-agent transcript carrying 3 Edit + 1 Write tool_use blocks
 # across multiple assistant entries, When SubagentStop fires, Then the close

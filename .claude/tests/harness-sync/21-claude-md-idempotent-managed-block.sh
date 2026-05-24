@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 058 — Scenario: paired markers + region matches source → first apply = up-to-date,
+# Scenario: paired markers + region matches source → first apply = up-to-date,
 # second apply = up-to-date, no mutations across runs (sha256sum stable).
 
 set -euo pipefail

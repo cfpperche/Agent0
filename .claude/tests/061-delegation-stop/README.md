@@ -1,8 +1,8 @@
-# 061-delegation-stop tests
+# delegation-stop tests
 
 Scenario coverage for `.claude/hooks/delegation-stop.sh` — the `SubagentStop`
 hook that closes the delegation audit row opened by `delegation-gate.sh` at
-`PreToolUse(Agent)` time. See `docs/specs/061-subagent-stop-hook/`.
+`PreToolUse(Agent)` time.
 
 Run: `bash run-all.sh` (quiet) or `bash run-all.sh -v` (verbose).
 

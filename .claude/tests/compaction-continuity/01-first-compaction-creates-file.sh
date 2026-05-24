@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/compaction-continuity/01-first-compaction-creates-file.sh
-# Spec 081 — Scenario 1: first compaction creates a new file in .compact-history/.
+# Scenario 1: first compaction creates a new file in .compact-history/.
 #
 # Given an empty .claude/.compact-history/ (or no dir at all), when pre-compact.sh
 # fires, then a single file matching <ISO>-<pid>-<rand5>.md is created.

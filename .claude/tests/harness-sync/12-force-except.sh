@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 016 — Scenario: --force-except keeps matching files customized.
+# Scenario: --force-except keeps matching files customized.
 # Asserts:
 #   (a) --force --force-except=.gitignore overwrites OTHER customized files
 #   (b) .gitignore (matching the except glob) stays customized-refused

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 016 — Scenario: .gitignore merge when fork has no .gitignore.
+# Scenario: .gitignore merge when fork has no .gitignore.
 # Asserts:
 #   (a) Fork lacking .gitignore receives Agent0's verbatim via process_file
 #   (b) No merge marker appears (full copy, not append-merge)

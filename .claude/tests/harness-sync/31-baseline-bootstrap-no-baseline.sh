@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 068 — Scenario: a fork with no baseline file does not error on first --apply.
+# Scenario: a fork with no baseline file does not error on first --apply.
 # Asserts the first sync degrades gracefully: differing files refused as
 # `(no baseline)`, missing files copied, and a baseline written for next time.
 

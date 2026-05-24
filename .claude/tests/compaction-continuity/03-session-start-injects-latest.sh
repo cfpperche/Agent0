@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/compaction-continuity/03-session-start-injects-latest.sh
-# Spec 081 — Scenario 3: SessionStart on source=compact injects the latest snapshot.
+# Scenario 3: SessionStart on source=compact injects the latest snapshot.
 #
 # Given multiple snapshots exist with distinct lex order, when SessionStart fires
 # with source=compact, then session-start.sh reads the lex-greatest file and

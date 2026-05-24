@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/supply-chain-composer/02-composer-require-override.sh
-# Spec 047 V2 — Scenario: `composer require <pkg>` with valid OVERRIDE marker passes.
+# Scenario: `composer require <pkg>` with valid OVERRIDE marker passes.
 #
 # Asserts:
 #   (a) hook exit 0

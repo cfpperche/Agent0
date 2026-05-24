@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/runtime-introspect/15-cargo-skip-non-detect.sh
-# V15 — Scenario H: non-verifier cargo verbs skip silently. Spec 022.
+# V15 — Scenario H: non-verifier cargo verbs skip silently. 
 #
 # Asserts that cargo invocations OUTSIDE the v1 verifier allowlist
 # (cargo run / doc / publish / bench / fmt / update / install) do NOT

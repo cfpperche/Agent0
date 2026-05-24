@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/061-delegation-stop/03-loop-budget.sh
-# Spec 061 — Scenario: sub-agent stopped due to loop-budget exhaustion.
+# Scenario: sub-agent stopped due to loop-budget exhaustion.
 #
 # Given .claude/.delegation-state/agents/<agent_id>/consecutive_failures holds
 # a count >= CLAUDE_DELEGATION_LOOP_BUDGET (default 5), When SubagentStop

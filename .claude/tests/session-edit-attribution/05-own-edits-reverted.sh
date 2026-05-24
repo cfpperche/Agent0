@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/session-edit-attribution/05-own-edits-reverted.sh
-# Spec 030 — Scenario "own edits reverted".
+# Scenario "own edits reverted".
 #
 # Given session A tracked an edit to foo.ts and then ran `git restore foo.ts`,
 # when A's Stop fires, the block must NOT fire because the path is no longer

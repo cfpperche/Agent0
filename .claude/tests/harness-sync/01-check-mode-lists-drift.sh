@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 016 — Scenario: check mode lists drift.
+# Scenario: check mode lists drift.
 # Asserts:
 #   (a) --check exits 1 when drift exists
 #   (b) stdout names each missing file

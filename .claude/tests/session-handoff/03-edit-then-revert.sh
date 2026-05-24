@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/session-handoff/03-edit-then-revert.sh
-# Spec 023 — Scenario 3: session edits then reverts to start state.
+# Scenario 3: session edits then reverts to start state.
 #
 # Given carryover present at start (so porcelain is non-empty, otherwise the
 # pre-existing empty-porcelain early-exit fires before the snapshot check),

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/supply-chain-composer/04-edit-composer-json-advisory.sh
-# Spec 047 V2 — Scenario: sub-agent Edit/Write on composer.json triggers advisory.
+# Scenario: sub-agent Edit/Write on composer.json triggers advisory.
 #
 # Asserts:
 #   (a) hook exit 0

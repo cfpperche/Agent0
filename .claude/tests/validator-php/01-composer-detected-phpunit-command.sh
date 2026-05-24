@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/validator-php/01-composer-detected-phpunit-command.sh
-# Spec 047 V1 — Scenario: validator detects PHP via composer.json (PHPUnit default).
+# Scenario: validator detects PHP via composer.json (PHPUnit default).
 #
 # Asserts:
 #   (a) JSON .command includes 'vendor/bin/phpunit'

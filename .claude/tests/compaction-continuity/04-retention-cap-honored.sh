@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/compaction-continuity/04-retention-cap-honored.sh
-# Spec 081 — Scenario 4: retention cap honored.
+# Scenario 4: retention cap honored.
 #
 # Given .claude/settings.json carries compactHistory.keepLast: 3 AND
 # .compact-history/ contains 5 snapshots (built by running pre-compact 5x),

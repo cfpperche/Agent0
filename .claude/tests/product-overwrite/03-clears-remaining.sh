@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 069 — Scenario: a non-harness artifact is still cleared.
+# Scenario: a non-harness artifact is still cleared.
 # Asserts every non-allowlist top-level entry is removed and named on stdout,
 # while a harness entry in the same target survives.
 

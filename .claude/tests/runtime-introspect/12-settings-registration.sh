@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # .claude/tests/runtime-introspect/12-settings-registration.sh
 # V12 — Scenario: settings.json registers runtime-capture.sh on
-#       PostToolUseFailure(Bash) (spec 020).
+#       PostToolUseFailure(Bash).
 #
 # Static-fact verification. Reads .claude/settings.json and asserts:
 #   (a) hooks.PostToolUseFailure exists and is an array
@@ -9,7 +9,7 @@
 #   (c) at least one of those entries' hooks[].command references
 #       runtime-capture.sh
 #
-# This test is the canonical RED→GREEN flip for spec 020. Test 11
+# This test is the canonical RED→GREEN flip for the failure-capture capacity. Test 11
 # already passes pre-020 because the hook is event-agnostic when invoked
 # directly; the registration that makes it fire on production failures
 # lives only in settings.json.

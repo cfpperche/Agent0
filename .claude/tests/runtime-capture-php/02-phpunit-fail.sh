@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/runtime-capture-php/02-phpunit-fail.sh
-# Spec 047 V3 — Scenario: phpunit FAILURES! → detector=phpunit, FAIL.
+# Scenario: phpunit FAILURES! → detector=phpunit, FAIL.
 
 set -euo pipefail
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"

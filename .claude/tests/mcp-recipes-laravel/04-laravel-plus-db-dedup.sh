@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/mcp-recipes-laravel/04-laravel-plus-db-dedup.sh
-# Spec 047 V6 — Scenario: Laravel + database/migrations → union (laravel-boost-mcp + playwright-mcp + dbhub).
+# Scenario: Laravel + database/migrations → union (laravel-boost-mcp + playwright-mcp + dbhub).
 
 set -euo pipefail
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"

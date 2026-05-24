@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/mcp-recipes-laravel/03-non-laravel-php-skips.sh
-# Spec 047 V6 — Negative: composer.json without laravel/framework AND no artisan → NO laravel-boost-mcp.
+# Negative: composer.json without laravel/framework AND no artisan → NO laravel-boost-mcp.
 
 set -euo pipefail
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"

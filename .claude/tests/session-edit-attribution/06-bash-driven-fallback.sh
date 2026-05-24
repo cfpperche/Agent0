@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/session-edit-attribution/06-bash-driven-fallback.sh
-# Spec 030 — Scenario "Bash-driven edit (fallback path)".
+# Scenario "Bash-driven edit (fallback path)".
 #
 # Given a session that modified files via Bash (not Edit/Write/MultiEdit), so
 # the tracker has an EMPTY edited-files.txt, but porcelain still differs from

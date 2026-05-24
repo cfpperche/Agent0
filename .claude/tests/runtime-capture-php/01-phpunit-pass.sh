@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/runtime-capture-php/01-phpunit-pass.sh
-# Spec 047 V3 — Scenario: vendor/bin/phpunit clean run → detector=phpunit, PASS.
+# Scenario: vendor/bin/phpunit clean run → detector=phpunit, PASS.
 
 set -euo pipefail
 

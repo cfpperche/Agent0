@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/lint-validator/06-ruff-declared-missing-advisory.sh
-# Spec 013 V6 — Scenario: ruff declared but binary missing → advisory, no block.
+# Scenario: ruff declared but binary missing → advisory, no block.
 #
 # Sub-cases cover 2+ python managers (pip-default + poetry) since each yields
 # a different install command. The validator detects manager via lockfile

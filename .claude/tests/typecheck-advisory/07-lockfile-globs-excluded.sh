@@ -7,7 +7,7 @@
 # misclassifies the lockfile change as "prod without test" and fires a
 # false-positive `no_test_change_for_prod_edit` warning.
 #
-# Bug surfaced via shrnk-mono spec 013 dogfood 2026-05-12.
+# Bug surfaced via dogfood 2026-05-12.
 #
 # Fix: excluded_globs gains `*.lock *.lockb go.sum */go.sum`. Covers all
 # 10 supported managers (bun/yarn/cargo/poetry/uv/pdm direct via *.lock;
@@ -57,7 +57,7 @@ EOF
 
 # Commit baseline so subsequent edits show up via `git diff --name-only`
 # (the "modified-tracked" path that produced the false-positive in
-# the shrnk-mono dogfood — distinct from the V6 untracked-noise path).
+# the dogfood — distinct from the V6 untracked-noise path).
 ( cd "$TMPDIR" && git add . && git commit -q -m baseline )
 
 # Modify every lockfile — simulates `<manager> install` writing through

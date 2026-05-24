@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/session-edit-attribution/03-own-edits-uncommitted.sh
-# Spec 030 — Scenario "own edits uncommitted".
+# Scenario "own edits uncommitted".
 #
 # Given session A tracked an edit to foo.ts (via the tracker hook) and the
 # file is still dirty in the worktree, when A's Stop fires without

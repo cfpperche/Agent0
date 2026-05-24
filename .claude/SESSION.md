@@ -8,33 +8,41 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Session 2026-05-24 — closed.** Spec 083 (memory-events-journal, MS-2 of umbrella 080) shipped end-to-end in one session: scaffold → spec → plan → tasks → implementation → mechanical verifications → commit. Single commit `f7fc1fa` (22 files, 813 insertions). Tree clean. Local `main` is **2 commits ahead of origin** (`d0f215e` prior-session handoff + `f7fc1fa` this session) — push pending user decision.
+**Session 2026-05-24 — closed. Umbrella 080 fully shipped.** Two specs landed end-to-end in one session:
 
-Umbrella 080 progress: MS-3, MS-6 ✓ (spec 081). MS-1 ✓ (spec 082). MS-2 ✓ (this spec). Remaining: MS-4 (084 — independent), MS-5+MS-7 (085 — depends on 082+083, now unblocked).
+- **feat(084)** `e4bd714` — reminders.yaml refactor + check_command + snooze (15 files, +890/-94).
+- **feat(086)** `028628e` — memory cap + query + decay (26 files, +1048/-60).
+
+Plus prior-session push at session start (`19218f9..c8104a1` to origin — 083 + 2 handoffs).
+
+Umbrella 080 status: **shipped**. All 7 mechanisms ✓ (MS-1 frontmatter schema, MS-2 event journal, MS-3 + MS-6 compact-history + runtime-state README, MS-4 reminders YAML, MS-5 cap + query, MS-7 decay engine). One polish scenario remains unchecked in umbrella acceptance — documenting the 4 umbrella NGs explicitly in `.claude/rules/memory-placement.md`. Non-blocking; do during next memory-placement edit.
 
 ## WIP — resume point
 
 **No active WIP.**
 
-**Boot-time consequences:**
+**Boot-time consequences (next session):**
 
-1. `.claude/hooks/memory-events-journal.sh` registers at next session start. Any `Edit`/`Write`/`MultiEdit` of `.claude/memory/*.md` (except `MEMORY.md`) will append one JSONL line to `.claude/.memory-events.jsonl` AND auto-regenerate `MEMORY.md` via `memory-project.sh`. Fail-open (always exit 0).
-2. `.claude/hooks/memory-index-gate.sh` registers at next session start. Any agent attempt to `Edit`/`Write`/`MultiEdit` `.claude/memory/MEMORY.md` directly is BLOCKED (exit 2) unless the tool input carries `# OVERRIDE: memory-index-edit: <reason ≥10 chars>` (or HTML-comment form). Override-bypassed edits recorded as `manual-edit` events.
-3. First boot-time edit of any entry will trigger the "journal empty; run backfill" advisory once — run `bash .claude/tools/memory-backfill.sh` early in the next session to seed 13 `add` events with git-introduction timestamps (one-shot, idempotent).
+1. `.claude/hooks/memory-decay-readout.sh` fires at SessionStart, surfaces `=== MEMORY DECAY ===` framed block. Currently empty (all 13 entries backfilled with `last_accessed=2026-05-24`; no entry will be stale until ~2026-07-23 at the 60d default threshold).
+2. `bash .claude/tools/memory-project.sh` now emits cap advisories — 3 entries currently overflow the 250-char projected-line cap (`anthill-port-workflow` 363, `consumer-contract-discipline` 357, `product-pipeline-empirical-baseline` 252). Worth shortening descriptions when next touching those entries.
+3. Local `main` is **2 commits ahead of origin** (`e4bd714` + `028628e`) — push pending user decision.
 
 ## Next steps
 
-1. **Push** — `git push origin main` to publish 083 (2 commits ahead). After push, optionally `bash .claude/tools/memory-backfill.sh` in a fresh session to seed the journal.
-2. **Spec 084 (MS-4 reminders refactor)** — independent of 082/083, smaller scope. `.claude/reminders.yaml` refactor + `check_command` + snooze. Manual migration of existing bullets, no migration tooling. Good shorter-session candidate.
-3. **Spec 085 (MS-5 + MS-7 cap+query+decay)** — now fully unblocked (082 ✓ + 083 ✓). Cap MEMORY.md index-line at 250 chars + `memory-query.sh` + decay engine (advisory default, transparent overridable formula).
-4. **Dated reminders due:** 029 (05-30) · 035 (06-07) · 046 (07-01) · 060 (07-19).
+1. **Push** — `git push origin main` to publish 084 + 086.
+2. **Polish: umbrella 080 NG-doc scenario** — add explicit documentation of the 4 umbrella NGs (NG-1..NG-4) to `.claude/rules/memory-placement.md` so the last umbrella closure scenario can tick. Small edit, can fold into the next memory-placement touch.
+3. **Tighten 3 cap-overflow entries** — rewrite descriptions for `anthill-port-workflow`, `consumer-contract-discipline`, `product-pipeline-empirical-baseline` to fit under 250 chars projected (the cap discipline ships hot — wear it).
+4. **Dated reminders due (now in `.claude/reminders.yaml`):** 029 (05-30) · 035 (06-07) · 046 (07-01) · 060 (07-19). Run `bash .claude/tools/memory-query.sh list` analog isn't applicable — use `bash .claude/hooks/reminders-readout.sh` or just `cat .claude/reminders.yaml`.
 
 ## Decisions & gotchas
 
-- **083 overrode umbrella 080 OQ-5.** Journal is gitignored per-machine, not a single git-tracked backfill commit. Rationale: append-only JSONL in a shared repo produces merge conflicts on every concurrent commit; entry files themselves are git-tracked and carry durable history. OQ-5 marked `RESOLVED 2026-05-24 by 083` in umbrella spec.
-- **Side cleanup: 9 entries' `name:` field migrated kebab → Title Case** (e.g. `anthill-archived` → `Anthill archived`) so projected MEMORY.md doesn't visually regress vs the hand-curated index. Per 082 schema, `name:` IS the canonical display label — alignment was overdue.
-- **Within-session settings.json activation is gated** — adding a new hook mid-session does NOT make it fire on subsequent edits this session. Live-hook scenarios (V1/V3/V4/V5 in 083 spec) are unverified mid-session; will validate naturally on first entry edit next session. Same gotcha 082 hit.
+- **086 `confirm` bypasses the memory-events-journal hook** — Python helper writes via syscall, hook only sees `Edit`/`Write`/`MultiEdit` tool calls. Audit lives in `git log`. Spec scenario rewritten mid-flight; see `086/notes.md`.
+- **086 `memory-project.sh` now delegates YAML to Python helper** — PyYAML folds long descriptions, breaking awk. New `project-entries` subcommand emits tab-separated triples; degraded awk fallback retained.
+- **086 NNN renumbered 085 → 086** — slot 085 occupied by external empty scaffold. Umbrella 080 row refs updated.
+- **086 OQ-1 formula:** `(today − last_accessed_or_created_at).days − confirmed_count × 14`, threshold 60d. Forks override in `.claude/memory.config.json`.
+- **Settings.json hooks activate next-session only** — `memory-decay-readout.sh` registered, fires from next boot.
 
 ## Carryover (orthogonal — not touched this session)
 
 - `docs/specs/074-subagent-personas/` — untracked draft; leave for originating session.
+- `docs/specs/085-image-gen-opt-in/` — empty scaffold from another session; leave alone (user confirmed it's external to this work).

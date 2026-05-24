@@ -26,7 +26,7 @@ When saving a learning, fact, or rule, route it by **what kind of knowledge** it
 
 **One narrow exception** to "no behavioral mandates here": a mandate that binds the Agent0 *maintainer* rather than the agent working in any fork. Rules ship to forks, so a maintainer-only discipline placed in a rule would be inert cruft in every fork that consumes the harness but never extends it. Such disciplines route to project memory despite being mandate-shaped — `propagation-hygiene.md` (how fork-bound files must be written so they carry no Agent0-internal pointers) is the canonical case; `agent0-purpose.md` is a softer precedent.
 
-**Concrete examples currently in this bucket:** `agent0-purpose.md` (Agent0 is a template-forever project; do not list empty placeholders as gaps), `visibility-intent.md` (next visibility wedge is agent-self-debug, not human dashboards), `cc-platform-hooks.md` (the canonical 29 events of the CC platform).
+**Concrete examples currently in this bucket:** `agent0-purpose.md` (Agent0 is a template-forever project; do not list empty placeholders as gaps), `visibility-intent.md` (next visibility wedge is agent-self-debug, not human dashboards), `cc-platform-hooks.md` (the canonical 32 events of the CC platform).
 
 ### 3. Project rules — `.claude/rules/<topic>.md`
 
@@ -194,7 +194,7 @@ Shipped as a starter template. Forks override values directly. Missing keys fall
 ### Gotchas
 
 - **`confirm` writes via Python, NOT via the Edit/Write tool surface.** The `PostToolUse` memory-events-journal hook (which captures `Edit`/`Write`/`MultiEdit` invocations) does NOT fire on confirms. The audit trail for confirms lives in `git log <entry-file>`. If you need journal events on confirms in your fork, extend the Python helper to append a JSONL line directly.
-- **`last_accessed` is honest only after the founder uses `confirm`.** Backfilled values for pre-spec-086 entries default to "today at backfill time" (no honest read signal exists pre-spec). Decay won't surface anyone for ~60 days after the backfill ship unless the founder confirms (and thus moves the timestamp) some entries first.
+- **`last_accessed` is honest only after the founder uses `confirm`.** Backfilled values for legacy entries (those predating the metadata extension) default to "today at backfill time" (no honest read signal pre-extension). Decay won't surface anyone for ~60 days after backfill unless the founder confirms (and thus moves the timestamp) some entries first.
 - **Cap counts the projected bullet length, not the raw description.** The check is on `- [<name>](<slug>.md) — <description>` after assembly. Tightening `name` (rare) is one lever; the usual fix is shortening `description`.
 - **Folded YAML strings in the entries can confuse non-Python tooling.** PyYAML's `safe_dump` folds long values across lines for readability. The Python helper handles this; the degraded awk projection path in `memory-project.sh` (used when python3+yaml absent) emits a `memory-project-advisory:` warning and may truncate folded descriptions at the first line. Forks without PyYAML get a degraded but still-functional projection.
 
@@ -203,7 +203,7 @@ Shipped as a starter template. Forks override values directly. Missing keys fall
 - `.claude/memory.config.json` — config (cap + decay numerics)
 - `.claude/tools/memory-query.sh` — bash dispatcher (4 subcommands)
 - `.claude/tools/memory-query-helper.py` — Python helper (YAML mutation + filtering + projection)
-- `.claude/tools/memory-backfill-metadata.sh` — one-shot helper to populate `created_at` / `last_accessed` / `confirmed_count` for pre-spec-086 entries
+- `.claude/tools/memory-backfill-metadata.sh` — one-shot helper to populate `created_at` / `last_accessed` / `confirmed_count` for legacy entries
 - `.claude/tools/memory-project.sh` — extended with cap-advisory check
 - `.claude/hooks/memory-decay-readout.sh` — SessionStart hook
 
@@ -215,7 +215,7 @@ Shipped as a starter template. Forks override values directly. Missing keys fall
 
 ## Why three buckets, not two
 
-The previous version of this rule had only two buckets: project-shared (rules) and per-user (preferences). That model conflates two distinct kinds of project-shared knowledge: behavioral mandates that should ride with capacities into forks, and factual reference that's Agent0-internal design context. The empirical trigger for the split was discovering that Claude Code has 29 hook events (not the ~9 originally assumed). That knowledge:
+The previous version of this rule had only two buckets: project-shared (rules) and per-user (preferences). That model conflates two distinct kinds of project-shared knowledge: behavioral mandates that should ride with capacities into forks, and factual reference that's project-internal design context. The empirical trigger for the split was discovering that Claude Code has 32 hook events (not the ~9 commonly cited). That knowledge:
 - Is project-shared (other Agent0 contributors benefit)
 - Is NOT a behavioral mandate (it's reference data)
 - Should NOT ship to forks (forks consume capacities, they don't extend the harness)

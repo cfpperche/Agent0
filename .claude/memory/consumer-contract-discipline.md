@@ -1,9 +1,6 @@
 ---
 name: Consumer-contract discipline
-description: Producer templates must document the consumer-side contract for any artifact
-  a downstream step consumes — not just the artifact shape, but who reads it and what
-  shape they expect. The Agent0-port surfaced this insight by porting steps that had
-  implicit cross-step contracts in anthill.
+description: Producer templates must document the consumer-side contract (who reads it, what shape they expect) for any artifact a downstream step consumes structurally.
 metadata:
   type: project
   created_at: '2026-05-16T12:25:58-03:00'

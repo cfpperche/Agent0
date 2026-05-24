@@ -1,9 +1,6 @@
 ---
 name: Anthill-port workflow
-description: Observed stable workflow that emerged from porting anthill skills (steps
-  5-8 of spec 026 Phase B) — port → audit smells → write template → dogfood (opus
-  sub-agent) → fold gaps same-session → validator → commit → SESSION.md handoff. Pattern,
-  not rule; future ports may deviate when justified.
+description: 7-phase loop for anthill→MCP ports (spec 026 Phase B steps 5-8) — port → audit smells → template → dogfood → fold gaps → validate → commit → handoff. Pattern, not rule.
 metadata:
   type: project
   created_at: '2026-05-16T12:25:58-03:00'

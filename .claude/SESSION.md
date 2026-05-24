@@ -8,24 +8,24 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Session 2026-05-23 (cont.) — 076 #8 harness-core slice landed (uncommitted); dogfood unblocked the brief-side.** Tasks 19-23 done: `# SKILL-DIRECTED: <slug>` marker extraction + `skill_directed` audit field in `.claude/hooks/delegation-gate.sh`; `escalation` branch suppression (`model-discipline` untouched); § Advisories paragraph + § Audit log field count bump (13→14) in `.claude/rules/delegation.md`. 3-payload local test passed. The parallel dogfood session shipped 075 (commit `88a2134`) and ended, leaving my 5 modified files untouched per the Parallel WIP convention — `.claude/skills/product/` is free again. Tree: 5 modified files (gate, rule, SESSION.md, 076 notes.md, 076 tasks.md), 3 commits ahead of origin/main (079, 081, 075).
+**Session 2026-05-23 — closed.** 076 (product-dogfood-fixes) shipped end-to-end: 6 findings across 7 commits (a2d4ed6 → 2e10a6b close). Harness propagated to both forks via `sync-harness.sh --apply` (mei-saas `a689604` clean 18-file sync; codexeng `6271101` large 99-file catch-up including 31 deletes from spec 066/077 retired template dirs + 2 customizations preserved). Tree clean. 11 commits to push on Agent0 main.
 
 ## WIP — resume point
 
-**Resume 076 #8 tasks 24-26 now.** Per option (b): insert `# SKILL-DIRECTED: product` into ~16 briefs in `.claude/skills/product/references/delegation-briefs.md` (task 24), real-world dispatch test (task 25), then ONE combined commit `feat(076): SKILL-DIRECTED marker suppresses escalation on skill-chosen models (#8)` (task 26) — covers all of 19-26.
+**No active WIP.** All work shipped + committed. Next session starts cold on 082 scaffolding (umbrella 080 MS-1).
 
 ## Next steps
 
-1. **076 #8 tasks 24-26** (in progress) → combined commit closes #8.
-2. After #8 ships → sweep the remaining 5 findings of 076 (#9, #3, #2-sections, #5, #4 — easiest→hardest; see `docs/specs/076-product-dogfood-fixes/plan.md`).
-3. `/sdd new memory-frontmatter-schema` → scaffold umbrella-080 child **082** (MS-1 frontmatter schema + PostToolUse advisory validator). Foundation for 083 (MS-2 event-sourcing) and 085 (MS-5+MS-7 cap+query+decay). All three unscaffolded.
-4. Dated reminders due: 029 05-30 · 035 06-07 · 046 07-01 · 060 07-19.
-5. Push pending commits when ready (`git push origin main`).
+1. **`/sdd new memory-frontmatter-schema`** → scaffold umbrella-080 child **082** (MS-1 frontmatter schema + PostToolUse advisory validator). Foundation for 083 (MS-2 event-sourcing) and 085 (MS-5+MS-7 cap+query+decay). All three unscaffolded.
+2. 5 remaining 076 findings from the original 10-finding triage table (#1, #2-byte-window, #6, #7, #10) were covered by spec 075 — no follow-up specs pending unless dogfood surfaces new findings.
+3. Dated reminders due: 029 05-30 · 035 06-07 · 046 07-01 · 060 07-19.
+4. Push pending commits: `git push origin main` (Agent0 11 + mei-saas 1 + codexeng 6).
 
 ## Decisions & gotchas
 
-- **076 — anchor for `# SKILL-DIRECTED:` mirrors `# OVERRIDE:` exactly** (loose `^[[:space:]]*# SKILL-DIRECTED: ` + shell-side ≥10-char/slug check), not the strict regex tasks.md prescribed. Reason: rule paragraph claims grammar parity with `# OVERRIDE:`; strict regex would falsify that. Logged in `docs/specs/076-product-dogfood-fixes/notes.md` § Deviations.
-- **`CLAUDE_PROJECT_DIR` fallback ≠ project dir for ad-hoc gate runs.** Gate uses `${CLAUDE_PROJECT_DIR:-$PWD}`; piping a payload from `/tmp` writes audit rows to `/tmp/.claude/delegation-audit.jsonl`, NOT the real log — looks like a write-failure on casual grep. `export CLAUDE_PROJECT_DIR=/home/goat/Agent0` or accept the sandbox. Logged in 076 notes.md.
+- **076 — SKILL-DIRECTED slug min ≥3 chars, NOT ≥10.** The ≥10 was copied from `# OVERRIDE:` whose payload is human prose; SKILL-DIRECTED carries machine slugs (`product` is 7 chars). Live task-25 test caught it. Logged in `docs/specs/076-product-dogfood-fixes/notes.md` § Deviations 2026-05-23.
+- **`CLAUDE_PROJECT_DIR` fallback ≠ project dir for ad-hoc gate runs.** Gate uses `${CLAUDE_PROJECT_DIR:-$PWD}`; piping a payload from `/tmp` writes audit rows to `/tmp/.claude/delegation-audit.jsonl`, NOT the real log. `export CLAUDE_PROJECT_DIR=/home/goat/Agent0` or accept the sandbox. Logged in 076 notes.md.
+- **sync-harness customizations refused:** codexeng's `.mcp.json.example` + `.claude/rules/mcp-recipes.md` are intentional fork-locals; sync skipped them as expected. Use `--force-except=GLOB` to keep specific paths customized while force-syncing others, never blanket `--force`.
 
 ## Carryover (orthogonal — not touched this session)
 

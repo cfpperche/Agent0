@@ -2,7 +2,7 @@
 # Stop hook: block once per session if the repo has uncommitted changes but
 # SESSION.md was not updated during this session.
 #
-# Spec 017: state is isolated per-session_id at
+# State is isolated per-session_id at
 # `<.session-state>/<session_id>/{started-at,nagged}`. Parallel sessions
 # never reset each other's markers.
 #
@@ -51,13 +51,13 @@ if [[ -z "$CURRENT_PORCELAIN" ]]; then
   exit 0
 fi
 
-# Spec 030: per-session edit attribution via the PostToolUse tracker hook.
+# Per-session edit attribution via the PostToolUse tracker hook.
 # The tracker (`.claude/hooks/session-track-edits.sh`) appends each Edit /
 # Write / MultiEdit `file_path` to `edited-files.txt`. Reading that file is
 # the primary signal — it tells us what THIS session actually touched,
 # independent of what other sessions or out-of-band processes did to the
-# worktree during our lifetime. Absent file → legacy session (pre-030 deploy)
-# or tracker disabled → fall through to spec-023 porcelain-compare.
+# worktree during our lifetime. Absent file → legacy session (tracker
+# not yet deployed) or tracker disabled → fall through to porcelain-compare.
 TRACK_FILE="$STATE_DIR/edited-files.txt"
 USE_TRACKER=0
 OWN_DIRTY_WIP=0
@@ -86,11 +86,11 @@ if [[ -f "$TRACK_FILE" ]]; then
   fi
 fi
 
-# Spec 023 fallback: when the tracker is absent (legacy session, disabled, or
-# fork hasn't synced 030), discriminate carryover from real WIP via the
-# SessionStart porcelain snapshot. Skipped when the tracker has already
-# decided we have own WIP (OWN_DIRTY_WIP=1) — the spec-023 path would just
-# duplicate the decision.
+# Porcelain-compare fallback: when the tracker is absent (legacy session,
+# disabled, or fork hasn't synced the tracker yet), discriminate carryover
+# from real WIP via the SessionStart porcelain snapshot. Skipped when the
+# tracker has already decided we have own WIP (OWN_DIRTY_WIP=1) — the
+# porcelain-compare path would just duplicate the decision.
 if [[ "$USE_TRACKER" -eq 0 ]]; then
   START_PORCELAIN="$STATE_DIR/start-porcelain.txt"
   if [[ -f "$START_PORCELAIN" ]]; then

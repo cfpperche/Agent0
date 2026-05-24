@@ -54,8 +54,8 @@ Without coordination, every developer's machine running this repo's cron would e
 
 ```json
 {
-  "/home/goat/Agent0": true,
-  "/home/goat/mei-saas": false
+  "/path/to/your-repo": true,
+  "/path/to/another-repo": false
 }
 ```
 
@@ -63,7 +63,7 @@ Keys are absolute repo paths (resolved via `git rev-parse --show-toplevel`); val
 
 **Flow:**
 
-1. Developer clones repo on machine A, runs `./.claude/tools/install-routines.sh`. Script prompts: `Designate this machine as routines leader for /home/goat/Agent0? [y/N]`. Developer answers `y` (or `Y` / yes).
+1. Developer clones repo on machine A, runs `./.claude/tools/install-routines.sh`. Script prompts: `Designate this machine as routines leader for <repo-path>? [y/N]`. Developer answers `y` (or `Y` / yes).
 2. Same developer clones same repo on machine B, runs `install-routines.sh`. Script asks the same question. Developer answers `N` (default).
 3. Machine A's cron fires; `run-routine.sh` checks the file, sees `true`, proceeds. Machine B's cron fires; checks file, sees `false`, exits 0 silently.
 

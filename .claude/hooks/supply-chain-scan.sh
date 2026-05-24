@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # .claude/hooks/supply-chain-scan.sh
-# PreToolUse(Bash) hook — supply-chain dep-install gate + audit (specs 008+009).
+# PreToolUse(Bash) hook — supply-chain dep-install gate + audit.
 #
 # Detects dep-mutating Bash commands across 10 package managers (npm, pnpm,
 # yarn, bun, pip, uv, poetry, pdm, cargo, go), audits them, and either blocks
-# (spec 009 default) or advises (spec 008 mode, opt-in via env var). Honors
+# (block-mode default) or advises (advisory-mode, opt-in via env var). Honors
 # the `# OVERRIDE: <reason ≥10 chars>` marker (start-of-line anchored, same
 # shape as .claude/hooks/secrets-scan.sh) to record intent and bypass block.
 #
@@ -14,7 +14,7 @@
 #                      Valid override → exit 0 silent, decision="block-override".
 #                      Too-short override → exit 2 with short-reason template,
 #                      decision="block" with rejected reason preserved.
-#   advisory         — CLAUDE_SUPPLY_CHAIN_BLOCK=0; spec 008 behaviour exactly.
+#   advisory         — CLAUDE_SUPPLY_CHAIN_BLOCK=0; informational, no block.
 #                      Never exit 2. Decision values: "advisory" / "advisory-override".
 #                      Too-short override silently degrades to plain advisory.
 #
@@ -36,8 +36,8 @@
 # Escape hatches:
 #   CLAUDE_SKIP_SUPPLY_CHAIN_SCAN=1  — exits 0 silently, no scan, no audit
 #                                      (takes precedence over BLOCK setting)
-#   CLAUDE_SUPPLY_CHAIN_BLOCK=0      — advisory mode (spec 008 behaviour)
-#   default / any other BLOCK value  — block mode (spec 009 default)
+#   CLAUDE_SUPPLY_CHAIN_BLOCK=0      — advisory mode
+#   default / any other BLOCK value  — block mode (default)
 #
 # The defensive default-to-block-on-unset means a typo in the env var name
 # (CLAUDE_SUPPLY_CHAIN_BLCOK=0) leaves the discipline ON, not silently OFF.
@@ -46,9 +46,7 @@
 #   .claude/rules/supply-chain.md      — full discipline
 #   .claude/hooks/secrets-scan.sh      — sibling preflight (primitives reused);
 #                                        block-template-as-contract pattern
-#                                        from spec 006/007 (issue #24327)
-#   docs/specs/008-supply-chain-scan/  — base advisory capacity
-#   docs/specs/009-supply-chain-block/ — block-by-default promotion
+#                                        from the secrets-scan capacity (issue #24327)
 #
 # Exit codes: 0 (pass / advisory / valid-override) or 2 (block mode reject).
 # jq is a hard dependency; if missing the hook fails open (exit 0).
@@ -66,10 +64,10 @@ if [ "${CLAUDE_SKIP_SUPPLY_CHAIN_SCAN:-0}" = "1" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Phase 1b: Mode resolution (spec 009)
+# Phase 1b: Mode resolution
 # ---------------------------------------------------------------------------
-# CLAUDE_SUPPLY_CHAIN_BLOCK=0 → advisory mode (spec 008 behaviour).
-# Default OR any other value → block mode (spec 009 default).
+# CLAUDE_SUPPLY_CHAIN_BLOCK=0 → advisory mode.
+# Default OR any other value → block mode.
 # Defensive default-to-block: an env-var typo never silently disables block.
 if [ "${CLAUDE_SUPPLY_CHAIN_BLOCK:-1}" = "0" ]; then
   MODE="advisory"
@@ -236,8 +234,8 @@ detected_action=""
 detected_packages=""
 
 # Bare lockfile-resolve install tracking (closes parent-edit + bare-install
-# coverage gap surfaced via shrnk-mono spec 013 dogfood 2026-05-12; sibling to
-# spec 008/009 detection). When a manager+verb pair matches but no packages are
+# coverage gap surfaced via 2026-05-12 dogfood; sibling to
+# advisory/block-mode detection). When a manager+verb pair matches but no packages are
 # collected AND the verb is a lockfile-resolve shape (npm/pnpm/bun `install` |
 # `i`), record it for the post-scan dirty-manifest advisory below. Defaults
 # stay empty so the existing skip-not-install path is unchanged when no bare
@@ -336,14 +334,14 @@ while [ "$i" -lt "$((n - 1))" ]; do
 done
 
 # ---------------------------------------------------------------------------
-# Phase 5: Decision (mode-aware — spec 009)
+# Phase 5: Decision (mode-aware)
 # ---------------------------------------------------------------------------
 if [ -z "$detected_manager" ]; then
   # Bare lockfile-resolve install + uncommitted manifest → advisory.
-  # Closes the parent-edit + bare-install coverage gap caught via shrnk-mono
-  # spec 013 dogfood 2026-05-12 (parent edits package.json, runs `bun install`,
-  # both layers silent; dep enters lockfile with zero audit signal). Extends
-  # spec 008/009 detection; not a separate capacity.
+  # Closes the parent-edit + bare-install coverage gap caught via 2026-05-12
+  # dogfood (parent edits package.json, runs `bun install`, both layers silent;
+  # dep enters lockfile with zero audit signal). Extends advisory/block-mode
+  # detection; not a separate capacity.
   #
   # Predicate: a manager+verb pair like `bun install` matched WITHOUT packages
   # AND a recognised manifest basename (package.json / pyproject.toml /
@@ -409,7 +407,7 @@ packages_display="$(printf '%s' "$packages_json" | jq -r 'join(", ")')"
 # is the actual install shape worth echoing back in the "corrected form" hint.
 first_cmd_line="$(printf '%s' "$COMMAND" | grep -v '^[[:space:]]*# OVERRIDE: ' | grep -v '^[[:space:]]*$' | head -1)"
 
-# --- Block mode (spec 009 default) -----------------------------------------
+# --- Block mode (default) --------------------------------------------------
 if [ "$MODE" = "block" ]; then
   if [ "$override_valid" -eq 1 ]; then
     append_audit "block-override" "$detected_manager" "$detected_action" "$packages_json" "$override_reason"
@@ -447,14 +445,14 @@ EOF
   exit 2
 fi
 
-# --- Advisory mode (spec 008 behaviour, preserved exactly) -----------------
+# --- Advisory mode (preserved verbatim) ------------------------------------
 if [ "$override_valid" -eq 1 ]; then
   append_audit "advisory-override" "$detected_manager" "$detected_action" "$packages_json" "$override_reason"
   exit 0
 fi
 
 # No valid override (including too-short, which silently degrades in advisory
-# mode per spec 008) — emit stderr advisory and audit `advisory`.
+# mode) — emit stderr advisory and audit `advisory`.
 printf 'supply-chain-advisory: %s %s — %s\n' "$detected_manager" "$detected_action" "$packages_display" >&2
 append_audit "advisory" "$detected_manager" "$detected_action" "$packages_json" ""
 exit 0

@@ -14,7 +14,6 @@
 # missing sidecar, missing transcript — all exit 0 silently. A broken hook
 # must never block sub-agent termination or pollute the agent's next turn.
 #
-# Spec: docs/specs/061-subagent-stop-hook/
 # Bridge mechanism: notes.md § Design decisions (2026-05-19 empirical capture)
 
 set -uo pipefail

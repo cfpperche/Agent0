@@ -7,7 +7,6 @@
 #
 # Second invocation is a no-op (journal already populated for each entry).
 #
-# Spec: docs/specs/083-memory-events-journal/
 # Rule: .claude/rules/memory-placement.md § Event journal
 
 set -uo pipefail

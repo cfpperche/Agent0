@@ -13,19 +13,19 @@ Nothing automatically. The sync runs only when a developer invokes it explicitly
 
 ```bash
 # Read-only drift survey (default)
-bash .claude/tools/sync-harness.sh --agent0-path=/home/goat/Agent0 --check ~/some-fork
+bash .claude/tools/sync-harness.sh --agent0-path=~/Agent0 --check ~/some-fork
 
 # Apply changes
-bash .claude/tools/sync-harness.sh --agent0-path=/home/goat/Agent0 --apply ~/some-fork
+bash .claude/tools/sync-harness.sh --agent0-path=~/Agent0 --apply ~/some-fork
 
 # Dry-run (apply-shaped output, no writes)
-bash .claude/tools/sync-harness.sh --agent0-path=/home/goat/Agent0 --apply --dry-run ~/some-fork
+bash .claude/tools/sync-harness.sh --agent0-path=~/Agent0 --apply --dry-run ~/some-fork
 
 # Force-overwrite fork customizations
-bash .claude/tools/sync-harness.sh --agent0-path=/home/goat/Agent0 --apply --force ~/some-fork
+bash .claude/tools/sync-harness.sh --agent0-path=~/Agent0 --apply --force ~/some-fork
 
 # Env-var form — convenient when scripting several fork syncs
-AGENT0_HARNESS_PATH=/home/goat/Agent0 bash .claude/tools/sync-harness.sh --apply ~/some-fork
+AGENT0_HARNESS_PATH=~/Agent0 bash .claude/tools/sync-harness.sh --apply ~/some-fork
 ```
 
 If neither `--agent0-path` nor `AGENT0_HARNESS_PATH` is given, the tool refuses with exit code 2 and a usage hint naming both.
@@ -237,7 +237,7 @@ The sync baseline file subsumes the need for a separate audit log — it is both
 - **A malformed baseline fails open.** If the JSON is unreadable, the sync logs `!! harness-sync-baseline.json unreadable/malformed — treating as no baseline` and proceeds 2-state for that run, then rewrites a clean baseline on `--apply`. A broken baseline never blocks a sync.
 - **No bidirectional sync.** Improvements made in a fork do NOT flow back to Agent0 via this tool. Fork developers PR-review their improvements upstream. The tool is deliberately one-way to keep the dependency graph clean (Agent0 is upstream-of-everything).
 - **`settings.json` references files OUTSIDE the manifest cause silent breakage in forks.** Two distinct sub-bugs surfaced through statusline dogfood, both shipped fixes:
-  - **Sub-bug A (shrnk-mono 2026-05-12):** `settings.json.statusLine.command` referenced `.claude/presence/statusline.mjs`, but `.claude/presence/` was missing from `COPY_CHECK_GLOBS`. Fix: `.claude/presence|*.mjs` added to `COPY_CHECK_GLOBS`.
-  - **Sub-bug B (mei-saas 2026-05-19):** even after sub-bug A's fix, forks were still missing the `statusLine` block in their `settings.json`. Root cause: `merge_settings_json` jq expression emitted `{hooks: ...}` only, silently dropping every other top-level key (`$schema`, `statusLine`, `permissions`, `env`, `model`) from both sides. Fix: merge function rewritten to use fork's settings as the base + explicit whitelist of Agent0-owned keys (`$schema`, `statusLine`) + the existing per-event hooks dedup. Regression test: `.claude/tests/harness-sync/23-settings-merge-toplevel-keys.sh`.
-  - **Maintainer rule:** when adding any new directory under `.claude/` that ships scripts referenced by hooks/settings, add a matching entry to `COPY_CHECK_RECURSIVE` or `COPY_CHECK_GLOBS`. The audit `git ls-files .claude/ | awk -F/ '{print $1"/"$2}' | sort -u` lists current subdirs; cross-check against the manifest arrays. When adding a new harness-owned top-level key to `settings.json` (beyond `hooks`/`$schema`/`statusLine`), also add it to the conditional `has(…)` block in `merge_settings_json` — otherwise the key won't propagate.
+  - **Sub-bug A (2026-05-12 dogfood):** `settings.json.statusLine.command` referenced `.claude/presence/statusline.mjs`, but `.claude/presence/` was missing from `COPY_CHECK_GLOBS`. Fix: `.claude/presence|*.mjs` added to `COPY_CHECK_GLOBS`.
+  - **Sub-bug B (2026-05-19 dogfood):** even after sub-bug A's fix, forks were still missing the `statusLine` block in their `settings.json`. Root cause: `merge_settings_json` jq expression emitted `{hooks: ...}` only, silently dropping every other top-level key (`$schema`, `statusLine`, `permissions`, `env`, `model`) from both sides. Fix: merge function rewritten to use fork's settings as the base + explicit whitelist of upstream-owned keys (`$schema`, `statusLine`) + the existing per-event hooks dedup. Regression test: `.claude/tests/harness-sync/23-settings-merge-toplevel-keys.sh`.
+  - **Upstream maintainer rule:** when adding any new directory under `.claude/` that ships scripts referenced by hooks/settings, add a matching entry to `COPY_CHECK_RECURSIVE` or `COPY_CHECK_GLOBS`. The audit `git ls-files .claude/ | awk -F/ '{print $1"/"$2}' | sort -u` lists current subdirs; cross-check against the manifest arrays. When adding a new harness-owned top-level key to `settings.json` (beyond `hooks`/`$schema`/`statusLine`), also add it to the conditional `has(…)` block in `merge_settings_json` — otherwise the key won't propagate.
 - **`.gitignore` template is stack-agnostic — forks MUST uncomment per-stack patterns post-clone.** Agent0's `.gitignore` ships with `# node_modules/`, `# .venv/`, `# target/`, etc. all commented out (template is intentionally stack-agnostic; forks customize per their actual stack). A fork that forgets to uncomment its stack's lines leaves `git ls-files --others --exclude-standard` dumping thousands of paths into validator's TDD warning loop, hanging the post-edit-validate hook for minutes. The validator gained a defensive grep filter (2026-05-12, validators/run.sh) that strips common noise dir prefixes before the per-file loop — but the fork's correct `.gitignore` remains the primary control. Audit any fork's first session: `git -C <fork> ls-files --others --exclude-standard | awk -F/ '{print $1}' | sort | uniq -c | sort -rn | head` should show low counts for `node_modules`/`target`/`.venv`/etc.

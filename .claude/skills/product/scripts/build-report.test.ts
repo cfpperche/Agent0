@@ -293,10 +293,10 @@ describe('buildReportHtml — slug/stack metadata', () => {
   test('falls back to .state.json slug + flags.stack when opts omit them', async () => {
     await writeFixture(tmpRoot, {
       ...FULL_FIXTURE,
-      '.state.json': JSON.stringify({ version: 5, slug: 'mei-saas', flags: { stack: 'next' } }),
+      '.state.json': JSON.stringify({ version: 5, slug: 'my-app', flags: { stack: 'next' } }),
     });
     const html = buildReportHtml(tmpRoot, template, { now: 'FIXED' });
-    expect(html.includes('mei-saas')).toBe(true);
+    expect(html.includes('my-app')).toBe(true);
     expect(html.includes('stack next')).toBe(true);
   });
 

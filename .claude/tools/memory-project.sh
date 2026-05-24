@@ -8,13 +8,12 @@
 # Idempotent + deterministic: re-running on an unchanged corpus produces
 # byte-identical output. LC_ALL=C locks sort order cross-machine.
 #
-# Per spec 086: also checks each projected line length against
+# Also checks each projected line length against
 # `.claude/memory.config.json` § cap.max_line_chars (default 250) and emits
 # `memory-cap-advisory:` to stderr for overflows. The bullet is still
 # emitted (no truncation) — the cap is a writing discipline, not a
 # silent edit. Exit 0 regardless of advisories.
 #
-# Spec: docs/specs/083-memory-events-journal/ + docs/specs/086-memory-cap-query-decay/
 # Schema: .claude/rules/memory-placement.md § Frontmatter schema
 
 set -uo pipefail

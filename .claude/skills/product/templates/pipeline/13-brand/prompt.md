@@ -99,7 +99,7 @@ Step 5 is mid-Identity. No gate yet. After a clean submit, `product_advance` mov
 
 ## What this step replaces
 
-This template ports the archived `anthill-brand-designer` skill (see `.claude/memory/anthill-archived.md`) — Brand Book section: brand story, personality traits, color palette, typography, logo rules, imagery, voice. The deep port keeps the discipline (every visual choice rooted in a personality trait, "we are / we are not" pairs, prohibited-uses mandate, version control) while reframing for the multi-step pipeline:
+This template ports the archived `anthill-brand-designer` skill — Brand Book section: brand story, personality traits, color palette, typography, logo rules, imagery, voice. The deep port keeps the discipline (every visual choice rooted in a personality trait, "we are / we are not" pairs, prohibited-uses mandate, version control) while reframing for the multi-step pipeline:
 
 - **Mode shift.** Anthill's brand-designer was a single-orchestrator skill (one agent, interview + synthesis + write all in one shape). The MCP port splits it: parent owns the founder dialogue (cannot delegate — it's posture, not writing), sub-agent owns the synthesis (clear template, ideal for delegation). Mirrors the step-4 split.
 - **Calibrated interview.** Anthill ran a fixed-shape Step 1 ("read company values, identify personality traits"). The port adds founder-clarity branching — sharp-vision founders get 2–3 deepening probes; no-clarity founders get 7–9 foundational probes. The interview shape adapts to the input.

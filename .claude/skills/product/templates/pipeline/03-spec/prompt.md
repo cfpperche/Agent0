@@ -127,7 +127,7 @@ The functional-spec MUST include a `## Problem-Validation Interviews` H2 section
 
 ## What this step replaces
 
-This template synthesises two archived anthill skills (see `.claude/memory/anthill-archived.md`):
+This template synthesises two archived anthill skills:
 
 - **`anthill-spec`** — the visual-spec discipline: pages → components → interactions → states → navigation map, plus the `## Decisions Pending` handoff table. Anthill produced a single stakeholder-readable `<slug>-spec.md`; we keep that rigor as `functional-spec.md` and add the feature decomposition.
 - **`anthill-feature-refiner`** — the per-feature depth: problem framing, scope boundaries, the architecture section (module placement, data model, integration points), and Gherkin acceptance scenarios. Anthill ran this as an interactive discovery interview; in this pipeline the discovery already happened in step 1 (ideation), so step 3 is pure synthesis — the interview rounds collapse into reading the concept brief.

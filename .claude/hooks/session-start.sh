@@ -3,10 +3,10 @@
 #
 # - startup / resume / clear → SESSION.md (cross-session handoff)
 # - compact                  → lex-greatest .claude/.compact-history/*.md
-#                              (the latest pre-compact snapshot; spec 081
-#                              superseded the single-file COMPACT_NOTES.md model)
+#                              (the latest pre-compact snapshot; supersedes
+#                              the legacy single-file COMPACT_NOTES.md model)
 #
-# State is isolated per-session_id (spec 017): markers live at
+# State is isolated per-session_id: markers live at
 # `<.session-state>/<session_id>/{started-at,nagged}`. Parallel Claude Code
 # sessions in the same project don't interfere with each other's nag state.
 # Sanitization (regex `^[a-zA-Z0-9_-]+$`) defends against path traversal in
@@ -41,14 +41,14 @@ mkdir -p "$STATE_DIR"
 touch "$STATE_DIR/started-at"
 rm -f "$STATE_DIR/nagged"
 
-# Spec 030: create an empty edited-files.txt marker so Stop can distinguish
+# Edit attribution: create an empty edited-files.txt marker so Stop can distinguish
 # "tracker is installed and this session edited nothing" (bystander → exit 0)
-# from "tracker is not installed at all" (legacy session → fall to spec 023).
+# from "tracker is not installed at all" (legacy session → fall to porcelain-compare).
 # The tracker hook only fires on Edit/Write/MultiEdit, so without this seed a
 # real bystander session would have no file and fall to the legacy path.
 touch "$STATE_DIR/edited-files.txt"
 
-# Spec 023: snapshot `git status --porcelain` so Stop can discriminate
+# Porcelain snapshot: snapshot `git status --porcelain` so Stop can discriminate
 # "this session changed nothing" (carryover or no-op) from "this session
 # has uncommitted WIP that needs a SESSION.md handoff". Best-effort —
 # absence triggers Stop's fallback to today's mtime-only logic.
@@ -84,7 +84,7 @@ elif [[ -f "$SESSION_FILE" ]]; then
   BANNER+=$'\n=== end SESSION.md ===\n'
 fi
 
-# Runtime-introspect (spec 011): point the agent at the probe tool so it can
+# Runtime-introspect: point the agent at the probe tool so it can
 # verify its own edits via cached test/build snapshots. Silent when the tool
 # is absent — the capacity isn't installed in every fork.
 PROBE_TOOL="$PROJECT_DIR/.claude/tools/probe.sh"
@@ -92,7 +92,7 @@ if [[ -x "$PROBE_TOOL" ]]; then
   BANNER+=$'\n=== runtime-introspect ===\nProbe the latest captured test/build run with: bash .claude/tools/probe.sh last-run\n=== end runtime-introspect ===\n'
 fi
 
-# githooks-activation (spec 018): surface the manual core.hooksPath activation
+# githooks-activation: surface the manual core.hooksPath activation
 # command when .githooks/ is present but config doesn't point at it.
 # Auto-activation is refused on purpose (Lazarus vector — see
 # .claude/rules/secrets-scan.md § Gotchas); the passive advisory closes the
@@ -104,7 +104,7 @@ if [[ -d "$PROJECT_DIR/.githooks" && "${CLAUDE_SKIP_GITHOOKS_HINT:-0}" != "1" ]]
   fi
 fi
 
-# Cleanup (spec 017): best-effort removal of session-state subdirs older than
+# Cleanup: best-effort removal of session-state subdirs older than
 # 7 days. Failure NEVER blocks the hook — silenced with 2>/dev/null || true.
 find "$SESSION_STATE_ROOT" -mindepth 1 -maxdepth 1 -type d -mtime +7 -exec rm -rf {} + 2>/dev/null || true
 

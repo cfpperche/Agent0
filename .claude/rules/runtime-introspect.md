@@ -51,7 +51,7 @@ The list is deliberately small. The supply-chain capacity proved that strict pai
 
 ## `last-run.json` schema
 
-Single snapshot, overwritten on every matched capture. JSON shape (post live-dogfood pass on /home/goat/shrnk, 2026-05-11):
+Single snapshot, overwritten on every matched capture. JSON shape (post live-dogfood pass, 2026-05-11):
 
 ```json
 {
@@ -105,7 +105,7 @@ Per-detector pattern tables, run against combined `stdout + stderr` (since some 
 
 ```
 status: PASS
-command: cd /home/goat/shrnk && bun test
+command: cd ~/some-fork && bun test
 detector: bun-test
 exit: null
 inferred_status: PASS

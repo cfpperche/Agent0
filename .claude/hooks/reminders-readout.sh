@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SessionStart hook: inject pending + past-snoozed reminders into the agent's
-# context. Reads .claude/reminders.yaml (YAML, per spec 084 — replaced the
-# .claude/REMINDERS.md plain-bullet format).
+# context. Reads .claude/reminders.yaml (the structured replacement for
+# the legacy .claude/REMINDERS.md plain-bullet format).
 #
 # Tool tier (degraded gracefully):
 #   1. python3 + PyYAML available → invoke reminders-helper.py readout
@@ -11,9 +11,9 @@
 #
 # Always exits 0; never blocks SessionStart.
 #
-# NOTE: priority is python-first rather than yq-first (vs spec 084 plan).
+# NOTE: priority is python-first rather than yq-first.
 # Helper produces the canonical output; yq path is a structural fallback
-# that emits a simpler shape. Documented in 084/notes.md.
+# that emits a simpler shape.
 
 set -uo pipefail
 

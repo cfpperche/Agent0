@@ -299,7 +299,7 @@ case "${1:-}" in
   record)  shift; sub_record  "$@" ;;
   ""|-h|--help)
     cat <<'EOF'
-/image — AI image generation helper (spec 085)
+/image — AI image generation helper
 
 Subcommands:
   prepare --tier=<draft|brand-text|brand-photo> [--name=<slug>] "<prompt>"

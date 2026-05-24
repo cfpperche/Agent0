@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/hooks/runtime-capture.sh
-# PostToolUse(Bash) hook — capture last test/build/typecheck run (spec 011).
+# PostToolUse(Bash) hook — capture last test/build/typecheck run.
 #
 # Tokenises tool_input.command, matches against the v1 detector pair list
 # plus CLAUDE_RUNTIME_INTROSPECT_EXTRA_DETECT globs, and on a match writes
@@ -36,7 +36,6 @@
 #   .claude/rules/runtime-introspect.md       — full discipline
 #   .claude/hooks/supply-chain-scan.sh        — tokeniser-twin (keep in sync)
 #   .claude/hooks/secrets-scan.sh             — fail-open patterns
-#   docs/specs/011-runtime-introspect/        — spec
 
 set -uo pipefail
 
@@ -71,7 +70,7 @@ COMMAND="$(printf '%s' "$INPUT" | jq -r '.tool_input.command // ""' 2>/dev/null 
 # Pre-tokeniser skip: known FP shapes that contain verifier-shaped tokens
 # inside non-verifier content (commit-message heredoc, grep with pattern, etc.)
 # ---------------------------------------------------------------------------
-# Surfaced by validation pass 2026-05-11 against spec 011 itself: a `git
+# Surfaced by 2026-05-11 validation pass: a `git
 # commit -m "$(cat <<'EOF' ... bun tsc ... EOF)"` invocation tokenised the
 # commit body and matched "bun tsc" → false snapshot. Same family as the
 # supply-chain "commit messages mentioning compound syntax" gotcha but
@@ -101,14 +100,14 @@ HOOK_EVENT_NAME="$(printf '%s' "$INPUT" | jq -r '.hook_event_name // ""' 2>/dev/
 
 # PostToolUse tool_response shape (Claude Code, 2026-05-11):
 #   {stdout, stderr, interrupted, isImage, noOutputExpected}
-# Notably absent: exit_code. Live-dogfood pass 1 against /home/goat/shrnk
+# Notably absent: exit_code. Live-dogfood pass 1
 # confirmed Claude Code's Bash tool_response carries NO exit signal — only
 # the streams. We still read exit_code defensively in case the field appears
 # in a future harness release or another tool surface (tests still simulate
 # it). When absent, status is inferred from runner-specific stdout patterns.
 #
-# PostToolUseFailure shape DIVERGES (spec 020, empirically verified
-# 2026-05-11): tool_response is ABSENT. Failure body is at top-level
+# PostToolUseFailure shape DIVERGES (empirically verified 2026-05-11):
+# tool_response is ABSENT. Failure body is at top-level
 # `.error` as a single string; `is_interrupt` replaces
 # `tool_response.interrupted`. We route `.error` → STDERR_RAW so the
 # existing inference table (and tail-clamp logic) treats the failure body
@@ -142,7 +141,7 @@ fi
 # modern verifiers emit colored output (e.g. `\e[32m 0 fail\e[0m`) which
 # prefixes line-anchored inference patterns like `^[[:space:]]*0 fail$` and
 # forces the inference to fall through to the weak `pass/ok` heuristic
-# (surfaced by shrnk-mono dogfood 2026-05-12). LLM agents reading the
+# (surfaced by 2026-05-12 dogfood). LLM agents reading the
 # snapshot don't render colors anyway, so the codes are pure noise.
 # Pattern covers ESC + `[` + optional parameters + final letter; matches
 # SGR (`m`), cursor positioning, clear, and most CSI sequences.

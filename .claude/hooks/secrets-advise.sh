@@ -2,7 +2,7 @@
 # .claude/hooks/secrets-advise.sh
 # PostToolUse(Edit|Write|MultiEdit) hook — on-edit secrets advisory.
 #
-# Soft-signal companion to the commit-time secrets-scan gate (spec 006).
+# Soft-signal companion to the commit-time secrets-scan gate.
 # Opt-in via env var; never blocks; parent-agent exempt (same actor-split
 # pattern as the post-edit validator — `agent_id` absent → exit 0 silently).
 #

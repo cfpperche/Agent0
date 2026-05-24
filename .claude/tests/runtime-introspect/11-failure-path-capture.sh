@@ -2,9 +2,9 @@
 # .claude/tests/runtime-introspect/11-failure-path-capture.sh
 # V11 — Scenario: failure-path capture under PostToolUseFailure (spec 020).
 #
-# Spec 011 registered runtime-capture.sh on PostToolUse(Bash), but
+# The runtime-capture hook registered on PostToolUse(Bash), but
 # PostToolUse fires only when the underlying Bash command exits 0
-# (canonical per .claude/memory/cc-platform-hooks.md). Failing verifiers
+# (canonical per the CC hook docs). Failing verifiers
 # (test failures, type errors, lint errors) route to PostToolUseFailure
 # instead — silently dropped pre-spec-020. The fix: also register on
 # PostToolUseFailure(Bash), AND teach the hook the divergent payload

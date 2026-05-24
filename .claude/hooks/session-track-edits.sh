@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Spec 030: PostToolUse(Edit|Write|MultiEdit) tracker that appends each edited
+# PostToolUse(Edit|Write|MultiEdit) tracker that appends each edited
 # file_path to `.claude/.session-state/<session_id>/edited-files.txt`. The Stop
 # hook reads this as the primary signal for "did THIS session edit anything?",
-# replacing spec 023's worktree-delta-compare on the primary path (spec 023
-# stays live as fallback for legacy sessions; Bash-driven edits in tracker-
-# enabled sessions become a documented silent miss).
+# replacing the worktree-delta-compare on the primary path (the porcelain
+# compare stays live as fallback for legacy sessions; Bash-driven edits in
+# tracker-enabled sessions become a documented silent miss).
 #
 # Escape hatch: `CLAUDE_SKIP_SESSION_HOOKS=1` short-circuits like the rest of
 # the session-state machinery. Fails OPEN on every error path — a broken

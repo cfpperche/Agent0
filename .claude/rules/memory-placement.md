@@ -12,21 +12,21 @@ When saving a learning, fact, or rule, route it by **what kind of knowledge** it
 
 **Do NOT use for:** anything substantive about the project itself. If another Agent0 contributor would benefit from knowing this fact, it does not belong here. The "memoria do projeto" naming in CC's UI is misleading: it's memory of the user *about* the project, not of the project itself.
 
-**Concrete example currently in this bucket:** `user_language.md` — "native Portuguese, fluent English; chat in Portuguese by default but repo artifacts stay English". Genuine per-user preference; another developer cloning Agent0 has their own language preference.
+**Typical contents:** a small handful of per-user preference notes (language, response style, "I prefer X over Y"). Each developer's bucket is independent; preferences don't sync between machines or contributors.
 
 ### 2. Project memory — `.claude/memory/<topic>.md`
 
 **For:** factual cross-cutting knowledge about THE PROJECT — platform constraints, prior decisions and their reasoning, architectural gotchas discovered through dogfooding, references to canonical external sources. Git-tracked, **propagates between contributors of THE SAME project via PR/clone** but **NOT shipped between projects** via sync-harness manifest. The empty scaffold (`.claude/memory/.gitkeep`) IS shipped so every fork gets its own bucket — but memory content is project-local, never cross-pollinated.
 
-**For forks of Agent0:** this same rule applies. Each fork has its own `.claude/memory/` that accumulates its own factual knowledge (e.g. pyshrnk might memorize "Starlette form parsing without python-multipart uses urllib.parse.parse_qs"). Agent0's memory entries (about CC platform internals, sync-harness design rationale, etc.) do NOT travel to forks — and reciprocally, fork-specific memories do NOT propagate back upstream. The sync tool is one-way for capacities; memory content is one-source.
+**For forks of Agent0:** this same rule applies. Each fork has its own `.claude/memory/` that accumulates its own factual knowledge (e.g. a Python-stack fork might memorize "Starlette form parsing without python-multipart uses urllib.parse.parse_qs"). The upstream's memory entries (about CC platform internals, sync-harness design rationale, etc.) do NOT travel to forks — and reciprocally, fork-specific memories do NOT propagate back upstream. The sync tool is one-way for capacities; memory content is one-source.
 
 **Use when:** the knowledge is project-specific factual reference, not behavioral mandate. "Claude Code has 29 hook events", "we chose hash-compare because alternatives X/Y had problems Z". The agent reads these on demand when starting relevant work — discovery is via the `## Memory` block in CLAUDE.md (lazy-read of `.claude/memory/MEMORY.md` index).
 
 **Do NOT use for:** behavioral mandates ("the agent must do X") — those are rules. Capacity operational documentation ("how the supply-chain hook works") — those are rules. Work-specific design context — that lives in the corresponding `docs/specs/NNN-*/` dir.
 
-**One narrow exception** to "no behavioral mandates here": a mandate that binds the Agent0 *maintainer* rather than the agent working in any fork. Rules ship to forks, so a maintainer-only discipline placed in a rule would be inert cruft in every fork that consumes the harness but never extends it. Such disciplines route to project memory despite being mandate-shaped — `propagation-hygiene.md` (how fork-bound files must be written so they carry no Agent0-internal pointers) is the canonical case; `agent0-purpose.md` is a softer precedent.
+**One narrow exception** to "no behavioral mandates here": a mandate that binds the upstream *maintainer* rather than the agent working in any fork. Rules ship to forks, so a maintainer-only discipline placed in a rule would be inert cruft in every fork that consumes the harness but never extends it. Such disciplines route to project memory despite being mandate-shaped — e.g. a propagation-hygiene memory describing how fork-bound files must be written so they carry no upstream-internal pointers (a discipline binding the upstream maintainer, inert in any leaf fork).
 
-**Concrete examples currently in this bucket:** `agent0-purpose.md` (Agent0 is a template-forever project; do not list empty placeholders as gaps), `visibility-intent.md` (next visibility wedge is agent-self-debug, not human dashboards), `cc-platform-hooks.md` (the canonical 32 events of the CC platform).
+**Typical contents:** platform-knowledge references (canonical hook surfaces, framework constraints), prior decisions and their reasoning, dogfood-surfaced gotchas. Each project accumulates its own; entries are project-local by design.
 
 ### 3. Project rules — `.claude/rules/<topic>.md`
 
@@ -34,7 +34,7 @@ When saving a learning, fact, or rule, route it by **what kind of knowledge** it
 
 **Use when:** the knowledge is "the agent must follow X when working in this project" or "here's how capacity Y works in any fork that adopts it". Path-scoped variants of these rules use a `paths:` frontmatter to restrict where they apply.
 
-**Do NOT use for:** factual reference data that's Agent0-design-internal (CC platform knowledge, why-we-chose-X decisions). Those are project memory, not rules — they'd noisily ship to every fork that doesn't extend the harness.
+**Do NOT use for:** factual reference data that's project-internal design context (CC platform knowledge, why-we-chose-X decisions). Those are project memory, not rules — they'd noisily ship to every fork that doesn't extend the harness.
 
 **Concrete examples currently in this bucket:** `delegation.md` (5-field handoff mandate), `secrets-scan.md` (gitleaks behavior + override grammar), `runtime-introspect.md` (probe.sh capacity operational docs).
 
@@ -91,15 +91,15 @@ The `.claude/hooks/memory-frontmatter-validate.sh` hook fires on `PostToolUse(Ed
 
 ```markdown
 ---
-name: cc-platform-hooks
-description: Canonical surface of 32 Claude Code hook events; consult before designing any hook-based capacity.
+name: payment-webhook-quirks
+description: Idempotency rules + retry semantics observed in our payment-gateway incident; consult before touching webhook handlers.
 metadata:
   type: reference
   created_at: 2026-05-19T17:41:00Z
   last_accessed: 2026-05-23T09:15:00Z
   confirmed_count: 4
 ---
-# CC platform hooks
+# Payment webhook quirks
 …body…
 ```
 
@@ -148,7 +148,6 @@ A human running `vim .claude/memory/MEMORY.md && git commit` bypasses the tool-s
 
 - `.claude/hooks/memory-events-journal.sh` / `.claude/hooks/memory-index-gate.sh` — implementations
 - `.claude/tools/memory-project.sh` / `.claude/tools/memory-backfill.sh` — operator commands
-- `.claude/memory/cc-platform-hooks.md` — hook event semantics + `agent_id` / `agent_type` payload conventions
 - `.claude/rules/delegation.md` § *Advisories* / *Audit log* — `memory-journal-advisory:` follows the project advisory grammar; the JSONL shape mirrors `.claude/delegation-audit.jsonl`
 
 ## Cap / query / decay

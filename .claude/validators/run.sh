@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # .claude/validators/run.sh
 # Stack auto-detect validator. Emits one JSON object on stdout per the
-# documented contract (docs/specs/002-delegation/plan.md § "Validator JSON contract"
-# extended by docs/specs/005-tdd/plan.md § "Validator JSON contract — additive change").
+# documented validator JSON contract (initial shape + TDD-warnings extension).
 #
 # Detect order (first match wins): bun → pnpm → npm → python → go → rust.
 # When no marker is found, emits the no-stack-detected fallback (ok=true) so
@@ -26,7 +25,7 @@ stack=""
 stack_subtype=""
 typecheck_advisory_msg=""
 
-# Manifest-as-intent typecheck dispatch (mirrors spec 013 lint-validator):
+# Manifest-as-intent typecheck dispatch (mirrors lint-validator dispatch pattern):
 #   (a) tsconfig.json exists                 → use direct tsc invocation
 #   (b) package.json `.scripts.typecheck`    → use `<runner> run typecheck`
 #   (c) neither                              → omit typecheck step + advisory
@@ -129,7 +128,7 @@ if [ -z "$command_str" ]; then
   emit_no_stack
 fi
 
-# --- Lint extension (spec 013) ----------------------------------------------
+# --- Lint extension ----------------------------------------------
 # Manifest-as-intent: linter declared in the manifest is the canonical signal
 # this fork wants lint enforcement. Filesystem (`node_modules/...`, `python -m
 # ruff --version`) is the secondary "installed?" probe used only after
@@ -277,7 +276,7 @@ stderr_tail="$(tail -c 4096 "$stderr_file" 2>/dev/null || true)"
 ok_value="false"
 [ "$exit_code" -eq 0 ] && ok_value="true"
 
-# --- TDD warning detection (spec 005) ---------------------------------------
+# --- TDD warning detection ---------------------------------------
 # Skip entirely when not in a git repo: git diff is the signal source, and
 # emitting an empty/misleading warnings field outside a repo is worse than
 # omitting it. Hook treats missing `warnings` as "no advisory".
@@ -321,8 +320,8 @@ if git rev-parse --git-dir >/dev/null 2>&1; then
   # *.lock / *.lockb / go.sum cover supply-chain lockfiles across all 10 managers
   # (bun.lock, bun.lockb, yarn.lock, Cargo.lock, poetry.lock, uv.lock, pdm.lock,
   # go.sum; package-lock.json + pnpm-lock.yaml fall through *.json / *.yaml).
-  # Surfaced via shrnk-mono spec 013 dogfood 2026-05-12: `bun install` modified
-  # bun.lock, validator misclassified it as prod-without-test → false-positive.
+  # Surfaced via 2026-05-12 dogfood: `bun install` modified bun.lock,
+  # validator misclassified it as prod-without-test → false-positive.
   excluded_globs='*.md *.txt *.json *.yml *.yaml *.toml *.lock *.lockb LICENSE *.gitignore .gitkeep go.sum */go.sum'
 
   old_ifs="$IFS"

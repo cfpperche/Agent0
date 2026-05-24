@@ -10,7 +10,6 @@
 # jq is a hard dependency; if missing, the hook fails closed (exit 2) — matches
 # delegation-gate.sh convention.
 #
-# Spec: docs/specs/083-memory-events-journal/
 # Rule: .claude/rules/memory-placement.md § Event journal
 
 set -uo pipefail
@@ -90,7 +89,6 @@ To update MEMORY.md, do one of:
      The bypass is recorded in .claude/.memory-events.jsonl as a
      `manual-edit` event with the reason as a field.
 
-Spec: docs/specs/083-memory-events-journal/spec.md
 Rule: .claude/rules/memory-placement.md § Event journal
 EOF
   exit 2
@@ -104,7 +102,7 @@ An `# OVERRIDE: memory-index-edit:` marker was found, but the reason was
 shorter than 10 characters after trimming. Lengthen the reason to a
 greppable justification a future maintainer can audit.
 
-Spec: docs/specs/083-memory-events-journal/spec.md
+Rule: .claude/rules/memory-placement.md § Event journal
 EOF
   exit 2
 fi

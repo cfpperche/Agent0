@@ -149,7 +149,7 @@ EOF
 
   cat >&2 <<'EOF'
 
-Spec: docs/specs/002-delegation/spec.md
+Rule: .claude/rules/delegation.md
 EOF
   exit 2
 fi

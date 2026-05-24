@@ -6,7 +6,7 @@
 # CLAUDE_SKIP_MCP_RECIPES=1 to suppress regardless of stack signals. Silent
 # when no signals match (Agent0 base case).
 #
-# Detection runs at $CLAUDE_PROJECT_DIR root AND (spec 015) one level deep into
+# Detection runs at $CLAUDE_PROJECT_DIR root AND one level deep into
 # common monorepo workspace dirs (apps/*, packages/*, services/*, workspaces/*).
 # Override the workspace set via CLAUDE_MCP_RECIPES_WORKSPACE_DIRS (space-
 # separated; replaces default; empty string disables walk entirely).
@@ -25,8 +25,6 @@
 #
 # Reference:
 #   .claude/rules/mcp-recipes.md          — full recipes + workflow
-#   docs/specs/012-mcp-recipes/           — base spec
-#   docs/specs/015-monorepo-stack-detect/ — workspace-walk extension
 
 set -uo pipefail
 
@@ -194,7 +192,7 @@ detect_at() {
   fi
 }
 
-# Root scan — preserves spec 012 behaviour (bare signal labels, no prefix).
+# Root scan — bare signal labels, no prefix (the original-version behaviour).
 detect_at "$PROJECT_DIR" ""
 
 # Project-only signals (not per-workspace): the /product and /image skills are
@@ -205,11 +203,10 @@ if [ -d "$PROJECT_DIR/.claude/skills/product" ]; then
   signals="$signals .claude/skills/product/"
 fi
 
-# Workspace walk (spec 015) — depth-1 scan into common monorepo layouts.
+# Workspace walk — depth-1 scan into common monorepo layouts.
 # Default set: apps packages services workspaces.
 # CLAUDE_MCP_RECIPES_WORKSPACE_DIRS overrides (space-separated; empty string
-# disables walk entirely so root-only detection mirrors spec 012's pre-015
-# behaviour).
+# disables walk entirely so detection is root-only).
 if [ -n "${CLAUDE_MCP_RECIPES_WORKSPACE_DIRS+set}" ]; then
   workspace_dirs="$CLAUDE_MCP_RECIPES_WORKSPACE_DIRS"
 else

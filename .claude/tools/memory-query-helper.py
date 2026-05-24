@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """memory-query-helper.py — search / list / confirm / decay / backfill for .claude/memory/.
 
-Reads/writes entry frontmatter (per spec 082 schema) and projects via
-.claude/memory.config.json (spec 086). Mirrors the reminders-helper.py
-pattern from spec 084: bash dispatcher delegates to this Python helper for
+Reads/writes entry frontmatter (per the memory frontmatter schema) and
+projects via .claude/memory.config.json. Mirrors the reminders-helper.py
+pattern: bash dispatcher delegates to this Python helper for
 YAML mutation + filtering.
 
 Subcommands:

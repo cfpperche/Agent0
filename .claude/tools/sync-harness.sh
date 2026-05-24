@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # .claude/tools/sync-harness.sh
-# Spec 016 — one-way sync of Agent0 harness state into a fork.
-# See docs/specs/016-harness-sync/ and .claude/rules/harness-sync.md (if present).
+# One-way sync of upstream harness state into a fork.
+# See .claude/rules/harness-sync.md for the full discipline.
 
 set -euo pipefail
 
 # Capture the original invocation args before the parse loop consumes them —
-# the self-rebootstrap re-exec (spec 072) forwards them verbatim.
+# the self-rebootstrap re-exec forwards them verbatim.
 ORIGINAL_ARGS=("$@")
 
 # ---------------------------------------------------------------------------
@@ -116,7 +116,7 @@ if [ ! -d "$FORK_ROOT" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# sync baseline (spec 068)
+# sync baseline
 # ---------------------------------------------------------------------------
 
 # The recorded sync baseline lives in the fork at
@@ -131,7 +131,7 @@ BASELINE_PRESENT=0
 BASELINE_TSV=""          # temp: sorted "relpath<TAB>sha" of the recorded baseline
 MANIFEST_RAW=""          # temp: unsorted "relpath<TAB>sha" of Agent0's current set
 MANIFEST_TSV=""          # temp: sorted+uniq MANIFEST_RAW
-# Temp copy this process was re-exec'd from (self-rebootstrap, spec 072); empty
+# Temp copy this process was re-exec'd from (self-rebootstrap path); empty
 # in a normal run. Cleaned up here so the re-exec'd process removes its own
 # source on exit — no separate trap needed.
 REBOOTSTRAP_TMP="${AGENT0_SYNC_REBOOTSTRAP_TMP:-}"
@@ -151,9 +151,9 @@ MANIFEST_TSV="$(mktemp -t sync-manifest-XXXXXX)"
 # Project-local paths — MUST NOT be added to any COPY_CHECK array below.
 # .claude/.browser-state/  session credentials (cookies/localStorage); project-specific,
 #                           gitignored *.json, only .gitkeep sentinel travels via git.
-# .claude/memory/           project knowledge; content is project-local (spec 019).
+# .claude/memory/           project knowledge; content is project-local.
 #                           The empty .gitkeep IS in COPY_CHECK_FILES — content is not.
-# .claude/routines/         project-scoped routine definitions (spec 064); content is
+# .claude/routines/         project-scoped routine definitions; content is
 #                           project-local. Only .gitkeep travels via git so a fresh
 #                           fork has the empty directory ready for /routine new.
 
@@ -203,8 +203,8 @@ CUSTOMIZED_REFUSED=0
 OVERWRITTEN=0
 MERGED=0
 DRIFT=0
-STALE_UPDATED=0   # spec 068: stale plain files auto-updated (fork == baseline, Agent0 moved)
-REMOVED=0         # spec 068: upstream-removed files deleted from the fork
+STALE_UPDATED=0   # stale plain files auto-updated (fork == baseline, upstream moved)
+REMOVED=0         # upstream-removed files deleted from the fork
 
 # ---------------------------------------------------------------------------
 # copy / check
@@ -234,7 +234,7 @@ matches_force_except() {
 }
 
 # ---------------------------------------------------------------------------
-# baseline load + lookup (spec 068)
+# baseline load + lookup
 # ---------------------------------------------------------------------------
 
 # Load the fork's recorded sync baseline (if present) into a sorted TSV temp
@@ -268,7 +268,7 @@ baseline_sha_for() {
 }
 
 # ---------------------------------------------------------------------------
-# self-rebootstrap (spec 072)
+# self-rebootstrap
 # ---------------------------------------------------------------------------
 
 # sync-harness.sh is itself in the propagation manifest, so an --apply against a
@@ -359,7 +359,7 @@ process_file() {
     return
   fi
 
-  # Hash mismatch — 3-way reconciliation: fork vs baseline vs Agent0 (spec 068).
+  # Hash mismatch — 3-way reconciliation: fork vs baseline vs Agent0.
   local baseline_sha
   baseline_sha="$(baseline_sha_for "$rel")"
 
@@ -410,7 +410,7 @@ process_file() {
 }
 
 # Append a managed file + its current Agent0 sha to the running manifest
-# (spec 068). The accumulated MANIFEST_TSV is consumed by the deletion pass
+#. The accumulated MANIFEST_TSV is consumed by the deletion pass
 # (orphan detection) and the baseline write.
 record_manifest() {
   local rel="$1"
@@ -457,7 +457,7 @@ walk_copy_check() {
 }
 
 # ---------------------------------------------------------------------------
-# deletion reconciliation (spec 068)
+# deletion reconciliation
 # ---------------------------------------------------------------------------
 
 # Remove now-empty parent directories of a just-deleted file, bottom-up,
@@ -546,7 +546,7 @@ reconcile_deletions() {
 }
 
 # ---------------------------------------------------------------------------
-# baseline write (spec 068)
+# baseline write
 # ---------------------------------------------------------------------------
 
 # Record Agent0's current managed-file sha-set as the fork's new sync baseline.
@@ -713,7 +713,7 @@ extract_section() {
 }
 
 # ---------------------------------------------------------------------------
-# CLAUDE.md managed-block helpers (spec 058)
+# CLAUDE.md managed-block helpers
 # ---------------------------------------------------------------------------
 
 # Detect marker state in a file. Outputs: absent | paired | mismatched | nested-invalid
@@ -1007,8 +1007,8 @@ _merge_claude_md_managed_block() {
   fi
 
   # Region differs — 3-way reconciliation of the managed block as a single
-  # baseline-tracked unit (spec 071, reusing the spec-068 baseline machinery).
-  # The AGENT0:BEGIN/END contract makes the whole block Agent0-owned, so any
+  # baseline-tracked unit, reusing the per-file baseline machinery.
+  # The AGENT0:BEGIN/END contract makes the whole block upstream-owned, so any
   # edit inside it is customization — no per-section granularity is needed.
   local region_baseline_sha dst_region_sha is_stale=0
   region_baseline_sha="$(baseline_sha_for "CLAUDE.md#managed-block")"
@@ -1084,7 +1084,7 @@ _merge_claude_md_managed_block() {
   fi
 }
 
-# Legacy heading-set append merge (spec 016). Fallback for unmigrated forks.
+# Legacy heading-set append merge. Fallback for unmigrated forks.
 _merge_claude_md_legacy() {
   local rel="CLAUDE.md"
   local src="$AGENT0_ROOT/$rel"

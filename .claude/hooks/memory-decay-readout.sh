@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # SessionStart hook: surface stale .claude/memory/ entries inside a framed
-# === MEMORY DECAY === block. Per spec 086, fires every session (always-fire
-# with `(no stale entries)` empty case keeps the capacity discoverable).
+# === MEMORY DECAY === block. Fires every session (always-fire with
+# `(no stale entries)` empty case keeps the capacity discoverable).
 #
-# Reads staleness from frontmatter (per 082 schema): last_accessed (or
+# Reads staleness from frontmatter (memory schema): last_accessed (or
 # created_at as fallback), confirmed_count. Score = age_days - confirms × 14.
 # Threshold + boost configurable via .claude/memory.config.json (defaults
-# 60 / 14 — see spec 086 OQ-1 resolution).
+# 60 / 14).
 #
 # Always exits 0 — never blocks SessionStart. Degrades silently when
 # python3+yaml absent (no frame emitted).

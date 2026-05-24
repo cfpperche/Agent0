@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/hooks/runtime-pre-mark.sh
-# PreToolUse(Bash) companion to runtime-capture.sh (spec 011).
+# PreToolUse(Bash) companion to runtime-capture.sh.
 #
 # Stamps started_at (ISO-8601 UTC) for the current tool_use_id into
 # .claude/.runtime-state/in-flight/<id>.t so the PostToolUse capture hook
@@ -17,7 +17,6 @@
 #
 # Reference:
 #   .claude/rules/runtime-introspect.md  — full discipline
-#   docs/specs/011-runtime-introspect/   — spec
 
 set -uo pipefail
 

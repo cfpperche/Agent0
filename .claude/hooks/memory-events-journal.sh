@@ -10,9 +10,8 @@
 # Exit codes: always 0. Fail-open on any step (missing jq, unwritable
 # journal, projection error) — emit one `memory-journal-advisory:` line
 # to stderr and exit 0. The PreToolUse gate is the only blocking part
-# of spec 083; this PostToolUse half is signal-only.
+# of the memory-events-journal capacity; this PostToolUse half is signal-only.
 #
-# Spec: docs/specs/083-memory-events-journal/
 # Rule: .claude/rules/memory-placement.md § Event journal
 
 set -uo pipefail

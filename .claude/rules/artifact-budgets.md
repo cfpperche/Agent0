@@ -8,7 +8,7 @@ This rule documents the one thing artifact size is still used for: a **catastrop
 
 ## The catastrophe cap
 
-A single **uniform absolute cap of 200 KB** applies to any artifact a sub-agent writes. It is not per-step and not a budget — it is the line past which "no legitimate `/product` artifact is ever this large; a sub-agent here is in a runaway" holds. (The largest legitimate artifact observed across the mei-saas dogfood runs was a system-design / functional-spec at ~65 KB; 200 KB is ~3× that — generous headroom by design.)
+A single **uniform absolute cap of 200 KB** applies to any artifact a sub-agent writes. It is not per-step and not a budget — it is the line past which "no legitimate `/product` artifact is ever this large; a sub-agent here is in a runaway" holds. (The largest legitimate artifact observed across `/product` dogfood runs was a system-design / functional-spec at ~65 KB; 200 KB is ~3× that — generous headroom by design.)
 
 When a sub-agent's output crosses 200 KB it **stops immediately and emits a partial-result** naming what it was producing. This is a token-runaway kill, not a scope verdict — no trim, no re-emit, no compression. The orchestrator records the partial-result and surfaces it.
 
@@ -16,7 +16,7 @@ The cap is deliberately loose. A false miss — a 180 KB bloated artifact slippi
 
 ## Why the size budget was retired
 
-Earlier versions of this rule declared a per-step KB **budget** with a two-threshold overshoot cascade (`max × 1.2` → partial-result, `max × 1.8` → hard-abort). The mei-saas `/product` dogfood (two runs, 2026-05-19 + 2026-05-21) proved the instrument broken: **every artifact with a meaningful ceiling overshot it** — 10/10 mood screens, plus functional-spec, roadmap, cost-estimate, sitemap, fixture-spec, brand-book — and every sub-agent `oversize_reason` diagnosed "the budget is miscalibrated for this scope", never "I bloated". The cascade fired ~15 times with zero true positives.
+Earlier versions of this rule declared a per-step KB **budget** with a two-threshold overshoot cascade (`max × 1.2` → partial-result, `max × 1.8` → hard-abort). Two `/product` dogfood runs (2026-05-19 + 2026-05-21) proved the instrument broken: **every artifact with a meaningful ceiling overshot it** — 10/10 mood screens, plus functional-spec, roadmap, cost-estimate, sitemap, fixture-spec, brand-book — and every sub-agent `oversize_reason` diagnosed "the budget is miscalibrated for this scope", never "I bloated". The cascade fired ~15 times with zero true positives.
 
 Root cause: a KB budget is a **scope-blind fixed constant**. It cannot adapt to a run's declared scope (e.g. a full multi-phase product against budgets calibrated for an MVP). The cascade was retired and scope/quality judgment moved to a rubric judge, which is inherently scope-aware.
 

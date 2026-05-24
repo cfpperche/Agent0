@@ -121,7 +121,7 @@ Draft `plan.md` from an existing `spec.md`. No positional argument — operate o
 
 1. **Locate target** — find the latest `docs/specs/NNN-*/` dir. If multiple are in flight and ambiguous, ask which one.
 2. **Read `spec.md`** — refuse if it still has unfilled template placeholders (`{{` substrings) or is essentially empty. Tell the user to fill spec first.
-2.5. **Migration advisory** — if the spec's `## Context / references` (or any § Context section in `spec.md`) literally contains the substring `app-skeleton/`, emit a one-line advisory to stderr: `migration-advisory: foundation spec references the deleted app-skeleton template; re-run research at /sdd plan time per spec 079`. Non-blocking — `/sdd plan` proceeds with step 3.
+2.5. **Migration advisory** — if the spec's `## Context / references` (or any § Context section in `spec.md`) literally contains the substring `app-skeleton/`, emit a one-line advisory to stderr: `migration-advisory: foundation spec references the deleted app-skeleton template; re-run research at /sdd plan time per the stack-aware handoff discipline`. Non-blocking — `/sdd plan` proceeds with step 3.
 3. **Draft `plan.md`** — preserve the existing template section headers; fill them from `spec.md` + your understanding of the codebase. For "Alternatives considered" you MUST list at least one rejected option with reasoning — if there genuinely was no alternative, say so explicitly ("no real alternatives; only viable approach is X because Y").
 4. **Cite research** — if the spec or plan involved web research or codebase exploration, link the sources in the plan. This satisfies `research-before-proposing.md`.
 5. **Report** — output `plan.md` path. Tell the user to review and confirm before `/sdd tasks`.

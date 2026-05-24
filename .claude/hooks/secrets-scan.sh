@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/hooks/secrets-scan.sh
-# PreToolUse(Bash) hook — preflight shape-gate for secrets-scan (spec 007).
+# PreToolUse(Bash) hook — preflight shape-gate for secrets-scan.
 #
 # This script is a PURE PREFLIGHT GATE. It does NOT call gitleaks.
 # The actual gitleaks scan lives in .githooks/pre-commit (the native git
@@ -39,8 +39,6 @@
 # Reference:
 #   .githooks/pre-commit           — native git hook (actual scan)
 #   .claude/rules/secrets-scan.md  — full discipline, both layers
-#   docs/specs/007-secrets-scan-timing/  — design, alternatives, risks
-#   docs/specs/006-secrets-scan/   — original spec this extends
 #
 # Lazarus vector note: the override env-var is injected via PreToolUse
 # updatedInput — NOT via a post-clone script. The install step (core.hooksPath)
@@ -93,9 +91,9 @@ is_git_commit() {
 }
 
 if [ -z "$COMMAND" ] || ! is_git_commit "$COMMAND"; then
-  # Not a git commit — short-circuit silently. No audit row (spec 007 §
-  # skip-not-commit: audit row proves the hook ran; but for truly non-commit
-  # commands, the volume would be enormous — audit only git-commit shapes).
+  # Not a git commit — short-circuit silently. No audit row (skip-not-commit
+  # rationale: audit rows prove the hook ran; but for truly non-commit commands,
+  # the volume would be enormous — audit only git-commit shapes).
   # NOTE: per DONE_WHEN spec T1, we DO audit skip-not-commit. So we must
   # proceed to the audit path even here. Fall through to audit below.
   mkdir -p "$(dirname "$AUDIT_LOG")" 2>/dev/null || exit 0
@@ -214,7 +212,7 @@ append_audit() {
 # Phase 3: Override marker parsing
 # ---------------------------------------------------------------------------
 # Detection: `^[[:space:]]*# OVERRIDE: <reason>` anchored at start-of-line.
-# Same regex shipped in spec 006, traceable to the spec 002 fix that closed a
+# Same regex preserved from the initial secrets-scan, traceable to the delegation-gate fix that closed a
 # false-positive where `# OVERRIDE:` appearing INSIDE a quoted string (e.g.
 # `git commit -m "see the # OVERRIDE: docs"`) was matching and bypassing the
 # scan. The anchor is load-bearing — DO NOT relax it to an inline-trailing
@@ -316,7 +314,7 @@ if [ -n "$detected_shape" ]; then
     # (falls through to the override pass-through block below)
     :
   else
-    # No valid override — reject with verbatim stderr template (spec 007 Task 4).
+    # No valid override — reject with verbatim stderr template.
     case "$detected_shape" in
       compound-and|compound-semicolon)
         cat >&2 <<'EOF'

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tools/probe.sh
-# Shell tool for the runtime-introspect capacity (spec 011). Lets the agent
+# Shell tool for the runtime-introspect capacity. Lets the agent
 # query the latest captured test/build/typecheck run via a structured
 # plain-text summary.
 #
@@ -15,7 +15,6 @@
 #
 # Reference:
 #   .claude/rules/runtime-introspect.md  — full discipline
-#   docs/specs/011-runtime-introspect/   — spec
 
 set -uo pipefail
 
@@ -110,7 +109,7 @@ EOF
       fi
     fi
 
-    # Stale comparison — spec 017: session-state is per-session_id, so the
+    # Stale comparison — session-state is per-session_id, so the
     # boundary signal is the MAX mtime across all <.session-state>/<id>/started-at
     # markers. Sessão única: identical behavior to pre-017 (single subdir).
     # Sessões paralelas: stale=true may trigger earlier in the older session

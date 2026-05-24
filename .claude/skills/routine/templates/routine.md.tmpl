@@ -16,9 +16,10 @@ _  {{NOW}}                — ISO-8601 at enqueue time_
 
 Example body (delete and replace):
 
-Audit `.claude/memory/cc-platform-hooks.md` against Claude Code release
-notes published since {{LAST_COMPLETED_TS}}. For each documented change
-not yet reflected in the memo, propose a one-line edit.
+Audit a project-knowledge file (e.g. `.claude/memory/<topic>.md`)
+against the canonical upstream source it tracks, since
+{{LAST_COMPLETED_TS}}. For each documented change not yet reflected,
+propose a one-line edit.
 
 # Done when
 
@@ -27,7 +28,7 @@ for the routine to count as done. Be specific; this is the verifier._
 
 Example (delete and replace):
 
-- Either an edit applied to `.claude/memory/cc-platform-hooks.md`,
+- Either an edit applied to the tracked memo,
   OR a single message `no-drift-detected` written to the chat.
 - `.claude/.routines-state/{{SLUG}}/completed/<ts>.md` materialized
   (handled automatically by /routine run; nothing to do here).

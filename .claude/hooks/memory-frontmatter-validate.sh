@@ -7,7 +7,6 @@
 # (see .claude/rules/delegation.md § Advisories).
 #
 # Schema authority: .claude/rules/memory-placement.md § Frontmatter schema
-# Spec: docs/specs/082-memory-frontmatter-schema/
 #
 # bash 3.2-compatible: no associative arrays, no mapfile.
 
@@ -97,7 +96,7 @@ while IFS= read -r line; do
     continue
   fi
 
-  # Deeper indent / malformed line — tolerated per spec 082 OQ-2 (advisory,
+  # Deeper indent / malformed line — tolerated (advisory,
   # not a YAML validator; downstream consumers catch real shape failures).
 done <<EOF
 $FM_BODY

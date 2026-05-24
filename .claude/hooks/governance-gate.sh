@@ -90,7 +90,6 @@ append an inline override marker (>= 10 chars of reason after 'OVERRIDE:'):
   <your command>  # OVERRIDE: <why, >= 10 chars>
 
 Marker is case-sensitive: '# OVERRIDE: ' (uppercase, colon, space).
-Spec: docs/specs/001-governance-gate/spec.md
 EOF
 
 exit 2

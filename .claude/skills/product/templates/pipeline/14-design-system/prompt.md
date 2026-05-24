@@ -152,7 +152,7 @@ Step 6 is mid-Identity. No gate yet. After a clean submit, `product_advance` mov
 
 ## What this step replaces
 
-This template synthesises two archived anthill skills (see `.claude/memory/anthill-archived.md`):
+This template synthesises two archived anthill skills:
 
 - **`anthill-design-system`** — the bootstrap discipline: catalog OR custom, 9-section DESIGN.md, stack-adapted token output. The `/product` skill keeps the catalog/custom split, expands to a 4-file bundle (spec + tokens + components + optional JSON), and integrates the catalog lookup via the bundled `.claude/skills/product/references/od-catalog-index.json` + direct `Read` of `.claude/skills/product/design-systems/<system>/DESIGN.md` (anthill used `npx getdesign add`; spec 027 used MCP tools; spec 049 collapsed the indirection — the skill ships the vendor in-tree).
 - **`anthill-design-system-lead`** — the governance discipline: token semantic naming, primitive vs semantic distinction, component inventory with status, accessibility-as-a-hard-gate. The MCP port keeps the discipline; the inventory + governance posture flow through `components.md`.

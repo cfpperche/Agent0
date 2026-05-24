@@ -1,8 +1,8 @@
 # SDD handoff — the Phase 5 contract
 
-Per spec 066, `/product` does **not** generate a runnable app. It ends at the **visual contract** (Phase 4 — `screen-atlas.md` + the hi-fi killer-flow mood + `fixture-spec.md`) and then, in Phase 5, **scaffolds the SDD specs the engineering build runs as**. This doc is the contract the orchestrator (`SKILL.md` § Phase 5) executes.
+`/product` does **not** generate a runnable app. It ends at the **visual contract** (Phase 4 — `screen-atlas.md` + the hi-fi killer-flow mood + `fixture-spec.md`) and then, in Phase 5, **scaffolds the SDD specs the engineering build runs as**. This doc is the contract the orchestrator (`SKILL.md` § Phase 5) executes.
 
-The motivating evidence: the deleted v2/v3 per-route screen-writer fan-out tried to generate ~36 Next.js `page.tsx` files in a blind parallel pass and the output quality collapsed (mei-saas dogfood, 2026-05-19/20). Making a blind fan-out produce responsive, consistent, visually-verified UI is a hard problem the original `/product` design lost. The fix is not a better fan-out — it is to stop fanning out: hand a *contract* to SDD, which is built for deliberate, harness-disciplined, visually-fed implementation. `/product` keeps what it does well (design synthesis → a visual contract) and stops doing what it does badly (generating screens).
+The motivating evidence: the deleted v2/v3 per-route screen-writer fan-out tried to generate ~36 Next.js `page.tsx` files in a blind parallel pass and the output quality collapsed (2026-05-19/20 dogfood). Making a blind fan-out produce responsive, consistent, visually-verified UI is a hard problem the original `/product` design lost. The fix is not a better fan-out — it is to stop fanning out: hand a *contract* to SDD, which is built for deliberate, harness-disciplined, visually-fed implementation. `/product` keeps what it does well (design synthesis → a visual contract) and stops doing what it does badly (generating screens).
 
 ## What Phase 5 produces
 

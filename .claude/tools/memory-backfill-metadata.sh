@@ -3,7 +3,7 @@
 # confirmed_count on the existing .claude/memory/*.md entries.
 #
 # Idempotent: the helper no-ops when all 3 fields are already present.
-# Run once during spec 086 ship; not part of the running capacity.
+# Run once when initially adopting the schema; not part of the running capacity.
 # Forks adopting the schema populate organically as entries get touched.
 
 set -uo pipefail

@@ -29,7 +29,7 @@ The default of `square` matches the v1 hardcoded behavior; existing callers with
 ## Why these models
 
 - **draft → FLUX schnell**: cheapest production-grade text-to-image in fal.ai's catalog as of 2026-05-24 (~10× cheaper than OAI/Imagen tiers). Open-weights licence — no usage-rights friction for prototype/mockup work.
-- **brand-text → gpt-image-2**: OpenAI's text-rendering remains state-of-art for typography (verified empirically across the 2026 community benchmarks cited in `docs/specs/085-image-gen-opt-in/plan.md`).
+- **brand-text → gpt-image-2**: OpenAI's text-rendering remains state-of-art for typography (verified empirically across 2026 community benchmarks).
 - **brand-photo → imagen4/ultra**: Google's flagship photo-real model. Imagen 4 Ultra wins on consistent realism; FLUX 2 pro wins on artistic flexibility — the skill defaults to Imagen 4 Ultra for "brand" semantics where realism matters more than stylization.
 
 ## Model ID resolution

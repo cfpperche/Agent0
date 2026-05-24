@@ -13,8 +13,6 @@ metadata:
 
 Conducts a structured-but-flexible brainstorm session and renders the captured material as a single self-contained HTML file for human review. Distinct from `/sdd refine` — that skill **converges** on a spec, this one **diverges** to surface more ideas, perspectives, and open questions. Output is ephemeral by design (lives under `.claude/.brainstorm-state/`, gitignored); the user decides afterwards what to promote into a spec via `/sdd new <slug>`.
 
-See spec `docs/specs/031-brainstorm/spec.md` for the contract.
-
 ## Argument parsing
 
 User invokes as `/brainstorm <subcommand> [args]`. The raw argument string is `$ARGUMENTS`. Parse it yourself: split on first whitespace, first token is the subcommand (`start` / `list` / `resume` / `done`), the remainder (which may be a quoted string) is the subcommand arg. Strip surrounding quotes from the topic for `start`. Do not rely on `$1` / `$2` positional substitution — always parse `$ARGUMENTS` yourself.

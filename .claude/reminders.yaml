@@ -1,0 +1,116 @@
+reminders:
+- id: r-2026-05-14-fair-od-re-match-spec
+  created: '2026-05-14'
+  context: 'Fair OD re-match for spec 027 — the blind-judge result (3.87 vs 4.73)
+    is confounded (1 OD pass vs 4 refined iterations). To measure 027 honestly: either
+    iterate the OD run to 4 passes, or re-judge it against the first-pass baseline.
+    See .claude/memory/od-grounding-dogfood.md § Pointers.'
+  status: pending
+  links:
+  - .claude/memory/od-grounding-dogfood.md
+- id: r-2026-05-18-test-first-real-od-bump
+  created: '2026-05-18'
+  context: Test the first real OD --bump/--apply against upstream — network-bound
+    write-paths still untested. --check is empirically verified at the new skill location
+    (2026-05-18 ran cleanly; upstream HEAD 34f66113 ≠ pin d25a7aaf — drift report
+    works). See .claude/skills/product/scripts/sync-open-design.ts + docs/specs/049-od-vendor-port-to-skill/.
+  status: pending
+  links:
+  - .claude/skills/product/scripts/sync-open-design.ts
+  - docs/specs/049-od-vendor-port-to-skill/
+- id: r-2026-05-16-spec-029-sdd-list
+  created: '2026-05-16'
+  due: '2026-05-30'
+  context: Spec 029 sdd-list-in-flight — 2 weeks post-ship, check `/sdd list --in-flight`
+    adoption; if unused, revert the template change (one line, cheap). See docs/specs/029-sdd-list-in-flight/spec.md
+    Open Q1.
+  status: pending
+  links:
+  - docs/specs/029-sdd-list-in-flight/spec.md
+- id: r-2026-05-17-why-i-run-hermes
+  created: '2026-05-17'
+  due: '2026-06-30'
+  context: Write "Why I run Hermes Agent inside an Agent0-disciplined repo" post —
+    leverage Hermes adoption peak + Słomka's "skills written without permission" critique
+    as ammunition; positions Agent0 governance layer as the missing audit trail for
+    Hermes users. Window closes when Hermes hype rolls off or a competitor lands the
+    same framing first. See conversation 2026-05-17 Hermes deep-research synthesis.
+  status: pending
+- id: r-2026-05-17-curate-agent0-atlas
+  created: '2026-05-17'
+  due: '2026-09-30'
+  context: 'Curate `agent0-atlas.md` (analog to hermesatlas.com — 114 repos / 12 categories
+    curated by ksimback) when ≥10 public Agent0 forks exist. Manual curation viable
+    at that scale; generates distribution. Until threshold: skip.'
+  status: pending
+- id: r-2026-05-17-re-snapshot-agentskills
+  created: '2026-05-17'
+  due: '2026-08-17'
+  context: 'Re-snapshot agentskills.io spec quarterly — `.claude/skills/skill/references/spec-snapshot.md`
+    was frozen 2026-05-17. Diff upstream vs snapshot; if drift, update `scripts/validate.sh`
+    rule set + reconcile. Deferred Open Question #5 from spec 033. See `.claude/skills/skill/SKILL.md`
+    § Notes.'
+  status: pending
+  links:
+  - .claude/skills/skill/references/spec-snapshot.md
+  - .claude/skills/skill/SKILL.md
+- id: r-2026-05-17-full-23-route-prototype
+  created: '2026-05-17'
+  context: Full 23-route `/prototype` dogfood — 2026-05-17 sandbox shipped spec 034
+    with typecheck+lint gate empirically verified on 2-stack scaffolds + 2 dispatched
+    screens (Next.js linear-clone + Expo habit-tracker). 20 of 23 routes were not
+    dispatched (sandbox scope cap); mechanism is mechanical repetition. Run a fresh-session
+    full /prototype invocation when first real user needs it — establishes the upper-bound
+    time + token cost for a real 23-route end-to-end build.
+  status: pending
+- id: r-2026-05-17-revisar-spec-035-dogfood
+  created: '2026-05-17'
+  due: '2026-06-07'
+  context: 'Revisar spec 035 dogfood window: contar missed-clarifications na janela
+    2026-05-17 → 2026-06-07; se ≥3 missed, scope spec 036 com UserPromptSubmit hook;
+    senão bump spec 035 status para shipped'
+  status: pending
+- id: r-2026-05-19-discutir-expansao-full
+  created: '2026-05-19'
+  context: 'Discutir expansão full-stack do /product (3 caminhos: A. /sdd new faz
+    promoção como hoje; B. --scope=fullstack estende /product pra ~17 steps com BE+DB+api-contract;
+    C. nova skill /promote <product-dir> separada que lê docs/ e gera apps/+packages/+infrastructure/).
+    Casos motivadores: ERP salões beleza Acme Yard (2026-05-18) + MEI SaaS roadmap
+    8 fases (2026-05-19, founder real product — motivador mais forte). Decisão 2026-05-19:
+    Caminho A é workaround imediato pra forks que precisem antes (mei-saas vai `/sdd
+    new monorepo-restructure-mei-saas` pós-/product, lendo docs/system-design.md como
+    input); Caminho C é o spec de longo prazo (~064+ quando priorizar — 060 tomado
+    pelo umbrella harness-gaps-2026); Caminho B rejeitado (single-responsibility violation
+    — /product é design partner, não monorepo generator).'
+  status: pending
+- id: r-2026-05-18-spec-046-dogfood-gate
+  created: '2026-05-18'
+  due: '2026-07-01'
+  context: Spec 046 dogfood gate — review next 3-5 specs scaffolded after 046; if
+    `notes.md` is non-empty AND cited in ≥3 PRs by gate date, promote to mandatory
+    + consider delegation-gate advisory; if empty in all, revert template + rule edits.
+    See `docs/specs/046-sdd-in-flight-notes/spec.md` Open Q2.
+  status: pending
+  links:
+  - docs/specs/046-sdd-in-flight-notes/spec.md
+- id: r-2026-05-19-revisar-medium-priority
+  created: '2026-05-19'
+  due: '2026-07-19'
+  context: Revisar §A/§B medium-priority rows do spec 060-harness-gaps-2026 — se ≥3
+    rows não foram scaffolded como follow-up specs até a data, decidir bulk-close
+    ou re-priorizar batch seguinte; ver `docs/specs/060-harness-gaps-2026/spec.md`
+    § Gap matrix.
+  status: pending
+  links:
+  - docs/specs/060-harness-gaps-2026/spec.md
+- id: r-2026-05-19-re-rodar-auditoria
+  created: '2026-05-19'
+  due: '2026-08-19'
+  context: Re-rodar auditoria competitiva de harnesses (vs Codex CLI / Claude Code
+    / Hermes Agent / Goose / OpenCode / Spec-Kit / BMAD / OpenSpec / agentskills.io)
+    — atualizar `docs/specs/060-harness-gaps-2026/spec.md` § Gap matrix com gaps emergentes
+    + scaffold novos follow-up specs; cadência trimestral; última auditoria 2026-05-19
+    (research delegado via general-purpose opus).
+  status: pending
+  links:
+  - docs/specs/060-harness-gaps-2026/spec.md

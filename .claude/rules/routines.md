@@ -3,7 +3,7 @@
 `.claude/routines/<slug>.md` is the project-scoped sibling of Claude Code's native `/schedule` skill. Where `/schedule` stores recurring agent runs on Anthropic's user-account cloud (the user-level memory analog), `.claude/routines/` git-tracks recurring intent at the repo level — propagating via clone, surviving fork via `.claude/tools/sync-harness.sh`, and visible in PR diff. It occupies the gap between three other state files in this project:
 
 - **`.claude/SESSION.md`** — *in-flight* work-state (cross-session, this-machine handoff).
-- **`.claude/REMINDERS.md`** — *one-shot deferred do-this-thing* items with no cadence.
+- **`.claude/reminders.yaml`** — *one-shot deferred do-this-thing* items with no cadence.
 - **`.claude/routines/<slug>.md`** — *cadence-driven recurring* work that the repo's contributors all benefit from.
 
 The capacity exists because recurring project work otherwise leaks into the founder's head, a personal calendar, or `TODO` comments in code — all of which fail the "another developer cloning the repo on a fresh machine should inherit it" test. Routines pass that test by construction.
@@ -12,7 +12,7 @@ The capacity exists because recurring project work otherwise leaks into the foun
 
 | Capacity | Cadence | Scope | Storage | Best for |
 | --- | --- | --- | --- | --- |
-| `/remind` | One-shot deferred | Project (git-tracked file) | `.claude/REMINDERS.md` | "Review pricing in Q3", "Circle back on caching when first user complains" — no recurring schedule. |
+| `/remind` | One-shot deferred | Project (git-tracked file) | `.claude/reminders.yaml` | "Review pricing in Q3", "Circle back on caching when first user complains" — no recurring schedule. |
 | `/routine` | Recurring (cron) | Project (git-tracked file) | `.claude/routines/<slug>.md` + state in `.claude/.routines-state/` | "Audit `cc-platform-hooks.md` against CC release notes every quarter", "Re-snapshot stack defaults every 90 days" — recurring work that any contributor benefits from. |
 | `/schedule` (CC native) | Recurring (cron) | User (Anthropic cloud) | Anthropic backend | Personal automations tied to the user's account — cross-repo and cross-machine, but invisible to other contributors. |
 

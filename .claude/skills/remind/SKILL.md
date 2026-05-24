@@ -1,85 +1,139 @@
 ---
 name: remind
-description: Deferred-intent reminder list for this project. Use when the user wants to capture a future to-do that isn't urgent enough to act on now ("circle back on caching when first user complains", "review pricing in Q3", "update README after auth refactor lands"). Subcommands - add "<text>" [--due <YYYY-MM-DD>], list, dismiss <N>. State lives in .claude/REMINDERS.md (git-tracked) and is auto-injected at session start by .claude/hooks/reminders-readout.sh. See .claude/rules/reminders.md for what belongs here vs MEMORY vs SESSION.md.
-argument-hint: <add "<text>" [--due <YYYY-MM-DD>] | list | dismiss <N>>
+description: Deferred-intent reminder list for this project. Use when the user wants to capture a future to-do that isn't urgent enough to act on now ("circle back on caching when first user complains", "review pricing in Q3", "update README after auth refactor lands"). Subcommands - add "<text>" [--due <YYYY-MM-DD>] [--check '<cmd>'] [--links <a,b,c>], list, done <N-or-id>, dismiss <N-or-id> (alias for done), snooze <N-or-id> <Nd|Nw|Nm|YYYY-MM-DD>, check <N-or-id>. State lives in .claude/reminders.yaml (git-tracked) and is auto-injected at session start by .claude/hooks/reminders-readout.sh. See .claude/rules/reminders.md for what belongs here vs MEMORY vs SESSION.md.
+argument-hint: <add "<text>" [--due <DATE>] [--check '<cmd>'] [--links <a,b,c>] | list | done <N|id> | dismiss <N|id> | snooze <N|id> <Nd|Nw|Nm|DATE> | check <N|id>>
 license: MIT
-compatibility: Designed for Claude Code. Body references `.claude/` conventional paths and CC-specific tools; portable to any runtime that maps a `.claude/`-analog directory and surfaces the referenced tools.
+compatibility: Designed for Claude Code. Body references `.claude/` conventional paths and CC-specific tools; portable to any runtime that maps a `.claude/`-analog directory and surfaces the referenced tools. Requires python3 + PyYAML for state mutation; readout hook degrades to yq or raw-YAML when PyYAML is absent.
 metadata:
   agent0-portability-tier: cc-native
-  version: "0.1"
+  version: "0.2"
 ---
 
 # /remind — deferred reminders
 
-Capture, list, and dismiss action-shaped future items that aren't urgent enough to act on now but shouldn't be lost. State lives in one plain markdown file (`.claude/REMINDERS.md`, git-tracked), auto-injected into context at session start. Not a task manager, not a knowledge base, not a session work-state log — reminders are *future do-this-thing* items only.
+Capture, list, snooze, complete, and probe action-shaped future items that aren't urgent enough to act on now but shouldn't be lost. State lives in `.claude/reminders.yaml` (git-tracked YAML, one entry per record), auto-injected into context at session start. Not a task manager, not a knowledge base, not a session work-state log — reminders are *future do-this-thing* items only.
 
-See `.claude/rules/reminders.md` for what belongs here vs `MEMORY.md` vs `SESSION.md`, and the discipline (no auto-commit, no stable IDs, deletion-is-dismissal).
+See `.claude/rules/reminders.md` for what belongs here vs `MEMORY.md` vs `SESSION.md`, and the discipline (no auto-commit, no autonomous check execution, soft-delete via `status: done + completed_ts`).
+
+All state mutation routes through `.claude/skills/remind/scripts/reminders-helper.py`. The helper uses `yaml.safe_dump(..., sort_keys=False)` so git diffs stay clean (insertion-order preserved, no alphabetic re-sort).
 
 ## Argument parsing
 
-User invokes as `/remind <subcommand> [args]`. The raw argument string is `$ARGUMENTS`. Parse it yourself: split on whitespace, first token is the subcommand (`add` / `list` / `dismiss`), the rest are subcommand args. Quoted strings in `<text>` must be honored as a single argument (preserve the text between matching quotes). Do not rely on `$1` / `$2` — harness substitution for positionals differs between slash invocation and Skill tool invocation; always parse `$ARGUMENTS`.
+User invokes as `/remind <subcommand> [args]`. The raw argument string is `$ARGUMENTS`. Parse it yourself: split on whitespace, first token is the subcommand (`add` / `list` / `done` / `dismiss` / `snooze` / `check`), the rest are subcommand args. Quoted strings in `<text>` and `--check '<cmd>'` must be honored as single arguments (preserve text between matching quotes). Do not rely on `$1` / `$2`.
 
 Raw invocation: `$ARGUMENTS`
 
-State file path used throughout: `.claude/REMINDERS.md` (resolve relative to the repo root / `$CLAUDE_PROJECT_DIR`).
+State file: `.claude/reminders.yaml` (resolve relative to `$CLAUDE_PROJECT_DIR`).
+
+Helper script: `.claude/skills/remind/scripts/reminders-helper.py`. Invoke as `python3 .claude/skills/remind/scripts/reminders-helper.py <subcommand> [args...]`, with `CLAUDE_PROJECT_DIR` set in env. The helper is the canonical mutator — never edit `.claude/reminders.yaml` by hand from this skill body.
 
 ## Subcommand: `add`
 
-Append a new reminder. Parse `$ARGUMENTS`: first token must be `add`; the remainder contains the reminder text (typically quoted) and optionally `--due <YYYY-MM-DD>`.
+Append a new reminder. Parse `$ARGUMENTS`: first token must be `add`; the remainder contains the reminder text (typically quoted) and optionally `--due <YYYY-MM-DD>`, `--check '<cmd>'`, `--links <a,b,c>`.
 
 1. **Validate input**:
-   - The text must be present and non-empty after trim. Refuse with `add: text is required` and **do not write the file**.
-   - Reject if the text contains a literal newline. Refuse with `add: text must be a single line` and **do not write the file**.
-   - If `--due <date>` is present, validate `<date>` against the strict regex `^[0-9]{4}-[0-9]{2}-[0-9]{2}$`. Refuse with `add: --due must be strict YYYY-MM-DD (got: <value>)` for any deviation, including `2026/09/01`, `2026-9-1`, `2026-09-01x`, etc. **Do not write the file** on failure.
-2. **Ensure the file exists** with the canonical header. If `.claude/REMINDERS.md` is absent, create it with exactly this content (H1 followed by one blank line):
+   - The text must be present and non-empty after trim. Refuse with `add: text is required`.
+   - Reject if the text contains a literal newline. Refuse with `add: text must be a single line`.
+   - If `--due <date>` is present, the date must match `^[0-9]{4}-[0-9]{2}-[0-9]{2}$`. The helper enforces this — exit code 2 surfaces.
+   - `--check '<cmd>'` is an arbitrary bash one-liner. No validation here; the user takes responsibility for shell-safety. The helper does not execute the command at add-time.
+   - `--links <a,b,c>` is a comma-separated list of free-form strings (typically file paths or external URLs). Whitespace stripped per item.
+2. **Invoke helper**:
    ```
-   # Reminders
-
+   CLAUDE_PROJECT_DIR="$CLAUDE_PROJECT_DIR" python3 .claude/skills/remind/scripts/reminders-helper.py add "<text>" [--due <date>] [--check '<cmd>'] [--links <a,b,c>]
    ```
-3. **Append the bullet** to the end of the file. Shape:
-   - Without `--due`: `- <text>`
-   - With `--due`: `- <text>  ·  due: <YYYY-MM-DD>` — two spaces, middle-dot character (`·`, U+00B7), two spaces, then `due: <date>`.
-   Use Read + Write (or Edit) to append. Do not introduce trailing blank lines; the bullet line is the new last line.
-4. **Report**: echo `added: <bullet line>` back to the user — the exact line that was written.
+   Forward stdout/stderr verbatim. Expected stdout: `added: <id>: <text>`.
 
 ## Subcommand: `list`
 
-Print the current reminders. No arguments.
+Print the current reminders. Invoke `python3 .claude/skills/remind/scripts/reminders-helper.py list` and forward output verbatim. Default filter: `status: pending` plus `status: snoozed` with `snoozed_until <= today` (same as the readout hook). Add `--all` flag to also include done + future-snoozed entries.
 
-1. **If the file is absent OR contains no bullet lines** (see bullet definition below), emit a single line:
+Output shape (per the helper):
+
+```
+1. [<id>] <context>
+   · due: <YYYY-MM-DD>
+   · check: <cmd>
+   · links: <a>, <b>
+2. ...
+<N> reminder(s)
+```
+
+Positions `1..N` are 1-indexed against the filtered list. The agent can quote the same positions when running `done` / `snooze` / `check` later in the same conversation — but the resolved ID is the canonical identifier; positions shift when entries are added/dismissed.
+
+## Subcommand: `done`
+
+Soft-delete the named entry. Parse `$ARGUMENTS`: first token must be `done`; second token is `<N|id>`.
+
+1. **Validate**: `<N>` must be a positive integer OR `<id>` must match `^r-\d{4}-\d{2}-\d{2}-[a-z0-9-]+$`. The helper enforces both.
+2. **Invoke**:
    ```
-   no pending reminders
+   CLAUDE_PROJECT_DIR="$CLAUDE_PROJECT_DIR" python3 .claude/skills/remind/scripts/reminders-helper.py done <N|id>
    ```
-   and exit.
-2. **Otherwise** output the file contents verbatim (no renumbering, no filtering, no transformation, no added headers), then a final line `<N> reminder(s)` where `<N>` is the bullet count.
-3. **Bullet definition** (binding for both `list` and `dismiss`): a line whose first non-whitespace character is `-` followed by a space, occurring after the H1 header. Empty lines and the header do not count.
+   The helper flips `status: done` and stamps `completed_ts: <UTC-ISO>`. The entry stays in `reminders.yaml` (soft-delete; audit history in-band).
+3. **Report**: forward `done: <id>: <context>` from helper stdout.
 
 ## Subcommand: `dismiss`
 
-Delete the Nth reminder bullet, 1-indexed. Parse `$ARGUMENTS`: first token must be `dismiss`; second token is `N`.
+Silent alias for `done` (backward-compat with the pre-084 muscle memory). Same semantics, same arguments. The helper's `done` subcommand handles both invocation paths. No deprecation warning.
 
-1. **Validate**:
-   - If `.claude/REMINDERS.md` is absent, refuse with `dismiss: no reminders to dismiss`.
-   - If `N` is missing, non-numeric, or `<= 0`, refuse with `dismiss: N must be a positive integer (got: <value>)`.
-   - Count bullet lines using the binding bullet definition. If `N > count`, refuse with `dismiss: only <count> reminder(s); cannot dismiss <N>`.
-2. **Delete** the Nth bullet line (and only that line). Preserve the H1 header, blank lines, and every other bullet exactly in original order. Do NOT mark with a checkbox, move to an archive section, renumber, or otherwise rewrite the file.
-3. **Report**: echo `dismissed: <bullet line>` back to the user — include any `  ·  due: <date>` suffix if it was present.
+```
+CLAUDE_PROJECT_DIR="$CLAUDE_PROJECT_DIR" python3 .claude/skills/remind/scripts/reminders-helper.py done <N|id>
+```
+
+Forward the report; surface as `dismissed: <id>: <context>` to keep the verbal echo aligned with the user's invocation.
+
+## Subcommand: `snooze`
+
+Push an entry out of the readout window. Parse `$ARGUMENTS`: first token must be `snooze`; second token is `<N|id>`; third token is the duration.
+
+1. **Validate**: duration must match `^[0-9]+(d|w|m)$` (days/weeks/months — `m` is a 30-day approximation, not calendar months) OR `^[0-9]{4}-[0-9]{2}-[0-9]{2}$` (explicit ISO date). The helper computes `snoozed_until` and refuses on shape error.
+2. **Invoke**:
+   ```
+   CLAUDE_PROJECT_DIR="$CLAUDE_PROJECT_DIR" python3 .claude/skills/remind/scripts/reminders-helper.py snooze <N|id> <duration>
+   ```
+3. **Report**: forward `snoozed: <id> until <YYYY-MM-DD>`. The readout hook will skip the entry until that date is reached.
+
+## Subcommand: `check`
+
+Run an entry's `check_command` and surface output. Parse `$ARGUMENTS`: first token must be `check`; second token is `<N|id>`.
+
+1. **Resolve the entry's check_command**:
+   ```
+   CMD="$(CLAUDE_PROJECT_DIR="$CLAUDE_PROJECT_DIR" python3 .claude/skills/remind/scripts/reminders-helper.py get-check <N|id>)"
+   ```
+   The helper's `get-check` subcommand prints the raw `check_command` string (no shell escaping). If the entry has no `check_command`, the helper exits 2 with `check: entry <id> has no check_command` on stderr — forward that and stop.
+2. **Resolve the entry's ID for the report** (positions can change between calls):
+   ```
+   ID="$(CLAUDE_PROJECT_DIR="$CLAUDE_PROJECT_DIR" python3 .claude/skills/remind/scripts/reminders-helper.py resolve <N|id>)"
+   ```
+3. **Execute the command**: run `$CMD` via `bash -c "$CMD"` from the repo root. Capture stdout, stderr, and exit code separately.
+4. **Report** to the agent verbatim:
+   ```
+   check: <ID>
+   $ <CMD>
+   <stdout>
+   ----- stderr (if any) -----
+   <stderr>
+   exit: <code>
+   ```
+   The YAML is NOT mutated. The human-in-loop reads the output and decides whether to `done`, `snooze`, or leave the entry as-is.
 
 ## Unknown subcommand
 
-If the first token of `$ARGUMENTS` is missing or not one of `add`, `list`, `dismiss`, refuse with a one-line usage hint and stop:
+If the first token of `$ARGUMENTS` is missing or not one of `add`, `list`, `done`, `dismiss`, `snooze`, `check`, refuse with a one-line usage hint and stop:
 
 ```
-/remind <add "<text>" [--due <YYYY-MM-DD>] | list | dismiss <N>>
+/remind <add "<text>" [--due <DATE>] [--check '<cmd>'] [--links <a,b,c>] | list | done <N|id> | dismiss <N|id> | snooze <N|id> <Nd|Nw|Nm|DATE> | check <N|id>>
 ```
 
 ## Notes
 
-- **Don't auto-stage, don't auto-commit.** The founder reviews `git diff` and decides what enters history. `add` and `dismiss` leave the file dirty in the working tree.
-- **Deletion IS dismissal.** Don't checkbox-mark, don't move to an archive section, don't renumber. Keeps the session-start readout short and the file lean. Audit lives in the git log of `.claude/REMINDERS.md`.
-- **Position numbers are not stable IDs.** Pattern is "list, then dismiss the position you see right now". Positions shift when bullets are added or removed — re-list between multi-dismisses.
-- **No history / archive section.** Reminders are pure current-state. Dismissed items are gone from the file.
-- **Single file, plain markdown only.** No JSON, no sqlite, no per-item file. The session-start hook just `cat`s the file; readability and `git diff` are the contract.
+- **Don't auto-stage, don't auto-commit.** The founder reviews `git diff` and decides what enters history. Every subcommand leaves the file dirty.
+- **Soft-delete is the default.** `done` flips `status: done` + stamps `completed_ts`; the entry remains in `reminders.yaml` carrying its in-band history. If the file grows enough to feel like noise, a future `/remind prune` subcommand (not v1) can hard-remove `done` entries.
+- **Positions are not stable IDs.** Pattern is "list, then act on the position you see right now" — same as the pre-084 discipline. Stable IDs (`r-YYYY-MM-DD-<slug>`) are the canonical identifier in storage; positions resolve to IDs at command time. The skill body always logs the resolved ID in its report so the user can confirm.
+- **No autonomous `check_command` execution.** The readout hook never runs checks at SessionStart. `check_command` is a probe the agent invokes explicitly via `/remind check <id>` when the entry's relevance comes into question. This preserves the contract-not-promise discipline (see `.claude/rules/delegation.md` § Why DONE_WHEN exists).
+- **YAML insertion order is preserved.** The helper uses `yaml.safe_dump(..., sort_keys=False, default_flow_style=False)`. Hand-edit at your own risk — alphabetic re-sort by other YAML tools will pollute git diffs.
+- **Single file, structured YAML only.** No JSON, no per-entry file, no JSON Schema validator. Schema lives in the helper's add-validation logic; the file's shape IS the contract. See `.claude/rules/reminders.md` § Frontmatter schema.
 - **Reminders are not knowledge.** Facts, decisions, conventions belong in `MEMORY.md` (personal) or `.claude/rules/<topic>.md` (project). See `.claude/rules/memory-placement.md`.
 - **Reminders are not session work-state.** In-flight work belongs in `.claude/SESSION.md`. Reminders are *future* work that won't fit the next session's first five minutes. See `.claude/rules/session-handoff.md`.
-- See `.claude/rules/reminders.md` for the full capacity description.
+- See `.claude/rules/reminders.md` for the full capacity description, override grammar, and migration history.

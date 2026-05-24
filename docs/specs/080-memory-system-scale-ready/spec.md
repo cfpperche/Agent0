@@ -24,7 +24,7 @@ This umbrella is **shipped** when every row in the gap matrix below has its chil
 | MS-1 | Frontmatter schema (3 required + 3 optional) + validator hook (PostToolUse advisory) | 082 | pending | Foundation for MS-2, MS-5, MS-7 |
 | MS-2 | Event-sourced memory always-on + raw-edit gate + projection helper | 083 | pending | Requires 082; rejects parallel-session clobber |
 | MS-3 | Per-compaction snapshot history (`.claude/.compact-history/<ISO>.md`) | 081 | ✓ shipped | Fixed documented gotcha in compaction-continuity.md (2026-05-23) |
-| MS-4 | `.claude/reminders.yaml` refactor + `check_command` + snooze | 084 | pending | Manual migration of existing bullets; no migration tooling |
+| MS-4 | `.claude/reminders.yaml` refactor + `check_command` + snooze | 084 | ✓ shipped | Manual migration of existing bullets; no migration tooling |
 | MS-5 | Index-line length cap (250 chars) + `memory-query.sh` | 085 | pending | Requires 082+083; paired with MS-7 |
 | MS-6 | Runtime-state subsystem README (`.claude/.runtime-state/README.md`) | 081 | ✓ shipped | Enumerates 6 existing state subsystems with rule pointers (2026-05-23) |
 | MS-7 | Decay engine (advisory-default) + confirm/archive helpers + readout hook | 085 | pending | Default formula transparent + overridable; `auto_archive: false` |
@@ -36,7 +36,7 @@ Estimated total: ~1.440 LOC across 4 child specs (081, 082, 083, 084, 085).
 - [x] **Scenario: 081 closure** — **Given** child spec 081 covering MS-3 + MS-6 exists; **When** 081 status flips to `shipped`; **Then** rows MS-3 and MS-6 in the gap matrix above flip to ✓ and `081 status: shipped`.
 - [ ] **Scenario: 082 closure** — **Given** child spec 082 covering MS-1 exists; **When** 082 ships; **Then** the MS-1 row flips to ✓.
 - [ ] **Scenario: 083 closure** — **Given** child spec 083 covering MS-2 exists AND 082 is shipped; **When** 083 ships; **Then** the MS-2 row flips to ✓ and dependency is satisfied.
-- [ ] **Scenario: 084 closure** — **Given** child spec 084 covering MS-4 exists; **When** 084 ships; **Then** the MS-4 row flips to ✓.
+- [x] **Scenario: 084 closure** — **Given** child spec 084 covering MS-4 exists; **When** 084 ships; **Then** the MS-4 row flips to ✓.
 - [ ] **Scenario: 085 closure** — **Given** child spec 085 covering MS-5 + MS-7 exists AND 082+083 are shipped; **When** 085 ships; **Then** rows MS-5 and MS-7 flip to ✓.
 - [ ] All 4 non-goals (NG-1..NG-4) are documented in `.claude/rules/memory-placement.md` as explicit boundaries; at least one mechanism's child spec text cross-references the NG it respects.
 

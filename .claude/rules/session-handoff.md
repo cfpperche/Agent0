@@ -65,7 +65,7 @@ Any one of those = partial content. The persisted-output path (when shown) is th
 
 Before responding to anything that touched the truncated block:
 
-1. **Identify the source file** the hook was meant to inject — e.g., `.claude/SESSION.md`, `.claude/COMPACT_NOTES.md`, `.claude/REMINDERS.md`.
+1. **Identify the source file** the hook was meant to inject — e.g., `.claude/SESSION.md`, `.claude/COMPACT_NOTES.md`, `.claude/reminders.yaml`.
 2. **Read it directly** via the Read tool, full file.
 3. **Then answer.** Reasoning from the partial preview is the failure mode this rule exists to prevent.
 

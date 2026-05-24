@@ -160,7 +160,7 @@ If the first token of `$ARGUMENTS` is missing or not one of `new`, `audit`, `por
 ## Notes
 
 - **Defer to canonical when available.** `validate.sh` `exec`s `skills-ref validate` when that Python tool is on PATH. The bash rule set is the zero-dep fallback; `skills-ref` is the source of truth. If the two disagree, prefer `skills-ref` and re-snapshot `references/spec-snapshot.md`.
-- **Spec drift.** `references/spec-snapshot.md` was retrieved on 2026-05-17. Re-check the live spec (https://agentskills.io/specification) periodically; when it evolves, re-snapshot and audit `scripts/validate.sh` against the diff. A REMINDERS.md item is the natural cadence reminder.
+- **Spec drift.** `references/spec-snapshot.md` was retrieved on 2026-05-17. Re-check the live spec (https://agentskills.io/specification) periodically; when it evolves, re-snapshot and audit `scripts/validate.sh` against the diff. A `reminders.yaml` entry is the natural cadence reminder.
 - **Body not validated.** This toolkit checks frontmatter compliance only. Body portability (e.g., declared `agentskills-portable` tier but body uses `${CLAUDE_SKILL_DIR}`) is operator-asserted; a future enhancement could grep for tier-inconsistent signals during `/skill audit`.
 - **`argument-hint` stays top-level.** Per Phase C research, Claude Code reads this field only at the top of frontmatter. The porter does NOT migrate it under `metadata:` — see `references/portability-tiers.md` § "On `argument-hint` placement" for the evidence.
 - **No git auto-commit.** All operations leave the working tree dirty for review. The user decides what enters history. Suggest `git diff` after `port` to verify body bytes are untouched.

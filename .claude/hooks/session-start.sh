@@ -56,6 +56,14 @@ if git -C "$PROJECT_DIR" rev-parse --git-dir >/dev/null 2>&1; then
   git -C "$PROJECT_DIR" status --porcelain >"$STATE_DIR/start-porcelain.txt" 2>/dev/null || true
 fi
 
+# Accumulate all banner blocks into BANNER, then emit a single JSON object at
+# the end with both `hookSpecificOutput.additionalContext` (model context) and
+# `systemMessage` (user-visible banner). CC v2.1.0+ silently drops SessionStart
+# stdout from the user-visible surface — plain `printf` only reaches the model.
+# The dual-emit pattern (proven by Anthill's reminder-surfacer.sh) restores the
+# banner so the user sees the handoff at session boot without having to type.
+BANNER=""
+
 if [[ "$SOURCE" == "compact" ]]; then
   # Read the lex-greatest .compact-history/*.md — equals chronologically-latest
   # because filenames are fixed-width ISO-second prefixes. Graceful no-op when
@@ -66,14 +74,14 @@ if [[ "$SOURCE" == "compact" ]]; then
     LATEST_SNAPSHOT="$({ ls -1 "$COMPACT_HISTORY_DIR"/*.md 2>/dev/null || true; } | tail -1)"
   fi
   if [[ -n "$LATEST_SNAPSHOT" && -f "$LATEST_SNAPSHOT" ]]; then
-    printf '=== compact-history (pre-compact snapshot — raw signal /compact would have lost) ===\n'
-    cat "$LATEST_SNAPSHOT"
-    printf '\n=== end compact-history ===\n'
+    BANNER+=$'=== compact-history (pre-compact snapshot — raw signal /compact would have lost) ===\n'
+    BANNER+="$(cat "$LATEST_SNAPSHOT" 2>/dev/null || true)"
+    BANNER+=$'\n=== end compact-history ===\n'
   fi
 elif [[ -f "$SESSION_FILE" ]]; then
-  printf '=== SESSION.md (handoff from prior session) ===\n'
-  cat "$SESSION_FILE"
-  printf '\n=== end SESSION.md ===\n'
+  BANNER+=$'=== SESSION.md (handoff from prior session) ===\n'
+  BANNER+="$(cat "$SESSION_FILE" 2>/dev/null || true)"
+  BANNER+=$'\n=== end SESSION.md ===\n'
 fi
 
 # Runtime-introspect (spec 011): point the agent at the probe tool so it can
@@ -81,9 +89,7 @@ fi
 # is absent — the capacity isn't installed in every fork.
 PROBE_TOOL="$PROJECT_DIR/.claude/tools/probe.sh"
 if [[ -x "$PROBE_TOOL" ]]; then
-  printf '\n=== runtime-introspect ===\n'
-  printf 'Probe the latest captured test/build run with: bash .claude/tools/probe.sh last-run\n'
-  printf '=== end runtime-introspect ===\n'
+  BANNER+=$'\n=== runtime-introspect ===\nProbe the latest captured test/build run with: bash .claude/tools/probe.sh last-run\n=== end runtime-introspect ===\n'
 fi
 
 # githooks-activation (spec 018): surface the manual core.hooksPath activation
@@ -94,13 +100,19 @@ fi
 if [[ -d "$PROJECT_DIR/.githooks" && "${CLAUDE_SKIP_GITHOOKS_HINT:-0}" != "1" ]]; then
   current_hookspath="$(git -C "$PROJECT_DIR" config --get core.hooksPath 2>/dev/null || true)"
   if [[ "$current_hookspath" != ".githooks" ]]; then
-    printf '\n=== githooks-activation ===\n'
-    printf 'Native git hooks NOT activated (gitleaks pre-commit inert).\n'
-    printf 'Run once: git config core.hooksPath .githooks\n'
-    printf '=== end githooks-activation ===\n'
+    BANNER+=$'\n=== githooks-activation ===\nNative git hooks NOT activated (gitleaks pre-commit inert).\nRun once: git config core.hooksPath .githooks\n=== end githooks-activation ===\n'
   fi
 fi
 
 # Cleanup (spec 017): best-effort removal of session-state subdirs older than
 # 7 days. Failure NEVER blocks the hook — silenced with 2>/dev/null || true.
 find "$SESSION_STATE_ROOT" -mindepth 1 -maxdepth 1 -type d -mtime +7 -exec rm -rf {} + 2>/dev/null || true
+
+# Emit the dual-channel JSON only when there is content AND jq is available.
+# Best-effort: a jq failure must NEVER block session start (|| true).
+if [[ -n "$BANNER" ]] && command -v jq >/dev/null 2>&1; then
+  jq -n --arg msg "$BANNER" '{
+    hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: $msg },
+    systemMessage: $msg
+  }' 2>/dev/null || true
+fi

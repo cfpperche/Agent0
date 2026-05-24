@@ -29,7 +29,7 @@ When the Claude Code context window fills up (auto-compact) or the user runs `/c
 ## Gotchas
 
 - Hooks only register on the **next** session — `settings.json` changes mid-session don't retro-activate.
-- The historical single-file model (`.claude/COMPACT_NOTES.md`, overwritten each compaction) was retired by spec 081 in favor of the per-event `.claude/.compact-history/<ISO>-<pid>-<rand>.md` files documented above. Multiple compactions in one session no longer lose the earliest snapshot — the retention cap (`compactHistory.keepLast`, default 20) decides when old ones drop.
+- An earlier version of this capacity used a single `.claude/COMPACT_NOTES.md` file overwritten each compaction. That model lost the earliest snapshot when multiple compactions hit one session, and was retired in favor of the per-event `.claude/.compact-history/<ISO>-<pid>-<rand>.md` files documented above. The retention cap (`compactHistory.keepLast`, default 20) decides when old snapshots drop.
 - "Last 12 turns" counts real user prompts only (string `content`), not tool_result entries.
 - If `jq` is missing or the transcript can't be read, PreCompact silently exits — compaction proceeds without a snapshot. Better degraded than blocking.
 - `CLAUDE_SKIP_SESSION_HOOKS=1` does **not** disable PreCompact (only the Stop nag). Compaction snapshotting always runs when registered.

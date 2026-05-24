@@ -67,7 +67,7 @@ When in doubt, route to project memory (`.claude/memory/`). Demoting from rule �
 <!-- DO NOT RENAME — referenced verbatim by .claude/hooks/memory-frontmatter-validate.sh advisory messages -->
 ## Frontmatter schema
 
-Project-memory entries (bucket #2 — `.claude/memory/<topic>.md`, NOT `MEMORY.md` itself, which is the index) carry a YAML frontmatter block fenced by `---`. Three fields are **required**; three are **optional** and populated by future tooling (decay engine, event-sourced journal — see spec 080 § *The 7 mechanisms*).
+Project-memory entries (bucket #2 — `.claude/memory/<topic>.md`, NOT `MEMORY.md` itself, which is the index) carry a YAML frontmatter block fenced by `---`. Three fields are **required**; three are **optional** and populated by the decay engine + event-sourced journal documented below.
 
 The `.claude/hooks/memory-frontmatter-validate.sh` hook fires on `PostToolUse(Edit|Write|MultiEdit)` for any file under `.claude/memory/*.md` (except `MEMORY.md`) and emits a non-blocking `memory-frontmatter-advisory:` line to stderr when the entry violates the schema. Always exit 0 — never blocks the edit. Pattern matches `tdd-advisory:` / `lint-advisory:` / `typecheck-advisory:` (see `.claude/rules/delegation.md` § *Advisories*).
 
@@ -76,14 +76,14 @@ The `.claude/hooks/memory-frontmatter-validate.sh` hook fires on `PostToolUse(Ed
 | Field | Shape | Purpose |
 |---|---|---|
 | `name` | string | Stable identifier — slug or human-readable label. Both shapes pass (existing entries use both). |
-| `description` | string | One-line summary used in the MEMORY.md index. Future cap: 250 chars (MS-5, spec 085); not enforced today. |
-| `metadata.type` | string | Classification, nested under `metadata:`. Value-open per spec 080 NG-3 (forks pick taxonomy). Examples in current use: `project`, `reference`. |
+| `description` | string | One-line summary used in the MEMORY.md index. Soft cap on projected index-line length (advisory only) — see § *Cap / query / decay* below. |
+| `metadata.type` | string | Classification, nested under `metadata:`. Value-open by design (forks pick the taxonomy that fits their project). Examples in current use: `project`, `reference`. |
 
 ### Optional fields (under `metadata.*`)
 
 | Field | Shape | Purpose |
 |---|---|---|
-| `metadata.created_at` | ISO-8601 timestamp | Entry creation time. Decay engine input (MS-7, spec 085). |
+| `metadata.created_at` | ISO-8601 timestamp | Entry creation time. Decay engine input (see § *Cap / query / decay*). |
 | `metadata.last_accessed` | ISO-8601 timestamp | Last-read time. Decay engine input. |
 | `metadata.confirmed_count` | integer | Strength signal — how many times the entry has been re-validated since creation. |
 
@@ -153,7 +153,7 @@ A human running `vim .claude/memory/MEMORY.md && git commit` bypasses the tool-s
 
 ## Cap / query / decay
 
-Three scale-handling surfaces shipped by spec [086](../../docs/specs/086-memory-cap-query-decay/). Together they let the bucket operate at 100-500 entries without the index becoming unreadable or stale entries crowding the active set.
+Three scale-handling surfaces let the bucket operate at 100-500 entries without the index becoming unreadable or stale entries crowding the active set.
 
 ### 1. Index-line cap
 
@@ -161,11 +161,11 @@ Three scale-handling surfaces shipped by spec [086](../../docs/specs/086-memory-
 
 ### 2. `memory-query.sh`
 
-Search + filter helper for entry bodies and frontmatter. Four subcommands, all routed through `.claude/tools/memory-query-helper.py` (Python + PyYAML; mirrors the `reminders-helper.py` pattern from spec 084):
+Search + filter helper for entry bodies and frontmatter. Four subcommands, all routed through `.claude/tools/memory-query-helper.py` (Python + PyYAML; mirrors the `.claude/skills/remind/scripts/reminders-helper.py` pattern — bash dispatcher delegates to a Python helper for YAML mutation):
 
 - **`search <pattern>`** — case-insensitive grep across all `.claude/memory/*.md` (body + frontmatter). One line per hit: `<path>: <first matching line>`.
 - **`list [--type=T] [--stale=Nd|Nw|Nm]`** — filter the index. `--type` matches `metadata.type` exactly; `--stale` accepts the same duration grammar as `/remind snooze` and lists entries whose `last_accessed` is older than `today − duration`.
-- **`confirm <name1> [<name2> ...]`** — bumps `metadata.last_accessed` to today + increments `metadata.confirmed_count`. Variadic; reports the resolved file path per name. Refuses with exit 2 on unknown names. The edit is captured by the existing memory-events-journal hook (spec 083) as an `update` event.
+- **`confirm <name1> [<name2> ...]`** — bumps `metadata.last_accessed` to today + increments `metadata.confirmed_count`. Variadic; reports the resolved file path per name. Refuses with exit 2 on unknown names. Note: the helper writes via Python syscalls, which bypasses the `PostToolUse` memory-events-journal hook — the audit trail for confirms lives in `git log` of the entry file, not in `.claude/.memory-events.jsonl`.
 - **`decay [--readout]`** — computes staleness for each entry and lists ones above the threshold. The `--readout` flag wraps output in a `=== MEMORY DECAY ===` framed block for SessionStart injection.
 
 ### 3. Decay engine
@@ -178,7 +178,7 @@ score = (today − last_accessed_or_created_at).days − confirmed_count × conf
 
 Entries with `score > threshold_days` are listed as stale. Defaults: `threshold_days = 60`, `confirm_boost_days = 14` (each confirm discounts ~2 weeks from the staleness clock). The `.claude/hooks/memory-decay-readout.sh` SessionStart hook fires `memory-query.sh decay --readout` every session — always-fire with `(no stale entries)` empty-case keeps the capacity discoverable.
 
-The engine never auto-archives, auto-deletes, or otherwise mutates entry files. Decay is observation, not removal — the founder (or agent) decides whether to `confirm`, manually edit, or move the entry. This is the load-bearing distinction vs Anthill's `auto_archive: true` posture (umbrella [080](../../docs/specs/080-memory-system-scale-ready/) NG-4).
+The engine never auto-archives, auto-deletes, or otherwise mutates entry files. Decay is observation, not removal — the founder (or agent) decides whether to `confirm`, manually edit, or move the entry. Auto-archive is rejected by design: staleness is a re-validation cadence question (some useful entries need re-confirming twice a year), not a wrongness signal.
 
 ### Config — `.claude/memory.config.json`
 
@@ -193,7 +193,7 @@ Shipped as a starter template. Forks override values directly. Missing keys fall
 
 ### Gotchas
 
-- **`confirm` triggers the journal hook + index regen.** The mutation is a regular file edit, so the spec 083 `PostToolUse` hook captures it as an `update` event in `.claude/.memory-events.jsonl` AND `memory-project.sh` re-runs. Side effect: every confirm rewrites `MEMORY.md` too (the projection might shift if descriptions vary). Correct behavior; document if it surprises future readers.
+- **`confirm` writes via Python, NOT via the Edit/Write tool surface.** The `PostToolUse` memory-events-journal hook (which captures `Edit`/`Write`/`MultiEdit` invocations) does NOT fire on confirms. The audit trail for confirms lives in `git log <entry-file>`. If you need journal events on confirms in your fork, extend the Python helper to append a JSONL line directly.
 - **`last_accessed` is honest only after the founder uses `confirm`.** Backfilled values for pre-spec-086 entries default to "today at backfill time" (no honest read signal exists pre-spec). Decay won't surface anyone for ~60 days after the backfill ship unless the founder confirms (and thus moves the timestamp) some entries first.
 - **Cap counts the projected bullet length, not the raw description.** The check is on `- [<name>](<slug>.md) — <description>` after assembly. Tightening `name` (rare) is one lever; the usual fix is shortening `description`.
 - **Folded YAML strings in the entries can confuse non-Python tooling.** PyYAML's `safe_dump` folds long values across lines for readability. The Python helper handles this; the degraded awk projection path in `memory-project.sh` (used when python3+yaml absent) emits a `memory-project-advisory:` warning and may truncate folded descriptions at the first line. Forks without PyYAML get a degraded but still-functional projection.

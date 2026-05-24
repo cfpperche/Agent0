@@ -1,8 +1,8 @@
 # Artifact size cap
 
-_(This file keeps its historical name `artifact-budgets.md`; the "budget" cascade it originally carried was retired by spec 075 — see § Why the size budget was retired.)_
+_(This file keeps its historical name `artifact-budgets.md`; the per-step KB-budget cascade it originally carried was retired — see § Why the size budget was retired.)_
 
-Artifact size is **not** a scope or quality signal. A `/product` sub-agent produces an artifact at whatever size its job honestly takes; whether that artifact is correctly scoped, complete, and right-sized is judged by the **quality judge** (`.claude/skills/product/references/quality-judge.md`, spec 075) — not by a byte count.
+Artifact size is **not** a scope or quality signal. A `/product` sub-agent produces an artifact at whatever size its job honestly takes; whether that artifact is correctly scoped, complete, and right-sized is judged by the **quality judge** at `.claude/skills/product/references/quality-judge.md` — not by a byte count.
 
 This rule documents the one thing artifact size is still used for: a **catastrophe cap** — a dumb circuit-breaker against a genuine token runaway.
 
@@ -18,7 +18,7 @@ The cap is deliberately loose. A false miss — a 180 KB bloated artifact slippi
 
 Earlier versions of this rule declared a per-step KB **budget** with a two-threshold overshoot cascade (`max × 1.2` → partial-result, `max × 1.8` → hard-abort). The mei-saas `/product` dogfood (two runs, 2026-05-19 + 2026-05-21) proved the instrument broken: **every artifact with a meaningful ceiling overshot it** — 10/10 mood screens, plus functional-spec, roadmap, cost-estimate, sitemap, fixture-spec, brand-book — and every sub-agent `oversize_reason` diagnosed "the budget is miscalibrated for this scope", never "I bloated". The cascade fired ~15 times with zero true positives.
 
-Root cause: a KB budget is a **scope-blind fixed constant**. It cannot adapt to a run's declared scope (the mei-saas run requested a full multi-phase product against budgets calibrated for an MVP). Spec 075 retired it and moved scope/quality judgment to a rubric judge, which is inherently scope-aware. See `docs/specs/075-product-quality-audit/`.
+Root cause: a KB budget is a **scope-blind fixed constant**. It cannot adapt to a run's declared scope (e.g. a full multi-phase product against budgets calibrated for an MVP). The cascade was retired and scope/quality judgment moved to a rubric judge, which is inherently scope-aware.
 
 ## Trim-loop and re-emit are still forbidden
 
@@ -44,7 +44,6 @@ The project's `# OVERRIDE: <reason ≥10 chars>` grammar still applies, now scop
 
 ## Cross-references
 
-- `docs/specs/075-product-quality-audit/` — the spec that retired the budget cascade and added the rubric judge
 - `.claude/skills/product/references/quality-judge.md` — how artifact scope/quality is actually judged now
 - `.claude/skills/product/references/{delegation-briefs,pipeline-coverage}.md` — where the catastrophe cap is noted per step
 - `.claude/rules/delegation.md` — the 5-field handoff; briefs note the cap in CONSTRAINTS

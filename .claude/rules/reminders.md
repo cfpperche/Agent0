@@ -8,7 +8,7 @@
 
 The capacity exists because deferred intent otherwise leaks into chat scrollback (lost on `/clear` or compaction), `TODO` comments in code (rot with the file, invisible across the repo), or the founder's head (lossy).
 
-Format reshape history: spec [084](../../docs/specs/084-reminders-yaml-refactor/) replaced the plain-bullet `.claude/REMINDERS.md` (pre-2026-05-24) with this structured YAML form, ported as the *mechanism* from Anthill's exemplar without the *policy* (no JSON Schema corpus, no autonomous check execution, no links-graph traversal). MS-4 of umbrella [080](../../docs/specs/080-memory-system-scale-ready/).
+An earlier format used plain-bullet markdown at `.claude/REMINDERS.md`. The current structured YAML form ships the *mechanism* (typed entries, `check_command`, `snooze`, soft-delete) without the heavier policies adjacent capacities sometimes carry (no JSON Schema corpus, no autonomous check execution, no links-graph traversal).
 
 ## Flow
 
@@ -54,7 +54,7 @@ reminders:
 | `snoozed_until` | ISO date | When the entry returns to the readout. Required when `status: snoozed`, ignored otherwise. |
 | `completed_ts` | UTC ISO-8601 timestamp | When the entry was marked done. Auto-stamped by the helper on `/remind done`; should not be set manually. |
 
-The helper validates required fields and enums at write-time. Schema does NOT live in a separate JSON Schema file by design — mirrors the pattern from spec [082](../../docs/specs/082-memory-frontmatter-schema/) (schema in the writer, not a separate file).
+The helper validates required fields and enums at write-time. Schema does NOT live in a separate JSON Schema file by design — the writer holds the contract; adding a JSON Schema runtime dependency would be heavier than the value it buys at this scale.
 
 ## What to write here
 
@@ -73,7 +73,7 @@ The helper validates required fields and enums at write-time. Schema does NOT li
 ## Discipline
 
 - **No auto-stage, no auto-commit.** `add` / `done` / `snooze` / `dismiss` leave the file dirty in the working tree. The founder reviews `git diff` before history is written.
-- **Soft-delete is the default.** `/remind done <id>` flips `status: done` and stamps `completed_ts`. The entry stays in `reminders.yaml` so the audit history is in-band (no need to `git log -- .claude/reminders.yaml` to recover what was dismissed). Trade-off: monotonic file growth. A `/remind prune` subcommand was deferred until growth becomes friction (rule-of-three demand test; see spec [084](../../docs/specs/084-reminders-yaml-refactor/) OQ-1).
+- **Soft-delete is the default.** `/remind done <id>` flips `status: done` and stamps `completed_ts`. The entry stays in `reminders.yaml` so the audit history is in-band (no need to `git log -- .claude/reminders.yaml` to recover what was dismissed). Trade-off: monotonic file growth. A `/remind prune` subcommand is deferred until growth becomes real friction (rule-of-three demand test).
 - **`check_command` is never autonomous.** The readout hook surfaces `check_command` text inline but never runs it. Execution happens only via explicit `/remind check <id>`, which prints the command's stdout/stderr/exit-code to the agent and leaves the YAML untouched. The human-in-loop decides next action. This preserves the contract-not-promise discipline; see `.claude/rules/delegation.md` § Why DONE_WHEN exists.
 - **Positions are not stable IDs.** Pattern is "list, then act on the position you see right now". Stable IDs (`r-YYYY-MM-DD-<slug>`) are the canonical identifier in storage; positions are a UX convenience that resolves to IDs at command time. The skill body always logs the resolved ID in its report so the user can confirm.
 - **Insertion order is the diff contract.** The helper uses `yaml.safe_dump(..., sort_keys=False)` so adds append to the end and field order within a record is preserved. Hand-edits with other YAML tools (that re-sort alphabetically) will pollute git diffs — re-run through the helper to normalize.
@@ -94,12 +94,10 @@ The helper validates required fields and enums at write-time. Schema does NOT li
 - **Position numbers shift across adds/dismisses.** `list` is 1-indexed against the filtered (pending + past-snoozed) view. An add or dismiss between listing and acting renumbers everything. When chaining commands, re-list between mutations or use the stable ID.
 - **`check_command` runs in the repo root with the current shell.** No sandboxing. The user owns the safety of whatever they wrote in `--check '<cmd>'`. Treat it like any other shell snippet in the repo.
 - **Field order is preserved on write but not on yq read.** `yq eval` may re-order in its output by default. Reading via the Python helper (or via `yq -P` with explicit field ordering) preserves the schema-canonical order. Hand-fixing field order after a yq round-trip is a no-op once the next helper-mediated write happens.
-- **Migration from the old `.claude/REMINDERS.md` was manual (one-shot).** The original 12 plain-bullet entries were translated by hand on 2026-05-24 (spec 084 task T2). No conversion script ships — the cutover is intentionally one-time and unrepeatable.
+- **No migration tooling for the old plain-bullet format.** Forks transitioning from the older `.claude/REMINDERS.md` translate entries by hand into `.claude/reminders.yaml`. The cutover is intentionally one-time and unrepeatable — investing in a migration script for a single-time event is over-engineering at this scale.
 
 ## Cross-references
 
 - `.claude/rules/memory-placement.md` — 3-bucket model (this file is the canonical reminder spec sibling)
 - `.claude/rules/session-handoff.md` — `.claude/SESSION.md` discipline
 - `.claude/rules/delegation.md` § Why DONE_WHEN exists — contract-not-promise (informs no-autonomous-check rule)
-- `docs/specs/080-memory-system-scale-ready/` — umbrella that motivated the YAML refactor (MS-4)
-- `docs/specs/084-reminders-yaml-refactor/` — the spec that shipped this capacity

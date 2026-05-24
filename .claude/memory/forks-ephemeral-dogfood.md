@@ -1,3 +1,9 @@
+---
+name: forks-ephemeral-dogfood
+description: Capacity docs' "forks" framing is forward-looking; current reality is all forks are spun-up-then-archived dogfood projects. Hard-cutover is the default back-compat posture.
+metadata:
+  type: project
+---
 # Forks are ephemeral dogfood projects
 
 When Agent0 capacity docs (CLAUDE.md, `.claude/rules/*.md`, sync-harness, MCP READMEs) reference "forks", the term is **forward-looking framing**, not a description of an active ecosystem.

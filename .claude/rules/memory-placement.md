@@ -64,6 +64,54 @@ When in doubt, route to project memory (`.claude/memory/`). Demoting from rule �
 | Project memory | `.claude/memory/<topic>.md` | **Yes** | **Empty scaffold only** (`.gitkeep`); content stays project-local | No (lazy-read via CLAUDE.md `## Memory`) | Factual project knowledge — each project accumulates its own |
 | Project rules | `.claude/rules/<topic>.md` | **Yes** | **Yes** | On demand (CLAUDE.md mentions) | Behavioral mandates + capacity docs |
 
+<!-- DO NOT RENAME — referenced verbatim by .claude/hooks/memory-frontmatter-validate.sh advisory messages -->
+## Frontmatter schema
+
+Project-memory entries (bucket #2 — `.claude/memory/<topic>.md`, NOT `MEMORY.md` itself, which is the index) carry a YAML frontmatter block fenced by `---`. Three fields are **required**; three are **optional** and populated by future tooling (decay engine, event-sourced journal — see spec 080 § *The 7 mechanisms*).
+
+The `.claude/hooks/memory-frontmatter-validate.sh` hook fires on `PostToolUse(Edit|Write|MultiEdit)` for any file under `.claude/memory/*.md` (except `MEMORY.md`) and emits a non-blocking `memory-frontmatter-advisory:` line to stderr when the entry violates the schema. Always exit 0 — never blocks the edit. Pattern matches `tdd-advisory:` / `lint-advisory:` / `typecheck-advisory:` (see `.claude/rules/delegation.md` § *Advisories*).
+
+### Required fields
+
+| Field | Shape | Purpose |
+|---|---|---|
+| `name` | string | Stable identifier — slug or human-readable label. Both shapes pass (existing entries use both). |
+| `description` | string | One-line summary used in the MEMORY.md index. Future cap: 250 chars (MS-5, spec 085); not enforced today. |
+| `metadata.type` | string | Classification, nested under `metadata:`. Value-open per spec 080 NG-3 (forks pick taxonomy). Examples in current use: `project`, `reference`. |
+
+### Optional fields (under `metadata.*`)
+
+| Field | Shape | Purpose |
+|---|---|---|
+| `metadata.created_at` | ISO-8601 timestamp | Entry creation time. Decay engine input (MS-7, spec 085). |
+| `metadata.last_accessed` | ISO-8601 timestamp | Last-read time. Decay engine input. |
+| `metadata.confirmed_count` | integer | Strength signal — how many times the entry has been re-validated since creation. |
+
+### Worked example
+
+```markdown
+---
+name: cc-platform-hooks
+description: Canonical surface of 32 Claude Code hook events; consult before designing any hook-based capacity.
+metadata:
+  type: reference
+  created_at: 2026-05-19T17:41:00Z
+  last_accessed: 2026-05-23T09:15:00Z
+  confirmed_count: 4
+---
+# CC platform hooks
+…body…
+```
+
+### Failure modes the validator advises on
+
+- **Missing required field** — `name`, `description`, or `metadata.type` absent.
+- **Unknown field** (typo guard) — any top-level key outside `{name, description, metadata}`, or any `metadata.*` key outside the 4 allowed values above.
+- **No frontmatter block** — file does not start with `---` at line 1.
+- **Frontmatter unparseable** — first `---` present but no closing `---` found.
+
+Conforming entries pass silently. `MEMORY.md` (the index) is skipped — it carries no frontmatter by design.
+
 ## Cross-cutting artifacts (not buckets, but related)
 
 - **`CLAUDE.md`** — first-contact orientation, capacity inventory, always loaded. Points at memory/rules/specs as needed.

@@ -1,3 +1,9 @@
+---
+name: propagation-hygiene
+description: Maintainer discipline — fork-bound files (CLAUDE.md, .claude/rules/, sync manifest) must carry no Agent0-internal pointers. Read before editing CLAUDE.md or a rule.
+metadata:
+  type: project
+---
 # Propagation hygiene
 
 A maintainer discipline: **fork-bound files must carry no Agent0-internal pointers.** When you edit CLAUDE.md or a `.claude/rules/*.md` file, the content you write will be copied verbatim into every fork by `sync-harness.sh`. Anything in it that only makes sense inside the Agent0 repo becomes dead weight — or a dangling pointer — in every fork.

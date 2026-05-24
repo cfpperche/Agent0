@@ -1,3 +1,9 @@
+---
+name: capacity-spec-index
+description: Which Agent0 spec(s) designed each capacity — Agent0-internal index relocated by spec 070 to keep fork-bound files free of docs/specs/ pointers.
+metadata:
+  type: reference
+---
 # Capacity → spec index
 
 The design-memory linkage between each Agent0 capacity and the spec(s) that designed it.

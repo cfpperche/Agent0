@@ -1,3 +1,9 @@
+---
+name: od-grounding-dogfood
+description: Spec 027 step-2 dogfood (2026-05-14) — citation-by-path real, but grounding alone does not buy visual quality. Blind judge result was confounded (1-pass OD vs 4x-refined baseline).
+metadata:
+  type: project
+---
 # OD grounding dogfood — what spec 027 actually buys
 
 Dogfooded 2026-05-14, the day spec 027 (Open Design vendor port) shipped. The step-2 prototype stage was run end-to-end with the OD vendor in the loop, on the SwiftBoard brief (`/tmp/bench/step2-fixture.md` + `brief_B.md`) — the same input the pre-OD step-2 benchmark used, so OD grounding is the only variable.

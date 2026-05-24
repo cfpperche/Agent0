@@ -1,3 +1,9 @@
+---
+name: product-pipeline-empirical-baseline
+description: First end-to-end full /product run with all 4 mature gates (2026-05-23) — ~3.1M tokens, ~83min, 44 dispatches, 17/17 judges. Use as cost+shape envelope for planning.
+metadata:
+  type: project
+---
 # /product pipeline empirical baseline (Expo, 2026-05-23)
 
 First end-to-end full /product run with the 4 mature gates in place (spec 069 Phase 0 clear, spec 075 quality judge, spec 079 stack-aware handoff, spec 066 visual-contract structure). Captures the cost + shape envelope future planning needs.

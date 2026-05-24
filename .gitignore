@@ -65,3 +65,7 @@ prototypes/
 
 # Visual-audit screenshots — evidence captured by playwright MCP; conversation is the memory
 /audit-*.png
+
+# Image-gen mockups — throwaway draft tier (spec 085). Brand assets at assets/brand/* stay tracked.
+assets/generated/mockups/*
+!assets/generated/mockups/.gitkeep

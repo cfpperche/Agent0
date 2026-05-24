@@ -182,6 +182,10 @@ COPY_CHECK_FILES=(
   ".claude/.browser-state/.gitkeep"
   ".claude/routines/.gitkeep"
   ".claude/.runtime-state/README.md"
+  "assets/.gitkeep"
+  "assets/brand/.gitkeep"
+  "assets/generated/.gitkeep"
+  "assets/generated/mockups/.gitkeep"
 )
 
 # Structured merge handled by dedicated functions below

@@ -32,3 +32,16 @@ paths = [
   '''secrets-scan\.md''',
   '''harness-sync-baseline\.json''',
 ]
+
+# Custom detector: fal.ai API key (<uuid>:<hex>).
+# Default gitleaks rules do NOT catch fal.ai's key shape — verified empirically
+# during /image skill activation. The `keywords` array is the performance gate
+# (gitleaks only runs the regex on lines containing any of the listed
+# substrings, case-insensitive); the regex matches the canonical fal.ai key
+# shape produced by the dashboard. Cross-reference: .claude/rules/image-gen.md
+# § Gotchas (fal.ai key shape vs gitleaks default rules).
+[[rules]]
+id = "fal-ai-api-key"
+description = "fal.ai API key (uuid:hex shape)"
+regex = '''[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}:[a-f0-9]{32,}'''
+keywords = ["fal", "fal_key"]

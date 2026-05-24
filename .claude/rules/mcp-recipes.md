@@ -30,6 +30,7 @@ The hint hook fires when any signal matches. Multiple signals can fire; the sugg
 | Browser (non-Next) | `package.json` has any of `react` / `vue` / `svelte` / `vite` / `astro` in deps, AND Next signal is absent | `playwright-mcp` + `chrome-devtools-mcp` |
 | DB | Any of `schema.prisma`, `drizzle.config.{js,ts,mjs}`, `alembic.ini`, `database/migrations/`, `db/migrate/` exists, OR `.env.example` has a `^DATABASE_URL=` line | `dbhub` |
 | Laravel | `artisan` executable file at root (canonical), OR `composer.json` declares `laravel/framework` in `require` / `require-dev` | `laravel-boost-mcp` + `playwright-mcp` |
+| Image-gen | Any of `assets/brand/`, `assets/generated/` exists, OR README markdown contains `![hero` or `<img`, OR `.claude/skills/product/` is installed, OR `.claude/skills/image/` is installed | `fal-ai` |
 
 The list is deliberately small. Same lesson as the runtime-introspect detector allowlist and the supply-chain manager table: ship a strict shape, extend on real-world signal.
 
@@ -206,6 +207,49 @@ The first installs the package; the second wires up the `boost:mcp` artisan comm
 - A running `next dev` server on the host. The MCP auto-discovers Next dev servers and connects via `/_next/mcp`. Without a running dev server, the MCP fires but most tools return empty.
 
 **Security:** local-only (the MCP introspects the dev server, no remote endpoints). See upstream README for the dev-only positioning — do not run against production builds.
+
+---
+
+### fal.ai MCP (image / video / audio / 3D)
+
+**Source:** [fal.ai/docs/documentation/setting-up/mcp](https://fal.ai/docs/documentation/setting-up/mcp) (official, hosted by fal.ai team)
+
+**What it provides:** Access to fal.ai's full catalog of 1000+ generative-media models — image generation (FLUX 1/2, GPT Image 1.5/2, Imagen 4, Nano Banana, SDXL), video (Veo 3.1, Kling 3.0, Sora 2), audio, 3D, speech, and LLMs — under a single HTTP MCP endpoint with `search_models` / `recommend_model` / inference / file-upload tools. The official endpoint tracks fal.ai's catalog directly; no package install, no version pinning.
+
+**`.mcp.json` block** (HTTP transport — first such block in `.mcp.json.example`):
+
+```json
+{
+  "mcpServers": {
+    "fal-ai": {
+      "type": "http",
+      "url": "https://mcp.fal.ai/mcp",
+      "headers": {
+        "Authorization": "Bearer ${FAL_KEY}"
+      }
+    }
+  }
+}
+```
+
+**Install:** no package install — HTTP endpoint is hosted by fal.ai. Get `FAL_KEY` from fal.ai dashboard, export in shell or `.env`. Alternative one-shot registration: `claude mcp add --transport http fal-ai https://mcp.fal.ai/mcp --header "Authorization: Bearer $FAL_KEY"`.
+
+**When to enable:** any fork using the `/image` skill (mockup generation, brand assets, hero images), or directly invoking video/audio/3D generation via fal.ai's catalog. Pairs with `.claude/rules/image-gen.md` for the image-specific tier abstraction and storage conventions.
+
+**Runtime requirements:** network connectivity to `mcp.fal.ai` at session start. Forks behind strict egress firewalls or in offline environments use the community-package fallback (see § *Documented community alternatives* below).
+
+**Security:** `FAL_KEY` IS a secret — `<uuid>:<secret>` shape. Never commit a populated `.mcp.json` with the literal key; use `${FAL_KEY}` env-var indirection. Verify fal.ai key shape against gitleaks default rules; if not caught, add a custom rule per `.claude/rules/secrets-scan.md`. Free at the MCP layer; you pay only for model inferences at standard fal.ai rates — image generation runs `~$0.003-$0.20/img` per `references/tier-pricing.md`. Cost runaway from sub-agent loops is the discipline risk — see `.claude/rules/image-gen.md` § *Pre-call cost printing*.
+
+**Documented community alternatives:** if the official hosted endpoint is unreachable, or the fork prefers a fully-local stdio MCP for cost/observability reasons:
+
+| Package | Source | Notes |
+|---|---|---|
+| `piebro/fal-ai-mcp-server` | [npm](https://www.npmjs.com/package/fal-ai-mcp-server) · [GitHub](https://github.com/piebro/fal-ai-mcp-server) | Most-featured community option, MIT, single-maintainer. Stdio transport via `npx -y`. |
+| `@monsoft/mcp-fal-ai` | [npm](https://www.npmjs.com/package/@monsoft/mcp-fal-ai) | Dual transport (stdio + SSE), 8 tools. |
+| `mcp-fal-ai-image` | [npm](https://www.npmjs.com/package/mcp-fal-ai-image) | Image-only variant, lighter scope. |
+| `lansespirit/image-gen-mcp` | [GitHub](https://github.com/lansespirit/image-gen-mcp) | NOT fal.ai-backed — calls OAI gpt-image-1 + Imagen 4 directly. Use to bypass fal.ai entirely. |
+
+Swap is a `.mcp.json` edit (replace the HTTP block with the chosen alternative's stdio block) + same `FAL_KEY` env var. The `/image` skill's tier→model resolution stays identical.
 
 ## Hint output shape
 

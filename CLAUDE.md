@@ -58,7 +58,11 @@ A `PreToolUse(Bash)` preflight (`.claude/hooks/supply-chain-scan.sh`) blocks dep
 
 ## MCP recipes
 
-Opt-in `.mcp.json` recipes for four mature external MCPs (Playwright, Chrome DevTools, DBHub, Next.js DevTools); a `SessionStart` hook hints applicable ones from the fork's detected stack. Pure recommendation — copy-paste from `.mcp.json.example`. See `.claude/rules/mcp-recipes.md`.
+Opt-in `.mcp.json` recipes for mature external MCPs (Playwright, Chrome DevTools, DBHub, Laravel Boost, Next.js DevTools, fal.ai); a `SessionStart` hook hints applicable ones from the fork's detected stack. Pure recommendation — copy-paste from `.mcp.json.example`. See `.claude/rules/mcp-recipes.md`.
+
+## Image generation
+
+Opt-in capacity for AI image generation via fal.ai MCP — the `/image` skill produces draft mockups (FLUX schnell, ~$0.003/img, gitignored) and brand assets (gpt-image-2 or Imagen 4 Ultra, $0.04-$0.20/img, tracked) with mandatory `--tier` flag, pre-call cost printing, and a JSONL manifest of every call. Activation is a `.mcp.json` edit + `FAL_KEY` env. See `.claude/rules/image-gen.md`.
 
 ## Harness sync
 

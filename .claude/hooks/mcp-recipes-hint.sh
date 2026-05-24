@@ -19,6 +19,9 @@
 #   DB        schema.prisma / drizzle.config.{js,ts,mjs} / alembic.ini /
 #             database/migrations/ / db/migrate/ / DATABASE_URL in .env.example
 #             -> dbhub
+#   Image-gen assets/brand/ OR assets/generated/ OR README has hero/img markdown
+#             OR .claude/skills/product/ installed
+#             -> fal-ai
 #
 # Reference:
 #   .claude/rules/mcp-recipes.md          — full recipes + workflow
@@ -44,6 +47,7 @@ have_next=0
 have_browser=0         # react/vue/svelte/vite/astro
 have_db=0
 have_laravel=0         # artisan file OR composer.json with laravel/framework
+have_image_gen=0       # assets/brand/, assets/generated/, README hero img, /product skill
 
 # detect_at <abs_path> [<label_prefix>]
 #
@@ -149,6 +153,24 @@ detect_at() {
     fi
   fi
 
+  # --- Image-gen signals: assets/brand/ OR assets/generated/ OR README hero/img markdown ---
+  local local_have_image_gen=0
+  for d in assets/brand assets/generated; do
+    if [ -d "$path/$d" ]; then
+      have_image_gen=1
+      local_have_image_gen=1
+      signals="$signals ${prefix}$d/"
+      break
+    fi
+  done
+
+  if [ "$local_have_image_gen" -eq 0 ] && [ -f "$path/README.md" ]; then
+    if grep -qE '!\[hero|<img' "$path/README.md"; then
+      have_image_gen=1
+      signals="$signals ${prefix}README.md:hero-image"
+    fi
+  fi
+
   # --- Laravel signal: artisan file (canonical) OR composer.json with laravel/framework ---
   local local_have_laravel=0
   if [ -f "$path/artisan" ]; then
@@ -174,6 +196,14 @@ detect_at() {
 
 # Root scan — preserves spec 012 behaviour (bare signal labels, no prefix).
 detect_at "$PROJECT_DIR" ""
+
+# Project-only signals (not per-workspace): the /product and /image skills are
+# harness artifacts living under PROJECT_DIR/.claude/skills/, never inside a
+# workspace dir. Probe once at root.
+if [ -d "$PROJECT_DIR/.claude/skills/product" ]; then
+  have_image_gen=1
+  signals="$signals .claude/skills/product/"
+fi
 
 # Workspace walk (spec 015) — depth-1 scan into common monorepo layouts.
 # Default set: apps packages services workspaces.
@@ -231,6 +261,9 @@ if [ "$have_laravel" -eq 1 ]; then
   add_recipe "laravel-boost-mcp"
   add_recipe "playwright-mcp"
 fi
+if [ "$have_image_gen" -eq 1 ]; then
+  add_recipe "fal-ai"
+fi
 
 # No recipes -> silent.
 [ -z "$recipes" ] && exit 0
@@ -255,6 +288,8 @@ for r in $recipes; do
       printf '  - dbhub              multi-engine DB schema + safe query exec\n' ;;
     laravel-boost-mcp)
       printf '  - laravel-boost-mcp  Laravel framework introspection (Eloquent models, DB schema, logs, docs)\n' ;;
+    fal-ai)
+      printf '  - fal-ai             AI image/video/audio generation via fal.ai hosted MCP (1000+ models, /image skill)\n' ;;
   esac
 done
 printf 'See .claude/rules/mcp-recipes.md for full recipes (install commands, runtime requirements, security).\n'

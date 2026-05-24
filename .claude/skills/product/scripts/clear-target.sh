@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # .claude/skills/product/scripts/clear-target.sh
-# Spec 069 — selective clear of a /product --out target.
+# selective clear of a /product --out target.
 #
 # Removes every top-level entry of <out> that is NOT in the Agent0 harness
 # allowlist, so a /product overwrite regenerates the docs foundation WITHOUT
 # destroying .git/ history or the bootstrapped harness. Replaces the blunt
 # `rm -r <out>` that spec-069 "Gap F" flagged as an unrecoverable foot-gun.
-# See docs/specs/069-product-overwrite-git-safety/.
+
 #
 # Usage:  clear-target.sh <out>
 # Exit:   0 success · 2 usage error (missing / non-directory <out>)

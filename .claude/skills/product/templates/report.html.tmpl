@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>/product REPORT — {{SLUG}}</title>
 
-<!-- Client-side render stack (spec 073). Pinned CDN majors; the report degrades
-     to raw <pre> markdown if marked fails to load. See docs/specs/073-product-report-html/. -->
+<!-- Client-side render stack. Pinned CDN majors; the report degrades
+     to raw <pre> markdown if marked fails to load. -->
 <script src="https://cdn.jsdelivr.net/npm/marked@14/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
@@ -72,7 +72,7 @@
   .nav-item[data-status="pending"] .ico { color: var(--pending); }
   .pane { flex: 1; padding: 28px 40px; max-width: 920px; overflow-x: auto; }
   .pane .placeholder { color: var(--fg-dim); padding: 40px 0; font-style: italic; }
-  /* spec 073 follow-up — sub-tabs split a multi-part step so no step is one
+  /* Sub-tabs split a multi-part step so no step is one
      giant scroll; only the active tab's parts are in the DOM. */
   .tabs {
     display: flex; flex-wrap: wrap; gap: 4px;

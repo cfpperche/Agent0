@@ -1,8 +1,7 @@
 /**
  * sync-open-design.ts — vendored open-design sync engine
  *
- * Ported from anthill's `scripts/sync-open-design.ts` (spec 027) and re-homed in
- * the /product skill (spec 049). Paths resolve from the skill root via
+ * Lives inside the /product skill. Paths resolve from the skill root via
  * `import.meta.url`, invocation is `bun scripts/sync-open-design.ts` (no tsx shebang).
  *
  * Four subcommands:
@@ -195,8 +194,8 @@ export function validateDesignMd(content: string): string[] {
 }
 
 /** Recursively list all files under `dir`, excluding `.gitkeep` scaffold markers
- * (anthill adds `.gitkeep` to vendor subdirs; they are never part of the upstream
- * tarball and never enter a manifest tree checksum). */
+ * (vendor subdirs carry `.gitkeep` so they exist in fresh clones; those markers are
+ * never part of the upstream tarball and never enter a manifest tree checksum). */
 function walkFiles(dir: string): string[] {
   const result = spawnSync('find', [dir, '-type', 'f'], { encoding: 'utf-8', timeout: 30_000 });
   if (result.status !== 0) return [];

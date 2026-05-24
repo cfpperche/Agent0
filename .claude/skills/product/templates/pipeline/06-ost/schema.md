@@ -4,9 +4,9 @@
 
 `<out>/docs/ost.md`
 
-## Size floor (anti-stub — spec 075)
+## Size floor (anti-stub)
 
-Per spec 075 the size **ceiling** is retired — artifact scope is judged by the quality judge (`references/quality-judge.md`), not a byte count. Only the `min_size` **floor** remains.
+The size **ceiling** is retired — artifact scope is judged by the quality judge (`references/quality-judge.md`), not a byte count. Only the `min_size` **floor** remains.
 
 | Artifact | `min_size` floor | Floor rationale |
 |---|---|---|

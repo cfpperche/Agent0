@@ -1,6 +1,6 @@
 # Step-4 self-review checklist
 
-Run before calling `product_step_submit`. Ported from `anthill-ux-audit` and augmented for this pipeline's three-mode posture + Layer 1. Some items are enforced mechanically (section check, Layer 1) — most are quality gaps only this review catches.
+Run before calling `product_step_submit`. Some items are enforced mechanically (section check, Layer 1) — most are quality gaps only this review catches.
 
 ## Scope & inputs
 

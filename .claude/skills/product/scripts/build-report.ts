@@ -1,5 +1,5 @@
 /**
- * build-report.ts — /product navigable HTML report generator (spec 073)
+ * build-report.ts — /product navigable HTML report generator
  *
  * Deterministic, zero-npm-dependency (Node/Bun stdlib only). Reads the raw
  * `/product` artifacts under `<out>/docs/`, packs them into one script-safe

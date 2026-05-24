@@ -6,7 +6,7 @@ The full shape for the step-4 artifact. The H2 titles slugify to the required-se
 ---
 # Optional YAML frontmatter — ONLY emit when audit ran in measurable mode (HTML inputs).
 # Skip this entire block when audit ran in projected mode (markdown spec inputs).
-# Step 6 (design-system) and step 15 (screen-atlas; absorbed step 7 per spec 045) read this block to consume findings
+# Step 6 (design-system) and step 15 (screen-atlas) read this block to consume findings
 # programmatically. The markdown body below is the derived human-readable view.
 findings:
   - id: F-01

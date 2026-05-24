@@ -1,10 +1,10 @@
 # Step 15a — Schema (screen-atlas.md)
 
-`screen-atlas.md` is the single deliverable of Step 15a. This schema is the size-budget + required-section reference; the Step 15a brief's `DONE_WHEN` points here. Per spec 066 the atlas is a **prose-only markdown contract** — no embedded screens, no `extra_files`, no `app/`.
+`screen-atlas.md` is the single deliverable of Step 15a. This schema is the size-budget + required-section reference; the Step 15a brief's `DONE_WHEN` points here. The atlas is a **prose-only markdown contract** — no embedded screens, no `extra_files`, no `app/`.
 
-## Size floor (anti-stub — spec 075)
+## Size floor (anti-stub)
 
-Per spec 075 the size **ceiling** is retired — artifact scope is judged by the quality judge (`references/quality-judge.md`), not a byte count. Only the `min_size` **floor** remains.
+The size **ceiling** is retired — artifact scope is judged by the quality judge (`references/quality-judge.md`), not a byte count. Only the `min_size` **floor** remains.
 
 | Artifact | `min_size` floor | Floor rationale |
 |---|---|---|
@@ -35,7 +35,7 @@ A uniform 200 KB catastrophe cap applies per `.claude/rules/artifact-budgets.md`
 
 ## What this schema does NOT enforce
 
-Step 15a writes ONE markdown file. There is no `required_glob` for a `screens/*.html` set and no `extra_files` REPORT.md bundle — per spec 066:
+Step 15a writes ONE markdown file. There is no `required_glob` for a `screens/*.html` set and no `extra_files` REPORT.md bundle:
 
 - The hi-fi killer-flow mood screens are Step 15b's output (`docs/screens/hifi/<NN>-<name>.html`), produced by the separate § Mood-screen-writer sub-agent.
 - The fixture spec is Step 15c's output (`docs/fixture-spec.md`).

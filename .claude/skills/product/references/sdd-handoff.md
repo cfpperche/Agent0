@@ -101,6 +101,4 @@ Phase 5 copies every row from `docs/system-design.md § Trade-off Triggers → O
 
 - `SKILL.md` § Phase 5 — the orchestration body that executes this contract
 - `.claude/rules/spec-driven.md` § The four artifacts — the `**Type:** umbrella` convention
-- `docs/specs/060-harness-gaps-2026/` — the canonical umbrella + child-matrix example
-- `docs/specs/066-product-ui-quality/` — the spec that introduced this handoff
 - `.claude/skills/sdd/templates/` — the four template files used as the scaffold base

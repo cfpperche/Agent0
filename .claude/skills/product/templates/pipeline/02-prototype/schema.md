@@ -2,9 +2,9 @@
 
 The submitted `REPORT.md` MUST contain the level-2 markdown headings below + meet the Layer 1 size/content floor in the JSON fenced block. All listed files must be persisted via the `extra_files` parameter on `product_step_submit`. Both checks fire on submit; missing sections OR Layer 1 failures produce `code: "schema-incomplete"` with the failure list.
 
-## Size floor (anti-stub — spec 075)
+## Size floor (anti-stub)
 
-Per spec 075 the size **ceiling** is retired — artifact scope is judged by the quality judge (`references/quality-judge.md`), not a byte count. Only the `min_size` **floor** remains, as a cheap anti-stub check enforced at submit by the Layer 1 block below.
+The size **ceiling** is retired — artifact scope is judged by the quality judge (`references/quality-judge.md`), not a byte count. Only the `min_size` **floor** remains, as a cheap anti-stub check enforced at submit by the Layer 1 block below.
 
 | Artifact | `min_size` floor | Floor rationale |
 |---|---|---|
@@ -84,7 +84,7 @@ The Identity block (codename, palette tokens, type stack, citation chain per dir
 
 ### Notes on the floors
 
-- **`direction-{a,b,c}.html` min_size 10240** (10 KB) — bumped from 8 KB after adding the charts & sparklines section in refinement v4. Pivota's anthill reference landed at 17-20 KB; benchmark runs land at 33-47 KB. A 10 KB floor catches stubs while allowing terse variants
+- **`direction-{a,b,c}.html` min_size 10240** (10 KB) — bumped from 8 KB after adding the charts & sparklines section in refinement v4. Reference variants land at 17-20 KB; benchmark runs land at 33-47 KB. A 10 KB floor catches stubs while allowing terse variants
 - Each direction file's `contains` enforces:
   - The `:root` token system + 3 canonical token names (`--background` / `--foreground` / `--primary`) — agents that forget the token system trip Layer 1 immediately
   - The substring `Most Popular` — proxy for the required **pricing tile grid** surface (see prompt.md § 4 section #7). The "Most Popular" badge convention is universal across SaaS pricing surfaces; if a product's tier structure uses a different highlight word (e.g., "Recommended", "Featured", or "Free Forever" for a free-only product), the agent should include the literal substring `Most Popular` in a comment (`<!-- Most Popular tier: rendered as "Recommended" because <reason> -->`) or as the emphasis label, to pass the check

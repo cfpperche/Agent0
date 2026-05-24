@@ -1,6 +1,6 @@
 # Quality judge — `/product` v0.4.0
 
-The quality judge is an independent-context `opus` sub-agent dispatched **after each pipeline step** to grade the step's artifact(s) against the step's rubric. It is spec 075's replacement for the retired size-budget instrument: it answers *"is this artifact correctly scoped, complete, and coherent for its declared job?"* — the question the KB ceiling was a poor proxy for.
+The quality judge is an independent-context `opus` sub-agent dispatched **after each pipeline step** to grade the step's artifact(s) against the step's rubric. It is the replacement for the retired size-budget instrument: it answers *"is this artifact correctly scoped, complete, and coherent for its declared job?"* — the question the KB ceiling was a poor proxy for.
 
 This doc is the judge's operational contract: when it runs, how its rubric is assembled, the verdict it returns, how a verdict routes. The judge's 5-field dispatch brief lives in `delegation-briefs.md § quality-judge`; the rubric content lives in `quality-checklist.md`.
 
@@ -32,7 +32,7 @@ The judge runs once per **judge-unit**:
 
 ## Rubric assembly
 
-For a judge-unit the rubric is **assembled, not authored** — spec 075 authors no new rubric. Three sources:
+For a judge-unit the rubric is **assembled, not authored** authors no new rubric. Three sources:
 
 1. **`quality-checklist.md` per-step criteria** — the gradeable semantic criteria, each with a stable `id`. The judge grades each as a *semantic* read — "is this section substantive and load-bearing", not "does the string exist". Some steps (e.g. 07 Sitemap-IA) have no semantic criterion; their rubric is right-sizing + schema context only.
 2. **`schema.md` — as context, not a re-graded checklist.** The judge reads the step's `schema.md` (required sections, `contains`-anchors, `§ Size floor`) and `prompt.md` to know the artifact's required shape and job. The deterministic "does the anchor exist" check is already enforced at submit by `schema.md` Layer 1 — the judge does **not** re-run it. Schema is the judge's *brief*: the source of "what this artifact is for".
@@ -120,4 +120,3 @@ Phase 4 (step 15) has no gate — a `15a/15b/15c` `fail` cannot pre-populate any
 - `templates/pipeline/<NN-step>/schema.md` — the per-step structural context + `§ Size floor` `min_size`
 - `.claude/rules/artifact-budgets.md` — the retired size budget + the 200 KB catastrophe cap
 - `templates/report.md.tmpl § Quality concerns` — where `concern` / `fail` verdicts surface
-- `docs/specs/075-product-quality-audit/` — the spec; `notes.md` carries the verdict-shape + v5-additive decision trail

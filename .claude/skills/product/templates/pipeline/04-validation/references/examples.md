@@ -1,6 +1,6 @@
 # UX-audit examples — good vs bad
 
-Concrete contrasts for the load-bearing shapes in `validation-report.md`. Ported from `anthill-ux-audit` and augmented. The pattern in every pair: specific and actionable wins, vague loses.
+Concrete contrasts for the load-bearing shapes in `validation-report.md`. The pattern in every pair: specific and actionable wins, vague loses.
 
 ## Finding entry
 

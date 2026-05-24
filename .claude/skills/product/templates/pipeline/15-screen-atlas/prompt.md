@@ -6,7 +6,7 @@ delegation_hint: "synthesize screen-atlas.md — a navigable markdown visual-con
 
 # Step 15a — Screen atlas (the navigable visual contract)
 
-**Goal:** produce `screen-atlas.md` — the navigable markdown document engineering opens when starting the SDD build. The atlas **describes** every screen the v1 product needs (a contract); it does **not** build them. Per spec 066 the v2/v3 per-route screen-writer fan-out is deleted — Step 15a writes **ONE markdown file**: no `app/`, no `.tsx`, no `.html`, no layout files.
+**Goal:** produce `screen-atlas.md` — the navigable markdown document engineering opens when starting the SDD build. The atlas **describes** every screen the v1 product needs (a contract); it does **not** build them. The v2/v3 per-route screen-writer fan-out is deleted — Step 15a writes **ONE markdown file**: no `app/`, no `.tsx`, no `.html`, no layout files.
 
 The atlas is one of the three Step 15 sub-agents (**15a** atlas · **15b** hi-fi killer-flow mood · **15c** fixture-spec), dispatched in parallel. The atlas is the **prose half** of the visual contract; the hi-fi mood screens at `docs/screens/hifi/` (Step 15b) are the **rendered half**. The atlas references the hi-fi mood; it does not reproduce its markup.
 

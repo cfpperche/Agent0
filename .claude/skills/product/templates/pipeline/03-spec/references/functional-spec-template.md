@@ -147,7 +147,7 @@ If there are genuinely no open decisions, write instead:
 
 > No open decisions — all design choices are resolved in this spec.
 
-This table is the handoff contract `anthill-prd`'s successor (step 8) consumes — each row
+This table is the handoff contract step 8 (PRD) consumes — each row
 becomes a resolved requirement with a `from spec decision #N` back-reference.
 ```
 

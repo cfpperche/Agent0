@@ -2,13 +2,13 @@
 
 Every `Agent` tool call dispatched by `/product` v0.4.0 MUST use the 5-field handoff per `.claude/rules/delegation.md` (TASK / CONTEXT / CONSTRAINTS / DELIVERABLE / DONE_WHEN). The delegation-gate hook returns exit 2 otherwise.
 
-**Briefs cover every `/product` sub-agent dispatch** — one per pipeline step (Step 02 = direction-writer; Step 15 = the three visual-contract sub-agents 15a-atlas / 15b-hi-fi-mood / 15c-fixture-spec) plus the shared **§ Mood-screen-writer** template, used by Step 02 (lo-fi mode) and Step 15b (hi-fi mode). Per spec 066 the v2/v3 per-route Next.js/Expo `.tsx` screen-writer is **deleted** — `/product` ends at the visual contract; the runnable app is built by the SDD children scaffolded in Phase 5. The **§ Quality judge** brief (spec 075) is dispatched once per judge-unit AFTER the producer returns — an evaluator, not a producer.
+**Briefs cover every `/product` sub-agent dispatch** — one per pipeline step (Step 02 = direction-writer; Step 15 = the three visual-contract sub-agents 15a-atlas / 15b-hi-fi-mood / 15c-fixture-spec) plus the shared **§ Mood-screen-writer** template, used by Step 02 (lo-fi mode) and Step 15b (hi-fi mode). The v2/v3 per-route Next.js/Expo `.tsx` screen-writer is **deleted** — `/product` ends at the visual contract; the runnable app is built by the SDD children scaffolded in Phase 5. The **§ Quality judge** brief is dispatched once per judge-unit AFTER the producer returns — an evaluator, not a producer.
 
-**Per-step model assignment** (per spec 036 Q1 resolution preserved in spec 045): Step 01 = `opus` (concept brief multi-source synthesis); Steps 02-15 = `sonnet` (mechanical with dense brief + bundled template). The post-step **§ Quality judge** runs on `opus` (evaluation reasoning + a within-family asymmetry against the `sonnet` producers).
+**Per-step model assignment**: Step 01 = `opus` (concept brief multi-source synthesis); Steps 02-15 = `sonnet` (mechanical with dense brief + bundled template). The post-step **§ Quality judge** runs on `opus` (evaluation reasoning + a within-family asymmetry against the `sonnet` producers).
 
-**Substitution placeholders** ({{...}}) are replaced inline by the orchestrator (SKILL.md) before dispatch. The orchestrator reads `<out>/docs/.state.json` for `slug`, `idea`, `out`, `flags.stack`, `target_language` (resolved at Phase 0.5 per spec 054), and the prior-step outputs by path. **`{{stack_hint}}`** is an alias for `flags.stack` used by Step 08's CONTEXT block; when `state.flags.stack` is empty (founder did not pass `--stack`), the substituted value is the literal `(none declared)`.
+**Substitution placeholders** ({{...}}) are replaced inline by the orchestrator (SKILL.md) before dispatch. The orchestrator reads `<out>/docs/.state.json` for `slug`, `idea`, `out`, `flags.stack`, `target_language` (resolved at Phase 0.5), and the prior-step outputs by path. **`{{stack_hint}}`** is an alias for `flags.stack` used by Step 08's CONTEXT block; when `state.flags.stack` is empty (founder did not pass `--stack`), the substituted value is the literal `(none declared)`.
 
-**Per spec 054, every brief producing user-facing text MUST receive `{{target_language}}` substitution.** The orchestrator threads `.state.json.target_language` into the brief at dispatch time. Sub-agents read it and match all generated copy (page headings, button labels, microcopy, marketing copy, voice samples, etc) to that language. Code-flavored surfaces (e.g. `/settings/integrations` references to `API`, `OAuth`, etc) may stay English locally; flag those as exceptions in the brand-book `## Glossary § applies_to` column.
+**Per design discipline, every brief producing user-facing text MUST receive `{{target_language}}` substitution.** The orchestrator threads `.state.json.target_language` into the brief at dispatch time. Sub-agents read it and match all generated copy (page headings, button labels, microcopy, marketing copy, voice samples, etc) to that language. Code-flavored surfaces (e.g. `/settings/integrations` references to `API`, `OAuth`, etc) may stay English locally; flag those as exceptions in the brand-book `## Glossary § applies_to` column.
 
 ## Phase 1 — Discovery
 
@@ -55,7 +55,7 @@ CONSTRAINTS:
 - Self-contained HTML — single file, inline styles + SVG.
 - CSS :root custom properties (vendor-agnostic names: --color-primary, --background, --foreground).
 - Includes "Most Popular" string token + ≥1 `<svg` (catalog citation discipline).
-- **Do NOT produce sitemap.yaml** — that's Step 07's deliverable per spec 045 (sitemap-IA promoted to own step).
+- **Do NOT produce sitemap.yaml** — that's Step 07's deliverable (sitemap-IA is its own step).
 - Size floor: per `.claude/skills/product/templates/pipeline/02-prototype/schema.md § Size floor` — the `min_size` anti-stub floor (no scope ceiling).
 - Catastrophe cap per `.claude/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
 - Write file DIRECTLY to {{out}}/docs/direction-a.html. The 3-5 killer-flow lo-fi mood screens are produced by separate § Mood-screen-writer dispatches in lo-fi mode (sub-agent b — see § Mood-screen-writer below).
@@ -106,7 +106,7 @@ CONSTRAINTS:
 - Standard tier: PROJECTED mode. Audit infers contrast / tab order / a11y from spec + HTML inspection.
 - Heuristic-only — Nielsen 10 + WCAG 2.1 AA top issues.
 - validation_mode: `tested` / `intuition` / `not-applicable` — default `intuition`.
-- YAML frontmatter: `findings[]` with `{id, severity 1-4, heuristic, location, issue, recommendation, fix_skill_hint}` where fix_skill_hint ∈ `{design-system, screen-atlas, deferred}` (note: `prototype-v2` removed per spec 045 — Step 7 deleted; fixes that were `prototype-v2` now route to `screen-atlas`).
+- YAML frontmatter: `findings[]` with `{id, severity 1-4, heuristic, location, issue, recommendation, fix_skill_hint}` where fix_skill_hint ∈ `{design-system, screen-atlas, deferred}`.
 - ≥ 3 findings minimum.
 - ≥ 5 KB (anti-stub floor; no ceiling).
 - Catastrophe cap per `.claude/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
@@ -139,7 +139,7 @@ CONSTRAINTS:
 - P0/P1/P2 tiering — hard cut. Everything else is § Backlog (within Solution sketch section) or explicit § Anti-goals.
 - NSM is ONE primary metric in its dedicated slot; supporting observability metrics optional, listed as read-only follow-ons.
 - Spec-Pending decisions from Step 03 RESOLVED INLINE: founder-locked → apply; spec-default applies → state reason; genuinely open → § Upstream/downstream refs as "open: see followup".
-- Attribution: header comment "PRD shape based on Lenny Rachitsky's 1-pager template (lennysnewsletter.com/p/prds-1-pagers-examples) — hybrid w/ Steward-specific Release scope · NSM · Upstream refs sections per spec 045 Decision 15".
+- Attribution: header comment "PRD shape based on Lenny Rachitsky's 1-pager template (lennysnewsletter.com/p/prds-1-pagers-examples) — hybrid w/ Steward-specific Release scope · NSM · Upstream refs sections".
 - Write file DIRECTLY to {{out}}/docs/prd/v1.md.
 
 DELIVERABLE: {{out}}/docs/prd/v1.md
@@ -210,7 +210,7 @@ NOTE: Orchestrator parses this YAML after sub-agent returns and BLOCKS step + re
 
 ```
 # SKILL-DIRECTED: product
-TASK: Produce system-design.md + security.md + data-flow.json for "{{idea}}". System-design includes RACI matrix + risk register per spec 045. Data-flow.json is the structured inventory consumed by Step 09 legal for DPIA trigger.
+TASK: Produce system-design.md + security.md + data-flow.json for "{{idea}}". System-design includes RACI matrix + risk register. Data-flow.json is the structured inventory consumed by Step 09 legal for DPIA trigger.
 
 CONTEXT: Read prd.md at {{out}}/docs/prd/v1.md (scope drives scale assumption) + sitemap.yaml at {{out}}/docs/sitemap.yaml (route inventory drives integration list + auth requirements) + functional-spec.md at {{out}}/docs/functional-spec.md (preliminary architecture) + concept-brief.md at {{out}}/docs/concept-brief.md (product class + audience). **Stack hint from invocation:** `{{stack_hint}}` — the founder passed `--stack={{stack_hint}}` at invocation. Treat as a default the product class either justifies (record in § Stack rationale) or overrides (record the rationale for override in § Alternatives Considered). The final § Stack section is the binding contract — Phase 5 reads only what you write there; the flag is not re-read downstream. Read .claude/skills/product/templates/pipeline/08-system-design/prompt.md + schema.md.
 
@@ -258,7 +258,7 @@ DELIVERABLE: {{out}}/docs/legal-posture.md
 DONE_WHEN: File exists; size ≥ the `schema.md § Size floor` conditional `min_size`; escape clause at TOP (line 1-5); contains "Terms" + "Privacy" + "Licensing" + "Sub-Processor" + "Open Decisions" section headers; § DPIA present IF data-flow.json contains sensitive categories; § AI-Specific present IF LLM in Integrations; sub-processor count matches system-design integration count.
 ```
 
-### Step 10 — Roadmap (defines phases for Step 11 cost — per spec 045 cost↔roadmap swap)
+### Step 10 — Roadmap (defines phases for Step 11 cost — cost↔roadmap ordering)
 
 **model:** `sonnet`  ·  **subagent_type:** `general-purpose`
 
@@ -284,13 +284,13 @@ DELIVERABLE: {{out}}/docs/roadmap.md
 DONE_WHEN: File exists; size ≥ the `schema.md § Size floor` `min_size`; 3 phase headers present + each phase has 1-3 milestones + deliverables table per phase + § Open Decisions section; phase titles are user-flow-shaped (NOT generic labels like "Foundation").
 ```
 
-### Step 11 — Cost Estimate (per-phase using Step 10's roadmap — spec 045 swap)
+### Step 11 — Cost Estimate (per-phase using Step 10's roadmap swap)
 
 **model:** `sonnet`  ·  **subagent_type:** `general-purpose`
 
 ```
 # SKILL-DIRECTED: product
-TASK: Produce cost-estimate.md — single-scenario burn rate + run-cost line items for v1 of "{{idea}}", calculated PER PHASE using Step 10's roadmap phase boundaries (spec 045 cost↔roadmap swap).
+TASK: Produce cost-estimate.md — single-scenario burn rate + run-cost line items for v1 of "{{idea}}", calculated PER PHASE using Step 10's roadmap phase boundaries (cost↔roadmap ordering).
 
 CONTEXT: Read **roadmap.md at {{out}}/docs/roadmap.md (phase boundaries drive cost calculation — load-bearing for per-phase breakdown)** + system-design.md at {{out}}/docs/system-design.md (stack + integrations drive line items) + legal-posture.md at {{out}}/docs/legal-posture.md (DPIA + counsel review budget) + prd.md at {{out}}/docs/prd/v1.md (success metric drives scale assumption). Read .claude/skills/product/templates/pipeline/11-cost-estimate/prompt.md + schema.md.
 
@@ -356,9 +356,9 @@ TASK: Produce brand-book.md — voice + visual direction posture + we-are/we-are
 CONTEXT: Read prd.md at {{out}}/docs/prd/v1.md (finalized scope + NSM + persona) + gtm-launch.md at {{out}}/docs/gtm-launch.md (positioning canvas already locked — brand voice should reinforce, not contradict) + concept-brief.md at {{out}}/docs/concept-brief.md (audience + product class) + direction-a.html at {{out}}/docs/direction-a.html (visual lineage). Read .claude/skills/product/templates/pipeline/13-brand/prompt.md for canonical 7-section structure (we target 2-3 section snapshot at standard tier).
 
 CONSTRAINTS:
-- Standard tier: voice (1-2 paragraphs) + voice samples + ONE "We are / We are not" pair minimum + **`## Language` section (spec 054)** + **`## Glossary` section (spec 054)** + Visual Direction posture + Logo Direction (clear-space + min-size + ≥3 prohibited uses) + Color Story + Anti-Patterns.
+- Standard tier: voice (1-2 paragraphs) + voice samples + ONE "We are / We are not" pair minimum + **`## Language` section** + **`## Glossary` section** + Visual Direction posture + Logo Direction (clear-space + min-size + ≥3 prohibited uses) + Color Story + Anti-Patterns.
 - **Target language: `{{target_language}}`** (BCP-47, from `.state.json.target_language` resolved at Phase 0.5). All voice samples, "We are / We are not" pairs, anti-pattern bullets, color-story prose, and other brand prose in this language. The `## Language` section declares this target as a machine-readable `**target_language:** <bcp47>` line.
-- **Glossary obligation (spec 054):** the `## Glossary` H2 has two sub-sections — `### We say` (preferred terms / phrasing the brand favors) and `### We don't say` (avoided terms with native replacement, reason, and applies_to scope). 4-column table format: `| Term | Replacement | Reason | Applies to |`. Cap ≤ 20 entries per sub-section. Identify entries ORGANICALLY from concept-brief + positioning + product domain — domain jargon the founder uses naturally, voice traps the comparables fall into, anglicisms the brand should localize. **DO NOT auto-derive from positioning Unlike-clause** (positioning is product-vs-product level; glossary is copy-trap level; mechanical translation produces noise). Downstream Step 15 screen-writers consume `### We don't say` as a string-replace lookup.
+- **Glossary obligation:** the `## Glossary` H2 has two sub-sections — `### We say` (preferred terms / phrasing the brand favors) and `### We don't say` (avoided terms with native replacement, reason, and applies_to scope). 4-column table format: `| Term | Replacement | Reason | Applies to |`. Cap ≤ 20 entries per sub-section. Identify entries ORGANICALLY from concept-brief + positioning + product domain — domain jargon the founder uses naturally, voice traps the comparables fall into, anglicisms the brand should localize. **DO NOT auto-derive from positioning Unlike-clause** (positioning is product-vs-product level; glossary is copy-trap level; mechanical translation produces noise). Downstream Step 15 screen-writers consume `### We don't say` as a string-replace lookup.
 - Voice samples: 3 minimum (one-liner per surface type — headline, microcopy, CTA label).
 - Visual Direction names the feel (e.g. "Cool Brutalist", "Warm Premium") + 2-3 posture decisions (e.g. "hairline 1px borders only" / "monospace dominant" / "single saturated accent"). NO hex codes (Step 14 handles).
 - "We are / We are not" pair: contrast — NOT a flat adjective list.
@@ -387,8 +387,8 @@ CONTEXT: Read brand-book.md at {{out}}/docs/brand-book.md for posture + voice. R
 CONSTRAINTS:
 - Standard tier: catalog path PREFERRED — if 1-2 vendors match, inherit their tokens with brand-tuned overrides. Custom path fallback only.
 - Semantic token names ONLY — `--color-primary` not `--color-blue-500`; `--space-md` not `--space-12`. NO visual naming.
-- **tokens.css written to {{out}}/docs/design-system/tokens.css** (NOT root — root reserved for runtime per spec 036 finding #7 iter-2). The skeleton's `app/globals.css` imports it relative as `@import "../docs/design-system/tokens.css"`.
-- **tokens.css registers tokens under a Tailwind v4 `@theme` block (spec 066)** — NOT only a bare `:root` block. The `@theme` directive is what makes the tokens generate real utility classes (`bg-primary`, `text-fg`, `p-md`, `rounded-lg`, `font-sans`) — the downstream component-library SDD child consumes utilities, not raw vars. Use Tailwind v4 theme namespaces: `--color-*` (colors), `--text-*` (font sizes), `--radius-*` (radii), `--font-*` (families), `--spacing` / `--spacing-*` (scale). Dark-first posture unchanged: declare the dark values inside `@theme`; the light-mode `@media (prefers-color-scheme: light)` block overrides the `--color-*` vars in a following `:root` (Tailwind v4's theme-override pattern). Token coverage: color (8-14) + spacing (5-7 scale) + radius (3) + font (sans + mono + 5-7 size scale).
+- **tokens.css written to {{out}}/docs/design-system/tokens.css** (NOT root — root reserved for runtime). The skeleton's `app/globals.css` imports it relative as `@import "../docs/design-system/tokens.css"`.
+- **tokens.css registers tokens under a Tailwind v4 `@theme` block** — NOT only a bare `:root` block. The `@theme` directive is what makes the tokens generate real utility classes (`bg-primary`, `text-fg`, `p-md`, `rounded-lg`, `font-sans`) — the downstream component-library SDD child consumes utilities, not raw vars. Use Tailwind v4 theme namespaces: `--color-*` (colors), `--text-*` (font sizes), `--radius-*` (radii), `--font-*` (families), `--spacing` / `--spacing-*` (scale). Dark-first posture unchanged: declare the dark values inside `@theme`; the light-mode `@media (prefers-color-scheme: light)` block overrides the `--color-*` vars in a following `:root` (Tailwind v4's theme-override pattern). Token coverage: color (8-14) + spacing (5-7 scale) + radius (3) + font (sans + mono + 5-7 size scale).
 - tokens.css opens with a one-line comment `/* Tailwind v4 @theme — import after `@import "tailwindcss"` in the app's globals.css */` so the foundation SDD child wires the import order correctly.
 - components.md: per-component anatomy + variants + states for at least Button / Input / Card / Table / Badge / Dialog / EmptyState. 3+ KB.
 - README.md (design-system overview): overview + tokens narrative + audit-response section (which step-04 findings applied as token tunes) + catalog lineage citations. 8+ KB. Required H2: "Audit Response".
@@ -402,7 +402,7 @@ DONE_WHEN: tokens.css ≥ 1.5 KB valid CSS with a Tailwind v4 `@theme` block (re
 
 ## Phase 4 — Visual contract
 
-Phase 4 is Step 15 — the **visual contract**. Per spec 066 the v2/v3 per-route screen-writer fan-out is **deleted**: `/product` no longer generates an `app/**/page.tsx` screen set, writes no route-group layouts, runs no build verification. The runnable app is built by the SDD children scaffolded in Phase 5. Step 15 dispatches the three sub-agents in **two waves** (spec 076 #5): wave A = **(15a) the atlas-writer + (15c) the fixture-spec-writer in one message** (parallel — no shared input, distinct output paths, no FS race); wave B = **(15b) the hi-fi mood-screen-writer after 15c returns** (the Mood-screen-writer brief in hi-fi mode reads `fixture-spec.md` — 15c's deliverable — so 15b CANNOT share a message with 15c).
+Phase 4 is Step 15 — the **visual contract**. The v2/v3 per-route screen-writer fan-out is **deleted**: `/product` no longer generates an `app/**/page.tsx` screen set, writes no route-group layouts, runs no build verification. The runnable app is built by the SDD children scaffolded in Phase 5. Step 15 dispatches the three sub-agents in **two waves**: wave A = **(15a) the atlas-writer + (15c) the fixture-spec-writer in one message** (parallel — no shared input, distinct output paths, no FS race); wave B = **(15b) the hi-fi mood-screen-writer after 15c returns** (the Mood-screen-writer brief in hi-fi mode reads `fixture-spec.md` — 15c's deliverable — so 15b CANNOT share a message with 15c).
 
 ### Step 15a — Screen atlas (the navigable visual contract)
 
@@ -412,7 +412,7 @@ Phase 4 is Step 15 — the **visual contract**. Per spec 066 the v2/v3 per-route
 # SKILL-DIRECTED: product
 TASK: Produce screen-atlas.md — the navigable visual-contract document for the complete v1 surface of "{{idea}}". The atlas is a MARKDOWN INDEX. Write NO `app/` files, NO layout.tsx, NO page.tsx, NO HTML — the atlas DESCRIBES the screens the SDD children will build; it does not build them.
 
-CONTEXT: Read ALL prior artifacts at {{out}}/docs/ (semantic-named per spec 048; pipeline order via REPORT.md):
+CONTEXT: Read ALL prior artifacts at {{out}}/docs/ (semantic-named; pipeline order via REPORT.md):
 - Phase 1 (Discovery): concept-brief.md, functional-spec.md, validation-report.md, direction-a.html + screens/ (lo-fi mood — visual lineage)
 - Phase 2 (Specification): prd/v1.md (US-NN inventory — load-bearing for PRD coverage), ost.md, sitemap.yaml (route inventory — load-bearing for the Screens Index), system-design.md + security.md + data-flow.json, legal-posture.md (legal-mandatory surfaces — consent dialog if DPIA fires), roadmap.md, cost-estimate.md, gtm-launch.md
 - Phase 3 (Identity): brand-book.md, design-system/tokens.css, design-system/components.md, design-system/README.md
@@ -470,7 +470,7 @@ DONE_WHEN: File exists; size ≥ 2 KB (anti-stub floor); contains "## Persona" +
 
 ## Mood-screen-writer (lo-fi mood for Step 02 · hi-fi mood for Step 15b)
 
-ONE brief, two modes. Produces self-contained static HTML **mood screens** — a rendered visual exploration of the killer flow. Per spec 066 this REPLACES the deleted per-route Next.js/Expo `.tsx` screen-writer: `/product` produces mood HTML, never an `app/**/page.tsx` screen set. Dispatched per screen, capped at 5 concurrent (see § Concurrency cap). The orchestrator substitutes `{{mood_tier}}` (`lo-fi` or `hi-fi`), the per-screen `{{NN}}` / `{{name}}` / `{{screen_intent}}`, and the output path before dispatch.
+ONE brief, two modes. Produces self-contained static HTML **mood screens** — a rendered visual exploration of the killer flow. Per design discipline, this REPLACES the deleted per-route Next.js/Expo `.tsx` screen-writer: `/product` produces mood HTML, never an `app/**/page.tsx` screen set. Dispatched per screen, capped at 5 concurrent (see § Concurrency cap). The orchestrator substitutes `{{mood_tier}}` (`lo-fi` or `hi-fi`), the per-screen `{{NN}}` / `{{name}}` / `{{screen_intent}}`, and the output path before dispatch.
 
 | Mode | Step | Pre/post brand | Output path | Tokens source |
 |---|---|---|---|---|
@@ -492,8 +492,8 @@ CONTEXT:
 
 CONSTRAINTS:
 - **Self-contained static HTML** — single file, one `<style>` block in `<head>`, inline `<svg>` for any chart/icon. NO external CSS/JS, NO build step, NO framework. The file opens directly via `file://`.
-- **MOBILE-FIRST IS MANDATORY (spec 066 — closes F1).** Author the base CSS for the 375 px viewport; layer wider layouts via `@media (min-width: …)` breakpoints inside the `<style>` block. The screen MUST reflow with NO horizontal overflow at 375 px AND read correctly at 1280 px.
-- **EXACTLY ONE NAV RENDERS AT ANY VIEWPORT WIDTH (spec 076 #3).** The desktop nav/sidebar is `display:none` below the mobile breakpoint; the mobile nav (hamburger / bottom-tab / drawer) is `display:none` above it. A wrapped desktop nav at 375 px is a hard violation, not just an overflow concern — the SKILL.md overflow probe (`scrollWidth > clientWidth`) cannot catch a wrap. Pick one nav per breakpoint and hide the other; never let both render concurrently.
+- **MOBILE-FIRST IS MANDATORY.** Author the base CSS for the 375 px viewport; layer wider layouts via `@media (min-width: …)` breakpoints inside the `<style>` block. The screen MUST reflow with NO horizontal overflow at 375 px AND read correctly at 1280 px.
+- **EXACTLY ONE NAV RENDERS AT ANY VIEWPORT WIDTH.** The desktop nav/sidebar is `display:none` below the mobile breakpoint; the mobile nav (hamburger / bottom-tab / drawer) is `display:none` above it. A wrapped desktop nav at 375 px is a hard violation, not just an overflow concern — the SKILL.md overflow probe (`scrollWidth > clientWidth`) cannot catch a wrap. Pick one nav per breakpoint and hide the other; never let both render concurrently.
 - **NEVER use `style=` attributes for layout/positioning.** All layout (flex, grid, spacing, sizing) lives in the `<style>` block as classes — an inline `style=` cannot carry a media query, which is exactly why it breaks mobile-first. A `style=` attribute carrying `display` / `width` / `margin` / `padding` / `position` is a hard violation. (A `style=` carrying ONLY a single dynamic value — e.g. a progress-bar `width` — is the lone tolerated exception.)
 - **Tokens, not raw values.** Declare a `:root` block. lo-fi: exploratory custom properties from `direction-a.html`. hi-fi: copy the `:root` values verbatim from `design-system/tokens.css`. Every color / spacing / radius / font reads `var(--token)` — no bare `#hex`, no hard-coded `px` for layout (1px borders are the idiomatic exception).
 - **hi-fi copy is real, on-brand, fixture-grounded.** Every user-facing string matches `brand-book.md` voice and respects `## Glossary § We don't say`. Every datum (names, numbers, dates) comes from `fixture-spec.md` — no lorem ipsum, no invented incoherent data. **Target language: `{{target_language}}`.**
@@ -507,9 +507,9 @@ DELIVERABLE: the {{mood_tier}} mood screen HTML file at the orchestrator-named p
 DONE_WHEN: File exists; valid self-contained HTML with one `<style>` block + a `:root` token block; size ≥ the 4 KB anti-stub floor; the `<style>` block carries ≥1 `@media (min-width: …)` breakpoint and the base CSS targets 375 px (mobile-first); NO `style=` layout attributes; no horizontal overflow at 375 px; hi-fi screens read `var(--token)` from tokens.css + render `fixture-spec.md` data + carry on-brand copy.
 ```
 
-## Quality judge (dispatched after every step — spec 075)
+## Quality judge (dispatched after every step)
 
-ONE brief, one dispatch per **judge-unit** (steps 01-14 = the step; Step 15 = `15a-screen-atlas` / `15b-hifi-mood` / `15c-fixture-spec`, judged separately). Dispatched by the orchestrator AFTER a step's producer returns and the `wc -c` anti-stub pre-filter passes — an independent-context sub-agent that grades the step's artifact(s) against the step's rubric and emits a structured verdict. It is spec 075's replacement for the retired size-budget instrument. The full operational contract — rubric assembly, the verdict shape, the verdict→gate routing — is `references/quality-judge.md`; this is the dispatch template. The orchestrator substitutes `{{step_label}}`, `{{artifact_paths}}`, `{{schema_dir}}`, `{{rubric_section}}`, `{{verdict_path}}`, `{{out}}` before dispatch.
+ONE brief, one dispatch per **judge-unit** (steps 01-14 = the step; Step 15 = `15a-screen-atlas` / `15b-hifi-mood` / `15c-fixture-spec`, judged separately). Dispatched by the orchestrator AFTER a step's producer returns and the `wc -c` anti-stub pre-filter passes — an independent-context sub-agent that grades the step's artifact(s) against the step's rubric and emits a structured verdict. It is the replacement for the retired size-budget instrument. The full operational contract — rubric assembly, the verdict shape, the verdict→gate routing — is `references/quality-judge.md`; this is the dispatch template. The orchestrator substitutes `{{step_label}}`, `{{artifact_paths}}`, `{{schema_dir}}`, `{{rubric_section}}`, `{{verdict_path}}`, `{{out}}` before dispatch.
 
 The step producers' briefs deliberately do **not** mention the judge — telling a producer it will be graded invites writing-to-the-judge bias. The judge evaluates after the fact.
 
@@ -544,11 +544,11 @@ DONE_WHEN: {{verdict_path}} exists and parses as JSON; carries `step` = "{{step_
 
 The Step 02 lo-fi mood-screen-writers and the Step 15b hi-fi mood-screen-writers fan out: **MAX 5 concurrent `Agent` calls** each. Both phases produce 3-5 mood screens (killer flow only), so the cap is rarely hit — it stands as the guardrail. Step 15a (atlas) + 15c (fixture-spec) are dispatched together in wave A (one message, 2 calls); Step 15b (hi-fi mood) is wave B (after 15c returns — see § Phase 4) and fans out up to 5 concurrent killer-flow calls. Wave A's 2 calls + wave B's 5-screen fan-out are sequential waves, both well within the per-wave cap.
 
-**Cap=5 was proven non-OOM** on spec 034's 17-route dogfood (2026-05-17).
+**Cap=5 was proven non-OOM** on a 17-route dogfood (2026-05-17).
 
 ## Failure handling
 
-Per spec 045 (port of spec 036 Q4 resolution), updated for the spec 066 restructure:
+Per design discipline, updated for the v0.4.0 restructure:
 
 - **Step 01 BLOCKED** → ABORT the entire run (upstream-of-everything).
 - **Step 15a (atlas) BLOCKED** → ABORT the entire run (the atlas IS the visual contract; Phase 5's SDD handoff has nothing to hand off without it).
@@ -568,6 +568,3 @@ Mood-screen-writer (per-screen) failures within Step 02 or Step 15b: mark the sp
 - `SKILL.md` — orchestration body that dispatches these briefs
 - `.claude/rules/delegation.md` — 5-field handoff discipline
 - `templates/pipeline/<step>/prompt.md` — canonical step brief (sub-agents read this directly)
-- `docs/specs/066-product-ui-quality/` — the restructure spec (delete the screen-writer fan-out; end at the visual contract + SDD handoff)
-- `docs/specs/045-prototype-skill-pipeline-realign/` — pipeline lineage
-- `docs/specs/032-pipeline-industry-alignment/` — parent industry-alignment (17 decisions ported here)

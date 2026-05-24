@@ -34,7 +34,7 @@ Case-insensitive on the key, case-sensitive on the value. Place it near the top 
 
 ## Optional YAML frontmatter — structured findings handoff
 
-The report MAY open with a YAML frontmatter block (`---` ... `---`) carrying a structured `findings[]` field that downstream steps (step 6 design-system, step 7 screen-atlas) read programmatically. This is the audit-as-delegation-manifest pattern restored from the anthill comparison (the original `anthill-ux-audit` schema-validated its frontmatter; the pre-prepare port had pure markdown). Optional, not required by Layer 1 — but **strongly recommended** when `validation_mode: intuition` or `tested` AND the audit branch is `(i) measurable` (HTML inputs), because that's when the findings have the concrete data downstream consumers can act on.
+The report MAY open with a YAML frontmatter block (`---` ... `---`) carrying a structured `findings[]` field that downstream steps (step 6 design-system, step 7 screen-atlas) read programmatically. This is the audit-as-delegation-manifest pattern — schema-validated frontmatter so downstream consumers route findings without re-parsing prose. Optional, not required by Layer 1 — but **strongly recommended** when `validation_mode: intuition` or `tested` AND the audit branch is `(i) measurable` (HTML inputs), because that's when the findings have the concrete data downstream consumers can act on.
 
 Frontmatter shape:
 

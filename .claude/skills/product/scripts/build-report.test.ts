@@ -1,5 +1,5 @@
 /**
- * Unit + integration tests for build-report.ts (spec 073, product-report-html).
+ * Unit + integration tests for build-report.ts.
  *
  * Covers the exported pure pieces — `escapeForScriptTag`, `classifyArtifact` —
  * plus `buildReportHtml` against synthetic fixture `docs/` trees: full run,

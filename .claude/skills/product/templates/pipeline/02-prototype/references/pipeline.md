@@ -66,7 +66,7 @@ When the OD vendor is available, seed from `<vendor_paths.skills>/web-prototype/
 ### Build phase rules (hard — any failure = fix pass before emit)
 
 1. All 6 palette tokens declared in `:root` (`--background` / `--foreground` / `--primary` / `--accent` / `--border` / `--muted`)
-2. **Recommended: enrich the token system beyond the 6 base palette tokens** for landing-page cohesion. Anthill's reference directions declare ~18 tokens; this richness is what makes sections feel like one designed product rather than independent fragments. Suggested extensions:
+2. **Recommended: enrich the token system beyond the 6 base palette tokens** for landing-page cohesion. Reference landing-page directions typically declare ~18 tokens; this richness is what makes sections feel like one designed product rather than independent fragments. Suggested extensions:
    - **Surface elevation:** `--surface-1` / `--surface-2` / `--surface-3` (progressively elevated card / panel / hover surfaces)
    - **Border weight:** `--border-subtle` (5-8% opacity) / `--border-std` (12-15% opacity) — semi-transparent variants of foreground
    - **Typography scale:** `--fs-display` (`clamp(36px, 5vw, 56px)` for fluid hero), `--fs-h2`, `--fs-h3`, `--fs-body` (15-16px), `--fs-meta` (12px)

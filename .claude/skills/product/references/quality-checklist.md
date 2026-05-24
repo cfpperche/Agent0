@@ -1,6 +1,6 @@
 # Quality rubric — `/product` v0.4.0
 
-_Referenced as `quality-checklist.md` for historical continuity. Spec 075 repositioned it from an orchestrator self-check doc into the **quality judge's rubric contract** — the semantic half of the per-step rubric the judge grades against._
+_Referenced as `quality-checklist.md` for historical continuity. It is the **quality judge's rubric contract** — the semantic half of the per-step rubric the judge grades against._
 
 For each pipeline step the quality judge assembles a rubric from three sources and grades the step's artifact(s) pointwise:
 
@@ -10,9 +10,9 @@ For each pipeline step the quality judge assembles a rubric from three sources a
 
 `quality-judge.md` owns rubric assembly, the verdict JSON shape, and the verdict→gate routing. This file owns the content of source (2).
 
-**Size is not a criterion.** Spec 075 retired artifact size as a quality/scope signal. The `schema.md § Size floor` `min_size` is a `wc -c` anti-stub pre-filter (the orchestrator skips the judge on a stub); the uniform 200 KB catastrophe cap is a token-runaway circuit-breaker. The judge grades neither — it grades whether the artifact is correctly scoped, complete, and coherent (the right-sizing criterion), never how many bytes it is.
+**Size is not a criterion.** Artifact size is no longer a quality/scope signal. The `schema.md § Size floor` `min_size` is a `wc -c` anti-stub pre-filter (the orchestrator skips the judge on a stub); the uniform 200 KB catastrophe cap is a token-runaway circuit-breaker. The judge grades neither — it grades whether the artifact is correctly scoped, complete, and coherent (the right-sizing criterion), never how many bytes it is.
 
-**Spec 066 reshaped Phase 4-5.** The v2/v3 per-route screen-writer fan-out is gone — no `app/**/page.tsx` set, no `pnpm install` / build verification, no `tsc` / `biome` ship gate. Steps 01-14 are unchanged; Step 15 is the three-part visual contract (§ Visual-contract rubric criteria); Phase 5 is the SDD handoff (§ Deterministic gates).
+**v0.4.0 reshaped Phase 4-5.** The v2/v3 per-route screen-writer fan-out is gone — no `app/**/page.tsx` set, no `pnpm install` / build verification, no `tsc` / `biome` ship gate. Steps 01-14 are unchanged; Step 15 is the three-part visual contract (§ Visual-contract rubric criteria); Phase 5 is the SDD handoff (§ Deterministic gates).
 
 ## Per-step rubric criteria (steps 01-14)
 
@@ -125,7 +125,7 @@ Mechanical checks the orchestrator runs directly — pass/fail by `grep`, parse,
 - See `references/sdd-handoff.md` for the full Phase 5 contract.
 
 ### Skill-self compliance (non-skippable)
-`bash .claude/skills/skill/scripts/validate.sh .claude/skills/product` exits 0 — the spec 033 gate. NOT optional. The skill prints the result in the Phase 5 handoff.
+`bash .claude/skills/skill/scripts/validate.sh .claude/skills/product` exits 0 — the skill-compliance gate. NOT optional. The skill prints the result in the Phase 5 handoff.
 
 ### Best-effort visual check (Step 15b)
 If the Playwright MCP is loaded this session, each `docs/screens/hifi/*.html` is screenshotted at 375 px + 1280 px and probed for horizontal overflow (`scrollWidth > clientWidth`). Results land in `REPORT.md § Visual check`. If the MCP is not loaded, a `visual-gate-skipped` advisory is recorded. **Best-effort — never blocks the run.**
@@ -134,7 +134,7 @@ If the Playwright MCP is loaded this session, each `docs/screens/hifi/*.html` is
 
 | Source | REPORT.md section |
 |---|---|
-| Judge verdicts — per-step + visual-contract (`concern` / `fail` rows) | `## Quality concerns` (spec 075 — `scope_assessment` + flagged criteria) |
+| Judge verdicts — per-step + visual-contract (`concern` / `fail` rows) | `## Quality concerns` |
 | Per-step rubric (01-14) — pass / blocked status | `## Pipeline coverage` |
 | Visual-contract rubric (15a / 15b / 15c) | `## Visual contract` |
 | SDD handoff | `## SDD handoff` |

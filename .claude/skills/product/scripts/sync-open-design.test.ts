@@ -1,5 +1,5 @@
 /**
- * Unit tests for the OD vendor sync engine (spec 027, scripts/sync-open-design.ts).
+ * Unit tests for the OD vendor sync engine.
  *
  * Covers the pure, exported pieces — `computeTreeChecksum`, `validateManifestShape`,
  * `validateDesignMd` — plus `verifyManifest` drift detection against a fixture tree.

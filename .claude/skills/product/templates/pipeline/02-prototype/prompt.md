@@ -108,7 +108,7 @@ Use `model: opus` for each sub-agent — sonnet times out on heavy step-2 templa
 
 **Why this pattern** — not just parallelism for speed:
 
-- **Anti-convergence** — pre-attributing the angle makes "2 of 3 directions land on the same dark-canvas vibe" structurally impossible. The spec 027 dogfood documented the convergence failure of the single-Producer pattern; this fan-out is the durable fix. Without pre-attribution, the brief's centre of gravity (here typically "dark-mode-leaning + Linear-grade speed") pulls every direction toward the same axis.
+- **Anti-convergence** — pre-attributing the angle makes "2 of 3 directions land on the same dark-canvas vibe" structurally impossible. An earlier dogfood documented the convergence failure of the single-Producer pattern; this fan-out is the durable fix. Without pre-attribution, the brief's centre of gravity (here typically "dark-mode-leaning + Linear-grade speed") pulls every direction toward the same axis.
 - **Honest DS-fit grading** — isolation makes each sub-agent grade its own DS-catalogue fit against ITS angle, not against an internal multi-direction comparison. The dogfood found this as an emergent property: sub-agents disclose partial fits by name ("Warp is a stretch citation for Cool Brutalist — I borrowed only the terminal-block layout DNA; native warm-parchment palette was swapped") and disclose when an accent is brief-specified rather than DS-inherited (Direction C's oxblood). **Promote this discipline explicitly** in CONSTRAINTS: instruct the sub-agent to disclose partial fits and brief-specified-not-DS choices, both inline in the HTML's lineage section and back to the parent in its DELIVERABLE message.
 - **Context-budget hygiene** — three sub-agents materialise their HTML in their own contexts; the parent's context stays fresh for the cross-cutting work (compare.html + REPORT.md) and for the user-checkpoint dialogue.
 
@@ -141,7 +141,7 @@ Read `references/visual-constraints.md` + `references/a11y-checklist.md` + `refe
 </section>
 ```
 
-This is the **discipline that separates landing-page cohesion from loose sections**. Headings alone are not enough; the eyebrow + title + lead trio gives every section narrative entry. Anthill's reference output uses this rhythm consistently across every content section — adopt it. The header (#1) and palette strip (#2) sections may use a lighter variant (no lead) but content sections #3-#6 must carry all 4 layers.
+This is the **discipline that separates landing-page cohesion from loose sections**. Headings alone are not enough; the eyebrow + title + lead trio gives every section narrative entry. Reference landing-page output uses this rhythm consistently across every content section — adopt it. The header (#1) and palette strip (#2) sections may use a lighter variant (no lead) but content sections #3-#6 must carry all 4 layers.
 
 Eyebrow content — use these EXACT labels (or close variants that explicitly name the section type — NOT the section content):
 
@@ -281,7 +281,7 @@ Pull the **Scale** field from the concept brief's identity block. Map it:
 | Micro-Product / single-purpose tool / CLI helper | **3-5** | Primary action surface · settings · empty-error. CLI: `--help` / primary command / error output. |
 | Mobile App (focused, 1-persona) | **4-7** | Onboarding · main view · detail · settings · (1-2 mechanic surfaces) |
 | Developer Tool / API-first | **4-8** | Landing · dashboard · integration / quickstart · key-state · error / empty |
-| SMB SaaS (the spec 026 default) | **6-10** | Landing · onboarding · dashboard · 2 core CRUD/workflow · settings · empty-error |
+| SMB SaaS (the default) | **6-10** | Landing · onboarding · dashboard · 2 core CRUD/workflow · settings · empty-error |
 | Venture-Scale / Marketplace / multi-persona | **10-15** | Multi-persona surfaces (consumer-side + provider-side) increase the count linearly |
 
 Brief field is missing or ambiguous → ask the user during discovery (§ 2) or default to **SMB SaaS** (6-10).
@@ -301,7 +301,7 @@ Brief field is missing or ambiguous → ask the user during discovery (§ 2) or 
 
 Use as starting points, not as the answer. Each line is one HTML file.
 
-**SMB SaaS, N=8 (the spec 026 default — was hardcoded, now derived):**
+**SMB SaaS, N=8 (the default — was hardcoded, now derived):**
 1. `01-landing.html` — full marketing landing (hero, value sections, pricing, FAQ)
 2. `02-onboarding.html` — first-run wizard (3-5 steps)
 3. `03-dashboard.html` — primary in-product workspace
@@ -355,8 +355,8 @@ Call `product_advance` to move to step 3 (spec). Step 2 carries a Layer 3 checkp
 - Design tokens for code consumption. Step 6 (design-system) emits the `tokens.css` consumed by step 7 + step 13
 - User testing of the mockups. Step 4 (validation) validates via intuition-mode or tested-mode
 
-## What this step replaces
+## Scope notes
 
-Anthill's `anthill-prototype` skill (402 LOC SKILL.md + 10 references = 2311 LOC total) in `html-mockup` mode. The `stack-native` half (full-product / mobile-native / shadcn-bootstrap = 1382 LOC across 3 references) is OUT OF SCOPE per spec 026 — those reappear when step 13 (prototype-v3) gets the framework-synthesis port.
+This step ships the `html-mockup` mode of prototype generation. The `stack-native` half (full-product / mobile-native / shadcn-bootstrap framework-synthesis) is OUT OF SCOPE — that reappears if and when a future prototype-v3 step (step 13) gets the framework-synthesis port.
 
-The OD vendor bundle (anthill's `.anthill/vendor/open-design/` + `.anthill/design-systems/`) **ships inside the `/product` skill** (spec 027 ported to MCP; spec 049 re-homed to the skill): 73 vendored `DESIGN.md` design systems at `.claude/skills/product/design-systems/<vendor>/DESIGN.md`, 33 skill bundles + 5-school direction library at `.claude/skills/product/vendor/open-design/`, pinned and checksum-verified. The agent picks systems from the catalogue index at `.claude/skills/product/references/od-catalog-index.json` and `Read`s the chosen `DESIGN.md` paths directly — see `references/od-bridge.md` for the pre-flight read sequence. DESIGN.md citation by name + path is mandatory (`schema.md` enforces it). The pre-OD inline 5-school description is retained in `references/pipeline.md` § "Manual escape — OD vendor unavailable" as a documented fallback for broken installs.
+The Open Design (OD) vendor bundle **ships inside the `/product` skill**: 73 vendored `DESIGN.md` design systems at `.claude/skills/product/design-systems/<vendor>/DESIGN.md`, 33 skill bundles + 5-school direction library at `.claude/skills/product/vendor/open-design/`, pinned and checksum-verified. The agent picks systems from the catalogue index at `.claude/skills/product/references/od-catalog-index.json` and `Read`s the chosen `DESIGN.md` paths directly — see `references/od-bridge.md` for the pre-flight read sequence. DESIGN.md citation by name + path is mandatory (`schema.md` enforces it). The pre-OD inline 5-school description is retained in `references/pipeline.md` § "Manual escape — OD vendor unavailable" as a documented fallback for broken installs.

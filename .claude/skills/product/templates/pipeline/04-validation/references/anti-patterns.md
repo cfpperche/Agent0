@@ -1,6 +1,6 @@
 # UX-audit anti-patterns
 
-Ported from `anthill-ux-audit` and augmented for this pipeline's three-mode posture. Each row: the trap, then the fix. Read before auditing.
+Each row: the trap, then the fix. Read before auditing.
 
 ## Audit-quality traps
 

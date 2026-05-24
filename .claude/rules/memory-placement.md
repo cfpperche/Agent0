@@ -112,6 +112,45 @@ metadata:
 
 Conforming entries pass silently. `MEMORY.md` (the index) is skipped — it carries no frontmatter by design.
 
+## Event journal
+
+`.claude/memory/MEMORY.md` is a **derived view**, regenerated from the entries' `name` + `description` frontmatter. Two cooperating hooks make the system self-consistent:
+
+- **`PostToolUse(Edit|Write|MultiEdit)`** → `.claude/hooks/memory-events-journal.sh` fires on any write to `.claude/memory/*.md` (excluding `MEMORY.md`). Appends one JSONL event to `.claude/.memory-events.jsonl` AND invokes `bash .claude/tools/memory-project.sh` to regenerate `MEMORY.md` from the current entries. Always exit 0 — failure modes (unwritable journal, missing `jq`, projection error) emit a `memory-journal-advisory:` line and continue. The PreToolUse gate is the only blocking part of this capacity.
+
+- **`PreToolUse(Edit|Write|MultiEdit)`** → `.claude/hooks/memory-index-gate.sh` blocks raw edits to `.claude/memory/MEMORY.md` (exit 2 with corrective template) unless the tool input carries `# OVERRIDE: memory-index-edit: <reason ≥10 chars>` (or the equivalent `<!-- OVERRIDE: memory-index-edit: <reason> -->` HTML-comment form). Override-bypassed edits are recorded as `manual-edit` events in the journal with the reason as a field.
+
+### Event shape
+
+One JSONL line per memory write. Five `event_type` values:
+
+| `event_type` | When | Fields |
+| --- | --- | --- |
+| `add` | First write of an `entry_id` (no prior `add` in journal) | `ts`, `entry_id`, `actor`, `session_id`, `tool_use_id`, `tool` |
+| `update` | Subsequent write of an `entry_id` that already has an `add` | same as `add` |
+| `delete` | Reserved — not auto-emitted in v1 (no file-removal hook event) | `ts`, `entry_id`, `actor` |
+| `rename` | Manual append when renaming an entry (no auto-detect in v1) | `ts`, `entry_id`, `prev_entry_id`, `actor` |
+| `manual-edit` | PreToolUse gate override accepted | adds `reason` field |
+
+`entry_id = basename(filename, '.md')` — naturally stable, machine-derivable, no schema field needed. `actor = agent_type` when present in the hook payload (sub-agent edits), else `"parent"`. `ts` in ISO-8601 UTC; the backfill uses git-introduction timestamps which may carry a timezone offset (acceptable — JSONL consumers parse both).
+
+### Per-machine journal (gitignored)
+
+`.claude/.memory-events.jsonl` is **gitignored** — per-machine cache, sibling to `.claude/delegation-audit.jsonl` and `.claude/.runtime-state/`. A git-tracked journal would produce merge conflicts on every concurrent commit across a multi-contributor fork; entry files themselves are git-tracked and carry the durable record via `git log --follow`. On a new leader machine, run `bash .claude/tools/memory-backfill.sh` once to seed the journal with one `add` event per existing entry (`ts` derived from git-introduction time). Idempotent — re-running on a populated journal is a no-op.
+
+The first invocation of the journal hook on an empty journal emits a one-time `memory-journal-advisory: journal empty; run bash .claude/tools/memory-backfill.sh` to mitigate the otherwise-silent add-vs-update misclassification.
+
+### Direct `git commit` opt-out
+
+A human running `vim .claude/memory/MEMORY.md && git commit` bypasses the tool-surface gate. This is explicitly opt-out — the operator is responsible for re-running `bash .claude/tools/memory-project.sh` afterward to re-converge. The next agent-driven edit to any entry restores consistency anyway.
+
+### Cross-references
+
+- `.claude/hooks/memory-events-journal.sh` / `.claude/hooks/memory-index-gate.sh` — implementations
+- `.claude/tools/memory-project.sh` / `.claude/tools/memory-backfill.sh` — operator commands
+- `.claude/memory/cc-platform-hooks.md` — hook event semantics + `agent_id` / `agent_type` payload conventions
+- `.claude/rules/delegation.md` § *Advisories* / *Audit log* — `memory-journal-advisory:` follows the project advisory grammar; the JSONL shape mirrors `.claude/delegation-audit.jsonl`
+
 ## Cross-cutting artifacts (not buckets, but related)
 
 - **`CLAUDE.md`** — first-contact orientation, capacity inventory, always loaded. Points at memory/rules/specs as needed.

@@ -1,5 +1,5 @@
 ---
-name: anthill-port-workflow
+name: Anthill-port workflow
 description: Observed stable workflow that emerged from porting anthill skills (steps 5-8 of spec 026 Phase B) — port → audit smells → write template → dogfood (opus sub-agent) → fold gaps same-session → validator → commit → SESSION.md handoff. Pattern, not rule; future ports may deviate when justified.
 metadata:
   type: project

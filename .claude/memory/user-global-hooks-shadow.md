@@ -1,5 +1,5 @@
 ---
-name: user-global-hooks-shadow
+name: User-global hooks shadow project hooks
 description: User-global hooks under ~/.claude/hooks/ fire BEFORE project hooks; can shadow Agent0 capacities. If dogfood gives unexpected interception, check there first.
 metadata:
   type: reference

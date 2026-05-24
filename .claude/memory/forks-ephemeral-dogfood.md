@@ -1,5 +1,5 @@
 ---
-name: forks-ephemeral-dogfood
+name: Forks are ephemeral dogfood
 description: Capacity docs' "forks" framing is forward-looking; current reality is all forks are spun-up-then-archived dogfood projects. Hard-cutover is the default back-compat posture.
 metadata:
   type: project

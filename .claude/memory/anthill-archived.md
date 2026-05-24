@@ -1,5 +1,5 @@
 ---
-name: anthill-archived
+name: Anthill archived
 description: anthill (the skill/agent harness Agent0 ports content from) is archived as of 2026-05-13; no longer evolves; quality reference, not a moving target
 metadata:
   type: project

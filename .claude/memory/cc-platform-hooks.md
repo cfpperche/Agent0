@@ -1,17 +1,17 @@
 ---
 name: Claude Code platform hooks
-description: Canonical surface of 32 Claude Code hook events and the exit-zero PostToolUse
+description: Canonical surface of 29 Claude Code hook events and the exit-zero PostToolUse
   gotcha; consult before designing any hook-based capacity
 metadata:
   type: reference
   created_at: '2026-05-11T19:33:20-03:00'
-  last_accessed: '2026-05-24'
+  last_accessed: '2026-05-25'
   confirmed_count: 0
 ---
 
-The Claude Code hook system exposes **32 event names**, not the ~9 commonly cited. This memory captures the canonical surface, the event semantics (success vs failure), and the meta-lesson behind why this file exists.
+The Claude Code hook system exposes **29 event names**, not the ~9 commonly cited. This memory captures the canonical surface, the event semantics (success vs failure), and the meta-lesson behind why this file exists.
 
-Canonical source: <https://code.claude.com/docs/en/hooks> (verified 2026-05-19 via cc-platform-audit routine — 3 new events added since 2026-05-11 snapshot: `PermissionDenied`, `TaskCreated`, `TaskCompleted`).
+Canonical source: <https://code.claude.com/docs/en/hooks> (verified 2026-05-25 via cc-platform-audit routine — upstream lifecycle table enumerates exactly 29 events; the "32" narrative carried over from the 2026-05-19 audit was a count drift against an unchanged 29-row table, now reconciled. `PermissionDenied`, `TaskCreated`, `TaskCompleted` remain present and documented as in the 2026-05-19 snapshot).
 
 ## Meta-lesson — why this memory exists
 
@@ -21,9 +21,9 @@ The deeper lesson: before designing a new capacity that uses hooks, **read the c
 
 Second-order lesson from spec 020 itself: even with the right event registered, **payload shape across related events is NOT guaranteed to be identical**. Spec 020's plan-phase assumption ("`PostToolUseFailure` shape parity with `PostToolUse` — no documented reason to invent a different schema") was wrong. The dump-probe in Phase 3 was the cheap way to surface the divergence; the alternative (assume parity, ship, wait for downstream dogfood to break) would have wasted a fork-sync cycle. **When integrating with an unfamiliar event, write a dump-probe first.** Cost: ~5 min. Value: removes a class of "test passes locally, breaks in production" surprises.
 
-## The 32 events
+## The 29 events
 
-Quoted from the docs Hook lifecycle table (last audited 2026-05-19 via the cc-platform-audit routine):
+Quoted from the docs Hook lifecycle table (last audited 2026-05-25 via the cc-platform-audit routine):
 
 | Event | Fires when |
 | --- | --- |
@@ -57,7 +57,7 @@ Quoted from the docs Hook lifecycle table (last audited 2026-05-19 via the cc-pl
 | `ElicitationResult` | An elicitation completes (same form-driven shape) |
 | `SessionEnd` | The session ends |
 
-Agent0 currently uses **8 of these 32** (counted from `.claude/settings.json`):
+Agent0 currently uses **8 of these 29** (counted from `.claude/settings.json`):
 
 - `PreToolUse` (5 matchers: governance-gate, secrets-scan, supply-chain-scan, runtime-pre-mark, delegation-gate)
 - `PostToolUse` (5 matchers: post-edit-validate, secrets-advise, supply-chain-advise, session-track-edits, runtime-capture)
@@ -68,7 +68,7 @@ Agent0 currently uses **8 of these 32** (counted from `.claude/settings.json`):
 - `PreCompact` (pre-compact)
 - `InstructionsLoaded` (rule-load-debug, opt-in)
 
-The remaining 24 are unused capacity surfaces. Notable underexplored ones: `WorktreeCreate`/`WorktreeRemove` (spec 063 territory), `TaskCreated`/`TaskCompleted` (potential hook surface for /goal + task tracking integrations), `Elicitation`/`ElicitationResult` (MCP form workflows), `FileChanged` (file-watcher capacity not yet built).
+The remaining 21 are unused capacity surfaces. Notable underexplored ones: `WorktreeCreate`/`WorktreeRemove` (spec 063 territory), `TaskCreated`/`TaskCompleted` (potential hook surface for /goal + task tracking integrations), `Elicitation`/`ElicitationResult` (MCP form workflows), `FileChanged` (file-watcher capacity not yet built).
 
 ## Exit-code semantics for PostToolUse / PostToolUseFailure
 

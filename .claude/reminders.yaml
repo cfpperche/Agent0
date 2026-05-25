@@ -24,9 +24,10 @@ reminders:
   context: Spec 029 sdd-list-in-flight — 2 weeks post-ship, check `/sdd list --in-flight`
     adoption; if unused, revert the template change (one line, cheap). See docs/specs/029-sdd-list-in-flight/spec.md
     Open Q1.
-  status: pending
+  status: done
   links:
   - docs/specs/029-sdd-list-in-flight/spec.md
+  completed_ts: '2026-05-25T14:51:35Z'
 - id: r-2026-05-17-why-i-run-hermes
   created: '2026-05-17'
   due: '2026-06-30'

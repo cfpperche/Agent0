@@ -8,11 +8,11 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Session 2026-05-24 (5th) — propagation-advisory hook shipped + Option B handoff queued.** Commit `3a66f88` shipped the PostToolUse hook + rule + 11 tests + settings/CLAUDE.md wire-up. Hook fires on edits to fork-bound paths and emits `propagation-advisory:` lines for 5 leak classes (spec-NNN, docs/specs/NNN, anthill, personal-path, memory-pointer). 11/11 tests pass; 5/5 project-memory tests still pass; smoke-test 4-scenario confirmed mid-implementation.
+**Session 2026-05-24 (5th) — propagation-advisory hook shipped + Option B handoff queued.** Commit `3a66f88` shipped hook + rule + 11 tests + settings/CLAUDE.md wire-up. 5 leak classes detected (spec-NNN, docs/specs/NNN, anthill, personal-path, memory-pointer). 11/11 tests pass.
 
-**Open self-consistency tension surfaced post-ship:** the propagation-advisory mechanism itself ships to forks (hook + rule + tests + settings entry + CLAUDE.md section all in fork-bound manifest), but the discipline it enforces is **upstream-maintainer-bound** per `.claude/memory/propagation-hygiene.md § Why this is memory, not a rule`. Leaf forks have zero downstream propagation, so the hook generates **false positives** on their legitimate own-spec / own-path / own-memory refs. **Decision: implement Option B** — exclude propagation-advisory from the sync-harness manifest (same posture as `.claude/memory/` shipping only `.gitkeep`).
+**Self-consistency tension surfaced post-ship**: the mechanism itself ships to forks but enforces an upstream-maintainer-bound discipline (per `.claude/memory/propagation-hygiene.md § Why this is memory, not a rule`). Leaf forks would see **false positives** on their legitimate own-spec / own-path refs. **Decision: Option B** — exclude propagation-advisory from sync manifest (same posture as `.claude/memory/` shipping only `.gitkeep`).
 
-Session 4 (parallel) shipped commit `9314e12` with `.claude/memory/bertolini-dogfood-loop.md` (cascade-classification pattern, deferred per rule-of-three). Untouched here.
+Session 4 shipped `9314e12` with `bertolini-dogfood-loop.md` memory (deferred per rule-of-three). Untouched here.
 
 ## WIP — resume point
 
@@ -41,11 +41,11 @@ Session 4 (parallel) shipped commit `9314e12` with `.claude/memory/bertolini-dog
 
 ## Decisions & gotchas
 
-- **Self-consistency lens from `propagation-hygiene.md` L57-60** is right: a discipline that binds only the upstream maintainer should not ship its enforcement mechanism to forks where it's inert or false-positive-generating. Same logic that puts the memory in `.claude/memory/` (not `.claude/rules/`) applies to its hook companion.
-- **Test surface stays intact in Agent0** — the 11 scenario tests still run against Agent0's copy. Excluding from manifest only stops the sync.
-- **`CLAUDE_SKIP_PROPAGATION_ADVISE=1` becomes redundant for forks** under Option B. Keep the env var in Agent0 for throwaway-session use; disappears from fork experience.
-- **Forks-that-are-templates** (rare; downstream propagators) can opt-in by manually copying the 4 files + settings entry. Capacity remains discoverable via Agent0 git history.
-- **Don't touch `.claude/memory/bertolini-dogfood-loop.md`** — session 4's work, separate concern.
+- **Self-consistency lens from `propagation-hygiene.md`** is right: discipline that binds only the upstream should not ship its enforcement to leaf forks. Same logic that puts the memory in `.claude/memory/` applies to its hook companion.
+- **Tests stay intact in Agent0** — 11 scenarios still run against Agent0's copy; exclusion stops only the sync.
+- **`CLAUDE_SKIP_PROPAGATION_ADVISE=1` becomes redundant for forks** under Option B. Keep the env var in Agent0 for throwaway-session use.
+- **Template-forks** (rare downstream propagators) can opt-in by manually copying the 4 files + settings entry. Capacity discoverable via Agent0 git history.
+- **Don't touch `bertolini-dogfood-loop.md`** — session 4's work.
 
 ## Carryover (orthogonal — not touched this session)
 

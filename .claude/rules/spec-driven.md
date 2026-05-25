@@ -81,6 +81,10 @@ Mixing scenario bullets with plain bullets in the same `## Acceptance criteria` 
 
 This is a writing discipline. There is no Cucumber, no Gherkin parser, no test-runner integration, no hook that validates `spec.md` shape. Scenarios are prose; their value is clarity for the next reader (often a sub-agent), not machine consumption. The earliest specs keep their flat-checklist shape — `git log` is the audit trail, not a rewrite.
 
+### Skill-level sibling
+
+Skills with ≥4 step headers carry an analogous discipline at the SKILL.md body level — `## Eval Scenarios` with **Input / Expected / Failure indicators** triples per scenario. Same contract-not-promise filosofia, different unit of work (skill body, not spec body). See `.claude/skills/skill/references/skill-rubric.md` § *Eval scenarios* for the writing convention and `bash .claude/skills/skill/scripts/check-rubric.sh <slug>` (invoked via `/skill audit`) for the non-blocking advisory.
+
 ## Relationship to other rules
 
 - **`research-before-proposing.md`** — research happens *during* spec phase, before `plan.md` is locked. Cite sources in the spec or plan.

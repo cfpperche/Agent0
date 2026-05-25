@@ -28,7 +28,7 @@ State paths used throughout:
 - Porter: `${CLAUDE_SKILL_DIR}/scripts/port-frontmatter.sh`
 - Templates: `${CLAUDE_SKILL_DIR}/templates/{SKILL.md,cc-native,portable}.tmpl`
 
-## Subcommand: `new <slug> [--tier <tier>]`
+## Subcommand: `new <slug> [--tier <tier>]` — 🔒 Low freedom: scaffold + validate sequence
 
 Scaffold a new Agent0 skill with a spec-compliant SKILL.md. Parse `$ARGUMENTS`: first token must be `new`; second token is the slug; optional `--tier <tier>` selects the template variant (default `cc-native`).
 
@@ -61,7 +61,7 @@ Scaffold a new Agent0 skill with a spec-compliant SKILL.md. Parse `$ARGUMENTS`: 
 
 6. **Report**: output the new SKILL.md path and tell the user to fill the `{{...}}` placeholders (description first — that's the discovery surface) and re-validate when done.
 
-## Subcommand: `audit [<slug>|--all]`
+## Subcommand: `audit [<slug>|--all]` — 🔓 Medium freedom: per-skill reporting adapts to compliance state
 
 Inspect skills against the spec and report compliance + tier.
 
@@ -70,12 +70,14 @@ Inspect skills against the spec and report compliance + tier.
 - `audit --all` (default if no arg) → audit every `.claude/skills/*/SKILL.md` found
 
 **For each target**:
-1. Run `bash ${CLAUDE_SKILL_DIR}/scripts/validate.sh .claude/skills/<slug>` and capture exit code + stderr.
-2. Read frontmatter to extract declared `metadata.agent0-portability-tier` (or `unknown` if not present).
-3. Classify:
-   - `✓ compliant` — validator exit 0
-   - `✗ non-compliant (ruleN-...)` — validator exit non-0, list rule IDs from stderr
-4. **Out of scope**: CC-marketplace skills surfaced via the Claude Code harness (e.g., `init`, `review`, `security-review`, `claude-api`, `simplify`, `fewer-permission-prompts`, `loop`, `schedule`, `update-config`, `keybindings-help`) do not have files under `.claude/skills/` in this repo — they are not enumerated. Note this in the report footer for clarity.
+1. Run `bash ${CLAUDE_SKILL_DIR}/scripts/validate.sh .claude/skills/<slug>` and capture exit code + stderr (agentskills.io frontmatter compliance — upstream spec).
+2. Run `bash ${CLAUDE_SKILL_DIR}/scripts/check-rubric.sh .claude/skills/<slug>` and capture stderr (Agent0 rubric body-shape advisories — repo-local). Always exit 0 — advisory only.
+3. Read frontmatter to extract declared `metadata.agent0-portability-tier` (or `unknown` if not present).
+4. Classify:
+   - `✓ compliant` — validate.sh exit 0
+   - `✗ non-compliant (ruleN-...)` — validate.sh exit non-0, list rule IDs from stderr
+   - Capture rubric advisories separately (zero or more `skill-rubric-advisory:` lines from check-rubric.sh) — these never flip compliance, they surface as a footer block.
+5. **Out of scope**: CC-marketplace skills surfaced via the Claude Code harness (e.g., `init`, `review`, `security-review`, `claude-api`, `simplify`, `fewer-permission-prompts`, `loop`, `schedule`, `update-config`, `keybindings-help`) do not have files under `.claude/skills/` in this repo — they are not enumerated. Note this in the report footer for clarity.
 
 **Output shape**:
 ```
@@ -87,14 +89,17 @@ sdd                cc-native                     ✓ compliant
 skill              cc-native                     ✓ compliant (meta)
 <other>            <tier or unknown>             <status>
 
-summary: N compliant, M non-compliant, audited from .claude/skills/
+rubric advisories (Agent0 body-shape — non-blocking):
+  <verbatim skill-rubric-advisory: lines from check-rubric.sh, or "(none)">
+
+summary: N compliant, M non-compliant, K rubric advisories, audited from .claude/skills/
 note: external CC-marketplace skills (init, review, ...) are surfaced by
       the CC harness, not by this repo's .claude/skills/; not audited here.
 ```
 
-If any target is non-compliant, exit the subcommand with a one-line hint pointing at `/skill port <slug>` as the next step.
+If any target is non-compliant, exit the subcommand with a one-line hint pointing at `/skill port <slug>` as the next step. Rubric advisories alone do NOT trigger this hint — they're advisory only; the corrective for rubric gaps is hand-editing the skill body per `.claude/skills/skill/references/skill-rubric.md`.
 
-## Subcommand: `port <slug>`
+## Subcommand: `port <slug>` — 🔒 Low freedom: porter + validator + diff-stat sequence
 
 Apply `port-frontmatter.sh` to bring a skill's frontmatter into spec compliance. Parse `$ARGUMENTS`: first token `port`, second token `<slug>`.
 
@@ -121,7 +126,7 @@ Apply `port-frontmatter.sh` to bring a skill's frontmatter into spec compliance.
 
 6. **Report**: echo the porter's output line (`ported: <path> (tier: <tier>)`) and the validation result. Suggest the user `git diff .claude/skills/<slug>/SKILL.md` to review before committing.
 
-## Subcommand: `validate <slug>`
+## Subcommand: `validate <slug>` — 🔒 Low freedom: defer to validator script
 
 Wrap `validate.sh` for a single skill. Parse `$ARGUMENTS`: first token `validate`, second token `<slug>` (omit for the meta-skill itself, i.e., `skill`).
 
@@ -134,7 +139,7 @@ Wrap `validate.sh` for a single skill. Parse `$ARGUMENTS`: first token `validate
 
 3. **Report**: echo "pass" on exit 0 (and any stderr soft-warnings), or "fail" with the stderr block on exit non-0. Exit code mirrors `validate.sh`.
 
-## Subcommand: `list`
+## Subcommand: `list` — 🔒 Low freedom: scan + format
 
 Enumerate every `.claude/skills/*/` directory with its declared tier and a compliance check at a glance.
 
@@ -156,6 +161,32 @@ If the first token of `$ARGUMENTS` is missing or not one of `new`, `audit`, `por
 ```
 /skill <new <slug> [--tier <tier>] | audit [<slug>|--all] | port <slug> | validate <slug> | list>
 ```
+
+## Eval Scenarios
+
+### Eval 1: Happy path — scaffold a new cc-native skill
+
+**Input:** User says `/skill new my-toolkit` after working through a `/sdd` spec that calls for a new Claude-Code-specific helper.
+
+**Expected:** `new` subcommand runs. Slug regex passes; no existing `.claude/skills/my-toolkit/` collision. Default tier `cc-native` selected. Template copied; `{{SLUG}}` and `{{DATE}}` substituted; other `{{...}}` placeholders left for the user. `validate.sh` runs immediately and exits non-zero (description placeholder still present); the surfaced stderr names the rule + asks the user to fill `{{DESCRIPTION_PLACEHOLDER}}` and re-validate. New SKILL.md path reported. No git auto-commit.
+
+**Failure indicators:** Scaffolder runs without the immediate validate pass. `{{...}}` content placeholders auto-filled with invented content. Tier flag silently coerced to `cc-native` when an invalid tier was passed (should refuse with canonical list). Skill directory created when slug collides with existing dir.
+
+### Eval 2: Audit-all across the project
+
+**Input:** User says `/skill audit --all` mid-feature to confirm the skill bucket is healthy before shipping a new spec.
+
+**Expected:** Every `.claude/skills/*/SKILL.md` enumerated alphabetically. Per-skill row shows name + declared tier + `✓ compliant` or `✗ non-compliant (ruleN-...)`. CC-marketplace skills (`init`, `review`, `security-review`, etc.) explicitly NOT enumerated (they live in the harness, not in `.claude/skills/`); footer note flags this exclusion. Rubric-advisory findings (from `check-rubric.sh` per Task 6 wiring) listed as a separate footer block under the table. Summary line reads `summary: N compliant, M non-compliant, K rubric advisories`.
+
+**Failure indicators:** CC-marketplace skills mistakenly enumerated and flagged as non-compliant (they have no local files). Per-skill table missing the tier column. Rubric findings mixed into the compliance column instead of the footer block. Summary line missing the rubric-advisory count.
+
+### Eval 3: Port a non-compliant skill
+
+**Input:** User says `/skill port legacy-helper` after `audit --all` surfaced `rule4-description-missing` on the target.
+
+**Expected:** Porter confirms with the user (dry-run preview + `y/N` prompt). `port-frontmatter.sh` runs; `validate.sh` re-runs against the modified file. Diff-stat verifies ONLY frontmatter line additions — zero body changes. Porter output line + validation result echoed. If `validate.sh` still fails post-port (e.g. `rule3-name-dirname-mismatch` needs editorial decision), surfaces stderr and hands back to the user. User pointed at `git diff` before committing.
+
+**Failure indicators:** Porter runs without user confirmation. Body bytes changed (any line below the frontmatter mutates) → reported as porter bug. Validate skipped after port → user ships still-non-compliant frontmatter. Auto-commit by the porter.
 
 ## Notes
 

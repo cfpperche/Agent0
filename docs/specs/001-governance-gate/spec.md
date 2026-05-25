@@ -1,6 +1,8 @@
 # 001 — governance-gate
 
-_Created 2026-05-10. Status: draft._
+_Created 2026-05-10._
+
+**Status:** shipped
 
 ## Intent
 

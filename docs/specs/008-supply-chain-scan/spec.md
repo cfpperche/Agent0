@@ -1,6 +1,8 @@
 # 008 — supply-chain-scan
 
-_Created 2026-05-11. Status: delivered (commits `1123243` design, `f979283` phase 1 hooks, `aaa96e0` phase 2 docs + tests)._
+_Created 2026-05-11._
+
+**Status:** shipped
 
 ## Intent
 

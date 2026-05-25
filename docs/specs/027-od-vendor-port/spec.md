@@ -1,5 +1,7 @@
 # 027 — Open Design vendor port into `mcp-product-pipeline`
 
+**Status:** shipped
+
 ## Intent
 
 Vendor the Open Design bundle (Apache-2.0, `nexu-io/open-design`) **inside** `packages/mcp-product-pipeline/` so the MCP server can ground its prototype-stage outputs (step 2, future step 7 prototype-v2) in 73 named design systems (Linear, Notion, Stripe, Wise, …) and 33 skill bundles — replacing the current "agent invents palette/typography from training data" path with "agent reads a vendored, pinned `DESIGN.md` and a vendored `SKILL.md`".

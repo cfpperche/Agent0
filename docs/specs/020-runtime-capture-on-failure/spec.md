@@ -1,6 +1,8 @@
 # 020 — runtime-capture-on-failure
 
-_Created 2026-05-11. Status: draft._
+_Created 2026-05-11._
+
+**Status:** shipped
 
 ## Intent
 

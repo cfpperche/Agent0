@@ -1,6 +1,8 @@
 # 026 — mcp-pipeline-deep-port
 
-_Created 2026-05-13. Status: draft._
+_Created 2026-05-13._
+
+**Status:** shipped
 
 ## Intent
 

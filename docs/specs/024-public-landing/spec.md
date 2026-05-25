@@ -1,6 +1,8 @@
 # 024 — public-landing
 
-_Created 2026-05-12. Status: draft._
+_Created 2026-05-12._
+
+**Status:** shipped
 
 ## Intent
 

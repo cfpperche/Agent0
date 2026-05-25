@@ -1,6 +1,8 @@
 # 005 — tdd
 
-_Created 2026-05-10. Status: spec ready (open questions resolved; ready for plan)._
+_Created 2026-05-10._
+
+**Status:** shipped
 
 ## Intent
 

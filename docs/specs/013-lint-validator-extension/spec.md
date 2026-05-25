@@ -1,6 +1,8 @@
 # 013 — lint-validator-extension
 
-_Created 2026-05-11. Status: delivered 2026-05-11 (`3677807`); dogfooded 2026-05-12 (pyshrnk `f2d002c` + shrnk `542d55c`); amended 2026-05-12 with uv auto-sync caveat — see `dogfood-findings.md` § F1._
+_Created 2026-05-11._
+
+**Status:** shipped
 
 ## Intent
 

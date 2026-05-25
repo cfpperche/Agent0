@@ -11,6 +11,8 @@ metadata:
 
 # /brainstorm — divergent ideation skill
 
+<!-- SKILL-RUBRIC-EXEMPT: divergent-ideation steps follow situational technique choice rather than per-step affordance; eval scenarios marginal — examples in references/techniques.md serve same role; see docs/specs/087-skill-rubric-freedom-evals/notes.md design-decision 2026-05-25 -->
+
 Conducts a structured-but-flexible brainstorm session and renders the captured material as a single self-contained HTML file for human review. Distinct from `/sdd refine` — that skill **converges** on a spec, this one **diverges** to surface more ideas, perspectives, and open questions. Output is ephemeral by design (lives under `.claude/.brainstorm-state/`, gitignored); the user decides afterwards what to promote into a spec via `/sdd new <slug>`.
 
 ## Argument parsing

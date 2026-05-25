@@ -11,6 +11,8 @@ metadata:
 
 # /remind — deferred reminders
 
+<!-- SKILL-RUBRIC-EXEMPT: subcommand dispatcher with mechanical per-step structure; see docs/specs/087-skill-rubric-freedom-evals/notes.md design-decision 2026-05-25 for rationale and rule-of-three promotion criterion -->
+
 Capture, list, snooze, complete, and probe action-shaped future items that aren't urgent enough to act on now but shouldn't be lost. State lives in `.claude/reminders.yaml` (git-tracked YAML, one entry per record), auto-injected into context at session start. Not a task manager, not a knowledge base, not a session work-state log — reminders are *future do-this-thing* items only.
 
 See `.claude/rules/reminders.md` for what belongs here vs `MEMORY.md` vs `SESSION.md`, and the discipline (no auto-commit, no autonomous check execution, soft-delete via `status: done + completed_ts`).

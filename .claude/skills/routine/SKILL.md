@@ -11,6 +11,8 @@ metadata:
 
 # /routine — project-scoped recurring routines
 
+<!-- SKILL-RUBRIC-EXEMPT: subcommand dispatcher with mechanical per-step structure; see docs/specs/087-skill-rubric-freedom-evals/notes.md design-decision 2026-05-25 for rationale and rule-of-three promotion criterion -->
+
 Create, list, execute, validate, and dismiss recurring routines for this repo. Routine definitions live in `.claude/routines/<slug>.md` (git-tracked); cron renders them into `.claude/.routines-state/<slug>/queue/` (gitignored); the next interactive Claude Code session reads the queue and dispatches each pending routine via this skill.
 
 See `.claude/rules/routines.md` for full discipline, frontmatter reference, cron syntax limits, leader-flag model, and the differences vs `/remind` and `/schedule`.

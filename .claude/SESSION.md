@@ -8,45 +8,29 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Session 2026-05-24 (5th) — propagation-advisory hook shipped + Option B handoff queued.** Commit `3a66f88` shipped hook + rule + 11 tests + settings/CLAUDE.md wire-up. 5 leak classes detected (spec-NNN, docs/specs/NNN, anthill, personal-path, memory-pointer). 11/11 tests pass.
+**Session 2026-05-24 (6th) — Option B shipped + propagation-hygiene audit closed.**
 
-**Self-consistency tension surfaced post-ship**: the mechanism itself ships to forks but enforces an upstream-maintainer-bound discipline (per `.claude/memory/propagation-hygiene.md § Why this is memory, not a rule`). Leaf forks would see **false positives** on their legitimate own-spec / own-path refs. **Decision: Option B** — exclude propagation-advisory from sync manifest (same posture as `.claude/memory/` shipping only `.gitkeep`).
+Two commits, both synced to `~/mei-saas` + `~/codexeng`:
 
-Session 4 shipped `9314e12` with `bertolini-dogfood-loop.md` memory (deferred per rule-of-three). Untouched here.
+- `a59a024` — Option B. propagation-advisory triad excluded from sync manifest. `sync-harness.sh` gained `COPY_CHECK_EXCLUDE` + `matches_exclude()` (3 path patterns) plus a jq `is_excluded`/`strip_excluded` pair in `merge_settings_json` that filters PostToolUse entries whose any inner command contains `propagation-advise.sh` (filters both fork + agent0 sides — defends against forks that previously inherited the registration). CLAUDE.md propagation section removed; managed-block merge propagated removal. Memory updated (`.claude/memory/propagation-hygiene.md § The fork-bound file class` + `§ Mechanical enforcement`). Validated: 33/33 harness-sync tests + 11/11 propagation-advisory tests pass. Initial jq bug (`any(.hooks // []; ...)` indexed array with string) caught by tests 05 + 23, corrected to `.hooks[]?`.
+- `60c16c6` — audit follow-up. Stripped 3 residual upstream-internal pointers from fork-bound surface: `pipeline.md:7` dropped spec-lineage parenthetical; `mcp-recipes-hint.sh` + `mcp-recipes.md` swapped "Agent0 base case" → "bare-repository case".
+
+Fork commits: mei-saas `fbc37c8` + `e0cc7db`; codexeng `0c459ac` + `97cb58f`.
 
 ## WIP — resume point
 
-**No active WIP.** Next session implements Option B from scratch.
+**No active WIP.**
 
-## Next steps — Option B implementation plan
+## Next steps
 
-1. **Read `.claude/tools/sync-harness.sh`** — find the exclusion mechanism. `.claude/memory/` is the precedent (ships only `.gitkeep`); look for the exclusion pattern around the file-walk + `is_memory_path`-style check. Confirm hook point.
-
-2. **Add 4 path exclusions** to the manifest:
-   - `.claude/hooks/propagation-advise.sh`
-   - `.claude/rules/propagation-advisory.md`
-   - `.claude/tests/propagation-advisory/**`
-
-3. **Settings.json hook entry** — `merge_settings_json` propagates the PostToolUse(Edit|Write|MultiEdit) hooks block. Options: (a) filter by command-path substring `propagation-advise.sh` in merge; (b) accept that forks see the registration but exclude the file (registration becomes a no-op — fail-safe per test 09 opt-out). Option (b) is cheaper.
-
-4. **CLAUDE.md managed block** — the `## Propagation advisory` section is inside AGENT0:BEGIN/END. Easiest: just remove the section from CLAUDE.md (the rule doc + memory carries the substance for Agent0).
-
-5. **Update `propagation-hygiene.md` memory** — L22 surface definition. Add exception: "EXCEPT `propagation-advise.sh` + `propagation-advisory.md` + `tests/propagation-advisory/` which are upstream-maintainer-bound and excluded from the sync manifest (same posture as `.claude/memory/`)."
-
-6. **Test** — `bash .claude/tools/sync-harness.sh --check --agent0-path=. ~/mei-saas`. Expected: 4 propagation-advisory paths absent from copy plan; no drift advisories about them.
-
-7. **Forks cleanup** — `mei-saas` + `codexeng` never received the propagation-advisory (it shipped in 3a66f88, no sync since). Clean state by construction.
-
-8. **Commit + push** — `chore(propagation-advisory): exclude from sync manifest — upstream-maintainer-bound`.
+None queued. Open questions live in `.claude/reminders.yaml` (auto-injected) and on the kept-deferred residuals in `.claude/memory/propagation-hygiene.md § Not-yet-cleaned surfaces` (memory-basename examples in `routines.md` + `#`-style spec citations in shell-script comments — both decision is to defer, clean opportunistically when those files are next edited for another reason).
 
 ## Decisions & gotchas
 
-- **Self-consistency lens from `propagation-hygiene.md`** is right: discipline that binds only the upstream should not ship its enforcement to leaf forks. Same logic that puts the memory in `.claude/memory/` applies to its hook companion.
-- **Tests stay intact in Agent0** — 11 scenarios still run against Agent0's copy; exclusion stops only the sync.
-- **`CLAUDE_SKIP_PROPAGATION_ADVISE=1` becomes redundant for forks** under Option B. Keep the env var in Agent0 for throwaway-session use.
-- **Template-forks** (rare downstream propagators) can opt-in by manually copying the 4 files + settings entry. Capacity discoverable via Agent0 git history.
-- **Don't touch `bertolini-dogfood-loop.md`** — session 4's work.
+- **Option (a) chosen for settings.json merge** over SESSION-5's (b). The (b) rationale ("fail-safe per test 09 opt-out") was wrong — test 09 is the env-var opt-out, not missing-file behavior. (a) cost ~3 LOC of jq for clean forks.
+- **mei-saas + codexeng had been carrying stale upstream content** beyond Option B. Both forks pulled 273 stale-updated files in the first apply — propagation-hygiene cleanups (spec/memory citations) that landed upstream pre-Option-B but never reached the forks. Treat the volume as legitimate catch-up, not corruption.
+- **`COPY_CHECK_EXCLUDE` is the canonical lever** if a future capacity needs the same upstream-maintainer-bound treatment. Mechanism is generic; only the 3 paths are currently in the list.
 
 ## Carryover (orthogonal — not touched this session)
 
-- `docs/specs/074-subagent-personas/` — untracked draft (carried from earlier handoff).
+- `docs/specs/087-skill-rubric-freedom-evals/` — untracked draft (`spec.md` + `plan.md` + `tasks.md` + `notes.md`). Pre-existing before this session; not picked up.

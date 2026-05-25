@@ -49,6 +49,12 @@ Do NOT cite `capacity-spec-index.md` from a fork-bound file either — `.claude/
 
 The CLAUDE.md sync merge is **append-only**: it adds missing `## ` sections, it never removes them. Deleting a section from Agent0's CLAUDE.md (as spec 070 did with `## PHP / Laravel`) does NOT remove it from a fork that already synced it. Fresh forks get the clean CLAUDE.md; pre-existing forks keep the stale section until a future spec teaches the merge to remove sections. Rule files, by contrast, are whole-file synced — a de-leaked rule does propagate cleanly to existing forks via the 3-way reconciliation (a fork that never customised the rule auto-updates).
 
+## Mechanical enforcement — the advisory hook
+
+The discipline is documented here; the **mechanical enforcement** lives in `.claude/rules/propagation-advisory.md` + `.claude/hooks/propagation-advise.sh`. The hook fires on `PostToolUse(Edit|Write|MultiEdit)` against any file in the fork-bound surface and emits `propagation-advisory:` stderr lines per leak finding. Patterns covered: `spec-NNN`, `docs/specs/NNN`, `anthill`, `personal-path` (`/home/<user>/`), `memory-pointer` (`.claude/memory/<file>.md`). Always non-blocking — same `<kind>-advisory:` shape as TDD / lint / typecheck / secrets advisories.
+
+This is the rule-of-three promotion candidate: if the advisory empirically fires more than ~3 times per week on legitimate new leaks (not false positives), promote to a pre-commit gate OR a periodic `/routine`. Until then, the soft signal at edit-time is enough — drift is caught mid-flight, the maintainer fixes in the same edit cycle, no separate cleanup pass needed.
+
 ## Not-yet-cleaned surfaces (follow-up)
 
 Spec 070 cleaned CLAUDE.md, `.claude/rules/*.md`, and the four root config/hook files (`.mcp.json.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.gitignore`) of `docs/specs/` spec-citation leaks. Follow-up status:

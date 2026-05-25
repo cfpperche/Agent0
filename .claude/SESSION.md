@@ -8,37 +8,24 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Session 2026-05-24 (3rd) — complete propagation-hygiene audit shipped.** Five-tier sweep across the entire fork-bound surface (`.claude/{hooks,rules,tools,validators,skills,tests,agents}/`, CLAUDE.md, root configs). Final scan returns **zero residuals**. All test suites pass; sync-harness end-to-end validated against `mei-saas`.
-
-3 commits pushed:
-
-- **`2851191`** — A+B+C cleanup (49 files, +162/-184): specific-fork names (mei-saas/shrnk/pyshrnk) stripped from rules; personal `/home/goat/*` paths → `~/Agent0` / `~/some-fork`; spec-NNN in stderr templates → `Rule: <path>` pointers; memory-file pointers stripped; memory basenames-as-examples in memory-placement.md generalized.
-
-- **`f230186`** — D-tier cleanup (80 files, +364/-460): **all anthill references stripped** from `/product` (~121 across 47 files; methodology preserved standalone — Torres, Cagan, Lenny, Dunford, GDPR, etc.); **all spec-NNN refs stripped** from `/product` docs; **fork-portable tests** — `05-rule-cross-reference.sh` + `06-migration-shape.sh` DELETED (tested patterns that don't exist in forks).
-
-- **`0849b26`** — final residual sweep (159 files, +210/-210): test-file headers, fixture paths (`/home/goat/shrnk` → `/tmp/shrnk-fixture`; `rshrnk` → `sample-crate`), rule-body residuals, skill-toolkit spec-033 refs.
-
-D3 kept by design: Agent0 naming in `harness-sync.md` — the tool IS Agent0, flag IS `--agent0-path`.
+**Session 2026-05-24 (4th) — Bertolini dogfood-loop study + deferred-reference memory.** Studied the X thread (<https://x.com/brunobertolini/status/2058617644769493017>), the linked gist (paste-and-go autonomous-loop wizard), and Cherny's auto-mode/multi-clauding parent tweet via Playwright. Decision after `/sdd refine` discussion of 4 scope options: **D — not adopt, save as `reference` memory**. 1 commit: `9314e12` — `.claude/memory/bertolini-dogfood-loop.md` captures pattern + explicit revisit trigger.
 
 ## WIP — resume point
 
-**No active WIP.** All goal hook conditions satisfied. Working tree clean.
+**No active WIP from this session.** Working tree carries an orthogonal in-progress capacity from the maintainer — see Carryover.
 
 ## Next steps
 
-1. **No immediate carryover.** Audit complete; future drift auto-surfaces via `memory/propagation-hygiene.md`.
-2. **Optional**: next sync-harness against mei-saas/codexeng propagates the cleaned content (dry-run validated — clean delta beyond the 2 deleted tests).
-3. **Dated reminders**: 029 (05-30) · 035 (06-07) · 046 (07-01) · 060 (07-19).
+1. **Dated reminders**: 029 (05-30, 6 days) · 035 (06-07) · 046 (07-01) · 060 (07-19).
+2. **Watch for cascade-classification pattern recurrence** — second/third independent sighting promotes the meta-shape (ordered buckets + named match + conservative default) from [[bertolini-dogfood-loop]] to a paragraph in `.claude/rules/delegation.md` § Advisories. Don't build a wizard; do edit the rule.
 
 ## Decisions & gotchas
 
-- **Propagation-hygiene memory empirically validated** by 3 commits totaling 288 files. The "anthill basenames-as-examples" follow-up flagged at L57 of that memory is fully resolved.
-- **Sub-agent delegation worked well for editorial scope.** Two opus sub-agents (D1 anthill + D2 spec-NNN) handled ~210 edits each across ~47-77 files. Brief shape: clear constraints + survey commands + DONE_WHEN grep. Reports verifiable.
-- **Sed sweeps + surgical Edits is the right mix.** ~60% sed-pattern bulk; ~40% surgical Edit for context-sensitive rewrites. Pure-sed creates ungrammatical residuals; pure-Edit is 10× tool calls.
-- **`# Spec NNN VN —` was a near-miss.** Sed regex needed `(\s[A-Z]+)?` to catch the `V7` version-letter variant.
-- **Test fixture paths matter for fork-portability.** Hardcoded `/home/goat/<repo>` in fixture command strings would resolve to nonexistent paths in fork CI; replaced with `/tmp/<name>-fixture` generics.
-- **Methodology citations are durable.** "(Torres OST)", "(Lenny 1-pager)", "(Cagan SVPG)", "(April Dunford)", "(GDPR Art 25)", "(Nielsen heuristics)" survived as standalone — industry-canonical, fork-friendly, zero-leak.
+- **Rule-of-three discipline held against an interesting single sample.** Bertolini's pattern is genuinely novel (we have no cascade classification anywhere) but the demand test is one sighting. Deferred via [[skill-eval-pattern]] precedent. The memory entry names exactly what to promote when 2+ more sightings land — pre-cooked decision so future-me doesn't re-derive.
+- **The novel piece is the cascade, not the taxonomy.** Bertolini's 4 buckets (`backend_fix` / `tracking_fix` / `ui_issue` / `needs_product`) are SaaS-with-analytics-bound and won't generalize. What's portable is the meta-shape: ordered buckets + named match criteria + ultimate-default-to-conservative when uncertain.
+- **Agent0 isn't a dogfood target for the loop itself.** It's a meta-harness without browser-exploration scenarios; the wizard's premise ("test your consumer SaaS app") doesn't map. Forks that ARE product apps already inherit `/routine` + post-edit-validator and can roll their own — no need for an Agent0-side wizard.
 
 ## Carryover (orthogonal — not touched this session)
 
-- `docs/specs/074-subagent-personas/` — untracked draft; leave for originating session.
+- **Propagation-advisory capacity in progress** (maintainer WIP) — 4 files staged across this session: `.claude/hooks/propagation-advise.sh` (new), `.claude/rules/propagation-advisory.md` (new), `.claude/settings.json` (hook registration), `CLAUDE.md` (capacity index entry). Single logical unit — commit together when ready.
+- `docs/specs/074-subagent-personas/` — untracked draft (carried from earlier handoff).

@@ -104,10 +104,6 @@ Every first-party `.claude/skills/*/SKILL.md` must pass the agentskills.io front
 
 Artifact size is not a scope/quality signal — scope and quality are judged by the `/product` quality judge. The only size mechanism is a uniform 200 KB catastrophe cap (a dumb token-runaway circuit-breaker) plus the retained per-step `min_size` anti-stub floors; trim-loop and re-emit-at-smaller-scope stay forbidden. See `.claude/rules/artifact-budgets.md`.
 
-## Propagation advisory
-
-A `PostToolUse(Edit|Write|MultiEdit)` hook (`.claude/hooks/propagation-advise.sh`) scans edited content of fork-bound files for upstream-internal pointers (spec-NNN refs, `docs/specs/NNN` paths, anthill mentions, personal `/home/<user>/` paths, `.claude/memory/<file>.md` pointers) and emits non-blocking `propagation-advisory:` lines. Opt-out via `CLAUDE_SKIP_PROPAGATION_ADVISE=1`; per-edit override via `# OVERRIDE: propagation-exempt: <reason>`. See `.claude/rules/propagation-advisory.md`.
-
 ## Compact Instructions
 
 When summarizing this conversation for context compaction, prioritize keeping:

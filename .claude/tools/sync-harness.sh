@@ -188,6 +188,19 @@ COPY_CHECK_FILES=(
   "assets/generated/mockups/.gitkeep"
 )
 
+# Path patterns excluded from propagation. Bash `case` globs anchored against
+# the per-file relpath. Used for upstream-maintainer-bound capacities whose
+# enforcement should not ship to leaf forks — same posture as `.claude/memory/`
+# (content stays project-local). A path matching here is silently dropped from
+# both the manifest record AND the per-file process: no copy, no baseline entry,
+# no advisory. Companion filter in `merge_settings_json` drops the matching
+# hook command from the settings merge so the registration is invisible too.
+COPY_CHECK_EXCLUDE=(
+  ".claude/hooks/propagation-advise.sh"
+  ".claude/rules/propagation-advisory.md"
+  ".claude/tests/propagation-advisory/*"
+)
+
 # Structured merge handled by dedicated functions below
 # - .claude/settings.json
 # - CLAUDE.md
@@ -226,6 +239,18 @@ matches_force_except() {
   local pat
   for pat in $FORCE_EXCEPT; do
     [ -z "$pat" ] && continue
+    case "$rel" in
+      $pat) return 0 ;;
+    esac
+  done
+  return 1
+}
+
+# Returns 0 if `rel` matches any pattern in COPY_CHECK_EXCLUDE, else 1.
+# Excluded paths are silently skipped by both record_manifest and process_file.
+matches_exclude() {
+  local rel="$1" pat
+  for pat in "${COPY_CHECK_EXCLUDE[@]}"; do
     case "$rel" in
       $pat) return 0 ;;
     esac
@@ -428,6 +453,9 @@ walk_copy_check() {
     if [ -d "$AGENT0_ROOT/$base" ]; then
       while IFS= read -r relfile; do
         if [ -n "$relfile" ]; then
+          if matches_exclude "$relfile"; then
+            continue
+          fi
           record_manifest "$relfile"
           process_file "$relfile"
         fi
@@ -441,6 +469,9 @@ walk_copy_check() {
     if [ -d "$AGENT0_ROOT/$dir" ]; then
       while IFS= read -r relfile; do
         if [ -n "$relfile" ]; then
+          if matches_exclude "$relfile"; then
+            continue
+          fi
           record_manifest "$relfile"
           process_file "$relfile"
         fi
@@ -449,6 +480,9 @@ walk_copy_check() {
   done
 
   for relfile in "${COPY_CHECK_FILES[@]}"; do
+    if matches_exclude "$relfile"; then
+      continue
+    fi
     record_manifest "$relfile"
     process_file "$relfile"
   done
@@ -635,11 +669,22 @@ merge_settings_json() {
   # Fork (dst) is the BASE — preserves permissions/env/model/fork-only top-level keys.
   # Agent0-owned top-level keys ($schema, statusLine) overwrite when Agent0 has them.
   # hooks: union per-event, dedup by (matcher, ordered list of inner commands).
+  # Excluded hook commands (matched as substring on any inner .command) are dropped
+  # from BOTH sides — companion to COPY_CHECK_EXCLUDE, makes propagation-advise.sh
+  # registration invisible to forks even if a prior sync leaked it. Substring match
+  # is anchored only by hook-file basename, so command shape (`bash $CLAUDE_PROJECT_DIR/...`)
+  # variants all match.
   local tmp merged
   tmp="$(mktemp -t sync-settings-XXXXXX)"
   if ! jq -s '
     def dedup_key:
       (.matcher // "") + "|" + ((.hooks // []) | map(.command // "") | join("##"));
+
+    def is_excluded:
+      any(.hooks[]?; (.command // "") | contains("propagation-advise.sh"));
+
+    def strip_excluded:
+      map(select(is_excluded | not));
 
     . as $arr |
     ($arr[0] // {}) as $fork |
@@ -651,7 +696,9 @@ merge_settings_json() {
         ((($fork.hooks // {}) | keys) + (($agent0.hooks // {}) | keys))
         | unique
         | map(. as $k | {
-            ($k): ((($fork.hooks[$k]) // []) + (($agent0.hooks[$k]) // []) | unique_by(dedup_key))
+            ($k): (((($fork.hooks[$k]) // []) | strip_excluded)
+                 + ((($agent0.hooks[$k]) // []) | strip_excluded)
+                 | unique_by(dedup_key))
           })
         | add // {}
       )

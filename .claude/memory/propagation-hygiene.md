@@ -25,6 +25,8 @@ A file is **fork-bound** if `sync-harness.sh` propagates it to forks. That is ev
 
 **Not** fork-bound, by design: `docs/specs/`, `.claude/memory/` (ships only `.gitkeep`), `src/`, the fork's own `tests/`, package manifests. These never travel.
 
+**Explicit exclusions inside the sync manifest** — `COPY_CHECK_EXCLUDE` in `sync-harness.sh` drops three paths from propagation despite their location in otherwise-fork-bound surface: `.claude/hooks/propagation-advise.sh`, `.claude/rules/propagation-advisory.md`, `.claude/tests/propagation-advisory/*`. A companion filter in `merge_settings_json` strips the PostToolUse registration whose command points at `propagation-advise.sh`. This is the self-consistency resolution of the propagation-advisory mechanism: the discipline binds the upstream maintainer (this file's whole point), so shipping its enforcement to leaf forks would emit false-positive advisories on a fork's legitimate own-spec / own-path content — the exact dangling-pointer flaw this discipline forbids. Same posture as `.claude/memory/` shipping only `.gitkeep`: the capacity lives in Agent0, the *opt-in* for downstream re-propagators is manual copy of the 4 paths + the settings entry.
+
 ## The mandate
 
 Content in a fork-bound file must be **fork-facing operational documentation** — what the capacity does, how it behaves, how a fork developer uses it. It must NOT contain **Agent0-internal design memory**:
@@ -52,6 +54,8 @@ The CLAUDE.md sync merge is **append-only**: it adds missing `## ` sections, it 
 ## Mechanical enforcement — the advisory hook
 
 The discipline is documented here; the **mechanical enforcement** lives in `.claude/rules/propagation-advisory.md` + `.claude/hooks/propagation-advise.sh`. The hook fires on `PostToolUse(Edit|Write|MultiEdit)` against any file in the fork-bound surface and emits `propagation-advisory:` stderr lines per leak finding. Patterns covered: `spec-NNN`, `docs/specs/NNN`, `anthill`, `personal-path` (`/home/<user>/`), `memory-pointer` (`.claude/memory/<file>.md`). Always non-blocking — same `<kind>-advisory:` shape as TDD / lint / typecheck / secrets advisories.
+
+The hook + rule + tests are **Agent0-only** by construction — see § The fork-bound file class § *Explicit exclusions inside the sync manifest*. Tests still run against Agent0's copy (the 11 scenarios in `.claude/tests/propagation-advisory/` are exercised here); the exclusion stops only the sync.
 
 This is the rule-of-three promotion candidate: if the advisory empirically fires more than ~3 times per week on legitimate new leaks (not false positives), promote to a pre-commit gate OR a periodic `/routine`. Until then, the soft signal at edit-time is enough — drift is caught mid-flight, the maintainer fixes in the same edit cycle, no separate cleanup pass needed.
 

@@ -4,7 +4,7 @@
 #
 # Pure recommendation: never blocks, never audits, exit 0 always. Honors
 # CLAUDE_SKIP_MCP_RECIPES=1 to suppress regardless of stack signals. Silent
-# when no signals match (Agent0 base case).
+# when no signals match (bare-repository case).
 #
 # Detection runs at $CLAUDE_PROJECT_DIR root AND one level deep into
 # common monorepo workspace dirs (apps/*, packages/*, services/*, workspaces/*).

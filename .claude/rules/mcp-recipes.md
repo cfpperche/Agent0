@@ -16,7 +16,7 @@ Three artifacts plus one hook:
 
 - **`.claude/rules/mcp-recipes.md`** (this file) — authoritative per-MCP reference.
 - **`.mcp.json.example`** at repo root — copy-paste-ready file with all four blocks commented out by leading `//` markers. Workflow: `cp .mcp.json.example .mcp.json`, then remove `//` lines on the blocks you want active.
-- **`.claude/hooks/mcp-recipes-hint.sh`** (`SessionStart`) — runs the signal table below and emits a single `=== mcp-recipes ===` block listing applicable recipes when ≥1 signal fires. Silent when no signals match (Agent0 base case). Honors `CLAUDE_SKIP_MCP_RECIPES=1` to suppress regardless.
+- **`.claude/hooks/mcp-recipes-hint.sh`** (`SessionStart`) — runs the signal table below and emits a single `=== mcp-recipes ===` block listing applicable recipes when ≥1 signal fires. Silent when no signals match (bare-repository case). Honors `CLAUDE_SKIP_MCP_RECIPES=1` to suppress regardless.
 
 The fork chooses what to enable. Recipes recommend; the developer activates with one `cp` + uncomment.
 

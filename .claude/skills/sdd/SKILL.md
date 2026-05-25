@@ -21,7 +21,7 @@ User invokes as `/sdd <subcommand> [args]`. The raw argument string is `$ARGUMEN
 
 Raw invocation: `$ARGUMENTS`
 
-## Subcommand: `new <slug>`
+## Subcommand: `new <slug>` — 🔒 Low freedom: scaffold + substitute sequence
 
 Scaffold a new spec dir. Parse `$ARGUMENTS`: first token must be `new`, second token is the slug (kebab-case, e.g. `auth-rewrite`).
 
@@ -48,7 +48,7 @@ Scaffold a new spec dir. Parse `$ARGUMENTS`: first token must be `new`, second t
 
 5. **Report** — output the four paths and tell the user the next step is to fill `spec.md`. Do NOT auto-fill it; the user owns intent. Suggest they describe the change conversationally and you can draft `spec.md` from that, but only after they say so. If the idea is still vague, suggest `/sdd refine` instead. The fourth file `notes.md` stays empty at scaffold time — its purpose is in-flight design memory populated **during** implementation (see `.claude/rules/spec-driven.md` § The four artifacts).
 
-## Subcommand: `refine`
+## Subcommand: `refine` — 🔓 Medium freedom: adaptive interview with structured close
 
 Discovery interview that turns a vague idea into a filled `spec.md`. Opt-in front-end to `new` — conducts a senior-engineer interview, then writes the synthesis into the `spec.md` template. **Invocable at any point** — before a spec dir exists, or to refine one that does.
 
@@ -115,7 +115,7 @@ For option 1 on a from-scratch refine: propose a kebab-case slug derived from th
 
 Report the score and point the user at the next step: `/sdd plan`.
 
-## Subcommand: `plan`
+## Subcommand: `plan` — 🔒 Low freedom: read spec, fill plan template
 
 Draft `plan.md` from an existing `spec.md`. No positional argument — operate on the most recent spec dir (highest NNN) unless the user has already named a specific one in conversation.
 
@@ -126,7 +126,7 @@ Draft `plan.md` from an existing `spec.md`. No positional argument — operate o
 4. **Cite research** — if the spec or plan involved web research or codebase exploration, link the sources in the plan. This satisfies `research-before-proposing.md`.
 5. **Report** — output `plan.md` path. Tell the user to review and confirm before `/sdd tasks`.
 
-## Subcommand: `tasks`
+## Subcommand: `tasks` — 🔒 Low freedom: read plan, decompose into ordered checklist
 
 Generate `tasks.md` from `plan.md`. Same target-selection rule as `plan`.
 
@@ -140,7 +140,7 @@ Generate `tasks.md` from `plan.md`. Same target-selection rule as `plan`.
 4. **Include verification** — the last 1-2 tasks should be acceptance checks against the criteria in `spec.md` (run tests, verify behavior, sanity checks).
 5. **Report** — output `tasks.md` path. Tell the user implementation is now mechanical: work the tasks top-to-bottom, check off as completed, update `plan.md` if any task reveals plan is wrong.
 
-## Subcommand: `list`
+## Subcommand: `list` — 🔒 Low freedom: scan + format
 
 List all specs in the repo with a one-line status each. Supports two opt-in flags: `--in-flight` (filter to active work) and `--json` (machine-readable output, agent-friendly). Both are independent; any combination is legal.
 
@@ -221,6 +221,32 @@ If the first token of `$ARGUMENTS` is missing or not one of `new`, `refine`, `pl
 ```
 /sdd <new <slug> | refine [<idea> | NNN] | plan | tasks | list>
 ```
+
+## Eval Scenarios
+
+### Eval 1: Happy path — `new <slug>` from a clear idea
+
+**Input:** User says `/sdd new auth-rewrite` after describing the change conversationally.
+
+**Expected:** Slug regex passes; no `docs/specs/NNN-auth-rewrite/` collision. Next NNN computed by scanning existing `NNN-*` dirs and incrementing. Four template files copied (`spec.md`, `plan.md`, `tasks.md`, `notes.md`) and `{{SLUG}}` / `{{NNN}}` / `{{DATE}}` substituted in each. Four paths reported. Skill stops short of auto-filling `spec.md` — user is asked to fill it OR explicitly opt into a draft from the conversation. `notes.md` left empty (populated only during implementation).
+
+**Failure indicators:** Spec dir number conflicts with an existing dir (scan skipped). Placeholder `{{SLUG}}` left literal in some file. `spec.md` auto-filled with invented content the user never confirmed. `notes.md` pre-populated.
+
+### Eval 2: Refine an existing spec mid-flight
+
+**Input:** User says `/sdd refine 087` after the plan has started but the spec needs additional acceptance scenarios.
+
+**Expected:** Resumability path triggers — `spec.md` read first; `plan.md` filled state detected; warning emitted ("refining intent after planning has started; re-run `/sdd plan` afterward to resync") but flow not blocked. Step 0 context load runs silently. Discovery rounds challenge the additions at least twice (scope creep guard). At least 4 of 7 question-bank categories covered. Synthesis surfaces a structured summary for user confirmation; on confirmation, `spec.md` rewritten preserving existing checked items.
+
+**Failure indicators:** Discovery skipped on resumability path (jump straight to synthesis). Sycophantic ("great idea") phrases in any round. Round 1 starts without context load. Synthesis overwrites already-checked acceptance criteria. No re-plan reminder issued at close.
+
+### Eval 3: `list --in-flight` filter behavior
+
+**Input:** User says `/sdd list --in-flight` mid-week to assess what's still active.
+
+**Expected:** Scan `docs/specs/` for `NNN-*/` dirs. Resolve status — declared `**Status:**` line wins; derived heuristic fallback otherwise. Filter to specs whose status ∈ {draft, in-progress} OR derived ∈ {spec, plan, tasks} with git activity within 14 days (or `CLAUDE_SDD_IN_FLIGHT_RECENCY_DAYS` override). Per-row output: `NNN-<slug>  [status]  N/M acceptance unchecked  last activity Yd ago  — <h1>`. Specs with declared `shipped`/`superseded` or derived `done`/`empty` excluded. Stale `tasks` rows (>14d) excluded.
+
+**Failure indicators:** Shipped specs included in --in-flight output. Acceptance counts (N/M) computed only on top-level bullets (missing scenario sub-bullets). Status line declared as `in-progress` but the row uses a derived value instead. JSON shape leaks (--json not requested but output is JSON).
 
 ## Notes
 

@@ -35,7 +35,7 @@ User invokes as `/product "<idea>" --out=<path> [flags]`. The raw argument strin
 3. Optional flags (any order after idea): `--stack=<name>` (next | expo; default: web stack inferred from idea → next), `--from-step=NN` (resume from step N in range 1-15), `--skip-prd` (omit Step 05 dispatch — degenerate; PRD feeds Steps 06-15), `--skip-brand` (omit Step 13 + fall back to `templates/default-tokens.css`).
 4. Compute `slug` = kebab-case from idea (lowercase, alphanumeric + hyphens, max 40 chars).
 
-## Phase 0 — Setup + idempotency check + resume detection
+## Phase 0 — Setup + idempotency check + resume detection — 🔒 Low freedom: deterministic file scan + harness filter
 
 1. **Idempotency check** — list files at `<out>`. Filter out the **Agent0 harness allowlist** (these are exempt; a freshly-bootstrapped Agent0 fork is "fresh" from `/product`'s perspective):
 
@@ -57,7 +57,7 @@ User invokes as `/product "<idea>" --out=<path> [flags]`. The raw argument strin
 
 3. **Seed `<out>/.mcp.json`** — write the Playwright MCP server block so visual verification is available to the Phase 4 best-effort check AND to every SDD-child session the founder later opens. The block: `{ "mcpServers": { "playwright": { "command": "npx", "args": ["@playwright/mcp@latest"] } } }`. **Append-aware:** if `<out>/.mcp.json` already exists, parse it and merge the `playwright` key into the existing `mcpServers` object — do NOT overwrite other servers. If absent, write the file fresh. (`.mcp.json` is strict JSON — no comments; the reference block lives commented in `.mcp.json.example` / `.claude/rules/mcp-recipes.md`, but the file written here is valid JSON.) MCP servers load at session start, so the Playwright tools are live for *this* `/product` run only if the session already had them; otherwise the Phase 4 visual check is best-effort-skipped and the seed pays off for the SDD-child sessions.
 
-## Phase 0.5 — Target language resolution
+## Phase 0.5 — Target language resolution — 🔒 Low freedom: detect or read user-supplied locale
 
 Resolves `target_language` BEFORE Step 01 dispatches so every downstream sub-agent generates user-facing text in the right language. Runs ONCE per fresh run (skipped on `--from-step` resume — state already carries the value).
 
@@ -75,7 +75,7 @@ Resolves `target_language` BEFORE Step 01 dispatches so every downstream sub-age
 
 **Override:** founder can edit `.state.json.target_language` between phases — downstream sub-agents read the current value at dispatch time, so changes mid-run propagate to subsequent steps (but artifacts already written stay in their original language until re-iterated).
 
-## Quality judge — runs after every step
+## Quality judge — runs after every step — 🔒 Low freedom: canonical rubric, deterministic verdict
 
 After a phase's step producers return, the orchestrator grades each step's artifact(s) with the **quality judge** — an independent `opus` sub-agent — before building the report and reaching the gate. The judge is the scope/quality verdict that replaced the retired size budget; it answers *"is this artifact correctly scoped, complete, and coherent for its declared job?"*. Full contract: `references/quality-judge.md`. Each phase's "Update `.state.json`" step invokes this routine over that phase's steps.
 
@@ -95,7 +95,7 @@ For each **judge-unit** in the phase (steps 01-14 = the step; Step 15 = `15a-scr
 
 The judge never autonomously BLOCKs or aborts — deterministic structural BLOCK/abort stays the `schema.md` Layer 1 + orchestrator job (`delegation-briefs.md § Failure handling`). A judge `fail` is orthogonal to BLOCKED: a step in `completed_steps` can still carry a `fail` verdict.
 
-## Phase 1 — Discovery (pipeline steps 01-04)
+## Phase 1 — Discovery (pipeline steps 01-04) — 🔓 Medium freedom: content adapts to detected scope
 
 **Read `references/delegation-briefs.md` § "Phase 1 — Discovery" BEFORE dispatching.** Each Agent call uses the 5-field template there.
 
@@ -109,7 +109,7 @@ The judge never autonomously BLOCKs or aborts — deterministic structural BLOCK
    - `iterate` → user names which step(s) to re-dispatch (sub-prompt). Re-dispatches with augmented brief. Increment `iterations.discovery`. Re-gate after.
    - `abort` → exit cleanly; set `flags.from_step = current_step`; print resume command.
 
-## Phase 2 — Specification (pipeline steps 05-12)
+## Phase 2 — Specification (pipeline steps 05-12) — 🔓 Medium freedom: artifact content adapts to phase-1 outputs
 
 The biggest phase (8 steps). Internal dispatch DAG follows dependency order; some parallelize, others are strictly serial.
 
@@ -124,7 +124,7 @@ The biggest phase (8 steps). Internal dispatch DAG follows dependency order; som
 9. **Build the HTML report** — run `build-report.ts` as in Phase 1 step 5; regenerates `<out>/docs/REPORT.html`. Best-effort, never blocks.
 10. **Gate — `gate_specification`** — `AskUserQuestion` (same 3-option shape). Point the user at `<out>/docs/REPORT.html` to review before choosing. Per § Quality judge, a `fail` among the Step 05-12 `quality_verdicts` pre-sets the recommended option to `iterate`.
 
-## Phase 3 — Identity (pipeline steps 13-14)
+## Phase 3 — Identity (pipeline steps 13-14) — 🔓 Medium freedom: brand/design content adapts to product domain
 
 Strictly serial — design system depends on brand.
 
@@ -134,7 +134,7 @@ Strictly serial — design system depends on brand.
 4. **Build the HTML report** — run `build-report.ts` as in Phase 1 step 5; regenerates `<out>/docs/REPORT.html`. Best-effort, never blocks.
 5. **Gate — `gate_identity`** — `AskUserQuestion`. Point the user at `<out>/docs/REPORT.html` to review before choosing. Per § Quality judge, a `fail` among the Step 13-14 `quality_verdicts` pre-sets the recommended option to `iterate`.
 
-## Phase 4 — Visual contract (pipeline step 15)
+## Phase 4 — Visual contract (pipeline step 15) — 🔓 Medium freedom: screen atlas size adapts to sitemap scope
 
 NO GATE — Phase 4 closes the visual-contract phase; Phase 5 (the mandatory SDD handoff) is the pipeline's terminal step.
 
@@ -163,7 +163,7 @@ The v2/v3 per-route screen-writer fan-out is **deleted**. `/product` writes NO `
    If the Playwright MCP is NOT loaded at all, emit `visual-gate-skipped: Playwright MCP not loaded — <out>/.mcp.json seeded for the next session` and record the skip in REPORT.md. **Best-effort — never blocks, never aborts.**
 4. **Author `<out>/docs/REPORT.md` inline.** Read `templates/report.md.tmpl`, substitute placeholders from `<out>/docs/.state.json` + the phase outputs. Fill the `## Quality concerns` section from `.state.json` `quality_verdicts` — every `concern`/`fail` criterion with its `note`, plus each judge-unit's `scope_assessment` (per `quality-judge.md § Verdict → gate routing`). See `quality-judge.md` + `quality-checklist.md` for the rubric.
 
-## Phase 5 — Mandatory SDD handoff
+## Phase 5 — Mandatory SDD handoff — 🔒 Low freedom: umbrella matrix template + foundation child scaffold
 
 `/product` does not end at a chat message — it scaffolds the engineering entry point. **Read `references/sdd-handoff.md` before executing this phase** — it is the full contract for what to write and how to fill it from the pipeline artifacts.
 
@@ -248,6 +248,32 @@ This skill does not have subcommands beyond the initial invocation. If `$ARGUMEN
 ```
 /product "<idea>" --out=<path> [--stack=<name>] [--from-step=NN] [--skip-prd] [--skip-brand]
 ```
+
+## Eval Scenarios
+
+### Eval 1: Happy path — full multi-phase product
+
+**Input:** User says `/product "ERP para salões de beleza Acme Yard" --stack=next --out=/home/user/acme-yard`.
+
+**Expected:** Phase 0 idempotency check — `<out>` empty or harness-only → proceed. Phase 0.5 locale resolved from idea language (pt-BR). Phase 1 dispatches Discovery steps 01-04 in parallel; Phase 2 fans out steps 05-12 (specification) with the quality judge gating each handoff; Phase 3 builds identity (steps 13-14); Phase 4 produces the screen atlas + hi-fi killer-flow mood (5-screen concurrency cap respected); Phase 5 scaffolds the SDD umbrella spec + foundation child child reading system-design.md to compute the stack-aware matrix. Output is a docs-first tree under `<out>` plus an SDD umbrella; NO app code, NO `pnpm install`, NO build verification.
+
+**Failure indicators:** Pipeline ships a runnable app tree (`app/` / `apps/` / `package.json` at root). Mood-screen-writer fan-out exceeds 5 concurrent. Artifact rejected by quality judge but pipeline continues to next phase. `<out>` overwritten despite containing non-harness pre-existing files (idempotency check skipped). Visual contract dispatched before specification phase completes.
+
+### Eval 2: MVP — selective skip flags
+
+**Input:** User says `/product "MEI SaaS for solo entrepreneurs" --out=./mei-saas --skip-brand`.
+
+**Expected:** Phase 0/0.5 same as Eval 1. Brand step (within Phase 3) skipped with a one-line `--skip-brand active` advisory; downstream steps that would normally read brand artifacts (design-system step 14, atlas step 15) emit explicit warning that they're falling back to neutral defaults. PRD still ships (no `--skip-prd`); roadmap + cost + GTM all reference US-NN from the PRD. Pipeline still concludes with Phase 5 SDD handoff.
+
+**Failure indicators:** Brand step silently skipped without downstream warning. PRD also dropped (user didn't pass `--skip-prd`). Design system step invents a brand from thin air instead of using neutral defaults. Phase 5 umbrella omits the foundation child because brand artifacts are missing.
+
+### Eval 3: Resume mid-pipeline via `--from-step=NN`
+
+**Input:** User says `/product "<idea>" --out=./existing-product --from-step=07` after a prior run aborted mid-pipeline.
+
+**Expected:** Phase 0 idempotency detects non-empty `<out>`; resume-detection logic reads `<out>/docs/REPORT.md` (or equivalent state marker) to confirm steps 01-06 are present and valid. Pipeline restarts AT step 07 (sitemap-IA), reading already-produced step 01-06 artifacts as context. Steps before 07 NOT re-dispatched. Sitemap schema enforcement check from § Notes still applies (any `required_categories` member with 0 routes AND no `deferred_categories` declaration → BLOCK). Quality judge gates resumption verdict.
+
+**Failure indicators:** Phase 0 wipes `<out>` despite valid prior artifacts. Steps before 07 re-dispatched (token waste). Step 07 dispatched without reading step 06 (system-design.md) output. Sitemap schema check skipped on resume path.
 
 ## Notes
 

@@ -2,17 +2,19 @@
 
 _Static reference table consumed by `.claude/skills/image/scripts/gen.sh`. Approx values — refresh quarterly via the routine described in § Refresh discipline._
 
-**Snapshot date:** 2026-05-24
+**Snapshot date:** 2026-05-25
 
 ## Tiers
 
 | Tier | Model endpoint | Default content-type | Approx cost (USD/img) | Strengths |
 |---|---|---|---|---|
 | `draft` | `fal-ai/flux/schnell` | `image/jpeg` → `.jpg` | ~$0.003 | Sub-second inference, open-weights (Black Forest Labs). Best for high-volume throwaway mockups. |
-| `brand-text` | `fal-ai/gpt-image-2` | `image/png` → `.png` | ~$0.04 (low) / ~$0.20 (high) | Crisp typography rendering. Best for logos, banners, anything with text. Quality tier configurable via fal.ai params; v1 of the skill uses the default-quality midpoint. |
+| `brand-text` | `fal-ai/gpt-image-2` | `image/png` → `.png` | ~$0.20 (high default) [^1] | Crisp typography rendering. Best for logos, banners, anything with text. |
 | `brand-photo` | `fal-ai/imagen4/ultra` | `image/png` → `.png` | ~$0.06 | Photo-real fidelity. Best for hero images, illustrations, marketing visuals. |
 
-Content-type per tier is empirically verified for FLUX schnell (2026-05-24 dogfood — returns JPEG). The brand tiers' PNG defaults are documented assumption; verify on first invocation by checking the response's `content_type` field.
+[^1]: v1 of the skill (`gen.sh exec`) hardcodes `quality: "high"` for gpt-image-2 to match the schema default and the AC ceiling typical brand callers target. A `--quality=low|medium|high` flag is deferred — see spec 088 Open Q1. Low/medium would map to ~$0.04 / ~$0.10; promote to the flag when a fork asks for cost-sensitive brand-text runs.
+
+Content-type per tier is empirically verified for FLUX schnell (2026-05-24 dogfood — returns JPEG) and gpt-image-2 (2026-05-25 codexeng dogfood — returns PNG). The Imagen 4 Ultra PNG default is documented assumption; verify on first invocation by checking the response's `content_type` field.
 
 ## Aspect ratios
 
@@ -25,6 +27,18 @@ The `--aspect` flag maps to fal.ai's `image_size` enum. Three values supported i
 | `portrait` | `portrait_16_9` | 576×1024 | Mobile screens, vertical posters, story-format |
 
 The default of `square` matches the v1 hardcoded behavior; existing callers without `--aspect` continue to get 1024×1024.
+
+## gpt-image-2 min-pixel floor
+
+`gpt-image-2`'s input schema declares `total pixels between 655,360 and 8,294,400` (per `mcp__fal-ai__get_model_schema` output, codexeng dogfood 2026-05-25). Two of the three aspect-ratio enums fall below the floor and get upsampled by the model:
+
+| Aspect requested | Documented dims | Pixels | Actual returned (gpt-image-2) | Drift |
+|---|---|---|---:|---|
+| `square` | 1024×1024 | 1,048,576 | 1024×1024 | none (above floor) |
+| `landscape` | 1024×576 | 589,824 | **1088×608** | +6.25% / +5.56% |
+| `portrait` | 576×1024 | 589,824 | **608×1088** | +5.56% / +6.25% |
+
+`.claude/skills/image/scripts/gen.sh` § `sub_exec` auto-reconciles via `ffmpeg -vf scale=<w>:<h>` when actual ≠ expected and `ffmpeg` is on PATH; emits `image-skill-advisory:` to stderr and leaves the file at the upsampled dims if ffmpeg is absent (the image is still usable; this is graceful-degrade). FLUX schnell and Imagen 4 Ultra do not enforce this floor — only gpt-image-2.
 
 ## Why these models
 

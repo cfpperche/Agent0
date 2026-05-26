@@ -31,8 +31,9 @@ MANIFEST_PATH="$PROJECT_DIR/assets/generated/.manifest.jsonl"
 #     - FLUX schnell    → image/jpeg
 #     - gpt-image-2     → image/png  (verify before first brand-text invocation)
 #     - imagen4/ultra   → image/png  (verify before first brand-photo invocation)
+# v1 bakes quality=high for brand-text; see references/tier-pricing.md § brand-text
 TIER_TABLE='draft|fal-ai/flux/schnell|assets/generated/mockups|0.003|jpg
-brand-text|fal-ai/gpt-image-2|assets/brand|0.040|png
+brand-text|fal-ai/gpt-image-2|assets/brand|0.200|png
 brand-photo|fal-ai/imagen4/ultra|assets/brand|0.060|png'
 
 # ---------------------------------------------------------------------------
@@ -236,6 +237,154 @@ sub_prepare() {
 }
 
 # ---------------------------------------------------------------------------
+# Subcommand: exec
+# ---------------------------------------------------------------------------
+# Consumes a prepare-shape JSON envelope, POSTs to fal.run REST (NOT MCP — see
+# spec 088 and image-gen.md § Gotchas for the diagnosis driving this split),
+# downloads the returned image to output_path, reconciles dimensions if the
+# model upsampled (gpt-image-2 min-pixel floor case), and emits a JSON receipt.
+# Exit 0 on success, non-zero on failure; receipt is always one JSON line on
+# stdout so the agent can parse it regardless of outcome.
+sub_exec() {
+  local envelope=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --envelope=*) envelope="${1#--envelope=}"; shift ;;
+      --envelope)   envelope="${2:-}"; shift 2 ;;
+      *) printf '/image exec: unknown arg: %s\n' "$1" >&2; exit 2 ;;
+    esac
+  done
+
+  # Fall back to stdin if --envelope not supplied
+  if [ -z "$envelope" ]; then
+    if [ -t 0 ]; then
+      printf '/image exec: --envelope=<json> required (or pipe JSON via stdin)\n' >&2
+      exit 2
+    fi
+    envelope=$(cat)
+  fi
+
+  [ -z "${FAL_KEY:-}" ] && die_no_fal_key
+
+  local tier model prompt output_path image_size expected_dims
+  tier="$(printf '%s' "$envelope"          | jq -r '.tier          // ""')"
+  model="$(printf '%s' "$envelope"         | jq -r '.model         // ""')"
+  prompt="$(printf '%s' "$envelope"        | jq -r '.prompt        // ""')"
+  output_path="$(printf '%s' "$envelope"   | jq -r '.output_path   // ""')"
+  image_size="$(printf '%s' "$envelope"    | jq -r '.image_size    // ""')"
+  expected_dims="$(printf '%s' "$envelope" | jq -r '.dimensions    // ""')"
+
+  if [ -z "$tier" ] || [ -z "$model" ] || [ -z "$prompt" ] || [ -z "$output_path" ]; then
+    printf '/image exec: envelope missing required fields (tier/model/prompt/output_path)\n' >&2
+    exit 2
+  fi
+
+  local abs_output
+  case "$output_path" in
+    /*) abs_output="$output_path" ;;
+    *)  abs_output="$PROJECT_DIR/$output_path" ;;
+  esac
+  mkdir -p "$(dirname "$abs_output")"
+
+  # Build request body. gpt-image-2 takes a quality enum; FLUX + Imagen do not.
+  local body
+  case "$model" in
+    *gpt-image-2*)
+      body="$(jq -nc --arg p "$prompt" --arg s "$image_size" \
+        '{prompt:$p, image_size:$s, quality:"high"}')"
+      ;;
+    *)
+      body="$(jq -nc --arg p "$prompt" --arg s "$image_size" \
+        '{prompt:$p, image_size:$s}')"
+      ;;
+  esac
+
+  # POST to fal.run synchronous REST endpoint.
+  # REST uses 'Authorization: Key', NOT 'Bearer' — see image-gen.md § Gotchas.
+  # --max-time 300 is a hard 5-min ceiling; longer than any v1 sync tier needs.
+  local resp_file http_code
+  resp_file="$(mktemp)"
+  http_code="$(curl -sS -o "$resp_file" -w '%{http_code}' \
+    -X POST "https://fal.run/$model" \
+    -H "Authorization: Key $FAL_KEY" \
+    -H "Content-Type: application/json" \
+    --data-raw "$body" \
+    --max-time 300 || printf '000')"
+
+  if [ "$http_code" != "200" ]; then
+    cat "$resp_file" >&2
+    printf '\n' >&2
+    printf '{"status":"failure","http_code":%s,"output_path":"%s"}\n' \
+      "${http_code:-0}" "$(json_escape "$output_path")"
+    rm -f "$resp_file"
+    exit 1
+  fi
+
+  local image_url
+  image_url="$(jq -r '.images[0].url // ""' "$resp_file")"
+  rm -f "$resp_file"
+  if [ -z "$image_url" ]; then
+    printf 'unexpected response shape (no .images[0].url)\n' >&2
+    printf '{"status":"failure","http_code":200,"output_path":"%s"}\n' \
+      "$(json_escape "$output_path")"
+    exit 1
+  fi
+
+  # Two-hop download — fal.run returns a fal.media CDN URL, not the bytes.
+  if ! curl -sS -o "$abs_output" --max-time 120 "$image_url"; then
+    printf 'download failed from %s\n' "$image_url" >&2
+    printf '{"status":"failure","http_code":200,"output_path":"%s"}\n' \
+      "$(json_escape "$output_path")"
+    exit 1
+  fi
+  if [ ! -s "$abs_output" ]; then
+    printf 'downloaded file is empty at %s\n' "$abs_output" >&2
+    printf '{"status":"failure","http_code":200,"output_path":"%s"}\n' \
+      "$(json_escape "$output_path")"
+    exit 1
+  fi
+
+  # Dimension reconciliation. PNG `file` output: "PNG image data, 1088 x 608, ...".
+  # JPEG `file` output carries a density artifact (e.g. "density 1x1") BEFORE the
+  # real image dims, so head -1 picks up "1x1" instead of "1024x1024". Two-tier
+  # parse: prefer ffprobe (exact, ships with ffmpeg) → fall back to file with
+  # tail -1 (real image dims come after density in JPEG; no spurious NxN after).
+  local actual_dims final_dims
+  if command -v ffprobe >/dev/null 2>&1; then
+    actual_dims="$(ffprobe -v error -select_streams v:0 \
+      -show_entries stream=width,height -of csv=p=0:s=x "$abs_output" 2>/dev/null)"
+  fi
+  if [ -z "${actual_dims:-}" ]; then
+    actual_dims="$(file "$abs_output" 2>/dev/null \
+      | grep -oE '[0-9]+ ?x ?[0-9]+' | tail -1 | tr -d ' ')"
+  fi
+  final_dims="$actual_dims"
+
+  if [ -n "$actual_dims" ] && [ -n "$expected_dims" ] && [ "$actual_dims" != "$expected_dims" ]; then
+    if command -v ffmpeg >/dev/null 2>&1; then
+      local w h tmp
+      w="${expected_dims%x*}"
+      h="${expected_dims#*x}"
+      tmp="${abs_output}.tmp.${RANDOM}"
+      if ffmpeg -y -loglevel error -i "$abs_output" -vf "scale=${w}:${h}" "$tmp" 2>/dev/null; then
+        mv "$tmp" "$abs_output"
+        final_dims="$expected_dims"
+        printf 'returned: %s -> downscaled: %s (via ffmpeg)\n' "$actual_dims" "$expected_dims"
+      else
+        rm -f "$tmp"
+        printf 'image-skill-advisory: ffmpeg downscale failed; left at %s\n' "$actual_dims" >&2
+      fi
+    else
+      printf 'image-skill-advisory: returned %s, expected %s; install ffmpeg to auto-downscale\n' \
+        "$actual_dims" "$expected_dims" >&2
+    fi
+  fi
+
+  printf '{"status":"success","output_path":"%s","dimensions":"%s","http_code":200}\n' \
+    "$(json_escape "$output_path")" "$final_dims"
+}
+
+# ---------------------------------------------------------------------------
 # Subcommand: record
 # ---------------------------------------------------------------------------
 sub_record() {
@@ -296,21 +445,28 @@ sub_record() {
 # ---------------------------------------------------------------------------
 case "${1:-}" in
   prepare) shift; sub_prepare "$@" ;;
+  exec)    shift; sub_exec    "$@" ;;
   record)  shift; sub_record  "$@" ;;
   ""|-h|--help)
     cat <<'EOF'
 /image — AI image generation helper
 
 Subcommands:
-  prepare --tier=<draft|brand-text|brand-photo> [--name=<slug>] "<prompt>"
+  prepare --tier=<draft|brand-text|brand-photo> [--name=<slug>] [--aspect=...] "<prompt>"
     Validate inputs, derive output path, print cost estimate, emit JSON
-    envelope (stdout). Errors out with --tier=missing template, FAL_KEY-unset
-    pointer, or invalid-name complaint.
+    envelope (stdout). Errors out on missing --tier, unset FAL_KEY, or
+    invalid --name.
+
+  exec --envelope=<prepare-shape-json>
+    Consume the envelope, POST to fal.run REST (NOT MCP — see spec 088),
+    download image to output_path, ffmpeg-downscale on dim drift if available.
+    Emits a JSON receipt on stdout: {status, output_path, dimensions,
+    http_code}.
 
   record --tier=X --model=Y --cost=Z --prompt="..." --output=path
          [--dims=1024x1024] [--status=success]
-    Append a manifest line to assets/generated/.manifest.jsonl after the MCP
-    call returns. Called by the agent post-MCP, with the prepare-envelope
+    Append a manifest line to assets/generated/.manifest.jsonl after exec
+    finishes. Called by the agent post-exec, with envelope + exec-receipt
     values forwarded.
 
 See .claude/skills/image/SKILL.md for the full invocation flow and

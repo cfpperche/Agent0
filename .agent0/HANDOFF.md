@@ -8,9 +8,11 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-Spec 092 (multi-runtime-handoff) shipped: `.agent0/HANDOFF.md` is now the canonical handoff; `.claude/SESSION.md` is a pointer-only compatibility file (first non-blank line `<!-- AGENT0_HANDOFF_POINTER -->`). Claude `SessionStart`/`Stop` hooks read and enforce this file on every source; Codex follows the same handoff by `AGENTS.md` convention. Adjacent rules (reminders, routines, memory-placement, spec-driven, artifact-budgets, runtime-introspect, compaction-continuity) and entrypoints (CLAUDE.md, AGENTS.md managed blocks, README.md) updated in the same commit. Five test suites green: session-handoff (10), compaction-continuity (6), session-state-isolation (7), session-edit-attribution (8), runtime-introspect (16); plus instruction-drift (6) and harness-sync (33). Spec 090 had shipped earlier.
+Spec 093 (runtime-capability-registry) scaffolded end-to-end in one session: `spec.md` drafted, 2-round cross-model debate (Codex initiating, Claude reviewing) converged at Round 2, all 14 synthesis bullets applied to `spec.md`, `debate.md` § Applied changes filled, `plan.md` drafted with vocabulary pressure-test dry-run, `tasks.md` drafted with 17 numbered tasks across 7 layers + verification. Status: `draft`; ready for implementation top-to-bottom starting at Layer 0 (vocabulary lock-in gate).
 
-Downstream forks **mei-saas** (`7c25afd`) and **codexeng** (`4a657ab`) sync'd + migrated (each got the 092 harness + their own `.agent0/HANDOFF.md` populated from prior SESSION.md content, SESSION.md collapsed to pointer). codexeng kept its known 1 customized-refused (`image/SKILL.md § Notes`) — section-blind sha-compare, no upstream content change so no merge needed. **administradora-ia-nativa** deferred (drift unrelated to 092: pending removals of `app-skeleton/` + `04-ux-testing/` from older specs — needs its own dedicated sync window).
+Converged design: registry lives at `.claude/rules/runtime-capabilities.md` (NOT `.agent0/*` — that namespace stays per-project per spec 092); six-state vocabulary (`native` / `native-opt-in` / `convention` / `read-only` / `planned` / `unsupported`); AGENTS.md `## Codex Capability Tiers` table removed in favor of pointer + skeptical default; CLAUDE.md managed-block parity; `check-instruction-drift.sh` extended with 5 anchor-level invariants; tests under `.claude/tests/runtime-capabilities/`; MCP recipes row pre-shipped as the vocabulary pressure-test (Claude=`native-opt-in`).
+
+Spec 090 (multi-runtime-entrypoints) and 092 (multi-runtime-handoff) remain shipped. Spec 091 (sdd-debate-runner, `docs/specs/091-sdd-debate-runner/`) remains paused and **untracked** on the working tree — do not commit or resume without explicit user direction.
 
 ## Active Work
 
@@ -18,15 +20,16 @@ _None._
 
 ## Next Actions
 
-1. Spec 091 (`docs/specs/091-sdd-debate-runner/`) remains paused and **untracked** on the working tree. Do not commit or resume without explicit user direction.
-2. Codex CLI port of `/sdd debate` is out-of-repo and unchanged in status.
-3. Propagation-advisory regex gap (pattern set doesn't catalog fork names) remains unscoped — threshold for spec scaffolding not met.
-4. **administradora-ia-nativa** harness sync — dedicated window: drift includes removals from older specs (`app-skeleton/`, `04-ux-testing/`, `project-memory/05-06` tests) plus a `.claude/settings.json` + `.gitignore` merge. Not coupled to 092.
+1. Work `docs/specs/093-runtime-capability-registry/tasks.md` top-to-bottom starting with **Layer 0 task 1** (re-confirm the 12-row × 2-runtime vocabulary pressure-test from `plan.md § Approach` step 1 + verify `.claude/hooks/mcp-recipes-hint.sh` exists at that exact path).
+2. If Layer 0 surfaces any row that resists the six-state vocabulary, update `spec.md § Scenario: status vocabulary` BEFORE proceeding — do not silently expand the vocabulary in the registry.
+3. After registry ships, MCP parity becomes the obvious spec-094 candidate (the worked-example row already lists current owner files and the `native-opt-in` marker).
+4. Keep spec 091 paused and untracked unless the user explicitly resumes it.
 
 ## Decisions & Gotchas
 
-- Pointer detection uses the literal first-non-blank-line marker `<!-- AGENT0_HANDOFF_POINTER -->`; size-threshold and frontmatter were rejected (false-positive / parser-cost).
-- Cross-runtime edit attribution is out of v1: Codex has no lifecycle hook to attribute through, so the legacy porcelain-compare false-positive (Codex edits during a Claude bystander session, `edited-files.txt` missing) stays as documented legacy risk.
-- Stale-claim TTL/advisory deferred per rule-of-three demand test — `Active Work` bullets ship with mandatory `release condition` field only; build the advisory if dogfood produces ≥3 stale-claim collisions the field cannot catch.
-- `.agent0/HANDOFF.md` is git-tracked but **outside** `sync-harness.sh`'s manifest by design — per-project state, never fork-managed. Adopting forks rewrite their own `.claude/SESSION.md` to pointer-only and create their own HANDOFF.md; new hooks fall to layer-(b) advisory during the migration window.
-- Block-once Stop semantics, edit-attribution tracker (`edited-files.txt`), and porcelain-compare fallback are preserved verbatim — only the freshness target changed (`.claude/SESSION.md` → `.agent0/HANDOFF.md`).
+- 093 registry path is `.claude/rules/runtime-capabilities.md` — `.agent0/*` rejected in debate because spec 092 made that namespace per-project state; mixing Agent0-managed policy in would blur the contract. Existing `.claude/rules/*` sync glob covers the new file with zero manifest edits.
+- YAML/JSON sidecar rejected in Round 2: two canonical files for one registry would reintroduce the drift risk the spec is built to eliminate. Markdown canonical; the five anchor-level drift checks don't parse cells, so parsing-fragility is moot. Promote to a schema only when a real machine-read use case appears.
+- `AGENTS.md` `## Codex Capability Tiers` is being removed in the same change as the registry ships — drift check (c) makes this irreversible without breaking CI. Fork-local reintroduction must use `AGENTS.override.md`, not in-place edits to the managed block.
+- `MINIMUM_SET` array in `check-instruction-drift.sh` is a second source of truth alongside `spec.md` Scenario 1's 12-row enumeration. A future spec promoting a 13th row to the minimum updates both in the same commit; the array literal carries a comment naming the spec as canonical source.
+- `.agent0/HANDOFF.md` is git-tracked but **outside** `sync-harness.sh`'s manifest by design — per-project state, never fork-managed. (Carried forward from 092; informs why 093's registry can't live here.)
+- Block-once Stop semantics, edit-attribution tracker, porcelain-compare fallback unchanged from 092.

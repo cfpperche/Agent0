@@ -15,7 +15,7 @@ The immediate purpose is not to make every Claude-only feature work in Codex. It
 - [x] **Scenario: users can inspect one canonical capability matrix**
   - **Given** Agent0 is used by Claude Code and Codex CLI
   - **When** a user or agent wants to know whether a capability is `native`, `native-opt-in`, `convention`, `read-only`, `planned`, or `unsupported` in a runtime
-  - **Then** one canonical registry answers that question for the current first-party capability set, including at minimum: instruction entrypoints, session handoff, SDD, debate, lifecycle hooks, runtime introspect, delegation/subagents, MCP recipes, image generation, memory, harness sync, and customization/sync surfaces. `planned` cells carry a future spec slug where known (e.g. `planned: 094-mcp-parity`) or `planned: untracked` otherwise.
+  - **Then** one canonical registry answers that question for the current first-party capability set, including at minimum: instruction entrypoints, session handoff, SDD, debate, lifecycle hooks, runtime introspect, delegation/subagents, MCP recipes, image generation, memory, harness sync, and customization/sync surfaces. `planned` cells carry a future spec slug where known (e.g. `planned: NNN-mcp-parity`) or `planned: untracked` otherwise.
 
 - [x] **Scenario: runtime entrypoints point at the registry instead of duplicating roadmap claims**
   - **Given** `CLAUDE.md` and `AGENTS.md` are the first-contact files for Claude Code and Codex CLI

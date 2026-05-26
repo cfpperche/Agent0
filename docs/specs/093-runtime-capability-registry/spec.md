@@ -2,7 +2,7 @@
 
 _Created 2026-05-26._
 
-**Status:** draft
+**Status:** shipped
 
 ## Intent
 
@@ -12,46 +12,46 @@ The immediate purpose is not to make every Claude-only feature work in Codex. It
 
 ## Acceptance criteria
 
-- [ ] **Scenario: users can inspect one canonical capability matrix**
+- [x] **Scenario: users can inspect one canonical capability matrix**
   - **Given** Agent0 is used by Claude Code and Codex CLI
   - **When** a user or agent wants to know whether a capability is `native`, `native-opt-in`, `convention`, `read-only`, `planned`, or `unsupported` in a runtime
   - **Then** one canonical registry answers that question for the current first-party capability set, including at minimum: instruction entrypoints, session handoff, SDD, debate, lifecycle hooks, runtime introspect, delegation/subagents, MCP recipes, image generation, memory, harness sync, and customization/sync surfaces. `planned` cells carry a future spec slug where known (e.g. `planned: 094-mcp-parity`) or `planned: untracked` otherwise.
 
-- [ ] **Scenario: runtime entrypoints point at the registry instead of duplicating roadmap claims**
+- [x] **Scenario: runtime entrypoints point at the registry instead of duplicating roadmap claims**
   - **Given** `CLAUDE.md` and `AGENTS.md` are the first-contact files for Claude Code and Codex CLI
   - **When** either entrypoint mentions multi-runtime support or capability tiers
   - **Then** it points to the canonical registry for detailed status and keeps only a bootstrap pointer plus skeptical-default guidance (agents should assume `convention` or `planned` until the registry's runtime column says otherwise). Tier definitions, capability rows, and status vocabulary live exclusively in the registry; the current `AGENTS.md` Codex Capability Tiers table is removed in the same change.
 
-- [ ] **Scenario: status vocabulary is provider-neutral and testable**
+- [x] **Scenario: status vocabulary is provider-neutral and testable**
   - **Given** a capability row in the registry
   - **When** it assigns support state for Claude Code, Codex CLI, or a future runtime
   - **Then** the cell value is one of six documented vocabulary terms with operational meaning: `native` (works on clone; runtime has a primitive that consumes the capacity), `native-opt-in` (runtime has the primitive but user must enable it via env var, config copy, or credential), `convention` (no primitive; entrypoint instructs the agent to perform the capacity manually following a documented rule), `read-only` (agent can read the artifacts the capacity produces but cannot invoke or extend it), `planned` (explicitly scoped for a future spec; carries spec slug or `untracked`), or `unsupported` (no path forward declared). Runtime-specific labels such as `Claude-only-until-follow-up` are not used.
 
-- [ ] **Scenario: Codex is not over-promised**
+- [x] **Scenario: Codex is not over-promised**
   - **Given** Codex reads `AGENTS.md` before doing non-trivial work
   - **When** the task touches a capability that is still Claude-hook-native, slash-skill-native, subagent-native, or MCP-activation-specific
   - **Then** the registry and entrypoint wording make clear whether Codex may use it directly, only emulate it manually with file/shell work, only read it as reference, or must wait for a follow-up spec
 
-- [ ] **Scenario: MCP parity has an obvious next-step shape**
+- [x] **Scenario: MCP parity has an obvious next-step shape**
   - **Given** MCP recipes currently live in `.claude/rules/mcp-recipes.md`, `.mcp.json.example`, and Claude `SessionStart` hints
   - **When** the v1 registry ships
   - **Then** it already contains a non-implementation worked-example row for MCP recipes that pressure-tests the v1 vocabulary before any MCP parity work starts. The row lists owner files (`.claude/rules/mcp-recipes.md`, `.mcp.json.example`, `.claude/hooks/mcp-recipes-hint.sh`), marks Claude support as `native-opt-in` (not plain `native` — recipes require user activation), marks Codex support as `convention` or `planned`, and carries the follow-up spec slug. If the row cannot be expressed in the proposed vocabulary, the vocabulary changes before this spec moves to plan/tasks.
 
-- [ ] **Scenario: registry ownership does not conflict with handoff ownership**
+- [x] **Scenario: registry ownership does not conflict with handoff ownership**
   - **Given** spec 092 made `.agent0/HANDOFF.md` per-project state and explicitly rejected sync-by-default for `.agent0/**`
   - **When** this spec introduces an Agent0-owned capability registry
   - **Then** the registry lives at `.claude/rules/runtime-capabilities.md` — an already Agent0-managed surface that propagates via the existing `.claude/rules/*` sync glob. No `.agent0/<file>` exception is introduced; `.agent0/HANDOFF.md` and `.agent0/**` remain per-project state per spec 092.
 
-- [ ] **Scenario: drift checks protect the new source of truth**
+- [x] **Scenario: drift checks protect the new source of truth**
   - **Given** the registry becomes canonical
   - **When** `AGENTS.md`, `CLAUDE.md`, or adjacent rules make capability-tier claims
   - **Then** `.claude/tools/check-instruction-drift.sh` (or a nearby helper/test invoked alongside it) verifies five anchor-level invariants without parsing per-cell values: (a) `.claude/rules/runtime-capabilities.md` exists; (b) both `AGENTS.md` and `CLAUDE.md` point to it; (c) the old `AGENTS.md` Codex Capability Tiers table is gone; (d) the six documented vocabulary terms appear in the registry; (e) the minimum-set capability row labels from Scenario 1 each appear at least once. Extra rows for newly-added capabilities are permitted; duplicate required labels are errors.
 
-- [ ] The registry includes at least two concrete runtime columns for v1: `Claude Code` and `Codex CLI`. Additional runtime columns (`Cursor`, `Aider`, `Hermes Agent`, etc.) may appear only as explicitly future/unknown placeholders, not as asserted support.
+- [x] The registry includes at least two concrete runtime columns for v1: `Claude Code` and `Codex CLI`. Additional runtime columns (`Cursor`, `Aider`, `Hermes Agent`, etc.) may appear only as explicitly future/unknown placeholders, not as asserted support.
 
-- [ ] The registry includes an owner-file reference **list** for each first-party capability row so future specs know which files actually implement or document the capability. Several capabilities span rules, hooks, tools, tests, and specs; single-file references are insufficient.
+- [x] The registry includes an owner-file reference **list** for each first-party capability row so future specs know which files actually implement or document the capability. Several capabilities span rules, hooks, tools, tests, and specs; single-file references are insufficient.
 
-- [ ] The registry states its update rule: every future spec that changes runtime support for a capability must update `.claude/rules/runtime-capabilities.md` in the same change. New capability rows may be added without expanding the drift check's minimum-required-labels set; that set grows only when a follow-up spec explicitly promotes a row to the minimum.
+- [x] The registry states its update rule: every future spec that changes runtime support for a capability must update `.claude/rules/runtime-capabilities.md` in the same change. New capability rows may be added without expanding the drift check's minimum-required-labels set; that set grows only when a follow-up spec explicitly promotes a row to the minimum.
 
 ## Non-goals
 

@@ -12,30 +12,24 @@ _In-flight design memory for this spec — decisions, deviations, tradeoffs, and
 
 _Choices made where the spec/plan was ambiguous. The decision itself + why this option over others considered in the moment._
 
-### {{YYYY-MM-DD}} — {{author}} — {{one-line title}}
+### 2026-05-26 — parent — Upstream does not record a fork sync baseline
 
-{{free-prose body — what was ambiguous, what was decided, why}}
+During implementation, `rg`/`git ls-files` confirmed that `.claude/harness-sync-baseline.json` does not exist in the Agent0 upstream repo. The baseline is fork-local state written by `sync-harness.sh --apply` in downstream forks, per `.claude/rules/harness-sync.md`; Agent0 upstream validates manifest coverage by running `sync-harness.sh --check --agent0-path "$(pwd)" "$(pwd)"`. The plan/task text was adjusted accordingly so this spec does not introduce a new upstream baseline file.
 
 ## Deviations
 
 _Places where implementation intentionally departed from `plan.md`. The departure + the reason it was necessary or better._
 
-### {{YYYY-MM-DD}} — {{author}} — {{one-line title}}
-
-{{free-prose body — what the plan said, what was done instead, why}}
+_None beyond the baseline decision recorded above; the plan was updated before continuing._
 
 ## Tradeoffs
 
 _Alternatives weighed during implementation (not at plan time). The chosen path + what was given up + why the tradeoff was worth it._
 
-### {{YYYY-MM-DD}} — {{author}} — {{one-line title}}
-
-{{free-prose body — options considered in-flight, chosen path, accepted cost}}
+_None beyond the tradeoffs already captured in `debate.md`._
 
 ## Open questions
 
 _Questions surfaced during build that the implementer couldn't resolve alone. Owner (who decides) or path to resolution if known. Promote answered questions to `spec.md` § Open questions or as retroactive acceptance scenarios when the spec is updated._
 
-### {{YYYY-MM-DD}} — {{author}} — {{one-line title}}
-
-{{free-prose body — the question, why it surfaced, what's blocked on it, who can decide}}
+_None._

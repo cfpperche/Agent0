@@ -105,25 +105,6 @@ if [ -f "$claude" ] && [ -f "$agents" ] &&
   fi
 fi
 
-check_claim_caveats() {
-  local file="$1"
-  local tier
-
-  for tier in 'native-now' 'manual/read-only-now' 'Claude-only-until-follow-up'; do
-    if ! grep -qF "$tier" "$file"; then
-      fail "AGENTS.md missing tier qualifier: $tier"
-    fi
-  done
-}
-
-if [ -f "$agents" ] && [ "$(detect_marker_state "$agents")" = "paired" ]; then
-  before_failures="$failures"
-  check_claim_caveats "$agents"
-  if [ "$failures" -eq "$before_failures" ]; then
-    ok "AGENTS.md Claude-only claims are covered by file-level tier caveats"
-  fi
-fi
-
 if [ "$SKIP_SYNC_CHECK" -eq 1 ]; then
   ok "sync-harness AGENTS.md baseline check skipped by flag"
 else
@@ -145,6 +126,91 @@ else
     fi
   fi
 fi
+
+check_runtime_capabilities_registry() {
+  local registry_rel=".claude/rules/runtime-capabilities.md"
+  local registry="$ROOT/$registry_rel"
+  local term file label count before_failures
+
+  # Source of truth: docs/specs/093-runtime-capability-registry/spec.md
+  # § "Scenario: users can inspect one canonical capability matrix". If a
+  # future spec promotes a 13th minimum row, update this array and that spec in
+  # the same change. Extra rows in the registry are allowed.
+  local minimum_set=(
+    "instruction entrypoints"
+    "session handoff"
+    "SDD"
+    "debate"
+    "lifecycle hooks"
+    "runtime introspect"
+    "delegation/subagents"
+    "MCP recipes"
+    "image generation"
+    "memory"
+    "harness sync"
+    "customization/sync surfaces"
+  )
+
+  before_failures="$failures"
+
+  if [ -f "$registry" ]; then
+    ok "runtime capability registry exists"
+  else
+    fail "registry file missing: $registry_rel"
+  fi
+
+  for file in "$claude" "$agents"; do
+    if [ -f "$file" ] && [ "$(detect_marker_state "$file")" = "paired" ]; then
+      if _extract_region "$file" | grep -qF "$registry_rel"; then
+        ok "$(basename "$file"): managed block points to runtime capability registry"
+      else
+        fail "$(basename "$file"): managed block missing registry pointer"
+      fi
+    fi
+  done
+
+  if [ -f "$agents" ]; then
+    if grep -qF '## Codex Capability Tiers' "$agents"; then
+      fail "AGENTS.md: legacy '## Codex Capability Tiers' table still present"
+    else
+      ok "AGENTS.md legacy Codex Capability Tiers table absent"
+    fi
+  fi
+
+  if [ -f "$registry" ]; then
+    for term in native native-opt-in convention read-only planned unsupported; do
+      if grep -qF "\`$term\`" "$registry"; then
+        ok "registry vocabulary term present: $term"
+      else
+        fail "registry: vocabulary term \`$term\` missing"
+      fi
+    done
+
+    for label in "${minimum_set[@]}"; do
+      count="$(awk -F '|' -v label="$label" '
+        NF > 2 {
+          cell = $2
+          gsub(/^[ \t]+|[ \t]+$/, "", cell)
+          if (cell == label) count++
+        }
+        END { print count + 0 }
+      ' "$registry")"
+      if [ "$count" -eq 0 ]; then
+        fail "registry: required row '$label' missing"
+      elif [ "$count" -gt 1 ]; then
+        fail "registry: required row '$label' duplicated"
+      else
+        ok "registry required row present: $label"
+      fi
+    done
+  fi
+
+  if [ "$failures" -eq "$before_failures" ]; then
+    ok "runtime capability registry anchor checks passed"
+  fi
+}
+
+check_runtime_capabilities_registry
 
 if [ "$failures" -eq 0 ]; then
   exit 0

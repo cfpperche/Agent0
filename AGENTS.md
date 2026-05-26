@@ -2,15 +2,9 @@
 
 Agent0 is a reusable base/template repository for starting new software projects with an agent harness already wired in. Use this file as the Codex-native first-contact surface; Claude Code uses `CLAUDE.md`.
 
-## Codex Capability Tiers
+## Runtime Capability Registry
 
-| Tier | Meaning | Agent0 examples |
-| --- | --- | --- |
-| `native-now` | Codex can use these directly in this repo. | Read/edit files, run shell commands, follow this `AGENTS.md`, inspect `docs/specs/NNN-<slug>/` artifacts. |
-| `manual/read-only-now` | Codex can read these as behavioral references, but they are not Codex-native commands yet. | `.claude/rules/*`, existing SDD specs, `.claude/skills/*/SKILL.md` as documentation. |
-| `Claude-only-until-follow-up` | Claude Code harness capabilities that need future Codex-port specs before Codex can claim them as native. | `.claude/hooks/*`, slash skills such as `/sdd`, subagents, MCP recipes, `.claude/settings.json` lifecycle wiring. |
-
-For non-trivial work, follow the spec-first workflow in `docs/specs/NNN-<slug>/`. If a referenced capability is in the `manual/read-only-now` or `Claude-only-until-follow-up` tier, treat it as context and reproduce the behavior with normal Codex file/shell work unless a future Codex port exists.
+For non-trivial work, consult `.claude/rules/runtime-capabilities.md` before assuming any `.claude/*` capacity is Codex-native. Default skeptical: assume `convention` or `planned` until the registry's Codex column says otherwise.
 
 <!-- AGENT0:BEGIN -->
 
@@ -20,7 +14,11 @@ Non-trivial work is spec-first — intent before code under `docs/specs/NNN-<slu
 
 ## Runtime entrypoints
 
-`CLAUDE.md` is the Claude Code entrypoint; `AGENTS.md` is the Codex entrypoint. This managed block is the shared Agent0 index: Claude Code may run the hooks/skills named here; Codex treats `.claude/` hooks, slash skills, subagents, and MCP recipes as manual/read-only or Claude-only-until-follow-up unless its runtime preamble says native-now. `AGENTS.md` is baseline-tracked; Codex fork customization belongs in `AGENTS.override.md` or nested `AGENTS.md`.
+`CLAUDE.md` is the Claude Code entrypoint; `AGENTS.md` is the Codex entrypoint. This managed block is the shared Agent0 index; runtime support details live in `.claude/rules/runtime-capabilities.md`. `AGENTS.md` is baseline-tracked; Codex fork customization belongs in `AGENTS.override.md` or nested `AGENTS.md`.
+
+## Runtime capabilities
+
+`.claude/rules/runtime-capabilities.md` is the canonical provider-neutral matrix for Agent0 capability support across Claude Code, Codex CLI, and future runtimes. Consult it before assuming a `.claude/*` capability is native in a runtime.
 
 ## Session handoff
 

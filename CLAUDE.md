@@ -34,7 +34,11 @@ Non-trivial work is spec-first — intent before code under `docs/specs/NNN-<slu
 
 ## Runtime entrypoints
 
-`CLAUDE.md` is the Claude Code entrypoint; `AGENTS.md` is the Codex entrypoint. This managed block is the shared Agent0 index: Claude Code may run the hooks/skills named here; Codex treats `.claude/` hooks, slash skills, subagents, and MCP recipes as manual/read-only or Claude-only-until-follow-up unless its runtime preamble says native-now. `AGENTS.md` is baseline-tracked; Codex fork customization belongs in `AGENTS.override.md` or nested `AGENTS.md`.
+`CLAUDE.md` is the Claude Code entrypoint; `AGENTS.md` is the Codex entrypoint. This managed block is the shared Agent0 index; runtime support details live in `.claude/rules/runtime-capabilities.md`. `AGENTS.md` is baseline-tracked; Codex fork customization belongs in `AGENTS.override.md` or nested `AGENTS.md`.
+
+## Runtime capabilities
+
+`.claude/rules/runtime-capabilities.md` is the canonical provider-neutral matrix for Agent0 capability support across Claude Code, Codex CLI, and future runtimes. Consult it before assuming a `.claude/*` capability is native in a runtime.
 
 ## Session handoff
 

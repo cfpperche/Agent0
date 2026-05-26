@@ -130,6 +130,8 @@ If the first token of `$ARGUMENTS` is missing or not one of `add`, `list`, `done
 
 ## Notes
 
+_Fork-extension surface — append fork-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add fork bullets at the end. See `.claude/rules/harness-sync.md` § Fork-extension convention._
+
 - **Don't auto-stage, don't auto-commit.** The founder reviews `git diff` and decides what enters history. Every subcommand leaves the file dirty.
 - **Soft-delete is the default.** `done` flips `status: done` + stamps `completed_ts`; the entry remains in `reminders.yaml` carrying its in-band history. If the file grows enough to feel like noise, a future `/remind prune` subcommand (not v1) can hard-remove `done` entries.
 - **Positions are not stable IDs.** Pattern is "list, then act on the position you see right now" — same as the pre-084 discipline. Stable IDs (`r-YYYY-MM-DD-<slug>`) are the canonical identifier in storage; positions resolve to IDs at command time. The skill body always logs the resolved ID in its report so the user can confirm.

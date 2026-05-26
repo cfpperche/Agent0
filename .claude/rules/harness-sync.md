@@ -83,6 +83,18 @@ Whitespace-only diffs are still customization. A fork that ran `shfmt`/`prettier
 
 **First sync (bootstrap).** A fork that has never run an `--apply` under the baseline mechanism has no baseline. On that first run, files that *match* Agent0 trivially seed their baseline entry; files that *differ* are the genuine pre-baseline ambiguity (stale vs customized is unknowable with no recorded history) and are refused as `!! customized (no baseline)`. The operator does a **one-time** reconciliation — review the diffs, then `--apply --force` (adopt Agent0 wholesale) or `--apply --force --force-except='<globs of real customizations>'`. After that first run the baseline is fully seeded and every subsequent sync is clean 3-way. The friction is unavoidable (there is no history to consult) but is paid exactly once per fork.
 
+## Fork-extension convention (doc-only, no machinery)
+
+For files the sync ships **without** a structured merge primitive (every shipped `SKILL.md`, every rule, every helper script), there is a **documentation convention** — not a mechanical merge — for where fork-local extensions should live to keep the post-sync conflict region predictable.
+
+**The convention.** For each shipped `SKILL.md`, the `## Notes` section is the designated extension surface. Fork-local additions go there. Sync will still flag the file as `!! customized` (sha-compare doesn't know about section semantics), but the conflict region is **always the same place** — making the manual merge mechanical: take the new Agent0 SKILL.md verbatim, then re-add the fork's `## Notes` bullets at the end.
+
+**Why a convention, not machinery (yet).** Per-section marker-aware merge (analogous to `CLAUDE.md`'s managed-block) would require shipping `<!-- AGENT0-EXTENSION-START -->` / `<!-- AGENT0-EXTENSION-END -->` markers in every extensible file plus a per-marker merge handler in `sync-harness.sh`. That's ~200 LOC + 7 files of marker overhead. As of 2026-05-25, only **one fork** (codexeng) has surfaced this pain, with **two customizations**. Rule-of-three demand test (canonical in this project — see `.claude/rules/reminders.md`, `.claude/rules/spec-driven.md`, etc.) says: **don't pre-build the machinery**. The convention costs zero LOC and reduces manual-merge time to ~30s per file (because the conflict is always at the same heading).
+
+**Promotion trigger.** Promote convention → machinery when **≥3 forks have ≥1 `!! customized` entry on a SKILL.md or rule** OR **≥5 distinct customizations surfaced across ≥2 forks**. Reminder `r-2026-05-25-re-evaluate-fork-extension-con` (due 2026-08-25) re-evaluates against this threshold. The machinery's design template already exists: `CLAUDE.md`'s managed-block merge, `settings.json`'s structured-key merge, `.gitignore`'s additive merge — pick the closest analog and generalize.
+
+**Other files (rules, helper scripts, etc.) don't carry the convention yet** — they're less extensible by nature (rules are policy; scripts are mechanism). If a fork legitimately needs to extend a rule, it customizes the file and accepts the `!! customized` flag; if forks start hitting this regularly, that's the rule-of-three signal to add an extension convention to rules too.
+
 ## settings.json merge strategy
 
 `.claude/settings.json` is structurally merged via `jq`, not hash-compared. Algorithm:

@@ -103,6 +103,8 @@ If the first token of `$ARGUMENTS` is missing or not one of `new`, `list`, `run`
 
 ## Notes
 
+_Fork-extension surface — append fork-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add fork bullets at the end. See `.claude/rules/harness-sync.md` § Fork-extension convention._
+
 - **Don't auto-stage, don't auto-commit.** `new` writes the file; `git add` is the developer's call. Same discipline as `/remind`.
 - **Routine definitions are git-tracked; state is NOT.** `.claude/routines/<slug>.md` ships in git; `.claude/.routines-state/` is gitignored (per-machine). This split is what makes the capacity multi-developer-safe.
 - **Sync-harness propagates the capacity (rule + scripts + skill + hook), NOT instances.** A fork that adopts Agent0's harness gets `/routine` for free, but the fork's own routines are fork-local.

@@ -277,6 +277,8 @@ This skill does not have subcommands beyond the initial invocation. If `$ARGUMEN
 
 ## Notes
 
+_Fork-extension surface — append fork-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add fork bullets at the end. See `.claude/rules/harness-sync.md` § Fork-extension convention._
+
 - **Skill compliance is non-skippable.** Run `bash .claude/skills/skill/scripts/validate.sh .claude/skills/product` before commit; exit 0 required.
 - **`/product` ends at the visual contract — it does NOT generate a runnable app.** Phase 4 produces `screen-atlas.md` + the hi-fi killer-flow mood (static HTML) + `fixture-spec.md`; Phase 5 scaffolds the SDD umbrella + foundation child. No `app/` tree, no `pnpm install`, no build verification. The app build is the founder working the scaffolded SDD specs. This is the deliberate fix for the v2/v3 36-route fan-out whose output quality collapsed (2026-05-19/20 dogfood).
 - **Concurrency cap 5** for the mood-screen-writer fan-outs (Step 02 lo-fi, Step 15b hi-fi — both 3-5 screens, killer flow only). Proven non-OOM on a 17-route dogfood.

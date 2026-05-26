@@ -115,3 +115,17 @@ reminders:
   status: pending
   links:
   - docs/specs/060-harness-gaps-2026/spec.md
+- id: r-2026-05-25-re-evaluate-fork-extension-con
+  created: '2026-05-25'
+  context: 'Re-evaluate fork-extension convention promotion to smart-merge machinery
+    — current state: doc-only convention shipped 2026-05-25 (line in each .claude/skills/*/SKILL.md
+    § Notes pointing fork-local extensions there + ref in .claude/rules/harness-sync.md).
+    Promote to per-section marker-aware merge (analogous to CLAUDE.md managed-block)
+    IF: ≥3 forks have ≥1 customization-refused entry OR ≥5 distinct customizations
+    surfaced across ≥2 forks. Until threshold: convention is sufficient — manual merge
+    is mechanical because conflict region is always § Notes.'
+  status: pending
+  due: '2026-08-25'
+  links:
+  - .claude/rules/harness-sync.md
+  - .claude/skills/image/SKILL.md

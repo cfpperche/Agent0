@@ -101,6 +101,8 @@ The 3-stage shape is deliberate — generation is the network-bound step, `prepa
 
 ## Notes
 
+_Fork-extension surface — append fork-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add fork bullets at the end. See `.claude/rules/harness-sync.md` § Fork-extension convention._
+
 - **Hybrid MCP + REST architecture.** The `.mcp.json` fal-ai recipe (optional now) covers discovery tools — `mcp__fal-ai__search_models`, `get_model_schema`, `get_pricing`, `recommend_model` — which the agent uses to pick the right tier intelligently. Generation routes through `gen.sh exec` (curl POST to `https://fal.run/<model>`) instead of `mcp__fal-ai__run_model`. The split exists because the hosted MCP's generation path was empirically diagnosed broken on 2026-05-25 (hangs ≥990s on gpt-image-2; CC client mis-renders the timeout as "user rejected"). See spec 088 for the full diagnosis. Forks without the MCP recipe still get full generation capability — only discovery is unavailable.
 - The skill does NOT integrate with `/product` or `/prototype` in v1. Standalone — user invokes explicitly. Cross-skill coupling is deferred until either skill explicitly asks for image-gen.
 - The skill does NOT enforce per-session cost budgets in v1. Pre-call cost printing is the only signal. Add a counter if empirical sub-agent drift surfaces.

@@ -8,27 +8,32 @@ See `.claude/rules/session-handoff.md` for the protocol (4 KB size discipline + 
 
 ## Current state
 
-**Session 2026-05-26 — Spec 089 (`sdd-debate-artifact`) shipped: `6da3f4b`.**
+**Session 2026-05-26 — Spec 090 shipped end-to-end via cross-runtime `/sdd` dogfood.**
 
-Adds `/sdd debate` subcommand + 5th SDD artifact (`debate.md`) for cross-model spec review. Originally drafted as broker-human copy-paste; pivoted within the same session to **dual-agent direct-file mode** after user feedback that their workflow is two CLI agents in separate sessions (Claude Code + Codex CLI). Both agents read and write `debate.md` directly via native file tools; human alternates active agent and decides when to ask for synthesis. Zero infra in this skill (no API key, no MCP, no script). Codex CLI maintains its own port of the skill; concurrency control is out of scope (assume turn-based human orchestration).
+Multi-runtime entrypoints landed: `AGENTS.md` at repo root, byte-identical Agent0 managed block in both `CLAUDE.md` and `AGENTS.md`, asymmetric sync (CLAUDE = structured marker merge; AGENTS = plain baseline-tracked because Codex provides native override-chain primitives), 3-tier capability classification preamble in AGENTS.md, drift script + 6 test fixtures + harness-sync 33-test suite all green. Implementation by Codex CLI; spec/plan/tasks scaffolded + debate by Claude Code; two Claude-side audit passes drove one round of follow-ups that closed the two LOW findings.
 
-Deviation logged in `docs/specs/089-sdd-debate-artifact/notes.md` § Deviations.
+Cross-runtime `/sdd debate` proved out empirically: 3 rounds Claude↔Codex on spec 090, 2 rounds Claude↔Codex on spec 092, all rounds wrote directly to `debate.md` via file tools — zero copy-paste, zero broker scripts, zero new infra in either skill.
 
 ## WIP
 
-None. Working tree clean post-commit.
+Spec 092 (multi-runtime-handoff) is **mid-cycle, synthesis written but not applied**:
+
+- `docs/specs/092-multi-runtime-handoff/debate.md` — converged at end of Round 2 (7 accepts by Codex; 7 resolutions confirmed by Claude). Synthesis section filled by Claude with `Resolution: converged` + ~9 proposed `spec.md` changes. `## Applied changes` placeholder still — synthesis NOT yet applied to spec.md.
+- Pending decision: ask Codex CLI to audit the synthesis (prompt prepared in conversation history) OR apply directly without cross-review.
+
+Spec 091 (sdd-debate-runner) is **explicitly paused** per the user; do not continue without an explicit "resume 091" instruction.
+
+`.claude/SESSION.md` is the only file modified by this session-end handoff write.
 
 ## Next steps
 
-1. **Push** (3 commits ahead of origin: `6da3f4b`, `a934e8b`, `63665e5`) — founder decides timing.
-2. **First real `/sdd debate` invocation** — when the next high-stakes spec lands (schema / public API / security shape), run debate against it. Track in conversation whether the GPT-5/Codex critique produced a real spec edit; ≥3 such "produced edit" debates = rule-of-three trigger for spec 090 (promote toward direct-API or sharper protocol if needed).
-3. **Spec 029** (`sdd-list-in-flight`) due 2026-05-30 — check `/sdd list --in-flight` adoption; if unused, revert template change (reminder `r-2026-05-16-spec-029-sdd-list`).
-4. **Codexeng fork** — still has 14 modified + 5 untracked pending founder commits (sequence in codexeng's SESSION.md: V6 founder eyeball → V7 ship spec 004 → commit specs 002/003/004 → push → first live brand-text validates spec 088 V9).
-5. **Mei-saas fork** — 13 modified + 2 untracked pending maintainer commit.
-6. **Codex side** — port spec 089's `/sdd debate` protocol into Codex CLI's skill equivalent before the first dogfood debate run.
+1. **Push** (4 commits ahead of `origin/main`: `b3ed057` + `a0c6850` + `2fd41e2` + `5385919`) — user decides timing.
+2. **Spec 092 — synthesis review or apply.** Either run the prepared Codex-audit prompt or apply directly to `spec.md` + fill `## Applied changes`. If apply: ~9 acceptance edits + 4 non-goals + 5 open-question updates + 2 reference appends per the synthesis text.
+3. **Spec 091 — resume only on explicit user instruction.**
+4. **Codex side port of `/sdd debate`** — track whether the Codex-CLI port matches the runtime-neutral protocol (initiating/reviewing role detection via `**Initiating agent:**` metadata; counter requires Round N-1 critique filled; legacy fallback infers initiator from round headers). Spec 089 documents the contract; Codex's port is out-of-repo.
 
 ## Decisions & gotchas
 
-- **Dual-agent debate uses the file as sole shared state.** Each `/sdd debate` invocation reads `debate.md`, writes the next empty Claude-side slot (position / counter / synthesis), reports the handoff. No auto-convergence, no round-count cap, no copy-paste. The human decides when to ask for synthesis.
-- **Re-invoking `/sdd debate` on an in-flight debate is the orchestration pattern**, not an error. Refusal logic keys on the `**Resolution:**` placeholder line — present-as-placeholder = in-flight (continue), present-as-concrete-value = complete (archive existing to `debate-N.md` before new scaffold).
-- **The original broker-human posture was wrong-shaped** for the user's real workflow. The pivot happened ~5 minutes after the original ship. Documented in `notes.md` § Deviations as historical record; the spec's own acceptance scenarios were rewritten to match shipped reality before re-tick.
+- **Cross-runtime `/sdd debate` empirically works.** Two real specs (090, 092) reviewed by the peer runtime, both produced concrete spec edits before plan locked. Convergence at Round 2 (092) and Round 3 (090); 3-round cadence held.
+- **Asymmetric sync is honest, not a hack.** CLAUDE.md = structured merge (one per project); AGENTS.md = baseline-tracked (Codex's `AGENTS.override.md` + nested chain handles fork customization natively). Future maintainers tempted to "fix" the asymmetry must read spec 090 first.
+- **Helpers at `.claude/tools/lib/managed-block.sh`** — sourced by `sync-harness.sh` and `check-instruction-drift.sh`. New tools touching markers/regions source from here, not re-implement.

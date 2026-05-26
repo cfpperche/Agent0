@@ -261,7 +261,7 @@ This skill does not have subcommands beyond the initial invocation. If `$ARGUMEN
 
 ### Eval 2: MVP — selective skip flags
 
-**Input:** User says `/product "MEI SaaS for solo entrepreneurs" --out=./mei-saas --skip-brand`.
+**Input:** User says `/product "MVP SaaS for solo entrepreneurs" --out=./mvp-saas --skip-brand`.
 
 **Expected:** Phase 0/0.5 same as Eval 1. Brand step (within Phase 3) skipped with a one-line `--skip-brand active` advisory; downstream steps that would normally read brand artifacts (design-system step 14, atlas step 15) emit explicit warning that they're falling back to neutral defaults. PRD still ships (no `--skip-prd`); roadmap + cost + GTM all reference US-NN from the PRD. Pipeline still concludes with Phase 5 SDD handoff.
 

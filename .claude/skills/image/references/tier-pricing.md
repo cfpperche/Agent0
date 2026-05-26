@@ -14,7 +14,7 @@ _Static reference table consumed by `.claude/skills/image/scripts/gen.sh`. Appro
 
 [^1]: v1 of the skill (`gen.sh exec`) hardcodes `quality: "high"` for gpt-image-2 to match the schema default and the AC ceiling typical brand callers target. A `--quality=low|medium|high` flag is deferred — see spec 088 Open Q1. Low/medium would map to ~$0.04 / ~$0.10; promote to the flag when a fork asks for cost-sensitive brand-text runs.
 
-Content-type per tier is empirically verified for FLUX schnell (2026-05-24 dogfood — returns JPEG) and gpt-image-2 (2026-05-25 codexeng dogfood — returns PNG). The Imagen 4 Ultra PNG default is documented assumption; verify on first invocation by checking the response's `content_type` field.
+Content-type per tier is empirically verified for FLUX schnell (2026-05-24 dogfood — returns JPEG) and gpt-image-2 (2026-05-25 fork dogfood — returns PNG). The Imagen 4 Ultra PNG default is documented assumption; verify on first invocation by checking the response's `content_type` field.
 
 ## Aspect ratios
 
@@ -30,7 +30,7 @@ The default of `square` matches the v1 hardcoded behavior; existing callers with
 
 ## gpt-image-2 min-pixel floor
 
-`gpt-image-2`'s input schema declares `total pixels between 655,360 and 8,294,400` (per `mcp__fal-ai__get_model_schema` output, codexeng dogfood 2026-05-25). Two of the three aspect-ratio enums fall below the floor and get upsampled by the model:
+`gpt-image-2`'s input schema declares `total pixels between 655,360 and 8,294,400` (per `mcp__fal-ai__get_model_schema` output, fork dogfood 2026-05-25). Two of the three aspect-ratio enums fall below the floor and get upsampled by the model:
 
 | Aspect requested | Documented dims | Pixels | Actual returned (gpt-image-2) | Drift |
 |---|---|---|---:|---|

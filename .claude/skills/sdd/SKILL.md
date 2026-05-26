@@ -1,7 +1,7 @@
 ---
 name: sdd
-description: Spec-driven development scaffolding. Use when starting non-trivial work (3+ files, new module, API/schema change, vague request needing decomposition). Creates and progresses docs/specs/NNN-slug/{spec,plan,tasks,notes}.md per the spec-driven workflow. Subcommands - new <slug>, refine, plan, tasks, list. See .claude/rules/spec-driven.md for when SDD applies and when to skip.
-argument-hint: <new <slug> | refine [<idea> | NNN] | plan | tasks | list>
+description: Spec-driven development scaffolding. Use when starting non-trivial work (3+ files, new module, API/schema change, vague request needing decomposition). Creates and progresses docs/specs/NNN-slug/{spec,plan,tasks,notes,debate}.md per the spec-driven workflow. Subcommands - new <slug>, refine, debate, plan, tasks, list. See .claude/rules/spec-driven.md for when SDD applies and when to skip.
+argument-hint: <new <slug> | refine [<idea> | NNN] | debate | plan | tasks | list>
 license: MIT
 compatibility: Designed for Claude Code. Body references `.claude/` conventional paths and CC-specific tools; portable to any runtime that maps a `.claude/`-analog directory and surfaces the referenced tools.
 metadata:
@@ -17,7 +17,7 @@ See `.claude/rules/spec-driven.md` for the workflow rationale and when to apply 
 
 ## Argument parsing
 
-User invokes as `/sdd <subcommand> [args]`. The raw argument string is `$ARGUMENTS`. Parse it yourself: split on whitespace, first token is the subcommand (`new` / `refine` / `plan` / `tasks` / `list`), the rest are subcommand args. Do not rely on `$1` / `$2` — harness substitution for those is inconsistent across invocation paths (slash vs Skill tool); always parse `$ARGUMENTS` instead.
+User invokes as `/sdd <subcommand> [args]`. The raw argument string is `$ARGUMENTS`. Parse it yourself: split on whitespace, first token is the subcommand (`new` / `refine` / `debate` / `plan` / `tasks` / `list`), the rest are subcommand args. Do not rely on `$1` / `$2` — harness substitution for those is inconsistent across invocation paths (slash vs Skill tool); always parse `$ARGUMENTS` instead.
 
 Raw invocation: `$ARGUMENTS`
 
@@ -114,6 +114,95 @@ For option 1 on a from-scratch refine: propose a kebab-case slug derived from th
 | Grounding                 |    10% | Every claim traces to a discovery answer          |
 
 Report the score and point the user at the next step: `/sdd plan`.
+
+## Subcommand: `debate` — 🔓 Medium freedom: scaffold + write Claude-side rounds
+
+Cross-model review of `spec.md`. The live Claude session writes its position and counter-arguments directly to `debate.md`; a second tool-calling CLI agent (running in a separate session, with its own port of this skill — Codex CLI, Cursor, Aider, etc.) reads the same file and writes the critique rounds directly. **The human orchestrates the handoffs and decides when the debate is complete.** Goal: productive disagreement before `plan.md` is locked — catching spec ambiguities, hidden assumptions, and weak acceptance criteria that a single model misses. Opt-in step between `refine`/`new` and `plan`. Zero infra in this session: no API key, no MCP, no script — both agents have native file read/write. The artifact `debate.md` IS the audit trail (git-tracked alongside the spec).
+
+**Entry shape:** `/sdd debate` — no positional argument. Same target-selection rule as `plan` / `tasks`: latest `docs/specs/NNN-*/` dir unless the user has named a specific one in conversation. **Re-invocable on an in-flight debate** — each invocation writes the next empty Claude-side slot (position, counter, or synthesis) based on file state.
+
+### Step 1: Locate target — 🔒 Low freedom
+
+1. Find the latest `docs/specs/NNN-*/` dir. If multiple are in flight and ambiguous, ask which one.
+2. Read `spec.md`. **Refuse** with a clear message if:
+   - `spec.md` still has `{{` template placeholders → "fill spec.md first; debate operates on a real spec"
+   - no spec dir exists at all → "no spec dir in flight; run `/sdd new <slug>` first"
+
+### Step 2: Detect debate state — 🔒 Low freedom
+
+If `debate.md` does NOT exist → proceed to Step 3 (Scaffold). Otherwise inspect its `**Resolution:**` line under `## Synthesis`:
+
+- **In-flight** — `Resolution:` value is the literal placeholder `{{converged | cap-reached | abandoned}}` (template scaffolds it this way; only overwritten when the user asks for synthesis). **Do NOT refuse** — this is the normal re-invocation pattern in dual-agent orchestration. Skip Step 3-4 (scaffolding already done) and jump straight to Step 6 (write the next empty Claude-side slot from current file state).
+
+- **Complete** — `Resolution:` value is one of `converged` / `cap-reached` / `abandoned` (set when synthesis was written). Warn but allow — the user is explicitly starting a second debate; rename the existing file to the next free `debate-N.md` (1, 2, 3, …) before scaffolding the new one.
+
+The Resolution-line check is the only reliable signal; the section header `## Synthesis` is present from scaffold time and is not a discriminator.
+
+### Step 3: Scaffold debate.md — 🔒 Low freedom
+
+Copy `${CLAUDE_SKILL_DIR}/templates/debate.md.tmpl` to `docs/specs/NNN-<slug>/debate.md`. Substitute `{{NNN}}`, `{{SLUG}}`, `{{DATE}}` exactly as `new` does.
+
+### Step 4: Pre-populate Round 1 — 🔓 Medium freedom
+
+Replace the `{{round 1 position — Claude fills at scaffold time from spec.md}}` placeholder with a structured summary of `spec.md`:
+
+- **Intent** — one paragraph (verbatim or condensed from `spec.md` § Intent)
+- **Top 3 acceptance scenarios** — pick the 3 most load-bearing scenarios from `## Acceptance criteria` (skip plain-bullet static facts; favor Given/When/Then behaviors)
+- **Top 3 open questions** — verbatim from `spec.md` § Open questions; if fewer than 3 exist, include all
+- **Where I want pushback** — Claude's own 2-3 lines naming the parts of the spec it's least confident about (don't fabricate; if confident throughout, say "I'm confident in scope and acceptance; pushback most useful on Non-goals — is anything missing?")
+
+Leave all other placeholders (`{{round 1 critique}}`, `{{round 2 counter}}`, …) intact for later rounds to fill.
+
+### Step 5: Emit handoff instruction — 🔒 Low freedom
+
+Print to the user, verbatim (substitute the actual `NNN-<slug>`):
+
+```
+debate.md is at docs/specs/NNN-<slug>/debate.md.
+
+Claude side wrote: <Round N position | Round N counter | Synthesis>.
+
+Next step (you orchestrate):
+- To get the next critique: switch to your other agent (Codex CLI, etc.) and invoke its sdd-debate equivalent — it reads debate.md, finds the next empty critique slot, writes the critique directly.
+- When the other agent finishes its round, re-invoke /sdd debate here — I read the file, find the next empty Claude slot, write the next counter.
+- When you decide the debate is done, ask me explicitly: "synthesize the debate" — I'll write the Synthesis section + propose spec.md changes.
+
+The artifact debate.md is the only shared state; both agents read and write it directly. No copy-paste.
+```
+
+### Step 6: Round-handling protocol — 🔓 Medium freedom
+
+Each `/sdd debate` invocation (including re-invocations on in-flight debates):
+
+1. **Read `debate.md`** — parse the round sections; identify the next slot whose body is still a `{{...}}` placeholder
+2. **Determine slot type:**
+   - Empty `{{round N position}}` → write Claude's position (only happens on first invocation; Step 4 already did this)
+   - Empty `{{round N counter}}` → write Claude's counter for the most recent critique above it
+   - All round slots filled AND the user has asked for synthesis → jump to Step 7
+   - All Claude-side slots filled, no critique pending, user has NOT asked for synthesis → report: "All Claude-side rounds written; waiting on the other agent for next critique, OR ask me to synthesize when ready"
+3. **Write the counter** — for each critique point in the most recent external critique, classify as: **accept** (will propose spec change in synthesis), **reject** (with one-line reasoning), or **defer** (open question; flag for synthesis). Fill the placeholder.
+4. **Report** — print: "Round N counter written to debate.md. Hand off to the other agent for next critique, OR ask me to synthesize."
+
+**No auto-convergence detection. No round-count cap. The user decides when the debate ends** by explicitly asking for synthesis (or just running `/sdd plan` without one). If more rounds than the template's 3 are needed, the user can append `## Round 4 — Claude (counter)` / `## Round 4 — external (critique)` headers manually; the round-handling logic above keys on placeholder presence, not round number.
+
+### Step 7: Synthesis — 🔓 Medium freedom
+
+Triggered when the user explicitly asks ("synthesize the debate", "wrap up", "write the synthesis", etc.). Fill the `## Synthesis` section:
+
+- **Resolution** — `converged` (Claude judges no new critique points in latest round) | `cap-reached` (user stopped after a fixed number of rounds) | `abandoned` (user stopped without resolution intent)
+- **Proposed spec changes** — bulleted list, each entry naming the `spec.md` section + the delta (e.g. "Add Scenario X to § Acceptance criteria", "Remove Non-goal Y", "Sharpen § Intent paragraph 2")
+- **Unresolved disagreements** — for any deferred critique points or open positions; for each, name Claude's view + the other agent's view + why no resolution
+
+Then ask the user: `Accept all proposed changes / edit before applying / reject — what's your call?`
+
+### Step 8: Apply changes — 🔒 Low freedom
+
+On user confirmation:
+
+1. Apply each proposed change to `spec.md` (use Edit, not Write — preserve unchanged sections)
+2. Fill the `## Applied changes` section of `debate.md` with the actual edits made (file path + section + brief description)
+3. If the user rejected the synthesis, fill `## Applied changes` with "synthesis rejected — no changes applied" and the user's stated reasoning if given
+4. Report: `Debate complete. spec.md updated with N changes. Next step: /sdd plan.`
 
 ## Subcommand: `plan` — 🔒 Low freedom: read spec, fill plan template
 
@@ -216,10 +305,10 @@ Flag combinations:
 
 ## Unknown subcommand
 
-If the first token of `$ARGUMENTS` is missing or not one of `new`, `refine`, `plan`, `tasks`, `list`, refuse with a one-line usage hint:
+If the first token of `$ARGUMENTS` is missing or not one of `new`, `refine`, `debate`, `plan`, `tasks`, `list`, refuse with a one-line usage hint:
 
 ```
-/sdd <new <slug> | refine [<idea> | NNN] | plan | tasks | list>
+/sdd <new <slug> | refine [<idea> | NNN] | debate | plan | tasks | list>
 ```
 
 ## Eval Scenarios
@@ -248,7 +337,19 @@ If the first token of `$ARGUMENTS` is missing or not one of `new`, `refine`, `pl
 
 **Failure indicators:** Shipped specs included in --in-flight output. Acceptance counts (N/M) computed only on top-level bullets (missing scenario sub-bullets). Status line declared as `in-progress` but the row uses a derived value instead. JSON shape leaks (--json not requested but output is JSON).
 
+### Eval 4: Debate happy path — scaffold + Round 1 + re-invoke for counter
+
+**Input:** User has filled `spec.md` in `docs/specs/NNN-<slug>/` and invokes `/sdd debate`. Then runs their other agent (e.g. Codex CLI) against the same `debate.md`, which writes the Round 1 critique directly into the file. Then re-invokes `/sdd debate` here.
+
+**Expected (first invocation):** Latest spec dir resolved. `spec.md` read; no `{{` placeholders. No existing `debate.md` (or completed-with-Resolution one was archived to `debate-N.md`). `debate.md` created from template with `{{NNN}}`/`{{SLUG}}`/`{{DATE}}` substituted. Round 1 position populated with structured summary (intent + top 3 scenarios + top 3 open questions + "where I want pushback"). All other round placeholders left intact. Handoff instruction emitted verbatim describing the dual-agent orchestration — no copy-paste, no external-model brand names, no auto-end criteria.
+
+**Expected (re-invocation after other agent wrote critique):** State detected as in-flight (Resolution still placeholder). No re-scaffold, no refusal. Read `debate.md`, find next empty Claude-side slot (Round 2 counter), classify each critique point as accept/reject/defer, fill the placeholder. Report "Round 2 counter written" + reminder that next step is the other agent OR an explicit synthesis ask.
+
+**Failure indicators:** Round 1 left as `{{...}}` placeholder. External-model brand named (e.g. "GPT-5" hard-coded) instead of generic "the other agent". Auto-applied changes to `spec.md` at scaffold time. Skipped refusal when `spec.md` had unfilled placeholders. Refused on in-flight re-invocation (the new correct behavior is to continue, not refuse). Auto-declared convergence without a user ask. Wrote synthesis without explicit user request. Stopped the debate at a fixed round count rather than waiting for user signal.
+
 ## Notes
+
+_Fork-extension surface — append fork-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add fork bullets at the end. See `.claude/rules/harness-sync.md` § Fork-extension convention._
 
 - Specs are **git-tracked** — they are project memory, not scratch. Don't gitignore them.
 - The skill provides *structure*; you (Claude) provide *content*. Don't auto-fill `spec.md` — the user owns intent.

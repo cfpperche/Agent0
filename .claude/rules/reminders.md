@@ -2,7 +2,7 @@
 
 `.claude/reminders.yaml` is a structured YAML list of *action-shaped future items* that the agent or founder doesn't want to lose but doesn't want to do now. It occupies the gap between two other state files in this project:
 
-- **`.claude/SESSION.md`** — *in-flight* work-state (cross-session handoff).
+- **`.agent0/HANDOFF.md`** — *in-flight* work-state (cross-session handoff).
 - **`~/.claude/projects/.../memory/MEMORY.md`** — *durable knowledge* (facts, preferences, decisions).
 - **`.claude/reminders.yaml`** — *deferred do-this-thing* items, neither urgent enough to start now nor durable enough to count as knowledge.
 
@@ -13,7 +13,7 @@ An earlier format used plain-bullet markdown at `.claude/REMINDERS.md`. The curr
 ## Flow
 
 - **Write** — via the `/remind` skill (`.claude/skills/remind/SKILL.md`). Subcommands `add`, `list`, `done`, `dismiss` (alias for `done`), `snooze`, `check`. All state mutation routes through `.claude/skills/remind/scripts/reminders-helper.py` so field order and YAML shape stay consistent. Hand-edits are allowed but the schema (top-level `reminders:` list, per-entry shape below) must be preserved.
-- **Read** — automatic at session start. The `SessionStart` hook (`.claude/hooks/reminders-readout.sh`) parses `reminders.yaml`, filters to surfaceable entries (`status: pending` plus `status: snoozed` with `snoozed_until ≤ today`), and emits a framed `=== REMINDERS ===` block alongside `SESSION.md` and the optional `COMPACT_NOTES.md` injection.
+- **Read** — automatic at session start. The `SessionStart` hook (`.claude/hooks/reminders-readout.sh`) parses `reminders.yaml`, filters to surfaceable entries (`status: pending` plus `status: snoozed` with `snoozed_until ≤ today`), and emits a framed `=== REMINDERS ===` block alongside the canonical `.agent0/HANDOFF.md` injection and any compact-history context.
 
 ## Schema
 
@@ -66,7 +66,7 @@ The helper validates required fields and enums at write-time. Schema does NOT li
 ## What NOT to put here
 
 - **Knowledge.** Facts ("the prod DB lives at host X"), conventions ("we use kebab-case for slugs"), decisions ("we picked PG over MySQL because…") belong in memory — `MEMORY.md` for personal, `.claude/rules/<topic>.md` for project-shared. See `.claude/rules/memory-placement.md`.
-- **In-flight work.** Active work that needs finishing next session belongs in `.claude/SESSION.md`. See `.claude/rules/session-handoff.md`.
+- **In-flight work.** Active work that needs finishing next session belongs in `.agent0/HANDOFF.md`. See `.claude/rules/session-handoff.md`.
 - **One-file fixes.** If the work fits in two lines, just do it now — don't queue a reminder.
 - **Tracked issues.** Reminders are a project-shared scratchpad with a single git-tracked source. Items that need collaborators or public discussion belong in the project's issue tracker, not here.
 
@@ -99,5 +99,5 @@ The helper validates required fields and enums at write-time. Schema does NOT li
 ## Cross-references
 
 - `.claude/rules/memory-placement.md` — 3-bucket model (this file is the canonical reminder spec sibling)
-- `.claude/rules/session-handoff.md` — `.claude/SESSION.md` discipline
+- `.claude/rules/session-handoff.md` — `.agent0/HANDOFF.md` discipline
 - `.claude/rules/delegation.md` § Why DONE_WHEN exists — contract-not-promise (informs no-autonomous-check rule)

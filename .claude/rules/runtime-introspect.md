@@ -19,7 +19,7 @@ The wedge is deliberately framework-agnostic and minimal — it complements matu
 
 **Probe — `.claude/tools/probe.sh`.** Bash + jq. Single `last-run` subcommand in v1. Reads the state file, computes status (`PASS` exit==0, `FAIL` exit!=0, `UNKNOWN` exit missing/non-numeric), computes age from `started_at` vs now, computes `stale` by comparing `started_at` against `.claude/.session-state/started-at`, emits a structured plain-text block the agent can pattern-match (status / command / exit / age / stale header, then `--- stdout (head) ---` / `--- stdout (tail) ---` / `--- stderr ---` markers). Missing state → friendly empty-state message naming an example invocation (`bun test`, `pytest`, etc.); exit 0. Unknown subcommand → exit 2 with one-line usage hint.
 
-**SessionStart hint — `.claude/hooks/session-start.sh`.** Existing hook is extended to append one line after the SESSION.md / COMPACT_NOTES.md block, naming the probe path and example invocation, so the agent discovers the capability without reading this rule cold.
+**SessionStart hint — `.claude/hooks/session-start.sh`.** Existing hook appends one line after the handoff / compact-history blocks, naming the probe path and example invocation, so the agent discovers the capability without reading this rule cold.
 
 ## Detector pair list (v1)
 

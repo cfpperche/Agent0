@@ -2,7 +2,7 @@
 
 _Created 2026-05-26._
 
-**Status:** draft
+**Status:** shipped
 
 ## Intent
 
@@ -10,51 +10,51 @@ Unify Agent0's session handoff so Claude Code and Codex can coordinate through o
 
 ## Acceptance criteria
 
-- [ ] **Scenario: both runtimes read the same handoff**
+- [x] **Scenario: both runtimes read the same handoff**
   - **Given** a repo with the new canonical handoff file populated
   - **When** Claude Code starts a session and Codex starts work from `AGENTS.md`
   - **Then** both runtimes are directed to the same handoff source covering the four required sections: `Current State`, `Active Work`, `Next Actions`, and `Decisions & Gotchas`
 
-- [ ] **Scenario: Claude hook injection uses the neutral handoff**
+- [x] **Scenario: Claude hook injection uses the neutral handoff**
   - **Given** the canonical handoff file exists
   - **When** the Claude `SessionStart` hook runs
   - **Then** it injects the neutral handoff content instead of requiring agents to rely on `.claude/SESSION.md` as the primary source
 
-- [ ] **Scenario: Claude stop enforcement protects the neutral handoff**
+- [x] **Scenario: Claude stop enforcement protects the neutral handoff**
   - **Given** a Claude Code session edits repo files tracked by the existing session-state machinery
   - **When** the `Stop` hook evaluates whether a handoff update is required
   - **Then** it checks freshness of the neutral handoff file and blocks once per session when repo edits happened but the handoff was not updated. Stop preserves the current edit-attribution behavior: when `.claude/.session-state/<id>/edited-files.txt` exists and is empty, Stop exits silently (Claude session edited nothing the tracker could see). Cross-runtime attribution for Codex-authored edits stays out of v1; the legacy porcelain-compare fallback's known false-positive (Codex edits during a Claude bystander session, `edited-files.txt` missing) remains a documented legacy risk, not a new mechanism.
 
-- [ ] **Scenario: Codex has an explicit manual convention**
+- [x] **Scenario: Codex has an explicit manual convention**
   - **Given** Codex opens the repo and reads root `AGENTS.md`
   - **When** the task is non-trivial or changes repo files (per `.claude/rules/spec-driven.md` § *When SDD applies* as the canonical "non-trivial" definition; AGENTS.md and `.claude/rules/session-handoff.md` cross-reference)
   - **Then** Codex is instructed to read the neutral handoff before acting and update it before finishing, using the same short sections Claude uses
 
-- [ ] **Scenario: active parallel work is visible across runtimes**
+- [x] **Scenario: active parallel work is visible across runtimes**
   - **Given** Claude and Codex are both working in the repo
   - **When** either runtime claims or releases an active `Active Work` bullet
   - **Then** the handoff's `Active Work` section names the thread with three required fields — **owner runtime**, **touched paths**, and **release condition** — so the other runtime can avoid conflicting edits. `Active Work` replaces the prior `Ownership / Locks` framing and subsumes the existing `Parallel WIP` convention.
 
-- [ ] **Scenario: legacy Claude-only readers do not lose the handoff**
+- [x] **Scenario: legacy Claude-only readers do not lose the handoff**
   - **Given** a user or older instruction still opens `.claude/SESSION.md`
   - **When** the neutral handoff is canonical
-  - **Then** `.claude/SESSION.md` is a short **static pointer file** naming `.agent0/HANDOFF.md` as the canonical handoff (plus reference to `.claude/rules/session-handoff.md`), with no work-state content. Claude hooks read/enforce `.agent0/HANDOFF.md` directly — they do not chase or parse the pointer file.
+  - **Then** `.claude/SESSION.md` is a short **static pointer file** naming `.agent0/HANDOFF.md` as the canonical handoff (plus reference to `.claude/rules/session-handoff.md`), with no work-state content. Claude hooks read/enforce `.agent0/HANDOFF.md` directly in normal operation — they never chase the pointer body as a second source of truth.
 
-- [ ] The canonical handoff path is `.agent0/HANDOFF.md`. The file is git-tracked in the fork (matches today's `.claude/SESSION.md` posture). The 4 KB size discipline of `.claude/rules/session-handoff.md` applies.
+- [x] The canonical handoff path is `.agent0/HANDOFF.md`. The file is git-tracked in the fork (matches today's `.claude/SESSION.md` posture). The 4 KB size discipline of `.claude/rules/session-handoff.md` applies.
 
-- [ ] The handoff template contains the required sections: `Current State`, `Active Work`, `Next Actions`, and `Decisions & Gotchas`. `Active Work` bullets carry **owner runtime + touched paths + release condition**; this section subsumes the existing `Parallel WIP` convention in `.claude/rules/session-handoff.md` (rule edited in same implementation to migrate the bullet grammar).
+- [x] The handoff template contains the required sections: `Current State`, `Active Work`, `Next Actions`, and `Decisions & Gotchas`. `Active Work` bullets carry **owner runtime + touched paths + release condition**; this section subsumes the existing `Parallel WIP` convention in `.claude/rules/session-handoff.md` (rule edited in same implementation to migrate the bullet grammar).
 
-- [ ] The size discipline remains at or below the existing handoff target: keep the canonical handoff under 4 KB and replace stale content rather than appending a journal.
+- [x] The size discipline remains at or below the existing handoff target: keep the canonical handoff under 4 KB and replace stale content rather than appending a journal.
 
-- [ ] Project-local handoff content is not copied over fork-owned work by `sync-harness.sh`; any sync change must preserve that handoff is per-project state, not Agent0-managed policy.
+- [x] Project-local handoff content is not copied over fork-owned work by `sync-harness.sh`; any sync change must preserve that handoff is per-project state, not Agent0-managed policy.
 
-- [ ] Claude `SessionStart` hook injects `.agent0/HANDOFF.md` on **both** `source=startup` AND `source=compact`, alongside any compact-specific context (`COMPACT_NOTES.md`). No source-dependent handoff source — single canonical file across both hook firings. `.claude/rules/compaction-continuity.md` updated to match.
+- [x] Claude `SessionStart` hook injects `.agent0/HANDOFF.md` on **both** `source=startup` AND `source=compact`, alongside any compact-specific context (`.claude/.compact-history/*.md`). No source-dependent handoff source — single canonical file across both hook firings. `.claude/rules/compaction-continuity.md` updated to match.
 
-- [ ] Missing-handoff fallback is **3-layered**: (a) if `.agent0/HANDOFF.md` exists → inject/enforce it; (b) else-if `.claude/SESSION.md` exists and is NOT the pointer-only file → fall back to legacy `.claude/SESSION.md` + emit migration advisory; (c) else → emit one-line advisory (`'.agent0/HANDOFF.md' missing — create it to enable handoff`) and proceed without aborting the session. Detection of "pointer-only file" is plan-level (content-marker, size-threshold, or frontmatter — picked in plan).
+- [x] Missing-handoff fallback is **3-layered**: (a) if `.agent0/HANDOFF.md` exists → inject/enforce it; (b) else-if `.claude/SESSION.md` exists and its first non-blank line is NOT `<!-- AGENT0_HANDOFF_POINTER -->` → fall back to legacy `.claude/SESSION.md` + emit migration advisory; (c) else → emit one-line advisory (`'.agent0/HANDOFF.md' missing — create it to enable handoff`) and proceed without aborting the session.
 
-- [ ] Rule updates in same implementation: `.claude/rules/session-handoff.md` is rewritten to reference `.agent0/HANDOFF.md` as canonical, migrate `Parallel WIP` content into the new `Active Work` shape, and document the asymmetric Claude/Codex enforcement (Claude = hooks; Codex = AGENTS.md convention).
+- [x] Rule updates in same implementation: `.claude/rules/session-handoff.md` is rewritten to reference `.agent0/HANDOFF.md` as canonical, migrate `Parallel WIP` content into the new `Active Work` shape, and document the asymmetric Claude/Codex enforcement (Claude = hooks; Codex = AGENTS.md convention).
 
-- [ ] Tests cover Claude hook read path, Claude stop freshness path, missing neutral handoff fallback (3-layered), and `.claude/SESSION.md` compatibility behavior.
+- [x] Tests cover Claude hook read path, Claude stop freshness path, missing neutral handoff fallback (3-layered), and `.claude/SESSION.md` compatibility behavior.
 
 ## Non-goals
 
@@ -72,8 +72,8 @@ Unify Agent0's session handoff so Claude Code and Codex can coordinate through o
 
 ## Open questions
 
-- [ ] Should the first implementation require `AGENTS.md` from spec 090 to exist first, or can it update only Claude hooks plus the neutral file and let 090 wire Codex instructions later? Lean: implement after 090 applies (which it now has — d2a9806's parent chain ships 090) so both runtime entrypoints can point at the same file in one pass.
-- [ ] **(plan-level)** Should `.claude/.session-state/<id>/edited-files.txt` (or equivalent) gain a stale-claim advisory check beyond the v1 release-condition requirement? Each `Active Work` bullet already MUST carry a release condition (explicit field, not implicit); v1 enforces no TTL automatically (advisory only). Plan decides whether to add a separate `stale-claim-advisory:` line in `Stop` / `SessionStart` when a bullet's release condition appears unmet across N sessions.
+- [x] ~~Should the first implementation require `AGENTS.md` from spec 090 to exist first, or can it update only Claude hooks plus the neutral file and let 090 wire Codex instructions later?~~ **Resolved by implementation (2026-05-26):** spec 090 had already shipped, so this implementation updates both runtime entrypoints in one pass.
+- [x] ~~Should `.claude/.session-state/<id>/edited-files.txt` (or equivalent) gain a stale-claim advisory check beyond the v1 release-condition requirement?~~ **Resolved by plan (2026-05-26):** no stale-claim advisory in v1. Each `Active Work` bullet carries an explicit release condition; build an advisory later only if dogfood produces repeated stale-claim drift.
 
 _Resolved during debate (see § Synthesis in `debate.md`):_
 
@@ -83,8 +83,9 @@ _Resolved during debate (see § Synthesis in `debate.md`):_
 
 ## Context / references
 
-- `.claude/rules/session-handoff.md` — current Claude-only handoff rule, size discipline, start/stop behavior, and parallel WIP convention.
-- `.claude/SESSION.md` — current live handoff file that this spec would replace or shim.
+- `.claude/rules/session-handoff.md` — handoff rule, size discipline, start/stop behavior, and Active Work convention.
+- `.agent0/HANDOFF.md` — canonical live handoff file introduced by this spec.
+- `.claude/SESSION.md` — legacy compatibility pointer to the canonical handoff.
 - `.claude/hooks/session-start.sh` — injects the current handoff into Claude Code context.
 - `.claude/hooks/session-stop.sh` — enforces handoff freshness for Claude Code sessions that edited files.
 - `.claude/.session-state/` — per-session state used by Claude hooks for edit attribution and block-once behavior.

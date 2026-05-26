@@ -28,9 +28,9 @@ git commit -q -m initial
 # even after we revert the tracked-file edit below).
 echo "carryover-untracked" >carryover.txt
 
-mkdir -p "$TMPDIR/.claude"
-touch "$TMPDIR/.claude/SESSION.md"
-touch -d "1 hour ago" "$TMPDIR/.claude/SESSION.md"
+mkdir -p "$TMPDIR/.claude" "$TMPDIR/.agent0"
+touch "$TMPDIR/.agent0/HANDOFF.md"
+touch -d "1 hour ago" "$TMPDIR/.agent0/HANDOFF.md"
 export CLAUDE_PROJECT_DIR="$TMPDIR"
 
 SESSION_ID="test-revert-03"

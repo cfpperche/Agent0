@@ -40,7 +40,7 @@ The project's `# OVERRIDE: <reason ≥10 chars>` grammar still applies, now scop
 ## Where this applies
 
 - **`/product` skill** — the only consumer. The catastrophe cap is noted in one line of each brief's CONSTRAINTS and in `references/pipeline-coverage.md`.
-- State-file limits (`SESSION.md` ≤ 4 KB, `COMPACT_NOTES.md` 12 turns, `MEMORY.md` ~200 lines) are harness/script limits, not artifact caps — unrelated to this rule.
+- State-file limits (`.agent0/HANDOFF.md` ≤ 4 KB, compact-history snapshots keep the last 12 turns, `MEMORY.md` ~200 lines) are harness/script limits, not artifact caps — unrelated to this rule.
 
 ## Cross-references
 

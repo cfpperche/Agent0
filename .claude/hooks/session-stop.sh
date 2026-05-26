@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Stop hook: block once per session if the repo has uncommitted changes but
-# SESSION.md was not updated during this session.
+# .agent0/HANDOFF.md was not updated during this session.
 #
 # State is isolated per-session_id at
 # `<.session-state>/<session_id>/{started-at,nagged}`. Parallel sessions
@@ -14,7 +14,7 @@ set -euo pipefail
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 SESSION_STATE_ROOT="$PROJECT_DIR/.claude/.session-state"
-SESSION_FILE="$PROJECT_DIR/.claude/SESSION.md"
+SESSION_FILE="$PROJECT_DIR/.agent0/HANDOFF.md"
 
 # Parse session_id from stdin payload — same sanitization shape as
 # session-start.sh. Inlined-duplicated (not extracted to a helper) because
@@ -100,7 +100,7 @@ if [[ "$USE_TRACKER" -eq 0 ]]; then
   fi
 fi
 
-# SESSION.md updated during this session → all good.
+# HANDOFF.md updated during this session → all good.
 if [[ -f "$SESSION_FILE" && "$SESSION_FILE" -nt "$STARTED_AT" ]]; then
   exit 0
 fi
@@ -109,5 +109,5 @@ fi
 mkdir -p "$STATE_DIR"
 touch "$NAGGED"
 cat <<'JSON'
-{"decision":"block","reason":"Before ending this session: the repo has uncommitted changes but SESSION.md was not updated this session. Update SESSION.md (Current state / WIP / Next steps / Decisions & gotchas) so the next session can pick up where this one left off. Then end your turn normally — this hook will not block again this session."}
+{"decision":"block","reason":"Before ending this session: the repo has uncommitted changes but .agent0/HANDOFF.md was not updated this session. Update .agent0/HANDOFF.md (Current State / Active Work / Next Actions / Decisions & Gotchas) so the next session can pick up where this one left off. Then end your turn normally — this hook will not block again this session."}
 JSON

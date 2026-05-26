@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# SessionStart hook: inject context appropriate to the start source.
+# SessionStart hook: inject canonical handoff and start-source context.
 #
-# - startup / resume / clear → SESSION.md (cross-session handoff)
-# - compact                  → lex-greatest .claude/.compact-history/*.md
-#                              (the latest pre-compact snapshot; supersedes
-#                              the legacy single-file COMPACT_NOTES.md model)
+# - all sources → .agent0/HANDOFF.md (canonical cross-runtime handoff)
+# - compact     → also inject lex-greatest .claude/.compact-history/*.md
+#                 (the latest pre-compact snapshot; supersedes the legacy
+#                 single-file COMPACT_NOTES.md model)
 #
 # State is isolated per-session_id: markers live at
 # `<.session-state>/<session_id>/{started-at,nagged}`. Parallel Claude Code
@@ -16,7 +16,9 @@ set -euo pipefail
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 SESSION_STATE_ROOT="$PROJECT_DIR/.claude/.session-state"
-SESSION_FILE="$PROJECT_DIR/.claude/SESSION.md"
+SESSION_FILE="$PROJECT_DIR/.agent0/HANDOFF.md"
+LEGACY_SESSION_FILE="$PROJECT_DIR/.claude/SESSION.md"
+HANDOFF_POINTER_MARKER="<!-- AGENT0_HANDOFF_POINTER -->"
 COMPACT_HISTORY_DIR="$PROJECT_DIR/.claude/.compact-history"
 
 # Read stdin payload FIRST so we can extract session_id before any state ops.
@@ -50,7 +52,7 @@ touch "$STATE_DIR/edited-files.txt"
 
 # Porcelain snapshot: snapshot `git status --porcelain` so Stop can discriminate
 # "this session changed nothing" (carryover or no-op) from "this session
-# has uncommitted WIP that needs a SESSION.md handoff". Best-effort —
+# has uncommitted WIP that needs a HANDOFF.md update". Best-effort —
 # absence triggers Stop's fallback to today's mtime-only logic.
 if git -C "$PROJECT_DIR" rev-parse --git-dir >/dev/null 2>&1; then
   git -C "$PROJECT_DIR" status --porcelain >"$STATE_DIR/start-porcelain.txt" 2>/dev/null || true
@@ -63,6 +65,30 @@ fi
 # The dual-emit pattern restores the
 # banner so the user sees the handoff at session boot without having to type.
 BANNER=""
+
+first_nonblank_line() {
+  sed -n '/[^[:space:]]/ { p; q; }' "$1" 2>/dev/null || true
+}
+
+is_handoff_pointer_file() {
+  [[ -f "$1" ]] && [[ "$(first_nonblank_line "$1")" == "$HANDOFF_POINTER_MARKER" ]]
+}
+
+if [[ -f "$SESSION_FILE" ]]; then
+  BANNER+=$'=== HANDOFF.md (canonical handoff) ===\n'
+  BANNER+="$(cat "$SESSION_FILE" 2>/dev/null || true)"
+  BANNER+=$'\n=== end HANDOFF.md ===\n'
+elif [[ -f "$LEGACY_SESSION_FILE" ]] && ! is_handoff_pointer_file "$LEGACY_SESSION_FILE"; then
+  BANNER+=$'=== SESSION.md (handoff from prior session) ===\n'
+  BANNER+="$(cat "$LEGACY_SESSION_FILE" 2>/dev/null || true)"
+  BANNER+=$'\n=== end SESSION.md ===\n'
+  BANNER+=$'\nmigration-advisory: .claude/SESSION.md is legacy; create .agent0/HANDOFF.md to migrate\n'
+else
+  BANNER+=$'=== handoff-advisory ===\n'
+  BANNER+="'.agent0/HANDOFF.md' missing — create it to enable handoff"
+  BANNER+=$'\n'
+  BANNER+=$'=== end handoff-advisory ===\n'
+fi
 
 if [[ "$SOURCE" == "compact" ]]; then
   # Read the lex-greatest .compact-history/*.md — equals chronologically-latest
@@ -78,10 +104,6 @@ if [[ "$SOURCE" == "compact" ]]; then
     BANNER+="$(cat "$LATEST_SNAPSHOT" 2>/dev/null || true)"
     BANNER+=$'\n=== end compact-history ===\n'
   fi
-elif [[ -f "$SESSION_FILE" ]]; then
-  BANNER+=$'=== SESSION.md (handoff from prior session) ===\n'
-  BANNER+="$(cat "$SESSION_FILE" 2>/dev/null || true)"
-  BANNER+=$'\n=== end SESSION.md ===\n'
 fi
 
 # Runtime-introspect: point the agent at the probe tool so it can

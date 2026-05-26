@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/session-handoff/02-edits-without-session-update.sh
-# Scenario 2: session edits a file, SESSION.md not updated.
+# Scenario 2: session edits a file, HANDOFF.md not updated.
 #
 # Given a clean session start, when the session edits a tracked file
 # (porcelain changes), then Stop MUST block (today's behavior preserved).
@@ -23,10 +23,10 @@ echo "initial" >tracked.txt
 git add tracked.txt
 git commit -q -m initial
 
-mkdir -p "$TMPDIR/.claude"
-touch "$TMPDIR/.claude/SESSION.md"
-# Backdate SESSION.md so the mtime-newer-than-started-at check fails
-touch -d "1 hour ago" "$TMPDIR/.claude/SESSION.md"
+mkdir -p "$TMPDIR/.claude" "$TMPDIR/.agent0"
+touch "$TMPDIR/.agent0/HANDOFF.md"
+# Backdate HANDOFF.md so the mtime-newer-than-started-at check fails
+touch -d "1 hour ago" "$TMPDIR/.agent0/HANDOFF.md"
 export CLAUDE_PROJECT_DIR="$TMPDIR"
 
 SESSION_ID="test-edit-02"
@@ -42,11 +42,11 @@ sleep 1
 echo "edited-mid-session" >tracked.txt
 printf '%s' "{\"session_id\":\"$SESSION_ID\",\"tool_input\":{\"file_path\":\"tracked.txt\"}}" | bash "$TRACK_HOOK"
 
-# SESSION.md NOT bumped — primary path should block
+# HANDOFF.md NOT bumped — primary path should block
 stop_output="$(printf '%s' "$stdin_json" | bash "$STOP_HOOK" 2>&1 || true)"
 
 if ! printf '%s' "$stop_output" | grep -q '"decision":"block"'; then
-  printf 'FAIL: Stop did not block on real edits without SESSION.md update\n'
+  printf 'FAIL: Stop did not block on real edits without HANDOFF.md update\n'
   printf 'stop_output: %s\n' "$stop_output"
   exit 1
 fi

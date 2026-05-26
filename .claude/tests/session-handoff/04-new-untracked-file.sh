@@ -25,9 +25,9 @@ git add tracked.txt
 git commit -q -m initial
 echo "carryover" >carryover.txt
 
-mkdir -p "$TMPDIR/.claude"
-touch "$TMPDIR/.claude/SESSION.md"
-touch -d "1 hour ago" "$TMPDIR/.claude/SESSION.md"
+mkdir -p "$TMPDIR/.claude" "$TMPDIR/.agent0"
+touch "$TMPDIR/.agent0/HANDOFF.md"
+touch -d "1 hour ago" "$TMPDIR/.agent0/HANDOFF.md"
 export CLAUDE_PROJECT_DIR="$TMPDIR"
 
 SESSION_ID="test-new-untracked-04"

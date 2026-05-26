@@ -4,7 +4,7 @@
 #
 # Given a session-state subdir with `started-at` but NO `start-porcelain.txt`
 # (older session, or git/fs failure at SessionStart), when porcelain is
-# non-empty AND SESSION.md was not updated, then Stop MUST block — falling
+# non-empty AND HANDOFF.md was not updated, then Stop MUST block — falling
 # back to today's mtime-only path.
 
 set -euo pipefail
@@ -24,9 +24,9 @@ git add tracked.txt
 git commit -q -m initial
 echo "carryover" >carryover.txt
 
-mkdir -p "$TMPDIR/.claude"
-touch "$TMPDIR/.claude/SESSION.md"
-touch -d "1 hour ago" "$TMPDIR/.claude/SESSION.md"
+mkdir -p "$TMPDIR/.claude" "$TMPDIR/.agent0"
+touch "$TMPDIR/.agent0/HANDOFF.md"
+touch -d "1 hour ago" "$TMPDIR/.agent0/HANDOFF.md"
 export CLAUDE_PROJECT_DIR="$TMPDIR"
 
 SESSION_ID="test-fallback-05"

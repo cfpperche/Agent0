@@ -18,7 +18,7 @@ rm -rf .git && git init
 git remote add origin git@github.com:you/my-new-project.git
 ```
 
-Then open the directory in Claude Code or Codex. Claude Code's `SessionStart` hook will surface `SESSION.md` and any pending reminders automatically; Codex reads `AGENTS.md` as its native entrypoint.
+Then open the directory in Claude Code or Codex. Claude Code's `SessionStart` hook will surface `.agent0/HANDOFF.md` and any pending reminders automatically; Codex reads `AGENTS.md` as its native entrypoint and follows the same handoff by convention.
 
 ## What you get
 
@@ -58,7 +58,7 @@ The override marker `# OVERRIDE: <reason ≥10 chars>` is honored by the governa
 
    This points git at the versioned `.githooks/` directory and activates `.githooks/pre-commit`, which is the primary layer of the secrets-scan capacity (spec 007). The step is manual on purpose — automating it via a post-checkout hook would replicate the 2025 Lazarus Group "Contagious Interview" attack pattern, where a poisoned repo's hook runs on clone. Verify with `git config --get core.hooksPath` returning `.githooks`.
 
-7. **Reset `SESSION.md`.** Replace the handoff content with a one-line "fresh project, nothing in flight" or your own starting state. The Stop hook will nag you to update it on commit-day sessions.
+7. **Reset `.agent0/HANDOFF.md`.** Replace the handoff content with a short "fresh project, nothing in flight" state or your own starting context. Keep the four sections (`Current State`, `Active Work`, `Next Actions`, `Decisions & Gotchas`). The Stop hook will nag you to update it on commit-day Claude Code sessions.
 
 8. **(Optional) Drop the harness self-verification suite.** `.claude/tests/secrets-scan/` ships 8 scenario scripts (~780 LOC) that verify spec 007's two-layer scan against gitleaks — useful when modifying `.githooks/pre-commit` or `.claude/hooks/secrets-scan.sh`, otherwise unused. The suite lives under `.claude/` (not the project's `tests/`) because it tests *the harness*, not the fork's code; forks that won't touch the secrets-scan internals can delete the dir to drop ~780 LOC from their initial commit. The harness keeps working without it.
 
@@ -75,7 +75,7 @@ Non-trivial work flows through the `/sdd` skill:
 
 Mechanical edits (rename, typo, one-file fix) skip `/sdd` and go straight to the change. See `.claude/rules/spec-driven.md` for the full when-to-apply / when-to-skip rules.
 
-Future to-dos that don't belong in `SESSION.md` (in-flight) or memory (knowledge) go to `/remind`:
+Future to-dos that don't belong in `.agent0/HANDOFF.md` (in-flight) or memory (knowledge) go to `/remind`:
 
 ```
 /remind add "circle back on caching when first user complains"
@@ -91,12 +91,14 @@ Future to-dos that don't belong in `SESSION.md` (in-flight) or memory (knowledge
 ├── AGENTS.md                          # Codex instructions (runtime preamble + shared Agent0 block)
 ├── CLAUDE.md                          # project instructions (placeholders + template-stable rules)
 ├── README.md                          # this file
+├── .agent0/
+│   └── HANDOFF.md                     # runtime-neutral session handoff (git-tracked)
 ├── .gitleaks.toml                     # starter secrets-scan config (allowlists + builtin detectors)
 ├── .githooks/                         # versioned native git hooks (activate per-fork via core.hooksPath)
 │   └── pre-commit                     # primary secrets-scan layer (gitleaks over staged diff)
 ├── .claude/
 │   ├── settings.json                  # hooks + permissions
-│   ├── SESSION.md                     # cross-session handoff (git-tracked)
+│   ├── SESSION.md                     # pointer to .agent0/HANDOFF.md
 │   ├── REMINDERS.md                   # deferred-intent list (git-tracked)
 │   ├── hooks/                         # 9 lifecycle hooks
 │   ├── rules/                         # behavior rules (loaded into context)

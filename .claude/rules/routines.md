@@ -2,7 +2,7 @@
 
 `.claude/routines/<slug>.md` is the project-scoped sibling of Claude Code's native `/schedule` skill. Where `/schedule` stores recurring agent runs on Anthropic's user-account cloud (the user-level memory analog), `.claude/routines/` git-tracks recurring intent at the repo level — propagating via clone, surviving fork via `.claude/tools/sync-harness.sh`, and visible in PR diff. It occupies the gap between three other state files in this project:
 
-- **`.claude/SESSION.md`** — *in-flight* work-state (cross-session, this-machine handoff).
+- **`.agent0/HANDOFF.md`** — *in-flight* work-state (cross-session, cross-runtime handoff).
 - **`.claude/reminders.yaml`** — *one-shot deferred do-this-thing* items with no cadence.
 - **`.claude/routines/<slug>.md`** — *cadence-driven recurring* work that the repo's contributors all benefit from.
 

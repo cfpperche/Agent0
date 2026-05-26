@@ -51,7 +51,7 @@ Is the knowledge a behavioral mandate or capacity operational doc?
 
 Is the knowledge factual project reference (platform constraint, prior decision, gotcha)?
   Yes → .claude/memory/<topic>.md (git-tracked, NOT shipped to forks)
-  No  → reconsider; the knowledge probably belongs elsewhere (CLAUDE.md for orientation, SESSION.md for WIP, docs/specs/ for work-unit design memory)
+  No  → reconsider; the knowledge probably belongs elsewhere (CLAUDE.md for orientation, .agent0/HANDOFF.md for WIP, docs/specs/ for work-unit design memory)
 ```
 
 When in doubt, route to project memory (`.claude/memory/`). Demoting from rule → memory later is easy; promoting from per-user → project requires migration.
@@ -209,7 +209,7 @@ Shipped as a starter template. Forks override values directly. Missing keys fall
 ## Cross-cutting artifacts (not buckets, but related)
 
 - **`CLAUDE.md`** — first-contact orientation, capacity inventory, always loaded. Points at memory/rules/specs as needed.
-- **`SESSION.md`** — short-term WIP handoff, ~2KB budget, replaced rather than appended. Always loaded.
+- **`.agent0/HANDOFF.md`** — short-term WIP handoff, 4 KB target, replaced rather than appended. Injected automatically for Claude Code; read by convention for Codex.
 - **`docs/specs/NNN-*/`** — design memory for specific work units. Not auto-loaded; referenced when relevant.
 
 ## Why three buckets, not two

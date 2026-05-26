@@ -8,7 +8,7 @@ When the Claude Code context window fills up (auto-compact) or the user runs `/c
 
 2. **`/compact` runs** — Claude Code's summarizer compresses the transcript. The `## Compact Instructions` section in `CLAUDE.md` steers what the summary retains.
 
-3. **`SessionStart` hook with `source: "compact"`** (`.claude/hooks/session-start.sh`) fires after compaction. It reads the lex-greatest filename under `.claude/.compact-history/` (equals the chronologically-latest snapshot because the timestamp prefix is fixed-width ISO seconds) and injects its content as `additionalContext` — so the post-compact window has both the (lossy) summary *and* the (verbatim) raw signal from the last 12 turns.
+3. **`SessionStart` hook with `source: "compact"`** (`.claude/hooks/session-start.sh`) fires after compaction. It first applies the normal handoff decision, so `.agent0/HANDOFF.md` is injected on compact just like on startup/resume. It then reads the lex-greatest filename under `.claude/.compact-history/` (equals the chronologically-latest snapshot because the timestamp prefix is fixed-width ISO seconds) and injects its content as additive `additionalContext` — so the post-compact window has the canonical handoff, the (lossy) summary, and the (verbatim) raw signal from the last 12 turns.
 
 ## Why these primitives
 
@@ -21,7 +21,7 @@ When the Claude Code context window fills up (auto-compact) or the user runs `/c
 ## Files
 
 - `.claude/hooks/pre-compact.sh` — captures snapshot
-- `.claude/hooks/session-start.sh` — injects snapshot when `source=compact`, SESSION.md otherwise
+- `.claude/hooks/session-start.sh` — injects `.agent0/HANDOFF.md` on all sources, and additionally injects the latest snapshot when `source=compact`
 - `.claude/.compact-history/<ISO>-<pid>-<rand>.md` — the snapshot itself, one file per `/compact` event (gitignored, ephemeral, per-machine). Filename prefix `YYYY-MM-DDTHH-MM-SSZ` gives lex-order == chrono-order at second resolution; the `-$$-<rand5>` suffix is a portable tie-breaker for the rare two-compactions-in-one-second case (avoids GNU-only `date +%N`)
 - `.claude/settings.json` § `compactHistory.keepLast` — retention cap (integer, default 20 when absent). Fork-only override; the merge model in `sync-harness.sh` only reconciles `$schema` / `statusLine` / `hooks` at the top level, so this key stays per-fork
 - `CLAUDE.md` § *Compact Instructions* — steers the summarizer

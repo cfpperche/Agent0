@@ -25,8 +25,8 @@ git commit -q -m initial
 echo "carryover-modification" >tracked.txt
 echo "carryover-untracked" >carryover.txt
 
-mkdir -p "$TMPDIR/.claude"
-touch "$TMPDIR/.claude/SESSION.md"
+mkdir -p "$TMPDIR/.claude" "$TMPDIR/.agent0"
+touch "$TMPDIR/.agent0/HANDOFF.md"
 export CLAUDE_PROJECT_DIR="$TMPDIR"
 
 SESSION_ID="test-noop-01"
@@ -41,7 +41,7 @@ if [ ! -f "$SNAPSHOT" ]; then
   exit 1
 fi
 
-# Ensure mtime gap so SESSION.md mtime check would otherwise consider it stale
+# Ensure mtime gap so HANDOFF.md mtime check would otherwise consider it stale
 sleep 1
 
 # No edits during session — porcelain unchanged.

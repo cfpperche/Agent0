@@ -27,12 +27,23 @@ fi
 INPUT="$(cat 2>/dev/null || true)"
 [ -z "$INPUT" ] && exit 0
 
-if ! command -v jq >/dev/null 2>&1; then
-  exit 0
-fi
+# --- Pre-jq fast-path probe (see .claude/rules/hook-chain-latency.md) ---
+# Extract tool_use_id via sed instead of paying for a full jq parse. Faster on
+# the order of 15-25 ms per Bash call. If sed fails (malformed JSON, unusual
+# escape), fall back to jq if available; if not, exit 0 silently (the original
+# fail-open posture is preserved — runtime-introspect is opt-in measurement,
+# never blocking).
+TOOL_USE_ID="$(printf '%s' "$INPUT" \
+  | sed -n 's/.*"tool_use_id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' \
+  | head -1)"
 
-TOOL_USE_ID="$(printf '%s' "$INPUT" | jq -r '.tool_use_id // ""' 2>/dev/null || true)"
-[ -z "$TOOL_USE_ID" ] && exit 0
+if [ -z "$TOOL_USE_ID" ]; then
+  # sed couldn't find it — fall through to jq for malformed-but-valid-JSON inputs.
+  if command -v jq >/dev/null 2>&1; then
+    TOOL_USE_ID="$(printf '%s' "$INPUT" | jq -r '.tool_use_id // ""' 2>/dev/null || true)"
+  fi
+  [ -z "$TOOL_USE_ID" ] && exit 0
+fi
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 IN_FLIGHT_DIR="$PROJECT_DIR/.claude/.runtime-state/in-flight"

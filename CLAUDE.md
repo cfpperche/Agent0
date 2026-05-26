@@ -112,6 +112,10 @@ Every first-party `.claude/skills/*/SKILL.md` must pass the agentskills.io front
 
 `.claude/routines/<slug>.md` git-tracks recurring project work; an opt-in leader machine's cron enqueues each run for the next interactive session to dispatch via `/routine run <slug>`. See `.claude/rules/routines.md`.
 
+## Hook chain latency
+
+The `PreToolUse(Bash)` hook chain sits on the critical path of every Bash tool call; `.claude/tools/bench-hooks.sh` measures per-hook p50/p95 against a representative command set, `.claude/.perf-baseline.json` is the committed baseline, and `--check` mode flags regressions. Optimization techniques (per-handler `if`-field narrowing, pre-jq raw-stdin probes, sed-instead-of-jq for single-field extraction) apply to the four registered hooks. See `.claude/rules/hook-chain-latency.md`.
+
 ## Artifact size cap
 
 Artifact size is not a scope/quality signal — scope and quality are judged by the `/product` quality judge. The only size mechanism is a uniform 200 KB catastrophe cap (a dumb token-runaway circuit-breaker) plus the retained per-step `min_size` anti-stub floors; trim-loop and re-emit-at-smaller-scope stay forbidden. See `.claude/rules/artifact-budgets.md`.

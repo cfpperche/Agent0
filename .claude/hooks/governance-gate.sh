@@ -20,6 +20,23 @@ set -uo pipefail
 INPUT="$(cat 2>/dev/null || true)"
 [ -z "$INPUT" ] && exit 0
 
+# --- Pre-jq fast-path probe (see .claude/rules/hook-chain-latency.md) ---
+# 99% of Bash commands carry none of this gate's trigger keywords. Checking the
+# raw JSON for any of the trigger fragments before paying for `jq` short-circuits
+# the no-op path. The probe is SUFFICIENT-BUT-NOT-NECESSARY: a probe-miss falls
+# through to the existing jq + full-regex path (false negative is safe), a
+# probe-hit pays for full parse (false positive is harmless — just slower).
+# Patterns mirror Family 1-3 below at the keyword level only.
+# Required tokens: `rm -[rf]`, `--force`/`-f` (push), `--no-verify`, `--hard`,
+# `-A`/`--all`/'\./'\*` (add), `-a`/`--all` (commit). `OVERRIDE` is included so
+# the marker check still runs even if the actual destructive pattern isn't in
+# this raw string (defense-in-depth — the override is only meaningful when a
+# pattern DOES match, but its presence is a signal worth honoring).
+if ! printf '%s' "$INPUT" \
+    | grep -qE 'rm[[:space:]]+-|--force|--no-verify|--hard|add[[:space:]]+(-A|--all|\\\.|\\\*|\.|\*)|commit[[:space:]]+-[a-zA-Z]*a|commit[[:space:]]+--all|push[[:space:]]+[^"|]*-[a-zA-Z]*f|OVERRIDE'; then
+  exit 0
+fi
+
 if ! CMD="$(printf '%s' "$INPUT" | jq -r '.tool_input.command // ""')"; then
   cat >&2 <<'EOF'
 governance-gate: failed to parse PreToolUse JSON (jq missing or malformed input).

@@ -76,6 +76,7 @@
         "hooks": [
           {
             "type": "command",
+            "if": "Bash(git commit *|git commit|*git commit *|*git commit)",
             "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/secrets-scan.sh"
           }
         ]
@@ -85,6 +86,7 @@
         "hooks": [
           {
             "type": "command",
+            "if": "Bash(npm *|pnpm *|yarn *|bun *|pip *|uv *|poetry *|pdm *|cargo *|go *|composer *)",
             "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/supply-chain-scan.sh"
           }
         ]

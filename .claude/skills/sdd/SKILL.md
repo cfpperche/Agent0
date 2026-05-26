@@ -115,11 +115,13 @@ For option 1 on a from-scratch refine: propose a kebab-case slug derived from th
 
 Report the score and point the user at the next step: `/sdd plan`.
 
-## Subcommand: `debate` — 🔓 Medium freedom: scaffold + write Claude-side rounds
+## Subcommand: `debate` — 🔓 Medium freedom: scaffold + write the local agent's next slot
 
-Cross-model review of `spec.md`. The live Claude session writes its position and counter-arguments directly to `debate.md`; a second tool-calling CLI agent (running in a separate session, with its own port of this skill — Codex CLI, Cursor, Aider, etc.) reads the same file and writes the critique rounds directly. **The human orchestrates the handoffs and decides when the debate is complete.** Goal: productive disagreement before `plan.md` is locked — catching spec ambiguities, hidden assumptions, and weak acceptance criteria that a single model misses. Opt-in step between `refine`/`new` and `plan`. Zero infra in this session: no API key, no MCP, no script — both agents have native file read/write. The artifact `debate.md` IS the audit trail (git-tracked alongside the spec).
+Cross-model review of `spec.md` between two tool-calling CLI agents in separate sessions, each running its own port of this skill. **The agent that invokes `/sdd debate` first becomes the `initiating agent`; the other runtime, when invoked against the same file, becomes the `reviewing agent`.** Both read and write `debate.md` directly via native file tools; the human alternates which runtime is active and decides when the debate ends. Goal: productive disagreement before `plan.md` is locked — catching spec ambiguities, hidden assumptions, and weak acceptance criteria that a single model misses. Opt-in step between `refine`/`new` and `plan`. Zero infra in this session: no API key, no MCP, no broker script — both agents have native file read/write. The artifact `debate.md` IS the audit trail (git-tracked alongside the spec).
 
-**Entry shape:** `/sdd debate` — no positional argument. Same target-selection rule as `plan` / `tasks`: latest `docs/specs/NNN-*/` dir unless the user has named a specific one in conversation. **Re-invocable on an in-flight debate** — each invocation writes the next empty Claude-side slot (position, counter, or synthesis) based on file state.
+**This port's runtime identity:** `Claude Code`. The skill writes this literal string into `**Initiating agent:**` at scaffold time, and compares against this string on re-invocation to determine its role. A peer port (e.g. in Codex CLI, Cursor, Aider) defines its own identity string and operates identically; the example labels used throughout this section are illustrative, not behavioural rules.
+
+**Entry shape:** `/sdd debate` — no positional argument. Same target-selection rule as `plan` / `tasks`: latest `docs/specs/NNN-*/` dir unless the user has named a specific one in conversation. **Re-invocable on an in-flight debate** — each invocation determines this runtime's role (initiating vs reviewing) from file metadata and writes the next empty slot belonging to that role.
 
 ### Step 1: Locate target — 🔒 Low freedom
 
@@ -128,70 +130,94 @@ Cross-model review of `spec.md`. The live Claude session writes its position and
    - `spec.md` still has `{{` template placeholders → "fill spec.md first; debate operates on a real spec"
    - no spec dir exists at all → "no spec dir in flight; run `/sdd new <slug>` first"
 
-### Step 2: Detect debate state — 🔒 Low freedom
+### Step 2: Detect debate state + determine role — 🔒 Low freedom
 
-If `debate.md` does NOT exist → proceed to Step 3 (Scaffold). Otherwise inspect its `**Resolution:**` line under `## Synthesis`:
+If `debate.md` does NOT exist → this runtime is the **initiating agent**; proceed to Step 3 (Scaffold). Otherwise:
 
-- **In-flight** — `Resolution:` value is the literal placeholder `{{converged | cap-reached | abandoned}}` (template scaffolds it this way; only overwritten when the user asks for synthesis). **Do NOT refuse** — this is the normal re-invocation pattern in dual-agent orchestration. Skip Step 3-4 (scaffolding already done) and jump straight to Step 6 (write the next empty Claude-side slot from current file state).
+1. Inspect the file's `**Resolution:**` line under `## Synthesis`:
+   - **In-flight** — `Resolution:` value is the literal placeholder `{{converged | cap-reached | abandoned}}` (template scaffolds it this way; only overwritten when the user asks for synthesis). **Do NOT refuse** — this is the normal re-invocation pattern. Continue to step 2.
+   - **Complete** — `Resolution:` value is one of `converged` / `cap-reached` / `abandoned` (set when synthesis was written). Warn but allow — the user is explicitly starting a second debate; rename the existing file to the next free `debate-N.md` (1, 2, 3, …) and treat as scaffold (this runtime becomes the initiator of the new debate). Continue to Step 3.
 
-- **Complete** — `Resolution:` value is one of `converged` / `cap-reached` / `abandoned` (set when synthesis was written). Warn but allow — the user is explicitly starting a second debate; rename the existing file to the next free `debate-N.md` (1, 2, 3, …) before scaffolding the new one.
+2. Read the `**Initiating agent:**` line at the top of `debate.md`:
+   - Value equals this port's identity (`Claude Code`) → this runtime is the **initiating agent**. Jump to Step 6 (write the next empty initiating-agent slot — counter or, if user-requested, synthesis).
+   - Value is anything else → this runtime is the **reviewing agent**. Jump to Step 6 (write the next empty reviewing-agent critique slot).
+   - Line is absent (legacy file pre-dating runtime-neutral metadata) → assume this runtime is the initiator (legacy files were Claude-Code-scaffolded). Jump to Step 6. Emit a one-line stderr advisory: `debate-advisory: <path> has no '**Initiating agent:**' metadata — assuming local-runtime initiator; consider adding the line for forward compatibility`.
 
-The Resolution-line check is the only reliable signal; the section header `## Synthesis` is present from scaffold time and is not a discriminator.
+The Resolution-line check distinguishes in-flight vs complete; the Initiating-agent line determines this runtime's role. The section header `## Synthesis` is present from scaffold time and is not a discriminator.
 
 ### Step 3: Scaffold debate.md — 🔒 Low freedom
 
-Copy `${CLAUDE_SKILL_DIR}/templates/debate.md.tmpl` to `docs/specs/NNN-<slug>/debate.md`. Substitute `{{NNN}}`, `{{SLUG}}`, `{{DATE}}` exactly as `new` does.
+Copy `${CLAUDE_SKILL_DIR}/templates/debate.md.tmpl` to `docs/specs/NNN-<slug>/debate.md`. Substitute the standard placeholders (`{{NNN}}`, `{{SLUG}}`, `{{DATE}}` — same as `new`) AND the metadata block at the top:
+
+- `{{initiating agent name}}` → this port's identity literal: `Claude Code`
+- `{{reviewing agent name}}` → leave as the literal placeholder string `{{reviewing agent name}}` (the reviewing runtime fills it on its first write)
+- `{{runtime or session label}}` → a short label naming this runtime + session date, e.g. `Claude Code session YYYY-MM-DD` (use today's date)
 
 ### Step 4: Pre-populate Round 1 — 🔓 Medium freedom
 
-Replace the `{{round 1 position — Claude fills at scaffold time from spec.md}}` placeholder with a structured summary of `spec.md`:
+Only runs when this runtime is the initiating agent (no pre-existing file or freshly archived). Replace the `{{round 1 position — initiating agent fills at scaffold time from spec.md}}` placeholder with a structured summary of `spec.md`:
 
 - **Intent** — one paragraph (verbatim or condensed from `spec.md` § Intent)
 - **Top 3 acceptance scenarios** — pick the 3 most load-bearing scenarios from `## Acceptance criteria` (skip plain-bullet static facts; favor Given/When/Then behaviors)
 - **Top 3 open questions** — verbatim from `spec.md` § Open questions; if fewer than 3 exist, include all
-- **Where I want pushback** — Claude's own 2-3 lines naming the parts of the spec it's least confident about (don't fabricate; if confident throughout, say "I'm confident in scope and acceptance; pushback most useful on Non-goals — is anything missing?")
+- **Where the initiating agent wants pushback** — 2-3 lines naming the parts of the spec the local agent is least confident about (don't fabricate; if confident throughout, say "I'm confident in scope and acceptance; pushback most useful on Non-goals — is anything missing?")
 
-Leave all other placeholders (`{{round 1 critique}}`, `{{round 2 counter}}`, …) intact for later rounds to fill.
+Leave all other placeholders (`{{round 1 critique}}`, `{{round 2 counter}}`, …) intact for the reviewing agent and later rounds to fill.
 
 ### Step 5: Emit handoff instruction — 🔒 Low freedom
 
-Print to the user, verbatim (substitute the actual `NNN-<slug>`):
+Print to the user (substitute the actual `NNN-<slug>`, this runtime's role, and the slot just written). Two shapes — pick the one matching this invocation's role:
+
+When this runtime is the **initiating agent** and just wrote position/counter/synthesis:
 
 ```
 debate.md is at docs/specs/NNN-<slug>/debate.md.
 
-Claude side wrote: <Round N position | Round N counter | Synthesis>.
+Local agent (initiating) wrote: <Round N position | Round N counter | Synthesis>.
 
 Next step (you orchestrate):
-- To get the next critique: switch to your other agent (Codex CLI, etc.) and invoke its sdd-debate equivalent — it reads debate.md, finds the next empty critique slot, writes the critique directly.
-- When the other agent finishes its round, re-invoke /sdd debate here — I read the file, find the next empty Claude slot, write the next counter.
-- When you decide the debate is done, ask me explicitly: "synthesize the debate" — I'll write the Synthesis section + propose spec.md changes.
+- To get the next critique: switch to the peer agent's session and invoke its sdd-debate equivalent — it reads debate.md, detects it is the reviewing agent, writes the next empty critique slot.
+- When the peer agent finishes its critique, re-invoke /sdd debate here — this runtime re-reads the file, identifies the next empty initiating-agent slot, writes the counter.
+- When you decide the debate is done, ask explicitly: "synthesize the debate" — whichever agent you ask writes the Synthesis section + proposes spec.md changes.
 
 The artifact debate.md is the only shared state; both agents read and write it directly. No copy-paste.
 ```
 
+When this runtime is the **reviewing agent** and just wrote a critique:
+
+```
+debate.md is at docs/specs/NNN-<slug>/debate.md.
+
+Local agent (reviewing) wrote: Round N critique.
+
+Next step (you orchestrate):
+- Switch to the initiating agent's session and re-invoke its sdd-debate equivalent — it reads debate.md and writes its counter or, if you ask, synthesis.
+- If you'd rather end the debate here, ask either runtime to "synthesize the debate" on its next invocation.
+```
+
 ### Step 6: Round-handling protocol — 🔓 Medium freedom
 
-Each `/sdd debate` invocation (including re-invocations on in-flight debates):
+Each `/sdd debate` invocation on an in-flight debate (Step 2 has already classified this runtime as initiating or reviewing):
 
 1. **Read `debate.md`** — parse the round sections; identify the next slot whose body is still a `{{...}}` placeholder
-2. **Determine slot type:**
-   - Empty `{{round N position}}` → write Claude's position (only happens on first invocation; Step 4 already did this)
-   - Empty `{{round N counter}}` → write Claude's counter for the most recent critique above it
-   - All round slots filled AND the user has asked for synthesis → jump to Step 7
-   - All Claude-side slots filled, no critique pending, user has NOT asked for synthesis → report: "All Claude-side rounds written; waiting on the other agent for next critique, OR ask me to synthesize when ready"
-3. **Write the counter** — for each critique point in the most recent external critique, classify as: **accept** (will propose spec change in synthesis), **reject** (with one-line reasoning), or **defer** (open question; flag for synthesis). Fill the placeholder.
-4. **Report** — print: "Round N counter written to debate.md. Hand off to the other agent for next critique, OR ask me to synthesize."
+2. **Determine slot type based on role:**
+   - **Initiating agent role** — look for empty `{{round N counter}}` slot. If found, write the counter. If all initiating-agent counter slots are filled AND the user has NOT asked for synthesis, report: `All initiating-agent rounds written; waiting on the reviewing agent for next critique, OR ask me to synthesize when ready`. If the user HAS asked for synthesis, jump to Step 7.
+   - **Reviewing agent role** — look for empty `{{round N critique}}` slot. If found, write the critique. **On first reviewing-agent write only**, if `**Reviewing agent:**` is still the literal placeholder `{{reviewing agent name}}`, replace it with this port's identity literal (`Claude Code` for this port). If all reviewing-agent critique slots are filled, report: `All reviewing-agent critiques written; waiting on the initiating agent for next counter, OR ask the initiating agent to synthesize`.
+   - **Either role, user asked to synthesize** — jump to Step 7. Synthesis may be written by either role; whoever the user asks performs it.
+3. **Write the slot:**
+   - **Counter** (initiating role): for each critique point in the most recent reviewing-agent critique, classify as **accept** (will propose spec change in synthesis), **reject** (with one-line reasoning), or **defer** (open question; flag for synthesis). Fill the placeholder.
+   - **Critique** (reviewing role): list the specific spec.md ambiguities, hidden assumptions, weak acceptance criteria, missing non-goals you can identify. Be concrete — name sections, quote the unclear phrase. Avoid generic praise.
+4. **Report** — emit the Step 5 handoff instruction matching this runtime's role.
 
-**No auto-convergence detection. No round-count cap. The user decides when the debate ends** by explicitly asking for synthesis (or just running `/sdd plan` without one). If more rounds than the template's 3 are needed, the user can append `## Round 4 — Claude (counter)` / `## Round 4 — external (critique)` headers manually; the round-handling logic above keys on placeholder presence, not round number.
+**No auto-convergence detection. No round-count cap. The user decides when the debate ends** by explicitly asking for synthesis (or just running `/sdd plan` without one). If more rounds than the template's 3 are needed, the user can append `## Round 4 — initiating agent (counter)` / `## Round 4 — reviewing agent (critique)` headers manually; the round-handling logic above keys on placeholder presence, not round number.
 
 ### Step 7: Synthesis — 🔓 Medium freedom
 
-Triggered when the user explicitly asks ("synthesize the debate", "wrap up", "write the synthesis", etc.). Fill the `## Synthesis` section:
+Triggered when the user explicitly asks ("synthesize the debate", "wrap up", "write the synthesis", etc.). Either runtime can perform synthesis — whichever the user asks. Fill the `## Synthesis` section:
 
-- **Resolution** — `converged` (Claude judges no new critique points in latest round) | `cap-reached` (user stopped after a fixed number of rounds) | `abandoned` (user stopped without resolution intent)
+- **Resolution** — `converged` (the synthesizing agent judges no new critique points in the latest round) | `cap-reached` (user stopped after a fixed number of rounds) | `abandoned` (user stopped without resolution intent)
 - **Proposed spec changes** — bulleted list, each entry naming the `spec.md` section + the delta (e.g. "Add Scenario X to § Acceptance criteria", "Remove Non-goal Y", "Sharpen § Intent paragraph 2")
-- **Unresolved disagreements** — for any deferred critique points or open positions; for each, name Claude's view + the other agent's view + why no resolution
+- **Unresolved disagreements** — for any deferred critique points or open positions; for each, name the initiating agent's view + the reviewing agent's view + why no resolution
 
 Then ask the user: `Accept all proposed changes / edit before applying / reject — what's your call?`
 
@@ -337,15 +363,37 @@ If the first token of `$ARGUMENTS` is missing or not one of `new`, `refine`, `de
 
 **Failure indicators:** Shipped specs included in --in-flight output. Acceptance counts (N/M) computed only on top-level bullets (missing scenario sub-bullets). Status line declared as `in-progress` but the row uses a derived value instead. JSON shape leaks (--json not requested but output is JSON).
 
-### Eval 4: Debate happy path — scaffold + Round 1 + re-invoke for counter
+### Eval 4: This runtime initiates — scaffold + Round 1 position
 
-**Input:** User has filled `spec.md` in `docs/specs/NNN-<slug>/` and invokes `/sdd debate`. Then runs their other agent (e.g. Codex CLI) against the same `debate.md`, which writes the Round 1 critique directly into the file. Then re-invokes `/sdd debate` here.
+**Input:** User has filled `spec.md` in `docs/specs/NNN-<slug>/` and invokes `/sdd debate`. No prior `debate.md` exists.
 
-**Expected (first invocation):** Latest spec dir resolved. `spec.md` read; no `{{` placeholders. No existing `debate.md` (or completed-with-Resolution one was archived to `debate-N.md`). `debate.md` created from template with `{{NNN}}`/`{{SLUG}}`/`{{DATE}}` substituted. Round 1 position populated with structured summary (intent + top 3 scenarios + top 3 open questions + "where I want pushback"). All other round placeholders left intact. Handoff instruction emitted verbatim describing the dual-agent orchestration — no copy-paste, no external-model brand names, no auto-end criteria.
+**Expected:** Latest spec dir resolved. `spec.md` read; no `{{` placeholders. `debate.md` scaffolded from template; `{{NNN}}`/`{{SLUG}}`/`{{DATE}}` substituted as usual AND the metadata block filled — `**Initiating agent:** Claude Code`, `**Reviewing agent:** {{reviewing agent name}}` (placeholder retained), `**Initiated by:** Claude Code session <today's date>`. Round 1 — initiating agent (position) populated with structured summary (intent + top 3 scenarios + top 3 open questions + "where the initiating agent wants pushback"). All other round placeholders left intact. Handoff instruction emitted in the **initiating-agent shape** (Step 5 first variant) — directs the user to the peer agent for the critique.
 
-**Expected (re-invocation after other agent wrote critique):** State detected as in-flight (Resolution still placeholder). No re-scaffold, no refusal. Read `debate.md`, find next empty Claude-side slot (Round 2 counter), classify each critique point as accept/reject/defer, fill the placeholder. Report "Round 2 counter written" + reminder that next step is the other agent OR an explicit synthesis ask.
+**Failure indicators:** `**Initiating agent:**` left as placeholder or filled with anything other than `Claude Code`. Round 1 position left as `{{...}}`. Reviewing-agent placeholder overwritten at scaffold time. Wrote a critique slot instead of the position. Auto-applied changes to `spec.md`. Refused on unfilled `spec.md` placeholders skipped. Reviewing-agent handoff message used (wrong role variant).
 
-**Failure indicators:** Round 1 left as `{{...}}` placeholder. External-model brand named (e.g. "GPT-5" hard-coded) instead of generic "the other agent". Auto-applied changes to `spec.md` at scaffold time. Skipped refusal when `spec.md` had unfilled placeholders. Refused on in-flight re-invocation (the new correct behavior is to continue, not refuse). Auto-declared convergence without a user ask. Wrote synthesis without explicit user request. Stopped the debate at a fixed round count rather than waiting for user signal.
+### Eval 5: Peer runtime initiated — this runtime writes critique
+
+**Input:** A peer agent (e.g. Codex CLI) has previously run its own `/sdd debate` against `docs/specs/NNN-<slug>/` and the scaffolded `debate.md` carries `**Initiating agent:** Codex CLI` (or any value other than `Claude Code`). Round 1 — initiating agent (position) is filled. User invokes `/sdd debate` in this Claude Code session.
+
+**Expected:** State detected as in-flight (Resolution still placeholder). `**Initiating agent:**` value read; does NOT match `Claude Code` → this runtime is the **reviewing agent**. No scaffolding, no overwrite of position. Round 1 — reviewing agent (critique) slot found empty; concrete critique written (named spec sections, quoted unclear phrases, missing non-goals, weak acceptance scenarios). `**Reviewing agent:**` literal placeholder replaced with `Claude Code` on this first reviewer write. Handoff instruction emitted in the **reviewing-agent shape** (Step 5 second variant) — directs the user back to the peer (initiator) for the counter.
+
+**Failure indicators:** Overwrote Round 1 position. Filled `{{round 1 counter}}` instead of `{{round 1 critique}}`. Treated self as initiator despite metadata. Left `**Reviewing agent:**` as placeholder. Initiating-agent handoff message used (wrong role variant). Refused or warned.
+
+### Eval 6: Re-invocation by initiating agent — writes counter
+
+**Input:** `debate.md` already carries `**Initiating agent:** Claude Code` and Round 1 position. Reviewing agent has filled Round 1 critique. User re-invokes `/sdd debate` in this Claude Code session.
+
+**Expected:** State in-flight. `**Initiating agent:**` matches `Claude Code` → role = initiator. Round 1 critique read; next empty slot is `{{round 2 counter}}`. For each critique point, classify accept/reject/defer with one-line reasoning, fill the placeholder. Handoff instruction emitted in the initiating-agent shape — "waiting on reviewing agent for next critique, or ask to synthesize".
+
+**Failure indicators:** Wrote a critique slot (wrong role). Skipped the per-point classification. Auto-asked to synthesize without the user requesting it. Auto-stopped at any round count.
+
+### Eval 7: Re-invocation by reviewing agent — writes critique
+
+**Input:** `debate.md` carries `**Initiating agent:** Codex CLI` (or similar non-`Claude Code` value). Round 1 position + Round 1 critique + Round 2 counter all filled. User invokes `/sdd debate` in this Claude Code session for the next round.
+
+**Expected:** State in-flight. `**Initiating agent:**` does NOT match `Claude Code` → role = reviewer. Next empty slot is `{{round 2 critique}}`. Concrete critique written addressing the most recent counter (rebut what was rejected; add new issues if seen). `**Reviewing agent:**` was already filled on the first reviewer write — no change. Handoff instruction emitted in the reviewing-agent shape.
+
+**Failure indicators:** Wrote a counter slot (wrong role). Re-filled `**Reviewing agent:**` overwriting the prior value. Treated self as initiator. Refused because the file was past Round 1.
 
 ## Notes
 

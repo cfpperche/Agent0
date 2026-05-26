@@ -20,6 +20,23 @@ Surfaced during dogfood verification (task 7) — exactly the kind of "looked ob
 
 ## Deviations
 
+### 2026-05-26 — parent — Removed Claude-specific coupling; runtime-neutral roles
+
+The dual-agent direct-file design (shipped 2026-05-25) still carried Claude-as-initiator coupling in language and round labels: section header said "scaffold + write Claude-side rounds", Step 4 said "Claude's position", round template headers were `Round N — Claude (position)` / `Round N — external (critique)`. That assumed Claude Code would always be the agent invoking first — fine for the original setup but wrong-shaped for the multi-runtime direction the user pursued the next day (spec 090, `multi-runtime-entrypoints`).
+
+Pivot:
+
+1. **Roles, not runtimes** — `initiating agent` and `reviewing agent` are the two roles; either runtime can take either role. The agent that invokes `/sdd debate` first becomes the initiator and writes Round 1 position; the other runtime becomes the reviewer when first invoked against the same file.
+2. **Identity metadata in the file** — three new lines at the top of `debate.md`: `**Initiating agent:**`, `**Reviewing agent:**`, `**Initiated by:**`. The initiator fills the first and third at scaffold time with its port's identity literal (this port writes `Claude Code`); the reviewer fills the second on its first write.
+3. **Role detection on re-invocation** — each port compares `**Initiating agent:**` to its own identity string. Match → initiator (write counter or synthesis); mismatch → reviewer (write critique). Legacy files without the metadata fall back to "this runtime is initiator" with a stderr advisory.
+4. **Round headers** — generic `Round N — initiating agent (position|counter)` and `Round N — reviewing agent (critique)`. No runtime name in the structure.
+5. **Step 5 handoff instruction** — split into two role-shape variants: one for initiator (directs user to peer for next critique), one for reviewer (directs user back to initiator for next counter).
+6. **Eval Scenarios** — replaced single happy-path eval with four covering the role permutations: this-initiates, peer-initiated, re-invoke-by-initiator (counter), re-invoke-by-reviewer (critique).
+
+Why now: spec 090 surfaced the need for Agent0 to be transparent across Claude Code and Codex; carrying Claude-coupling in `/sdd debate` would have made spec 090's first dogfood ugly. Cheaper to fix the underlying skill once than to layer special cases later.
+
+Scope kept narrow per user direction: no real Codex integration, no `.codex/` directory, no `AGENTS.md`, no API/MCP/broker. The shared `debate.md` file is still the only cross-runtime contract.
+
 ### 2026-05-25 — parent — Pivoted from broker-human-paste to dual-agent direct-file mode
 
 Spec 089 was originally written and shipped with **broker-human** posture: Claude writes Round 1 to `debate.md`, user copies file to GPT-5 UI, pastes response back into Claude session, Claude appends verbatim. Hard cap at Round 3, Claude auto-detected convergence.

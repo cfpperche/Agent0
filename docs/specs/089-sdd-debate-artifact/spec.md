@@ -6,45 +6,50 @@ _Created 2026-05-25._
 
 ## Intent
 
-Add a 5th artifact `debate.md` to the SDD pipeline and a `/sdd debate` subcommand that orchestrates a cross-model review of `spec.md` between the live Claude session and **another tool-calling CLI agent** (separate session — Codex CLI, Cursor, Aider, etc., each porting its own equivalent of this skill). Both agents read and write `debate.md` **directly** via their native file tools; the human alternates which agent is active and decides when to ask for synthesis. The goal is to catch spec ambiguities, hidden assumptions, and weak acceptance criteria that a single model misses — productive disagreement before `plan.md` is locked, when the cost of change is still markdown-cheap.
+Add a 5th artifact `debate.md` to the SDD pipeline and a `/sdd debate` subcommand that orchestrates a cross-model review of `spec.md` between **two tool-calling CLI agents in separate sessions**, each running its own port of the skill (e.g. Claude Code, Codex CLI, Cursor, Aider). The agent that invokes `/sdd debate` first becomes the `initiating agent` (writes Round 1 position and subsequent counters); the other runtime, when first invoked against the same file, becomes the `reviewing agent` (writes critiques). Both agents read and write `debate.md` **directly** via their native file tools; the human alternates which runtime is active and decides when to ask for synthesis. Goal: catch spec ambiguities, hidden assumptions, and weak acceptance criteria that a single model misses — productive disagreement before `plan.md` is locked, when the cost of change is still markdown-cheap.
 
-Posture is **dual-agent, zero-infra-in-this-session**: no API key, no MCP server, no script — the cross-model boundary is bridged by the human running two CLI agent sessions side-by-side, not by code in either skill. The file `debate.md` is the only shared state. Either agent can be asked to write the synthesis when the human signals the debate is done.
+Posture is **runtime-neutral dual-agent, zero-infra-in-either-skill**: no API key, no MCP server, no broker script — the cross-model boundary is bridged by the human running two CLI agent sessions side-by-side, not by code in either port. The file `debate.md` is the only shared state and carries identity metadata (`**Initiating agent:** / **Reviewing agent:** / **Initiated by:**`) so each port can detect its role on every invocation. Either agent can be asked to write the synthesis when the human signals the debate is done.
 
 ## Acceptance criteria
 
-- [x] **Scenario: scaffold debate.md from active spec**
-  - **Given** a spec dir `docs/specs/NNN-<slug>/` exists with a filled `spec.md` (no `{{` placeholders)
+- [x] **Scenario: this runtime initiates — scaffold debate.md from active spec**
+  - **Given** a spec dir `docs/specs/NNN-<slug>/` exists with a filled `spec.md` (no `{{` placeholders) AND no prior `debate.md`
   - **When** the user invokes `/sdd debate`
-  - **Then** `docs/specs/NNN-<slug>/debate.md` is created from the template, `{{SLUG}}` / `{{NNN}}` / `{{DATE}}` substituted, and Round 1 (Claude's position) is pre-populated with a structured summary of `spec.md` key claims (intent, top 3 acceptance scenarios, top 3 open questions)
+  - **Then** `docs/specs/NNN-<slug>/debate.md` is created from the template; standard placeholders substituted; metadata block filled (`**Initiating agent:**` = this port's identity, `**Reviewing agent:**` = placeholder, `**Initiated by:**` = runtime + session label); Round 1 — initiating agent (position) pre-populated with a structured summary of `spec.md` key claims (intent, top 3 acceptance scenarios, top 3 open questions, "where the initiating agent wants pushback")
 
 - [x] **Scenario: refuse on missing or empty spec**
   - **Given** the target spec dir has `spec.md` still containing `{{` placeholders, OR no spec dir is in flight
   - **When** the user invokes `/sdd debate`
   - **Then** the skill refuses with a clear message ("fill spec.md first" or "no spec dir in flight"), does NOT create `debate.md`, and exits
 
-- [x] **Scenario: emit dual-agent handoff instruction after Round 1**
-  - **Given** `debate.md` exists with Round 1 (Claude position) populated
-  - **When** the skill completes the scaffold + Round 1 step
-  - **Then** the user sees a handoff message telling them to switch to the other CLI agent session and ask it to read `debate.md` and write the next critique directly into the file — no copy-paste mentioned
+- [x] **Scenario: emit role-shaped handoff instruction**
+  - **Given** the local agent has just written a slot (position, counter, critique, or synthesis)
+  - **When** the skill completes the slot
+  - **Then** the user sees a handoff message in the shape matching the local agent's role — initiator variant directs the user to the peer for the next critique; reviewer variant directs the user back to the initiator for the next counter; neither mentions copy-paste
 
-- [x] **Scenario: re-invocation on in-flight debate writes next Claude slot**
-  - **Given** `debate.md` has the most recent critique slot filled (by the other agent) and the next Claude-side counter slot empty
+- [x] **Scenario: re-invocation by initiating agent writes counter**
+  - **Given** `debate.md` carries `**Initiating agent:**` = this port's identity, with the most recent critique slot filled by the peer and the next initiator counter slot empty
   - **When** the user re-invokes `/sdd debate`
-  - **Then** Claude reads `debate.md`, identifies the empty `{{round N counter}}` placeholder, fills it with accept/reject/defer classifications of each critique point, and reports — does NOT refuse re-invocation
+  - **Then** the skill detects the initiator role from metadata, identifies the empty `{{round N counter}}` placeholder, fills it with accept/reject/defer classifications of each critique point, and reports — does NOT refuse, does NOT write a critique slot
+
+- [x] **Scenario: re-invocation by reviewing agent writes critique**
+  - **Given** `debate.md` carries `**Initiating agent:**` = some other runtime's identity (not this port's), with the most recent counter slot filled and the next reviewing-agent critique slot empty
+  - **When** the user invokes `/sdd debate`
+  - **Then** the skill detects the reviewer role from metadata, identifies the empty `{{round N critique}}` placeholder, fills it with a concrete critique (named sections, quoted phrases), and on the first reviewer write replaces the `**Reviewing agent:**` placeholder with this port's identity — does NOT write a counter slot
 
 - [x] **Scenario: synthesis is user-triggered, not auto**
   - **Given** the debate has any number of rounds populated
-  - **When** the user explicitly asks "synthesize the debate" (or equivalent)
-  - **Then** Claude writes the `## Synthesis` section with Resolution + proposed spec changes + unresolved disagreements, and asks the user to accept / edit / reject — no auto-convergence detection, no round-count auto-cap
+  - **When** the user explicitly asks "synthesize the debate" (or equivalent) of either agent
+  - **Then** the local agent writes the `## Synthesis` section with Resolution + proposed spec changes + unresolved disagreements, and asks the user to accept / edit / reject — no auto-convergence detection, no round-count auto-cap
 
 - [x] **Scenario: human-controlled stopping cadence**
   - **Given** an in-flight debate at any round (1, 2, 3, or beyond)
-  - **When** the user re-invokes `/sdd debate` and the file shows no pending Claude slot (all Claude-side slots filled, no new critique yet)
-  - **Then** Claude reports "waiting on the other agent for next critique, OR ask me to synthesize when ready" — does NOT force a stop or self-declare convergence
+  - **When** the user re-invokes `/sdd debate` and the file shows no pending slot for the local role (all this-role slots filled, no new slot for the other role)
+  - **Then** the local agent reports "waiting on the peer for next critique/counter, OR ask me to synthesize when ready" — does NOT force a stop or self-declare convergence
 
-- [x] `.claude/skills/sdd/templates/debate.md.tmpl` exists with the canonical structure: header (slug, date, broker, stop criteria), 3 round placeholders, synthesis section, applied-changes section
+- [x] `.claude/skills/sdd/templates/debate.md.tmpl` exists with the canonical structure: header (slug, date, identity metadata block, orchestration prose, stop criteria), 3 rounds of `initiating agent` / `reviewing agent` slots, synthesis section, applied-changes section — no runtime-specific labels in the round headers
 
-- [x] `.claude/skills/sdd/SKILL.md` § Subcommand: `debate` exists with the full handler protocol (steps 1-N), parsing rule, refusal cases, broker instructions, stop criteria, and at least one Eval Scenario
+- [x] `.claude/skills/sdd/SKILL.md` § Subcommand: `debate` exists with the full handler protocol (steps 1-N) in runtime-neutral language (initiating / reviewing / local / peer agent), parsing rule, refusal cases, role-shaped handoff instructions, stop criteria, and at least four Eval Scenarios covering the role permutations
 
 - [x] `.claude/rules/spec-driven.md` § The four artifacts is renamed § The artifacts and lists 5 entries (spec / plan / tasks / notes / debate); § Workflow gains an optional step 1.5 (`debate` between spec and plan) with the same opt-in framing as `refine`
 

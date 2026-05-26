@@ -8,9 +8,9 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-Spec 093 (runtime-capability-registry) shipped and **audited OK by Claude Code**: `.claude/rules/runtime-capabilities.md` carries 12 capacities × `Claude Code` + `Codex CLI` cells in the six-state vocabulary; AGENTS.md `## Codex Capability Tiers` removed (replaced by registry pointer + skeptical default); CLAUDE.md / AGENTS.md managed blocks byte-identical; `check-instruction-drift.sh` enforces the 5 anchor invariants (a)-(e); `.claude/tests/runtime-capabilities/` has 8 fixtures green. Validation at audit: runtime-capabilities 8/8, instruction-drift 6/6, harness-sync 33/33, drift-check on real repo exit 0, `git diff --check` clean.
+Spec 094 (hook-chain-latency) is **plan+tasks ready**, implementation deferred to next session. `spec.md` filled with empirical baseline from the 2026-05-26 diagnostic; `plan.md` carries a 3-phase measure-first / data-driven / validate-and-regress structure; `tasks.md` has 27 numbered tasks across 7 layers + verification, with explicit decision gates at every conditional layer (L4 only if L0 confirms harness matcher support; L5 only if L3+L4 don't close budget). Target budget proposed at p95 ≤ 80 ms for fast-path Bash (3× improvement over current ~250 ms perceived; movable to ≤120 ms if Phase 1 shows IPC floor is higher).
 
-Spec 094 (hook-chain-latency) **scaffolded in parallel** during 093 review window: `spec.md` filled with empirical baseline (4 PreToolUse(Bash) hooks × 20-50 ms each; ~150-300 ms per Bash call; gitleaks fast at ~33 ms, NOT bottleneck). `plan.md` / `tasks.md` still placeholder — next step `/sdd plan`.
+Spec 093 (runtime-capability-registry) shipped + audited OK earlier this session; full validation suite green. Spec 094-pre (`chore(harness-sync)`) landed mid-session: removed `permissions.defaultMode: bypassPermissions` from upstream `.claude/settings.json`, added `.claude/tests/harness-sync/34-no-permission-bypass-in-upstream.sh` enforcement, extended `harness-sync.md` § settings.json merge strategy with the upstream-side discipline. User's `~/.claude/settings.json` already carries the bypass globally — ergonomics unchanged.
 
 Specs 090, 092, 093 shipped. Spec 091 (sdd-debate-runner) remains paused and **untracked**.
 
@@ -20,16 +20,16 @@ _None._
 
 ## Next Actions
 
-1. Decide whether to proceed with `/sdd plan` for 094 (hook-chain-latency) next, or pivot to MCP parity (would become 095) per the `MCP recipes` registry row.
-2. The illustrative example `planned: 094-mcp-parity` in 093 spec.md Scenario 1 is now misleading since 094 is hook-chain-latency. Maintainer call: leave as-is (`e.g.` example) or rewrite to `NNN-mcp-parity`.
-3. Keep spec 091 paused and untracked unless explicitly resumed.
-4. Any future spec touching runtime support must update `.claude/rules/runtime-capabilities.md` in the same change.
+1. **Start spec 094 implementation at `tasks.md` Layer 0 task 1** — verify Claude Code's `matcher` field syntax for `PreToolUse(Bash)` hooks (payload-shape vs tool-name only). Pure research; no code change. Sources: official CC hook docs via `WebFetch` / `claude-code-guide` agent, or empirical sandbox probe if docs ambiguous. The finding gates L4 viability — record in `notes.md`.
+2. After L0: work `tasks.md` top-to-bottom honoring the decision gates. L1+L2 (bench tooling + baseline capture) are unconditional; L3 (pre-jq probe) is unconditional; L4 (matcher narrowing) is conditional on L0; L5 (orchestrator consolidation) is conditional on L3+L4 not closing the budget. Don't skip the conditional language — each gate exists to prevent over-engineering.
+3. The illustrative `planned: 094-mcp-parity` example in `docs/specs/093-runtime-capability-registry/spec.md § Scenario 1` is now misleading since 094 is hook-chain-latency. Cleanup deferred: leave as-is (`e.g.` example, not declaration) or rewrite to `NNN-mcp-parity`. Maintainer call.
+4. Keep spec 091 paused and untracked unless explicitly resumed.
 
 ## Decisions & Gotchas
 
-- 093 registry path is `.claude/rules/runtime-capabilities.md` — `.agent0/*` rejected in debate because spec 092 made that namespace per-project state. Existing `.claude/rules/*` sync glob covers it.
-- YAML/JSON sidecar rejected in Round 2: two canonical files would reintroduce drift. Markdown canonical; the 5 anchor checks don't parse cells. Promote to schema only when a real machine-read need surfaces.
-- `## Codex Capability Tiers` is permanently gone — drift check (c) makes it irreversible. Fork-local reintroduction uses `AGENTS.override.md`.
-- `MINIMUM_SET` array in `check-instruction-drift.sh` is a 2nd source of truth alongside spec Scenario 1's 12-row enumeration; comment cites spec as canonical.
-- `.claude/tests/instruction-drift/04` and `06` re-purposed for the new contract and `source` `../runtime-capabilities/fixtures.sh` — minor cross-suite coupling vs inline-fixture style of siblings; not a regression.
-- 093 implementation by Codex + 094 scaffold by Claude ran in parallel without collision because they touched disjoint paths.
+- 094 plan targets p95 ≤ 80 ms for fast-path Bash; budget is a Phase 2 proposal, not Phase 1 commitment. WSL2 fork+exec floor (~3-5 ms extra per spawn × 4 hooks) is the known risk to the math; document machine + OS in baseline JSON for honest cross-machine comparison.
+- Language port (intervention c, bash → Go/Rust/Python binary) is categorically out of v1. Build step + deploy artifact + maintenance surface aren't earned until measurement proves bash short-circuit is the floor. Separate spec if needed.
+- All 4 PreToolUse(Bash) hooks follow the identical `cat → jq → CMD → pattern → decide` pattern; consolidation (intervention b) is mechanically straightforward IF L3+L4 don't close budget. Held as fallback.
+- Permission-mode bypass removed from project settings.json — fresh clones / template forks of Agent0 no longer inherit the bypass. Existing forks running `sync-harness.sh` were never affected (merge already excluded `permissions`); test 34 catches future drift.
+- `.agent0/HANDOFF.md` is git-tracked but **outside** `sync-harness.sh`'s manifest by design — per-project state, never fork-managed.
+- Block-once Stop semantics, edit-attribution tracker, porcelain-compare fallback unchanged from 092.

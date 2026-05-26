@@ -20,6 +20,22 @@ Surfaced during dogfood verification (task 7) — exactly the kind of "looked ob
 
 ## Deviations
 
+### 2026-05-26 — parent — Two correctness bugs in runtime-neutral roll-out + spec 090 migration
+
+Two bugs surfaced in the runtime-neutral refactor shipped earlier today; both fixed before the first Codex debate run.
+
+**Bug 1 — initiator could write counter before prior critique was filled.** Step 6 said "find the next empty `{{round N counter}}` slot". On a fresh in-flight file (Round 1 position written, no Round 1 critique yet), Round 2 counter is technically the next empty initiating-agent slot — so the skill would happily write a counter against nothing. Wrong: a counter without a prior critique to address is meaningless and silently desyncs the rounds.
+
+Fix: Step 6 now gates the counter on the same-round-minus-one critique being filled. Round 2 counter requires Round 1 critique filled; Round 3 counter requires Round 2 critique filled. Symmetric gate added on the reviewer side (Round N critique requires the same-round initiator slot — position when N=1, counter when N≥2 — to be filled). When the prerequisite is missing, the skill emits a `Waiting on <other agent> for Round X <slot>; no <local role>-agent <slot> is ready.` message and exits without writing. Two new Eval Scenarios (8 + analog) cover the gate.
+
+**Bug 2 — legacy fallback assumed local runtime is initiator.** Step 2 said "if `**Initiating agent:**` is absent, assume this runtime is the initiator because legacy files were Claude-Code-scaffolded." The Claude-Code-only justification breaks the moment a peer port copies the logic — two ports would both think they own any metadata-less debate. Wrong default direction.
+
+Fix: legacy fallback now infers from round headers instead of defaulting. `## Round 1 — Claude (position)` → infer initiator = Claude Code + advisory. Known-other-runtime header → infer that runtime + advisory. No inferrable header → **refuse** with `debate-blocked:` and ask for manual metadata block migration. Two new Eval Scenarios (9 + 10) cover the inferred case and the refusal case.
+
+**Spec 090 debate.md migration.** Spec 090's `debate.md` was scaffolded on 2026-05-26 with the pre-runtime-neutral template (`Round 1 — Claude (position)`, `Round 1 — external (critique)`, no metadata block). Migrated to the new format inline: added the three metadata lines (`**Initiating agent:** Claude Code`, `**Reviewing agent:** {{reviewing agent name}}`, `**Initiated by:** Claude Code session 2026-05-26`); renamed round headers; updated placeholders to `initiating agent` / `reviewing agent` vocabulary; preserved Round 1 position content verbatim (intent + 3 scenarios + 3 open questions + the 3 pushback bullets, just relabeled). The Round 1 critique slot is empty, awaiting the Codex-side first run.
+
+Why this was worth fixing before any real Codex round: a single ambiguous run that writes a counter against nothing or proceeds with the wrong runtime-as-initiator pollutes the audit trail and produces a debate.md that's hard to recover. Cheaper to gate now than to rebuild the artifact later.
+
 ### 2026-05-26 — parent — Removed Claude-specific coupling; runtime-neutral roles
 
 The dual-agent direct-file design (shipped 2026-05-25) still carried Claude-as-initiator coupling in language and round labels: section header said "scaffold + write Claude-side rounds", Step 4 said "Claude's position", round template headers were `Round N — Claude (position)` / `Round N — external (critique)`. That assumed Claude Code would always be the agent invoking first — fine for the original setup but wrong-shaped for the multi-runtime direction the user pursued the next day (spec 090, `multi-runtime-entrypoints`).

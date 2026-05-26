@@ -141,9 +141,12 @@ If `debate.md` does NOT exist → this runtime is the **initiating agent**; proc
 2. Read the `**Initiating agent:**` line at the top of `debate.md`:
    - Value equals this port's identity (`Claude Code`) → this runtime is the **initiating agent**. Jump to Step 6 (write the next empty initiating-agent slot — counter or, if user-requested, synthesis).
    - Value is anything else → this runtime is the **reviewing agent**. Jump to Step 6 (write the next empty reviewing-agent critique slot).
-   - Line is absent (legacy file pre-dating runtime-neutral metadata) → assume this runtime is the initiator (legacy files were Claude-Code-scaffolded). Jump to Step 6. Emit a one-line stderr advisory: `debate-advisory: <path> has no '**Initiating agent:**' metadata — assuming local-runtime initiator; consider adding the line for forward compatibility`.
+   - **Line is absent (legacy file pre-dating runtime-neutral metadata)** → do NOT default to "local runtime is initiator"; that lets two ports both think they own the debate. Instead, infer from legacy round headers:
+     - Grep the file for `## Round 1 — Claude (position)` → infer Initiating agent = `Claude Code`. Emit advisory `debate-advisory: <path> has no '**Initiating agent:**' metadata; inferred Claude Code from legacy 'Round 1 — Claude (position)' header — add the metadata block manually for forward compatibility` and proceed with role determination using the inferred value (so a Claude Code port resuming a legacy Claude-scaffolded file correctly takes the initiator role).
+     - Grep for `## Round 1 — Codex CLI (position)` / `## Round 1 — Cursor (position)` / `## Round 1 — Aider (position)` (or any other known peer-port literal) → infer that runtime as the initiator. Same advisory shape with the inferred name. This runtime then takes the reviewer role per the standard non-match branch.
+     - No inferrable header → **refuse**. Print to stderr and exit: `debate-blocked: <path> has no '**Initiating agent:**' metadata and no inferrable legacy header. Add the metadata block manually (Initiating agent / Reviewing agent / Initiated by — see .claude/skills/sdd/templates/debate.md.tmpl for the shape) and re-invoke /sdd debate.`
 
-The Resolution-line check distinguishes in-flight vs complete; the Initiating-agent line determines this runtime's role. The section header `## Synthesis` is present from scaffold time and is not a discriminator.
+The Resolution-line check distinguishes in-flight vs complete; the Initiating-agent line (or, for legacy files, the inferred initiator) determines this runtime's role. The section header `## Synthesis` is present from scaffold time and is not a discriminator.
 
 ### Step 3: Scaffold debate.md — 🔒 Low freedom
 
@@ -199,17 +202,22 @@ Next step (you orchestrate):
 
 Each `/sdd debate` invocation on an in-flight debate (Step 2 has already classified this runtime as initiating or reviewing):
 
-1. **Read `debate.md`** — parse the round sections; identify the next slot whose body is still a `{{...}}` placeholder
-2. **Determine slot type based on role:**
-   - **Initiating agent role** — look for empty `{{round N counter}}` slot. If found, write the counter. If all initiating-agent counter slots are filled AND the user has NOT asked for synthesis, report: `All initiating-agent rounds written; waiting on the reviewing agent for next critique, OR ask me to synthesize when ready`. If the user HAS asked for synthesis, jump to Step 7.
-   - **Reviewing agent role** — look for empty `{{round N critique}}` slot. If found, write the critique. **On first reviewing-agent write only**, if `**Reviewing agent:**` is still the literal placeholder `{{reviewing agent name}}`, replace it with this port's identity literal (`Claude Code` for this port). If all reviewing-agent critique slots are filled, report: `All reviewing-agent critiques written; waiting on the initiating agent for next counter, OR ask the initiating agent to synthesize`.
-   - **Either role, user asked to synthesize** — jump to Step 7. Synthesis may be written by either role; whoever the user asks performs it.
+1. **Read `debate.md`** — parse the round sections; identify the next slot whose body is still a `{{...}}` placeholder.
+2. **Determine slot type based on role AND turn-order prerequisite. Either role, user asked to synthesize → jump to Step 7.** Otherwise:
+   - **Initiating agent role.** Look for the first initiating-agent slot still unfilled (Round 1 position, Round 2 counter, Round 3 counter, …). For a counter at Round N (N ≥ 2), the prerequisite is that **Round N-1 critique is filled**.
+     - Next slot is a counter at Round N AND Round N-1 critique is empty → report `Waiting on reviewing agent for Round N-1 critique; no initiating-agent counter is ready.` and exit. Do NOT write.
+     - Next slot is a counter at Round N AND Round N-1 critique is filled → write the counter (Step 3, counter branch).
+     - All initiating-agent slots filled AND user has not asked for synthesis → report `All initiating-agent rounds written; waiting on the reviewing agent for next critique, OR ask me to synthesize when ready` and exit.
+   - **Reviewing agent role.** Look for the first reviewing-agent critique slot still unfilled (Round 1 critique, Round 2 critique, Round 3 critique). For a critique at Round N, the prerequisite is that the same-round initiator slot is filled (position when N=1, counter when N≥2).
+     - Next slot is a critique at Round N AND the same-round initiator slot is empty → report `Waiting on initiating agent for Round N position` (when N=1) or `Waiting on initiating agent for Round N counter` (when N≥2), followed by `; no reviewing-agent critique is ready.` Exit. Do NOT write.
+     - Next slot is a critique at Round N AND the same-round initiator slot is filled → write the critique (Step 3, critique branch). **On first reviewing-agent write only**, if `**Reviewing agent:**` is still the literal placeholder `{{reviewing agent name}}`, replace it with this port's identity literal (`Claude Code` for this port).
+     - All reviewing-agent critique slots filled → report `All reviewing-agent critiques written; waiting on the initiating agent for next counter, OR ask the initiating agent to synthesize` and exit.
 3. **Write the slot:**
    - **Counter** (initiating role): for each critique point in the most recent reviewing-agent critique, classify as **accept** (will propose spec change in synthesis), **reject** (with one-line reasoning), or **defer** (open question; flag for synthesis). Fill the placeholder.
    - **Critique** (reviewing role): list the specific spec.md ambiguities, hidden assumptions, weak acceptance criteria, missing non-goals you can identify. Be concrete — name sections, quote the unclear phrase. Avoid generic praise.
 4. **Report** — emit the Step 5 handoff instruction matching this runtime's role.
 
-**No auto-convergence detection. No round-count cap. The user decides when the debate ends** by explicitly asking for synthesis (or just running `/sdd plan` without one). If more rounds than the template's 3 are needed, the user can append `## Round 4 — initiating agent (counter)` / `## Round 4 — reviewing agent (critique)` headers manually; the round-handling logic above keys on placeholder presence, not round number.
+**No auto-convergence detection. No round-count cap. The user decides when the debate ends** by explicitly asking for synthesis (or just running `/sdd plan` without one). If more rounds than the template's 3 are needed, the user can append `## Round 4 — initiating agent (counter)` / `## Round 4 — reviewing agent (critique)` headers manually; the round-handling logic above keys on placeholder presence and the same-round prerequisite, not round number.
 
 ### Step 7: Synthesis — 🔓 Medium freedom
 
@@ -394,6 +402,30 @@ If the first token of `$ARGUMENTS` is missing or not one of `new`, `refine`, `de
 **Expected:** State in-flight. `**Initiating agent:**` does NOT match `Claude Code` → role = reviewer. Next empty slot is `{{round 2 critique}}`. Concrete critique written addressing the most recent counter (rebut what was rejected; add new issues if seen). `**Reviewing agent:**` was already filled on the first reviewer write — no change. Handoff instruction emitted in the reviewing-agent shape.
 
 **Failure indicators:** Wrote a counter slot (wrong role). Re-filled `**Reviewing agent:**` overwriting the prior value. Treated self as initiator. Refused because the file was past Round 1.
+
+### Eval 8: Initiator re-invocation when prior critique is missing — refuses to write
+
+**Input:** `debate.md` carries `**Initiating agent:** Claude Code` (this port). Round 1 position is filled. Round 1 critique is still the literal placeholder (the reviewing agent has not run yet). User re-invokes `/sdd debate` in this Claude Code session.
+
+**Expected:** State in-flight. Role = initiator. The next initiating-agent slot is `{{round 2 counter}}`. Prerequisite check: Round 1 critique empty → report `Waiting on reviewing agent for Round 1 critique; no initiating-agent counter is ready.` and exit. No write to `debate.md`. No call to Step 7.
+
+**Failure indicators:** Wrote Round 2 counter despite Round 1 critique being empty (the canonical bug this gate exists to prevent). Wrote a reviewing-agent slot (wrong role). Jumped to synthesis without the user asking. Phrased the waiting message with the wrong round number (e.g. saying "Round 2 critique" when the missing prerequisite is Round 1).
+
+### Eval 9: Legacy file with Claude-coupled headers — inferred initiator + advisory
+
+**Input:** `debate.md` exists but has no `**Initiating agent:**` metadata line. The file's Round 1 header is the literal `## Round 1 — Claude (position)` (a debate scaffolded by the pre-runtime-neutral version of this skill). User invokes `/sdd debate` in this Claude Code session.
+
+**Expected:** Step 2 fallback fires. Grep finds the legacy `## Round 1 — Claude (position)` header → infers Initiating agent = `Claude Code`. Stderr advisory: `debate-advisory: <path> has no '**Initiating agent:**' metadata; inferred Claude Code from legacy 'Round 1 — Claude (position)' header — add the metadata block manually for forward compatibility`. Inferred value matches this port's identity → role = initiator. Proceed to Step 6 with the inferred role. No write to the metadata block (the inference is in-memory; the user adds the block manually per the advisory).
+
+**Failure indicators:** Defaulted to "local runtime is initiator" without grepping for legacy headers (the unsafe pre-fix behaviour). Mutated `debate.md` to insert a metadata block automatically. Refused with the no-inferrable-header message even though a legacy header was present. Inferred Claude Code but then took the reviewer role.
+
+### Eval 10: Legacy file with no inferrable header — refuses + asks for manual migration
+
+**Input:** `debate.md` exists, has no `**Initiating agent:**` metadata, AND has no recognisable legacy round header (e.g. a hand-written file or a header pattern from a runtime the inference list doesn't know). User invokes `/sdd debate`.
+
+**Expected:** Step 2 fallback runs the grep, finds no `## Round 1 — <known-runtime> (position)` match. Refuse: print to stderr `debate-blocked: <path> has no '**Initiating agent:**' metadata and no inferrable legacy header. Add the metadata block manually (Initiating agent / Reviewing agent / Initiated by — see .claude/skills/sdd/templates/debate.md.tmpl for the shape) and re-invoke /sdd debate.` Exit. No write to `debate.md`, no role taken, no jump to Step 6.
+
+**Failure indicators:** Proceeded with "assume local runtime is initiator". Mutated the file to insert metadata. Proceeded with an incorrect inferred runtime (e.g. inferring Claude Code from a non-matching header).
 
 ## Notes
 

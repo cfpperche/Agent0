@@ -2,7 +2,7 @@
 
 → **Landing page:** [cfpperche.github.io/Agent0](https://cfpperche.github.io/Agent0/) (en · pt · es)
 
-A reusable base/template repository for starting new software projects with [Claude Code](https://docs.claude.com/en/docs/claude-code). Ships a working harness — hooks, rules, skills, and spec-driven workflow — so each new project starts with the discipline already wired up, not from a blank `.claude/`.
+A reusable base/template repository for starting new software projects with [Claude Code](https://docs.claude.com/en/docs/claude-code) or Codex. Ships a working harness — hooks, rules, skills, and spec-driven workflow — so each new project starts with the discipline already wired up, not from a blank `.claude/`.
 
 Agent0 itself has no application code and no stack. It is *only* a template. The fork chooses the language, fills in the placeholders, and inherits the harness.
 
@@ -18,7 +18,7 @@ rm -rf .git && git init
 git remote add origin git@github.com:you/my-new-project.git
 ```
 
-Then open the directory in Claude Code. The `SessionStart` hook will surface `SESSION.md` and any pending reminders automatically.
+Then open the directory in Claude Code or Codex. Claude Code's `SessionStart` hook will surface `SESSION.md` and any pending reminders automatically; Codex reads `AGENTS.md` as its native entrypoint.
 
 ## What you get
 
@@ -88,6 +88,7 @@ Future to-dos that don't belong in `SESSION.md` (in-flight) or memory (knowledge
 
 ```
 .
+├── AGENTS.md                          # Codex instructions (runtime preamble + shared Agent0 block)
 ├── CLAUDE.md                          # project instructions (placeholders + template-stable rules)
 ├── README.md                          # this file
 ├── .gitleaks.toml                     # starter secrets-scan config (allowlists + builtin detectors)

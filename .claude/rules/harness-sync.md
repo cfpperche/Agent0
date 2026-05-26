@@ -5,7 +5,7 @@ paths:
 
 # Harness sync
 
-A one-way sync tool (`.claude/tools/sync-harness.sh <fork-path>`) that brings a fork's harness state up to date with this Agent0 repo. Hooks, rules, tools, validators, skills, tests, `.mcp.json.example` plus structured merges of `.claude/settings.json` and `CLAUDE.md`. Conservative by design: `--check` is the default (read-only); the plain-file path AND the CLAUDE.md managed block do 3-way reconciliation against a recorded baseline so *stale* content (fork untouched, Agent0 moved) auto-updates while genuinely *customized* content (fork edited) is refused without `--force`; product code (`src/`, fork's `tests/`, package manifests, `.mcp.json`) is never touched.
+A one-way sync tool (`.claude/tools/sync-harness.sh <fork-path>`) that brings a fork's harness state up to date with this Agent0 repo. Hooks, rules, tools, validators, skills, tests, `AGENTS.md`, `.mcp.json.example` plus structured merges of `.claude/settings.json` and `CLAUDE.md`. Conservative by design: `--check` is the default (read-only); the plain-file path AND the CLAUDE.md managed block do 3-way reconciliation against a recorded baseline so *stale* content (fork untouched, Agent0 moved) auto-updates while genuinely *customized* content (fork edited) is refused without `--force`; product code (`src/`, fork's `tests/`, package manifests, `.mcp.json`) is never touched.
 
 ## What fires
 
@@ -184,6 +184,8 @@ The operator reviews the candidate; if it matches intent, they ratify with `mv .
 
 **Idempotency** — once the fork is migrated (markers paired, region matches Agent0 source), `--apply` reports `= up to date` and produces zero mutations. `sha256sum` of `CLAUDE.md` is stable across consecutive applies.
 
+This marker-aware merge primitive applies to `CLAUDE.md` only. `AGENTS.md` is intentionally synchronized as a plain baseline-tracked file because Codex has native override-chain primitives (`AGENTS.override.md` and nested `AGENTS.md`) for fork-local instruction layering.
+
 ## CLAUDE.md heading-set merge strategy (legacy fallback)
 
 The legacy fallback strategy. Active only when the fork's `CLAUDE.md` lacks paired markers (state `absent` in the dispatcher). Heading-set comparison, **not** full-file hash. Fork-authored sections (Overview, Stack, Conventions, Gotchas, etc.) intentionally diverge from Agent0; a full-hash compare would always flag CLAUDE.md as customized and break the workflow. Algorithm:
@@ -202,7 +204,7 @@ Encoded in three arrays at the top of `sync-harness.sh`:
 
 - **`COPY_CHECK_RECURSIVE`** — `find -type f` under each base: `.claude/skills/`, `.claude/tests/`, `.claude/agents/`. Recursive walks; subdirs preserved.
 - **`COPY_CHECK_GLOBS`** — `dir|pattern` pairs, single-level: `.claude/hooks/*.sh`, `.claude/rules/*.md`, `.claude/tools/*.sh`, `.claude/validators/*.sh`.
-- **`COPY_CHECK_FILES`** — literal paths: `.mcp.json.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.claude/memory/.gitkeep`, `.claude/.browser-state/.gitkeep`.
+- **`COPY_CHECK_FILES`** — literal paths: `AGENTS.md`, `.mcp.json.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.claude/tools/lib/managed-block.sh`, `.claude/memory/.gitkeep`, `.claude/.browser-state/.gitkeep`.
 - **Structured merge** (not in COPY_CHECK): `.claude/settings.json`, `CLAUDE.md`, `.gitignore`.
 
 The walk only reads from Agent0 manifest paths. Out-of-scope fork content (`src/`, fork's `tests/` outside `.claude/tests/`, `docs/`, `package.json`, `Cargo.toml`, `pyproject.toml`, `.mcp.json`, `.env*`, `target/`, `node_modules/`, `.venv/`, `dist/`, `build/`) is **implicitly invisible** — no denylist guard fires because nothing in the manifest points at those paths. This means adding a new path to the manifest is the only way to extend scope; the safety floor is the manifest itself.
@@ -234,6 +236,7 @@ The sync baseline file subsumes the need for a separate audit log — it is both
 
 ## Gotchas
 
+- **`AGENTS.md` is plain baseline-tracked, not marker-merged.** This asymmetry is intentional. `CLAUDE.md` needs a marker-aware merge because Claude Code has no native override-file chain; Codex does have one (`AGENTS.override.md`, nested `AGENTS.md`), so root `AGENTS.md` remains Agent0-owned and fork-local Codex guidance belongs in those Codex-native override surfaces. Do not promote `AGENTS.md` to structured merge without a follow-up spec and rule-of-three demand evidence.
 - **`## Compact Instructions` anchor missing.** The CLAUDE.md merge looks for this line as the insertion point. A fork that has removed or renamed it will trigger the EOF-fallback warning; capacity sections land at EOF, which may not be the right place. Fix: restore the anchor in fork's CLAUDE.md, or reorganize after sync.
 - **Whitespace-only customization false-positive.** A fork that ran `shfmt` / `prettier` over a hook script will have hash-mismatch despite semantic equivalence. The sync flags it as customized. Fix: revert the formatter, OR use `--force` consciously after reviewing the diff. The tool does NOT normalize whitespace (would mask real customizations).
 - **`settings.json` array growth on hook renames.** When Agent0 renames a hook, both old and new entries land in the fork's settings.json (different dedup keys). The fork developer must prune manually post-sync. The `git diff` makes this visible; auto-prune deferred to v2.

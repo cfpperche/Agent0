@@ -115,6 +115,18 @@ if [ ! -d "$FORK_ROOT" ]; then
   exit 2
 fi
 
+SYNC_HARNESS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MANAGED_BLOCK_LIB="$SYNC_HARNESS_DIR/lib/managed-block.sh"
+if [ ! -f "$MANAGED_BLOCK_LIB" ] && [ -f "$AGENT0_ROOT/.claude/tools/lib/managed-block.sh" ]; then
+  MANAGED_BLOCK_LIB="$AGENT0_ROOT/.claude/tools/lib/managed-block.sh"
+fi
+if [ ! -f "$MANAGED_BLOCK_LIB" ]; then
+  printf 'sync-harness: missing managed-block helper library: %s\n' "$MANAGED_BLOCK_LIB" >&2
+  exit 2
+fi
+# shellcheck source=/dev/null
+. "$MANAGED_BLOCK_LIB"
+
 # ---------------------------------------------------------------------------
 # sync baseline
 # ---------------------------------------------------------------------------
@@ -175,9 +187,11 @@ COPY_CHECK_GLOBS=(
 
 # Literal files
 COPY_CHECK_FILES=(
+  "AGENTS.md"
   ".mcp.json.example"
   ".gitleaks.toml"
   ".githooks/pre-commit"
+  ".claude/tools/lib/managed-block.sh"
   ".claude/memory/.gitkeep"
   ".claude/.browser-state/.gitkeep"
   ".claude/routines/.gitkeep"
@@ -757,64 +771,6 @@ extract_section() {
     }
     { if (in_sec) print }
   ' "$file"
-}
-
-# ---------------------------------------------------------------------------
-# CLAUDE.md managed-block helpers
-# ---------------------------------------------------------------------------
-
-# Detect marker state in a file. Outputs: absent | paired | mismatched | nested-invalid
-detect_marker_state() {
-  local file="$1"
-  local begin_count end_count begin_line end_line
-  if [ ! -f "$file" ]; then
-    echo "absent"
-    return
-  fi
-  begin_count="$(grep -cE '^<!-- AGENT0:BEGIN -->$' "$file" 2>/dev/null || true)"
-  end_count="$(grep -cE '^<!-- AGENT0:END -->$' "$file" 2>/dev/null || true)"
-  [ -z "$begin_count" ] && begin_count=0
-  [ -z "$end_count" ] && end_count=0
-
-  if [ "$begin_count" -eq 0 ] && [ "$end_count" -eq 0 ]; then
-    echo "absent"
-    return
-  fi
-
-  if [ "$begin_count" -eq 0 ] || [ "$end_count" -eq 0 ]; then
-    echo "mismatched"
-    return
-  fi
-
-  if [ "$begin_count" -gt 1 ] || [ "$end_count" -gt 1 ]; then
-    echo "nested-invalid"
-    return
-  fi
-
-  # Exactly 1 of each — check order
-  begin_line="$(grep -nE '^<!-- AGENT0:BEGIN -->$' "$file" | head -1 | cut -d: -f1)"
-  end_line="$(grep -nE '^<!-- AGENT0:END -->$' "$file" | head -1 | cut -d: -f1)"
-  if [ "$begin_line" -ge "$end_line" ]; then
-    echo "nested-invalid"
-    return
-  fi
-  echo "paired"
-}
-
-# Extract content between AGENT0:BEGIN and AGENT0:END markers (exclusive).
-_extract_region() {
-  local file="$1"
-  awk '
-    /^<!-- AGENT0:END -->$/ { in_region=0 }
-    in_region { print }
-    /^<!-- AGENT0:BEGIN -->$/ { in_region=1 }
-  ' "$file"
-}
-
-# sha256 of an in-memory region string. Consistent newline handling so the
-# managed-block baseline record and the 3-way check compute the SAME digest.
-_region_sha() {
-  printf '%s\n' "$1" | sha256sum | awk '{print $1}'
 }
 
 # Record CLAUDE.md's Agent0-managed block (between AGENT0:BEGIN/END) as a

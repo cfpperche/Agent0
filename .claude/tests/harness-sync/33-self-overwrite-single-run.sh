@@ -12,16 +12,20 @@ set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 REAL_TOOL="$AGENT0_ROOT/.claude/tools/sync-harness.sh"
+REAL_LIB="$AGENT0_ROOT/.claude/tools/lib/managed-block.sh"
 
 TMPDIR="$(mktemp -d -t spec-072-33-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 SRC="$TMPDIR/agent0"
 FORK="$TMPDIR/fork"
-mkdir -p "$SRC/.claude/tools" "$FORK/.claude/tools"
+mkdir -p "$SRC/.claude/tools/lib" "$FORK/.claude/tools"
 
-# Agent0 source ships the real sync-harness.sh + a minimal harness.
+# Agent0 source ships the real sync-harness.sh, its sourced helper lib, and a
+# minimal harness. The rebootstrap temp copy falls back to --agent0-path for
+# this lib because the temp directory has no sibling lib/ directory.
 cp "$REAL_TOOL" "$SRC/.claude/tools/sync-harness.sh"
+cp "$REAL_LIB" "$SRC/.claude/tools/lib/managed-block.sh"
 printf '{"hooks":{}}\n' > "$SRC/.claude/settings.json"
 printf '# CLAUDE\n\n## Compact Instructions\n' > "$SRC/CLAUDE.md"
 

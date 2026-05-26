@@ -2,7 +2,7 @@
 
 _Created 2026-05-26._
 
-**Status:** draft
+**Status:** shipped
 
 ## Intent
 
@@ -10,17 +10,17 @@ Refactor Agent0's agent-instruction entrypoints so the same repository can be op
 
 ## Acceptance criteria
 
-- [ ] **Scenario: Codex first-contact entrypoint**
+- [x] **Scenario: Codex first-contact entrypoint**
   - **Given** a fresh Agent0 checkout is opened with Codex
   - **When** Codex reads `AGENTS.md`
   - **Then** it sees the project purpose, the spec-first workflow, the **3-tier capability classification preamble** (`native-now` / `manual/read-only-now` / `Claude-only-until-follow-up`), the Codex-specific runtime surface, and pointers to shared Agent0 rules wrapped in the appropriate tier qualifier so Claude-only tool names and hook payloads are never presented as if already available in Codex; AND the root `AGENTS.md` is self-contained, fits within Codex's default project-doc byte budget, and remains semantically safe when concatenated after a hypothetical user-global `AGENTS.md`
 
-- [ ] **Scenario: Claude Code entrypoint remains correct**
+- [x] **Scenario: Claude Code entrypoint remains correct**
   - **Given** a fresh Agent0 checkout is opened with Claude Code
   - **When** Claude Code reads `CLAUDE.md`
   - **Then** it still sees correct Claude Code instructions and also understands that Codex uses `AGENTS.md`, with no conflicting guidance about which file owns shared Agent0 behavior
 
-- [ ] **Scenario: shared Agent0 guidance does not silently drift (5 concrete static checks)**
+- [x] **Scenario: shared Agent0 guidance does not silently drift (5 concrete static checks)**
   - **Given** `CLAUDE.md` and `AGENTS.md` both carry shared Agent0 guidance inside `<!-- AGENT0:BEGIN -->` / `<!-- AGENT0:END -->` markers
   - **When** a drift-detection pass runs (CI step, local script, or `sync-harness.sh --check`)
   - **Then** all five of the following hold, and any failure blocks "shipped":
@@ -30,29 +30,29 @@ Refactor Agent0's agent-instruction entrypoints so the same repository can be op
     - (iv) `AGENTS.md` contains no Claude-only command claims without a Codex caveat — `/sdd` references and similar Claude-native tool names must be wrapped in the 3-tier qualifier
     - (v) `sync-harness.sh --check` detects `AGENTS.md` drift on the baseline-tracked path (same code path as other Agent0-owned harness files)
 
-- [ ] **Scenario: fork-facing instruction hygiene**
+- [x] **Scenario: fork-facing instruction hygiene**
   - **Given** `CLAUDE.md` and `AGENTS.md` are fork-facing instruction files
   - **When** their shared Agent0 guidance is scanned
   - **Then** it contains no **concrete** Agent0-internal `docs/specs/0NN-<concrete-slug>` pointers and no **concrete** `.claude/memory/<specific-topic>.md` references (e.g. `cc-platform-hooks.md`, `propagation-hygiene.md`); **generic placeholder forms** are allowed when describing the convention (e.g. `docs/specs/NNN-<slug>/`, `.claude/memory/<topic>.md`, `.claude/memory/<slug>.md`)
 
-- [ ] `AGENTS.md` exists at repo root, is written as the Codex runtime entrypoint, and carries the 3-tier capability classification preamble before any pointer to shared rules
+- [x] `AGENTS.md` exists at repo root, is written as the Codex runtime entrypoint, and carries the 3-tier capability classification preamble before any pointer to shared rules
 
-- [ ] `CLAUDE.md` includes an explicit runtime-entrypoint section explaining its relationship to `AGENTS.md` AND the asymmetric file-structure contract: `CLAUDE.md` uses structured marker-aware merge (existing 058/071 design) because Claude Code has no override-file chain; `AGENTS.md` is plain baseline-tracked because Codex provides the native override chain (`AGENTS.override.md` and nested `AGENTS.md` files)
+- [x] `CLAUDE.md` includes an explicit runtime-entrypoint section explaining its relationship to `AGENTS.md` AND the asymmetric file-structure contract: `CLAUDE.md` uses structured marker-aware merge (existing 058/071 design) because Claude Code has no override-file chain; `AGENTS.md` is plain baseline-tracked because Codex provides the native override chain (`AGENTS.override.md` and nested `AGENTS.md` files)
 
-- [ ] Ownership model for shared guidance is **byte-identical managed block inside `<!-- AGENT0:BEGIN -->` / `<!-- AGENT0:END -->`** in both files, validated by a comparison check. A generator / provider-neutral source file is deferred to a follow-up spec if the first implementation shows the shared block needs templating or transformation.
+- [x] Ownership model for shared guidance is **byte-identical managed block inside `<!-- AGENT0:BEGIN -->` / `<!-- AGENT0:END -->`** in both files, validated by a comparison check. A generator / provider-neutral source file is deferred to a follow-up spec if the first implementation shows the shared block needs templating or transformation.
 
-- [ ] Marker layout is **asymmetric per file**: `CLAUDE.md` has (runtime-specific preamble outside markers) + (shared managed block inside markers) + (optional fork narrative outside markers). `AGENTS.md` has (runtime-specific preamble outside markers) + (shared managed block inside markers) — **no root-file fork-narrative section**. Fork-side Codex customization belongs in `AGENTS.override.md` or nested-directory `AGENTS.md` files per Codex's native instruction-chain model; this customization path is documented in `AGENTS.md`'s body as the sanctioned surface.
+- [x] Marker layout is **asymmetric per file**: `CLAUDE.md` has (runtime-specific preamble outside markers) + (shared managed block inside markers) + (optional fork narrative outside markers). `AGENTS.md` has (runtime-specific preamble outside markers) + (shared managed block inside markers) + (Agent0-authored customization-surface pointer outside markers, naming `AGENTS.override.md` and nested `AGENTS.md` as the fork-customization path) — **no root-file fork-narrative section**, because root `AGENTS.md` is Agent0-owned and Codex's native override chain handles fork-side instruction layering.
 
-- [ ] `AGENTS.md` enters `sync-harness.sh` in this same implementation as a plain baseline-tracked file. Root-file edits by a fork are treated as harness customization and refused by sync without `--force`, identical to other Agent0-owned harness files.
+- [x] `AGENTS.md` enters `sync-harness.sh` in this same implementation as a plain baseline-tracked file. Root-file edits by a fork are treated as harness customization and refused by sync without `--force`, identical to other Agent0-owned harness files.
 
-- [ ] Managed-block byte size stays within the current `CLAUDE.md` managed-block envelope; an exact byte threshold + verification script lands in `plan.md` (e.g. `wc -c` against a stored baseline). The discipline is **index-shaped**, not expanded rule copies.
+- [x] Managed-block byte size stays within the current `CLAUDE.md` managed-block envelope; an exact byte threshold + verification script lands in `plan.md` (e.g. `wc -c` against a stored baseline). The discipline is **index-shaped**, not expanded rule copies.
 
-- [ ] The 3-tier capability classification is documented in `spec.md` as the canonical Codex-safety contract:
+- [x] The 3-tier capability classification is documented in `spec.md` as the canonical Codex-safety contract:
   - **native-now** — capabilities Codex can use directly: instructions in `AGENTS.md` + direct file/shell workflow
   - **manual / read-only-now** — capabilities Codex can read for context but not execute as harnessed commands: SDD artifacts + `.claude/rules/*` as behavioral references
   - **Claude-only-until-follow-up** — capabilities reserved for future Codex-port specs: hooks, slash skills, subagents, MCP recipes
 
-- [ ] `README.md` quick start mentions that Agent0 can be opened in Claude Code or Codex once the corresponding runtime surface exists
+- [x] `README.md` quick start mentions that Agent0 can be opened in Claude Code or Codex once the corresponding runtime surface exists
 
 ## Non-goals
 
@@ -70,8 +70,8 @@ Refactor Agent0's agent-instruction entrypoints so the same repository can be op
 
 - [x] ~~Should shared Agent0 guidance be byte-identical inside `<!-- AGENT0:BEGIN -->` / `<!-- AGENT0:END -->` in both files, or should there be a new provider-neutral source such as `.agent0/instructions/managed-block.md` that renders into each runtime entrypoint?~~ **Resolved by debate (2026-05-26):** byte-identical for v1 + comparison test. Generator is deferred (see § Non-goals).
 - [x] ~~Should `sync-harness.sh` propagate `AGENTS.md` in the same implementation, or should `AGENTS.md` first land only in Agent0 and become fork-syncable after the Codex hook/skill parity shape is clearer?~~ **Resolved by debate (2026-05-26):** propagate in this same implementation as plain baseline-tracked file. Structured-merge support deferred (see § Non-goals).
-- [ ] How much Codex-specific capability should `AGENTS.md` claim before `.codex/config.toml`, Codex hooks, and `.agents/skills/` are actually implemented? **Constrained by debate (2026-05-26):** bounded by the 3-tier capability classification — `AGENTS.md` may claim nothing in the `Claude-only-until-follow-up` tier without a future spec implementing it. Plan uses the 3-tier table as the rubric for what to include vs defer.
-- [ ] Should `CLAUDE.md` mention Codex only in a short runtime preamble, or should the managed Agent0 block itself become runtime-neutral enough to be shared verbatim? (Depends on resolution of the Codex-capability question above at plan time.)
+- [x] How much Codex-specific capability should `AGENTS.md` claim before `.codex/config.toml`, Codex hooks, and `.agents/skills/` are actually implemented? **Constrained by debate (2026-05-26):** bounded by the 3-tier capability classification — `AGENTS.md` may claim nothing in the `Claude-only-until-follow-up` tier without a future spec implementing it. Plan uses the 3-tier table as the rubric for what to include vs defer.
+- [x] ~~Should `CLAUDE.md` mention Codex only in a short runtime preamble, or should the managed Agent0 block itself become runtime-neutral enough to be shared verbatim?~~ **Resolved by implementation (2026-05-26):** the shared managed block includes a compact `Runtime entrypoints` section and remains byte-identical across `CLAUDE.md` / `AGENTS.md`; `AGENTS.md` also has a Codex-specific preamble outside the markers.
 - [x] ~~What local verification is sufficient for drift: shell test comparing managed-block content, sync-harness test fixture, or a future generator command?~~ **Resolved indirectly by debate (2026-05-26):** the 5-check static list under § Acceptance criteria. Exact threshold + scripting lands in `plan.md`.
 
 ## Context / references

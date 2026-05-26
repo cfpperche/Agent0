@@ -50,6 +50,20 @@ Optional `--aspect=square|landscape|portrait` flag (default `square`). Maps to f
 
 The model IDs are addressed via the MCP's `search_models` / `recommend_model` tools; if any ID has shifted in fal.ai's catalog, the skill surfaces the current ID at first call and the table here gets bumped on next refresh.
 
+## Brand-tier prompt composition
+
+Image generators interpret vague prompts toward the **stock median** of their training distribution — "a banner" becomes the generic SaaS banner, not your brand. This is the silent failure mode for `brand-text` and `brand-photo` calls; the output looks plausibly competent but quietly off-brand, and the drift is only caught at human review (V6-style eyeball, which is expensive and easy to skip).
+
+The discipline: **brand-tier prompts should compose from a fork-local brand contract** — a written document declaring palette, typography, visual language, composition rules, and anti-patterns. The contract turns prompt-writing from interpretation into transcription; the failure mode shifts from invisible drift into visible "the contract was wrong" (and a wrong contract is editable; an undocumented vibe is not).
+
+**Agent0 ships no template for this contract** — palette and visual language are quintessentially fork-local (different products, different brands, no honest one-size-fits-all). The convention is path + presence only:
+
+- Common location: `docs/brand/styleguide.md` (or `docs/brand/<sub-brand>.md` for multi-brand forks).
+- At call time for `brand-text` / `brand-photo`: if a contract document exists, read it first and compose the prompt from its § *Prompt template* section. If it doesn't exist, the prompt is ad-hoc — flag this in the call summary so the human knows what they're trusting.
+- The contract document treats the fork's source-of-truth tokens (e.g. CSS variables, design-system JSON) as the **oracle**; the contract itself transcribes them. Disagreement between oracle and contract → oracle wins, contract is out of date. No automation; refresh discipline is manual and owner-binding.
+
+`draft` tier is exempt — mockups are throwaway by definition; ad-hoc prompts are correct-shaped there.
+
 ## Storage policy
 
 Path-based split — durability is signalled by the tier flag at call time:

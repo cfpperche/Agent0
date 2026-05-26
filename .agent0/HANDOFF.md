@@ -10,6 +10,8 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 Spec 092 (multi-runtime-handoff) shipped: `.agent0/HANDOFF.md` is now the canonical handoff; `.claude/SESSION.md` is a pointer-only compatibility file (first non-blank line `<!-- AGENT0_HANDOFF_POINTER -->`). Claude `SessionStart`/`Stop` hooks read and enforce this file on every source; Codex follows the same handoff by `AGENTS.md` convention. Adjacent rules (reminders, routines, memory-placement, spec-driven, artifact-budgets, runtime-introspect, compaction-continuity) and entrypoints (CLAUDE.md, AGENTS.md managed blocks, README.md) updated in the same commit. Five test suites green: session-handoff (10), compaction-continuity (6), session-state-isolation (7), session-edit-attribution (8), runtime-introspect (16); plus instruction-drift (6) and harness-sync (33). Spec 090 had shipped earlier.
 
+Downstream forks **mei-saas** (`7c25afd`) and **codexeng** (`4a657ab`) sync'd + migrated (each got the 092 harness + their own `.agent0/HANDOFF.md` populated from prior SESSION.md content, SESSION.md collapsed to pointer). codexeng kept its known 1 customized-refused (`image/SKILL.md § Notes`) — section-blind sha-compare, no upstream content change so no merge needed. **administradora-ia-nativa** deferred (drift unrelated to 092: pending removals of `app-skeleton/` + `04-ux-testing/` from older specs — needs its own dedicated sync window).
+
 ## Active Work
 
 _None._
@@ -19,6 +21,7 @@ _None._
 1. Spec 091 (`docs/specs/091-sdd-debate-runner/`) remains paused and **untracked** on the working tree. Do not commit or resume without explicit user direction.
 2. Codex CLI port of `/sdd debate` is out-of-repo and unchanged in status.
 3. Propagation-advisory regex gap (pattern set doesn't catalog fork names) remains unscoped — threshold for spec scaffolding not met.
+4. **administradora-ia-nativa** harness sync — dedicated window: drift includes removals from older specs (`app-skeleton/`, `04-ux-testing/`, `project-memory/05-06` tests) plus a `.claude/settings.json` + `.gitignore` merge. Not coupled to 092.
 
 ## Decisions & Gotchas
 

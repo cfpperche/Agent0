@@ -4,7 +4,7 @@ Run before delivering the synthesis (Step 3) and again before writing `spec.md` 
 
 ## Context
 
-- [ ] Read available project context before speaking — CLAUDE.md, `.claude/rules/*.md`, `.claude/memory/MEMORY.md`, the `docs/specs/` listing, recent `git log`
+- [ ] Read available project context before speaking — CLAUDE.md, `.claude/rules/*.md`, `.agent0/memory/MEMORY.md`, the `docs/specs/` listing, recent `git log`
 - [ ] Identified existing specs, rules, modules, or memory entries that overlap with the idea
 - [ ] Told the user which context was loaded and what is relevant — concisely, not a dump
 

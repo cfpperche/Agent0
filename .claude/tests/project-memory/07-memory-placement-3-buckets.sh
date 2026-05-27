@@ -3,7 +3,7 @@
 # Asserts:
 #   (a) memory-placement.md mentions all three bucket paths verbatim:
 #       - ~/.claude/projects/
-#       - .claude/memory/
+#       - .agent0/memory/
 #       - .claude/rules/
 
 set -euo pipefail
@@ -16,7 +16,7 @@ if [ ! -f "$RULE" ]; then
   exit 1
 fi
 
-for path in '~/.claude/projects/' '.claude/memory/' '.claude/rules/'; do
+for path in '~/.claude/projects/' '.agent0/memory/' '.claude/rules/'; do
   if ! grep -qF "$path" "$RULE"; then
     printf 'FAIL: memory-placement.md missing reference to bucket path: %s\n' "$path"
     exit 1

@@ -163,7 +163,7 @@ MANIFEST_TSV="$(mktemp -t sync-manifest-XXXXXX)"
 # Project-local paths — MUST NOT be added to any COPY_CHECK array below.
 # .claude/.browser-state/  session credentials (cookies/localStorage); project-specific,
 #                           gitignored *.json, only .gitkeep sentinel travels via git.
-# .claude/memory/           project knowledge; content is project-local.
+# .agent0/memory/           project knowledge; content is project-local.
 #                           The empty .gitkeep IS in COPY_CHECK_FILES — content is not.
 # .claude/routines/         project-scoped routine definitions; content is
 #                           project-local. Only .gitkeep travels via git so a fresh
@@ -182,6 +182,8 @@ COPY_CHECK_GLOBS=(
   ".claude/rules|*.md"
   ".claude/tools|*.sh"
   ".claude/validators|*.sh"
+  ".agent0/hooks|*.sh"
+  ".agent0/tools|memory-*"
 )
 
 # Literal files
@@ -192,7 +194,8 @@ COPY_CHECK_FILES=(
   ".gitleaks.toml"
   ".githooks/pre-commit"
   ".claude/tools/lib/managed-block.sh"
-  ".claude/memory/.gitkeep"
+  ".agent0/memory/.gitkeep"
+  ".agent0/memory.config.json"
   ".claude/.browser-state/.gitkeep"
   ".claude/routines/.gitkeep"
   ".claude/.runtime-state/README.md"
@@ -204,7 +207,7 @@ COPY_CHECK_FILES=(
 
 # Path patterns excluded from propagation. Bash `case` globs anchored against
 # the per-file relpath. Used for upstream-maintainer-bound capacities whose
-# enforcement should not ship to leaf consumer projects — same posture as `.claude/memory/`
+# enforcement should not ship to leaf consumer projects — same posture as `.agent0/memory/`
 # (content stays project-local). A path matching here is silently dropped from
 # both the manifest record AND the per-file process: no copy, no baseline entry,
 # no advisory. Companion filter in `merge_settings_json` drops the matching

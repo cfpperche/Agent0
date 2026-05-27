@@ -9,7 +9,7 @@ metadata:
 ---
 # Hook chain maintenance
 
-Maintainer-binding companion to `.claude/memory/hook-chain-latency.md`. The companion entry documents the chain budget + bench tool + regression check; this memory documents the upstream-maintainer discipline applied when adding or editing a `PreToolUse(Bash)` hook.
+Maintainer-binding companion to `.agent0/memory/hook-chain-latency.md`. The companion entry documents the chain budget + bench tool + regression check; this memory documents the upstream-maintainer discipline applied when adding or editing a `PreToolUse(Bash)` hook.
 
 Read before adding any new `PreToolUse(Bash)` hook, or editing the optimization-sensitive bodies of `governance-gate.sh`, `secrets-scan.sh`, `supply-chain-scan.sh`, `runtime-pre-mark.sh`.
 
@@ -80,6 +80,6 @@ Contract for any new `PreToolUse(Bash)` hook contributed upstream:
 
 ## Cross-references
 
-- `.claude/memory/hook-chain-latency.md` — companion entry (budget, bench tool, baseline shape, regression check).
+- `.agent0/memory/hook-chain-latency.md` — companion entry (budget, bench tool, baseline shape, regression check).
 - `docs/specs/094-hook-chain-latency/` — original empirical baseline + optimization decisions.
-- `.claude/memory/propagation-hygiene.md` — sibling maintainer-binding memory (fork-bound files carry no upstream-internal pointers); same shipping discipline.
+- `.agent0/memory/propagation-hygiene.md` — sibling maintainer-binding memory (fork-bound files carry no upstream-internal pointers); same shipping discipline.

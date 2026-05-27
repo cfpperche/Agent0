@@ -70,7 +70,14 @@ The validator runs a typecheck step only when the consumer project declares the 
 
 ## Memory
 
-Factual project knowledge lives in `.claude/memory/<topic>.md` — git-tracked, but NOT shipped to consumer projects; the lazy-read index is `.claude/memory/MEMORY.md`. Read it when prior decisions or gotchas would help. See `.claude/rules/memory-placement.md`.
+Factual project knowledge lives in `.agent0/memory/<topic>.md`; the trigger-read index is `.agent0/memory/MEMORY.md`. Content is git-tracked for this project, but not shipped to consumers.
+Read the index when work touches project architecture, first-party capacities, `.claude/rules/`, `.claude/hooks/`, `.claude/skills/`, `.claude/tools/sync-harness.sh`, `.claude/rules/runtime-capabilities.md`, or `.agent0/memory/`.
+Follow only relevant entries; ordinary reads do not mutate memory.
+Claude uses `.claude/settings.json` hooks. Codex users opt in by copying `.codex/config.toml.example` to `.codex/config.toml` and uncommenting the memory hooks.
+Do not raw-edit `.agent0/memory/MEMORY.md`; edit entries and let projection regenerate it.
+Hook-disabled memory edits must end with `bash .agent0/tools/memory-maintain.sh finalize <entry-path>`.
+Without hooks, stale-memory readout is `bash .agent0/tools/memory-query.sh decay --readout`.
+See `.claude/rules/memory-placement.md` § Multi-runtime usage.
 
 ## Browser auth
 

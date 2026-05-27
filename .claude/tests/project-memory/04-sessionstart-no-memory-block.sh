@@ -14,11 +14,11 @@ HOOK="$AGENT0_ROOT/.claude/hooks/session-start.sh"
 TMPDIR="$(mktemp -d -t spec-019-04-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
-mkdir -p "$TMPDIR/.claude/memory"
+mkdir -p "$TMPDIR/.agent0/memory"
 
 # Populate with 5 memories — each with a unique sentinel string
 for letter in a b c d e; do
-  cat > "$TMPDIR/.claude/memory/${letter}.md" <<EOF
+  cat > "$TMPDIR/.agent0/memory/${letter}.md" <<EOF
 ---
 name: ${letter}
 description: test memory

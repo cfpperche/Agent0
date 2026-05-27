@@ -19,7 +19,7 @@ Steps:
    - **Exit 0** → no regression beyond tolerance. Respond with exactly: `no-regression-detected since {{LAST_COMPLETED_TS}}` (no edits).
    - **Exit non-zero** → a hook cell regressed past the tolerance threshold. The tool prints the offending `<hook>:<cmd>` cell(s) on stderr with measured-vs-baseline p95.
 3. On regression:
-   - Read `.claude/memory/hook-chain-latency.md` § *Optimization techniques* for the three levers (matcher-narrowing, pre-jq probe, sed-instead-of-jq).
+   - Read `.agent0/memory/hook-chain-latency.md` § *Optimization techniques* for the three levers (matcher-narrowing, pre-jq probe, sed-instead-of-jq).
    - Inspect the offending hook(s) in `.claude/hooks/` and identify why the cell got slower (recent edit? new dependency? jq spawn re-introduced on the fast-path?).
    - Report findings to chat — **do NOT auto-fix and do NOT re-baseline**. The baseline is the contract; silently re-capturing it would mask the regression.
    - Suggest one of: revert the offending hook edit, apply an optimization from the rule, or (with justification) re-baseline.

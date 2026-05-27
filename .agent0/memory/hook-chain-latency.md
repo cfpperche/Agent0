@@ -10,7 +10,7 @@ metadata:
 
 The `PreToolUse(Bash)` hook chain sits on the critical path of every Bash tool call the agent makes; cost there is user-perceived as "slow agent". This entry documents the latency budget the chain meets, the bench tool that measures it, and how to interpret a regression report.
 
-This entry pairs with `.claude/memory/hook-chain-maintenance.md` (the upstream-maintainer discipline — optimization techniques + the contract for adding a new `PreToolUse(Bash)` hook). Neither file ships to consumer projects; both bind the upstream maintainer who edits any of the four registered hooks.
+This entry pairs with `.agent0/memory/hook-chain-maintenance.md` (the upstream-maintainer discipline — optimization techniques + the contract for adding a new `PreToolUse(Bash)` hook). Neither file ships to consumer projects; both bind the upstream maintainer who edits any of the four registered hooks.
 
 ## Scope
 
@@ -111,7 +111,7 @@ The check is not wired into a `pre-commit` hook in v1. The monthly routine `.cla
 
 ## Cross-references
 
-- `.claude/memory/hook-chain-maintenance.md` — upstream-maintainer discipline (optimization techniques + the 5-step contract for adding a new `PreToolUse(Bash)` hook).
+- `.agent0/memory/hook-chain-maintenance.md` — upstream-maintainer discipline (optimization techniques + the 5-step contract for adding a new `PreToolUse(Bash)` hook).
 - `.claude/rules/runtime-introspect.md` — sibling perf-observability rule; the `runtime-pre-mark.sh` hook this entry measures is owned by that capacity.
 - `.claude/rules/secrets-scan.md` — `secrets-scan.sh` contract; the `if`-field narrowing preserves it exactly because the hook body is unchanged.
 - `.claude/rules/supply-chain.md` — `supply-chain-scan.sh` contract; same.

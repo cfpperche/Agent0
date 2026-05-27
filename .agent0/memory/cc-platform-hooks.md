@@ -103,7 +103,7 @@ For `SessionStart`, `Setup`, `CwdChanged`, `FileChanged`: also supports `CLAUDE_
 }
 ```
 
-**Note:** Claude Code's Bash `tool_response` does NOT include an `exit_code` field. Status inference is required (see `.claude/memory/runtime-introspect-maintenance.md` § Inference heuristics and `.claude/hooks/runtime-capture.sh`).
+**Note:** Claude Code's Bash `tool_response` does NOT include an `exit_code` field. Status inference is required (see `.agent0/memory/runtime-introspect-maintenance.md` § Inference heuristics and `.claude/hooks/runtime-capture.sh`).
 
 **PostToolUseFailure(Bash) payload diverges (verified empirically 2026-05-11 by spec 020 dump-probe).** Under tool failure, the stdin payload to the hook script does NOT contain a `tool_response` field at all. Instead:
 
@@ -142,16 +142,16 @@ Implication for path-scoping validation playbooks:
 - Multi-trigger dogfood reads (Step 2 style) work because the FIRST matching trigger per rule fires; subsequent matches dedupe silently.
 - "Edit foo to verify it triggers rule X" only works if rule X hasn't already loaded this session. Prior reads / SessionStart-by-source-resume could have loaded it.
 
-This is correct CC behavior (avoids audit-log inflation and context waste); not a regression. Documented also in `.claude/memory/rule-load-debug.md` § Gotchas.
+This is correct CC behavior (avoids audit-log inflation and context waste); not a regression. Documented also in `.agent0/memory/rule-load-debug.md` § Gotchas.
 
 ## Cross-references
 
 - `.claude/rules/runtime-introspect.md` — spec 011 capacity that uses `PreToolUse(Bash)` + `PostToolUse(Bash)`; spec 020 added `PostToolUseFailure(Bash)`.
-- `.claude/memory/rule-load-debug.md` — uses `InstructionsLoaded`; opt-in observability for the dedup behavior documented in § Empirical above.
+- `.agent0/memory/rule-load-debug.md` — uses `InstructionsLoaded`; opt-in observability for the dedup behavior documented in § Empirical above.
 - `.claude/rules/secrets-scan.md` — uses `PreToolUse(Bash)` (preflight shape gate); doesn't depend on the success/failure split.
 - `.claude/rules/supply-chain.md` — uses `PreToolUse(Bash)` (block) + `PostToolUse(Edit|Write|MultiEdit)` (advisory).
 - `.claude/rules/delegation.md` — uses `PreToolUse(Agent)` + `PostToolUse(Edit|Write|MultiEdit)`.
-- `.claude/memory/compaction-continuity.md` — uses `PreCompact` + `SessionStart` (with `source: "compact"`).
+- `.agent0/memory/compaction-continuity.md` — uses `PreCompact` + `SessionStart` (with `source: "compact"`).
 - `.claude/rules/session-handoff.md` — uses `SessionStart` + `Stop`.
 - `.claude/rules/reminders.md` — uses `SessionStart`.
 

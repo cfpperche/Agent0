@@ -66,7 +66,7 @@ Rules:
 
 The cap is enforced behaviorally at session end, not by tooling. **Prune before write** when closing a session:
 
-1. **Migrate durable entries out.** Anything that survives this session as "future-me will want to know this" belongs in a memory file, not HANDOFF.md. Project-factual knowledge goes to `.claude/memory/<topic>.md`. Behavioral guidance goes to `~/.claude/projects/<path>/memory/feedback_<topic>.md`. The handoff entry then becomes a short pointer at most.
+1. **Migrate durable entries out.** Anything that survives this session as "future-me will want to know this" belongs in a memory file, not HANDOFF.md. Project-factual knowledge goes to `.agent0/memory/<topic>.md`. Behavioral guidance goes to `~/.claude/projects/<path>/memory/feedback_<topic>.md`. The handoff entry then becomes a short pointer at most.
 2. **Drop entries already in commit messages or specs.** `git log --oneline` + `docs/specs/NNN-*/` are the audit trail.
 3. **Replace, don't append.** Previous "Next Actions" are replaced by this session's. Previous "Current State" is overwritten, not extended.
 4. **Keep Active Work live.** Resolved bullets disappear; they do not earn "done" badges.

@@ -4,10 +4,10 @@ reminders:
   context: 'Fair OD re-match for spec 027 — the blind-judge result (3.87 vs 4.73)
     is confounded (1 OD pass vs 4 refined iterations). To measure 027 honestly: either
     iterate the OD run to 4 passes, or re-judge it against the first-pass baseline.
-    See .claude/memory/od-grounding-dogfood.md § Pointers.'
+    See .agent0/memory/od-grounding-dogfood.md § Pointers.'
   status: pending
   links:
-  - .claude/memory/od-grounding-dogfood.md
+  - .agent0/memory/od-grounding-dogfood.md
 - id: r-2026-05-18-test-first-real-od-bump
   created: '2026-05-18'
   context: Test the first real OD --bump/--apply against upstream — network-bound

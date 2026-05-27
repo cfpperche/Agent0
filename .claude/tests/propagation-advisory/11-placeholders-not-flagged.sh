@@ -14,8 +14,8 @@ export CLAUDE_PROJECT_DIR="$TMPDIR_T"
 
 clean_content='Specs follow the docs/specs/NNN-<slug>/ convention.
 The /product skill scaffolds docs/specs/001-<slug>/ + docs/specs/002-foundation/ + docs/specs/003-* infra children.
-Memory index lives at .claude/memory/MEMORY.md.
-A rule may reference .claude/memory/<topic>.md placeholders.'
+Memory index lives at .agent0/memory/MEMORY.md.
+A rule may reference .agent0/memory/<topic>.md placeholders.'
 
 payload="$(jq -n \
   --arg fp "$TMPDIR_T/.claude/rules/foo.md" \

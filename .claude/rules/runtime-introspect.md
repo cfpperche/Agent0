@@ -133,11 +133,11 @@ Missing `jq`: both hooks fail open (`exit 0`, no capture). The probe tool prints
 
 ## Maintenance
 
-Maintainer-binding surface (detector extension contract via `CLAUDE_RUNTIME_INTROSPECT_EXTRA_DETECT` and why it is human-only, per-detector inference heuristics, state-file design rationale, dogfood archaeology around sibling-process env inheritance, ANSI strip, cargo workspaces, commit-message FP, mid-session extension limits) lives in `.claude/memory/runtime-introspect-maintenance.md`.
+Maintainer-binding surface (detector extension contract via `CLAUDE_RUNTIME_INTROSPECT_EXTRA_DETECT` and why it is human-only, per-detector inference heuristics, state-file design rationale, dogfood archaeology around sibling-process env inheritance, ANSI strip, cargo workspaces, commit-message FP, mid-session extension limits) lives in `.agent0/memory/runtime-introspect-maintenance.md`.
 
 ## Cross-references
 
-- `.claude/memory/runtime-introspect-maintenance.md` — maintainer-binding companion
+- `.agent0/memory/runtime-introspect-maintenance.md` — maintainer-binding companion
 - `.claude/hooks/runtime-capture.sh` / `.claude/hooks/runtime-pre-mark.sh` — implementation
 - `.claude/tools/probe.sh` — probe surface
 - `.claude/rules/supply-chain.md` — sibling tokeniser whose discipline this hook shares

@@ -13,7 +13,7 @@ Maintainer-binding companion to `.claude/rules/propagation-advisory.md`. The com
 
 ## The 5 patterns
 
-Each maps to a leak class documented in `.claude/memory/propagation-hygiene.md`.
+Each maps to a leak class documented in `.agent0/memory/propagation-hygiene.md`.
 
 | Label | Regex | Catches | Example |
 |---|---|---|---|
@@ -21,19 +21,19 @@ Each maps to a leak class documented in `.claude/memory/propagation-hygiene.md`.
 | `docs/specs/NNN` | `docs/specs/[0-9]+-` | Concrete spec dir paths | `docs/specs/070-propagation-hygiene/` |
 | `anthill` | `\banthill\b` (case-insensitive) | Upstream design lineage | `anthill-fpa`, `Anthill's brand book` |
 | `personal-path` | `/home/[a-z][a-z0-9_-]+/` | Personal absolute paths | `/home/goat/Agent0` |
-| `memory-pointer` | `\.claude/memory/[a-z][a-z0-9_-]+\.md` | Memory file pointers | `.claude/memory/cc-platform-hooks.md` |
+| `memory-pointer` | `\.agent0/memory/[a-z][a-z0-9_-]+\.md` | Memory file pointers | `.agent0/memory/cc-platform-hooks.md` |
 
 ### Pattern exclusions (legitimate keeps that bypass the scan)
 
 - `docs/specs/NNN-<slug>/` — the literal placeholder naming convention (no digits)
 - `docs/specs/001-<slug>/`, `docs/specs/001-{{SLUG}}/`, `docs/specs/002-foundation/`, `docs/specs/003-*` — consumer-output paths the `/product` skill writes
-- `.claude/memory/MEMORY.md` — the index file (carries no upstream-specific content)
-- `.claude/memory/<topic>.md`, `<slug>.md`, `<file>.md`, `<name>.md` — placeholder forms a rule may legitimately reference
-- `.claude/memory/.gitkeep` — empty scaffold
+- `.agent0/memory/MEMORY.md` — the index file (carries no upstream-specific content)
+- `.agent0/memory/<topic>.md`, `<slug>.md`, `<file>.md`, `<name>.md` — placeholder forms a rule may legitimately reference
+- `.agent0/memory/.gitkeep` — empty scaffold
 
 ## Shipped surface (where the hook fires)
 
-Mirrors `.claude/memory/propagation-hygiene.md § The shipped file class`:
+Mirrors `.agent0/memory/propagation-hygiene.md § The shipped file class`:
 
 - `.claude/hooks/*.sh`
 - `.claude/rules/*.md`
@@ -74,6 +74,6 @@ Both upgrades reuse the same regex set; the advisory is the cheapest first deplo
 ## Cross-references
 
 - `.claude/rules/propagation-advisory.md` — consumer-facing companion (override grammar + escape hatch + advisory-line shape)
-- `.claude/memory/propagation-hygiene.md` — the upstream-maintainer discipline this hook enforces
+- `.agent0/memory/propagation-hygiene.md` — the upstream-maintainer discipline this hook enforces
 - `.claude/hooks/propagation-advise.sh` — implementation
 - `.claude/tests/propagation-advisory/` — scenario tests

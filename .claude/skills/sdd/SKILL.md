@@ -62,7 +62,7 @@ Discovery interview that turns a vague idea into a filled `spec.md`. Opt-in fron
 
 ### Step 0: Context load — 🔒 Low freedom: always silent
 
-Read project context BEFORE speaking; build an internal model, do NOT dump a summary. Read: `CLAUDE.md`, `.claude/rules/*.md`, `.claude/memory/MEMORY.md` (the lazy index — pull specific memory files only when a round needs them), the `docs/specs/` directory listing (titles, not full bodies), recent `git log`. Reference this naturally during the interview.
+Read project context BEFORE speaking; build an internal model, do NOT dump a summary. Read: `CLAUDE.md`, `.claude/rules/*.md`, `.agent0/memory/MEMORY.md` (the lazy index — pull specific memory files only when a round needs them), the `docs/specs/` directory listing (titles, not full bodies), recent `git log`. Reference this naturally during the interview.
 
 ### Step 1: Opening — 🔓 Medium freedom: brief, grounded
 

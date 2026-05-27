@@ -218,7 +218,7 @@ Encoded in three arrays at the top of `sync-harness.sh`:
 
 - **`COPY_CHECK_RECURSIVE`** — `find -type f` under each base: `.claude/skills/`, `.claude/tests/`, `.claude/agents/`. Recursive walks; subdirs preserved.
 - **`COPY_CHECK_GLOBS`** — `dir|pattern` pairs, single-level: `.claude/hooks/*.sh`, `.claude/rules/*.md`, `.claude/tools/*.sh`, `.claude/validators/*.sh`.
-- **`COPY_CHECK_FILES`** — literal paths: `AGENTS.md`, `.mcp.json.example`, `.codex/config.toml.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.claude/tools/lib/managed-block.sh`, `.claude/memory/.gitkeep`, `.claude/.browser-state/.gitkeep`.
+- **`COPY_CHECK_FILES`** — literal paths: `AGENTS.md`, `.mcp.json.example`, `.codex/config.toml.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.claude/tools/lib/managed-block.sh`, `.agent0/memory/.gitkeep`, `.agent0/memory.config.json`, `.claude/.browser-state/.gitkeep`.
 - **Structured merge** (not in COPY_CHECK): `.claude/settings.json`, `CLAUDE.md`, `.gitignore`.
 
 The walk only reads from Agent0 manifest paths. Out-of-scope consumer project content (`src/`, consumer project's `tests/` outside `.claude/tests/`, `docs/`, `package.json`, `Cargo.toml`, `pyproject.toml`, `.mcp.json`, `.codex/config.toml`, `.codex/.env.local`, `.env*`, `target/`, `node_modules/`, `.venv/`, `dist/`, `build/`) is **implicitly invisible** — no denylist guard fires because nothing in the manifest points at those paths. This means adding a new path to the manifest is the only way to extend scope; the safety floor is the manifest itself.

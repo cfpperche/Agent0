@@ -36,7 +36,7 @@ Runtime-specific labels such as `Claude-only-until-follow-up` are legacy wording
 | delegation/subagents | `native` | `unsupported` | `.claude/hooks/delegation-gate.sh`; `.claude/hooks/delegation-stop.sh`; `.claude/hooks/post-edit-validate.sh`; `.claude/rules/delegation.md`; `.claude/delegation-audit.jsonl` | Claude's `Agent` tool and hook gate are the current implementation. |
 | MCP recipes | `native-opt-in` | `native-opt-in` | `.claude/rules/mcp-recipes.md`; `.mcp.json.example`; `.codex/config.toml.example`; `.claude/hooks/mcp-recipes-hint.sh`; `docs/specs/098-codex-mcp-recipes-parity/` | Claude activates via `.mcp.json`; Codex activates via trusted-project `.codex/config.toml` copied from the MCP-only template. Both remain explicit opt-in and credential-gated where applicable. |
 | image generation | `native-opt-in` | `convention` | `.claude/skills/image/SKILL.md`; `.claude/rules/image-gen.md`; `.claude/rules/mcp-recipes.md`; `.mcp.json.example`; `assets/generated/` | Requires fal.ai MCP activation and `FAL_KEY`; Codex can only reproduce manually unless a future native path is scoped. |
-| memory | `native` | `convention` | `.claude/memory/MEMORY.md`; `.claude/memory/*.md`; `.claude/rules/memory-placement.md`; `.claude/tools/memory-*.sh` | Claude discovers memory through its instruction surface; Codex reads the files manually when relevant. |
+| memory | `native` | `native-opt-in` | `.agent0/memory/MEMORY.md`; `.agent0/memory/*.md`; `.claude/rules/memory-placement.md`; `.agent0/hooks/memory-*.sh`; `.agent0/tools/memory-*.sh`; `.codex/config.toml.example` | Codex hooks port the four memory implementations via `.codex/config.toml.example`; `apply_patch` is the v1 hook-coverage surface; `Bash` writes are out of strict parity and caught by `.githooks/pre-commit` backstop; finalizer fallback for hook-disabled sessions. |
 | harness sync | `native-opt-in` | `native-opt-in` | `.claude/tools/sync-harness.sh`; `.claude/rules/harness-sync.md`; `.claude/tests/harness-sync/` | Both runtimes can run the shell tool explicitly; it is never automatic. |
 | customization/sync surfaces | `native` | `convention` | `.claude/tools/sync-harness.sh`; `.claude/rules/harness-sync.md`; `AGENTS.override.md`; nested `AGENTS.md`; `docs/specs/090-multi-runtime-entrypoints/` | Claude-side customization is harness-managed; Codex customization layers through its native instruction-chain convention. |
 
@@ -48,4 +48,4 @@ Potential future columns include `Cursor`, `Aider`, and `Hermes Agent`. They are
 
 ## Maintenance
 
-Maintainer discipline (update rule, drift-check anchors, skill-portability relationship) lives in `.claude/memory/runtime-capabilities-maintenance.md`.
+Maintainer discipline (update rule, drift-check anchors, skill-portability relationship) lives in `.agent0/memory/runtime-capabilities-maintenance.md`.

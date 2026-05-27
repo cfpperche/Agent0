@@ -22,7 +22,7 @@
           },
           {
             "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/memory-decay-readout.sh"
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.agent0/hooks/memory-decay-readout.sh"
           }
         ]
       }
@@ -110,7 +110,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/memory-index-gate.sh"
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.agent0/hooks/memory-index-gate.sh"
           }
         ]
       }
@@ -157,7 +157,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/memory-frontmatter-validate.sh"
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.agent0/hooks/memory-frontmatter-validate.sh"
           }
         ]
       },
@@ -166,7 +166,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/memory-events-journal.sh"
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.agent0/hooks/memory-events-journal.sh"
           }
         ]
       },

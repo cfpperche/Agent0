@@ -2,7 +2,7 @@
 
 Used by `/sdd refine` (see `../SKILL.md` § Subcommand: refine). 56 questions in 7 categories. Each discovery round picks 2-3 — the ones most relevant to what is still unknown. Do not run the bank as a checklist; it is a menu.
 
-Before asking any question, grep/read the repo first — config files, `.claude/rules/`, `.claude/memory/`, existing `docs/specs/`, schemas, modules. Asking is the fallback, not the default. State the file you read so the user sees the grounding.
+Before asking any question, grep/read the repo first — config files, `.claude/rules/`, `.agent0/memory/`, existing `docs/specs/`, schemas, modules. Asking is the fallback, not the default. State the file you read so the user sees the grounding.
 
 ## Problem validation (is this worth building?)
 

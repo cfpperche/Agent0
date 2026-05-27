@@ -21,6 +21,8 @@ CLAUDE.local.md
 .claude/supply-chain-audit.jsonl.lock
 .claude/.rule-load-debug.jsonl
 .claude/.rule-load-debug.jsonl.lock
+.agent0/.memory-events.jsonl
+.agent0/.memory-events.jsonl.lock
 .claude/.memory-events.jsonl
 .claude/.memory-events.jsonl.lock
 .claude/.browser-state/*.json

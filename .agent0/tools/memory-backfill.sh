@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# .claude/tools/memory-backfill.sh
-# One-shot idempotent seed for .claude/.memory-events.jsonl: for each entry in
-# .claude/memory/*.md (excluding MEMORY.md) that has no `add` event yet,
+# .agent0/tools/memory-backfill.sh
+# One-shot idempotent seed for .agent0/.memory-events.jsonl: for each entry in
+# .agent0/memory/*.md (excluding MEMORY.md) that has no `add` event yet,
 # append one with `ts` from `git log --reverse --format=%aI <file> | head -1`
 # (filesystem mtime fallback if untracked), `actor: "backfill"`, `tool: null`.
 #
@@ -12,9 +12,9 @@
 set -uo pipefail
 LC_ALL=C
 
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
-MEMORY_DIR="$PROJECT_DIR/.claude/memory"
-JOURNAL="$PROJECT_DIR/.claude/.memory-events.jsonl"
+PROJECT_DIR="${AGENT0_PROJECT_DIR:-${CLAUDE_PROJECT_DIR:-$PWD}}"
+MEMORY_DIR="$PROJECT_DIR/.agent0/memory"
+JOURNAL="$PROJECT_DIR/.agent0/.memory-events.jsonl"
 
 if ! command -v jq >/dev/null 2>&1; then
   printf 'memory-backfill: jq not found; install jq to run\n' >&2
@@ -62,10 +62,12 @@ for file in "$MEMORY_DIR"/*.md; do
     --arg event_type "add" \
     --arg entry_id "$entry_id" \
     --arg actor "backfill" \
+    --arg runtime "backfill" \
     --arg session_id "" \
     --arg tool_use_id "" \
     --argjson tool null \
-    '{ts:$ts, event_type:$event_type, entry_id:$entry_id, actor:$actor, session_id:$session_id, tool_use_id:$tool_use_id, tool:$tool}' 2>/dev/null || true)"
+    --arg path ".agent0/memory/$base" \
+    '{ts:$ts, event_type:$event_type, entry_id:$entry_id, actor:$actor, runtime:$runtime, session_id:$session_id, tool_use_id:$tool_use_id, tool:$tool, path:$path}' 2>/dev/null || true)"
 
   if [ -n "$audit_line" ]; then
     printf '%s\n' "$audit_line" >> "$JOURNAL"

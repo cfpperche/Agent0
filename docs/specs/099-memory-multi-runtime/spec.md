@@ -2,7 +2,7 @@
 
 _Created 2026-05-27._
 
-**Status:** draft
+**Status:** implemented; ready for review
 
 ## Intent
 
@@ -120,7 +120,7 @@ All resolved during cross-model debate; see `debate.md § Synthesis (revised aft
 
 ## Context / references
 
-- `.claude/rules/runtime-capabilities.md` — current matrix: `memory` is `native` for Claude Code and `convention` for Codex CLI (moves to `native-opt-in` per this spec); `lifecycle hooks` is `native` for both as of 2026-05-27.
+- `.claude/rules/runtime-capabilities.md` — current matrix: `memory` is `native` for Claude Code and `native-opt-in` for Codex CLI after this spec; `lifecycle hooks` is `native` for both as of 2026-05-27.
 - `.claude/rules/memory-placement.md` — canonical three-bucket model, frontmatter schema, event journal, index projection, cap/query/decay; gains `## Multi-runtime usage` section per this spec.
 - `.claude/rules/session-handoff.md` and `docs/specs/092-multi-runtime-handoff/` — precedent for one runtime-neutral artifact under `.agent0/` with Claude hooks and Codex convention as asymmetric mechanisms; precedent for the namespace move.
 - `docs/specs/019-project-memory/` — introduced the project-memory bucket and lazy-read index.
@@ -131,7 +131,7 @@ All resolved during cross-model debate; see `debate.md § Synthesis (revised aft
 - `.claude/tools/memory-project.sh` — deterministic index projection and cap advisory; moves to `.agent0/tools/memory-project.sh`.
 - `.claude/tools/memory-query.sh` / `.claude/tools/memory-query-helper.py` — runtime-agnostic query, confirm, and decay command surface; move to `.agent0/tools/`.
 - `.claude/hooks/memory-events-journal.sh`, `.claude/hooks/memory-index-gate.sh`, `.claude/hooks/memory-frontmatter-validate.sh`, `.claude/hooks/memory-decay-readout.sh` — Claude Code-native memory hooks moving to `.agent0/hooks/memory-*.sh` and gaining runtime-detection branching per this spec.
-- `.claude/memory/codex-cli-hooks.md` — canonical Codex hook surface (events, payload shape, tool-name asymmetry, config layout); foundation for the port direction.
+- `.agent0/memory/codex-cli-hooks.md` — canonical Codex hook surface (events, payload shape, tool-name asymmetry, config layout); foundation for the port direction.
 - <https://developers.openai.com/codex/hooks> — official Codex CLI hooks docs (verified 2026-05-27).
 - `.codex/config.toml.example` — opt-in template shipped by spec 098; extended in this spec with a `[hooks]` block.
 - `.agent0/hooks/` — new directory housing the four memory-specific shared hook implementations (scripts ship as content; `.gitkeep` ensures presence on fresh clones).

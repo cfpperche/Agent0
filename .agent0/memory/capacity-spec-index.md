@@ -12,9 +12,9 @@ metadata:
 
 The design-memory linkage between each Agent0 capacity and the spec(s) that designed it.
 
-**Why this file exists.** CLAUDE.md capacity sections and `.claude/rules/*.md` propagate to forks via sync-harness; `docs/specs/` never does. A `Spec NNN:` citation or a `docs/specs/NNN-*/` pointer inside a propagated file is therefore a dangling reference in every fork. Spec 070 (propagation-hygiene) stripped those pointers from the fork-bound files and relocated the linkage here — `.claude/memory/` is git-tracked but not in the sync-harness manifest, so this index stays Agent0-internal. An Agent0 maintainer who needs the rationale behind a capacity looks it up here, then reads `docs/specs/NNN-<slug>/`.
+**Why this file exists.** CLAUDE.md capacity sections and `.claude/rules/*.md` propagate to forks via sync-harness; `docs/specs/` never does. A `Spec NNN:` citation or a `docs/specs/NNN-*/` pointer inside a propagated file is therefore a dangling reference in every fork. Spec 070 (propagation-hygiene) stripped those pointers from the fork-bound files and relocated the linkage here — `.agent0/memory/` is git-tracked but not in the sync-harness manifest, so this index stays Agent0-internal. An Agent0 maintainer who needs the rationale behind a capacity looks it up here, then reads `docs/specs/NNN-<slug>/`.
 
-This index is Agent0-internal. Do not cite it from CLAUDE.md or `.claude/rules/*.md` — that would recreate the dangling-pointer flaw (the index does not propagate either). See `.claude/memory/propagation-hygiene.md` for the discipline.
+This index is Agent0-internal. Do not cite it from CLAUDE.md or `.claude/rules/*.md` — that would recreate the dangling-pointer flaw (the index does not propagate either). See `.agent0/memory/propagation-hygiene.md` for the discipline.
 
 ## Governance & delegation
 
@@ -47,12 +47,12 @@ This index is Agent0-internal. Do not cite it from CLAUDE.md or `.claude/rules/*
 | Capacity / rule | Origin spec | Extending specs |
 |---|---|---|
 | Harness sync (`harness-sync.md`) | `016-harness-sync` | `058-claude-md-managed-block`, `068-harness-sync-baseline-reconciliation` |
-| Propagation hygiene (`.claude/memory/propagation-hygiene.md`) | `070-propagation-hygiene` | — |
+| Propagation hygiene (`.agent0/memory/propagation-hygiene.md`) | `070-propagation-hygiene` | — |
 | Session state isolation | `017-session-state-isolation` | — |
 | Session handoff / stop (`session-handoff.md`) | `023-session-stop-noop-aware` | `030-session-edit-attribution`, `061-subagent-stop-hook` |
 | Project memory (`memory-placement.md`) | `019-project-memory` | — |
-| Compaction continuity (`.claude/memory/compaction-continuity.md`) | no dedicated spec dir | — |
-| Rule load debug (`.claude/memory/rule-load-debug.md`) | no dedicated spec dir | — |
+| Compaction continuity (`.agent0/memory/compaction-continuity.md`) | no dedicated spec dir | — |
+| Rule load debug (`.agent0/memory/rule-load-debug.md`) | no dedicated spec dir | — |
 
 ## MCP & browser
 

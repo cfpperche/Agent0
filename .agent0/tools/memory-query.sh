@@ -13,8 +13,8 @@
 
 set -uo pipefail
 
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
-HELPER="$PROJECT_DIR/.claude/tools/memory-query-helper.py"
+PROJECT_DIR="${AGENT0_PROJECT_DIR:-${CLAUDE_PROJECT_DIR:-$PWD}}"
+HELPER="$PROJECT_DIR/.agent0/tools/memory-query-helper.py"
 
 if ! command -v python3 >/dev/null 2>&1; then
   printf 'memory-query-advisory: python3 missing\n' >&2
@@ -46,7 +46,7 @@ fi
 CMD="$1"; shift
 case "$CMD" in
   search|list|confirm|decay)
-    CLAUDE_PROJECT_DIR="$PROJECT_DIR" exec python3 "$HELPER" "$CMD" "$@"
+    AGENT0_PROJECT_DIR="$PROJECT_DIR" CLAUDE_PROJECT_DIR="$PROJECT_DIR" exec python3 "$HELPER" "$CMD" "$@"
     ;;
   -h|--help|help)
     usage; exit 0

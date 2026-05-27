@@ -2,7 +2,7 @@
 # Scenario: agent discovers project memory via CLAUDE.md.
 # Asserts:
 #   (a) Agent0 CLAUDE.md contains a `^## Memory$` line
-#   (b) that section mentions `.claude/memory/MEMORY.md` as entry point
+#   (b) that section mentions `.agent0/memory/MEMORY.md` as entry point
 
 set -euo pipefail
 
@@ -20,8 +20,8 @@ if [ "$count" != "1" ]; then
   exit 1
 fi
 
-if ! grep -q '\.claude/memory/MEMORY\.md' "$CLAUDE_MD"; then
-  printf 'FAIL: CLAUDE.md missing reference to .claude/memory/MEMORY.md\n'
+if ! grep -q '\.agent0/memory/MEMORY\.md' "$CLAUDE_MD"; then
+  printf 'FAIL: CLAUDE.md missing reference to .agent0/memory/MEMORY.md\n'
   exit 1
 fi
 

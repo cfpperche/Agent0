@@ -31,7 +31,7 @@ When the Claude Code context window fills up (auto-compact) or the user runs `/c
 - `.claude/hooks/pre-compact.sh` — captures snapshot
 - `.claude/hooks/session-start.sh` — injects `.agent0/HANDOFF.md` on all sources, and additionally injects the latest snapshot when `source=compact`
 - `.claude/.compact-history/<ISO>-<pid>-<rand>.md` — the snapshot itself, one file per `/compact` event (gitignored, ephemeral, per-machine). Filename prefix `YYYY-MM-DDTHH-MM-SSZ` gives lex-order == chrono-order at second resolution; the `-$$-<rand5>` suffix is a portable tie-breaker for the rare two-compactions-in-one-second case (avoids GNU-only `date +%N`)
-- `.claude/settings.json` § `compactHistory.keepLast` — retention cap (integer, default 20 when absent). Consumer project-only override; the merge model in `sync-harness.sh` only reconciles `$schema` / `statusLine` / `hooks` at the top level, so this key stays per-consumer
+- `.claude/settings.json` § `compactHistory.keepLast` — retention cap (integer, default 20 when absent). Consumer project-only override; the merge model in `sync-harness.sh` only reconciles `$schema` / `hooks` at the top level, so this key stays per-consumer
 - `CLAUDE.md` § *Compact Instructions* — steers the summarizer
 
 ## Gotchas

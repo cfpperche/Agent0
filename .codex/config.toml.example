@@ -11,6 +11,39 @@
 #      Or export the required env vars before running codex directly.
 #
 # Full recipe docs: .claude/rules/mcp-recipes.md
+#
+# Optional project-memory hooks:
+#   Uncomment the [features] + [[hooks.*]] block below after copying this file
+#   to .codex/config.toml and trusting repo-local hooks. The commands resolve
+#   from the git root because Codex may start in a subdirectory.
+
+# [features]
+# hooks = true
+
+# [[hooks.SessionStart]]
+# matcher = "startup|resume|clear|compact"
+# [[hooks.SessionStart.hooks]]
+# type = "command"
+# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/memory-decay-readout.sh"'
+# statusMessage = "Reading project-memory decay"
+
+# [[hooks.PreToolUse]]
+# matcher = "^apply_patch$"
+# [[hooks.PreToolUse.hooks]]
+# type = "command"
+# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/memory-index-gate.sh"'
+# statusMessage = "Checking project-memory index"
+
+# [[hooks.PostToolUse]]
+# matcher = "^apply_patch$"
+# [[hooks.PostToolUse.hooks]]
+# type = "command"
+# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/memory-frontmatter-validate.sh"'
+# statusMessage = "Validating project-memory frontmatter"
+# [[hooks.PostToolUse.hooks]]
+# type = "command"
+# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/memory-events-journal.sh"'
+# statusMessage = "Projecting project-memory index"
 
 [mcp_servers.playwright]
 enabled = false

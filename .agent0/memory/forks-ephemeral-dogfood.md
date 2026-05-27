@@ -32,4 +32,4 @@ When Agent0 capacity docs (CLAUDE.md, `.claude/rules/*.md`, sync-harness, MCP RE
 
 The user has flagged this 3+ times in different decision contexts (sync-harness back-compat, MCP version bump in 032). When future specs propose deprecation infrastructure or compat shims "for forks", check this memory first — the cost is real, the benefit is hypothetical.
 
-See also: [[feedback_agent0_changes_ship_via_rules_not_memory]] (user-memory) — the inverse rule, about what DOES ship: `.claude/rules/` propagates, `.claude/memory/` stays project-local.
+See also: [[feedback_agent0_changes_ship_via_rules_not_memory]] (user-memory) — the inverse rule, about what DOES ship: `.claude/rules/` propagates, `.agent0/memory/` stays project-local.

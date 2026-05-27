@@ -20,7 +20,7 @@
 # in-flight runtime-mark files land in tmp, never in the real project tree.
 # Tmpdir is cleaned at exit.
 #
-# Why this exists: see .claude/memory/hook-chain-latency.md.
+# Why this exists: see .agent0/memory/hook-chain-latency.md.
 
 set -uo pipefail
 

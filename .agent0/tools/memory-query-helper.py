@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""memory-query-helper.py — search / list / confirm / decay / backfill for .claude/memory/.
+"""memory-query-helper.py — search / list / confirm / decay / backfill for .agent0/memory/.
 
 Reads/writes entry frontmatter (per the memory frontmatter schema) and
-projects via .claude/memory.config.json. Mirrors the reminders-helper.py
+projects via .agent0/memory.config.json. Mirrors the reminders-helper.py
 pattern: bash dispatcher delegates to this Python helper for
 YAML mutation + filtering.
 
@@ -13,7 +13,7 @@ Subcommands:
   confirm <name1> [<name2> ...]
   decay [--readout]          staleness readout (framed when --readout)
 
-Defaults (overridable in .claude/memory.config.json):
+Defaults (overridable in .agent0/memory.config.json):
   cap.max_line_chars: 250
   decay.threshold_days: 60
   decay.confirm_boost_days: 14
@@ -43,15 +43,15 @@ except ImportError:
 
 
 def project_root() -> Path:
-    return Path(os.environ.get("CLAUDE_PROJECT_DIR", os.getcwd()))
+    return Path(os.environ.get("AGENT0_PROJECT_DIR") or os.environ.get("CLAUDE_PROJECT_DIR", os.getcwd()))
 
 
 def memory_dir() -> Path:
-    return project_root() / ".claude" / "memory"
+    return project_root() / ".agent0" / "memory"
 
 
 def config_path() -> Path:
-    return project_root() / ".claude" / "memory.config.json"
+    return project_root() / ".agent0" / "memory.config.json"
 
 
 DEFAULTS = {
@@ -106,7 +106,7 @@ def dump_frontmatter(fm: dict, body: str) -> str:
 
 
 def iter_entries():
-    """Yield (path, frontmatter, body) for each .claude/memory/*.md except MEMORY.md."""
+    """Yield (path, frontmatter, body) for each .agent0/memory/*.md except MEMORY.md."""
     md = memory_dir()
     if not md.is_dir():
         return
@@ -323,7 +323,7 @@ def cmd_decay(args: argparse.Namespace) -> None:
             for e in stale:
                 print(f"- {e['slug']} — stale {e['score']}d, confirmed {e['confirmed']}x")
             print(
-                f"run bash .claude/tools/memory-query.sh list --stale={threshold}d to inspect"
+                f"run bash .agent0/tools/memory-query.sh list --stale={threshold}d to inspect"
             )
         print("=== end MEMORY DECAY ===")
     else:

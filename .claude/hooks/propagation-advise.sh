@@ -3,13 +3,13 @@
 # PostToolUse(Edit|Write|MultiEdit) hook — emits `propagation-advisory:`
 # lines when an edit to a shipped file introduces an upstream-internal
 # pointer (spec-NNN refs, docs/specs/NNN paths, anthill mentions, personal
-# /home/<user>/ paths, .claude/memory/<file>.md pointers).
+# /home/<user>/ paths, .agent0/memory/<file>.md pointers).
 #
 # Mirrors the tdd-advisory: / lint-advisory: / secrets-advisory: family —
 # always exits 0, never blocks. Fires for both parent AND sub-agent edits
 # (the maintainer writing new rules is the most common author).
 #
-# Discipline: .claude/memory/propagation-hygiene.md
+# Discipline: .agent0/memory/propagation-hygiene.md
 # Rule:       .claude/rules/propagation-advisory.md
 #
 # Opt-out:    CLAUDE_SKIP_PROPAGATION_ADVISE=1
@@ -42,6 +42,7 @@ in_shipped=0
 case "$REL" in
   CLAUDE.md|.mcp.json.example|.gitleaks.toml|.gitignore) in_shipped=1 ;;
   .claude/hooks/*|.claude/rules/*|.claude/tools/*|.claude/validators/*|.claude/agents/*) in_shipped=1 ;;
+  .agent0/hooks/*|.agent0/tools/*) in_shipped=1 ;;
   .claude/skills/*|.claude/tests/*|.githooks/*) in_shipped=1 ;;
 esac
 [ "$in_shipped" = "0" ] && exit 0
@@ -154,7 +155,7 @@ scan_pattern "personal-path" '/home/[a-z][a-z0-9_-]+/' ''
 
 # 5. Memory-file path pointers. Excludes the MEMORY.md index and the
 #    placeholder forms a rule may legitimately reference.
-scan_pattern "memory-pointer" '\.claude/memory/[a-z][a-z0-9_-]+\.md' \
+scan_pattern "memory-pointer" '\.agent0/memory/[a-z][a-z0-9_-]+\.md' \
   'MEMORY\.md|<topic>|<slug>|<file>|<name>|\.gitkeep'
 
 exit 0

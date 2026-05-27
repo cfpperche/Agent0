@@ -162,6 +162,80 @@ if [ "$staged_files_count" -eq 0 ]; then
 fi
 
 # ---------------------------------------------------------------------------
+# Memory projection backstop
+# ---------------------------------------------------------------------------
+# Non-mutating check: if staged project-memory files changed, project the
+# staged .agent0/memory/*.md corpus into a temp MEMORY.md and compare it with
+# the staged .agent0/memory/MEMORY.md. Never rewrites or stages files.
+run_memory_projection_check() {
+  local changed
+  changed="$(git diff --cached --name-only -- .agent0/memory 2>/dev/null | grep -E '^\.agent0/memory/.*\.md$' || true)"
+  [ -n "$changed" ] || return 0
+
+  local projector="$PROJECT_DIR/.agent0/tools/memory-project.sh"
+  local helper="$PROJECT_DIR/.agent0/tools/memory-query-helper.py"
+  if [ ! -x "$projector" ]; then
+    printf 'memory-pre-commit: projector missing or not executable: %s\n' "$projector" >&2
+    return 1
+  fi
+
+  local tmpdir projected staged_index files
+  tmpdir="$(mktemp -d -t memory-precommit-XXXXXX 2>/dev/null || mktemp -d)"
+  projected="$tmpdir/projected-MEMORY.md"
+  staged_index="$tmpdir/staged-MEMORY.md"
+  mkdir -p "$tmpdir/.agent0/memory" "$tmpdir/.agent0/tools" 2>/dev/null || true
+
+  files="$(git ls-files --cached -- .agent0/memory 2>/dev/null || true)"
+  printf '%s\n' "$files" | while IFS= read -r rel; do
+    case "$rel" in
+      .agent0/memory/*.md) ;;
+      *) continue ;;
+    esac
+    mkdir -p "$tmpdir/$(dirname "$rel")" 2>/dev/null || true
+    git show ":$rel" > "$tmpdir/$rel" 2>/dev/null || true
+  done
+
+  if [ -f "$helper" ]; then
+    cp "$helper" "$tmpdir/.agent0/tools/memory-query-helper.py" 2>/dev/null || true
+    chmod +x "$tmpdir/.agent0/tools/memory-query-helper.py" 2>/dev/null || true
+  fi
+  if git cat-file -e ":.agent0/memory.config.json" 2>/dev/null; then
+    git show ":.agent0/memory.config.json" > "$tmpdir/.agent0/memory.config.json" 2>/dev/null || true
+  elif [ -f "$PROJECT_DIR/.agent0/memory.config.json" ]; then
+    cp "$PROJECT_DIR/.agent0/memory.config.json" "$tmpdir/.agent0/memory.config.json" 2>/dev/null || true
+  fi
+
+  if ! AGENT0_PROJECT_DIR="$tmpdir" CLAUDE_PROJECT_DIR="$tmpdir" bash "$projector" --out "$projected" >/dev/null 2>&1; then
+    rm -rf "$tmpdir" 2>/dev/null || true
+    printf 'memory-pre-commit: projection failed; run `bash .agent0/tools/memory-maintain.sh finalize` and re-stage\n' >&2
+    return 1
+  fi
+
+  git show ":.agent0/memory/MEMORY.md" > "$staged_index" 2>/dev/null || true
+  if ! cmp -s "$projected" "$staged_index"; then
+    rm -rf "$tmpdir" 2>/dev/null || true
+    cat >&2 <<'EOF'
+pre-commit-blocked: MEMORY.md drift detected.
+
+Run:
+  bash .agent0/tools/memory-maintain.sh finalize
+  git add .agent0/memory/MEMORY.md
+
+Then retry the commit. The pre-commit hook is non-mutating and never
+rewrites or stages MEMORY.md for you.
+EOF
+    return 1
+  fi
+
+  rm -rf "$tmpdir" 2>/dev/null || true
+  return 0
+}
+
+if ! run_memory_projection_check; then
+  exit 1
+fi
+
+# ---------------------------------------------------------------------------
 # Phase 3: Gitleaks availability check
 # ---------------------------------------------------------------------------
 if ! command -v gitleaks >/dev/null 2>&1; then

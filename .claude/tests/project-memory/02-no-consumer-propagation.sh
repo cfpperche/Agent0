@@ -4,8 +4,8 @@
 # INVARIANT GUARD: protects sync-harness manifest from accidental inclusion
 # of memory content files.
 # Asserts:
-#   (a) Upstream mock with .claude/memory/{.gitkeep, MEMORY.md, foo.md} populated
-#   (b) After sync: consumer project has .claude/memory/.gitkeep (scaffold shipped)
+#   (a) Upstream mock with .agent0/memory/{.gitkeep, MEMORY.md, foo.md} populated
+#   (b) After sync: consumer project has .agent0/memory/.gitkeep (scaffold shipped)
 #   (c) After sync: consumer project has NO MEMORY.md and NO foo.md (content stays upstream)
 
 set -euo pipefail
@@ -18,7 +18,7 @@ trap 'rm -rf "$TMPDIR"' EXIT
 
 SRC="$TMPDIR/agent0"
 CONSUMER="$TMPDIR/consumer"
-mkdir -p "$SRC/.claude/memory" "$SRC/.claude/hooks" "$CONSUMER/.claude"
+mkdir -p "$SRC/.agent0/memory" "$SRC/.claude/hooks" "$CONSUMER/.claude"
 
 # Mock upstream source — minimal but with memory content populated
 printf '#!/usr/bin/env bash\necho test\n' > "$SRC/.claude/hooks/test-hook.sh"
@@ -27,8 +27,8 @@ printf '{"hooks":{}}\n' > "$SRC/.claude/settings.json"
 printf '# CLAUDE\n\n## Compact Instructions\n' > "$SRC/CLAUDE.md"
 
 # Scaffold marker + upstream-internal content
-touch "$SRC/.claude/memory/.gitkeep"
-cat > "$SRC/.claude/memory/foo.md" <<'EOF'
+touch "$SRC/.agent0/memory/.gitkeep"
+cat > "$SRC/.agent0/memory/foo.md" <<'EOF'
 ---
 name: foo
 description: Upstream-only memory content that should NEVER ship to consumer projects
@@ -37,7 +37,7 @@ metadata:
 ---
 foo body
 EOF
-cat > "$SRC/.claude/memory/MEMORY.md" <<'EOF'
+cat > "$SRC/.agent0/memory/MEMORY.md" <<'EOF'
 - [Foo](foo.md) — Upstream-internal entry that should NOT appear in consumer project
 EOF
 
@@ -48,18 +48,18 @@ printf '# Consumer project CLAUDE\n\n## Compact Instructions\n' > "$CONSUMER/CLA
 bash "$TOOL" --apply --agent0-path="$SRC" "$CONSUMER" >/dev/null 2>&1 || true
 
 # Assert: empty scaffold shipped (consumer project has its own bucket to use)
-if [ ! -f "$CONSUMER/.claude/memory/.gitkeep" ]; then
+if [ ! -f "$CONSUMER/.agent0/memory/.gitkeep" ]; then
   printf 'FAIL: .gitkeep scaffold did not ship to consumer project\n'
-  ls -la "$CONSUMER/.claude/memory/" 2>&1
+  ls -la "$CONSUMER/.agent0/memory/" 2>&1
   exit 1
 fi
 
 # Assert: content files did NOT ship
-if [ -f "$CONSUMER/.claude/memory/foo.md" ]; then
+if [ -f "$CONSUMER/.agent0/memory/foo.md" ]; then
   printf 'FAIL: upstream content file foo.md leaked to consumer project\n'
   exit 1
 fi
-if [ -f "$CONSUMER/.claude/memory/MEMORY.md" ]; then
+if [ -f "$CONSUMER/.agent0/memory/MEMORY.md" ]; then
   printf 'FAIL: upstream MEMORY.md leaked to consumer project (each consumer project must have its own)\n'
   exit 1
 fi

@@ -81,7 +81,7 @@ The helper validates required fields and enums at write-time. Schema does NOT li
 
 ## Files
 
-- `.claude/reminders.yaml` — the state file. Git-tracked. Created by the helper on first `add` (not pre-seeded; sync-harness ships the *capacity*, not the *content* — same posture as `.claude/memory/`).
+- `.claude/reminders.yaml` — the state file. Git-tracked. Created by the helper on first `add` (not pre-seeded; sync-harness ships the *capacity*, not the *content* — same posture as `.agent0/memory/`).
 - `.claude/skills/remind/SKILL.md` — slash-command definition (subcommands + delegation to helper).
 - `.claude/skills/remind/scripts/reminders-helper.py` — canonical YAML mutator. Python + PyYAML; ~250 LOC. CRUD + filtering + date math + ID generation.
 - `.claude/hooks/reminders-readout.sh` — SessionStart readout hook. Python-first / yq-fallback / raw-YAML-last tier.

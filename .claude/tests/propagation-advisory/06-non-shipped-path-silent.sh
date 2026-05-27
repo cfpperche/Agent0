@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Scenario: an edit to a non-shipped path (docs/specs/, .claude/memory/)
+# Scenario: an edit to a non-shipped path (docs/specs/, .agent0/memory/)
 # is silent even with leak patterns — those paths don't propagate.
 
 set -euo pipefail
@@ -17,9 +17,9 @@ payload1="$(jq -n \
   --arg new "Refs spec 080, anthill, and /home/goat/Agent0 freely." \
   '{tool_name: "Edit", tool_input: {file_path: $fp, new_string: $new}}')"
 
-# Edit to .claude/memory/ (project-local memory, doesn't propagate)
+# Edit to .agent0/memory/ (project-local memory, doesn't propagate)
 payload2="$(jq -n \
-  --arg fp "$TMPDIR_T/.claude/memory/foo.md" \
+  --arg fp "$TMPDIR_T/.agent0/memory/foo.md" \
   --arg new "Refs spec 080 and anthill." \
   '{tool_name: "Edit", tool_input: {file_path: $fp, new_string: $new}}')"
 

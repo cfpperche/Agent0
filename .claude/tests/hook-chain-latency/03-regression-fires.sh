@@ -8,7 +8,7 @@
 #   3. Expect exit non-zero with a regression message naming the offending cell.
 #
 # Verifies the regression alarm contract documented in
-# .claude/memory/hook-chain-latency.md § Regression check.
+# .agent0/memory/hook-chain-latency.md § Regression check.
 
 set -euo pipefail
 

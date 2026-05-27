@@ -1,0 +1,43 @@
+# Agent0 - Codex MCP recipes
+#
+# MCP-only template. This is NOT a complete Codex project config and Agent0
+# does not own model, provider, sandbox, approval, or tool-permission defaults.
+#
+# Workflow:
+#   1. cp .codex/config.toml.example .codex/config.toml
+#   2. Export required environment variables in your shell or local env.
+#   3. Flip enabled = true only for the MCP recipes you want active.
+#   4. Restart Codex in a trusted project so project-scoped config is loaded.
+#
+# Full recipe docs: .claude/rules/mcp-recipes.md
+
+[mcp_servers.playwright]
+enabled = false
+command = "npx"
+args = ["-y", "@playwright/mcp@latest"]
+
+[mcp_servers.chrome-devtools]
+enabled = false
+command = "npx"
+args = ["-y", "chrome-devtools-mcp@latest"]
+
+[mcp_servers.dbhub]
+enabled = false
+command = "npx"
+args = ["-y", "@bytebase/dbhub@latest"]
+env_vars = ["DATABASE_URL"]
+
+[mcp_servers.laravel-boost]
+enabled = false
+command = "php"
+args = ["artisan", "boost:mcp"]
+
+[mcp_servers.next-devtools]
+enabled = false
+command = "npx"
+args = ["-y", "next-devtools-mcp@latest"]
+
+[mcp_servers.fal-ai]
+enabled = false
+url = "https://mcp.fal.ai/mcp"
+bearer_token_env_var = "FAL_KEY"

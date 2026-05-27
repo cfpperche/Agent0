@@ -5,7 +5,7 @@ paths:
 
 # Harness sync
 
-A one-way sync tool (`.claude/tools/sync-harness.sh <consumer-path>`) that brings a consumer project's harness state up to date with this Agent0 repo. Hooks, rules, tools, validators, skills, tests, `AGENTS.md`, `.mcp.json.example` plus structured merges of `.claude/settings.json` and `CLAUDE.md`. Conservative by design: `--check` is the default (read-only); the plain-file path AND the CLAUDE.md managed block do 3-way reconciliation against a recorded baseline so *stale* content (consumer untouched, Agent0 moved) auto-updates while genuinely *customized* content (consumer edited) is refused without `--force`; product code (`src/`, the consumer project's `tests/`, package manifests, `.mcp.json`) is never touched.
+A one-way sync tool (`.claude/tools/sync-harness.sh <consumer-path>`) that brings a consumer project's harness state up to date with this Agent0 repo. Hooks, rules, tools, validators, skills, tests, `AGENTS.md`, `.mcp.json.example`, `.codex/config.toml.example` plus structured merges of `.claude/settings.json` and `CLAUDE.md`. Conservative by design: `--check` is the default (read-only); the plain-file path AND the CLAUDE.md managed block do 3-way reconciliation against a recorded baseline so *stale* content (consumer untouched, Agent0 moved) auto-updates while genuinely *customized* content (consumer edited) is refused without `--force`; product code (`src/`, the consumer project's `tests/`, package manifests, `.mcp.json`, `.codex/config.toml`) is never touched.
 
 ## Glossary
 
@@ -55,7 +55,7 @@ If neither `--agent0-path` nor `AGENT0_HARNESS_PATH` is given, the tool refuses 
 
 ## Customization detection — 3-way reconciliation
 
-For plain files (the `COPY_CHECK_*` manifest — hooks, rules, tools, validators, skills, tests, agents, `.mcp.json.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.gitkeep` sentinels), the sync reconciles **three** reference points: the consumer project's copy, the recorded **baseline** (Agent0's version of the file as of the consumer project's last `--apply` — see § Sync baseline), and Agent0's current version. Three points let the tool tell a file the consumer project *deliberately edited* apart from one it simply *hasn't caught up on* — the gap the original 2-state `sha256` compare could not close.
+For plain files (the `COPY_CHECK_*` manifest — hooks, rules, tools, validators, skills, tests, agents, `.mcp.json.example`, `.codex/config.toml.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.gitkeep` sentinels), the sync reconciles **three** reference points: the consumer project's copy, the recorded **baseline** (Agent0's version of the file as of the consumer project's last `--apply` — see § Sync baseline), and Agent0's current version. Three points let the tool tell a file the consumer project *deliberately edited* apart from one it simply *hasn't caught up on* — the gap the original 2-state `sha256` compare could not close.
 
 For each plain file:
 
@@ -218,10 +218,10 @@ Encoded in three arrays at the top of `sync-harness.sh`:
 
 - **`COPY_CHECK_RECURSIVE`** — `find -type f` under each base: `.claude/skills/`, `.claude/tests/`, `.claude/agents/`. Recursive walks; subdirs preserved.
 - **`COPY_CHECK_GLOBS`** — `dir|pattern` pairs, single-level: `.claude/hooks/*.sh`, `.claude/rules/*.md`, `.claude/tools/*.sh`, `.claude/validators/*.sh`.
-- **`COPY_CHECK_FILES`** — literal paths: `AGENTS.md`, `.mcp.json.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.claude/tools/lib/managed-block.sh`, `.claude/memory/.gitkeep`, `.claude/.browser-state/.gitkeep`.
+- **`COPY_CHECK_FILES`** — literal paths: `AGENTS.md`, `.mcp.json.example`, `.codex/config.toml.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.claude/tools/lib/managed-block.sh`, `.claude/memory/.gitkeep`, `.claude/.browser-state/.gitkeep`.
 - **Structured merge** (not in COPY_CHECK): `.claude/settings.json`, `CLAUDE.md`, `.gitignore`.
 
-The walk only reads from Agent0 manifest paths. Out-of-scope consumer project content (`src/`, consumer project's `tests/` outside `.claude/tests/`, `docs/`, `package.json`, `Cargo.toml`, `pyproject.toml`, `.mcp.json`, `.env*`, `target/`, `node_modules/`, `.venv/`, `dist/`, `build/`) is **implicitly invisible** — no denylist guard fires because nothing in the manifest points at those paths. This means adding a new path to the manifest is the only way to extend scope; the safety floor is the manifest itself.
+The walk only reads from Agent0 manifest paths. Out-of-scope consumer project content (`src/`, consumer project's `tests/` outside `.claude/tests/`, `docs/`, `package.json`, `Cargo.toml`, `pyproject.toml`, `.mcp.json`, `.codex/config.toml`, `.env*`, `target/`, `node_modules/`, `.venv/`, `dist/`, `build/`) is **implicitly invisible** — no denylist guard fires because nothing in the manifest points at those paths. This means adding a new path to the manifest is the only way to extend scope; the safety floor is the manifest itself.
 
 **Deletion propagation.** The walk also accumulates Agent0's *current* manifest into a sha-set; the deletion pass compares that set against the recorded baseline's file list. A path present in the baseline but absent from the current set is an upstream removal, propagated per § Customization detection § *Upstream deletions*. Out-of-scope consumer project content stays invisible to this pass too — it only ever considers paths that were *previously* in the manifest (and therefore recorded in the baseline), never arbitrary consumer project files. A consumer project with no baseline skips the deletion pass entirely.
 
@@ -251,6 +251,8 @@ The sync baseline file subsumes the need for a separate audit log — it is both
 ## Gotchas
 
 - **`AGENTS.md` is plain baseline-tracked, not marker-merged.** This asymmetry is intentional. `CLAUDE.md` needs a marker-aware merge because Claude Code has no native override-file chain; Codex does have one (`AGENTS.override.md`, nested `AGENTS.md`), so root `AGENTS.md` remains Agent0-owned and consumer-local Codex guidance belongs in those Codex-native override surfaces. Do not promote `AGENTS.md` to structured merge without a follow-up spec and rule-of-three demand evidence.
+- **`.codex/config.toml.example` ships; `.codex/config.toml` does not.** Agent0 owns the MCP-only template and syncs it as a plain baseline-tracked file. The real Codex project config is operator-local, can contain model/provider/sandbox/approval settings and MCP credentials, and is never in the sync manifest. `.gitignore` ignores `.codex/config.toml`, but that does not untrack or scrub a config file a consumer project already committed.
+- **Codex MCP duplicate IDs.** A consumer project can define an MCP server ID in user-global `$CODEX_HOME/config.toml` and again in project `.codex/config.toml`. Sync does not inspect either real config. Prefer one active scope per server ID, or document the intentional override locally.
 - **`## Compact Instructions` anchor missing.** The CLAUDE.md merge looks for this line as the insertion point. A consumer project that has removed or renamed it will trigger the EOF-fallback warning; capacity sections land at EOF, which may not be the right place. Fix: restore the anchor in consumer project's CLAUDE.md, or reorganize after sync.
 - **Whitespace-only customization false-positive.** A consumer project that ran `shfmt` / `prettier` over a hook script will have hash-mismatch despite semantic equivalence. The sync flags it as customized. Fix: revert the formatter, OR use `--force` consciously after reviewing the diff. The tool does NOT normalize whitespace (would mask real customizations).
 - **`settings.json` array growth on hook renames.** When Agent0 renames a hook, both old and new entries land in the consumer project's settings.json (different dedup keys). The consumer project developer must prune manually post-sync. The `git diff` makes this visible; auto-prune deferred to v2.

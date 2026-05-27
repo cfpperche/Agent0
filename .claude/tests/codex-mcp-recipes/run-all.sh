@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
-# .claude/tests/harness-sync/run-all.sh
-# Orchestrator for spec-016 scenarios. Runs every NN-*.sh in lex order and
-# prints a summary table. Exits 0 if all pass, 1 if any fail.
-#
-# Usage:
-#   bash run-all.sh        # quiet — only summary table
-#   bash run-all.sh -v     # verbose — pass through each script's output
+# .claude/tests/codex-mcp-recipes/run-all.sh
+# Runs Codex MCP template validation scenarios in lex order.
 
 set -euo pipefail
 
@@ -20,12 +15,9 @@ if [ "${1:-}" = "-v" ]; then
 fi
 
 scripts=""
-for n in 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 \
-         24 25 26 27 28 29 30 31 32 33 34 35; do
-  match="$(ls "$SCRIPT_DIR/${n}"-*.sh 2>/dev/null | head -1 || true)"
-  if [ -n "$match" ]; then
-    scripts="$scripts $match"
-  fi
+for script in "$SCRIPT_DIR"/[0-9][0-9]-*.sh; do
+  [ -e "$script" ] || continue
+  scripts="$scripts $script"
 done
 
 if [ -z "$scripts" ]; then
@@ -35,7 +27,7 @@ fi
 
 results=""
 any_fail=0
-tmpout="$(mktemp -t run-all-out-XXXXXX)"
+tmpout="$(mktemp -t codex-mcp-recipes-run-all-XXXXXX)"
 trap 'rm -f "$tmpout"' EXIT
 
 for script in $scripts; do
@@ -61,9 +53,9 @@ for script in $scripts; do
   fi
 done
 
-printf '\n=== harness-sync scenario results ===\n'
+printf '\n=== codex-mcp-recipes scenario results ===\n'
 printf '%s\n' "$results"
-printf '=====================================\n'
+printf '==========================================\n'
 
 if [ "$any_fail" -eq 0 ]; then
   printf 'All scenarios PASS.\n'

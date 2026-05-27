@@ -2,7 +2,7 @@
 
 _Created 2026-05-27._
 
-**Status:** draft
+**Status:** shipped
 
 ## Intent
 
@@ -10,51 +10,51 @@ Port Agent0's MCP recipe capacity from Claude-only activation guidance to a prov
 
 ## Acceptance criteria
 
-- [ ] **Scenario: Codex user can activate the same MCP recipe set natively**
+- [x] **Scenario: Codex user can activate the same MCP recipe set natively**
   - **Given** a consumer project has received the Agent0 harness update and trusts the project in Codex
   - **When** the user reads the MCP recipe docs and the Codex template
   - **Then** they can enable Playwright, Chrome DevTools, DBHub, Laravel Boost, Next.js DevTools, and fal.ai through Codex-native MCP configuration without translating from Claude `.mcp.json` by hand, using both per-recipe TOML snippets and `codex mcp add` commands where Codex supports them
 
-- [ ] **Scenario: consumer sync propagates the Codex MCP template safely**
+- [x] **Scenario: consumer sync propagates the Codex MCP template safely**
   - **Given** a consumer project may already have a local or tracked `.codex/config.toml` with user/provider/MCP settings
   - **When** `bash .claude/tools/sync-harness.sh --apply --agent0-path=/home/goat/Agent0 <consumer-path>` runs after this spec lands
   - **Then** the Agent0-authored Codex MCP template is copied or updated, any real consumer `.codex/config.toml` remains untouched, and docs warn that `.gitignore` does not retroactively untrack a pre-existing committed config file or remove secrets from it
 
-- [ ] **Scenario: MCP recipes remain opt-in and secret-safe**
+- [x] **Scenario: MCP recipes remain opt-in and secret-safe**
   - **Given** the shipped template is checked into Agent0 and consumer projects
   - **When** an agent or human inspects it
   - **Then** every MCP server is disabled or inert by default, no literal credential is present, DBHub uses a verified Codex environment-variable forwarding pattern rather than a real `DATABASE_URL`, and fal.ai uses a verified Codex bearer-token environment-variable mechanism such as `bearer_token_env_var = "FAL_KEY"` rather than a static `Authorization` header
 
-- [ ] **Scenario: disabled Codex template blocks have no side effects**
+- [x] **Scenario: disabled Codex template blocks have no side effects**
   - **Given** `.codex/config.toml.example` uses parseable TOML blocks with `enabled = false`
   - **When** the template is validated under Codex before plan lock
   - **Then** it parses successfully and disabled servers do not spawn commands, fail startup, resolve packages, perform DNS/network calls, or emit per-server startup noise; if any side effect appears, the implementation switches to commented TOML blocks instead
 
-- [ ] **Scenario: docs make Claude and Codex activation paths symmetrical but honest**
+- [x] **Scenario: docs make Claude and Codex activation paths symmetrical but honest**
   - **Given** a maintainer reads `.claude/rules/mcp-recipes.md`
   - **When** they inspect any individual MCP recipe
   - **Then** that recipe documents Claude activation (`.mcp.json`), Codex TOML activation, Codex CLI activation where supported, whether `codex mcp add` writes user-global or project-scoped config, runtime requirements, and recipe-specific security notes
 
-- [ ] **Scenario: runtime capability registry reflects proven support**
+- [x] **Scenario: runtime capability registry reflects proven support**
   - **Given** Codex MCP parity has documentation, template, sync validation, and at least one real Codex CLI dogfood of an MCP recipe
   - **When** `.claude/rules/runtime-capabilities.md` is updated
   - **Then** the `MCP recipes` row marks Codex CLI as `native-opt-in`, keeps Claude Code as `native-opt-in`, and names both activation surfaces in the owner files / notes; Playwright is the recommended stdio dogfood, with a lightweight fal.ai HTTP/bearer-token config-shape validation before claiming the full six-recipe set
 
-- [ ] A Codex MCP template exists at a path that is safe to version and safe to sync to consumer projects; the current recommended path is `.codex/config.toml.example`.
+- [x] A Codex MCP template exists at a path that is safe to version and safe to sync to consumer projects; the current recommended path is `.codex/config.toml.example`.
 
-- [ ] `.codex/config.toml.example` is explicitly labeled in its header as an MCP-only fragment/template. It must not imply Agent0 owns the whole Codex project config surface.
+- [x] `.codex/config.toml.example` is explicitly labeled in its header as an MCP-only fragment/template. It must not imply Agent0 owns the whole Codex project config surface.
 
-- [ ] `.gitignore` ignores real operator-local Codex project config (`.codex/config.toml`) while allowing the example template to be tracked.
+- [x] `.gitignore` ignores real operator-local Codex project config (`.codex/config.toml`) while allowing the example template to be tracked.
 
-- [ ] `sync-harness.sh` includes `.codex/config.toml.example` in its propagation manifest as the only `.codex/*` path introduced by this spec; any further `.codex/*` propagation requires a follow-up spec.
+- [x] `sync-harness.sh` includes `.codex/config.toml.example` in its propagation manifest as the only `.codex/*` path introduced by this spec; any further `.codex/*` propagation requires a follow-up spec.
 
-- [ ] `harness-sync.md` documents that the Codex MCP template is shipped while real `.codex/config.toml` remains consumer-local, and documents the duplicate-ID gotcha when user-global and project-scoped Codex config define the same MCP server ID.
+- [x] `harness-sync.md` documents that the Codex MCP template is shipped while real `.codex/config.toml` remains consumer-local, and documents the duplicate-ID gotcha when user-global and project-scoped Codex config define the same MCP server ID.
 
-- [ ] A harness-sync regression test verifies `.codex/config.toml.example` is copied while `.codex/config.toml` is byte-preserved, mirroring the existing `.mcp.json.example` / `.mcp.json` safety contract.
+- [x] A harness-sync regression test verifies `.codex/config.toml.example` is copied while `.codex/config.toml` is byte-preserved, mirroring the existing `.mcp.json.example` / `.mcp.json` safety contract.
 
-- [ ] Focused template checks verify the six MCP IDs are present, all recipe blocks are disabled or inert by default, and secret-bearing recipes use environment-variable indirection.
+- [x] Focused template checks verify the six MCP IDs are present, all recipe blocks are disabled or inert by default, and secret-bearing recipes use environment-variable indirection.
 
-- [ ] `AGENTS.md` and `CLAUDE.md` continue to share the managed MCP section and point to the provider-neutral recipe docs without duplicating the full matrix; the managed block must point Codex users at `.claude/rules/mcp-recipes.md` and `.codex/config.toml.example` because Codex does not receive the Claude `SessionStart` MCP hint.
+- [x] `AGENTS.md` and `CLAUDE.md` continue to share the managed MCP section and point to the provider-neutral recipe docs without duplicating the full matrix; the managed block must point Codex users at `.claude/rules/mcp-recipes.md` and `.codex/config.toml.example` because Codex does not receive the Claude `SessionStart` MCP hint.
 
 ## Non-goals
 
@@ -75,16 +75,16 @@ Port Agent0's MCP recipe capacity from Claude-only activation guidance to a prov
 - [x] ~~Should docs prefer `codex mcp add ...` commands or direct TOML snippets?~~ → **Resolved:** document both. The template is the consumer-propagated artifact; `codex mcp add` is first-class operator UX where supported, with its write scope pinned per recipe.
 - [x] ~~Should the sync manifest treat `.codex/config.toml.example` as a plain baseline-tracked file immediately, or should it ship under `.claude/` first?~~ → **Resolved:** expand the manifest explicitly to include `.codex/config.toml.example` only. The single-path manifest AC is the precedent guard.
 - [x] ~~Should `mcp-recipes-hint.sh` remain Claude-only SessionStart behavior, or should this spec add a Codex-readable static hint in `AGENTS.md` only?~~ → **Resolved:** leave runtime hints unchanged and add a static managed-block pointer for Codex users in `AGENTS.md` / `CLAUDE.md`.
-- [ ] Codex trusted-project posture: where should docs explain that project-scoped `.codex/config.toml` requires the project to be trusted in Codex, unlike Claude's `.mcp.json` activation path?
-- [ ] Inline template security prose: should `.codex/config.toml.example` carry per-recipe security comments mirroring `.mcp.json.example`, or keep the template terse and defer full security notes to `.claude/rules/mcp-recipes.md`?
-- [ ] `.codex/.gitkeep`: should sync-harness ship a sentinel, or should the `.codex/` directory materialize only as the parent of `.codex/config.toml.example`?
+- [x] ~~Codex trusted-project posture: where should docs explain that project-scoped `.codex/config.toml` requires the project to be trusted in Codex, unlike Claude's `.mcp.json` activation path?~~ → **Resolved:** document it in `.claude/rules/mcp-recipes.md` overview and Codex activation workflow, and keep `.codex/config.toml.example` header focused on copy/enable mechanics.
+- [x] ~~Inline template security prose: should `.codex/config.toml.example` carry per-recipe security comments mirroring `.mcp.json.example`, or keep the template terse and defer full security notes to `.claude/rules/mcp-recipes.md`?~~ → **Resolved:** keep the template terse and secret-safe; full per-recipe security notes live in `.claude/rules/mcp-recipes.md`.
+- [x] ~~`.codex/.gitkeep`: should sync-harness ship a sentinel, or should the `.codex/` directory materialize only as the parent of `.codex/config.toml.example`?~~ → **Resolved:** no `.codex/.gitkeep`; `.codex/config.toml.example` is the only `.codex/*` path shipped by this spec.
 
 ## Context / references
 
 - `.claude/rules/mcp-recipes.md` — current Claude-oriented MCP recipe documentation.
 - `.mcp.json.example` — current Claude activation template.
 - `.claude/hooks/mcp-recipes-hint.sh` — Claude SessionStart recipe suggestion hook.
-- `.claude/rules/runtime-capabilities.md` — current capability matrix, where MCP recipes are Claude `native-opt-in` and Codex `convention`.
+- `.claude/rules/runtime-capabilities.md` — capability matrix promoted by this spec from Codex `convention` to Codex `native-opt-in` for MCP recipes.
 - `.claude/tools/sync-harness.sh` and `.claude/rules/harness-sync.md` — propagation mechanism that must carry the new template to consumer projects without touching real local config.
 - `docs/specs/012-mcp-recipes/` — original MCP recipes capacity.
 - `docs/specs/014-mcp-recipes-extras/` — later MCP recipe expansions.

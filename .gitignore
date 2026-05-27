@@ -3,6 +3,7 @@
 CLAUDE.local.md
 .claude/projects/
 .mcp.json
+.codex/config.toml
 
 # Ephemeral state under .claude/ — per-machine runtime, never commit
 .claude/.runtime/

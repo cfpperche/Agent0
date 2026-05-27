@@ -31,7 +31,7 @@
 //      "command": "npx",
 //      "args": ["@bytebase/dbhub@latest"],
 //      "env": {
-//        "DATABASE_URL": "postgres://user:password@localhost:5432/dbname?sslmode=disable"
+//        "DATABASE_URL": "${DATABASE_URL}"
 //      }
 //    },
 //    "next-devtools": {

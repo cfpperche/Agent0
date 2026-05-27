@@ -2,23 +2,32 @@
 paths:
   - ".mcp.json"
   - ".mcp.json.example"
+  - ".codex/config.toml.example"
   - ".claude/hooks/mcp-recipes-hint.sh"
   - ".claude/.browser-state/**"
 ---
 
 # MCP recipes
 
-A curated, opt-in set of `.mcp.json` server blocks for four mature external MCPs that complement the runtime-introspect capacity. The recipes are documentation + a copy-paste example file at repo root; a `SessionStart` companion hook detects the consumer project's stack and emits a one-block hint naming the applicable recipes when matches exist. Pure recommendation capacity — no auto-installs, no audit log, no blocks.
+A curated, opt-in set of MCP server recipes that complement the runtime-introspect capacity. Claude Code activates through `.mcp.json`; Codex CLI activates through project `.codex/config.toml` copied from `.codex/config.toml.example` after the project is trusted in Codex. A `SessionStart` companion hook detects the consumer project's stack and emits a one-block hint naming applicable recipes for Claude sessions. Pure recommendation capacity — no auto-installs, no audit log, no blocks.
 
 ## How it works
 
-Three artifacts plus one hook:
+Four artifacts plus one Claude-only hook:
 
 - **`.claude/rules/mcp-recipes.md`** (this file) — authoritative per-MCP reference.
-- **`.mcp.json.example`** at repo root — copy-paste-ready file with all four blocks commented out by leading `//` markers. Workflow: `cp .mcp.json.example .mcp.json`, then remove `//` lines on the blocks you want active.
-- **`.claude/hooks/mcp-recipes-hint.sh`** (`SessionStart`) — runs the signal table below and emits a single `=== mcp-recipes ===` block listing applicable recipes when ≥1 signal fires. Silent when no signals match (bare-repository case). Honors `CLAUDE_SKIP_MCP_RECIPES=1` to suppress regardless.
+- **`.mcp.json.example`** at repo root — Claude Code copy-paste-ready file with all blocks commented out by leading `//` markers. Workflow: `cp .mcp.json.example .mcp.json`, then remove `//` lines on the blocks you want active.
+- **`.codex/config.toml.example`** — Codex MCP-only project config template. Workflow: `cp .codex/config.toml.example .codex/config.toml`, then flip `enabled = true` only on recipes you want active. Real `.codex/config.toml` stays local and gitignored.
+- **`codex mcp add ...`** — Codex CLI operator convenience. In `codex-cli 0.133.0`, `codex mcp add` writes the global `$CODEX_HOME/config.toml` by default; use direct project TOML when the desired scope is the trusted project.
+- **`.claude/hooks/mcp-recipes-hint.sh`** (`SessionStart`) — Claude-only hint. Runs the signal table below and emits a single `=== mcp-recipes ===` block listing applicable recipes when ≥1 signal fires. Silent when no signals match (bare-repository case). Honors `CLAUDE_SKIP_MCP_RECIPES=1` to suppress regardless.
 
-The consumer project chooses what to enable. Recipes recommend; the developer activates with one `cp` + uncomment.
+The consumer project chooses what to enable. Recipes recommend; the developer activates explicitly.
+
+### Codex project config posture
+
+Codex stores MCP config alongside other Codex settings. User/global config lives in `$CODEX_HOME/config.toml` (normally `~/.codex/config.toml`); project-scoped MCP config lives in `.codex/config.toml` and is honored only for trusted projects. Agent0 ships only `.codex/config.toml.example`; it never writes a real project config or user-global config.
+
+Duplicate IDs are possible: if `playwright` exists globally and in project config, Codex has to resolve the collision according to its own config layering. Avoid ambiguity by using the same server ID in only one active scope, or consciously remove/rename the global entry when project-scoped behavior is required.
 
 ## Stack-detector signal table
 
@@ -68,6 +77,16 @@ The walk is strictly depth-1: `apps/web/next.config.js` fires; `apps/web/nested/
 }
 ```
 
+**Codex `.codex/config.toml` block:**
+```toml
+[mcp_servers.playwright]
+enabled = true
+command = "npx"
+args = ["-y", "@playwright/mcp@latest"]
+```
+
+**Codex CLI activation:** `codex mcp add playwright -- npx -y @playwright/mcp@latest` writes the global Codex config by default in `codex-cli 0.133.0`. For project-scoped activation, copy the block from `.codex/config.toml.example` into `.codex/config.toml` in a trusted project and set `enabled = true`.
+
 **Install:** `npx @playwright/mcp@latest` is invoked by Claude Code as needed. Playwright manages its own browser binaries on first run (Chromium / Firefox / WebKit / Chrome / Edge).
 
 **When to enable:** any consumer project doing browser/frontend/E2E work. Also paired with Next.js (see Next.js DevTools MCP below).
@@ -96,6 +115,16 @@ The walk is strictly depth-1: `apps/web/next.config.js` fires; `apps/web/nested/
 }
 ```
 
+**Codex `.codex/config.toml` block:**
+```toml
+[mcp_servers.chrome-devtools]
+enabled = true
+command = "npx"
+args = ["-y", "chrome-devtools-mcp@latest"]
+```
+
+**Codex CLI activation:** `codex mcp add chrome-devtools -- npx -y chrome-devtools-mcp@latest` writes the global Codex config by default in `codex-cli 0.133.0`. Use `.codex/config.toml` for trusted-project scope.
+
 **Install:** `npx -y chrome-devtools-mcp@latest`.
 
 **When to enable:** debugging an already-running browser session (network, console, perf). Complements Playwright — Playwright drives, DevTools observes.
@@ -123,12 +152,23 @@ The walk is strictly depth-1: `apps/web/next.config.js` fires; `apps/web/nested/
       "command": "npx",
       "args": ["@bytebase/dbhub@latest"],
       "env": {
-        "DATABASE_URL": "postgres://user:password@localhost:5432/dbname?sslmode=disable"
+        "DATABASE_URL": "${DATABASE_URL}"
       }
     }
   }
 }
 ```
+
+**Codex `.codex/config.toml` block:**
+```toml
+[mcp_servers.dbhub]
+enabled = true
+command = "npx"
+args = ["-y", "@bytebase/dbhub@latest"]
+env_vars = ["DATABASE_URL"]
+```
+
+**Codex CLI activation:** `codex mcp add dbhub --env DATABASE_URL="$DATABASE_URL" -- npx -y @bytebase/dbhub@latest` writes the global Codex config by default in `codex-cli 0.133.0`. Prefer the project TOML block when the database binding is project-specific. `env_vars = ["DATABASE_URL"]` forwards the variable from the local Codex environment without committing the DSN.
 
 **Install:** `npx @bytebase/dbhub@latest`. Docker image also available (`bytebase/dbhub`) for containerised deployments — use when the agent host can't run Node directly.
 
@@ -158,6 +198,16 @@ The walk is strictly depth-1: `apps/web/next.config.js` fires; `apps/web/nested/
   }
 }
 ```
+
+**Codex `.codex/config.toml` block:**
+```toml
+[mcp_servers.laravel-boost]
+enabled = true
+command = "php"
+args = ["artisan", "boost:mcp"]
+```
+
+**Codex CLI activation:** `codex mcp add laravel-boost -- php artisan boost:mcp` writes the global Codex config by default in `codex-cli 0.133.0`. Use project TOML for Laravel apps so the recipe stays tied to the trusted project containing `artisan`.
 
 **Install:** Two steps inside the Laravel project:
 
@@ -198,6 +248,16 @@ The first installs the package; the second wires up the `boost:mcp` artisan comm
 }
 ```
 
+**Codex `.codex/config.toml` block:**
+```toml
+[mcp_servers.next-devtools]
+enabled = true
+command = "npx"
+args = ["-y", "next-devtools-mcp@latest"]
+```
+
+**Codex CLI activation:** `codex mcp add next-devtools -- npx -y next-devtools-mcp@latest` writes the global Codex config by default in `codex-cli 0.133.0`. Use project TOML when the recipe should only apply to one trusted Next.js repo.
+
 **Install:** `npx -y next-devtools-mcp@latest`.
 
 **When to enable:** any Next.js consumer project (Next 16+ supported). Pairs naturally with Playwright for E2E.
@@ -231,6 +291,16 @@ The first installs the package; the second wires up the `boost:mcp` artisan comm
   }
 }
 ```
+
+**Codex `.codex/config.toml` block:**
+```toml
+[mcp_servers.fal-ai]
+enabled = true
+url = "https://mcp.fal.ai/mcp"
+bearer_token_env_var = "FAL_KEY"
+```
+
+**Codex CLI activation:** `codex mcp add fal-ai --url https://mcp.fal.ai/mcp --bearer-token-env-var FAL_KEY` writes the global Codex config by default in `codex-cli 0.133.0`. Use project TOML when the fal.ai surface should be scoped to one trusted project. `bearer_token_env_var` lets Codex build the bearer auth header from `FAL_KEY` without committing the token.
 
 **Install:** no package install — HTTP endpoint is hosted by fal.ai. Get `FAL_KEY` from fal.ai dashboard, export in shell or `.env`. Alternative one-shot registration: `claude mcp add --transport http fal-ai https://mcp.fal.ai/mcp --header "Authorization: Bearer $FAL_KEY"`.
 
@@ -276,7 +346,7 @@ That's the only env var for this capacity. No `BLOCK` / `ADVISE_ON_EDIT` variant
 
 ## Activation workflow
 
-For a consumer project:
+For Claude Code in a consumer project:
 
 1. Start a session in the consumer project's repo. The mcp-recipes hint surfaces in additional-context if stack signals match.
 2. `cp .mcp.json.example .mcp.json` (or merge into existing `.mcp.json`).
@@ -284,6 +354,16 @@ For a consumer project:
 4. For DBHub: also set `DATABASE_URL` in your shell or `.env` (never commit it).
 5. For Chrome DevTools: confirm Chrome is installed (`which google-chrome` or `which chrome`).
 6. Restart the Claude Code session — `.mcp.json` is loaded at session start.
+
+For Codex CLI in a trusted consumer project:
+
+1. `cp .codex/config.toml.example .codex/config.toml` (or merge the relevant `[mcp_servers.<id>]` blocks into an existing project config).
+2. Keep unrelated Codex settings local; Agent0's template is MCP-only and does not set model/provider/sandbox/approval defaults.
+3. Set required environment variables in the shell that launches Codex (`DATABASE_URL`, `FAL_KEY`, etc.).
+4. Change `enabled = false` to `enabled = true` only for the recipes you want active.
+5. Restart Codex in the trusted project. Codex does not receive Claude's SessionStart hint, so use this file and `.codex/config.toml.example` as the static reference.
+
+`codex mcp add` is supported as a convenience for user/global setup. In `codex-cli 0.133.0`, it writes the global `$CODEX_HOME/config.toml` by default; prefer direct `.codex/config.toml` edits when you need project-scoped activation.
 
 ## Authenticated workflow
 
@@ -436,6 +516,8 @@ Chrome DevTools MCP is the right choice when you need **observation**, not **dri
 ## Gotchas
 
 - **`.mcp.json.example` is JSON-with-comments.** Strict JSON parsers reject `//` line comments. The `.example` suffix is the universal "this is a template, do not parse directly" signal. The header comment in the file explicitly says: copy, rename, remove `//` markers before activation. Do NOT just `mv .mcp.json.example .mcp.json` — the result wouldn't parse.
+- **`.codex/config.toml.example` is parseable but disabled.** It is valid TOML with every recipe set to `enabled = false`. Copy it to `.codex/config.toml`, enable only the recipes you intend to run, and keep the real config local. The repo `.gitignore` ignores `.codex/config.toml`, but `.gitignore` does not untrack a config file already committed in a consumer project.
+- **Codex duplicate-ID scope.** A server ID can exist in both user-global `$CODEX_HOME/config.toml` and project `.codex/config.toml`. Avoid defining the same active ID twice unless you have intentionally checked how your Codex version resolves the collision.
 - **Package-name drift.** MCP packages are early-stage (most v0.x). A package can rename or restructure across minor releases. Each recipe section links to the upstream's source-of-truth README; if your `.mcp.json` block stops working after `@latest` resolves to a newer version, **check the upstream README first**, then update the recipe block. v1 of this spec uses `@latest` throughout; consumer projects that hit churn pain can pin manually (e.g. `@playwright/mcp@0.0.30`) — Agent0 does not maintain a version manifest.
 - **Monorepo walk is depth-1 only.** The stack detector scans `CLAUDE_PROJECT_DIR` at the top level AND walks depth-1 into the workspace dirs listed in § Walk scope (default `apps packages services workspaces`). A file at depth-2+ — e.g. `apps/web/nested/deep/next.config.js` — does NOT trigger the hint. Workarounds for deeply nested setups: (a) symlink the relevant config up to a depth-1 child, (b) point `CLAUDE_PROJECT_DIR` at the workspace you're actively working in, (c) `CLAUDE_MCP_RECIPES_WORKSPACE_DIRS="<deeper-roots>"` if the deep parent is a stable convention. The depth cap is intentional — arbitrary tree walks scale poorly on large repos.
 - **Workspace-walk default set is JS/TS-flavored.** Default `apps packages services workspaces` covers pnpm/Turborepo/Nx/Yarn conventions but not Cargo (`crates/`), Python `src/<pkg>/` layouts, or Bazel `//...` paths. Consumer projects with non-JS monorepos point `CLAUDE_MCP_RECIPES_WORKSPACE_DIRS` at their convention. Revisit the default set when/if a Cargo monorepo with embedded JS/Python sub-projects surfaces — until then, scope creep deferred.

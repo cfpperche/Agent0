@@ -189,6 +189,7 @@ COPY_CHECK_GLOBS=(
 COPY_CHECK_FILES=(
   "AGENTS.md"
   ".mcp.json.example"
+  ".codex/config.toml.example"
   ".gitleaks.toml"
   ".githooks/pre-commit"
   ".claude/tools/lib/managed-block.sh"

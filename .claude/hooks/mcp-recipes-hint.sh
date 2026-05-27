@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/hooks/mcp-recipes-hint.sh
-# SessionStart hook — detect fork's stack and emit MCP recipe suggestions.
+# SessionStart hook — detect consumer project's stack and emit MCP recipe suggestions.
 #
 # Pure recommendation: never blocks, never audits, exit 0 always. Honors
 # CLAUDE_SKIP_MCP_RECIPES=1 to suppress regardless of stack signals. Silent

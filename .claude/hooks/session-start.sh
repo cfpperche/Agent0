@@ -108,7 +108,7 @@ fi
 
 # Runtime-introspect: point the agent at the probe tool so it can
 # verify its own edits via cached test/build snapshots. Silent when the tool
-# is absent — the capacity isn't installed in every fork.
+# is absent — the capacity isn't installed in every consumer project.
 PROBE_TOOL="$PROJECT_DIR/.claude/tools/probe.sh"
 if [[ -x "$PROBE_TOOL" ]]; then
   BANNER+=$'\n=== runtime-introspect ===\nProbe the latest captured test/build run with: bash .claude/tools/probe.sh last-run\n=== end runtime-introspect ===\n'

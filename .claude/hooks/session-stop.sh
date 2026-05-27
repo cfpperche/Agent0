@@ -87,7 +87,7 @@ if [[ -f "$TRACK_FILE" ]]; then
 fi
 
 # Porcelain-compare fallback: when the tracker is absent (legacy session,
-# disabled, or fork hasn't synced the tracker yet), discriminate carryover
+# disabled, or consumer project hasn't synced the tracker yet), discriminate carryover
 # from real WIP via the SessionStart porcelain snapshot. Skipped when the
 # tracker has already decided we have own WIP (OWN_DIRTY_WIP=1) — the
 # porcelain-compare path would just duplicate the decision.

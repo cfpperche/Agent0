@@ -8,18 +8,19 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-**Spec 097 shipped + synced to both consumer projects.** Agent0 `main` is 3 commits ahead of `origin/main`, all local:
+**Spec 098 is implemented and committed.** Agent0 `main` is 2 commits ahead of `origin/main`:
 
-- `ca88370` docs(097): ship borderline-rules-disposition — 3 rules split into CF slice + maintenance memory
-- `e2ab331` docs(memory): add agent0-core-thesis
-- `56edfd7` docs: add spec 098 codex mcp parity *(parallel session, not this session)*
+- `2aa23a1` docs(098): ship codex-mcp-recipes-parity — Codex CLI gains native MCP recipes
+- `bfd630d` fix(098): ship project-local codex env launcher
 
-Downstream syncs committed:
+Spec 098 now ships the Codex MCP template and consumer-safe local env path:
 
-- mei-saas `2a05f11` — chore(harness): sync 093/094/095/096/097 (12 stale-updated, 3 removed, 0 customized-refused)
-- codexeng `072bb20` — chore(harness): sync 093/094/095/096/097 (21 copied, 81 stale-updated, 5 removed, 1 customized-refused — `.claude/skills/image/SKILL.md` preserved)
+- `.codex/config.toml.example` is synced to consumers; real `.codex/config.toml` remains local.
+- `.claude/tools/codex-local-env.sh` is synced to consumers; it loads `.codex/.env.local` only for that Codex process.
+- `.codex/.env.local` is gitignored and not synced.
+- Dogfood in Agent0 passed for Playwright, Chrome DevTools, and fal.ai `recommend_model` via local env launcher.
 
-Repo clean except `docs/specs/091-sdd-debate-runner/` (paused, untracked).
+Repo state after the commit is clean except `docs/specs/091-sdd-debate-runner/` (paused, untracked) and ignored local dogfood files under `.codex/`.
 
 ## Active Work
 
@@ -27,12 +28,25 @@ _None._
 
 ## Next Actions
 
-1. **Push to `origin/main`** when ready — 3 commits queued locally.
-2. **Spec 091** stays paused unless explicitly resumed.
-3. **Spec 098** belongs to a parallel session — leave alone.
+1. **Resync + dogfood `mei-saas`:**
+   - `bash /home/goat/Agent0/.claude/tools/sync-harness.sh --apply --agent0-path=/home/goat/Agent0 /home/goat/mei-saas`
+   - Verify `.codex/config.toml.example` and `.claude/tools/codex-local-env.sh` land.
+   - In the consumer, create/keep local `.codex/config.toml` + `.codex/.env.local` as needed, then dogfood via `bash .claude/tools/codex-local-env.sh exec ...`.
+   - Commit the consumer sync after reviewing diff.
+
+2. **Resync + dogfood `codexeng`:**
+   - `bash /home/goat/Agent0/.claude/tools/sync-harness.sh --apply --agent0-path=/home/goat/Agent0 /home/goat/codexeng`
+   - Preserve codexeng's known `.claude/skills/image/SKILL.md` customization; do not force it unless explicitly requested.
+   - Verify the same Codex MCP local-env flow as `mei-saas`.
+   - Commit the consumer sync after reviewing diff.
+
+3. **Push Agent0 `main`** when the local two commits are ready for remote.
+
+4. **Spec 091** stays paused unless explicitly resumed.
 
 ## Decisions & Gotchas
 
-- **Codexeng's `image/SKILL.md` customization is stable.** 1 customized-refused on every sync since adoption; consumer-side image-gen tuning is intentional. Future syncs should keep refusing without `--force`.
-- **Spec 097's split discipline is canonical** — codified in `memory-placement.md § Why three buckets` (3rd trigger). Consult before the next borderline-rules audit. Precedent file pair: `.claude/rules/runtime-introspect.md` ↔ `.claude/memory/runtime-introspect-maintenance.md`.
-- **`propagation-advisory.md` is excluded from sync** by `COPY_CHECK_EXCLUDE` in `sync-harness.sh` — its 097 thinning ships nowhere. Only `runtime-capabilities.md` + `runtime-introspect.md` reach consumers.
+- **Do not commit real Codex local files.** `.codex/config.toml`, `.codex/.env.local`, and local launcher experiments are machine/project state. Agent0 only ships `.codex/config.toml.example` and `.claude/tools/codex-local-env.sh`.
+- **Codex does not auto-load dotenv.** Consumers must launch through `bash .claude/tools/codex-local-env.sh` if they want project-local MCP keys without OS-level exports.
+- **`codex mcp add` writes global config by default** in the tested CLI; for project-scoped MCP recipes, edit `.codex/config.toml` copied from the template.
+- **Codexeng's `image/SKILL.md` customization is stable.** It has intentionally refused sync before; keep preserving it without `--force`.

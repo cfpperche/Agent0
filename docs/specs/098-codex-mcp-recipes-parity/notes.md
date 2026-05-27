@@ -24,6 +24,8 @@ Use parseable `[mcp_servers.<id>]` blocks with `enabled = false` in `.codex/conf
 
 Codex does not auto-load `.codex/.env.local`; a process-level env var is still required for `env_vars` / `bearer_token_env_var`. To avoid OS-level exports and cross-project key collisions, Agent0 now ships `.claude/tools/codex-local-env.sh`, which loads `.codex/.env.local` for the current project only and then execs `codex -C <repo>`. The dotenv itself remains gitignored and consumer-local.
 
+For operators who want direct `codex` startup without a project-local launcher, export `FAL_KEY` in the shell before launching Codex. Do not replace `bearer_token_env_var = "FAL_KEY"` with literal `bearer_token` for fal.ai: Codex 0.133.0 rejects that shape for `streamable_http`.
+
 ## Deviations
 
 _Places where implementation intentionally departed from `plan.md`. The departure + the reason it was necessary or better._

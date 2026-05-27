@@ -8,19 +8,29 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-**Spec 098 is implemented and committed.** Agent0 `main` is 2 commits ahead of `origin/main`:
+Codex was updated locally to `codex-cli 0.134.0`.
 
-- `2aa23a1` docs(098): ship codex-mcp-recipes-parity — Codex CLI gains native MCP recipes
-- `bfd630d` fix(098): ship project-local codex env launcher
+Agent0 fal.ai MCP is operational when Codex is launched through:
 
-Spec 098 now ships the Codex MCP template and consumer-safe local env path:
+```bash
+bash .claude/tools/codex-local-env.sh
+```
 
-- `.codex/config.toml.example` is synced to consumers; real `.codex/config.toml` remains local.
-- `.claude/tools/codex-local-env.sh` is synced to consumers; it loads `.codex/.env.local` only for that Codex process.
-- `.codex/.env.local` is gitignored and not synced.
-- Dogfood in Agent0 passed for Playwright, Chrome DevTools, and fal.ai `recommend_model` via local env launcher.
+Local-only state:
 
-Repo state after the commit is clean except `docs/specs/091-sdd-debate-runner/` (paused, untracked) and ignored local dogfood files under `.codex/`.
+- `.codex/config.toml` enables `fal-ai` with `bearer_token_env_var = "FAL_KEY"`.
+- `.codex/.env.local` contains `FAL_KEY` and is gitignored.
+- `bash .claude/tools/codex-local-env.sh mcp list` shows `fal-ai` enabled with bearer-token auth.
+
+Tracked docs/template were corrected after dogfood found the earlier direct-token advice was wrong: `codex-cli 0.133.0` rejects literal `bearer_token` for `streamable_http`. The documented Codex path is now env-var auth through `bearer_token_env_var`.
+
+Spec 098's fal.ai/Codex bearer-token correction has been committed locally.
+
+Tracked working tree is expected to be clean after this handoff commit.
+
+Pre-existing/paused work still present:
+
+- `docs/specs/091-sdd-debate-runner/` is untracked and paused.
 
 ## Active Work
 
@@ -28,25 +38,15 @@ _None._
 
 ## Next Actions
 
-1. **Resync + dogfood `mei-saas`:**
-   - `bash /home/goat/Agent0/.claude/tools/sync-harness.sh --apply --agent0-path=/home/goat/Agent0 /home/goat/mei-saas`
-   - Verify `.codex/config.toml.example` and `.claude/tools/codex-local-env.sh` land.
-   - In the consumer, create/keep local `.codex/config.toml` + `.codex/.env.local` as needed, then dogfood via `bash .claude/tools/codex-local-env.sh exec ...`.
-   - Commit the consumer sync after reviewing diff.
-
-2. **Resync + dogfood `codexeng`:**
-   - `bash /home/goat/Agent0/.claude/tools/sync-harness.sh --apply --agent0-path=/home/goat/Agent0 /home/goat/codexeng`
-   - Preserve codexeng's known `.claude/skills/image/SKILL.md` customization; do not force it unless explicitly requested.
-   - Verify the same Codex MCP local-env flow as `mei-saas`.
-   - Commit the consumer sync after reviewing diff.
-
-3. **Push Agent0 `main`** when the local two commits are ready for remote.
-
-4. **Spec 091** stays paused unless explicitly resumed.
+1. Do not commit `.codex/config.toml` or `.codex/.env.local`; they are local machine state.
+2. Resync/dogfood consumers (`mei-saas`, `codexeng`) after the Agent0 correction is committed, preserving known consumer customizations.
+3. Push Agent0 `main` when local commits are ready.
+4. Keep spec 091 paused unless explicitly resumed.
 
 ## Decisions & Gotchas
 
-- **Do not commit real Codex local files.** `.codex/config.toml`, `.codex/.env.local`, and local launcher experiments are machine/project state. Agent0 only ships `.codex/config.toml.example` and `.claude/tools/codex-local-env.sh`.
-- **Codex does not auto-load dotenv.** Consumers must launch through `bash .claude/tools/codex-local-env.sh` if they want project-local MCP keys without OS-level exports.
-- **`codex mcp add` writes global config by default** in the tested CLI; for project-scoped MCP recipes, edit `.codex/config.toml` copied from the template.
-- **Codexeng's `image/SKILL.md` customization is stable.** It has intentionally refused sync before; keep preserving it without `--force`.
+- Codex HTTP MCP bearer auth should use `bearer_token_env_var`; literal `bearer_token` is not a valid fal.ai `streamable_http` path in the tested Codex version.
+- Codex does not auto-load dotenv. Use `bash .claude/tools/codex-local-env.sh` or export `FAL_KEY` before starting Codex directly.
+- fal.ai keys are secrets. A key was briefly present in local config during debugging; rotate it in fal.ai if it has not already been rotated.
+- `codex mcp add` writes global config by default in the tested CLI; use project `.codex/config.toml` for Agent0-scoped MCP recipes.
+- Codexeng's `image/SKILL.md` customization has intentionally refused sync before; preserve it without `--force` unless explicitly requested.

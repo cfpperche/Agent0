@@ -5,9 +5,10 @@
 #
 # Workflow:
 #   1. cp .codex/config.toml.example .codex/config.toml
-#   2. Put secrets in .codex/.env.local (gitignored), not in this file.
+#   2. Default: put secrets in .codex/.env.local (gitignored), not in this file.
 #   3. Flip enabled = true only for the MCP recipes you want active.
 #   4. Start Codex with: bash .claude/tools/codex-local-env.sh
+#      Or export the required env vars before running codex directly.
 #
 # Full recipe docs: .claude/rules/mcp-recipes.md
 

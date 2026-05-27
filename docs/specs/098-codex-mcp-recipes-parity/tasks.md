@@ -84,6 +84,8 @@ _Acceptance checks tied to `spec.md` acceptance criteria. Each one should map to
 
 - [x] 31. Add a codex-mcp-recipes test proving the launcher loads `.codex/.env.local` and forwards args to Codex with the repo root.
 
+- [x] 32. Remove the consumer-local direct-token escape hatch after Codex 0.133.0 rejected literal `bearer_token` for fal.ai `streamable_http`; keep `bearer_token_env_var` plus shell/launcher env loading as the only documented Codex path.
+
 ## Notes
 
 _Anything that came up during execution that doesn't belong in plan.md but is useful for the PR description or future readers._

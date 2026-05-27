@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
 # Scenario: settings.json merge preserves top-level keys beyond .hooks.
 # Regression test for the bug where merge_settings_json only emitted {hooks: ...},
-# dropping $schema / statusLine / permissions / env / model from both sides.
+# dropping $schema / permissions / env / model from both sides.
+#
+# History note: statusLine was previously in the harness override whitelist; it
+# was extracted to user-global ~/.claude/settings.json on 2026-05-27, so this
+# test no longer asserts harness→consumer statusLine propagation. Instead,
+# assertion (b) verifies the inverse contract: a consumer-side statusLine is
+# preserved by the merge (since statusLine is no longer harness-owned).
 #
 # Asserts:
 #   (a) Agent0's $schema propagates when consumer project lacks it
-#   (b) Agent0's statusLine propagates when consumer project lacks it
-#   (c) consumer project's permissions preserved (Agent0 owns $schema + statusLine + hooks only)
+#   (b) consumer project's statusLine preserved (NOT overwritten; harness no longer owns this key)
+#   (c) consumer project's permissions preserved (Agent0 owns $schema + hooks only)
 #   (d) consumer-only top-level key (`env`) preserved
 #   (e) hooks merge still works (regression check on the original mechanism)
 
@@ -22,10 +28,9 @@ SRC="$TMPDIR/agent0"
 CONSUMER="$TMPDIR/consumer"
 mkdir -p "$SRC/.claude" "$CONSUMER/.claude"
 
-# Agent0 settings: $schema + statusLine + hooks (no permissions, no env)
+# Agent0 settings: $schema + hooks (no statusLine, no permissions, no env)
 jq -cn '{
   "$schema": "https://example.com/schema.json",
-  statusLine: {type:"command", command:"node $CLAUDE_PROJECT_DIR/.claude/presence/statusline.mjs"},
   hooks: {
     SessionStart: [
       {matcher:"*", hooks:[{type:"command", command:"bash $CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh"}]}
@@ -34,8 +39,9 @@ jq -cn '{
 }' > "$SRC/.claude/settings.json"
 printf '# CLAUDE\n\n## Compact Instructions\n' > "$SRC/CLAUDE.md"
 
-# Consumer project settings: permissions (consumer-owned) + env (consumer-only) + a hook
+# Consumer project settings: statusLine (consumer-owned, set locally) + permissions + env + a hook
 jq -cn '{
+  statusLine: {type:"command", command:"node /home/operator/.claude/scripts/statusline.mjs"},
   permissions: {defaultMode:"acceptEdits", allow:["Bash(npm test)"], deny:[]},
   env: {CONSUMER_ONLY_VAR: "value"},
   hooks: {
@@ -62,10 +68,10 @@ if [ "$schema" != "https://example.com/schema.json" ]; then
   exit 1
 fi
 
-# (b) Agent0's statusLine propagated
+# (b) Consumer's statusLine preserved (NOT overwritten — harness no longer owns this key)
 statusline_cmd="$(jq -r '.statusLine.command // empty' "$CONSUMER/.claude/settings.json")"
-if [ -z "$statusline_cmd" ]; then
-  printf 'FAIL: statusLine not propagated\n'
+if [ "$statusline_cmd" != "node /home/operator/.claude/scripts/statusline.mjs" ]; then
+  printf 'FAIL: consumer statusLine not preserved (got %q)\n' "$statusline_cmd"
   jq . "$CONSUMER/.claude/settings.json"
   exit 1
 fi
@@ -98,4 +104,4 @@ if [ "$pre_count" -ne 1 ] || [ "$ss_count" -ne 1 ]; then
   exit 1
 fi
 
-echo "PASS: 21-settings-merge-toplevel-keys"
+echo "PASS: 23-settings-merge-toplevel-keys"

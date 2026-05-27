@@ -182,7 +182,6 @@ COPY_CHECK_GLOBS=(
   ".claude/rules|*.md"
   ".claude/tools|*.sh"
   ".claude/validators|*.sh"
-  ".claude/presence|*.mjs"
 )
 
 # Literal files
@@ -681,8 +680,8 @@ merge_settings_json() {
   fi
 
   # Compute merged JSON.
-  # Consumer project (dst) is the BASE — preserves permissions/env/model/consumer-only top-level keys.
-  # Agent0-owned top-level keys ($schema, statusLine) overwrite when Agent0 has them.
+  # Consumer project (dst) is the BASE — preserves permissions/env/model/statusLine/consumer-only top-level keys.
+  # Agent0-owned top-level keys ($schema) overwrite when Agent0 has them.
   # hooks: union per-event, dedup by (matcher, ordered list of inner commands).
   # Excluded hook commands (matched as substring on any inner .command) are dropped
   # from BOTH sides — companion to COPY_CHECK_EXCLUDE, makes propagation-advise.sh
@@ -706,7 +705,6 @@ merge_settings_json() {
     ($arr[1] // {}) as $agent0 |
     $consumer
     | (if ($agent0 | has("$schema"))    then .["$schema"]  = $agent0["$schema"]  else . end)
-    | (if ($agent0 | has("statusLine")) then .statusLine   = $agent0.statusLine  else . end)
     | .hooks = (
         ((($consumer.hooks // {}) | keys) + (($agent0.hooks // {}) | keys))
         | unique

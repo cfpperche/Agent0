@@ -105,7 +105,6 @@ Future to-dos that don't belong in `.agent0/HANDOFF.md` (in-flight) or memory (k
 │   ├── skills/                        # /sdd, /remind
 │   ├── validators/run.sh              # auto-detect typecheck+test
 │   ├── agents/                        # custom subagent definitions (empty)
-│   ├── presence/statusline.mjs        # status line
 │   ├── tests/secrets-scan/            # harness self-verification suite for spec 007 (run-all.sh + V1-V7; optional, see step 7)
 │   ├── delegation-audit.jsonl         # delegation audit log (gitignored)
 │   └── secrets-audit.jsonl            # secrets-scan audit log (gitignored)

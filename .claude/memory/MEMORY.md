@@ -1,3 +1,4 @@
+- [Agent0 core thesis](agent0-core-thesis.md) — Agent0 intentionally avoids becoming an agent/skill catalog; durable value is prompt engineering, context engineering, and governance.
 - [Agent0 base repo purpose](agent0-purpose.md) — /home/goat/Agent0 is the user's base/template repository for all new software projects
 - [Anthill archived](anthill-archived.md) — anthill (the skill/agent harness Agent0 ports content from) is archived as of 2026-05-13; no longer evolves; quality reference, not a moving target
 - [Anthill-port workflow](anthill-port-workflow.md) — 7-phase loop for anthill→MCP ports (spec 026 Phase B steps 5-8) — port → audit smells → template → dogfood → fold gaps → validate → commit → handoff. Pattern, not rule.
@@ -6,6 +7,7 @@
 - [Claude Code platform hooks](cc-platform-hooks.md) — Canonical surface of 29 Claude Code hook events and the exit-zero PostToolUse gotcha; consult before designing any hook-based capacity
 - [Consumer-contract discipline](consumer-contract-discipline.md) — Producer templates must document the consumer-side contract (who reads it, what shape they expect) for any artifact a downstream step consumes structurally.
 - [Forks are ephemeral dogfood](forks-ephemeral-dogfood.md) — Capacity docs' "forks" framing is forward-looking; current reality is all forks are spun-up-then-archived dogfood projects. Hard-cutover is the default back-compat posture.
+- [hook-chain-maintenance](hook-chain-maintenance.md) — Maintainer discipline for the PreToolUse(Bash) hook chain — optimization techniques + 5-step contract for adding a new hook. Read before adding/editing PreToolUse(Bash) hooks.
 - [OD grounding dogfood](od-grounding-dogfood.md) — Spec 027 step-2 dogfood (2026-05-14) — citation-by-path real, but grounding alone does not buy visual quality. Blind judge result was confounded (1-pass OD vs 4x-refined baseline).
 - [/product pipeline empirical baseline](product-pipeline-empirical-baseline.md) — First end-to-end full /product run with all 4 mature gates (2026-05-23) — ~3.1M tokens, ~83min, 44 dispatches, 17/17 judges. Cost+shape envelope for planning.
 - [Propagation hygiene](propagation-hygiene.md) — Maintainer discipline — fork-bound files (CLAUDE.md, .claude/rules/, sync manifest) must carry no Agent0-internal pointers. Read before editing CLAUDE.md or a rule.

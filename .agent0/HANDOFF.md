@@ -8,37 +8,33 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-**Spec 099 (`memory-multi-runtime`) reviewed and post-review fixes applied.** Review by Claude Code surfaced one real design finding (double-fire of `memory-frontmatter-advisory:` — both `memory-events-journal.sh` and `memory-frontmatter-validate.sh` were calling `MAINTAIN validate` on the same edit) and one prose ambiguity in the migration playbook step 5. Both fixed in working tree, **NOT yet staged**.
+**Spec 099 (`memory-multi-runtime`) shipped end-to-end and pushed.** Implementation, post-review fixes, live Codex smoke validation, consumer migrations, and a surfaced test-bug fix all landed and pushed:
 
-**Fixes applied this session:**
+- Agent0 → `59fa0e6..43d8539` (5 commits): statusline extract, handoff, spec 099 impl (`d4d171b`), Codex smoke note (`fe8ac33`), test 01 generic-assert fix (`43d8539`).
+- mei-saas → `fd52239..ef768c3` (2 commits): statusline + spec 099 migration (1 entry moved, 8→4 settings, shims rm).
+- codexeng → `6d44929..5824ebe` (1 commit): spec 099 migration (3 entries moved, manual SKILL.md merge to preserve `codexeng fork hardening` bullet).
 
-1. `.agent0/hooks/memory-events-journal.sh` — removed the `MAINTAIN validate` block; ownership of frontmatter validation belongs solely to `memory-frontmatter-validate.sh`. Verified single-fire empirically: 0 advisories from events-journal + 1 from frontmatter-validate on a synthetic malformed entry.
-2. `docs/specs/099-memory-multi-runtime/migration-playbook.md` step 5 — rewrote from ambiguous "remove or replace if local scripts call them" to concrete reconciliation flow against `sync-harness`'s upstream-removed propagation.
+All three repos at **0 commits ahead** of `origin/main`. Working trees clean except pre-existing untracked items.
 
-**Tests pass post-fix:** `.claude/tests/memory-multi-runtime/run-all.sh` 5/5 PASS; `.claude/tests/project-memory/run-all.sh` 5/5 PASS.
+Memory infra empirically validated in a live fresh Codex session: journal recorded `actor:"Codex CLI"` + `runtime:"codex-cli"` + `tool_use_id:"call_*"` (sinal 1); PreToolUse gate blocked a raw `apply_patch` against `MEMORY.md` with exit 2 + corrective template (sinal 2). Both gaps `notes.md` had registered as not-validated are now closed.
 
-**Agent0 is 2 commits ahead of `origin/main`.** Staged index = original spec-099 implementation (88 files). Working tree adds the two fixes above. No commit was created this session.
-
-Pre-existing/paused: `docs/specs/091-sdd-debate-runner/` untracked; `.codex/config.toml` + `.codex/.env.local` machine-local.
+Pre-existing/paused: `docs/specs/091-sdd-debate-runner/` untracked in Agent0; `.codex/config.toml` + `.codex/.env.local` machine-local.
 
 ## Active Work
 
-_None active._ Spec 099 ready to land — 2 unstaged fixes + the staged tree compose the final commit.
+_None active._
 
 ## Next Actions
 
-1. `git add .agent0/hooks/memory-events-journal.sh docs/specs/099-memory-multi-runtime/migration-playbook.md` to fold the two review fixes into the spec-099 staged set.
-2. Commit. Suggested message: `feat(memory): port project memory to multi-runtime hooks` (body should mention the double-fire fix + playbook step 5 polish).
-3. Optional pre-push validation: live fresh-session Codex smoke (`.codex/config.toml.example` hook block uncommented + `apply_patch` against temp memory entry) to confirm `tool_input.command` payload shape against the tolerant parser. Synthetic tests already cover it.
-4. Keep consumer migrations (`mei-saas`, `codexeng`) as downstream operator work per `docs/specs/099-memory-multi-runtime/migration-playbook.md`.
-5. Shim-removal follow-up commit on Agent0 upstream after both known consumers migrate (track via reminder, not this session).
-6. Keep spec 091 paused unless explicitly resumed.
+1. **Shim-removal follow-up in Agent0.** The 4 `.claude/hooks/memory-*.sh` compat shims are dead-code in Agent0 itself (settings.json points at `.agent0/hooks/`), and both known consumers (mei-saas + codexeng) have removed them locally. Safe deletion window: 30-60 days from 2026-05-27 to give any unknown public forks time to migrate. Commit shape: `chore(memory): remove memory hook compat shims (spec 099 follow-up)`.
+2. **mei-saas test 01 staleness.** mei-saas's `.claude/tests/project-memory/01-files-are-git-tracked.sh` is still the pre-fix version (its sync happened before `43d8539`). Cosmetic — picks up on the next regular `sync-harness --apply`.
+3. Spec 091 stays paused unless explicitly resumed.
 
 ## Decisions & Gotchas
 
-- **Frontmatter validation is single-owner.** `memory-frontmatter-validate.sh` owns the advisory; `memory-events-journal.sh` is journal+project only. Re-introducing validate calls from other hooks would re-create the double-fire.
-- **Spec 099 transitional-state shape: Option A (compat shims).** Old `.claude/hooks/memory-*.sh` paths are 2-line `exec` shims. Existing consumers keep working post-sync; manual migration removes shims later.
-- **Spec 099 namespace lock: `.agent0/memory/`.** User-ratified Scenario B; OQ-1 became plan-phase enumeration only.
-- **Codex payload parser is tolerant, live probe was not run.** Primary `tool_input.command`, fallbacks `input` / `patch` / `content` / string `tool_input`; synthetic tests cover real patch headers.
-- **Project-memory git-tracked tests require staged rename state.** The spec-099 paths are staged intentionally so `git ls-files .agent0/memory/` sees the moved corpus.
+- **Spec 099 shipped Option A (compat shims).** Validated empirically: both consumers migrated with zero downtime, ~3 min each (sync → reconcile → mv → settings cleanup → shim rm → verify → commit).
+- **codexeng carries 1 load-bearing customization** in `.claude/skills/image/SKILL.md § Notes`: the `codexeng fork hardening` bullet promoting upstream "should compose" to "must" for brand-tier prompts. Re-apply on every sync via the consumer-extension convention (take upstream verbatim, re-add the bullet at end of § Notes).
+- **Tests that ship to consumers must use generic property assertions, not hardcoded entry names.** `01-files-are-git-tracked.sh` originally asserted specific Agent0-only entries (`agent0-purpose.md` + `visibility-intent.md`); fix in `43d8539` switched to "≥1 entry .md (excluding MEMORY.md) git-tracked". Pattern worth re-auditing across other shipped tests.
+- **Codex `apply_patch` empirical contract confirmed.** `tool_input.command` is the primary payload field (parser fallbacks never triggered); `tool_use_id` shape is `call_*` (vs Claude's `toolu_*`); patch-header parsing (`*** Add File:` / `*** Update File:`) works against real payloads.
+- **Frontmatter validation is single-owner.** `memory-frontmatter-validate.sh` emits the advisory; `memory-events-journal.sh` is journal+project only. Re-introducing validate calls from other hooks would re-create the spec-099-review double-fire bug.
 - **Re-audit pending in `runtime-capabilities.md`.** Codex lifecycle-hooks promotion implies adjacent rows (`delegation/subagents`, `runtime introspect`, `session handoff`) may also need promotion. Track via next competitive-harness audit cycle.

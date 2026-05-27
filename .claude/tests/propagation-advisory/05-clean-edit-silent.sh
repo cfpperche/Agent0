@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Scenario: a clean edit to a fork-bound path produces no advisory output.
+# Scenario: a clean edit to a shipped path produces no advisory output.
 
 set -euo pipefail
 

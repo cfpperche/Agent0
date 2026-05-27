@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Scenario: absent markers in fork + no section divergence with Agent0 region
+# Scenario: absent markers in consumer project + no section divergence with Agent0 region
 # → legacy merge runs (back-compat) AND migration candidate written; advisory line on stderr.
 
 set -euo pipefail
@@ -11,8 +11,8 @@ TMPDIR="$(mktemp -d -t spec-058-17-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 SRC="$TMPDIR/agent0"
-FORK="$TMPDIR/fork"
-mkdir -p "$SRC/.claude" "$FORK/.claude"
+CONSUMER="$TMPDIR/consumer"
+mkdir -p "$SRC/.claude" "$CONSUMER/.claude"
 
 # Source is wrapped (candidate generation prerequisite).
 cat > "$SRC/CLAUDE.md" <<'EOF'
@@ -39,13 +39,13 @@ compact.
 <!-- AGENT0:END -->
 EOF
 
-# Fork has NO markers, has A from a prior sync; no body divergence (A body matches src).
-cat > "$FORK/CLAUDE.md" <<'EOF'
-# MyFork
+# Consumer project has NO markers, has A from a prior sync; no body divergence (A body matches src).
+cat > "$CONSUMER/CLAUDE.md" <<'EOF'
+# MyConsumer
 
 ## Overview
 
-my fork overview.
+my consumer project overview.
 
 ## A
 
@@ -57,26 +57,26 @@ compact.
 EOF
 
 printf '{"hooks":{}}\n' > "$SRC/.claude/settings.json"
-printf '{"hooks":{}}\n' > "$FORK/.claude/settings.json"
+printf '{"hooks":{}}\n' > "$CONSUMER/.claude/settings.json"
 
 stderr_log="$(mktemp -t spec-058-17-err-XXXXXX)"
 actual_exit=0
-bash "$TOOL" --apply --agent0-path="$SRC" "$FORK" >/dev/null 2>"$stderr_log" || actual_exit=$?
+bash "$TOOL" --apply --agent0-path="$SRC" "$CONSUMER" >/dev/null 2>"$stderr_log" || actual_exit=$?
 if [ "$actual_exit" -ne 0 ]; then
   printf 'FAIL: --apply expected exit 0, got %d\n' "$actual_exit"
   cat "$stderr_log"
   exit 1
 fi
 
-# Legacy merge: ## B must be appended to fork (it was missing)
-if ! grep -q '^## B$' "$FORK/CLAUDE.md"; then
+# Legacy merge: ## B must be appended to consumer project (it was missing)
+if ! grep -q '^## B$' "$CONSUMER/CLAUDE.md"; then
   printf 'FAIL: legacy merge did not append ## B\n'
-  cat "$FORK/CLAUDE.md"
+  cat "$CONSUMER/CLAUDE.md"
   exit 1
 fi
 
 # Migration candidate file must exist
-if [ ! -f "$FORK/.claude/CLAUDE.md.migration-candidate.md" ]; then
+if [ ! -f "$CONSUMER/.claude/CLAUDE.md.migration-candidate.md" ]; then
   printf 'FAIL: candidate file not written\n'
   exit 1
 fi
@@ -89,20 +89,20 @@ if ! grep -q 'claude-md-migration-advisory: candidate written' "$stderr_log"; th
 fi
 
 # Candidate must have BEGIN/END markers
-if ! grep -q '^<!-- AGENT0:BEGIN -->$' "$FORK/.claude/CLAUDE.md.migration-candidate.md"; then
+if ! grep -q '^<!-- AGENT0:BEGIN -->$' "$CONSUMER/.claude/CLAUDE.md.migration-candidate.md"; then
   printf 'FAIL: candidate lacks BEGIN marker\n'
   exit 1
 fi
-if ! grep -q '^<!-- AGENT0:END -->$' "$FORK/.claude/CLAUDE.md.migration-candidate.md"; then
+if ! grep -q '^<!-- AGENT0:END -->$' "$CONSUMER/.claude/CLAUDE.md.migration-candidate.md"; then
   printf 'FAIL: candidate lacks END marker\n'
   exit 1
 fi
 
-# Candidate must preserve fork's project section above BEGIN
-begin_line="$(grep -nE '^<!-- AGENT0:BEGIN -->$' "$FORK/.claude/CLAUDE.md.migration-candidate.md" | head -1 | cut -d: -f1)"
-overview_line="$(grep -n '^## Overview$' "$FORK/.claude/CLAUDE.md.migration-candidate.md" | head -1 | cut -d: -f1)"
+# Candidate must preserve consumer project's project section above BEGIN
+begin_line="$(grep -nE '^<!-- AGENT0:BEGIN -->$' "$CONSUMER/.claude/CLAUDE.md.migration-candidate.md" | head -1 | cut -d: -f1)"
+overview_line="$(grep -n '^## Overview$' "$CONSUMER/.claude/CLAUDE.md.migration-candidate.md" | head -1 | cut -d: -f1)"
 if [ -n "$overview_line" ] && [ "$overview_line" -ge "$begin_line" ]; then
-  printf 'FAIL: fork ## Overview should be above BEGIN in candidate\n'
+  printf 'FAIL: consumer project ## Overview should be above BEGIN in candidate\n'
   exit 1
 fi
 

@@ -248,7 +248,7 @@ Schema enforces section presence + Layer 1 contains/size floors (phase heading, 
 - **Hiring plans.** Step 10 cost-estimate touched team cost; hiring sequence is post-handoff. The roadmap assumes the team shape locked at § 2; it does NOT plan when to hire.
 - **Post-launch growth roadmap.** Post-launch territory (future MCP step 18+ GTM). The v2-Vision section sketches direction; it does NOT plan launch + post-launch metrics tracking.
 - **Capacity / velocity modeling.** No story-point math, no velocity-from-prior-sprints. v1 is greenfield; velocity assumption is industry-default (40 hr/eng-week, 20% coordination overhead).
-- **Issue-board ingestion.** The MCP doesn't have a consumer project-side issue tracker; issue ingest is deferred to a future MCP step. Consumer tracker integration (Linear, Jira, GitHub Issues) lives downstream of the pipeline.
+- **Issue-board ingestion.** The MCP doesn't have a consumer-side issue tracker; issue ingest is deferred to a future MCP step. Consumer tracker integration (Linear, Jira, GitHub Issues) lives downstream of the pipeline.
 
 ## Design notes — the disciplines this step keeps
 

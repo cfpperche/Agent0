@@ -243,7 +243,7 @@ Three calibration choices worth naming:
 
 1. **Operational-metrics / process-mapping / efficiency-analysis are out of scope.** That's ops-monitoring territory, not product-spec cost modeling. If a future pipeline step models operational efficiency (capacity planning, headcount-to-revenue ratio, process throughput), it lands there, not in this step. FPA wins for cost-estimate.
 
-2. **No consumer project-level budget config file.** The budget inputs come from the parent's § 2 interview (pricing model + price point + rate) at synthesis time, not from a config file. This pipeline doesn't model consumer project-level financial state.
+2. **No consumer-level budget config file.** The budget inputs come from the parent's § 2 interview (pricing model + price point + rate) at synthesis time, not from a config file. This pipeline doesn't model consumer-level financial state.
 
 3. **Cost-ceiling cross-reference to step 9.** § Overview restates the step-9 cost ceiling and flags whether line-item math supports or revises it — closes the cross-step loop. The step-to-step contract symmetry (step-9 declares the ceiling, step-10 refines it with concrete line items) was added in the post-task-18 calibration.
 

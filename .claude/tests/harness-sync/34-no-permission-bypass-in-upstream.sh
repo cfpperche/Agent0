@@ -5,11 +5,11 @@
 # Permission modes (`bypassPermissions`, `acceptEdits`, etc.) and `allow:`
 # entries are user-ergonomic decisions that belong in `~/.claude/settings.json`
 # (user-global) or `.claude/settings.local.json` (gitignored per-machine),
-# NOT in the tracked project settings that fresh clones / template-based forks
+# NOT in the tracked project settings that fresh clones / template-based consumer projects
 # inherit verbatim.
 #
 # sync-harness.sh § merge_settings_json already excludes `permissions` from the
-# upstream-owned keys (forks preserve their own permission block on sync), but
+# upstream-owned keys (consumer projects preserve their own permission block on sync), but
 # this test guards the upstream baseline itself against drift: a maintainer
 # accidentally re-adding `permissions.defaultMode` or a non-empty `allow:` list
 # fails CI here.

@@ -1,3 +1,3 @@
 # harness-sync tests
 
-Scenario. Scenario-numbered scripts (`NN-<slug>.sh`) map 1:1 to acceptance scenarios in `the harness-sync spec`. Run individually or via `run-all.sh`. Each script is self-contained: builds a `mktemp -d` fixture (mock Agent0 source + mock fork target), invokes `.claude/tools/sync-harness.sh`, asserts stdout/stderr/exit, cleans up via `trap`.
+Scenario. Scenario-numbered scripts (`NN-<slug>.sh`) map 1:1 to acceptance scenarios in `the harness-sync spec`. Run individually or via `run-all.sh`. Each script is self-contained: builds a `mktemp -d` fixture (mock Agent0 source + mock consumer project target), invokes `.claude/tools/sync-harness.sh`, asserts stdout/stderr/exit, cleans up via `trap`.

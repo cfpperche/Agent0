@@ -2,7 +2,7 @@
 # .claude/tests/mcp-recipes/05-co-exists-with-011.sh
 # V5 — Scenario: hint co-exists with runtime-introspect's probe hint.
 #
-# When a fork has BOTH a stack signal (e.g. next.config.js) AND runtime-introspect
+# When a consumer project has BOTH a stack signal (e.g. next.config.js) AND runtime-introspect
 # installed (`.claude/tools/probe.sh` exists), the SessionStart context
 # should contain BOTH `=== runtime-introspect ===` AND `=== mcp-recipes ===`
 # blocks.

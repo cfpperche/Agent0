@@ -14,8 +14,8 @@ TMPDIR="$(mktemp -d -t spec-016-15-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 SRC="$TMPDIR/agent0"
-FORK="$TMPDIR/fork"
-mkdir -p "$SRC/.claude" "$FORK/.claude"
+CONSUMER="$TMPDIR/consumer"
+mkdir -p "$SRC/.claude" "$CONSUMER/.claude"
 
 printf '%s\n' \
   '# Claude Code state' \
@@ -28,13 +28,13 @@ printf '# CLAUDE\n\n## Compact Instructions\n' > "$SRC/CLAUDE.md"
 printf '%s\n' \
   '/vendor' \
   '/node_modules' \
-  > "$FORK/.gitignore"
-printf '{"hooks":{}}\n' > "$FORK/.claude/settings.json"
-printf '# CLAUDE fork\n\n## Compact Instructions\n' > "$FORK/CLAUDE.md"
+  > "$CONSUMER/.gitignore"
+printf '{"hooks":{}}\n' > "$CONSUMER/.claude/settings.json"
+printf '# CLAUDE consumer project\n\n## Compact Instructions\n' > "$CONSUMER/CLAUDE.md"
 
 # First apply — should merge.
-first_out="$(bash "$TOOL" --apply --agent0-path="$SRC" "$FORK" 2>&1)" || true
-sha_after_first="$(sha256sum "$FORK/.gitignore" | awk '{print $1}')"
+first_out="$(bash "$TOOL" --apply --agent0-path="$SRC" "$CONSUMER" 2>&1)" || true
+sha_after_first="$(sha256sum "$CONSUMER/.gitignore" | awk '{print $1}')"
 
 if ! printf '%s' "$first_out" | grep -qE 'merged \.gitignore'; then
   printf 'FAIL(a): first apply did not log "merged .gitignore"\n%s\n' "$first_out"
@@ -42,13 +42,13 @@ if ! printf '%s' "$first_out" | grep -qE 'merged \.gitignore'; then
 fi
 
 # Second apply — should be no-op.
-second_out="$(bash "$TOOL" --apply --agent0-path="$SRC" "$FORK" 2>&1)" || true
-sha_after_second="$(sha256sum "$FORK/.gitignore" | awk '{print $1}')"
+second_out="$(bash "$TOOL" --apply --agent0-path="$SRC" "$CONSUMER" 2>&1)" || true
+sha_after_second="$(sha256sum "$CONSUMER/.gitignore" | awk '{print $1}')"
 
 if [ "$sha_after_first" != "$sha_after_second" ]; then
   printf 'FAIL(b): second apply changed file (hash drift on idempotent re-run)\n'
   diff <(printf '%s\n' "$sha_after_first") <(printf '%s\n' "$sha_after_second")
-  cat "$FORK/.gitignore"
+  cat "$CONSUMER/.gitignore"
   exit 1
 fi
 
@@ -59,7 +59,7 @@ fi
 
 # Third --check — should exit 0 (no drift).
 check_exit=0
-bash "$TOOL" --check --agent0-path="$SRC" "$FORK" >/dev/null 2>&1 || check_exit=$?
+bash "$TOOL" --check --agent0-path="$SRC" "$CONSUMER" >/dev/null 2>&1 || check_exit=$?
 if [ "$check_exit" -ne 0 ]; then
   printf 'FAIL(c): --check after idempotent merge expected exit 0, got %d\n' "$check_exit"
   exit 1

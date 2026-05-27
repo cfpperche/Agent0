@@ -14,21 +14,21 @@ TMPDIR="$(mktemp -d -t spec-068-25-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 SRC="$TMPDIR/agent0"
-FORK="$TMPDIR/fork"
-mkdir -p "$SRC/.claude/hooks" "$FORK/.claude/hooks"
+CONSUMER="$TMPDIR/consumer"
+mkdir -p "$SRC/.claude/hooks" "$CONSUMER/.claude/hooks"
 
 printf '#!/usr/bin/env bash\necho agent0-version\n' > "$SRC/.claude/hooks/hookA.sh"
 printf '{"hooks":{}}\n' > "$SRC/.claude/settings.json"
 printf '# CLAUDE\n\n## Compact Instructions\n' > "$SRC/CLAUDE.md"
 chmod +x "$SRC/.claude/hooks/hookA.sh"
 
-printf '#!/usr/bin/env bash\necho FORK-EDITED-version\n' > "$FORK/.claude/hooks/hookA.sh"
-printf '{"hooks":{}}\n' > "$FORK/.claude/settings.json"
-printf '# CLAUDE fork\n\n## Compact Instructions\n' > "$FORK/CLAUDE.md"
-chmod +x "$FORK/.claude/hooks/hookA.sh"
+printf '#!/usr/bin/env bash\necho CONSUMER-EDITED-version\n' > "$CONSUMER/.claude/hooks/hookA.sh"
+printf '{"hooks":{}}\n' > "$CONSUMER/.claude/settings.json"
+printf '# CLAUDE consumer project\n\n## Compact Instructions\n' > "$CONSUMER/CLAUDE.md"
+chmod +x "$CONSUMER/.claude/hooks/hookA.sh"
 
-# Baseline records a THIRD distinct value — fork differs from baseline AND Agent0.
-cat > "$FORK/.claude/harness-sync-baseline.json" <<'EOF'
+# Baseline records a THIRD distinct value — consumer project differs from baseline AND Agent0.
+cat > "$CONSUMER/.claude/harness-sync-baseline.json" <<'EOF'
 {
   "agent0_commit": null,
   "synced_at": "2026-05-01T00:00:00Z",
@@ -37,10 +37,10 @@ cat > "$FORK/.claude/harness-sync-baseline.json" <<'EOF'
 }
 EOF
 
-before_sha="$(sha256sum "$FORK/.claude/hooks/hookA.sh" | awk '{print $1}')"
+before_sha="$(sha256sum "$CONSUMER/.claude/hooks/hookA.sh" | awk '{print $1}')"
 
 actual_exit=0
-out="$(bash "$TOOL" --apply --agent0-path="$SRC" "$FORK" 2>&1)" || actual_exit=$?
+out="$(bash "$TOOL" --apply --agent0-path="$SRC" "$CONSUMER" 2>&1)" || actual_exit=$?
 
 if [ "$actual_exit" -eq 0 ]; then
   printf 'FAIL: customized --apply expected non-zero exit, got 0\n%s\n' "$out"
@@ -58,7 +58,7 @@ if printf '%s' "$out" | grep -E 'hookA\.sh' | grep -q 'no baseline'; then
   exit 1
 fi
 
-after_sha="$(sha256sum "$FORK/.claude/hooks/hookA.sh" | awk '{print $1}')"
+after_sha="$(sha256sum "$CONSUMER/.claude/hooks/hookA.sh" | awk '{print $1}')"
 if [ "$before_sha" != "$after_sha" ]; then
   printf 'FAIL: customized hookA.sh was overwritten\n'
   exit 1

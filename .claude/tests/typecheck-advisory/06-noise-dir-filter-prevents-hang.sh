@@ -2,18 +2,18 @@
 # .claude/tests/typecheck-advisory/06-noise-dir-filter-prevents-hang.sh
 # V6 — Scenario: validator's TDD warning loop must not iterate over noise
 # dirs (node_modules, .venv, target, etc.) that escaped a mis-configured
-# fork's .gitignore.
+# consumer project's .gitignore.
 #
 # Bug surfaced via dogfood 2026-05-12: Agent0 ships a
 # stack-agnostic .gitignore template with `# node_modules/` commented;
-# the fork developer must uncomment per-stack. the dogfood fork did not, so
+# the consumer project developer must uncomment per-stack. the dogfood consumer project did not, so
 # `git ls-files --others --exclude-standard` dumped 15,711 paths into
 # the validator's per-file shell pattern-match loop, hanging beyond
 # any reasonable timeout.
 #
 # Fix: validator now grep-filters common noise dir prefixes (node_modules/,
 # .venv/, __pycache__/, target/, dist/, build/, coverage/, .next/, etc.)
-# before the loop. Defends in layers — fork's .gitignore is still the
+# before the loop. Defends in layers — consumer project's .gitignore is still the
 # correct primary control, but the validator no longer hangs catastrophically.
 #
 # Asserts:

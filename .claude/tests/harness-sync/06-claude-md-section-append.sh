@@ -2,7 +2,7 @@
 # Scenario: CLAUDE.md capacity-section append before Compact Instructions.
 # Asserts:
 #   (a) missing capacity sections appended
-#   (b) fork-authored sections preserved
+#   (b) consumer-authored sections preserved
 #   (c) `## Compact Instructions` remains LAST
 
 set -euo pipefail
@@ -14,8 +14,8 @@ TMPDIR="$(mktemp -d -t spec-016-06-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 SRC="$TMPDIR/agent0"
-FORK="$TMPDIR/fork"
-mkdir -p "$SRC/.claude" "$FORK/.claude"
+CONSUMER="$TMPDIR/consumer"
+mkdir -p "$SRC/.claude" "$CONSUMER/.claude"
 
 # Agent0 CLAUDE.md: Overview, Spec-driven development, Supply chain, Runtime introspect, Compact Instructions
 cat > "$SRC/CLAUDE.md" <<'EOF'
@@ -42,17 +42,17 @@ runtime-introspect content.
 compact.
 EOF
 
-# Fork CLAUDE.md: Overview, FORK-CUSTOM (fork-authored), Spec-driven development, Compact Instructions
-cat > "$FORK/CLAUDE.md" <<'EOF'
-# Fork
+# Consumer project CLAUDE.md: Overview, CONSUMER-CUSTOM (consumer-authored), Spec-driven development, Compact Instructions
+cat > "$CONSUMER/CLAUDE.md" <<'EOF'
+# Consumer project
 
 ## Overview
 
-fork overview.
+consumer project overview.
 
-## FORK-CUSTOM
+## CONSUMER-CUSTOM
 
-fork-authored section.
+consumer-authored section.
 
 ## Spec-driven development
 
@@ -64,10 +64,10 @@ compact.
 EOF
 
 printf '{"hooks":{}}\n' > "$SRC/.claude/settings.json"
-printf '{"hooks":{}}\n' > "$FORK/.claude/settings.json"
+printf '{"hooks":{}}\n' > "$CONSUMER/.claude/settings.json"
 
 actual_exit=0
-bash "$TOOL" --apply --agent0-path="$SRC" "$FORK" >/dev/null 2>&1 || actual_exit=$?
+bash "$TOOL" --apply --agent0-path="$SRC" "$CONSUMER" >/dev/null 2>&1 || actual_exit=$?
 
 if [ "$actual_exit" -ne 0 ]; then
   printf 'FAIL: --apply expected exit 0, got %d\n' "$actual_exit"
@@ -75,26 +75,26 @@ if [ "$actual_exit" -ne 0 ]; then
 fi
 
 # Supply chain section must now exist
-if ! grep -q '^## Supply chain' "$FORK/CLAUDE.md"; then
+if ! grep -q '^## Supply chain' "$CONSUMER/CLAUDE.md"; then
   printf 'FAIL: ## Supply chain not appended\n'
-  cat "$FORK/CLAUDE.md"
+  cat "$CONSUMER/CLAUDE.md"
   exit 1
 fi
 
 # Runtime introspect section must now exist
-if ! grep -q '^## Runtime introspect' "$FORK/CLAUDE.md"; then
+if ! grep -q '^## Runtime introspect' "$CONSUMER/CLAUDE.md"; then
   printf 'FAIL: ## Runtime introspect not appended\n'
   exit 1
 fi
 
-# FORK-CUSTOM preserved
-if ! grep -q '^## FORK-CUSTOM' "$FORK/CLAUDE.md"; then
-  printf 'FAIL: fork-authored ## FORK-CUSTOM dropped\n'
+# CONSUMER-CUSTOM preserved
+if ! grep -q '^## CONSUMER-CUSTOM' "$CONSUMER/CLAUDE.md"; then
+  printf 'FAIL: consumer-authored ## CONSUMER-CUSTOM dropped\n'
   exit 1
 fi
 
 # Compact Instructions still last
-last_h2="$(grep '^## ' "$FORK/CLAUDE.md" | tail -1)"
+last_h2="$(grep '^## ' "$CONSUMER/CLAUDE.md" | tail -1)"
 if [ "$last_h2" != "## Compact Instructions" ]; then
   printf 'FAIL: ## Compact Instructions not last (got: %s)\n' "$last_h2"
   exit 1

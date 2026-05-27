@@ -12,14 +12,14 @@ TOOL="$AGENT0_ROOT/.claude/tools/sync-harness.sh"
 TMPDIR="$(mktemp -d -t spec-016-10-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
-FORK="$TMPDIR/fork"
-mkdir -p "$FORK"
+CONSUMER="$TMPDIR/consumer"
+mkdir -p "$CONSUMER"
 
 # Run from non-Agent0 cwd with no env var. PWD is the tmpdir.
 unset AGENT0_HARNESS_PATH || true
 
 actual_exit=0
-out="$(cd "$TMPDIR" && bash "$TOOL" --apply "$FORK" 2>&1)" || actual_exit=$?
+out="$(cd "$TMPDIR" && bash "$TOOL" --apply "$CONSUMER" 2>&1)" || actual_exit=$?
 
 if [ "$actual_exit" -ne 2 ]; then
   printf 'FAIL: expected exit 2 (usage), got %d\n%s\n' "$actual_exit" "$out"

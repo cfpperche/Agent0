@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Scenario: --check distinguishes stale from customized.
-# Asserts a drifted fork with a baseline gets each plain file labelled
+# Asserts a drifted consumer project with a baseline gets each plain file labelled
 # up-to-date / stale / customized / removed, --check exits 1, and --check
 # performs no writes.
 
@@ -13,8 +13,8 @@ TMPDIR="$(mktemp -d -t spec-068-28-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 SRC="$TMPDIR/agent0"
-FORK="$TMPDIR/fork"
-mkdir -p "$SRC/.claude/hooks" "$FORK/.claude/hooks"
+CONSUMER="$TMPDIR/consumer"
+mkdir -p "$SRC/.claude/hooks" "$CONSUMER/.claude/hooks"
 
 # Agent0: 3 hooks.
 printf 'stale-v2\n'   > "$SRC/.claude/hooks/hStale.sh"
@@ -24,35 +24,35 @@ printf '{"hooks":{}}\n' > "$SRC/.claude/settings.json"
 printf '# CLAUDE\n\n## Compact Instructions\n' > "$SRC/CLAUDE.md"
 chmod +x "$SRC"/.claude/hooks/*.sh
 
-# Fork: hStale untouched-but-behind, hCustom fork-edited, hCurrent in sync,
+# Consumer project: hStale untouched-but-behind, hCustom consumer-edited, hCurrent in sync,
 # hOrphan present but gone from Agent0.
-printf 'stale-v1\n'  > "$FORK/.claude/hooks/hStale.sh"
-printf 'fork-edit\n' > "$FORK/.claude/hooks/hCustom.sh"
-printf 'current\n'   > "$FORK/.claude/hooks/hCurrent.sh"
-printf 'orphan\n'    > "$FORK/.claude/hooks/hOrphan.sh"
-printf '{"hooks":{}}\n' > "$FORK/.claude/settings.json"
-printf '# CLAUDE fork\n\n## Compact Instructions\n' > "$FORK/CLAUDE.md"
-chmod +x "$FORK"/.claude/hooks/*.sh
+printf 'stale-v1\n'  > "$CONSUMER/.claude/hooks/hStale.sh"
+printf 'consumer-edit\n' > "$CONSUMER/.claude/hooks/hCustom.sh"
+printf 'current\n'   > "$CONSUMER/.claude/hooks/hCurrent.sh"
+printf 'orphan\n'    > "$CONSUMER/.claude/hooks/hOrphan.sh"
+printf '{"hooks":{}}\n' > "$CONSUMER/.claude/settings.json"
+printf '# CLAUDE consumer project\n\n## Compact Instructions\n' > "$CONSUMER/CLAUDE.md"
+chmod +x "$CONSUMER"/.claude/hooks/*.sh
 
 sha() { sha256sum "$1" | awk '{print $1}'; }
-cat > "$FORK/.claude/harness-sync-baseline.json" <<EOF
+cat > "$CONSUMER/.claude/harness-sync-baseline.json" <<EOF
 {
   "agent0_commit": null,
   "synced_at": "2026-05-01T00:00:00Z",
   "tool_version": 1,
   "files": {
-    ".claude/hooks/hStale.sh": "$(sha "$FORK/.claude/hooks/hStale.sh")",
+    ".claude/hooks/hStale.sh": "$(sha "$CONSUMER/.claude/hooks/hStale.sh")",
     ".claude/hooks/hCustom.sh": "2222222222222222222222222222222222222222222222222222222222222222",
-    ".claude/hooks/hCurrent.sh": "$(sha "$FORK/.claude/hooks/hCurrent.sh")",
-    ".claude/hooks/hOrphan.sh": "$(sha "$FORK/.claude/hooks/hOrphan.sh")"
+    ".claude/hooks/hCurrent.sh": "$(sha "$CONSUMER/.claude/hooks/hCurrent.sh")",
+    ".claude/hooks/hOrphan.sh": "$(sha "$CONSUMER/.claude/hooks/hOrphan.sh")"
   }
 }
 EOF
 
-pre_sha="$(find "$FORK" -type f -exec sha256sum {} \; | sort)"
+pre_sha="$(find "$CONSUMER" -type f -exec sha256sum {} \; | sort)"
 
 actual_exit=0
-out="$(bash "$TOOL" --check --agent0-path="$SRC" "$FORK" 2>&1)" || actual_exit=$?
+out="$(bash "$TOOL" --check --agent0-path="$SRC" "$CONSUMER" 2>&1)" || actual_exit=$?
 
 if [ "$actual_exit" -ne 1 ]; then
   printf 'FAIL: --check expected exit 1 (drift), got %d\n%s\n' "$actual_exit" "$out"
@@ -69,9 +69,9 @@ if [ "$fail" -ne 0 ]; then
   exit 1
 fi
 
-post_sha="$(find "$FORK" -type f -exec sha256sum {} \; | sort)"
+post_sha="$(find "$CONSUMER" -type f -exec sha256sum {} \; | sort)"
 if [ "$pre_sha" != "$post_sha" ]; then
-  printf 'FAIL: --check modified the fork (must be read-only)\n'
+  printf 'FAIL: --check modified the consumer project (must be read-only)\n'
   exit 1
 fi
 

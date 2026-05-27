@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Scenario: no markers + fork rewrote an Agent0-region-titled section body
+# Scenario: no markers + consumer project rewrote an Agent0-region-titled section body
 # → diverged-sections.md written, candidate NOT written; legacy fallback merge still runs.
 
 set -euo pipefail
@@ -11,8 +11,8 @@ TMPDIR="$(mktemp -d -t spec-058-20-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 SRC="$TMPDIR/agent0"
-FORK="$TMPDIR/fork"
-mkdir -p "$SRC/.claude" "$FORK/.claude"
+CONSUMER="$TMPDIR/consumer"
+mkdir -p "$SRC/.claude" "$CONSUMER/.claude"
 
 cat > "$SRC/CLAUDE.md" <<'EOF'
 # Agent0
@@ -34,17 +34,17 @@ compact.
 <!-- AGENT0:END -->
 EOF
 
-# Fork has NO markers. ## TDD body differs from Agent0 region.
-cat > "$FORK/CLAUDE.md" <<'EOF'
-# MyFork
+# Consumer project has NO markers. ## TDD body differs from Agent0 region.
+cat > "$CONSUMER/CLAUDE.md" <<'EOF'
+# MyConsumer
 
 ## Overview
 
-fork overview.
+consumer project overview.
 
 ## TDD
 
-FORK-REWRITTEN TDD body — different from canonical.
+CONSUMER-REWRITTEN TDD body — different from canonical.
 
 ## Compact Instructions
 
@@ -52,11 +52,11 @@ compact.
 EOF
 
 printf '{"hooks":{}}\n' > "$SRC/.claude/settings.json"
-printf '{"hooks":{}}\n' > "$FORK/.claude/settings.json"
+printf '{"hooks":{}}\n' > "$CONSUMER/.claude/settings.json"
 
 err_log="$(mktemp -t spec-058-20-err-XXXXXX)"
 actual_exit=0
-bash "$TOOL" --apply --agent0-path="$SRC" "$FORK" >/dev/null 2>"$err_log" || actual_exit=$?
+bash "$TOOL" --apply --agent0-path="$SRC" "$CONSUMER" >/dev/null 2>"$err_log" || actual_exit=$?
 if [ "$actual_exit" -ne 0 ]; then
   printf 'FAIL: --apply expected exit 0 (legacy merge succeeds, candidate blocked), got %d\n' "$actual_exit"
   cat "$err_log"
@@ -71,27 +71,27 @@ if ! grep -q 'claude-md-migration-blocked' "$err_log"; then
 fi
 
 # diverged-sections.md must exist
-if [ ! -f "$FORK/.claude/CLAUDE.md.diverged-sections.md" ]; then
+if [ ! -f "$CONSUMER/.claude/CLAUDE.md.diverged-sections.md" ]; then
   printf 'FAIL: diverged-sections.md not written\n'
   exit 1
 fi
 
 # Report must name ## TDD
-if ! grep -q 'TDD' "$FORK/.claude/CLAUDE.md.diverged-sections.md"; then
+if ! grep -q 'TDD' "$CONSUMER/.claude/CLAUDE.md.diverged-sections.md"; then
   printf 'FAIL: diverged-sections.md does not mention TDD\n'
-  cat "$FORK/.claude/CLAUDE.md.diverged-sections.md"
+  cat "$CONSUMER/.claude/CLAUDE.md.diverged-sections.md"
   exit 1
 fi
 
 # Migration candidate must NOT exist
-if [ -f "$FORK/.claude/CLAUDE.md.migration-candidate.md" ]; then
+if [ -f "$CONSUMER/.claude/CLAUDE.md.migration-candidate.md" ]; then
   printf 'FAIL: candidate file should not exist when divergence blocked\n'
   exit 1
 fi
 
-# Fork's TDD edit must survive (legacy merge does not touch existing sections)
-if ! grep -q 'FORK-REWRITTEN TDD body' "$FORK/CLAUDE.md"; then
-  printf 'FAIL: fork TDD edit overwritten by legacy merge\n'
+# Consumer project's TDD edit must survive (legacy merge does not touch existing sections)
+if ! grep -q 'CONSUMER-REWRITTEN TDD body' "$CONSUMER/CLAUDE.md"; then
+  printf 'FAIL: consumer project TDD edit overwritten by legacy merge\n'
   exit 1
 fi
 

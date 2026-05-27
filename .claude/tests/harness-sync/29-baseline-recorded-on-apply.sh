@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Scenario: the baseline is recorded on every --apply.
-# Asserts that after --apply the fork has a valid harness-sync-baseline.json
+# Asserts that after --apply the consumer project has a valid harness-sync-baseline.json
 # capturing Agent0's managed-file sha-set, with all required top-level keys.
 
 set -euo pipefail
@@ -12,23 +12,23 @@ TMPDIR="$(mktemp -d -t spec-068-29-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 SRC="$TMPDIR/agent0"
-FORK="$TMPDIR/fork"
-mkdir -p "$SRC/.claude/hooks" "$FORK/.claude"
+CONSUMER="$TMPDIR/consumer"
+mkdir -p "$SRC/.claude/hooks" "$CONSUMER/.claude"
 
 printf '#!/usr/bin/env bash\necho hookA\n' > "$SRC/.claude/hooks/hookA.sh"
 printf '{"hooks":{}}\n' > "$SRC/.claude/settings.json"
 printf '# CLAUDE\n\n## Compact Instructions\n' > "$SRC/CLAUDE.md"
 chmod +x "$SRC/.claude/hooks/hookA.sh"
-printf '{"hooks":{}}\n' > "$FORK/.claude/settings.json"
-printf '# CLAUDE fork\n\n## Compact Instructions\n' > "$FORK/CLAUDE.md"
+printf '{"hooks":{}}\n' > "$CONSUMER/.claude/settings.json"
+printf '# CLAUDE consumer project\n\n## Compact Instructions\n' > "$CONSUMER/CLAUDE.md"
 
-BASELINE="$FORK/.claude/harness-sync-baseline.json"
+BASELINE="$CONSUMER/.claude/harness-sync-baseline.json"
 if [ -f "$BASELINE" ]; then
   printf 'FAIL: precondition — baseline should not exist before first --apply\n'
   exit 1
 fi
 
-bash "$TOOL" --apply --agent0-path="$SRC" "$FORK" >/dev/null 2>&1 || true
+bash "$TOOL" --apply --agent0-path="$SRC" "$CONSUMER" >/dev/null 2>&1 || true
 
 if [ ! -f "$BASELINE" ]; then
   printf 'FAIL: harness-sync-baseline.json not written by --apply\n'

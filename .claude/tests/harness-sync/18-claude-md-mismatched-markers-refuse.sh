@@ -33,15 +33,15 @@ TMP_A="$(mktemp -d -t spec-058-18a-XXXXXX)"
 trap 'rm -rf "$TMP_A" ${TMP_B:-} ${TMP_C:-}' EXIT
 
 SRC_A="$TMP_A/agent0"
-FORK_A="$TMP_A/fork"
+CONSUMER_A="$TMP_A/consumer project"
 setup_src "$SRC_A"
-mkdir -p "$FORK_A/.claude"
-cat > "$FORK_A/CLAUDE.md" <<'EOF'
-# MyFork
+mkdir -p "$CONSUMER_A/.claude"
+cat > "$CONSUMER_A/CLAUDE.md" <<'EOF'
+# MyConsumer
 
 ## Overview
 
-fork.
+consumer project.
 
 <!-- AGENT0:BEGIN -->
 
@@ -49,11 +49,11 @@ fork.
 
 body of A.
 EOF
-printf '{"hooks":{}}\n' > "$FORK_A/.claude/settings.json"
+printf '{"hooks":{}}\n' > "$CONSUMER_A/.claude/settings.json"
 
 err_a="$(mktemp -t spec-058-18-erra-XXXXXX)"
 exit_a=0
-bash "$TOOL" --apply --agent0-path="$SRC_A" "$FORK_A" >/dev/null 2>"$err_a" || exit_a=$?
+bash "$TOOL" --apply --agent0-path="$SRC_A" "$CONSUMER_A" >/dev/null 2>"$err_a" || exit_a=$?
 if [ "$exit_a" -eq 0 ]; then
   printf 'FAIL(a): only-BEGIN should refuse (exit non-zero), got 0\n'
   exit 1
@@ -67,15 +67,15 @@ fi
 # --- Case (b): only END, no BEGIN ---
 TMP_B="$(mktemp -d -t spec-058-18b-XXXXXX)"
 SRC_B="$TMP_B/agent0"
-FORK_B="$TMP_B/fork"
+CONSUMER_B="$TMP_B/consumer project"
 setup_src "$SRC_B"
-mkdir -p "$FORK_B/.claude"
-cat > "$FORK_B/CLAUDE.md" <<'EOF'
-# MyFork
+mkdir -p "$CONSUMER_B/.claude"
+cat > "$CONSUMER_B/CLAUDE.md" <<'EOF'
+# MyConsumer
 
 ## Overview
 
-fork.
+consumer project.
 
 ## A
 
@@ -83,11 +83,11 @@ body of A.
 
 <!-- AGENT0:END -->
 EOF
-printf '{"hooks":{}}\n' > "$FORK_B/.claude/settings.json"
+printf '{"hooks":{}}\n' > "$CONSUMER_B/.claude/settings.json"
 
 err_b="$(mktemp -t spec-058-18-errb-XXXXXX)"
 exit_b=0
-bash "$TOOL" --apply --agent0-path="$SRC_B" "$FORK_B" >/dev/null 2>"$err_b" || exit_b=$?
+bash "$TOOL" --apply --agent0-path="$SRC_B" "$CONSUMER_B" >/dev/null 2>"$err_b" || exit_b=$?
 if [ "$exit_b" -eq 0 ]; then
   printf 'FAIL(b): only-END should refuse, got 0\n'
   exit 1
@@ -101,15 +101,15 @@ fi
 # --- Case (c): nested-invalid (2 BEGIN markers) ---
 TMP_C="$(mktemp -d -t spec-058-18c-XXXXXX)"
 SRC_C="$TMP_C/agent0"
-FORK_C="$TMP_C/fork"
+CONSUMER_C="$TMP_C/consumer project"
 setup_src "$SRC_C"
-mkdir -p "$FORK_C/.claude"
-cat > "$FORK_C/CLAUDE.md" <<'EOF'
-# MyFork
+mkdir -p "$CONSUMER_C/.claude"
+cat > "$CONSUMER_C/CLAUDE.md" <<'EOF'
+# MyConsumer
 
 ## Overview
 
-fork.
+consumer project.
 
 <!-- AGENT0:BEGIN -->
 
@@ -121,11 +121,11 @@ fork.
 
 <!-- AGENT0:END -->
 EOF
-printf '{"hooks":{}}\n' > "$FORK_C/.claude/settings.json"
+printf '{"hooks":{}}\n' > "$CONSUMER_C/.claude/settings.json"
 
 err_c="$(mktemp -t spec-058-18-errc-XXXXXX)"
 exit_c=0
-bash "$TOOL" --apply --agent0-path="$SRC_C" "$FORK_C" >/dev/null 2>"$err_c" || exit_c=$?
+bash "$TOOL" --apply --agent0-path="$SRC_C" "$CONSUMER_C" >/dev/null 2>"$err_c" || exit_c=$?
 if [ "$exit_c" -eq 0 ]; then
   printf 'FAIL(c): nested-invalid should refuse, got 0\n'
   exit 1

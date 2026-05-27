@@ -3,7 +3,7 @@
 # Asserts:
 #   (a) --check exits 1 when drift exists
 #   (b) stdout names each missing file
-#   (c) no filesystem writes in fork target
+#   (c) no filesystem writes in consumer project target
 
 set -euo pipefail
 
@@ -14,8 +14,8 @@ TMPDIR="$(mktemp -d -t spec-016-01-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 SRC="$TMPDIR/agent0"
-FORK="$TMPDIR/fork"
-mkdir -p "$SRC/.claude/hooks" "$SRC/.claude/rules" "$FORK/.claude/hooks" "$FORK/.claude/rules"
+CONSUMER="$TMPDIR/consumer"
+mkdir -p "$SRC/.claude/hooks" "$SRC/.claude/rules" "$CONSUMER/.claude/hooks" "$CONSUMER/.claude/rules"
 
 # Source: 2 hooks + 1 rule
 printf '#!/usr/bin/env bash\necho hookA\n' > "$SRC/.claude/hooks/hookA.sh"
@@ -25,16 +25,16 @@ printf '{"hooks":{}}\n' > "$SRC/.claude/settings.json"
 printf '# CLAUDE\n\n## Compact Instructions\n' > "$SRC/CLAUDE.md"
 chmod +x "$SRC/.claude/hooks/hookA.sh" "$SRC/.claude/hooks/hookB.sh"
 
-# Fork: only hookA present (missing hookB + ruleA)
-printf '#!/usr/bin/env bash\necho hookA\n' > "$FORK/.claude/hooks/hookA.sh"
-printf '{"hooks":{}}\n' > "$FORK/.claude/settings.json"
-printf '# CLAUDE fork\n\n## Compact Instructions\n' > "$FORK/CLAUDE.md"
-chmod +x "$FORK/.claude/hooks/hookA.sh"
+# Consumer project: only hookA present (missing hookB + ruleA)
+printf '#!/usr/bin/env bash\necho hookA\n' > "$CONSUMER/.claude/hooks/hookA.sh"
+printf '{"hooks":{}}\n' > "$CONSUMER/.claude/settings.json"
+printf '# CLAUDE consumer project\n\n## Compact Instructions\n' > "$CONSUMER/CLAUDE.md"
+chmod +x "$CONSUMER/.claude/hooks/hookA.sh"
 
-pre_sha="$(find "$FORK" -type f -exec sha256sum {} \; | sort)"
+pre_sha="$(find "$CONSUMER" -type f -exec sha256sum {} \; | sort)"
 
 actual_exit=0
-out="$(bash "$TOOL" --check --agent0-path="$SRC" "$FORK" 2>&1)" || actual_exit=$?
+out="$(bash "$TOOL" --check --agent0-path="$SRC" "$CONSUMER" 2>&1)" || actual_exit=$?
 
 # Assertions
 if [ "$actual_exit" -ne 1 ]; then
@@ -53,9 +53,9 @@ if ! printf '%s' "$out" | grep -q 'ruleA.md'; then
   exit 1
 fi
 
-post_sha="$(find "$FORK" -type f -exec sha256sum {} \; | sort)"
+post_sha="$(find "$CONSUMER" -type f -exec sha256sum {} \; | sort)"
 if [ "$pre_sha" != "$post_sha" ]; then
-  printf 'FAIL: --check should not modify fork\n'
+  printf 'FAIL: --check should not modify consumer project\n'
   exit 1
 fi
 

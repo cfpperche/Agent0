@@ -49,7 +49,7 @@ DRY_RUN=0
 FORCE=0
 FORCE_EXCEPT=""
 AGENT0_ARG=""
-FORK_ARG=""
+CONSUMER_ARG=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -74,8 +74,8 @@ while [ $# -gt 0 ]; do
       exit 2
       ;;
     *)
-      if [ -z "$FORK_ARG" ]; then
-        FORK_ARG="$1"
+      if [ -z "$CONSUMER_ARG" ]; then
+        CONSUMER_ARG="$1"
       else
         printf 'sync-harness: unexpected extra positional arg: %s\n' "$1" >&2
         usage >&2
@@ -86,7 +86,7 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-if [ -z "$FORK_ARG" ]; then
+if [ -z "$CONSUMER_ARG" ]; then
   printf 'sync-harness: missing <consumer-path>\n' >&2
   usage >&2
   exit 2
@@ -103,15 +103,15 @@ else
   exit 2
 fi
 
-FORK_ROOT="$FORK_ARG"
+CONSUMER_ROOT="$CONSUMER_ARG"
 
 # Sanity: Agent0 looks like an Agent0 repo
 if [ ! -d "$AGENT0_ROOT/.claude" ] || [ ! -f "$AGENT0_ROOT/CLAUDE.md" ]; then
   printf 'sync-harness: --agent0-path=%s does not look like an Agent0 repo (no .claude/ or CLAUDE.md)\n' "$AGENT0_ROOT" >&2
   exit 2
 fi
-if [ ! -d "$FORK_ROOT" ]; then
-  printf 'sync-harness: consumer project path does not exist: %s\n' "$FORK_ROOT" >&2
+if [ ! -d "$CONSUMER_ROOT" ]; then
+  printf 'sync-harness: consumer project path does not exist: %s\n' "$CONSUMER_ROOT" >&2
   exit 2
 fi
 
@@ -138,7 +138,7 @@ fi
 # and lets the deletion pass propagate upstream removals safely. Git-tracked in
 # the consumer project (travels on clone); never shipped by Agent0 itself.
 BASELINE_TOOL_VERSION=1
-BASELINE_FILE="$FORK_ROOT/.claude/harness-sync-baseline.json"
+BASELINE_FILE="$CONSUMER_ROOT/.claude/harness-sync-baseline.json"
 BASELINE_PRESENT=0
 BASELINE_TSV=""          # temp: sorted "relpath<TAB>sha" of the recorded baseline
 MANIFEST_RAW=""          # temp: unsorted "relpath<TAB>sha" of Agent0's current set
@@ -326,7 +326,7 @@ _self_rebootstrap() {
 
   local rel=".claude/tools/sync-harness.sh"
   local src="$AGENT0_ROOT/$rel"
-  local dst="$FORK_ROOT/$rel"
+  local dst="$CONSUMER_ROOT/$rel"
   # No source, or consumer project has no copy → no in-place self-overwrite to guard.
   [ -f "$src" ] && [ -f "$dst" ] || return 0
 
@@ -364,7 +364,7 @@ _self_rebootstrap() {
 process_file() {
   local rel="$1"
   local src="$AGENT0_ROOT/$rel"
-  local dst="$FORK_ROOT/$rel"
+  local dst="$CONSUMER_ROOT/$rel"
 
   if [ ! -f "$src" ]; then
     return
@@ -515,8 +515,8 @@ prune_empty_parents() {
   local dir
   dir="$(dirname "$rel")"
   while [ -n "$dir" ] && [ "$dir" != "." ] && [ "$dir" != "/" ]; do
-    if [ -d "$FORK_ROOT/$dir" ] && [ -z "$(ls -A "$FORK_ROOT/$dir" 2>/dev/null)" ]; then
-      rmdir "$FORK_ROOT/$dir" 2>/dev/null || break
+    if [ -d "$CONSUMER_ROOT/$dir" ] && [ -z "$(ls -A "$CONSUMER_ROOT/$dir" 2>/dev/null)" ]; then
+      rmdir "$CONSUMER_ROOT/$dir" 2>/dev/null || break
       dir="$(dirname "$dir")"
     else
       break
@@ -546,7 +546,7 @@ reconcile_deletions() {
     if grep -Fxq "$rel" "$manifest_paths"; then
       continue
     fi
-    dst="$FORK_ROOT/$rel"
+    dst="$CONSUMER_ROOT/$rel"
     # Consumer project no longer has it — nothing to delete.
     if [ ! -f "$dst" ]; then
       continue
@@ -659,7 +659,7 @@ write_baseline() {
 merge_settings_json() {
   local rel=".claude/settings.json"
   local src="$AGENT0_ROOT/$rel"
-  local dst="$FORK_ROOT/$rel"
+  local dst="$CONSUMER_ROOT/$rel"
 
   if [ ! -f "$src" ]; then
     return
@@ -701,16 +701,16 @@ merge_settings_json() {
       map(select(is_excluded | not));
 
     . as $arr |
-    ($arr[0] // {}) as $consumer project |
+    ($arr[0] // {}) as $consumer |
     ($arr[1] // {}) as $agent0 |
-    $consumer project
+    $consumer
     | (if ($agent0 | has("$schema"))    then .["$schema"]  = $agent0["$schema"]  else . end)
     | (if ($agent0 | has("statusLine")) then .statusLine   = $agent0.statusLine  else . end)
     | .hooks = (
-        ((($consumer project.hooks // {}) | keys) + (($agent0.hooks // {}) | keys))
+        ((($consumer.hooks // {}) | keys) + (($agent0.hooks // {}) | keys))
         | unique
         | map(. as $k | {
-            ($k): (((($consumer project.hooks[$k]) // []) | strip_excluded)
+            ($k): (((($consumer.hooks[$k]) // []) | strip_excluded)
                  + ((($agent0.hooks[$k]) // []) | strip_excluded)
                  | unique_by(dedup_key))
           })
@@ -834,7 +834,7 @@ _write_region_divergence_report() {
   local src="$1"
   local dst="$2"
   local diverged_titles="$3"
-  local out="$FORK_ROOT/.claude/CLAUDE.md.diverged-region.md"
+  local out="$CONSUMER_ROOT/.claude/CLAUDE.md.diverged-region.md"
   local title
   mkdir -p "$(dirname "$out")"
   {
@@ -869,7 +869,7 @@ EOF
 _generate_migration_candidate() {
   local rel="CLAUDE.md"
   local src="$AGENT0_ROOT/$rel"
-  local dst="$FORK_ROOT/$rel"
+  local dst="$CONSUMER_ROOT/$rel"
   local src_state diverged_titles count title
 
   # Candidate generation requires Agent0 source to be wrapped — the markers
@@ -896,7 +896,7 @@ _generate_migration_candidate() {
       return
     fi
 
-    local report="$FORK_ROOT/.claude/CLAUDE.md.diverged-sections.md"
+    local report="$CONSUMER_ROOT/.claude/CLAUDE.md.diverged-sections.md"
     mkdir -p "$(dirname "$report")"
     {
       printf '# CLAUDE.md section divergence — migration blocked\n\n'
@@ -929,7 +929,7 @@ EOF
     return
   fi
 
-  local candidate="$FORK_ROOT/.claude/CLAUDE.md.migration-candidate.md"
+  local candidate="$CONSUMER_ROOT/.claude/CLAUDE.md.migration-candidate.md"
   mkdir -p "$(dirname "$candidate")"
 
   local src_region_h2 dst_h2 project_only_titles src_sha_short
@@ -982,7 +982,7 @@ EOF
 _merge_claude_md_managed_block() {
   local rel="CLAUDE.md"
   local src="$AGENT0_ROOT/$rel"
-  local dst="$FORK_ROOT/$rel"
+  local dst="$CONSUMER_ROOT/$rel"
 
   if matches_force_except "$rel"; then
     printf '!! force-except %s (merge skipped)\n' "$rel" >&2
@@ -1091,7 +1091,7 @@ _merge_claude_md_managed_block() {
 _merge_claude_md_legacy() {
   local rel="CLAUDE.md"
   local src="$AGENT0_ROOT/$rel"
-  local dst="$FORK_ROOT/$rel"
+  local dst="$CONSUMER_ROOT/$rel"
 
   if [ ! -f "$src" ]; then
     return
@@ -1123,7 +1123,7 @@ _merge_claude_md_legacy() {
   fi
 
   if [ -z "$missing_titles" ]; then
-    # CLAUDE.md is expected to diverge in consumer project-authored content (Overview, Stack, etc).
+    # CLAUDE.md is expected to diverge in consumer-authored content (Overview, Stack, etc).
     # The sync's only job is to ensure capacity sections from Agent0 are present.
     # If all Agent0 sections are present, treat as up-to-date regardless of other-body drift.
     printf '= up to date %s\n' "$rel"
@@ -1182,7 +1182,7 @@ EOF
 merge_claude_md() {
   local rel="CLAUDE.md"
   local src="$AGENT0_ROOT/$rel"
-  local dst="$FORK_ROOT/$rel"
+  local dst="$CONSUMER_ROOT/$rel"
 
   if [ ! -f "$src" ]; then
     return
@@ -1239,7 +1239,7 @@ merge_claude_md() {
 merge_gitignore() {
   local rel=".gitignore"
   local src="$AGENT0_ROOT/$rel"
-  local dst="$FORK_ROOT/$rel"
+  local dst="$CONSUMER_ROOT/$rel"
   local marker="# === Agent0 harness sync — additions ==="
 
   if [ ! -f "$src" ]; then

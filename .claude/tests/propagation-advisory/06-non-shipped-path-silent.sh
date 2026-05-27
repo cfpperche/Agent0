@@ -43,4 +43,4 @@ for pl in "$payload1" "$payload2"; do
   rm -f "$stderr_capture"
 done
 
-echo "PASS: 06-non-consumer project-path-silent"
+echo "PASS: 06-non-consumer-path-silent"

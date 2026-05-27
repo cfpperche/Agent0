@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Scenario: an edit to a fork-bound path with a spec-NNN ref fires the
+# Scenario: an edit to a shipped path with a spec-NNN ref fires the
 # propagation-advisory: spec-NNN line. Hook exits 0 regardless.
 
 set -euo pipefail

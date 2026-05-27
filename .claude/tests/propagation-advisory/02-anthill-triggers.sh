@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Scenario: an edit to a fork-bound path that introduces an anthill ref
+# Scenario: an edit to a shipped path that introduces an anthill ref
 # fires the propagation-advisory: anthill line.
 
 set -euo pipefail

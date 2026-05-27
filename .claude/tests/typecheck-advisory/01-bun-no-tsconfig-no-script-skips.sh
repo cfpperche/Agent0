@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # .claude/tests/typecheck-advisory/01-bun-no-tsconfig-no-script-skips.sh
-# V1 — Scenario: bun fork without tsconfig.json AND without typecheck script.
+# V1 — Scenario: bun consumer project without tsconfig.json AND without typecheck script.
 #
 # This is the bug surfaced via dogfood 2026-05-12: pre-fix the
 # validator unconditionally tried `bun run typecheck`, hard-failing the
-# pipeline on early-stage forks. Post-fix the validator omits the
+# pipeline on early-stage consumer projects. Post-fix the validator omits the
 # typecheck step entirely and emits `typecheck-advisory:` to stderr.
 #
 # Asserts:
@@ -29,7 +29,7 @@ chmod +x "$TMPDIR/bin/bun"
 
 touch "$TMPDIR/bun.lock"
 cat > "$TMPDIR/package.json" <<'EOF'
-{"name":"early-stage-fork"}
+{"name":"early-stage-consumer project"}
 EOF
 # NO tsconfig.json, NO scripts.typecheck
 

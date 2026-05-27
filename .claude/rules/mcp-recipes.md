@@ -415,7 +415,7 @@ async (page) => {
 }
 ```
 
-Caveat: the Playwright MCP sandbox may block `node:fs` imports (verified empirically — both `require('fs/promises')` and `await import('fs/promises')` failed in this dogfood pass on 2026-05). When `fs` is unavailable, the only viable reuse path is the `--storage-state` startup flag. The multi-host workflow then needs to either (a) merge multiple `<host>.json` files into one combined storage-state JSON at consumer project-prep time, or (b) restart the session each time a different host is needed.
+Caveat: the Playwright MCP sandbox may block `node:fs` imports (verified empirically — both `require('fs/promises')` and `await import('fs/promises')` failed in this dogfood pass on 2026-05). When `fs` is unavailable, the only viable reuse path is the `--storage-state` startup flag. The multi-host workflow then needs to either (a) merge multiple `<host>.json` files into one combined storage-state JSON at consumer-prep time, or (b) restart the session each time a different host is needed.
 
 The reuse step is silent: when `.claude/.browser-state/<host>.json` exists and is loaded (either via `--storage-state` or via mid-session injection), the agent navigates as authenticated and `BROWSER_AUTH_REQUIRED: <host>` is NOT emitted.
 

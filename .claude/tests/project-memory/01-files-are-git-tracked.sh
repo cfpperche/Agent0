@@ -2,7 +2,13 @@
 # Scenario: factual project memory is git-tracked.
 # Asserts:
 #   (a) .agent0/memory/ exists as a directory
-#   (b) git ls-files includes the migrated agent0-purpose.md + visibility-intent.md
+#   (b) at least 1 entry .md (excluding MEMORY.md) is git-tracked there
+#
+# Property is intentionally generic — hardcoded entry names would only
+# pass in the upstream Agent0 repo (where those specific entries exist)
+# and would always fail in consumer projects regardless of migration
+# state. The "≥1 entry tracked" shape signals both that the bucket has
+# been adopted AND that consumer content has landed under .agent0/memory/.
 
 set -euo pipefail
 
@@ -14,13 +20,15 @@ if [ ! -d "$AGENT0_ROOT/.agent0/memory" ]; then
 fi
 
 tracked="$(git -C "$AGENT0_ROOT" ls-files .agent0/memory/ 2>/dev/null || true)"
+entry_count="$(printf '%s\n' "$tracked" \
+  | grep -E '^\.agent0/memory/[^/]+\.md$' \
+  | grep -vE '^\.agent0/memory/MEMORY\.md$' \
+  | grep -c . || true)"
 
-for expected in agent0-purpose.md visibility-intent.md; do
-  if ! printf '%s' "$tracked" | grep -q "\.agent0/memory/$expected"; then
-    printf 'FAIL: .agent0/memory/%s not git-tracked\n' "$expected"
-    printf 'git ls-files output:\n%s\n' "$tracked"
-    exit 1
-  fi
-done
+if [ "$entry_count" -lt 1 ]; then
+  printf 'FAIL: expected ≥1 entry .md (excluding MEMORY.md) git-tracked under .agent0/memory/, found %d\n' "$entry_count"
+  printf 'git ls-files output:\n%s\n' "$tracked"
+  exit 1
+fi
 
 echo "PASS: 01-files-are-git-tracked"

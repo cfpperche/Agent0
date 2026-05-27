@@ -626,4 +626,33 @@ These survive into `plan.md` / `tasks.md` as mechanical work items, not as quest
 
 _Filled after user confirms the synthesis. List the actual edits made to `spec.md` (or "synthesis rejected — no changes applied")._
 
-- {{applied change 1 — file + section}}
+User confirmed the revised synthesis (`## Synthesis (revised after Round 4)` above) on 2026-05-27. `spec.md` rewritten in full to align with the converged direction. Diff applied:
+
+- **`spec.md § Intent`** — replaced the entire paragraph. New framing: structural symmetry via hook port to Codex CLI; `.agent0/memory/` corpus + `.agent0/hooks/memory-*.sh` shared implementations + `.agent0/tools/memory-*` tooling; finalizer downgraded to opt-out fallback; `.githooks/pre-commit` as universal backstop; scope explicitly narrow to memory.
+- **`spec.md § Acceptance criteria`** — substantial replacement:
+  - Modified Scenario 1 (Codex discovers project memory): trigger list expanded to operational triggers; "lazy-read" dropped in favor of "trigger-driven read"; path updated to `.agent0/memory/`.
+  - Modified Scenario 2 (both runtimes read same source): paths updated to `.agent0/memory/`.
+  - Dropped from prior superseded synthesis: "mandatory Codex finalizer exists" / "Codex deliberately unjournaled" / matrix-stays-`convention` framings.
+  - Added 7 new hook-parity scenarios: Codex `PreToolUse(apply_patch)` index gate; Codex `PostToolUse(apply_patch)` validate+project+journal; Codex `SessionStart` decay readout; shared `apply_patch` path discovery (patch-header parsing); shared hook scripts under `.agent0/hooks/`; `.codex/config.toml.example` extension; finalizer fallback for hook-disabled sessions.
+  - Added 3 cross-cutting scenarios kept from superseded synthesis (shared frontmatter validation primitive; non-mutating `.githooks/pre-commit` backstop; AGENTS.md 12-line budget mechanical check).
+  - Added matrix-delta scenario (Claude `native` + Codex `convention` → `native-opt-in`).
+  - Replaced 5 static-fact criteria: AGENTS.md § Memory budget + contents; CLAUDE.md/AGENTS.md same-bucket pointer; `memory-placement.md § Multi-runtime usage` content list; runtime-agnostic tools shell-invocable from project root with new paths; tests/verification coverage list.
+- **`spec.md § Non-goals`** — applied 5 deltas:
+  - Dropped "No Codex per-edit advisory surface" (Codex hooks restore parity).
+  - Dropped "No journal append for Codex edits in v1 (deliberate)" (Codex `PostToolUse` journals naturally).
+  - Added "No Codex lifecycle hook parity beyond the four memory hooks" (narrow scope per Round 4 OQ-6).
+  - Added "No guaranteed hook coverage for arbitrary Bash writes" (`apply_patch` is v1 surface; Bash falls to `.githooks/pre-commit`).
+  - Sharpened "No hard prevention of raw Codex edits to `MEMORY.md`" with Bash-bypass acknowledgment and skew-window framing.
+  - Sharpened "No broad `.claude/` namespace migration" with explicit three-part move scope (memory bucket / memory hooks / memory tools).
+- **`spec.md § Open questions`** — collapsed all 10 OQs into a brief CLOSED resolution table with a pointer to `debate.md § Synthesis (revised after Round 4)` as the canonical source. Section retained (not deleted) for spec-reader convenience; full justifications live in `debate.md`.
+- **`spec.md § Context / references`** — added 5 new anchors (`docs/specs/098-codex-mcp-recipes-parity/`, `.claude/memory/codex-cli-hooks.md`, `developers.openai.com/codex/hooks`, `.codex/config.toml.example`, `.agent0/hooks/`, `.agent0/tools/memory-maintain.sh`, `.githooks/pre-commit` + `secrets-scan.md`, `.agent0/HANDOFF.md § Size discipline`); updated existing entries to note path moves (`memory-*.sh` hooks, `memory-*` tools).
+- **Path updates throughout `spec.md`:** `.claude/memory/` → `.agent0/memory/`; memory-specific tools `.claude/tools/memory-*` → `.agent0/tools/memory-*`; memory-specific hooks `.claude/hooks/memory-*.sh` → `.agent0/hooks/memory-*.sh`. Non-memory paths (`.claude/rules/`, `.claude/skills/`, `.claude/settings.json`, non-memory `.claude/tools/*`, non-memory `.claude/hooks/*`) preserved as-is per narrow-scope discipline.
+- **`spec.md § Status`** — unchanged (`draft`); debate-converged but plan-phase work not yet started.
+
+**Addendum (2026-05-27, post-user-observation):** user clarified that consumer-project migration is manual, not automatic. Three small `spec.md` edits applied on top of the synthesis:
+
+- **`spec.md § Non-goals`** — split the original "No automatic memory-content propagation" bullet into two: (1) content remains project-local (unchanged), (2) **NEW**: no auto-migration mechanism for consumer projects' `.claude/memory/` → `.agent0/memory/` move; sync-harness ships scaffolding additively only; each consumer operator runs the migration by hand; transitional-state shape (compat shims vs hard cutover) is a plan-phase decision.
+- **`spec.md § Acceptance criteria`** — added a new scenario requiring a consumer migration playbook to exist (at `docs/specs/099-memory-multi-runtime/migration-playbook.md` or equivalent) with the ordered manual steps (pull synced files; `git mv` content; update `.claude/settings.json` hook registrations; remove legacy paths; verify).
+- **`spec.md § Context / references`** — added `mei-saas` + `codexeng` as the first known downstream consumers (precedent: spec 098 dogfood landed in both); the migration playbook is authored against their specific shapes.
+
+`plan.md` and `tasks.md` remain template stubs; `/sdd plan` is the next phase and will translate the 7 plan-phase enumeration tasks from the revised synthesis + this manual-migration addendum (namespace migration inventory, `.codex/config.toml.example` `[hooks]` authoring, `memory-maintain.sh` skeleton, AGENTS.md `## Memory` block authoring, `memory-placement.md § Multi-runtime usage` authoring, `.githooks/pre-commit` extension, AGENTS.md budget test, **consumer migration playbook authoring**) into a concrete plan + executable tasks.

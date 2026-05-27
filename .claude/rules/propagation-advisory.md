@@ -1,15 +1,15 @@
 # Propagation advisory
 
-A `PostToolUse(Edit|Write|MultiEdit)` hook (`.claude/hooks/propagation-advise.sh`) scans the edited content of fork-bound files for upstream-internal pointers and emits one `propagation-advisory:` line per finding to stderr. Mirrors the `tdd-advisory:` / `lint-advisory:` / `secrets-advisory:` family — always exits 0, never blocks. Fires for both parent AND sub-agent edits because the maintainer writing new rules is the most common author of fresh leaks.
+A `PostToolUse(Edit|Write|MultiEdit)` hook (`.claude/hooks/propagation-advise.sh`) scans the edited content of shipped files for upstream-internal pointers and emits one `propagation-advisory:` line per finding to stderr. Mirrors the `tdd-advisory:` / `lint-advisory:` / `secrets-advisory:` family — always exits 0, never blocks. Fires for both parent AND sub-agent edits because the maintainer writing new rules is the most common author of fresh leaks.
 
 The discipline this enforces is documented in `.claude/memory/propagation-hygiene.md` (maintainer-binding; doesn't ship). The advisory is the mechanical companion that surfaces drift in real time instead of waiting for a periodic audit.
 
 ## What fires, what stays silent
 
-- **Edit / Write / MultiEdit on a fork-bound path** → scan the edit's new content (`new_string`, `content`, or each `edits[].new_string`) against 5 leak-pattern regexes.
+- **Edit / Write / MultiEdit on a shipped path** → scan the edit's new content (`new_string`, `content`, or each `edits[].new_string`) against 5 leak-pattern regexes.
 - **Match on any pattern** → emit `propagation-advisory: <pattern> in <relpath>:<line> — <truncated text>` per finding (capped at 5 per pattern to limit noise).
 - **No matches** → silent exit 0.
-- **Path outside fork-bound surface** (e.g. `docs/specs/`, `.claude/memory/`) → silent exit 0 — those paths don't ship to forks, so their content carries no propagation risk.
+- **Path outside shipped surface** (e.g. `docs/specs/`, `.claude/memory/`) → silent exit 0 — those paths don't ship to consumer projects, so their content carries no propagation risk.
 
 ## The 5 patterns
 
@@ -26,14 +26,14 @@ Each maps to a leak class documented in `.claude/memory/propagation-hygiene.md`.
 ### Pattern exclusions (legitimate keeps that bypass the scan)
 
 - `docs/specs/NNN-<slug>/` — the literal placeholder naming convention (no digits)
-- `docs/specs/001-<slug>/`, `docs/specs/001-{{SLUG}}/`, `docs/specs/002-foundation/`, `docs/specs/003-*` — fork-output paths the `/product` skill writes
+- `docs/specs/001-<slug>/`, `docs/specs/001-{{SLUG}}/`, `docs/specs/002-foundation/`, `docs/specs/003-*` — consumer-output paths the `/product` skill writes
 - `.claude/memory/MEMORY.md` — the index file (carries no upstream-specific content)
 - `.claude/memory/<topic>.md`, `<slug>.md`, `<file>.md`, `<name>.md` — placeholder forms a rule may legitimately reference
 - `.claude/memory/.gitkeep` — empty scaffold
 
-## Fork-bound surface (where the hook fires)
+## Shipped surface (where the hook fires)
 
-Mirrors `.claude/memory/propagation-hygiene.md § The fork-bound file class`:
+Mirrors `.claude/memory/propagation-hygiene.md § The shipped file class`:
 
 - `.claude/hooks/*.sh`
 - `.claude/rules/*.md`

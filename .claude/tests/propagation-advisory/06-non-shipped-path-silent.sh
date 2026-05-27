@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Scenario: an edit to a non-fork-bound path (docs/specs/, .claude/memory/)
+# Scenario: an edit to a non-shipped path (docs/specs/, .claude/memory/)
 # is silent even with leak patterns — those paths don't propagate.
 
 set -euo pipefail
@@ -35,7 +35,7 @@ for pl in "$payload1" "$payload2"; do
   fi
 
   if [ -s "$stderr_capture" ]; then
-    printf 'FAIL: expected silent on non-fork-bound path, got:\n'
+    printf 'FAIL: expected silent on non-shipped path, got:\n'
     cat "$stderr_capture"
     rm -f "$stderr_capture"
     exit 1
@@ -43,4 +43,4 @@ for pl in "$payload1" "$payload2"; do
   rm -f "$stderr_capture"
 done
 
-echo "PASS: 06-non-fork-path-silent"
+echo "PASS: 06-non-consumer project-path-silent"

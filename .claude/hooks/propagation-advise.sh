@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # .claude/hooks/propagation-advise.sh
 # PostToolUse(Edit|Write|MultiEdit) hook — emits `propagation-advisory:`
-# lines when an edit to a fork-bound file introduces an upstream-internal
+# lines when an edit to a shipped file introduces an upstream-internal
 # pointer (spec-NNN refs, docs/specs/NNN paths, anthill mentions, personal
 # /home/<user>/ paths, .claude/memory/<file>.md pointers).
 #
@@ -35,16 +35,16 @@ PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 REL="${FILE_PATH#$PROJECT_DIR/}"
 
 # ---------------------------------------------------------------------------
-# Path scoping — only fire on fork-bound surface (per propagation-hygiene.md
-# § The fork-bound file class).
+# Path scoping — only fire on shipped surface (per propagation-hygiene.md
+# § The shipped file class).
 # ---------------------------------------------------------------------------
-in_fork_bound=0
+in_shipped=0
 case "$REL" in
-  CLAUDE.md|.mcp.json.example|.gitleaks.toml|.gitignore) in_fork_bound=1 ;;
-  .claude/hooks/*|.claude/rules/*|.claude/tools/*|.claude/validators/*|.claude/agents/*) in_fork_bound=1 ;;
-  .claude/skills/*|.claude/tests/*|.githooks/*) in_fork_bound=1 ;;
+  CLAUDE.md|.mcp.json.example|.gitleaks.toml|.gitignore) in_shipped=1 ;;
+  .claude/hooks/*|.claude/rules/*|.claude/tools/*|.claude/validators/*|.claude/agents/*) in_shipped=1 ;;
+  .claude/skills/*|.claude/tests/*|.githooks/*) in_shipped=1 ;;
 esac
-[ "$in_fork_bound" = "0" ] && exit 0
+[ "$in_shipped" = "0" ] && exit 0
 
 # Within-surface exclusions — these paths legitimately carry refs.
 case "$REL" in
@@ -138,13 +138,13 @@ scan_pattern() {
 scan_pattern "spec-NNN" '\b[Ss]pec [0-9][0-9]+\b' ''
 
 # 2. Concrete docs/specs/ paths. Excludes the placeholder NNN form and the
-#    three fork-output paths that /product writes (001-<slug>, 002-foundation,
+#    three consumer-output paths that /product writes (001-<slug>, 002-foundation,
 #    003-* infra-children).
 scan_pattern "docs/specs/NNN" 'docs/specs/[0-9]+-' \
   '001-\{\{SLUG\}\}|001-<slug>|002-foundation|003-\*|NNN-<slug>|NNN-\{\{SLUG\}\}'
 
 # 3. Anthill mentions — case-insensitive. Anthill is the archived upstream
-#    design lineage; forks have zero context for it.
+#    design lineage; consumer projects have zero context for it.
 scan_pattern "anthill" '\banthill\b' ''
 
 # 4. Personal /home/<user>/ paths. The pattern matches /home/<segment>/

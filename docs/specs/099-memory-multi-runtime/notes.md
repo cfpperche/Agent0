@@ -30,6 +30,17 @@ The implemented compromise is explicit: `memory_patch_body()` treats `tool_input
 
 The original tasks asked for fresh Claude Code and Codex session restarts. The completed verification is shell-level: synthetic Claude/Codex hook payloads, direct SessionStart hook invocation, TOML/JSON parse checks, and the memory/pre-commit test suites. This is the right evidence for repository behavior in this turn; live runtime restart checks should be done by the reviewing agent after applying the diff or by starting a fresh trusted-project session with the new `.codex/config.toml` hooks uncommented.
 
+### 2026-05-27 — parent — Post-commit Codex smoke validation closes the live-probe gap
+
+After commit `d4d171b`, ran a live empirical smoke against a fresh Codex CLI session with the `[hooks]` block uncommented in `.codex/config.toml`. The two deviations above (tolerant parser, no fresh-session restart) are now validated retroactively:
+
+- **Sinal 1 (PostToolUse + journal):** Codex created `.agent0/memory/_codex-smoke-test.md` via `apply_patch`. Journal wrote `{actor:"Codex CLI", runtime:"codex-cli", tool:"apply_patch", event_type:"add", path:".agent0/memory/_codex-smoke-test.md", tool_use_id:"call_*"}` — confirms `tool_input.command` is the primary payload field (no fallback needed), `*** Add File:` header parsing works on real payload, and actor/runtime attribution is correct. `MEMORY.md` regenerated with the new entry.
+- **Sinal 2 (PreToolUse gate):** Codex attempted an `apply_patch` with `*** Update File: .agent0/memory/MEMORY.md`. The gate returned exit 2 with the corrective template; Codex surfaced the stderr verbatim and did NOT apply the patch.
+
+Smoke artifact `_codex-smoke-test.md` removed; `bash .agent0/tools/memory-maintain.sh finalize` regenerated `MEMORY.md` byte-identically to the committed state (confirms projector idempotence). Working tree clean post-cleanup.
+
+The journal still carries the smoke `add` event in the local gitignored `.agent0/.memory-events.jsonl` — expected; the journal is the durable per-machine audit record, not the canonical content store.
+
 ## Tradeoffs
 
 _Alternatives weighed during implementation (not at plan time). The chosen path + what was given up + why the tradeoff was worth it._

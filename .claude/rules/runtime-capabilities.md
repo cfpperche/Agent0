@@ -40,26 +40,10 @@ Runtime-specific labels such as `Claude-only-until-follow-up` are legacy wording
 | harness sync | `native-opt-in` | `native-opt-in` | `.claude/tools/sync-harness.sh`; `.claude/rules/harness-sync.md`; `.claude/tests/harness-sync/` | Both runtimes can run the shell tool explicitly; it is never automatic. |
 | customization/sync surfaces | `native` | `convention` | `.claude/tools/sync-harness.sh`; `.claude/rules/harness-sync.md`; `AGENTS.override.md`; nested `AGENTS.md`; `docs/specs/090-multi-runtime-entrypoints/` | Claude-side customization is harness-managed; Codex customization layers through its native instruction-chain convention. |
 
-## Update rule
-
-Every future spec that changes runtime support for a capability must update this file in the same change. New capability rows may be added without expanding the drift check's minimum-required-labels set; that set grows only when a follow-up spec explicitly promotes a row to the minimum.
-
-## Drift enforcement
-
-`.claude/tools/check-instruction-drift.sh` protects the anchor-level contract without parsing per-cell values:
-
-- The registry file exists.
-- `CLAUDE.md` and `AGENTS.md` managed blocks point to this file.
-- The legacy `## Codex Capability Tiers` table is absent from `AGENTS.md`.
-- The six status vocabulary terms appear in this file.
-- Minimum-set capability labels appear as table rows without duplicates.
-
-Extra rows are permitted. Duplicate minimum-set rows are drift.
-
-## Skill portability relationship
-
-`.claude/skills/skill/references/portability-tiers.md` is a separate axis: it describes skill-body portability (`cc-native`, `agentskills-portable`, `runtime-agnostic`). This registry describes runtime support for Agent0 capabilities. Skill rows may cite skill portability tiers as evidence, but this file does not replace per-skill frontmatter or the portability-tier policy.
-
 ## Future runtimes
 
 Potential future columns include `Cursor`, `Aider`, and `Hermes Agent`. They are placeholders only. Do not add support claims for a runtime until a spec dogfoods or verifies that runtime's actual behavior.
+
+## Maintenance
+
+Maintainer discipline (update rule, drift-check anchors, skill-portability relationship) lives in `.claude/memory/runtime-capabilities-maintenance.md`.

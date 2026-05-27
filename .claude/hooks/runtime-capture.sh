@@ -11,8 +11,8 @@
 #
 # Tokeniser TWIN: shares pattern with .claude/hooks/supply-chain-scan.sh's
 # package-collection loop — same chain/pipe/redirect terminators and
-# value-taking flag skip. See .claude/rules/runtime-introspect.md § Gotchas
-# ("Tokeniser drift with supply-chain-scan").
+# value-taking flag skip. See .claude/memory/runtime-introspect-maintenance.md
+# § Deep gotchas ("Tokeniser drift with supply-chain-scan").
 #
 # Detector pair list (v1):
 #   bun test                        → bun-test

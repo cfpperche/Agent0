@@ -103,7 +103,7 @@ For `SessionStart`, `Setup`, `CwdChanged`, `FileChanged`: also supports `CLAUDE_
 }
 ```
 
-**Note:** Claude Code's Bash `tool_response` does NOT include an `exit_code` field. Status inference is required (see `.claude/rules/runtime-introspect.md` § Inference heuristics and `.claude/hooks/runtime-capture.sh`).
+**Note:** Claude Code's Bash `tool_response` does NOT include an `exit_code` field. Status inference is required (see `.claude/memory/runtime-introspect-maintenance.md` § Inference heuristics and `.claude/hooks/runtime-capture.sh`).
 
 **PostToolUseFailure(Bash) payload diverges (verified empirically 2026-05-11 by spec 020 dump-probe).** Under tool failure, the stdin payload to the hook script does NOT contain a `tool_response` field at all. Instead:
 

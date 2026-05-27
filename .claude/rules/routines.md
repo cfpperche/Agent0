@@ -1,6 +1,6 @@
 # Routines
 
-`.claude/routines/<slug>.md` is the project-scoped sibling of Claude Code's native `/schedule` skill. Where `/schedule` stores recurring agent runs on Anthropic's user-account cloud (the user-level memory analog), `.claude/routines/` git-tracks recurring intent at the repo level — propagating via clone, surviving fork via `.claude/tools/sync-harness.sh`, and visible in PR diff. It occupies the gap between three other state files in this project:
+`.claude/routines/<slug>.md` is the project-scoped sibling of Claude Code's native `/schedule` skill. Where `/schedule` stores recurring agent runs on Anthropic's user-account cloud (the user-level memory analog), `.claude/routines/` git-tracks recurring intent at the repo level — propagating via clone, surviving consumer project via `.claude/tools/sync-harness.sh`, and visible in PR diff. It occupies the gap between three other state files in this project:
 
 - **`.agent0/HANDOFF.md`** — *in-flight* work-state (cross-session, cross-runtime handoff).
 - **`.claude/reminders.yaml`** — *one-shot deferred do-this-thing* items with no cadence.
@@ -170,7 +170,7 @@ The marker is scoped — it skips the named check, not all validation:
 ## Discipline
 
 - **No auto-stage, no auto-commit.** `/routine new` writes the file; `git add` is the developer's call.
-- **Sync-harness propagates the capacity, NOT instances.** The `.claude/routines/` directory ships as `.gitkeep`-only via sync; individual routines a fork creates are fork-local by design.
+- **Sync-harness propagates the capacity, NOT instances.** The `.claude/routines/` directory ships as `.gitkeep`-only via sync; individual routines a consumer project creates are consumer-local by design.
 - **Leader-flag mutation requires explicit script invocation.** `install-routines.sh` and `uninstall-routines.sh` are the only sanctioned ways to mutate `~/.claude/.agent0-routines-leaders.json`. Hand-editing the file is allowed but the JSON shape must be preserved.
 - **Queue file accumulation is informative.** Multiple unactioned queue entries for the same slug (e.g. "3 pending since 10 days ago") is the signal that either the routine is firing too often, or no one's been opening sessions in this repo. Both are real signals — the readout surfaces them rather than collapsing them silently.
 - **Bash regex validation has gaps.** The 30-line cron validator catches obvious malformation but doesn't verify semantic plausibility (`0 25 * * *` is malformed AND rejected; `0 0 31 2 *` is semantically impossible — Feb 31 — but syntactically valid and accepted). Operator's responsibility to author plausible schedules.
@@ -190,6 +190,6 @@ The marker is scoped — it skips the named check, not all validation:
 
 - `.claude/rules/reminders.md` — sibling capacity (one-shot deferred); shares the user/project/shipped 3-bucket model.
 - `.claude/rules/memory-placement.md` — the 3-bucket model this rule extends to routines.
-- `.claude/rules/harness-sync.md` — how the capacity propagates to forks (`.claude/{tools,hooks,rules,skills}/` glob coverage).
+- `.claude/rules/harness-sync.md` — how the capacity propagates to consumer projects (`.claude/{tools,hooks,rules,skills}/` glob coverage).
 - `.claude/rules/delegation.md` § *Why DONE_WHEN exists* — the contract-not-promise discipline that motivates the human-in-loop dispatch.
 - `.claude/skills/skill/references/portability-tiers.md` — the tier definitions; `/routine` targets `cc-native` (depends on CC's slash-command surface for dispatch).

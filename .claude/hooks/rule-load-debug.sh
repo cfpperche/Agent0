@@ -6,7 +6,7 @@
 # only, no decision control (the harness ignores stdout/stderr for this event).
 #
 # Reference:
-#   .claude/rules/rule-load-debug.md  — discipline + probe usage
+#   .claude/memory/rule-load-debug.md  — discipline + probe usage
 #   https://code.claude.com/docs/en/hooks#instructionsloaded
 
 set -uo pipefail

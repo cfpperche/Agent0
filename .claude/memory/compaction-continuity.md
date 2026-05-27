@@ -1,3 +1,11 @@
+---
+name: compaction-continuity
+description: PreCompact+SessionStart snapshot pair preserving raw signal across /compact; mechanism + retention details.
+metadata:
+  type: reference
+  created_at: 2026-05-27T00:00:00Z
+---
+
 # Compaction continuity
 
 When the Claude Code context window fills up (auto-compact) or the user runs `/compact`, the conversation is summarized and older turns are dropped. The summary preserves the gist but loses raw signal — exact wording of decisions, verbatim user intent, specific paths and identifiers. This project preserves that raw signal across the compaction boundary via two hooks.

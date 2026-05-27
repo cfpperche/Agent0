@@ -8,11 +8,9 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-**Spec 096 (`maintainer-rules-to-memory`) SCAFFOLDED this session, status draft.** `spec.md` + `plan.md` + `tasks.md` drafted; ZERO implementation yet. 23 tasks across 5 phases. Triggered by a 25-rule audit (this session): 3 maintainer-binding capacity docs (`hook-chain-latency.md`, `compaction-continuity.md`, `rule-load-debug.md`) need to move from `.claude/rules/` → `.claude/memory/` because consumers never act on them. 2 BORDERLINE rules (`propagation-advisory.md`, `runtime-introspect.md`) deferred — split is non-trivial. 20 KEEP confirmed as-is.
+**Spec 096 (`maintainer-rules-to-memory`) SHIPPED this session, status shipped.** All 23 tasks done; all 10 acceptance criteria verified. Three rules moved `.claude/rules/` → `.claude/memory/` (`hook-chain-latency`, `compaction-continuity`, `rule-load-debug`); 11 cross-refs rewired across hooks/tools/memory/routines/tests + `.claude/.runtime-state/README.md` + `site/src/i18n/capacities.ts`; `CLAUDE.md` lost 2 managed-block sections (`## Hook chain latency`, `## Rule load debug`); `AGENTS.md` lost `## Rule load debug` (drift on `## Hook chain latency` incidentally closed); `memory-placement.md § Routing decision tree` tightened with the "consumer-side agent acts on it" test + explicit example list; `§ Why three buckets, not two` cites spec 096 as the second empirical trigger. Tests + upstream `--check` + `check-instruction-drift.sh` + `memory-query.sh list --type=reference` all clean.
 
-**mei-saas sync APPLIED this session.** `bash sync-harness.sh --apply --agent0-path=/home/goat/Agent0 /home/goat/mei-saas` → 22 copied + 81 stale-updated + 3 removed + 0 customized-refused + 0 overwritten. 97 files modified in mei-saas working tree; review + commit there is the human's call. Codexeng NOT YET synced (1 known customized file `.claude/skills/image/SKILL.md` — expected refuse without `--force`).
-
-Repo dirty: `.agent0/HANDOFF.md` (this update) + the new `docs/specs/096-maintainer-rules-to-memory/` (4 files) + 2 pre-existing `??` carried from before (`.claude/memory/agent0-core-thesis.md`, `docs/specs/091-sdd-debate-runner/` paused).
+Repo dirty: `.agent0/HANDOFF.md` (this update) + the modified spec 096 dir (`spec/plan/tasks/notes.md`) + the 14 source-tree changes from this spec + the 2 pre-existing `??` carried from before (`.claude/memory/agent0-core-thesis.md`, `docs/specs/091-sdd-debate-runner/` paused).
 
 ## Active Work
 
@@ -20,17 +18,16 @@ _None._
 
 ## Next Actions
 
-1. **Implement spec 096 Phase 1** (`docs/specs/096-maintainer-rules-to-memory/tasks.md`): pre-flight grep — task 1 inventories the rewire surface, task 2 verifies no runtime `cat`/`head` reads on the 3 paths (blocker check). Cheap, decides whether plan stands.
-2. **Phase 2-4 implementation** after Phase 1 clears: create 3 memory files with frontmatter → rewire ~7 cross-refs in `.claude/{hooks,tools}/` + other rules → delete 3 rule files → prune `CLAUDE.md` (`## Rule load debug` line 99, `## Hook chain latency` line 115) + `AGENTS.md` (`## Rule load debug` line 79 only; `## Hook chain latency` never propagated to AGENTS.md — pre-existing drift this spec closes) + tighten `memory-placement.md` § Routing decision tree.
-3. **Phase 5 verification**: re-grep, run `.claude/tests/{hook-chain-latency,compaction-continuity}/run-all.sh`, sync `--check` upstream + against mei-saas.
-4. **Sync codexeng** (separate cycle covering 093+094+095+096): `bash sync-harness.sh --check --agent0-path=/home/goat/Agent0 /home/goat/codexeng` first; expect 1 customized refuse.
-5. **Push origin/main** when 096 lands (currently 18+ commits ahead from prior session + the new commit from this one).
+1. **Commit + push spec 096.** Logical commit shape: one atomic change ("docs(096): ship maintainer-rules-to-memory — 3 rules → memory + ~14 rewires"). Repo is currently 18+ commits ahead from prior sessions plus this one.
+2. **Sync codexeng** (one cycle now covering 093+094+095+096): `bash .claude/tools/sync-harness.sh --check --agent0-path=/home/goat/Agent0 /home/goat/codexeng` first; expect 1 customized-refuse on `.claude/skills/image/SKILL.md`.
+3. **Sync mei-saas apply.** Today's `--check` showed 4 stales + 3 removed (the three orphan rules) + 0 customized-refused. `--apply` is safe; mei-saas-side review + commit is the human's call.
+4. **Consider follow-up spec for `propagation-advisory.md` + `runtime-introspect.md`** (the two BORDERLINE rules deferred from the 25-rule audit). Both carry user-facing override grammar mixed with maintainer-only extension mechanism — splits are non-trivial. Defer until a separate trigger surfaces.
 
 Keep spec 091 paused unless explicitly resumed.
 
 ## Decisions & Gotchas
 
-- **Audit criterion that drove the 3 MOVEs:** "does a consumer that only CONSUMES the harness (not extends) benefit from this content being in their agent's context?" Sub-agent classification mis-labeled `harness-sync.md` / `secrets-scan.md` / `supply-chain.md` as maintainer-only — they actually carry user-facing override grammar. Recalibrated to KEEP. Lesson: classify-by-criterion is right, but trust own context over a sub-agent's labels on rules already loaded.
-- **AGENTS.md drift discovered mid-plan.** `## Hook chain latency` exists in `CLAUDE.md` but NOT in `AGENTS.md` — never added when spec 094 shipped. Spec 096 incidentally closes this.
-- **mei-saas sync prediction was exact** (81 stale + 22 new + 3 removed-orphan + 0 customized-refused; actual matched 1:1). The 3 removed are vocab-rename orphans from spec 095 (`*-fork-*.sh` → `*-consumer-*.sh`).
-- **`.agent0/HANDOFF.md` is git-tracked but outside `sync-harness.sh`'s manifest by design** — per-project state, never consumer-managed.
+- **Phase 1 grep was scoped too tightly.** Inherited the per-dir scope from `.claude/rules/propagation-hygiene.md § The shipped file class` (which is propagation-leak-focused). Missed `.claude/.runtime-state/README.md` (synced, ships) + `site/src/i18n/capacities.ts` (marketing-site URLs). Both caught at Phase 5 re-grep and fixed in flight. Lesson recorded in `docs/specs/096-maintainer-rules-to-memory/notes.md § Notes`: rewire-completeness greps should be repo-wide minus `.git`/`node_modules`/`docs/specs/`, not per-dir.
+- **AGENTS.md drift closed incidentally.** `## Hook chain latency` was in `CLAUDE.md` but never propagated to `AGENTS.md` when spec 094 shipped. The CLAUDE.md prune of that section in this spec closes the drift with no separate change.
+- **Minimal-touch (spec § OQ1) held.** Body content of the 3 moved files is verbatim except for self-referential "this rule" → "this entry" + 1 framing sentence on `hook-chain-latency.md` describing its now-peer relationship with `hook-chain-maintenance.md`. Decay engine will surface any further stale phrasings over time.
+- **`memory-placement.md`'s routing tree now cites the moved slugs + spec 096 by number.** Propagation-advisory hook fired silently (informational, not blocking) — the citation is the canonical legitimate use the override exists for. Re-confirm at next propagation-hygiene audit; if it flags as drift, add `# OVERRIDE: propagation-exempt: routing-tree-example-list ...` then.

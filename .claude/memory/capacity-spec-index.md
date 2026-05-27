@@ -51,8 +51,8 @@ This index is Agent0-internal. Do not cite it from CLAUDE.md or `.claude/rules/*
 | Session state isolation | `017-session-state-isolation` | — |
 | Session handoff / stop (`session-handoff.md`) | `023-session-stop-noop-aware` | `030-session-edit-attribution`, `061-subagent-stop-hook` |
 | Project memory (`memory-placement.md`) | `019-project-memory` | — |
-| Compaction continuity (`compaction-continuity.md`) | no dedicated spec dir | — |
-| Rule load debug (`rule-load-debug.md`) | no dedicated spec dir | — |
+| Compaction continuity (`.claude/memory/compaction-continuity.md`) | no dedicated spec dir | — |
+| Rule load debug (`.claude/memory/rule-load-debug.md`) | no dedicated spec dir | — |
 
 ## MCP & browser
 

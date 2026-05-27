@@ -1,8 +1,9 @@
 ---
-paths:
-  - ".claude/hooks/rule-load-debug.sh"
-  - ".claude/tools/probe.sh"
-  - ".claude/.rule-load-debug.jsonl"
+name: rule-load-debug
+description: Opt-in InstructionsLoaded JSONL audit log for diagnosing path-scoped rule loads; off by default.
+metadata:
+  type: reference
+  created_at: 2026-05-27T00:00:00Z
 ---
 
 # Rule load debug
@@ -65,7 +66,7 @@ Missing log file → `status: no-snapshot` with hint to set `CLAUDE_RULE_LOAD_DE
 1. **Verify path-scoping after a frontmatter edit.** Enable, restart session, `/memory` shows reduced rule list. Touch a file matching one of the new globs (e.g. `Read .claude/hooks/secrets-scan.sh`). Inspect the log: the matching rule should appear with `load_reason: "path_glob_match"`, the correct glob list, and the triggering file recorded. If it doesn't fire, the glob is wrong.
 2. **Debug "rule didn't apply when I expected".** When agent behavior suggests a rule wasn't in context, check `--session <id> --reason path_glob_match` to confirm whether the rule actually loaded.
 3. **Measure startup load.** `--reason session_start` shows the unconditional set. Compare against expectations.
-4. **Audit compaction behavior.** `--reason compact` shows which files survived the re-load step. Documented separately (`.claude/rules/compaction-continuity.md`).
+4. **Audit compaction behavior.** `--reason compact` shows which files survived the re-load step. Documented separately (`.claude/memory/compaction-continuity.md`).
 
 ## Escape hatch
 
@@ -75,7 +76,7 @@ Missing log file → `status: no-snapshot` with hint to set `CLAUDE_RULE_LOAD_DE
 
 - **Hook fires asynchronously per CC docs** — `InstructionsLoaded` is non-blocking, runs in parallel with whatever triggered the load. Cannot influence loading, only observe. Don't try to "filter" or "redact" rule loads here; use frontmatter `paths:` or the `claudeMdExcludes` setting instead.
 - **No decision control by design.** Exit code is ignored, stdout is ignored. Don't shape this hook into something that tries to communicate back to the agent — there is no return channel. The audit log + probe is the only signal path.
-- **Logs are NOT shipped to consumer projects via sync-harness.** The hook script + this rule doc + the settings.json registration ride along (manifest-tracked), but the JSONL log lives at `.claude/.rule-load-debug.jsonl` (gitignored, machine-local). Each consumer project accumulates its own debug log when enabled.
+- **Logs are NOT shipped to consumer projects via sync-harness.** The hook script + this doc + the settings.json registration ride along (manifest-tracked), but the JSONL log lives at `.claude/.rule-load-debug.jsonl` (gitignored, machine-local). Each consumer project accumulates its own debug log when enabled.
 - **`session_id` is the same across `/compact` and `/resume`** — see `.claude/rules/session-handoff.md` § "Parallel sessions and other start triggers". A log filtered by `--session <id>` therefore includes pre-compact and post-compact loads in one slice; the `load_reason` field discriminates (`session_start` vs `compact`).
 - **`InstructionsLoaded` may not exist on older CC builds.** The event is documented at `code.claude.com/docs/en/hooks#instructionsloaded`. If a consumer project's CC version pre-dates the event, the hook registration is silently inert (unknown events are simply not dispatched). No fallback; opt-in env-var stays off and observability returns no signal.
 - **Don't conflate with `.claude/memory/`.** The auto-memory bucket (`~/.claude/projects/<path>/memory/`) is a different mechanism entirely — Claude writes notes there, separate from rule loading. This capacity ONLY observes the InstructionsLoaded event on CLAUDE.md and `.claude/rules/*.md` files.

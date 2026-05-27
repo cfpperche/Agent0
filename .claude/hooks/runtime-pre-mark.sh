@@ -27,7 +27,7 @@ fi
 INPUT="$(cat 2>/dev/null || true)"
 [ -z "$INPUT" ] && exit 0
 
-# --- Pre-jq fast-path probe (see .claude/rules/hook-chain-latency.md) ---
+# --- Pre-jq fast-path probe (see .claude/memory/hook-chain-latency.md) ---
 # Extract tool_use_id via sed instead of paying for a full jq parse. Faster on
 # the order of 15-25 ms per Bash call. If sed fails (malformed JSON, unusual
 # escape), fall back to jq if available; if not, exit 0 silently (the original

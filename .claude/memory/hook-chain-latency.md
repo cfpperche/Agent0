@@ -1,8 +1,16 @@
+---
+name: hook-chain-latency
+description: PreToolUse(Bash) chain latency budget + bench tooling for maintainers extending the hook chain.
+metadata:
+  type: reference
+  created_at: 2026-05-27T00:00:00Z
+---
+
 # Hook chain latency
 
-The `PreToolUse(Bash)` hook chain sits on the critical path of every Bash tool call the agent makes; cost there is user-perceived as "slow agent". This rule documents the latency budget the chain meets, the bench tool that measures it, and how to interpret a regression report.
+The `PreToolUse(Bash)` hook chain sits on the critical path of every Bash tool call the agent makes; cost there is user-perceived as "slow agent". This entry documents the latency budget the chain meets, the bench tool that measures it, and how to interpret a regression report.
 
-This rule is the consumer-facing surface. The maintainer-binding discipline — optimization techniques, the contract for adding a new `PreToolUse(Bash)` hook — lives in `.claude/memory/hook-chain-maintenance.md` (not shipped to consumer projects; the upstream maintainer reads it before editing any of the four registered hooks).
+This entry pairs with `.claude/memory/hook-chain-maintenance.md` (the upstream-maintainer discipline — optimization techniques + the contract for adding a new `PreToolUse(Bash)` hook). Neither file ships to consumer projects; both bind the upstream maintainer who edits any of the four registered hooks.
 
 ## Scope
 
@@ -103,8 +111,8 @@ The check is not wired into a `pre-commit` hook in v1. The monthly routine `.cla
 
 ## Cross-references
 
-- `.claude/memory/hook-chain-maintenance.md` — upstream-maintainer discipline (optimization techniques + the 5-step contract for adding a new `PreToolUse(Bash)` hook). Not shipped to consumer projects.
-- `.claude/rules/runtime-introspect.md` — sibling perf-observability rule; the `runtime-pre-mark.sh` hook this rule measures is owned by that capacity.
+- `.claude/memory/hook-chain-maintenance.md` — upstream-maintainer discipline (optimization techniques + the 5-step contract for adding a new `PreToolUse(Bash)` hook).
+- `.claude/rules/runtime-introspect.md` — sibling perf-observability rule; the `runtime-pre-mark.sh` hook this entry measures is owned by that capacity.
 - `.claude/rules/secrets-scan.md` — `secrets-scan.sh` contract; the `if`-field narrowing preserves it exactly because the hook body is unchanged.
 - `.claude/rules/supply-chain.md` — `supply-chain-scan.sh` contract; same.
 - `.claude/rules/delegation.md` — `governance-gate.sh` sits in the broader delegation/governance family.
@@ -113,7 +121,7 @@ The check is not wired into a `pre-commit` hook in v1. The monthly routine `.cla
 
 - **Sample noise is real.** Even at `--reps 100`, p95 measurements vary by ±5-10 ms run-to-run on WSL2 (Linux scheduler quanta, filesystem cache warmth, system load). The default `--tolerance 25%` is calibrated to absorb noise at typical N; lowering it requires raising N.
 - **The bench measures intrinsic per-hook cost, not production chain p95.** `if`-field narrowing means hooks don't spawn on irrelevant commands in production; the bench always runs every hook. Production p95 will be lower than the bench's chain sum (because narrowing cuts the chain) — the gap is the optimization's actual value.
-- **WSL2 fork+exec overhead is the floor.** Each `bash <hook>` subprocess pays ~3-5 ms more on WSL2 than on native Linux. The IPC noop cell quantifies this. Native-Linux installations will hit the budget more easily; the rule's 80 ms target assumes the WSL2 floor.
+- **WSL2 fork+exec overhead is the floor.** Each `bash <hook>` subprocess pays ~3-5 ms more on WSL2 than on native Linux. The IPC noop cell quantifies this. Native-Linux installations will hit the budget more easily; the 80 ms target assumes the WSL2 floor.
 - **`if` field "always runs when the command is too complex to parse".** From the docs: the harness can't always parse `bash -c "..."` or other meta-shell shapes, and falls open by running the hook. This is the right semantic — false positives on complex shapes are safer than missed inspections — but it means the bench's reported p95 floor IS the worst case the production hook can hit.
 - **The bench can be expensive itself.** 100 reps × 5 hooks × 10 commands × ~25 ms per cell = ~125 s for a single baseline run. Use lower `--reps` (20) for iteration; full N=100 for the locked baseline.
 - **The bench's command set is synthetic.** A real-session distribution probe (instrumented `PostToolUse(Bash)` advisory hook logging command shapes) was scoped in the hook-chain-latency spec plan but deferred — the synthetic set covers the obvious shapes and the bench is honest about the gap. If the bench predicts wins that aren't perceived in real usage, the synthetic set is wrong and the deferred work becomes the next priority.

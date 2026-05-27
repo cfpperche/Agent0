@@ -45,9 +45,18 @@ Is the knowledge a user-specific preference (language, style)?
   Yes → CC per-user memory (~/.claude/projects/<path>/memory/)
   No  → continue
 
-Is the knowledge a behavioral mandate or capacity operational doc?
+Is the knowledge a behavioral mandate, OR a capacity operational doc that the
+consumer-side agent acts on (invokes the primitive, reads the override grammar,
+inspects an audit log it produces)?
   Yes → .claude/rules/<topic>.md (will ship to consumer projects)
   No  → continue
+        ↑ This branch ALSO catches capacity operational docs — how to extend,
+          calibrate, regression-check — that ONLY the upstream maintainer ever
+          acts on. The consumer-side agent never reads them, so shipping them
+          via sync-harness is dead weight in every consumer project. Route them
+          to memory below, NOT to rules. (Example: `hook-chain-latency.md` /
+          `compaction-continuity.md` / `rule-load-debug.md` moved rule → memory
+          in spec 096 for exactly this reason.)
 
 Is the knowledge factual project reference (platform constraint, prior decision, gotcha)?
   Yes → .claude/memory/<topic>.md (git-tracked, NOT shipped to consumer projects)
@@ -55,6 +64,8 @@ Is the knowledge factual project reference (platform constraint, prior decision,
 ```
 
 When in doubt, route to project memory (`.claude/memory/`). Demoting from rule → memory later is easy; promoting from per-user → project requires migration.
+
+**The "consumer-side agent acts on it" test.** This is the load-bearing question for rule-vs-memory at the boundary case of capacity docs. Ask: "in a fork that consumes the harness but never extends it, does the agent ever load this doc to inform its behavior?" If yes → rule (e.g. `delegation.md`'s 5-field handoff, `secrets-scan.md`'s override grammar). If no → memory (the doc binds the maintainer extending the capacity, not the consumer-side agent using it).
 
 ## Quick reference table
 
@@ -214,9 +225,9 @@ Shipped as a starter template. Consumer projects override values directly. Missi
 
 ## Why three buckets, not two
 
-The previous version of this rule had only two buckets: project-shared (rules) and per-user (preferences). That model conflates two distinct kinds of project-shared knowledge: behavioral mandates that should ride with capacities into consumer projects, and factual reference that's project-internal design context. The empirical trigger for the split was discovering that Claude Code has 32 hook events (not the ~9 commonly cited). That knowledge:
-- Is project-shared (other Agent0 contributors benefit)
-- Is NOT a behavioral mandate (it's reference data)
-- Should NOT ship to consumer projects (consumer projects consume capacities, they don't extend the harness)
+The previous version of this rule had only two buckets: project-shared (rules) and per-user (preferences). That model conflates two distinct kinds of project-shared knowledge: behavioral mandates that should ride with capacities into consumer projects, and factual reference that's project-internal design context. Two empirical triggers established the split:
 
-No existing bucket fit. The new `.claude/memory/` bucket covers this gap.
+1. **CC-32-hooks discovery.** Claude Code has 32 hook events (not the ~9 commonly cited). That knowledge is project-shared (other Agent0 contributors benefit), NOT a behavioral mandate (it's reference data), and SHOULD NOT ship to consumer projects (consumer projects consume capacities, they don't extend the harness). No existing bucket fit.
+2. **The 2026-05-27 maintainer-rules-to-memory audit (spec 096).** Three rules (`hook-chain-latency.md`, `compaction-continuity.md`, `rule-load-debug.md`) documented capacity internals that only the upstream maintainer ever acts on — budgets to defend when adding a new hook, the PreCompact/SessionStart mechanism to preserve when editing the snapshot pair, opt-in observability for diagnosing path-scoped loads. They were drifting into consumer-project context noise. Moving them to memory removed that drift AND surfaced the criterion the routing tree above now names explicitly.
+
+The new `.claude/memory/` bucket covers both gaps.

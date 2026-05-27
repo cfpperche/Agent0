@@ -165,7 +165,7 @@ export const CAPACITIES: Capacity[] = [
   {
     id: "compaction-continuity",
     name: "Compaction continuity",
-    ruleDoc: `${REPO_TREE}/.claude/rules/compaction-continuity.md`,
+    ruleDoc: `${REPO_TREE}/.claude/memory/compaction-continuity.md`,
     desc: {
       en: "PreCompact snapshots the last 12 user turns to .claude/COMPACT_NOTES.md; SessionStart(source=compact) re-injects the snapshot post-compaction so raw signal survives summarization.",
       pt: "PreCompact captura os últimos 12 turnos do usuário em .claude/COMPACT_NOTES.md; SessionStart(source=compact) re-injeta o snapshot pós-compactação para o sinal cru sobreviver à sumarização.",
@@ -175,7 +175,7 @@ export const CAPACITIES: Capacity[] = [
   {
     id: "rule-load-debug",
     name: "Rule load debug",
-    ruleDoc: `${REPO_TREE}/.claude/rules/rule-load-debug.md`,
+    ruleDoc: `${REPO_TREE}/.claude/memory/rule-load-debug.md`,
     desc: {
       en: "Opt-in observability for the InstructionsLoaded hook. CLAUDE_RULE_LOAD_DEBUG=1 appends a JSONL row per rule load (file, load_reason, globs, trigger_file, session_id) — verify path-scoped rules fire on the right triggers without disturbing the default path.",
       pt: "Observabilidade opt-in para o hook InstructionsLoaded. CLAUDE_RULE_LOAD_DEBUG=1 anexa uma linha JSONL por carregamento de regra (file, load_reason, globs, trigger_file, session_id) — verifica que regras path-scoped disparam nos triggers certos sem afetar o caminho padrão.",

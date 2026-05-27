@@ -5,12 +5,15 @@
 - [bertolini-dogfood-loop](bertolini-dogfood-loop.md) — External paste-and-go autonomous-loop wizard (Bertolini gist 2026-05-24). Novel piece — strict-order cascade classification with default-to-issue. Not adopted in Agent0; single sample, rule-of-three test (cf. skill-eval-pattern).
 - [Capacity → spec index](capacity-spec-index.md) — Which Agent0 spec(s) designed each capacity — Agent0-internal index relocated by spec 070 to keep fork-bound files free of docs/specs/ pointers.
 - [Claude Code platform hooks](cc-platform-hooks.md) — Canonical surface of 29 Claude Code hook events and the exit-zero PostToolUse gotcha; consult before designing any hook-based capacity
+- [compaction-continuity](compaction-continuity.md) — PreCompact+SessionStart snapshot pair preserving raw signal across /compact; mechanism + retention details.
 - [Consumer-contract discipline](consumer-contract-discipline.md) — Producer templates must document the consumer-side contract (who reads it, what shape they expect) for any artifact a downstream step consumes structurally.
 - [Forks are ephemeral dogfood](forks-ephemeral-dogfood.md) — Capacity docs' "forks" framing is forward-looking; current reality is all forks are spun-up-then-archived dogfood projects. Hard-cutover is the default back-compat posture.
+- [hook-chain-latency](hook-chain-latency.md) — PreToolUse(Bash) chain latency budget + bench tooling for maintainers extending the hook chain.
 - [hook-chain-maintenance](hook-chain-maintenance.md) — Maintainer discipline for the PreToolUse(Bash) hook chain — optimization techniques + 5-step contract for adding a new hook. Read before adding/editing PreToolUse(Bash) hooks.
 - [OD grounding dogfood](od-grounding-dogfood.md) — Spec 027 step-2 dogfood (2026-05-14) — citation-by-path real, but grounding alone does not buy visual quality. Blind judge result was confounded (1-pass OD vs 4x-refined baseline).
 - [/product pipeline empirical baseline](product-pipeline-empirical-baseline.md) — First end-to-end full /product run with all 4 mature gates (2026-05-23) — ~3.1M tokens, ~83min, 44 dispatches, 17/17 judges. Cost+shape envelope for planning.
-- [Propagation hygiene](propagation-hygiene.md) — Maintainer discipline — fork-bound files (CLAUDE.md, .claude/rules/, sync manifest) must carry no Agent0-internal pointers. Read before editing CLAUDE.md or a rule.
+- [Propagation hygiene](propagation-hygiene.md) — Maintainer discipline — shipped files (CLAUDE.md, .claude/rules/, sync manifest) must carry no Agent0-internal pointers. Read before editing CLAUDE.md or a rule.
+- [rule-load-debug](rule-load-debug.md) — Opt-in InstructionsLoaded JSONL audit log for diagnosing path-scoped rule loads; off by default.
 - [Skill-eval pattern (observed externally)](skill-eval-pattern.md) — 5 industry posts converged on the same skill-eval recipe in early 2026; not adopted in Agent0 yet — wait for rule-of-three regression demand before building
 - [User-global hooks shadow project hooks](user-global-hooks-shadow.md) — User-global hooks under ~/.claude/hooks/ fire BEFORE project hooks; can shadow Agent0 capacities. If dogfood gives unexpected interception, check there first.
 - [Visibility capacity intent](visibility-intent.md) — User's stated goal for the next visibility/introspection capacity in Agent0 — agent self-debugging, not human dashboards

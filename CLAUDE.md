@@ -96,10 +96,6 @@ Factual project knowledge lives in `.claude/memory/<topic>.md` — git-tracked, 
 
 On an auth-gated URL with no saved state the agent emits `BROWSER_AUTH_REQUIRED: <host>`; the human logs in via a headed Playwright MCP session and the state (`.claude/.browser-state/<host>.json`) is reused for headless reads. See `.claude/rules/mcp-recipes.md` § Authenticated workflow.
 
-## Rule load debug
-
-Opt-in observability (`CLAUDE_RULE_LOAD_DEBUG=1`, off by default) for the `InstructionsLoaded` event — logs each CLAUDE.md / rule load to `.claude/.rule-load-debug.jsonl`, read back via `bash .claude/tools/probe.sh rule-loads`. See `.claude/rules/rule-load-debug.md`.
-
 ## Skill compliance
 
 Every first-party `.claude/skills/*/SKILL.md` must pass the agentskills.io frontmatter spec; the `/skill` meta-skill scaffolds, audits, ports, and validates them, with three declared portability tiers. See `.claude/skills/skill/`.
@@ -111,10 +107,6 @@ Every first-party `.claude/skills/*/SKILL.md` must pass the agentskills.io front
 ## Routines
 
 `.claude/routines/<slug>.md` git-tracks recurring project work; an opt-in leader machine's cron enqueues each run for the next interactive session to dispatch via `/routine run <slug>`. See `.claude/rules/routines.md`.
-
-## Hook chain latency
-
-The `PreToolUse(Bash)` hook chain sits on the critical path of every Bash tool call; `.claude/tools/bench-hooks.sh` measures per-hook p50/p95 against a representative command set, `.claude/.perf-baseline.json` is the committed baseline, and `--check` mode flags regressions. Optimization techniques (per-handler `if`-field narrowing, pre-jq raw-stdin probes, sed-instead-of-jq for single-field extraction) apply to the four registered hooks. See `.claude/rules/hook-chain-latency.md`.
 
 ## Artifact size cap
 

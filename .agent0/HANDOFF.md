@@ -18,6 +18,8 @@ All three repos at **0 commits ahead** of `origin/main`. Working trees clean exc
 
 Memory infra empirically validated in a live fresh Codex session: journal recorded `actor:"Codex CLI"` + `runtime:"codex-cli"` + `tool_use_id:"call_*"` (sinal 1); PreToolUse gate blocked a raw `apply_patch` against `MEMORY.md` with exit 2 + corrective template (sinal 2). Both gaps `notes.md` had registered as not-validated are now closed.
 
+**Shim-removal follow-up consumed (2026-05-27, same-day skip of the 30-60d window).** The 4 `.claude/hooks/memory-*.sh` compat shims are deleted from the working tree (`D` in `git status`); settings.json had already pointed exclusively at `.agent0/hooks/`. Only remaining references are in frozen spec history (`docs/specs/083|099/`). Pending commit: `chore(memory): remove memory hook compat shims (spec 099 follow-up)`.
+
 Pre-existing/paused: `docs/specs/091-sdd-debate-runner/` untracked in Agent0; `.codex/config.toml` + `.codex/.env.local` machine-local.
 
 ## Active Work
@@ -26,9 +28,8 @@ _None active._
 
 ## Next Actions
 
-1. **Shim-removal follow-up in Agent0.** The 4 `.claude/hooks/memory-*.sh` compat shims are dead-code in Agent0 itself (settings.json points at `.agent0/hooks/`), and both known consumers (mei-saas + codexeng) have removed them locally. Safe deletion window: 30-60 days from 2026-05-27 to give any unknown public forks time to migrate. Commit shape: `chore(memory): remove memory hook compat shims (spec 099 follow-up)`.
-2. **mei-saas test 01 staleness.** mei-saas's `.claude/tests/project-memory/01-files-are-git-tracked.sh` is still the pre-fix version (its sync happened before `43d8539`). Cosmetic — picks up on the next regular `sync-harness --apply`.
-3. Spec 091 stays paused unless explicitly resumed.
+1. **mei-saas test 01 staleness.** mei-saas's `.claude/tests/project-memory/01-files-are-git-tracked.sh` is still the pre-fix version (its sync happened before `43d8539`). Cosmetic — picks up on the next regular `sync-harness --apply`.
+2. Spec 091 stays paused unless explicitly resumed.
 
 ## Decisions & Gotchas
 

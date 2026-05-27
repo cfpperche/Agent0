@@ -41,7 +41,7 @@ if [ -r "$CONFIG_PATH" ] && command -v jq >/dev/null 2>&1; then
 fi
 
 # Verify helper available; fall back to a degraded awk path otherwise (for
-# bootstrapping forks that haven't installed PyYAML yet).
+# bootstrapping consumer projects that haven't installed PyYAML yet).
 USE_HELPER=0
 if [ -x "$HELPER" ] && command -v python3 >/dev/null 2>&1 && python3 -c "import yaml" 2>/dev/null; then
   USE_HELPER=1

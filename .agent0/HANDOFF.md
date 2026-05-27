@@ -8,11 +8,11 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-**Spec 098 (`codex-mcp-recipes-parity`) propagated end-to-end this session.** Both consumers committed + pushed: `mei-saas fd52239` → `github.com:cfpperche/mei-saas.git` (0 customized-refused) and `codexeng 3c1a9d0` → `github.com:cfpperche/codexeng.git` (1 customized-refused on `image/SKILL.md`, preserved). Identical 17-file / +484 / -28 delta in both. Dogfood validated empirically: real `.codex/config.toml` byte-preservation proven via seeded fake (sha pre/post identical, never appears in dry-run); `codex-mcp-recipes/run-all.sh` 3/3 + `harness-sync/35-codex-config-example-untouched.sh` PASS. **Agent0 is 4 commits ahead of `origin/main`** (spec 098 ship + 3 fixes/handoff); not yet pushed.
+**Spec 099 (`memory-multi-runtime`) fully scoped and ready for Phase A implementation.** `spec.md` + `plan.md` + `tasks.md` all filled; `debate.md` carries 4 debate rounds + revised synthesis + Applied changes (resolution: converged on hook-port direction after Round 3 critique invalidated the original asymmetric-convention premise). Spec status declared `draft`; flips to `in-progress` when Phase A task 1 lands.
 
-Codex initiated spec 099, `docs/specs/099-memory-multi-runtime/`, for a cross-runtime debate on porting Agent0 project memory to Codex/Claude parity.
+**Agent0 is 10 commits ahead of `origin/main`** — not yet pushed. Recent: spec 098 ship + fixes (5 commits, 0f660d3 baseline), `runtime-capabilities` Codex lifecycle-hooks promotion (bb23dcf), spec 099 debate + synthesis + applied changes + plan + tasks (4 commits, latest cf945f2).
 
-New evidence changed the direction: Codex CLI has native lifecycle hooks. `debate.md` now has Round 3 Claude critique and Round 4 Codex counter filled. The old synthesis in the file is explicitly invalidated/superseded; do not apply it.
+The Codex CLI lifecycle hooks discovery (2026-05-27 mid-debate) is the load-bearing finding of this session: matrix row updated `unsupported` → `native`; project memory `.claude/memory/codex-cli-hooks.md` captures the canonical hook surface; user-level feedback memory `feedback_verify_runtime_capabilities.md` captures the discipline lesson.
 
 Pre-existing/paused work still present:
 
@@ -21,21 +21,22 @@ Pre-existing/paused work still present:
 
 ## Active Work
 
-_None. Spec 099 is intentionally ready for Claude Code to edit `debate.md` next._
+_None. Spec 099 is fully scoped and waiting for Phase A task 1 to start implementation._
 
 ## Next Actions
 
-1. **Push Agent0 `main`** (4 commits ahead from spec 098 ship + fixes; cleanly buildable). Operator's call — not auto-pushed this session.
-2. Ask either Claude Code or Codex to write a fresh synthesis for `docs/specs/099-memory-multi-runtime/debate.md`, based on Round 3 critique + Round 4 counter, replacing/superseding the old synthesis direction.
-3. After synthesis, review and confirm before applying changes to `spec.md`.
-4. Keep spec 091 paused unless explicitly resumed.
-5. Do not commit `.codex/config.toml` or `.codex/.env.local`; they are local machine state.
+1. **Push Agent0 `main`** (10 commits ahead; cleanly buildable). Operator's call — not auto-pushed this session.
+2. **Begin Phase A task 1**: dump-probe Codex `apply_patch` payload shape — requires an active Codex CLI session to register a transient probe hook, invoke a small `apply_patch`, capture stdin JSON, document the actual field carrying the patch body (likely `tool_input.command` per docs but unverified). Save findings to `docs/specs/099-memory-multi-runtime/notes.md`. Then delete the probe.
+3. **After Phase A** (tasks 1-3): continue per `tasks.md` top-to-bottom. Phase B (hook port + shims) and Phase C (namespace move) are mechanical once task 1's probe finding is in hand.
+4. **Phase E** (consumer migrations in mei-saas + codexeng) requires `git push` authorization to the consumer remotes — confirm before pushing.
+5. Keep spec 091 paused unless explicitly resumed.
+6. Do not commit `.codex/config.toml` or `.codex/.env.local`; they are local machine state.
 
 ## Decisions & Gotchas
 
-- **Spec 098 dogfood: `enabled = false` parseable by `codex-cli 0.134.0`** — verified during the consumer apply phase; no startup noise on disabled servers. Closes spec 098 Round 2 verify-first AC and validates the "real TOML over commented TOML" default.
-- **Sync determinism confirmed** — mei-saas and codexeng received byte-identical 17-file deltas (`fd52239` / `3c1a9d0`). The shipped-surface set is genuinely consumer-agnostic for spec 098-shaped changes.
-- **`codex mcp add` writes user-global (`~/.codex/config.toml`) by default** in 0.134.0; project-scoped propagation requires copying the `.codex/config.toml.example` template directly. Reflected in spec 098 docs.
-- Spec 099 Round 4 counter accepts the new hook-based direction: canonical memory path moves to `.agent0/memory/`; shared memory hook implementations should live under `.agent0/hooks/`; Codex memory capability becomes `native-opt-in`; hook parity replaces the mandatory-finalizer-primary plan; `memory-maintain.sh finalize` remains fallback; `.githooks/pre-commit` projection check remains universal backstop.
-- Round 4 precision: Codex hook parity should be guaranteed for `apply_patch` memory edits; arbitrary Bash writes are fallback/backstop territory unless plan proves safe path discovery.
+- **Spec 099 transitional-state shape: Option A (compat shims).** Old `.claude/hooks/memory-*.sh` paths become 3-line `exec` shims to canonical `.agent0/hooks/memory-*.sh`. Existing consumers keep working post-sync; manual migration removes the shims. Option B (hard cutover) rejected — would break consumers because sync-harness deletes upstream-removed files but consumer settings.json (refused-customized) still references them.
+- **Spec 099 namespace lock: `.agent0/memory/`.** User-ratified Scenario B early in the debate; OQ-1 became plan-phase enumeration task only. Memory tools + 4 memory hooks + `memory.config.json` all move under `.agent0/`; other Claude-specific paths stay under `.claude/`.
+- **Codex `apply_patch` payload shape is unverified empirically.** Task 1 of Phase A is the dump-probe; do NOT write the patch-header parser before the probe lands real payload samples. Same lesson as `cc-platform-hooks.md` § Meta-lesson (spec 020 `PostToolUseFailure` shape divergence).
+- **Codex hooks finding invalidated the entire pre-Round-4 convergence.** Old synthesis preserved in debate.md with SUPERSEDED marker (audit trail). Future readers must reach the "Synthesis (revised after Round 4)" section, not the first one.
+- **Re-audit pending in runtime-capabilities.md.** The lifecycle-hooks promotion implies adjacent rows (`delegation/subagents`, `runtime introspect`, `session handoff`) may also need promotion to `native` or `native-opt-in`. Track via the next competitive-harness audit cycle.
 - Codex HTTP MCP bearer auth should use `bearer_token_env_var`; literal `bearer_token` is not a valid fal.ai `streamable_http` path in the tested Codex version. Codex does not auto-load dotenv.

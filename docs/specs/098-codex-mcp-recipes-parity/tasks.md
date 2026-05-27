@@ -78,6 +78,12 @@ _Acceptance checks tied to `spec.md` acceptance criteria. Each one should map to
 
 - [x] 28. If all checks pass, update `docs/specs/098-codex-mcp-recipes-parity/spec.md`: mark satisfied acceptance criteria with `[x]` and change `**Status:** draft` only when the implementation is fully shipped and ready for audit.
 
+- [x] 29. Add a shipped Codex launcher (`.claude/tools/codex-local-env.sh`) that loads `.codex/.env.local` for the current project only, so consumers can use per-project MCP keys without OS-level exports.
+
+- [x] 30. Add `.codex/.env.local` to `.gitignore` and document that sync-harness ships the launcher/template but never ships or touches real local config or local dotenv.
+
+- [x] 31. Add a codex-mcp-recipes test proving the launcher loads `.codex/.env.local` and forwards args to Codex with the repo root.
+
 ## Notes
 
 _Anything that came up during execution that doesn't belong in plan.md but is useful for the PR description or future readers._

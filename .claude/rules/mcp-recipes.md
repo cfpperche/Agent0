@@ -17,7 +17,8 @@ Four artifacts plus one Claude-only hook:
 
 - **`.claude/rules/mcp-recipes.md`** (this file) — authoritative per-MCP reference.
 - **`.mcp.json.example`** at repo root — Claude Code copy-paste-ready file with all blocks commented out by leading `//` markers. Workflow: `cp .mcp.json.example .mcp.json`, then remove `//` lines on the blocks you want active.
-- **`.codex/config.toml.example`** — Codex MCP-only project config template. Workflow: `cp .codex/config.toml.example .codex/config.toml`, then flip `enabled = true` only on recipes you want active. Real `.codex/config.toml` stays local and gitignored.
+- **`.codex/config.toml.example`** — Codex MCP-only project config template. Workflow: `cp .codex/config.toml.example .codex/config.toml`, put secrets in local `.codex/.env.local`, then flip `enabled = true` only on recipes you want active. Real `.codex/config.toml` and `.codex/.env.local` stay local and gitignored.
+- **`.claude/tools/codex-local-env.sh`** — Codex launcher that loads `.codex/.env.local` for this project only, then execs `codex -C <repo>`. Use this instead of OS-level exports when different consumer projects need different keys.
 - **`codex mcp add ...`** — Codex CLI operator convenience. In `codex-cli 0.133.0`, `codex mcp add` writes the global `$CODEX_HOME/config.toml` by default; use direct project TOML when the desired scope is the trusted project.
 - **`.claude/hooks/mcp-recipes-hint.sh`** (`SessionStart`) — Claude-only hint. Runs the signal table below and emits a single `=== mcp-recipes ===` block listing applicable recipes when ≥1 signal fires. Silent when no signals match (bare-repository case). Honors `CLAUDE_SKIP_MCP_RECIPES=1` to suppress regardless.
 
@@ -26,6 +27,8 @@ The consumer project chooses what to enable. Recipes recommend; the developer ac
 ### Codex project config posture
 
 Codex stores MCP config alongside other Codex settings. User/global config lives in `$CODEX_HOME/config.toml` (normally `~/.codex/config.toml`); project-scoped MCP config lives in `.codex/config.toml` and is honored only for trusted projects. Agent0 ships only `.codex/config.toml.example`; it never writes a real project config or user-global config.
+
+Codex does not automatically load dotenv files. If a recipe uses `env_vars = ["DATABASE_URL"]` or `bearer_token_env_var = "FAL_KEY"`, those names must exist in the environment of the Codex process. For consumer projects, prefer a gitignored `.codex/.env.local` plus `bash .claude/tools/codex-local-env.sh` so credentials are scoped to that one Codex process instead of exported at OS level.
 
 Duplicate IDs are possible: if `playwright` exists globally and in project config, Codex has to resolve the collision according to its own config layering. Avoid ambiguity by using the same server ID in only one active scope, or consciously remove/rename the global entry when project-scoped behavior is required.
 
@@ -359,9 +362,9 @@ For Codex CLI in a trusted consumer project:
 
 1. `cp .codex/config.toml.example .codex/config.toml` (or merge the relevant `[mcp_servers.<id>]` blocks into an existing project config).
 2. Keep unrelated Codex settings local; Agent0's template is MCP-only and does not set model/provider/sandbox/approval defaults.
-3. Set required environment variables in the shell that launches Codex (`DATABASE_URL`, `FAL_KEY`, etc.).
+3. Put recipe secrets in `.codex/.env.local`, for example `FAL_KEY=...` or `DATABASE_URL=...`. This file is gitignored and is not shipped by sync-harness.
 4. Change `enabled = false` to `enabled = true` only for the recipes you want active.
-5. Restart Codex in the trusted project. Codex does not receive Claude's SessionStart hint, so use this file and `.codex/config.toml.example` as the static reference.
+5. Restart Codex through `bash .claude/tools/codex-local-env.sh`. The launcher loads `.codex/.env.local` only for that Codex process, then runs `codex -C <repo>`.
 
 `codex mcp add` is supported as a convenience for user/global setup. In `codex-cli 0.133.0`, it writes the global `$CODEX_HOME/config.toml` by default; prefer direct `.codex/config.toml` edits when you need project-scoped activation.
 
@@ -517,6 +520,7 @@ Chrome DevTools MCP is the right choice when you need **observation**, not **dri
 
 - **`.mcp.json.example` is JSON-with-comments.** Strict JSON parsers reject `//` line comments. The `.example` suffix is the universal "this is a template, do not parse directly" signal. The header comment in the file explicitly says: copy, rename, remove `//` markers before activation. Do NOT just `mv .mcp.json.example .mcp.json` — the result wouldn't parse.
 - **`.codex/config.toml.example` is parseable but disabled.** It is valid TOML with every recipe set to `enabled = false`. Copy it to `.codex/config.toml`, enable only the recipes you intend to run, and keep the real config local. The repo `.gitignore` ignores `.codex/config.toml`, but `.gitignore` does not untrack a config file already committed in a consumer project.
+- **Codex does not auto-load `.codex/.env.local`.** Use `bash .claude/tools/codex-local-env.sh` to inject project-local secrets only into the Codex process. Do not export shared OS-level `FAL_KEY` / `DATABASE_URL` when different projects need different values.
 - **Codex duplicate-ID scope.** A server ID can exist in both user-global `$CODEX_HOME/config.toml` and project `.codex/config.toml`. Avoid defining the same active ID twice unless you have intentionally checked how your Codex version resolves the collision.
 - **Package-name drift.** MCP packages are early-stage (most v0.x). A package can rename or restructure across minor releases. Each recipe section links to the upstream's source-of-truth README; if your `.mcp.json` block stops working after `@latest` resolves to a newer version, **check the upstream README first**, then update the recipe block. v1 of this spec uses `@latest` throughout; consumer projects that hit churn pain can pin manually (e.g. `@playwright/mcp@0.0.30`) — Agent0 does not maintain a version manifest.
 - **Monorepo walk is depth-1 only.** The stack detector scans `CLAUDE_PROJECT_DIR` at the top level AND walks depth-1 into the workspace dirs listed in § Walk scope (default `apps packages services workspaces`). A file at depth-2+ — e.g. `apps/web/nested/deep/next.config.js` — does NOT trigger the hint. Workarounds for deeply nested setups: (a) symlink the relevant config up to a depth-1 child, (b) point `CLAUDE_PROJECT_DIR` at the workspace you're actively working in, (c) `CLAUDE_MCP_RECIPES_WORKSPACE_DIRS="<deeper-roots>"` if the deep parent is a stable convention. The depth cap is intentional — arbitrary tree walks scale poorly on large repos.

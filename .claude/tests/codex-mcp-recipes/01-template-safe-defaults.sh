@@ -11,6 +11,11 @@ if [ ! -f "$TEMPLATE" ]; then
   exit 1
 fi
 
+if ! grep -Fxq '.codex/.env.local' "$AGENT0_ROOT/.gitignore"; then
+  printf 'FAIL: .codex/.env.local is not gitignored\n'
+  exit 1
+fi
+
 ids=(playwright chrome-devtools dbhub laravel-boost next-devtools fal-ai)
 for id in "${ids[@]}"; do
   count="$(grep -Fxc "[mcp_servers.$id]" "$TEMPLATE" || true)"

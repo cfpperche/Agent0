@@ -20,6 +20,10 @@ Use parseable `[mcp_servers.<id>]` blocks with `enabled = false` in `.codex/conf
 
 `codex mcp add` is documented as operator convenience, not as the project-scoped propagation contract. With temp `CODEX_HOME` and a temp trusted project, `codex -C <tmp> mcp add agent0-scope-probe -- sh -c 'cat >/dev/null'` printed `Added global MCP server 'agent0-scope-probe'.`, wrote `$CODEX_HOME/config.toml`, and did not create `<project>/.codex/config.toml`.
 
+### 2026-05-27 — Codex CLI — Project-local dotenv launcher for consumers
+
+Codex does not auto-load `.codex/.env.local`; a process-level env var is still required for `env_vars` / `bearer_token_env_var`. To avoid OS-level exports and cross-project key collisions, Agent0 now ships `.claude/tools/codex-local-env.sh`, which loads `.codex/.env.local` for the current project only and then execs `codex -C <repo>`. The dotenv itself remains gitignored and consumer-local.
+
 ## Deviations
 
 _Places where implementation intentionally departed from `plan.md`. The departure + the reason it was necessary or better._

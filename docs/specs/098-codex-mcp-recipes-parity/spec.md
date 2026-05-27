@@ -46,6 +46,8 @@ Port Agent0's MCP recipe capacity from Claude-only activation guidance to a prov
 
 - [x] `.gitignore` ignores real operator-local Codex project config (`.codex/config.toml`) while allowing the example template to be tracked.
 
+- [x] `.gitignore` ignores project-local Codex MCP dotenv (`.codex/.env.local`), and the shipped launcher `.claude/tools/codex-local-env.sh` loads it only for the Codex process so consumers do not need OS-level env exports for keys that may differ by project.
+
 - [x] `sync-harness.sh` includes `.codex/config.toml.example` in its propagation manifest as the only `.codex/*` path introduced by this spec; any further `.codex/*` propagation requires a follow-up spec.
 
 - [x] `harness-sync.md` documents that the Codex MCP template is shipped while real `.codex/config.toml` remains consumer-local, and documents the duplicate-ID gotcha when user-global and project-scoped Codex config define the same MCP server ID.

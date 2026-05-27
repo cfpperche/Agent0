@@ -8,11 +8,11 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-Spec 095 (`harness-consumer-vocab`) **plan locked this session, no commits yet.** All 4 outstanding open questions resolved + `plan.md` filled (was stub). Empirical rename scope: **494 occurrences across ~85 files** in the shipped surface — larger than the prior `~50` handoff estimate. Single-PR mass-rename strategy stands; commit-per-category structure planned for review.
+**Spec 095 (`harness-consumer-vocab`) SHIPPED this session.** Single-PR mass-rename of `fork` → `consumer project` across the entire shipped surface — 9 implementation commits + spec/plan/tasks closure, all 7 ACs verified PASS. Empirical scope was **~700 occurrences** (handoff's 494 estimate was low — the bug-fix passes for adjectival compounds and shell-var leftovers added ~200 more touches). Specs 093 + 094 + 095 now ready for ONE consumer-side sync cycle.
 
-Specs 093 + 094 shipped in prior sessions; still NOT synced to consumer projects by design (deferred until 095 lands — see Decisions).
+Commits this session (top-to-bottom): `4764112` harness-sync.md + glossary, `c31e0ec` CLI tool, `ea0607b` rules-heavy, `9003ee2` rules-medium, `0b2a5ea` rules-light, `162e52f` propagation-pair (rule+hook+memory+test, atomic), `5f91494` hooks, `4b9f676` skills, `9f87f95` tests + adjectival-bug cleanup, `15ed5a4` CLAUDE.md + AGENTS.md + validator. (Plus task closure commit pending.)
 
-Repo dirty: `M docs/specs/095-harness-consumer-vocab/spec.md` (OQs resolved) + `M docs/specs/095-harness-consumer-vocab/plan.md` (was stub, now filled) + `M .agent0/HANDOFF.md` (this session) + 2 pre-existing `??` (`.claude/memory/agent0-core-thesis.md`, `docs/specs/091-sdd-debate-runner/` paused).
+Repo dirty: spec.md (status draft→shipped) + tasks.md (all `[x]`) + HANDOFF (this session) + 2 pre-existing `??` (`.claude/memory/agent0-core-thesis.md`, `docs/specs/091-sdd-debate-runner/` paused).
 
 ## Active Work
 
@@ -20,21 +20,14 @@ _None._
 
 ## Next Actions
 
-1. **Run `/sdd tasks` on spec 095** to draft `tasks.md` from the locked plan. Each task = one commit-category from `plan.md § Files to touch` (glossary host, CLI tool, rules-heavy, rules-medium, rules-light, propagation-pair, hooks, skills, tests, entrypoints, validator, re-baseline). ~11 task groups.
-2. **Implement the rename** per `tasks.md`. Per-occurrence reviewed — NOT blind sed (legitimate git-operation "fork" usages survive). Final step: `bash .claude/tools/sync-harness.sh --baseline` re-bakes hashes; commit alongside the rename.
-3. **Sync consumer projects** (mei-saas + codexeng) in one cycle covering 093 + 094 + 095 once rename PR merges. Codexeng has 1 customized file (`.claude/skills/image/SKILL.md`) — refuses without `--force` (correct).
-4. Keep spec 091 paused unless explicitly resumed.
+1. **Sync mei-saas + codexeng** in ONE cycle covering 093 + 094 + 095. Dry-run first: `bash .claude/tools/sync-harness.sh --check --agent0-path=/home/goat/Agent0 /home/goat/mei-saas` — verified clean this session (81 stale auto-updates, 22 new copies, 3 removed-orphan, **0 customized-refused from vocabulary**). Then `--apply`. Codexeng has 1 customized file (`.claude/skills/image/SKILL.md`) — expected refuse without `--force`.
+2. **Push the 9 commits + closure commit** to origin/main when ready. Currently 18 commits ahead.
+3. Keep spec 091 paused unless explicitly resumed.
 
 ## Decisions & Gotchas
 
-- **Spec 095 OQ resolutions (2026-05-27):**
-  - OQ #1 termo: three forms of `consumer` root — `consumer project` (prose), `consumer` (adjective), `<consumer-path>` (CLI positional).
-  - OQ #2 surface: `shipped surface` (describes mechanism, decouples from "consumer" rename — future-proof).
-  - OQ #3 paired memory: `.claude/memory/propagation-hygiene.md` IN scope (carve-out from Non-goal #1 — explicit doc-pair with `.claude/rules/propagation-advisory.md`, divergent vocab breaks the pair).
-  - OQ #4 PR shape: single PR mass-rename with commit-per-category structure (incremental rejected — leaves codebase in mixed-vocab state for weeks).
-- **Sync to consumer projects DEFERRED until 095 ships** (prior session decision, still active). Trade: 093 + 094 propagation blocked on 095 timeline.
-- **Hook-chain-latency split = canonical precedent for paired rule↔memory.** Same pattern applies to any future capacity where the discipline binds upstream maintainer ≠ what consumers see.
-- **`hook-chain-bench` routine does NOT auto-re-baseline** on `--check` non-zero — human decides revert / optimize / re-baseline.
-- **Spec-094 follow-up #6 (real-session command-shape distribution) remains deferred** — synthetic bench set is faithful-enough proxy.
+- **Bulk sed for renames is safe ONLY with post-rename audits.** Per-occurrence Edit was infeasible at ~700-occurrence scale; sed produced ~6 distinct bug classes (broken paths with embedded spaces, jq `$variable` mangled to `$consumer project`, process-fork meaning conflated with consumer-fork meaning, capitalized plurals missed, adjectival-compound bug where `\bfork\b` → `consumer project` made `fork-X` become `consumer project-X`, shell `FORK_ROOT`/`FORK_ARG`/`FORK_A`/`FORK_B`/`FORK_C` vars missed by `FORK_PATH`-only pattern). All caught and fixed via grep-audit + test-suite-as-oracle. **Lesson:** any future bulk rename needs at minimum: word-boundary patterns, longest-first ordering, separate protection for process-fork semantics (`__PROCESS_FORK_EXEC__` placeholder), separate shell-script-specific pre-pass for `$VAR` references, post-pass cleanup for `noun-` → `adjective-` compounds.
+- **Task 12 (re-bake baseline) was N/A.** Plan misunderstanding — the baseline file (`.claude/harness-sync-baseline.json`) lives in the CONSUMER project (`$CONSUMER_ROOT/.claude/`), not upstream. There's no `--baseline` standalone mode in sync-harness.sh; `write_baseline()` runs automatically on every `--apply`. Consumer-side baseline regenerates on the next mei-saas / codexeng `--apply`.
+- **Process-fork carve-out documented inline.** `.claude/rules/hook-chain-latency.md § Gotchas` keeps "WSL2 fork+exec overhead" — the only legitimate Unix-fork mention in shipped surface. `.claude/rules/harness-sync.md § Glossary` documents the third carve-out for git-operation "fork" usage.
+- **Sync to consumer projects DEFERRED to next session** (still active from prior decision — now unblocked). The 3-spec batch (093 + 094 + 095) is ready as one cycle.
 - **`.agent0/HANDOFF.md` is git-tracked but outside `sync-harness.sh`'s manifest by design** — per-project state, never consumer-managed.
-- **Sync-baseline re-bake (final rename step) flips hashes on every shipped file.** When consumer-side `--check` runs next, expect "stale" on every shipped file — that's the OQ #5 deferred sync paying off in one big `--apply` cycle, not a regression. Document in PR body so consumer-sync session doesn't panic.

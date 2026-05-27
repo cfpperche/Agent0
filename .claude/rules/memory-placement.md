@@ -16,25 +16,25 @@ When saving a learning, fact, or rule, route it by **what kind of knowledge** it
 
 ### 2. Project memory — `.claude/memory/<topic>.md`
 
-**For:** factual cross-cutting knowledge about THE PROJECT — platform constraints, prior decisions and their reasoning, architectural gotchas discovered through dogfooding, references to canonical external sources. Git-tracked, **propagates between contributors of THE SAME project via PR/clone** but **NOT shipped between projects** via sync-harness manifest. The empty scaffold (`.claude/memory/.gitkeep`) IS shipped so every fork gets its own bucket — but memory content is project-local, never cross-pollinated.
+**For:** factual cross-cutting knowledge about THE PROJECT — platform constraints, prior decisions and their reasoning, architectural gotchas discovered through dogfooding, references to canonical external sources. Git-tracked, **propagates between contributors of THE SAME project via PR/clone** but **NOT shipped between projects** via sync-harness manifest. The empty scaffold (`.claude/memory/.gitkeep`) IS shipped so every consumer project gets its own bucket — but memory content is project-local, never cross-pollinated.
 
-**For forks of Agent0:** this same rule applies. Each fork has its own `.claude/memory/` that accumulates its own factual knowledge (e.g. a Python-stack fork might memorize "Starlette form parsing without python-multipart uses urllib.parse.parse_qs"). The upstream's memory entries (about CC platform internals, sync-harness design rationale, etc.) do NOT travel to forks — and reciprocally, fork-specific memories do NOT propagate back upstream. The sync tool is one-way for capacities; memory content is one-source.
+**For consumer projects of Agent0:** this same rule applies. Each consumer project has its own `.claude/memory/` that accumulates its own factual knowledge (e.g. a Python-stack consumer project might memorize "Starlette form parsing without python-multipart uses urllib.parse.parse_qs"). The upstream's memory entries (about CC platform internals, sync-harness design rationale, etc.) do NOT travel to consumer projects — and reciprocally, consumer-specific memories do NOT propagate back upstream. The sync tool is one-way for capacities; memory content is one-source.
 
 **Use when:** the knowledge is project-specific factual reference, not behavioral mandate. "Claude Code has 29 hook events", "we chose hash-compare because alternatives X/Y had problems Z". The agent reads these on demand when starting relevant work — discovery is via the `## Memory` block in CLAUDE.md (lazy-read of `.claude/memory/MEMORY.md` index).
 
 **Do NOT use for:** behavioral mandates ("the agent must do X") — those are rules. Capacity operational documentation ("how the supply-chain hook works") — those are rules. Work-specific design context — that lives in the corresponding `docs/specs/NNN-*/` dir.
 
-**One narrow exception** to "no behavioral mandates here": a mandate that binds the upstream *maintainer* rather than the agent working in any fork. Rules ship to forks, so a maintainer-only discipline placed in a rule would be inert cruft in every fork that consumes the harness but never extends it. Such disciplines route to project memory despite being mandate-shaped — e.g. a propagation-hygiene memory describing how fork-bound files must be written so they carry no upstream-internal pointers (a discipline binding the upstream maintainer, inert in any leaf fork).
+**One narrow exception** to "no behavioral mandates here": a mandate that binds the upstream *maintainer* rather than the agent working in any consumer project. Rules ship to consumer projects, so a maintainer-only discipline placed in a rule would be inert cruft in every consumer project that consumes the harness but never extends it. Such disciplines route to project memory despite being mandate-shaped — e.g. a propagation-hygiene memory describing how shipped files must be written so they carry no upstream-internal pointers (a discipline binding the upstream maintainer, inert in any leaf consumer project).
 
 **Typical contents:** platform-knowledge references (canonical hook surfaces, framework constraints), prior decisions and their reasoning, dogfood-surfaced gotchas. Each project accumulates its own; entries are project-local by design.
 
 ### 3. Project rules — `.claude/rules/<topic>.md`
 
-**For:** behavioral mandates the agent SHOULD comply with, plus operational documentation of the project's capacities (hooks, validators, tools). Git-tracked AND **shipped to forks** via sync-harness manifest — the rules ride with the capacities they govern.
+**For:** behavioral mandates the agent SHOULD comply with, plus operational documentation of the project's capacities (hooks, validators, tools). Git-tracked AND **shipped to consumer projects** via sync-harness manifest — the rules ride with the capacities they govern.
 
-**Use when:** the knowledge is "the agent must follow X when working in this project" or "here's how capacity Y works in any fork that adopts it". Path-scoped variants of these rules use a `paths:` frontmatter to restrict where they apply.
+**Use when:** the knowledge is "the agent must follow X when working in this project" or "here's how capacity Y works in any consumer project that adopts it". Path-scoped variants of these rules use a `paths:` frontmatter to restrict where they apply.
 
-**Do NOT use for:** factual reference data that's project-internal design context (CC platform knowledge, why-we-chose-X decisions). Those are project memory, not rules — they'd noisily ship to every fork that doesn't extend the harness.
+**Do NOT use for:** factual reference data that's project-internal design context (CC platform knowledge, why-we-chose-X decisions). Those are project memory, not rules — they'd noisily ship to every consumer project that doesn't extend the harness.
 
 **Concrete examples currently in this bucket:** `delegation.md` (5-field handoff mandate), `secrets-scan.md` (gitleaks behavior + override grammar), `runtime-introspect.md` (probe.sh capacity operational docs).
 
@@ -46,11 +46,11 @@ Is the knowledge a user-specific preference (language, style)?
   No  → continue
 
 Is the knowledge a behavioral mandate or capacity operational doc?
-  Yes → .claude/rules/<topic>.md (will ship to forks)
+  Yes → .claude/rules/<topic>.md (will ship to consumer projects)
   No  → continue
 
 Is the knowledge factual project reference (platform constraint, prior decision, gotcha)?
-  Yes → .claude/memory/<topic>.md (git-tracked, NOT shipped to forks)
+  Yes → .claude/memory/<topic>.md (git-tracked, NOT shipped to consumer projects)
   No  → reconsider; the knowledge probably belongs elsewhere (CLAUDE.md for orientation, .agent0/HANDOFF.md for WIP, docs/specs/ for work-unit design memory)
 ```
 
@@ -58,7 +58,7 @@ When in doubt, route to project memory (`.claude/memory/`). Demoting from rule �
 
 ## Quick reference table
 
-| Bucket | Path | Git-tracked? | Ships to forks? | Auto-loaded? | Best for |
+| Bucket | Path | Git-tracked? | Ships to consumer projects? | Auto-loaded? | Best for |
 | --- | --- | --- | --- | --- | --- |
 | CC per-user memory | `~/.claude/projects/<path>/memory/` | No | No | Yes (MEMORY.md, capped) | Preferences only |
 | Project memory | `.claude/memory/<topic>.md` | **Yes** | **Empty scaffold only** (`.gitkeep`); content stays project-local | No (lazy-read via CLAUDE.md `## Memory`) | Factual project knowledge — each project accumulates its own |
@@ -77,7 +77,7 @@ The `.claude/hooks/memory-frontmatter-validate.sh` hook fires on `PostToolUse(Ed
 |---|---|---|
 | `name` | string | Stable identifier — slug or human-readable label. Both shapes pass (existing entries use both). |
 | `description` | string | One-line summary used in the MEMORY.md index. Soft cap on projected index-line length (advisory only) — see § *Cap / query / decay* below. |
-| `metadata.type` | string | Classification, nested under `metadata:`. Value-open by design (forks pick the taxonomy that fits their project). Examples in current use: `project`, `reference`. |
+| `metadata.type` | string | Classification, nested under `metadata:`. Value-open by design (consumer projects pick the taxonomy that fits their project). Examples in current use: `project`, `reference`. |
 
 ### Optional fields (under `metadata.*`)
 
@@ -136,7 +136,7 @@ One JSONL line per memory write. Five `event_type` values:
 
 ### Per-machine journal (gitignored)
 
-`.claude/.memory-events.jsonl` is **gitignored** — per-machine cache, sibling to `.claude/delegation-audit.jsonl` and `.claude/.runtime-state/`. A git-tracked journal would produce merge conflicts on every concurrent commit across a multi-contributor fork; entry files themselves are git-tracked and carry the durable record via `git log --follow`. On a new leader machine, run `bash .claude/tools/memory-backfill.sh` once to seed the journal with one `add` event per existing entry (`ts` derived from git-introduction time). Idempotent — re-running on a populated journal is a no-op.
+`.claude/.memory-events.jsonl` is **gitignored** — per-machine cache, sibling to `.claude/delegation-audit.jsonl` and `.claude/.runtime-state/`. A git-tracked journal would produce merge conflicts on every concurrent commit across a multi-contributor consumer project; entry files themselves are git-tracked and carry the durable record via `git log --follow`. On a new leader machine, run `bash .claude/tools/memory-backfill.sh` once to seed the journal with one `add` event per existing entry (`ts` derived from git-introduction time). Idempotent — re-running on a populated journal is a no-op.
 
 The first invocation of the journal hook on an empty journal emits a one-time `memory-journal-advisory: journal empty; run bash .claude/tools/memory-backfill.sh` to mitigate the otherwise-silent add-vs-update misclassification.
 
@@ -188,14 +188,14 @@ The engine never auto-archives, auto-deletes, or otherwise mutates entry files. 
 }
 ```
 
-Shipped as a starter template. Forks override values directly. Missing keys fall back to documented defaults. Malformed JSON emits a one-line `memory-config-advisory:` and the defaults run; never blocks. Out-of-spec keys are ignored silently.
+Shipped as a starter template. Consumer projects override values directly. Missing keys fall back to documented defaults. Malformed JSON emits a one-line `memory-config-advisory:` and the defaults run; never blocks. Out-of-spec keys are ignored silently.
 
 ### Gotchas
 
-- **`confirm` writes via Python, NOT via the Edit/Write tool surface.** The `PostToolUse` memory-events-journal hook (which captures `Edit`/`Write`/`MultiEdit` invocations) does NOT fire on confirms. The audit trail for confirms lives in `git log <entry-file>`. If you need journal events on confirms in your fork, extend the Python helper to append a JSONL line directly.
+- **`confirm` writes via Python, NOT via the Edit/Write tool surface.** The `PostToolUse` memory-events-journal hook (which captures `Edit`/`Write`/`MultiEdit` invocations) does NOT fire on confirms. The audit trail for confirms lives in `git log <entry-file>`. If you need journal events on confirms in your consumer project, extend the Python helper to append a JSONL line directly.
 - **`last_accessed` is honest only after the founder uses `confirm`.** Backfilled values for legacy entries (those predating the metadata extension) default to "today at backfill time" (no honest read signal pre-extension). Decay won't surface anyone for ~60 days after backfill unless the founder confirms (and thus moves the timestamp) some entries first.
 - **Cap counts the projected bullet length, not the raw description.** The check is on `- [<name>](<slug>.md) — <description>` after assembly. Tightening `name` (rare) is one lever; the usual fix is shortening `description`.
-- **Folded YAML strings in the entries can confuse non-Python tooling.** PyYAML's `safe_dump` folds long values across lines for readability. The Python helper handles this; the degraded awk projection path in `memory-project.sh` (used when python3+yaml absent) emits a `memory-project-advisory:` warning and may truncate folded descriptions at the first line. Forks without PyYAML get a degraded but still-functional projection.
+- **Folded YAML strings in the entries can confuse non-Python tooling.** PyYAML's `safe_dump` folds long values across lines for readability. The Python helper handles this; the degraded awk projection path in `memory-project.sh` (used when python3+yaml absent) emits a `memory-project-advisory:` warning and may truncate folded descriptions at the first line. Consumer projects without PyYAML get a degraded but still-functional projection.
 
 ### Files
 
@@ -214,9 +214,9 @@ Shipped as a starter template. Forks override values directly. Missing keys fall
 
 ## Why three buckets, not two
 
-The previous version of this rule had only two buckets: project-shared (rules) and per-user (preferences). That model conflates two distinct kinds of project-shared knowledge: behavioral mandates that should ride with capacities into forks, and factual reference that's project-internal design context. The empirical trigger for the split was discovering that Claude Code has 32 hook events (not the ~9 commonly cited). That knowledge:
+The previous version of this rule had only two buckets: project-shared (rules) and per-user (preferences). That model conflates two distinct kinds of project-shared knowledge: behavioral mandates that should ride with capacities into consumer projects, and factual reference that's project-internal design context. The empirical trigger for the split was discovering that Claude Code has 32 hook events (not the ~9 commonly cited). That knowledge:
 - Is project-shared (other Agent0 contributors benefit)
 - Is NOT a behavioral mandate (it's reference data)
-- Should NOT ship to forks (forks consume capacities, they don't extend the harness)
+- Should NOT ship to consumer projects (consumer projects consume capacities, they don't extend the harness)
 
 No existing bucket fit. The new `.claude/memory/` bucket covers this gap.

@@ -8,13 +8,13 @@ paths:
 
 # Image generation
 
-Opt-in capacity for AI image generation via fal.ai. The `/image` skill produces both **throwaway UI mockups** (FLUX schnell, ~$0.003/img) and **durable brand assets** (gpt-image-2 or Imagen 4 Ultra, $0.04-0.20/img) via a single provider — fal.ai aggregates FLUX, OpenAI gpt-image, Google Imagen, and ~1000 other models under one HTTP MCP endpoint. The skill is intentionally thin: tier flag selects the model, output path is mechanical, cost is printed before every call. Activation is a 3-line edit to `.mcp.json` + setting `FAL_KEY` in env. Forks that never activate pay zero cost.
+Opt-in capacity for AI image generation via fal.ai. The `/image` skill produces both **throwaway UI mockups** (FLUX schnell, ~$0.003/img) and **durable brand assets** (gpt-image-2 or Imagen 4 Ultra, $0.04-0.20/img) via a single provider — fal.ai aggregates FLUX, OpenAI gpt-image, Google Imagen, and ~1000 other models under one HTTP MCP endpoint. The skill is intentionally thin: tier flag selects the model, output path is mechanical, cost is printed before every call. Activation is a 3-line edit to `.mcp.json` + setting `FAL_KEY` in env. Consumer projects that never activate pay zero cost.
 
-The default provider is the **official fal.ai hosted MCP** (`https://mcp.fal.ai/mcp`), maintained by the fal.ai team. Community-maintained alternatives are documented for forks that prefer fully-local/stdio MCPs or need a fallback if the hosted endpoint is unreachable.
+The default provider is the **official fal.ai hosted MCP** (`https://mcp.fal.ai/mcp`), maintained by the fal.ai team. Community-maintained alternatives are documented for consumer projects that prefer fully-local/stdio MCPs or need a fallback if the hosted endpoint is unreachable.
 
 ## Activation
 
-Three steps, one-time per fork:
+Three steps, one-time per consumer project:
 
 1. **Copy + uncomment the recipe.** `cp .mcp.json.example .mcp.json` (or merge into existing). Remove the `//` markers on the `fal-ai` block. The block uses HTTP transport — distinct from the stdio blocks for Playwright/Chrome DevTools/DBHub/Next-devtools.
 
@@ -24,7 +24,7 @@ Three steps, one-time per fork:
 
 After restart, `/image --tier=<draft|brand-text|brand-photo> "<prompt>"` is available. Without activation, `/image` errors clean with a pointer back to this section.
 
-**MCP recipe is optional for generation (since spec 088, 2026-05-25).** `gen.sh exec` calls the fal.run REST endpoint directly with `FAL_KEY`, bypassing the MCP transport — so a fork that sets `FAL_KEY` but skips the `.mcp.json` recipe still gets full generation capability. The recipe remains valuable for **agent-side discovery tools** (`search_models`, `get_model_schema`, `get_pricing`, `recommend_model`) — skip it only if your fork has no use for those.
+**MCP recipe is optional for generation (since spec 088, 2026-05-25).** `gen.sh exec` calls the fal.run REST endpoint directly with `FAL_KEY`, bypassing the MCP transport — so a consumer project that sets `FAL_KEY` but skips the `.mcp.json` recipe still gets full generation capability. The recipe remains valuable for **agent-side discovery tools** (`search_models`, `get_model_schema`, `get_pricing`, `recommend_model`) — skip it only if your consumer project has no use for those.
 
 ## Tier table
 
@@ -54,13 +54,13 @@ The model IDs are addressed via the MCP's `search_models` / `recommend_model` to
 
 Image generators interpret vague prompts toward the **stock median** of their training distribution — "a banner" becomes the generic SaaS banner, not your brand. This is the silent failure mode for `brand-text` and `brand-photo` calls; the output looks plausibly competent but quietly off-brand, and the drift is only caught at human review (V6-style eyeball, which is expensive and easy to skip).
 
-The discipline: **brand-tier prompts should compose from a fork-local brand contract** — a written document declaring palette, typography, visual language, composition rules, and anti-patterns. The contract turns prompt-writing from interpretation into transcription; the failure mode shifts from invisible drift into visible "the contract was wrong" (and a wrong contract is editable; an undocumented vibe is not).
+The discipline: **brand-tier prompts should compose from a consumer-local brand contract** — a written document declaring palette, typography, visual language, composition rules, and anti-patterns. The contract turns prompt-writing from interpretation into transcription; the failure mode shifts from invisible drift into visible "the contract was wrong" (and a wrong contract is editable; an undocumented vibe is not).
 
-**Agent0 ships no template for this contract** — palette and visual language are quintessentially fork-local (different products, different brands, no honest one-size-fits-all). The convention is path + presence only:
+**Agent0 ships no template for this contract** — palette and visual language are quintessentially consumer-local (different products, different brands, no honest one-size-fits-all). The convention is path + presence only:
 
-- Common location: `docs/brand/styleguide.md` (or `docs/brand/<sub-brand>.md` for multi-brand forks).
+- Common location: `docs/brand/styleguide.md` (or `docs/brand/<sub-brand>.md` for multi-brand consumer projects).
 - At call time for `brand-text` / `brand-photo`: if a contract document exists, read it first and compose the prompt from its § *Prompt template* section. If it doesn't exist, the prompt is ad-hoc — flag this in the call summary so the human knows what they're trusting.
-- The contract document treats the fork's source-of-truth tokens (e.g. CSS variables, design-system JSON) as the **oracle**; the contract itself transcribes them. Disagreement between oracle and contract → oracle wins, contract is out of date. No automation; refresh discipline is manual and owner-binding.
+- The contract document treats the consumer project's source-of-truth tokens (e.g. CSS variables, design-system JSON) as the **oracle**; the contract itself transcribes them. Disagreement between oracle and contract → oracle wins, contract is out of date. No automation; refresh discipline is manual and owner-binding.
 
 `draft` tier is exempt — mockups are throwaway by definition; ad-hoc prompts are correct-shaped there.
 
@@ -74,7 +74,7 @@ Path-based split — durability is signalled by the tier flag at call time:
 
 Promotion mockup → brand asset is a manual `git mv assets/generated/mockups/<file> assets/brand/<file>` + commit. Rare and explicit by design.
 
-A fork that wants ALL image storage gitignored adds `assets/brand/*` to its own `.gitignore`. A fork that wants ALL tracked removes the `assets/generated/mockups/*` line. Both are local overrides; the harness default is the split above.
+A consumer project that wants ALL image storage gitignored adds `assets/brand/*` to its own `.gitignore`. A consumer project that wants ALL tracked removes the `assets/generated/mockups/*` line. Both are local overrides; the harness default is the split above.
 
 ## Error on omitted tier
 
@@ -126,14 +126,14 @@ Not enforced by a hook in v1 — the skill itself honours the marker by short-ci
 
 The default — fal.ai's official hosted MCP at `https://mcp.fal.ai/mcp` — is maintained by the fal.ai team and tracks their catalog directly. Free at the MCP layer; you pay only for model inferences. Network-dependent: if the endpoint is unreachable, the MCP fails to register and `/image` errors at call time.
 
-**Documented fallbacks** for forks that want a fully-local/stdio MCP or need an offline-capable alternative:
+**Documented fallbacks** for consumer projects that want a fully-local/stdio MCP or need an offline-capable alternative:
 
 | Package | Source | Notes |
 |---|---|---|
 | `piebro/fal-ai-mcp-server` | [npm](https://www.npmjs.com/package/fal-ai-mcp-server) · [GitHub](https://github.com/piebro/fal-ai-mcp-server) | Single individual maintainer, MIT, most-featured community option (built-in cost-estimation tools). Used as the fallback in `.claude/rules/mcp-recipes.md` § *Documented community alternatives*. |
 | `@monsoft/mcp-fal-ai` | [npm](https://www.npmjs.com/package/@monsoft/mcp-fal-ai) | 8 tools, dual transport (stdio + SSE), zero deps on fal.ai SDK |
 | `mcp-fal-ai-image` | [npm](https://www.npmjs.com/package/mcp-fal-ai-image) | Image-only variant; lighter scope |
-| `lansespirit/image-gen-mcp` | [GitHub](https://github.com/lansespirit/image-gen-mcp) | NOT fal.ai-backed — multi-provider (OAI gpt-image + Imagen 4 direct). Reach for this if a fork wants to bypass fal.ai entirely. |
+| `lansespirit/image-gen-mcp` | [GitHub](https://github.com/lansespirit/image-gen-mcp) | NOT fal.ai-backed — multi-provider (OAI gpt-image + Imagen 4 direct). Reach for this if a consumer project wants to bypass fal.ai entirely. |
 
 Swap is a `.mcp.json` edit (replace the `fal-ai` HTTP block with the chosen alternative's stdio block) + same `FAL_KEY` env var. The skill's tier→model resolution stays identical because all four alternatives expose the same underlying fal.ai endpoints.
 
@@ -157,9 +157,9 @@ Skill scripts read the table at call time; updates apply on next invocation with
 
 - **MCP `run_model` is broken upstream — generation uses curl.** As of 2026-05-25, `mcp__fal-ai__run_model` against the official hosted MCP (`https://mcp.fal.ai/mcp`) hangs ≥990s server-side on `gpt-image-2` (verified via 21,655 `"No token data found"` poll messages in the CC MCP-client log over a 7-hour session). CC's MCP-client times out at ~6 min and mis-renders the timeout as the canonical `"The user doesn't want to proceed with this tool use"` string — making the failure look like a permission problem. The `/image` skill now routes generation through `gen.sh exec` (REST POST to `https://fal.run/<model>` with `Authorization: Key $FAL_KEY`) instead. The MCP server is closed-source (Vercel-hosted stateless API; no upstream fix path); the curl path is the canonical generation method until further notice. Full diagnosis: `docs/specs/088-image-skill-curl-exec/`.
 - **gpt-image-2 has a min-pixel floor that drifts landscape/portrait dims.** The model's input schema declares `total pixels between 655,360 and 8,294,400`. `landscape_16_9` (1024×576 = 589,824 px) and `portrait_16_9` (576×1024 = 589,824 px) are below the floor; the model upsamples to **1088×608** (661,504 px). `square_hd` (1024×1024 = 1,048,576 px) sits above the floor — no drift. `gen.sh exec` auto-downscales via `ffmpeg -vf scale=...` when actual returned dims ≠ expected (graceful-degrade: emits `image-skill-advisory:` if ffmpeg is absent, leaves file at upsampled dims). FLUX schnell + Imagen 4 Ultra do not enforce this floor.
-- **Hosted MCP is network-dependent.** Unlike the stdio recipes that spawn locally, `https://mcp.fal.ai/mcp` requires a session-start HTTPS handshake. If fal.ai's endpoint is down or the fork is behind a strict egress firewall, the MCP doesn't register — discovery tools become unavailable, but generation still works (curl path bypasses MCP entirely; only `FAL_KEY` env is required). The community-package fallback (`piebro/fal-ai-mcp-server` via `npx -y`) is offline-capable if discovery matters.
+- **Hosted MCP is network-dependent.** Unlike the stdio recipes that spawn locally, `https://mcp.fal.ai/mcp` requires a session-start HTTPS handshake. If fal.ai's endpoint is down or the consumer project is behind a strict egress firewall, the MCP doesn't register — discovery tools become unavailable, but generation still works (curl path bypasses MCP entirely; only `FAL_KEY` env is required). The community-package fallback (`piebro/fal-ai-mcp-server` via `npx -y`) is offline-capable if discovery matters.
 - **MCP tool surface does NOT reload on mid-session `.mcp.json` edits.** `claude mcp list` reports `✓ Connected` immediately after `.mcp.json` changes (it re-handshakes on demand), BUT the `mcp__fal-ai__*` tools available to the agent are baked in at SessionStart and stay frozen for the session's lifetime. A session that boots without the `fal-ai` block (or with a broken block) cannot get tool access by fixing the file mid-flight — it MUST restart. Verified empirically 2026-05-24 during initial `/image` activation.
-- **`Authorization` header shape differs MCP vs REST.** MCP uses `Authorization: Bearer ${FAL_KEY}` (per fal.ai's official MCP setup). The REST API at `fal.run/fal-ai/<model>` uses `Authorization: Key $FAL_KEY` — different prefix word, same key value. Forks adapting the skill to a curl-fallback path must use `Key`, not `Bearer`. Verified empirically 2026-05-24.
+- **`Authorization` header shape differs MCP vs REST.** MCP uses `Authorization: Bearer ${FAL_KEY}` (per fal.ai's official MCP setup). The REST API at `fal.run/fal-ai/<model>` uses `Authorization: Key $FAL_KEY` — different prefix word, same key value. Consumer projects adapting the skill to a curl-fallback path must use `Key`, not `Bearer`. Verified empirically 2026-05-24.
 - **HTTP transport is the first such recipe in `.mcp.json.example`.** All 4 existing recipes (Playwright, Chrome DevTools, DBHub, Next-devtools) use stdio (`command`/`args`). The `fal-ai` block uses HTTP (`type: "http"`, `url`, `headers`). Don't pattern-match the wrong shape — the canonical key is `type`, not `transport` (verified empirically against `claude mcp add --transport http ...` which writes `"type": "http"` to JSON despite the CLI flag spelling).
 - **fal.ai key shape may not match gitleaks default rules.** Unlike OpenAI's `sk-*` or AWS's `AKIA*`, fal.ai keys (`<uuid>:<secret>`) are pattern-distinct. The first activation should test by writing the key to a scratch file and running `gitleaks detect --no-banner` against it — if not caught, add a custom rule to `.githooks/gitleaks.toml`. Mitigated meanwhile by the `${FAL_KEY}` indirection in `.mcp.json.example`.
 - **Pricing drift is real.** fal.ai changes prices occasionally. The `references/tier-pricing.md` table is a static snapshot; refresh quarterly via the routine. If the date stamp is >180 days old, treat the displayed cost as a lower bound and verify via fal.ai's current pricing page.
@@ -168,4 +168,4 @@ Skill scripts read the table at call time; updates apply on next invocation with
 - **Promotion is manual.** Mockup → brand asset is `git mv`. No automation. Acceptable — promotion is rare and the explicit step is the correct cognitive break.
 - **`.mcp.json` is secret-adjacent.** `FAL_KEY` indirection is the right pattern; never commit a populated `.mcp.json` with literal keys. Same caveat as the DBHub recipe's `DATABASE_URL`.
 - **No NSFW filtering at the skill layer.** fal.ai + the underlying providers (OpenAI / Google) enforce their own content policies at the model level. The skill does not re-implement filtering; if a prompt is rejected by the provider, the MCP returns an error and the skill surfaces it verbatim.
-- **Sync-harness propagation for the directory tree.** `assets/.gitkeep`, `assets/brand/.gitkeep`, etc. ship to forks via `harness-sync.sh` as part of the standard manifest. The PNG content under `assets/` is NOT synced — content is per-fork by design (same posture as `.claude/memory/`).
+- **Sync-harness propagation for the directory tree.** `assets/.gitkeep`, `assets/brand/.gitkeep`, etc. ship to consumer projects via `harness-sync.sh` as part of the standard manifest. The PNG content under `assets/` is NOT synced — content is per-consumer by design (same posture as `.claude/memory/`).

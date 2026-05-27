@@ -149,7 +149,7 @@ JSON object with required keys (Layer-1-enforced):
 - **`summary_prose`** (string, required) — 1-3 sentences in plain language; becomes `<figcaption>` when rendered (WCAG 1.1.1 alignment)
 - **`components`** (array of objects, required) — each has `id` (kebab-case unique), `label` (display name), `type` (enum: `frontend | backend | db | cloud | security | bus | external`), optional `sublabel` (one-line technology hint, "Next.js 15 App Router")
 - **`arrows`** (array of objects, required) — each has `from` (component id), `to` (component id), optional `label` (protocol hint, "REST", "events", "Prisma")
-- **`zones`** (array of objects, optional) — visual grouping for the future renderer; one per logical zone (Frontend / Backend / Data / Infrastructure). Skipped at v1 (JSON-only consumers don't need them); kept in the optional surface so a fork can populate ahead of the HTML renderer landing.
+- **`zones`** (array of objects, optional) — visual grouping for the future renderer; one per logical zone (Frontend / Backend / Data / Infrastructure). Skipped at v1 (JSON-only consumers don't need them); kept in the optional surface so a consumer project can populate ahead of the HTML renderer landing.
 - **`summary_cards`** (array of objects, optional, max 4) — short cards summarising the diagram; same deferral as `zones`.
 
 **`arrows[].from` and `.to` MUST reference component IDs that exist in `components[]`.** A mismatch is a discipline failure caught at agent self-review; Layer 1 doesn't structurally validate this (substring check only) because the failure shape is rare enough to not warrant a custom validator.

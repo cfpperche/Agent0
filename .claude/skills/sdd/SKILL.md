@@ -429,7 +429,7 @@ If the first token of `$ARGUMENTS` is missing or not one of `new`, `refine`, `de
 
 ## Notes
 
-_Fork-extension surface — append fork-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add fork bullets at the end. See `.claude/rules/harness-sync.md` § Fork-extension convention._
+_Consumer-extension surface — append consumer-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add consumer bullets at the end. See `.claude/rules/harness-sync.md` § Consumer-extension convention._
 
 - Specs are **git-tracked** — they are project memory, not scratch. Don't gitignore them.
 - The skill provides *structure*; you (Claude) provide *content*. Don't auto-fill `spec.md` — the user owns intent.

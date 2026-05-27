@@ -103,11 +103,11 @@ If the first token of `$ARGUMENTS` is missing or not one of `new`, `list`, `run`
 
 ## Notes
 
-_Fork-extension surface — append fork-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add fork bullets at the end. See `.claude/rules/harness-sync.md` § Fork-extension convention._
+_Consumer-extension surface — append consumer-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add consumer bullets at the end. See `.claude/rules/harness-sync.md` § Consumer-extension convention._
 
 - **Don't auto-stage, don't auto-commit.** `new` writes the file; `git add` is the developer's call. Same discipline as `/remind`.
 - **Routine definitions are git-tracked; state is NOT.** `.claude/routines/<slug>.md` ships in git; `.claude/.routines-state/` is gitignored (per-machine). This split is what makes the capacity multi-developer-safe.
-- **Sync-harness propagates the capacity (rule + scripts + skill + hook), NOT instances.** A fork that adopts Agent0's harness gets `/routine` for free, but the fork's own routines are fork-local.
+- **Sync-harness propagates the capacity (rule + scripts + skill + hook), NOT instances.** A consumer project that adopts Agent0's harness gets `/routine` for free, but the consumer project's own routines are consumer-local.
 - **Cron registration is separate from routine definition.** `/routine new` creates the file; `.claude/tools/install-routines.sh` (re-)generates the crontab block. After `new`, the routine is NOT scheduled until install runs.
 - **Idempotency is the routine author's responsibility.** The validator rejects `idempotent: false` in frontmatter, but it can't verify the prompt body is actually idempotent. The 4-layer N-fold defense (per `.claude/rules/routines.md`) catches drift; the routine author writes the guard.
 - **`run` dispatches in the current session.** Unlike Phase 2 (autonomous `claude -p`), v1 `run` means "you, the current Claude Code session, do what the routine prompt asks". The session is the executor.

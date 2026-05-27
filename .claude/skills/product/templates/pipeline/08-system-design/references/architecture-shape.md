@@ -19,7 +19,7 @@ Step 9 deepens that skeleton into the production design. The same modules, entit
 2. **Same entities, concrete schema.** Step 3's `Task { id, project_id, title, status }` becomes a typed pseudo-schema with PG types, indexes, soft-delete posture, multi-tenancy column if applicable. Adding fields is fine; removing entities is a design defect (step 3 had a feature step 9 forgot).
 3. **Same flows, fully traced.** Step 3's "user signs up → email confirmation → first action" becomes a sequence in the architecture.json arrows + a deeper treatment in system-design.md § Services + § APIs. The flow shape from step 3 is the contract; step 9 names every component the flow touches.
 
-When `architecture.md` is missing (step 3 skipped or not yet ported in the fork's pipeline state), the agent reads `functional-spec.md` directly and synthesises the architecture from there. Call this out in `## Decisions Locked & Open § Open` as a discipline note.
+When `architecture.md` is missing (step 3 skipped or not yet ported in the consumer project's pipeline state), the agent reads `functional-spec.md` directly and synthesises the architecture from there. Call this out in `## Decisions Locked & Open § Open` as a discipline note.
 
 ## The two-floor depth ladder
 

@@ -252,7 +252,7 @@ If the first token is missing or not one of `start` / `list` / `resume` / `done`
 
 ## Notes
 
-_Fork-extension surface — append fork-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add fork bullets at the end. See `.claude/rules/harness-sync.md` § Fork-extension convention._
+_Consumer-extension surface — append consumer-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add consumer bullets at the end. See `.claude/rules/harness-sync.md` § Consumer-extension convention._
 
 - This skill **does not write to `docs/specs/`**. Promotion into a spec is the user's decision — they call `/sdd new <slug>` separately after reviewing the HTML.
 - The rendered HTML has a `Copy as markdown for /sdd new` button in the footer that yields a structured markdown block — paste that into the new spec's `spec.md` as starting material.

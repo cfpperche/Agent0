@@ -75,7 +75,7 @@ Phase 5 has no step number — it is the terminal phase. `/product` scaffolds, u
 
 All 15 step prompts + schemas + references live at `.claude/skills/product/templates/pipeline/<step>/`. The skill is the canonical delivery.
 
-**Why bundle (not symlink or runtime-read):** the skill is standalone — must work in any fork. Bundle is the price of portability.
+**Why bundle (not symlink or runtime-read):** the skill is standalone — must work in any consumer project. Bundle is the price of portability.
 
 ## Two-mood-pass rationale (lo-fi + hi-fi)
 

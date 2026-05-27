@@ -37,7 +37,7 @@ User invokes as `/product "<idea>" --out=<path> [flags]`. The raw argument strin
 
 ## Phase 0 — Setup + idempotency check + resume detection — 🔒 Low freedom: deterministic file scan + harness filter
 
-1. **Idempotency check** — list files at `<out>`. Filter out the **Agent0 harness allowlist** (these are exempt; a freshly-bootstrapped Agent0 fork is "fresh" from `/product`'s perspective):
+1. **Idempotency check** — list files at `<out>`. Filter out the **Agent0 harness allowlist** (these are exempt; a freshly-bootstrapped Agent0 consumer project is "fresh" from `/product`'s perspective):
 
    ```
    .claude/        .githooks/         .gitignore
@@ -46,7 +46,7 @@ User invokes as `/product "<idea>" --out=<path> [flags]`. The raw argument strin
 
    Compute `<remaining>` = files at `<out>` MINUS the harness allowlist above (recursive — `.claude/**`, `.githooks/**`, `.git/**` all count as harness).
 
-   - **If `<remaining>` is empty** (or `<out>` doesn't exist): proceed to step 2 (Init) — no prompt, no rm, harness preserved. This is the path for `mkdir <fork> && sync-harness <fork> && /product --out=<fork>`, the natural harness-disciplined-from-day-1 founder workflow.
+   - **If `<remaining>` is empty** (or `<out>` doesn't exist): proceed to step 2 (Init) — no prompt, no rm, harness preserved. This is the path for `mkdir <consumer project> && sync-harness <consumer project> && /product --out=<consumer project>`, the natural harness-disciplined-from-day-1 founder workflow.
    - **If `<remaining>` is non-empty:**
      - If `--from-step=NN` was passed AND `<out>/docs/.state.json` exists: read state, validate (a) `version == 5` — if v4 found, abort with `state v4 found — older /product run; clear --out dir or run fresh /product`; if v3 found, abort with `state v3 found — older /product run; clear --out dir or run fresh /product`; if v2 found, abort with `state v2 found — older /product run; clear --out dir or run fresh /product`; (b) `slug`/`idea`/`flags.stack` match the invocation; if mismatch, abort with `state mismatch — clear --out dir or pick different --from-step`. If both pass, jump to step NN.
      - Else (no `--from-step` OR no `.state.json`): prompt `<out> exists with prior /product artifacts. Overwrite the non-harness artifacts? (.git/ history and the Agent0 harness are preserved) (y/N) ▷`. On `y` → run `bash .claude/skills/product/scripts/clear-target.sh <out>`, which removes every top-level entry NOT in the harness allowlist (the `<remaining>` set) — `.git/` history and the bootstrapped harness survive; the removed paths surface as deletions in the operator's post-run `git diff` (the audit trail). On `n` / no answer → abort cleanly with `aborted; pick a different --out or rm the existing dir yourself`. Exit 0.
@@ -277,7 +277,7 @@ This skill does not have subcommands beyond the initial invocation. If `$ARGUMEN
 
 ## Notes
 
-_Fork-extension surface — append fork-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add fork bullets at the end. See `.claude/rules/harness-sync.md` § Fork-extension convention._
+_Consumer-extension surface — append consumer-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add consumer bullets at the end. See `.claude/rules/harness-sync.md` § Consumer-extension convention._
 
 - **Skill compliance is non-skippable.** Run `bash .claude/skills/skill/scripts/validate.sh .claude/skills/product` before commit; exit 0 required.
 - **`/product` ends at the visual contract — it does NOT generate a runnable app.** Phase 4 produces `screen-atlas.md` + the hi-fi killer-flow mood (static HTML) + `fixture-spec.md`; Phase 5 scaffolds the SDD umbrella + foundation child. No `app/` tree, no `pnpm install`, no build verification. The app build is the founder working the scaffolded SDD specs. This is the deliberate fix for the v2/v3 36-route fan-out whose output quality collapsed (2026-05-19/20 dogfood).

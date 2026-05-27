@@ -97,7 +97,7 @@ The validator (`scripts/validate.sh`) does NOT verify that the body actually mat
 
 ## Why three tiers and not two
 
-Two tiers (CC-only vs portable) collapses a real distinction: a Linux-bash skill that runs in Hermes is portable to *most* runtimes but not to a Windows-only environment. The third tier holds the OS-portability bar separate so a fork can confidently say "this works on every supported runtime AND every supported OS" without re-auditing.
+Two tiers (CC-only vs portable) collapses a real distinction: a Linux-bash skill that runs in Hermes is portable to *most* runtimes but not to a Windows-only environment. The third tier holds the OS-portability bar separate so a consumer project can confidently say "this works on every supported runtime AND every supported OS" without re-auditing.
 
 ## Why the namespace is `agent0-` prefixed
 

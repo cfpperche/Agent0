@@ -181,7 +181,7 @@ Three calibration choices worth naming:
 - **JSON-only architecture artifact.** This step emits the structural component-graph JSON; HTML rendering is deferred to a future visualisation refinement. Acceptance: "one of `architecture.json` / `architecture.html`" — JSON-only satisfies.
 - **`security.md` sibling file, not a section in system-design.md.** Security is elevated to a sibling artifact so step 12 (legal-posture) and downstream consumers can cite security.md as a stable contract.
 
-Fork-level architecture constraints (`pattern`, `layers`, `vertical_slice`) are not modeled here. If a fork needs them, they live in the fork's `CLAUDE.md` and the agent reads them as ordinary repo context.
+Consumer project-level architecture constraints (`pattern`, `layers`, `vertical_slice`) are not modeled here. If a consumer project needs them, they live in the consumer project's `CLAUDE.md` and the agent reads them as ordinary repo context.
 
 ---
 

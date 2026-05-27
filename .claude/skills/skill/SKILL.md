@@ -190,7 +190,7 @@ If the first token of `$ARGUMENTS` is missing or not one of `new`, `audit`, `por
 
 ## Notes
 
-_Fork-extension surface — append fork-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add fork bullets at the end. See `.claude/rules/harness-sync.md` § Fork-extension convention._
+_Consumer-extension surface — append consumer-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add consumer bullets at the end. See `.claude/rules/harness-sync.md` § Consumer-extension convention._
 
 - **Defer to canonical when available.** `validate.sh` `exec`s `skills-ref validate` when that Python tool is on PATH. The bash rule set is the zero-dep fallback; `skills-ref` is the source of truth. If the two disagree, prefer `skills-ref` and re-snapshot `references/spec-snapshot.md`.
 - **Spec drift.** `references/spec-snapshot.md` was retrieved on 2026-05-17. Re-check the live spec (https://agentskills.io/specification) periodically; when it evolves, re-snapshot and audit `scripts/validate.sh` against the diff. A `reminders.yaml` entry is the natural cadence reminder.

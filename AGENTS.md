@@ -14,7 +14,7 @@ Non-trivial work is spec-first — intent before code under `docs/specs/NNN-<slu
 
 ## Runtime entrypoints
 
-`CLAUDE.md` is the Claude Code entrypoint; `AGENTS.md` is the Codex entrypoint. This managed block is the shared Agent0 index; runtime support details live in `.claude/rules/runtime-capabilities.md`. `AGENTS.md` is baseline-tracked; Codex fork customization belongs in `AGENTS.override.md` or nested `AGENTS.md`.
+`CLAUDE.md` is the Claude Code entrypoint; `AGENTS.md` is the Codex entrypoint. This managed block is the shared Agent0 index; runtime support details live in `.claude/rules/runtime-capabilities.md`. `AGENTS.md` is baseline-tracked; Codex consumer project customization belongs in `AGENTS.override.md` or nested `AGENTS.md`.
 
 ## Runtime capabilities
 
@@ -38,7 +38,7 @@ Production code follows red → green → refactor with tests in the same diff; 
 
 ## Secrets scan
 
-Two layers — the native `.githooks/pre-commit` runs gitleaks over the staged diff at commit time; a `PreToolUse(Bash)` preflight (`.claude/hooks/secrets-scan.sh`) gates dangerous commit shapes. Activate per-fork with `git config core.hooksPath .githooks`. See `.claude/rules/secrets-scan.md`.
+Two layers — the native `.githooks/pre-commit` runs gitleaks over the staged diff at commit time; a `PreToolUse(Bash)` preflight (`.claude/hooks/secrets-scan.sh`) gates dangerous commit shapes. Activate per-consumer with `git config core.hooksPath .githooks`. See `.claude/rules/secrets-scan.md`.
 
 ## Supply chain
 
@@ -50,7 +50,7 @@ A `PreToolUse(Bash)` preflight (`.claude/hooks/supply-chain-scan.sh`) blocks dep
 
 ## MCP recipes
 
-Opt-in `.mcp.json` recipes for mature external MCPs (Playwright, Chrome DevTools, DBHub, Laravel Boost, Next.js DevTools, fal.ai); a `SessionStart` hook hints applicable ones from the fork's detected stack. Pure recommendation — copy-paste from `.mcp.json.example`. See `.claude/rules/mcp-recipes.md`.
+Opt-in `.mcp.json` recipes for mature external MCPs (Playwright, Chrome DevTools, DBHub, Laravel Boost, Next.js DevTools, fal.ai); a `SessionStart` hook hints applicable ones from the consumer project's detected stack. Pure recommendation — copy-paste from `.mcp.json.example`. See `.claude/rules/mcp-recipes.md`.
 
 ## Image generation
 
@@ -58,19 +58,19 @@ Opt-in capacity for AI image generation via fal.ai MCP — the `/image` skill pr
 
 ## Harness sync
 
-`.claude/tools/sync-harness.sh` brings a fork's harness up to date with Agent0 via 3-way baseline reconciliation against `.claude/harness-sync-baseline.json` — stale files auto-update, fork-customized files refuse without `--force`, never touches product code. See `.claude/rules/harness-sync.md`.
+`.claude/tools/sync-harness.sh` brings a consumer project's harness up to date with Agent0 via 3-way baseline reconciliation against `.claude/harness-sync-baseline.json` — stale files auto-update, consumer-customized files refuse without `--force`, never touches product code. See `.claude/rules/harness-sync.md`.
 
 ## Lint validator
 
-The post-edit validator runs the fork's idiomatic linter — Biome (JS/TS), Ruff (Python), Pint + PHPStan/Larastan (PHP) — when the manifest declares it; missing-but-declared emits a non-blocking `lint-advisory:`. See `.claude/rules/lint-validator.md`.
+The post-edit validator runs the consumer project's idiomatic linter — Biome (JS/TS), Ruff (Python), Pint + PHPStan/Larastan (PHP) — when the manifest declares it; missing-but-declared emits a non-blocking `lint-advisory:`. See `.claude/rules/lint-validator.md`.
 
 ## Typecheck advisory
 
-The validator runs a typecheck step only when the fork declares the primitive (a `tsconfig.json`, or a `typecheck` script in `package.json`); otherwise it emits `typecheck-advisory:` and skips. See `.claude/rules/typecheck-advisory.md`.
+The validator runs a typecheck step only when the consumer project declares the primitive (a `tsconfig.json`, or a `typecheck` script in `package.json`); otherwise it emits `typecheck-advisory:` and skips. See `.claude/rules/typecheck-advisory.md`.
 
 ## Memory
 
-Factual project knowledge lives in `.claude/memory/<topic>.md` — git-tracked, but NOT shipped to forks; the lazy-read index is `.claude/memory/MEMORY.md`. Read it when prior decisions or gotchas would help. See `.claude/rules/memory-placement.md`.
+Factual project knowledge lives in `.claude/memory/<topic>.md` — git-tracked, but NOT shipped to consumer projects; the lazy-read index is `.claude/memory/MEMORY.md`. Read it when prior decisions or gotchas would help. See `.claude/rules/memory-placement.md`.
 
 ## Browser auth
 
@@ -117,4 +117,4 @@ Safe to compress:
 
 ## Codex Customization
 
-Root `AGENTS.md` is Agent0-owned and plain baseline-tracked by `sync-harness.sh`. Do not edit it directly in forks unless you intend to own a sync customization. Put fork-local Codex guidance in `AGENTS.override.md` at the appropriate scope, or in nested directory-level `AGENTS.md` files, so Codex's native instruction chain layers it after this root entrypoint.
+Root `AGENTS.md` is Agent0-owned and plain baseline-tracked by `sync-harness.sh`. Do not edit it directly in consumer projects unless you intend to own a sync customization. Put consumer-local Codex guidance in `AGENTS.override.md` at the appropriate scope, or in nested directory-level `AGENTS.md` files, so Codex's native instruction chain layers it after this root entrypoint.

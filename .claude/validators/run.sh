@@ -30,7 +30,7 @@ typecheck_advisory_msg=""
 #   (b) package.json `.scripts.typecheck`    → use `<runner> run typecheck`
 #   (c) neither                              → omit typecheck step + advisory
 # State (c) replaces the pre-fix hard-failure path where `<runner> run typecheck`
-# always landed in the pipeline, breaking validators on early-stage forks
+# always landed in the pipeline, breaking validators on early-stage consumer projects
 # without typecheck infrastructure (surfaced by dogfood 2026-05-12).
 has_typecheck_script() {
   [ -f "package.json" ] && jq -e '.scripts.typecheck // empty' package.json >/dev/null 2>&1
@@ -78,7 +78,7 @@ elif [ -f "package-lock.json" ] || [ -f "package.json" ]; then
   stack_subtype="npm"
   # npm path is conservative: rely on declared `typecheck` script rather than
   # `npx tsc` (npx is a separate binary from npm and adds resolution surprises
-  # when TypeScript isn't installed locally). Forks on npm declare typecheck
+  # when TypeScript isn't installed locally). Consumer projects on npm declare typecheck
   # in scripts; bun/pnpm get the tsconfig fast-path because their runners
   # invoke local node_modules/.bin/tsc directly.
   if has_typecheck_script; then
@@ -130,7 +130,7 @@ fi
 
 # --- Lint extension ----------------------------------------------
 # Manifest-as-intent: linter declared in the manifest is the canonical signal
-# this fork wants lint enforcement. Filesystem (`node_modules/...`, `python -m
+# this consumer project wants lint enforcement. Filesystem (`node_modules/...`, `python -m
 # ruff --version`) is the secondary "installed?" probe used only after
 # declaration is confirmed. Three states per stack:
 #   (a) declared + installed → append `<runner> <linter> check` to command_str
@@ -302,9 +302,9 @@ if git rev-parse --git-dir >/dev/null 2>&1; then
   # `git diff` would miss it and the warning would falsely fire. Including
   # `ls-files --others --exclude-standard` closes that gap.
   #
-  # Belt-and-suspenders noise filter — defends against forks with
+  # Belt-and-suspenders noise filter — defends against consumer projects with
   # mis-configured .gitignore (e.g. Agent0 ships a stack-agnostic gitignore
-  # template with `# node_modules/` commented; forks must uncomment per
+  # template with `# node_modules/` commented; consumer projects must uncomment per
   # stack). Without this filter, an un-ignored node_modules can dump 15k+
   # paths into the per-file shell loop, hanging the validator for minutes.
   # Surfaced via dogfood 2026-05-12.

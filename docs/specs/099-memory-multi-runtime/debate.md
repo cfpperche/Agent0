@@ -479,11 +479,13 @@ Converged on the new direction, with one important precision: "Codex hook parity
 
 ---
 
-## Synthesis
+## Synthesis (original — SUPERSEDED by `## Synthesis (revised after Round 4)` below)
+
+> **⚠ SUPERSEDED.** This synthesis was written based on the (then-undiscovered-stale) premise that Codex CLI lacks lifecycle hooks. Round 3 reviewing critique invalidated the premise; Round 4 initiating counter accepted the invalidation; the canonical decisions now live in `## Synthesis (revised after Round 4)` below. This section is preserved as audit trail of what was concluded under the stale premise — do NOT apply these changes to `spec.md`. The revised synthesis reflects the actual converged direction (Codex hook parity, not mandatory finalizer).
 
 _Written when the human explicitly asks an agent to synthesize ("synthesize the debate", "wrap up"). Either agent can perform synthesis — whichever one the human asks. Lists what changes in `spec.md` and why; flags unresolved disagreements._
 
-**Resolution:** converged
+**Resolution:** converged (later invalidated — see Round 3 critique + Round 4 counter)
 
 The debate ran Round 1 critique → Round 2 counter → Round 2 critique → Round 3 counter, with the human electing to synthesize instead of Round 3 critique. Both runtimes agree the spec is one synthesis-edit pass away from `/sdd plan`-ready. All five original Open Questions resolve to either a closed answer or a pre-plan task with a concrete deliverable; one new pre-plan question (drift backstop) closes the same way.
 
@@ -526,7 +528,97 @@ The debate ran Round 1 critique → Round 2 counter → Round 2 critique → Rou
 - Add `.githooks/pre-commit` + `.claude/rules/secrets-scan.md` — precedent for adding a second non-mutating check to the existing gitleaks hook, including the `git config core.hooksPath .githooks` activation pattern.
 - Add `.agent0/HANDOFF.md` § *Size discipline* — precedent for budget-discipline-with-mechanical-check (and the cautionary tale where the cap is documented but unenforced and routinely violated, motivating the scenario-7-new mechanical check for AGENTS.md).
 
-**Unresolved disagreements:** n/a — `Resolution: converged`.
+**Unresolved disagreements:** n/a — `Resolution: converged` (later invalidated).
+
+---
+
+## Synthesis (revised after Round 4)
+
+_Replaces the superseded synthesis above. Both runtimes (Claude Code as reviewing agent, Codex CLI as initiating agent) converged on this direction after the Codex-hooks finding inverted the v1 mechanism choice from asymmetric-convention to structural-symmetry-via-hook-port._
+
+**Resolution:** converged
+
+The decisive evidence: Codex CLI ships a 10-event lifecycle hook system (`PreToolUse`, `PostToolUse`, `SessionStart`, `Stop`, `SubagentStart`, `SubagentStop`, `UserPromptSubmit`, `PreCompact`, `PostCompact`, `PermissionRequest`), configurable via `.codex/config.toml [hooks]` or `.codex/hooks.json` at project or user scope. Payload shape is nearly identical to Claude Code's; matcher syntax (regex on `tool_name`) and exit-code semantics (0/2) are identical. The only real asymmetry is the tool-name catalog — Codex first-party edits arrive as `apply_patch` / `Bash`, not `Edit` / `Write` / `MultiEdit`. The v1 spec now ports the 4 Claude memory hooks to Codex via repo-local hook config, downgrades the previously mandatory finalizer to a fallback, and keeps the universal `.githooks/pre-commit` projection check as the cross-runtime backstop.
+
+**Proposed spec changes:**
+
+### `## Intent` — substantial revision
+
+- Replace the entire load-bearing-mechanisms sentence from the superseded synthesis with: "v1 ports the four Claude-side memory hooks to Codex CLI via repo-local hook configuration (extending the existing `.codex/config.toml.example` opt-in template from spec 098), so both runtimes intercept memory edits and SessionStart through their native lifecycle primitives. The mandatory finalizer of the superseded synthesis becomes an opt-out fallback (`memory-maintain.sh finalize`) for users running with `[features] hooks = false`, untrusted project hooks, or pre-hook-surface Codex versions. A non-mutating `.githooks/pre-commit` projection check stays as the universal drift backstop. The canonical memory path moves from `.claude/memory/` to `.agent0/memory/` per the namespace ratification."
+
+### `## Acceptance criteria` — replace finalizer-primary scenarios with hook-parity-primary scenarios
+
+Scenarios to **DROP** (carried over from superseded synthesis):
+
+- "Mandatory Codex finalizer exists" — replaced by hook-parity scenarios below; the finalizer scenario survives only as the fallback variant.
+- "AGENTS.md memory block describes finalizer as required workflow" — replaced by a slimmer block that points at hook activation instead.
+- Scenario 7's "Codex deliberately unjournaled in v1" framing — replaced by symmetric-journaling framing.
+- Scenario 8's "memory cell stays `convention`" — replaced by `native-opt-in`.
+
+Scenarios to **ADD**:
+
+- **Scenario (Codex SessionStart decay readout):** **Given** a fresh Codex CLI session in Agent0 with hooks activated via `.codex/config.toml`; **When** the session starts and `.agent0/memory/` contains stale entries; **Then** Codex emits the same `=== MEMORY DECAY ===` framed block Claude Code emits, including the `(no stale entries)` empty case — sourced by invoking the existing shared `memory-query.sh decay --readout` command from a Codex `SessionStart` hook.
+- **Scenario (Codex `PreToolUse(apply_patch)` raw-index gate):** **Given** Codex with hooks activated; **When** Codex attempts an `apply_patch` whose parsed `*** Update File:` / `*** Add File:` target is `.agent0/memory/MEMORY.md`; **Then** the Codex `PreToolUse` hook blocks with exit-2 + the same corrective template + the same `# OVERRIDE: memory-index-edit: <reason ≥10 chars>` grammar Claude Code's gate uses.
+- **Scenario (Codex `PostToolUse(apply_patch)` frontmatter validate + project + journal):** **Given** Codex with hooks activated; **When** Codex successfully `apply_patch` edits an entry under `.agent0/memory/<topic>.md`; **Then** the Codex `PostToolUse` hook (a) validates frontmatter via the shared `memory-maintain.sh validate` primitive, emitting `memory-frontmatter-advisory:` on violations with identical text to Claude's hook; (b) regenerates `.agent0/memory/MEMORY.md` via `memory-project.sh`; (c) appends a JSONL event to `.agent0/.memory-events.jsonl` with `actor: "Codex CLI"`, the Codex `session_id`, `tool_use_id`, and the resolved entry path parsed from the patch header.
+- **Scenario (`apply_patch` path discovery):** **Given** a Codex `PreToolUse`/`PostToolUse` hook script processes the stdin `tool_input` payload; **When** the payload contains an `apply_patch` patch body; **Then** the script extracts affected paths by parsing patch headers (`*** Add File:`, `*** Update File:`, `*** Delete File:`, `*** Move to:`) and filtering for `.agent0/memory/*.md` — no `git status` fallback, no Bash-write attribution required.
+- **Scenario (shared hook scripts live under `.agent0/hooks/`):** **Given** the 4 memory-specific hook scripts that both runtimes invoke; **When** a contributor inspects the repo; **Then** the scripts live under `.agent0/hooks/memory-*.sh` (runtime-neutral location matching the namespace move); `.claude/settings.json` references them at `.agent0/hooks/memory-*.sh`; `.codex/config.toml.example` (extended `[hooks]` block) references them at `.agent0/hooks/memory-*.sh`. Other Claude hooks remain under `.claude/hooks/` — the move scope is narrow (memory-specific shared implementations only).
+- **Scenario (`.codex/config.toml.example` extension):** **Given** the existing opt-in template shipped by spec 098; **When** a Codex user copies the template to `.codex/config.toml` and starts a session; **Then** a commented `[hooks]` block is present alongside the MCP recipes, with `PreToolUse` / `PostToolUse` / `SessionStart` registrations pointing at the `.agent0/hooks/memory-*.sh` scripts; the user uncomments to activate (same posture as MCP recipes).
+- **Scenario (finalizer fallback for hook-disabled sessions):** **Given** a Codex session running with `[features] hooks = false`, or with project hooks untrusted, or on a pre-hook-surface Codex version; **When** the user edits a memory entry; **Then** the documented fallback in `AGENTS.md` § Memory instructs the user to run `bash .agent0/tools/memory-maintain.sh finalize <entry-path>` before session end (or rely on the `.githooks/pre-commit` backstop at commit time). The finalizer is no longer the primary mechanism — it is the documented degraded-mode path.
+
+Scenarios to **KEEP** unchanged from superseded synthesis:
+
+- AGENTS.md memory block budget (≤12 non-blank lines, mechanical check).
+- Non-mutating `.githooks/pre-commit` projection check (universal backstop independent of which runtime made the edit).
+- Shared runtime-agnostic frontmatter validation primitive (now invoked by Claude hook + Codex hook + finalizer fallback — three callers of one implementation).
+
+### `## Non-goals` — DROP 2 from superseded synthesis, ADD 2 new ones, KEEP 1 sharpening
+
+**DROP** (invalidated by Codex hooks):
+
+- ~~"No Codex per-edit advisory surface."~~ — Codex `PostToolUse` hook restores advisory parity. Claude-only-by-mechanism framing was wrong.
+- ~~"No journal append for Codex edits in v1 (deliberate)."~~ — Codex `PostToolUse` hook journals naturally with runtime attribution. The deliberate-gap framing was a workaround for the stale premise.
+
+**ADD** (new asymmetries surfaced by Round 4):
+
+- **No guaranteed hook coverage for arbitrary Bash writes.** "Codex hook parity is guaranteed for the `apply_patch` edit surface. `Bash` writes that touch memory paths fall outside strict hook parity in v1 because path attribution from arbitrary shell commands is unreliable — those edits are caught by the `.githooks/pre-commit` projection check as the universal backstop, not by the `PostToolUse` hook. If a future spec demonstrates safe Bash path discovery without false positives, the matrix can extend."
+- **No port of every Claude hook to Codex in this spec.** "The hook port scope is narrow: only the four memory-specific hooks (events-journal, index-gate, frontmatter-validate, decay-readout). Other Claude capacities (delegation gate, runtime introspect, secrets scan, propagation advisory) remain Claude-only by mechanism in v1. A broader audit follow-up may promote them per `.claude/rules/runtime-capabilities.md` § Re-audit pending."
+
+**KEEP** (sharpened):
+
+- "No hard prevention of raw Codex edits to `MEMORY.md`." — sharpen: "The Codex `PreToolUse(apply_patch)` hook covers patch-based raw edits; arbitrary `Bash` writes (e.g. `echo > MEMORY.md`) remain bypassable. The `.githooks/pre-commit` projection check is the v1 backstop when `.githooks/pre-commit` is activated; when it is not, drift surfaces at the next Claude Code or Codex `SessionStart` hook firing."
+
+### `## Open questions` — CLOSE all 10; one pre-plan enumeration task remains
+
+- **OQ-1 (namespace) → CLOSED: `.agent0/memory/`.** User-ratified Scenario B. Plan-phase enumeration task: produce numeric inventory (file count + grep-anchor count) of paths to update for the move, then execute migration. No decision remains — only mechanical migration work.
+- **OQ-2 (Codex journaling) → CLOSED: YES.** Codex `PostToolUse` hook appends `.agent0/.memory-events.jsonl` events with runtime attribution. The "deliberately unjournaled" framing is dropped.
+- **OQ-3 (Codex command surface) → CLOSED: hook-primary + finalizer-fallback.** Primary mechanism is the 4 hooks via `.codex/config.toml.example`; `memory-maintain.sh finalize` (validate + project) remains as the fallback for hook-disabled sessions. Existing `memory-query.sh` for read-side operations stays unchanged.
+- **OQ-4 (capability matrix `memory` cell) → CLOSED: `native-opt-in`.** Lifecycle hooks primitive is native in Codex; the memory capacity is opt-in because activation requires copying `.codex/config.toml.example` and trusting repo-local hooks. Lifecycle hooks row separately corrected to `native` for Codex (already shipped this session — see `git log`).
+- **OQ-5 (decay readout cadence) → CLOSED: `SessionStart` hook on Codex.** Parity with Claude's always-fire posture (empty case is cheap). For users without hooks activated, the documented fallback is to invoke `memory-query.sh decay --readout` when the memory protocol triggers fire.
+- **OQ-6 (hook-script home) → CLOSED: `.agent0/hooks/`** for the 4 memory-specific shared scripts; runtime-specific config (`.claude/settings.json`, `.codex/config.toml.example`) invokes them. Scope intentionally narrow — other Claude hooks stay under `.claude/hooks/` in v1.
+- **OQ-7 (path discovery in Codex `apply_patch` hook) → CLOSED: parse patch headers.** `*** Add File:`, `*** Update File:`, `*** Delete File:`, `*** Move to:` extracted from the patch text in `tool_input`. No `git status` fallback (too racy with unrelated WIP). Bash path discovery explicitly out of scope (see new non-goal).
+- **OQ-8 (Codex hook config layout) → CLOSED: extend `.codex/config.toml.example`.** Spec 098 precedent: one opt-in template, one activation step. No separate `.codex/hooks.json.example`.
+- **OQ-9 (double-fire risk) → CLOSED: documentation only.** Sequentially-invoked runtimes emit distinct events (different `session_id` and `tool_use_id`); the journal records both, keyed by runtime attribution. Document in `memory-placement.md` § Multi-runtime usage; no new mechanism.
+- **OQ-10 (`PostToolUseFailure` divergence) → CLOSED: known gap, not blocker.** Memory validation runs on successful edits only; the divergence does not affect this spec. Document as a surface-coverage gap in `runtime-capabilities-maintenance.md` for future ports.
+
+### `## Context / references` — add 3 anchors
+
+- `developers.openai.com/codex/hooks` — canonical Codex hook surface docs (verified 2026-05-27).
+- `.codex/config.toml.example` — opt-in template shipped by spec 098; extended in this spec with a `[hooks]` block.
+- `.agent0/hooks/` — new directory housing the 4 memory-specific shared hook implementations (`.gitkeep` ships via sync-harness; scripts ship as content).
+
+### Plan-phase enumeration tasks (work, not decisions)
+
+These survive into `plan.md` / `tasks.md` as mechanical work items, not as questions:
+
+1. **Namespace migration inventory.** Enumerate files / anchors touched by `.claude/memory/` → `.agent0/memory/` move. Sequence the migration to avoid rewriting historical references inside old specs unless the reference is live contract text.
+2. **`.codex/config.toml.example` `[hooks]` block authoring.** Draft the TOML registrations for `PreToolUse(apply_patch)`, `PostToolUse(apply_patch)`, `SessionStart`. Verify against `developers.openai.com/codex/config-reference` schema.
+3. **`memory-maintain.sh` skeleton.** Implement `validate` (callable by Claude hook + Codex hook + standalone) and `finalize` (validate + project + idempotent re-stage hint). Out of scope: `--journal` flag (rule-of-three deferred).
+4. **AGENTS.md `## Memory` block authoring.** Within the 12-non-blank-line budget: trigger list, hook activation pointer (`.codex/config.toml.example`), finalizer fallback command, `memory-query.sh decay --readout` for hook-disabled sessions, "do not raw-edit MEMORY.md" rule, pointer to `memory-placement.md § Multi-runtime usage`.
+5. **`memory-placement.md § Multi-runtime usage` authoring.** Document hook activation flow, the Bash-write non-coverage gap, the `PostToolUseFailure` Claude-only event, double-fire framing.
+6. **`.githooks/pre-commit` extension.** Add the non-mutating projection-drift check alongside the existing gitleaks call. Activation gate (`git config core.hooksPath .githooks`) per `secrets-scan.md` precedent.
+7. **`.claude/tests/agents-memory-block-budget.sh`.** Mechanical check enforcing the 12-line cap.
+
+**Unresolved disagreements:** n/a — `Resolution: converged`. Round 4 reviewing critique (Claude Code) is not required; the convergence on Round 4 counter is complete and the synthesis above is the canonical input to `/sdd plan`.
 
 ---
 

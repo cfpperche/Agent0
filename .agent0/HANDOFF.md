@@ -22,8 +22,7 @@ _None active._
 ## Next Actions
 
 1. **NEXT HOOK BATCH — port `secrets-scan.sh` + `supply-chain-scan.sh` to `.agent0/`.** Both are `PreToolUse(Bash)` gates with the SAME clean shape as governance (107): read `tool_input.command`, exit-2 blocks identically on both runtimes, no spawn-asymmetry. Likely one combined spec. Path is paved — `bench-hooks.sh` already resolves `.agent0/hooks/` then `.claude/hooks/`, so the move needs no bench change. Per-port checklist (from 107): `git mv` → repoint `settings.json` (they use `if Bash(...)` matchers) → add commented `[[hooks.PreToolUse]]` blocks to `.codex/config.toml.example` → grep for + fix stale `.claude/hooks/<name>.sh` refs across tests/rules (the cascade governance hit) → update test path refs → dogfood both runtimes. Decide debate-or-not: governance got one for *refinement*; these may be straight ports if no refinement surfaces — ask the user.
-2. `post-edit-validate.sh` (4) is delegation-coupled (loop-budget counter) — defer to a delegation-family unit, NOT this Bash-gate batch.
-3. Remaining hooks after that: advisories (propagation/secrets/supply-chain-advise — PostToolUse edit-surface, need `apply_patch` path extraction), `pre-compact.sh` (Claude PreCompact — Codex has PreCompact too, revisit), `rule-load-debug.sh` (InstructionsLoaded — Claude-only event, stays), runtime-capture/pre-mark (Bash-surface, portable).
+2. After the Bash-gate batch: `post-edit-validate.sh` (delegation-coupled loop-budget → delegation-family unit, not this batch); PostToolUse edit-surface advisories (need `apply_patch` path extraction); runtime-capture/pre-mark (Bash-surface, portable); `rule-load-debug.sh` (InstructionsLoaded — Claude-only event, stays).
 
 ## Decisions & Gotchas
 

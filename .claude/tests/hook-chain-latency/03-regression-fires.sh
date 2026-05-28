@@ -19,9 +19,12 @@ BASELINE="$AGENT0_ROOT/.claude/.perf-baseline.json"
 TMPDIR="$(mktemp -d -t hcl-regression-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
-# Mirror enough of the project tree for the bench to run:
-mkdir -p "$TMPDIR/.claude/hooks" "$TMPDIR/.agent0/tools"
+# Mirror enough of the project tree for the bench to run. governance-gate.sh
+# moved to .agent0/hooks/ (spec 107); the bench resolves it there first, so the
+# slow copy must live in the .agent0/hooks/ mirror.
+mkdir -p "$TMPDIR/.claude/hooks" "$TMPDIR/.agent0/hooks" "$TMPDIR/.agent0/tools"
 cp "$AGENT0_ROOT/.claude/hooks/"*.sh "$TMPDIR/.claude/hooks/"
+cp "$AGENT0_ROOT/.agent0/hooks/"*.sh "$TMPDIR/.agent0/hooks/"
 cp "$BENCH" "$TMPDIR/.agent0/tools/bench-hooks.sh"
 cp "$BASELINE" "$TMPDIR/.claude/.perf-baseline.json"
 chmod +x "$TMPDIR/.agent0/tools/bench-hooks.sh"
@@ -29,7 +32,7 @@ chmod +x "$TMPDIR/.agent0/tools/bench-hooks.sh"
 # Inject a 100ms sleep into governance-gate.sh after its shebang/setup. The
 # baseline's governance-gate.noop p95 is ~20ms; +100ms is well past the 25%
 # default tolerance.
-SLOW_HOOK="$TMPDIR/.claude/hooks/governance-gate.sh"
+SLOW_HOOK="$TMPDIR/.agent0/hooks/governance-gate.sh"
 awk '
   NR == 1 { print; next }
   !inserted && /^set -uo pipefail/ {
@@ -39,7 +42,7 @@ awk '
     next
   }
   { print }
-' "$AGENT0_ROOT/.claude/hooks/governance-gate.sh" > "$SLOW_HOOK"
+' "$AGENT0_ROOT/.agent0/hooks/governance-gate.sh" > "$SLOW_HOOK"
 chmod +x "$SLOW_HOOK"
 
 # Run --check against the slow tree. CLAUDE_PROJECT_DIR points at TMPDIR so

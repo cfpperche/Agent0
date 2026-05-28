@@ -26,6 +26,9 @@ set -uo pipefail
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "$0")/../.." && pwd)}"
 HOOKS_DIR="$PROJECT_DIR/.claude/hooks"
+# Chain hooks migrate to .agent0/hooks/ over time (spec 106+ multi-runtime
+# ports); resolve each hook from .agent0/hooks/ first, then .claude/hooks/.
+AGENT0_HOOKS_DIR="$PROJECT_DIR/.agent0/hooks"
 BASELINE_PATH="$PROJECT_DIR/.claude/.perf-baseline.json"
 
 MODE="run"                # run | baseline | check
@@ -66,8 +69,9 @@ mkdir -p "$BENCH_TMPDIR/.agent0/.runtime-state/in-flight"
 ORIGINAL_PROJECT_DIR="$PROJECT_DIR"
 export CLAUDE_PROJECT_DIR="$BENCH_TMPDIR"
 
-# --- Hooks under test (filenames in .claude/hooks/) ---
-# Order matches settings.json PreToolUse(Bash) registration.
+# --- Hooks under test (resolved from .agent0/hooks/ then .claude/hooks/) ---
+# Order matches settings.json PreToolUse(Bash) registration. governance-gate.sh
+# lives in .agent0/hooks/ (spec 107); the rest remain in .claude/hooks/.
 HOOK_NAMES=( "governance-gate.sh" "secrets-scan.sh" "supply-chain-scan.sh" "runtime-pre-mark.sh" )
 
 # --- Command set ---
@@ -177,7 +181,11 @@ for cmd_pair in "${COMMANDS_LIST[@]}"; do
     if [ "$hook" = "noop" ]; then
       hook_path="$NOOP_HOOK"
     else
-      hook_path="$HOOKS_DIR/$hook"
+      if [ -f "$AGENT0_HOOKS_DIR/$hook" ]; then
+        hook_path="$AGENT0_HOOKS_DIR/$hook"
+      else
+        hook_path="$HOOKS_DIR/$hook"
+      fi
       if [ ! -f "$hook_path" ]; then
         P50["$hook|$cmd_label"]="null"
         P95["$hook|$cmd_label"]="null"

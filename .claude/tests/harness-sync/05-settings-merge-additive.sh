@@ -21,7 +21,7 @@ mkdir -p "$SRC/.claude" "$CONSUMER/.claude"
 jq -cn '{
   hooks: {
     PreToolUse: [
-      {matcher:"Bash", hooks:[{type:"command", command:"bash $CLAUDE_PROJECT_DIR/.claude/hooks/governance-gate.sh"}]},
+      {matcher:"Bash", hooks:[{type:"command", command:"bash $CLAUDE_PROJECT_DIR/.agent0/hooks/governance-gate.sh"}]},
       {matcher:"Bash", hooks:[{type:"command", command:"bash $CLAUDE_PROJECT_DIR/.claude/hooks/secrets-scan.sh"}]},
       {matcher:"Bash", hooks:[{type:"command", command:"bash $CLAUDE_PROJECT_DIR/.claude/hooks/supply-chain-scan.sh"}]}
     ],
@@ -36,7 +36,7 @@ printf '# CLAUDE\n\n## Compact Instructions\n' > "$SRC/CLAUDE.md"
 jq -cn '{
   hooks: {
     PreToolUse: [
-      {matcher:"Bash", hooks:[{type:"command", command:"bash $CLAUDE_PROJECT_DIR/.claude/hooks/governance-gate.sh"}]},
+      {matcher:"Bash", hooks:[{type:"command", command:"bash $CLAUDE_PROJECT_DIR/.agent0/hooks/governance-gate.sh"}]},
       {matcher:"Bash", hooks:[{type:"command", command:"bash $CLAUDE_PROJECT_DIR/.claude/hooks/consumer-only-hook.sh"}]}
     ]
   }

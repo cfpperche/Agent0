@@ -47,7 +47,7 @@ The advisory message names the prod files that triggered it (the `files` field o
 
 ## When to override
 
-Same shape as the governance and delegation gates (see `.claude/hooks/governance-gate.sh`): a line `# OVERRIDE: <reason ≥10 chars>` in the brief or commit context. By convention for TDD-exempt work, the reason text starts with `tdd-exempt:` so reviewers can grep the audit log for deliberate skips — for example `# OVERRIDE: tdd-exempt: rename only, no behavior change`. The prefix is a soft, human-readable convention; no script parses it.
+Same shape as the governance and delegation gates (see `.agent0/hooks/governance-gate.sh`): a line `# OVERRIDE: <reason ≥10 chars>` in the brief or commit context. By convention for TDD-exempt work, the reason text starts with `tdd-exempt:` so reviewers can grep the audit log for deliberate skips — for example `# OVERRIDE: tdd-exempt: rename only, no behavior change`. The prefix is a soft, human-readable convention; no script parses it.
 
 The validator may still emit the advisory because the heuristic is purely diff-shape — it does not read commit messages or briefs. That is fine. The override marker plus the recorded reason in the delegation audit log (`override` field on the dispatch entry, see `.claude/rules/delegation.md` § *Audit log*) is the documentation that the warning was deliberate. Reviewers correlate the two when auditing — match a `tdd-advisory:` in session output against the `tdd-exempt:` reason in the audit row, confirm the decision was made consciously, move on.
 

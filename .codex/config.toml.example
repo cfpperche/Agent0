@@ -79,6 +79,18 @@
 # command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/memory-events-journal.sh"'
 # statusMessage = "Projecting project-memory index"
 
+# Governance safety floor (spec 107). PreToolUse(Bash) blocks common-obvious
+# destructive ops (rm -r+-f, git push --force, reset --hard, clean -fdx,
+# whole-tree checkout/restore), hook bypass (--no-verify), and blanket staging.
+# Identical block semantics on Codex (reads only tool_input.command). Override:
+# `# OVERRIDE: <reason ≥10 chars>`. Speed-bump, not a sandbox.
+# [[hooks.PreToolUse]]
+# matcher = "^Bash$"
+# [[hooks.PreToolUse.hooks]]
+# type = "command"
+# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/governance-gate.sh"'
+# statusMessage = "Checking destructive-op safety floor"
+
 # Delegation observability (spec 106). SubagentStart audits the dispatch
 # (non-blocking — Codex cannot block a spawn); SubagentStop appends the close
 # row. Both write the single canonical .agent0/delegation-audit.jsonl. The

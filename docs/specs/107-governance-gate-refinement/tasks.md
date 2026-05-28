@@ -27,3 +27,8 @@ _Generated from `plan.md` on 2026-05-28. Work top-to-bottom. Check boxes as task
 
 - The gate reads only `tool_input.command` — no `PROJECT_DIR`, no state — so the `.agent0/` move needs no `_memory-hook-lib` and no runtime branch (unlike spec 106's stop hook).
 - Port is BUNDLED per user decision (overrode the debate's keep-separate lean). secrets-scan + supply-chain-scan ports remain a later batch.
+
+## Dogfood (both runtimes, live)
+
+- **Claude (2026-05-28):** live-dogfooded in the implementing session — the moved gate blocked a real `rm -rf` (exit 2, message from `.agent0/hooks/governance-gate.sh` with the refined "rm with recursive (-r/-R) and force (-f) flags" trigger), allowed an ordinary command, AND blocked the implementer's own commit (message body contained `rm -r -f`) — resolved by committing via a message file. The gate doesn't trust its own author.
+- **Codex (2026-05-28, independently dogfooded):** `.codex/config.toml` with `[features] hooks=true` + active `[[hooks.PreToolUse]]` matcher `^Bash$` → `.agent0/hooks/governance-gate.sh`. Three cases: (a) `rm -rf /tmp/<nonexistent>` → BLOCKED (`governance-gate: blocked [destructive]`, exit-2 semantics); (b) `echo …` → ALLOWED; (c) same `rm -rf … # OVERRIDE: <≥10 chars>` → ALLOWED. Verdict PASS — Codex fires PreToolUse(Bash) at the `.agent0/` path with identical block/allow/override behavior. Confirms the clean Bash-surface port has zero runtime asymmetry (unlike spec 106's delegation split).

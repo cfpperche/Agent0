@@ -13,7 +13,7 @@ paths:
 
 This rule is an **index**, not the canonical source. Each Agent0 capacity — validator, supply-chain, runtime-introspect, TDD, lint, MCP recipes — has its own rule doc that documents the per-stack behavior in full. This page exists so a new reader on a Laravel consumer project can find every PHP-aware touchpoint in one place. The canonical per-capacity docs are linked under each section below; read them when you need depth, this page for orientation.
 
-PHP detection in Agent0 is triggered by **`composer.json` at the project root** (validator + supply-chain) or **`artisan` file at the root** (Laravel canonical signal, used by mcp-recipes). The seven capacities below ship dormant in a non-PHP consumer project and activate the moment those signals exist — no env-var to set, no opt-in.
+PHP detection in Agent0 is triggered by **`composer.json` at the project root** (validator + supply-chain). The capacities below ship dormant in a non-PHP consumer project and activate the moment those signals exist — no env-var to set, no opt-in.
 
 ## 1. Validator detects PHP
 
@@ -64,18 +64,11 @@ PHP is the first stack where TWO lint primitives (Pint + PHPStan) can fire in a 
 
 Canonical doc: `.claude/rules/lint-validator.md` § *What fires, what advises* (PHP paragraph).
 
-## 6. MCP recipes hint laravel-boost-mcp
+## 6. Laravel Boost MCP template
 
-`.agent0/hooks/mcp-recipes-hint.sh` detects Laravel via `artisan` file at root (canonical) OR `composer.json` declaring `laravel/framework` in `require` / `require-dev`. When detected, the SessionStart hint adds:
+`.mcp.json.example` (Claude Code) and `.codex/config.toml.example` (Codex CLI) ship a `laravel-boost` MCP server block, disabled by default. Activation in a Laravel consumer project: `composer require laravel/boost --dev && php artisan boost:install` inside the Laravel project, then copy the relevant `.example` file (or merge the block into an existing config) and remove the `//` markers / flip `enabled = true`.
 
-- `laravel-boost-mcp` — Laravel framework introspection (Eloquent models, DB schema, logs, docs)
-- `playwright-mcp` — browser observation (Laravel apps commonly need browser-driven E2E)
-
-DBHub is suggested separately if the existing DB signals fire (`database/migrations/` is a default in Laravel; many Laravel consumer projects will see both Laravel + DB recipes).
-
-`.mcp.json.example` contains the `laravel-boost` server block, commented out by default. Activation in a consumer project: `composer require laravel/boost --dev && php artisan boost:install` inside the Laravel project, then `cp .mcp.json.example .mcp.json` + uncomment.
-
-Canonical doc: `.claude/rules/mcp-recipes.md` § *Laravel Boost MCP*.
+Pairs naturally with the `playwright` block for browser-driven E2E and the `dbhub` block when the consumer project also has a real DATABASE_URL. Activation is consumer-driven — Agent0 does not auto-detect or auto-suggest. Consult the upstream Laravel Boost README ([github.com/laravel/boost](https://github.com/laravel/boost)) for tool-list specifics and security stance.
 
 ## 7. CLAUDE.md capacity index
 
@@ -95,10 +88,10 @@ CLAUDE.md folds PHP/Laravel detection inline into the capacity sections that enu
 - `.claude/rules/runtime-introspect.md` — PHP detector pairs + inference
 - `.claude/rules/lint-validator.md` — Pint + PHPStan rules
 - `.claude/rules/tdd.md` — PHP test patterns
-- `.claude/rules/mcp-recipes.md` — Laravel Boost MCP recipe
+- `.mcp.json.example` / `.codex/config.toml.example` — Laravel Boost MCP template block (`[mcp_servers.laravel-boost]`)
 - `.claude/validators/run.sh` — the validator's PHP elif
-- `.claude/hooks/{supply-chain-scan,supply-chain-advise,runtime-capture}.sh` + `.agent0/hooks/mcp-recipes-hint.sh` — the four hooks PHP touches
-- `.claude/tests/{validator-php,supply-chain-composer,runtime-capture-php,mcp-recipes-laravel}/` — the test surface that locks the behavior
+- `.claude/hooks/{supply-chain-scan,supply-chain-advise,runtime-capture}.sh` — the three hooks PHP touches
+- `.claude/tests/{validator-php,supply-chain-composer,runtime-capture-php}/` — the test surface that locks the behavior
 
 ## Gotchas
 

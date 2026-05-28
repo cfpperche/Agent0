@@ -41,13 +41,6 @@
 # command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/routines-readout.sh"'
 # statusMessage = "Reading routine queue"
 
-# [[hooks.SessionStart]]
-# matcher = "startup|resume|clear|compact"
-# [[hooks.SessionStart.hooks]]
-# type = "command"
-# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/mcp-recipes-hint.sh"'
-# statusMessage = "Detecting MCP recipe hints"
-
 # [[hooks.PreToolUse]]
 # matcher = "^apply_patch$"
 # [[hooks.PreToolUse.hooks]]

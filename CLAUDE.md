@@ -70,7 +70,7 @@ A `PreToolUse(Bash)` preflight (`.claude/hooks/supply-chain-scan.sh`) blocks dep
 
 ## MCP recipes
 
-Opt-in MCP recipes for mature external MCPs (Playwright, Chrome DevTools, DBHub, Laravel Boost, Next.js DevTools, fal.ai); Claude uses `.mcp.json.example`, Codex uses `.codex/config.toml.example`, and both runtimes can receive the `SessionStart` stack hint when their hooks are enabled. Pure recommendation — activate explicitly from the provider-neutral docs. See `.claude/rules/mcp-recipes.md`.
+MCP server blocks for common external MCPs (Playwright, Chrome DevTools, DBHub, Laravel Boost, Next.js DevTools, fal.ai) ship as copy-paste templates only: `.mcp.json.example` for Claude Code, `.codex/config.toml.example` for Codex CLI. Each block is `enabled = false` / commented by default and uses env-var indirection for any secret (`bearer_token_env_var`, `env_vars`). Consult the upstream README of each MCP for activation specifics, runtime requirements, and security stance — Agent0 ships the templates, not curated reference docs.
 
 ## Image generation
 
@@ -101,7 +101,7 @@ See `.claude/rules/memory-placement.md` § Multi-runtime usage.
 
 ## Browser auth
 
-On an auth-gated URL with no saved state the agent emits `BROWSER_AUTH_REQUIRED: <host>`; the human logs in via a headed Playwright MCP session and the state (`.claude/.browser-state/<host>.json`) is reused for headless reads. See `.claude/rules/mcp-recipes.md` § Authenticated workflow.
+On an auth-gated URL with no saved state the agent emits `BROWSER_AUTH_REQUIRED: <host>`; the human logs in via a headed Playwright MCP session and the state (`.claude/.browser-state/<host>.json`) is reused for headless reads. See `.claude/rules/browser-auth.md`.
 
 ## Skill compliance
 

@@ -44,7 +44,7 @@ Same shape as `lint-advisory:` and `tdd-advisory:` — surfaces via `post-edit-v
 - **No env-var to silence.** The advisory IS the signal; suppressing it defeats the discipline. To stop the advisory, declare a tsconfig.json or typecheck script — that's the documented path.
 - **No tsconfig-content validation.** The validator checks file presence only; an empty `{}` tsconfig.json counts as "yes, has typecheck primitive" even though `tsc --noEmit` may emit no errors and no work happened. Acceptable: signal of intent is "I have a tsconfig", not "I have a meaningful tsconfig". Consumer projects responsible for content.
 - **No npm tsconfig fast-path.** Documented choice in `validator/run.sh` comments. If a consumer project on npm wants direct tsc invocation, they declare a `typecheck` script in package.json (`"typecheck": "tsc --noEmit"`). One indirection; explicit.
-- **No multi-stack typecheck.** Single-stack v1 — first lockfile match wins (same constraint as the lint extension). Multi-stack monorepo typecheck inherits when the monorepo-stack-detect walk extends to the validator (currently mcp-recipes-hint only).
+- **No multi-stack typecheck.** Single-stack v1 — first lockfile match wins (same constraint as the lint extension). Multi-stack monorepo typecheck is a future extension when the validator gains its own workspace walk.
 
 ## Gotchas
 

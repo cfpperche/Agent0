@@ -31,8 +31,8 @@ with open(path, "rb") as f:
     data = tomllib.load(f)
 
 session_start = data.get("hooks", {}).get("SessionStart", [])
-if len(session_start) != 4:
-    raise SystemExit(f"FAIL: expected 4 SessionStart entries, got {len(session_start)}")
+if len(session_start) != 3:
+    raise SystemExit(f"FAIL: expected 3 SessionStart entries, got {len(session_start)}")
 
 commands = [
     hook.get("command", "")
@@ -43,7 +43,6 @@ required = [
     ".agent0/hooks/memory-decay-readout.sh",
     ".agent0/hooks/reminders-readout.sh",
     ".agent0/hooks/routines-readout.sh",
-    ".agent0/hooks/mcp-recipes-hint.sh",
 ]
 missing = [needle for needle in required if not any(needle in command for command in commands)]
 if missing:

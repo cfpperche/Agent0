@@ -28,13 +28,11 @@ YAML
 printf '%s\n' '---' 'schedule: "0 9 * * 1"' '---' '# Weekly routine' > "$TMPDIR/.claude/routines/weekly.md"
 oldest="$(( $(date -u +%s) - 120 ))"
 printf 'Run weekly fixture\n' > "$TMPDIR/.claude/.routines-state/weekly/queue/$oldest.md"
-touch "$TMPDIR/next.config.js"
 
 payload="$(printf '{"hook_event_name":"SessionStart","source":"startup","cwd":"%s"}' "$TMPDIR/apps/web")"
 
 reminders_out="$(printf '%s' "$payload" | env -u CLAUDE_PROJECT_DIR -u AGENT0_PROJECT_DIR bash "$AGENT0_ROOT/.agent0/hooks/reminders-readout.sh")"
 routines_out="$(printf '%s' "$payload" | env -u CLAUDE_PROJECT_DIR -u AGENT0_PROJECT_DIR bash "$AGENT0_ROOT/.agent0/hooks/routines-readout.sh")"
-mcp_out="$(printf '%s' "$payload" | env -u CLAUDE_PROJECT_DIR -u AGENT0_PROJECT_DIR bash "$AGENT0_ROOT/.agent0/hooks/mcp-recipes-hint.sh")"
 
 if ! printf '%s\n' "$reminders_out" | grep -q 'Subdir reminder fixture'; then
   printf 'FAIL: reminders did not resolve git root\n%s\n' "$reminders_out"
@@ -42,10 +40,6 @@ if ! printf '%s\n' "$reminders_out" | grep -q 'Subdir reminder fixture'; then
 fi
 if ! printf '%s\n' "$routines_out" | grep -q 'weekly: 1 pending'; then
   printf 'FAIL: routines did not resolve git root\n%s\n' "$routines_out"
-  exit 1
-fi
-if ! printf '%s\n' "$mcp_out" | grep -q 'next.config.js'; then
-  printf 'FAIL: mcp hint did not resolve git root\n%s\n' "$mcp_out"
   exit 1
 fi
 

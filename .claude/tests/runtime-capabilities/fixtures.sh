@@ -49,7 +49,8 @@ EOF
 | lifecycle hooks | `native` | `unsupported` | `.claude/hooks/*.sh` | ok |
 | runtime introspect | `native` | `read-only` | `.claude/tools/probe.sh` | ok |
 | delegation/subagents | `native` | `unsupported` | `.claude/rules/delegation.md` | ok |
-| MCP recipes | `native-opt-in` | `native-opt-in` | `.claude/rules/mcp-recipes.md`; `.mcp.json.example`; `.agent0/hooks/mcp-recipes-hint.sh` | ok |
+| MCP recipes | `native-opt-in` | `native-opt-in` | `.mcp.json.example`; `.codex/config.toml.example` | ok |
+| browser auth | `native-opt-in` | `native-opt-in` | `.claude/rules/browser-auth.md` | ok |
 | image generation | `native-opt-in` | `convention` | `.claude/rules/image-gen.md` | ok |
 | memory | `native` | `native-opt-in` | `.agent0/memory/MEMORY.md` | ok |
 | harness sync | `native-opt-in` | `native-opt-in` | `.claude/tools/sync-harness.sh` | ok |

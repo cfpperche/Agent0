@@ -130,7 +130,7 @@ The default — fal.ai's official hosted MCP at `https://mcp.fal.ai/mcp` — is 
 
 | Package | Source | Notes |
 |---|---|---|
-| `piebro/fal-ai-mcp-server` | [npm](https://www.npmjs.com/package/fal-ai-mcp-server) · [GitHub](https://github.com/piebro/fal-ai-mcp-server) | Single individual maintainer, MIT, most-featured community option (built-in cost-estimation tools). Used as the fallback in `.claude/rules/mcp-recipes.md` § *Documented community alternatives*. |
+| `piebro/fal-ai-mcp-server` | [npm](https://www.npmjs.com/package/fal-ai-mcp-server) · [GitHub](https://github.com/piebro/fal-ai-mcp-server) | Single individual maintainer, MIT, most-featured community option (built-in cost-estimation tools). |
 | `@monsoft/mcp-fal-ai` | [npm](https://www.npmjs.com/package/@monsoft/mcp-fal-ai) | 8 tools, dual transport (stdio + SSE), zero deps on fal.ai SDK |
 | `mcp-fal-ai-image` | [npm](https://www.npmjs.com/package/mcp-fal-ai-image) | Image-only variant; lighter scope |
 | `lansespirit/image-gen-mcp` | [GitHub](https://github.com/lansespirit/image-gen-mcp) | NOT fal.ai-backed — multi-provider (OAI gpt-image + Imagen 4 direct). Reach for this if a consumer project wants to bypass fal.ai entirely. |
@@ -145,13 +145,12 @@ Skill scripts read the table at call time; updates apply on next invocation with
 
 ## Cross-references
 
-- `.claude/rules/mcp-recipes.md` — sibling capacity pattern; the `fal-ai` HTTP block lives in `.mcp.json.example` alongside the other 4 recipes
+- `.mcp.json.example` / `.codex/config.toml.example` — `fal-ai` MCP server block (HTTP transport, `bearer_token_env_var = "FAL_KEY"`)
 - `.claude/rules/secrets-scan.md` — `FAL_KEY` handling; the `<uuid>:<secret>` shape may not match gitleaks default rules (see § *Gotchas*)
 - `.claude/rules/supply-chain.md` — non-applicable: HTTP transport means no `npx`/package install, so the supply-chain hook never fires for this capacity
 - `.claude/rules/delegation.md` § *Why DONE_WHEN exists* — contract-not-promise frame motivating pre-call cost printing
 - `.claude/skills/image/` — skill implementation
 - `.claude/skills/image/references/tier-pricing.md` — static cost table
-- `.claude/rules/mcp-recipes.md` § *fal.ai MCP* — recipe-level documentation (HTTP transport block, community fallbacks)
 
 ## Gotchas
 

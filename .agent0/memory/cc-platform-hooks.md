@@ -62,7 +62,7 @@ Agent0 currently uses **8 of these 29** (counted from `.claude/settings.json`):
 - `PreToolUse` (5 matchers: governance-gate, secrets-scan, supply-chain-scan, runtime-pre-mark, delegation-gate)
 - `PostToolUse` (5 matchers: post-edit-validate, secrets-advise, supply-chain-advise, session-track-edits, runtime-capture)
 - `PostToolUseFailure` (runtime-capture, added by spec 020)
-- `SessionStart` (4 hooks: session-start, reminders-readout, mcp-recipes-hint, routines-readout — spec 064)
+- `SessionStart` (3 hooks: session-start, reminders-readout, routines-readout — plus memory-decay-readout from `.agent0/hooks/`)
 - `Stop` (session-stop)
 - `SubagentStop` (delegation-stop, added by spec 061)
 - `PreCompact` (pre-compact)

@@ -97,7 +97,7 @@ The 3-stage shape is deliberate — generation is the network-bound step, `prepa
 - `.claude/rules/image-gen.md` — capacity rule (activation, semantics, gotchas, community fallbacks)
 - `.claude/skills/image/references/tier-pricing.md` — static cost table (refresh quarterly)
 - `.claude/skills/image/scripts/gen.sh` — runtime helper
-- `.claude/rules/mcp-recipes.md` § *fal.ai MCP* — MCP recipe documentation
+- `.mcp.json.example` / `.codex/config.toml.example` — `fal-ai` MCP server block (HTTP transport, `bearer_token_env_var = "FAL_KEY"`)
 
 ## Notes
 

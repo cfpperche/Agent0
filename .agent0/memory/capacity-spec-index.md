@@ -58,8 +58,8 @@ This index is Agent0-internal. Do not cite it from CLAUDE.md or `.claude/rules/*
 
 | Capacity / rule | Origin spec | Extending specs |
 |---|---|---|
-| MCP recipes (`mcp-recipes.md`) | `012-mcp-recipes` | `014-mcp-recipes-extras`, `015-monorepo-stack-detect` |
-| Browser auth (documented in `mcp-recipes.md`) | `021-browser-auth-workflow` | — |
+| MCP recipes (templates only — `.mcp.json.example`, `.codex/config.toml.example`) | `012-mcp-recipes` | `014-mcp-recipes-extras`, `015-monorepo-stack-detect`; curation + hint decommissioned 2026-05-27 (no spec) |
+| Browser auth (`browser-auth.md`) | `021-browser-auth-workflow` | renamed from `mcp-recipes.md` § Authenticated workflow when curation was decommissioned 2026-05-27 |
 
 ## Skills, SDD & product
 

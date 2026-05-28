@@ -8,11 +8,13 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-**Spec 100 (`multi-runtime-session-readouts`) is implemented and validated.** The three SessionStart readout hooks moved from `.claude/hooks/` to `.agent0/hooks/`: `reminders-readout.sh`, `routines-readout.sh`, and `mcp-recipes-hint.sh`. Claude settings now point at the shared paths; `.codex/config.toml.example` contains opt-in commented SessionStart blocks for all three.
+**Spec 100 committed** (`97159e9`) — three SessionStart readouts now live under `.agent0/hooks/`.
 
-Docs and entrypoints were updated so the MCP stack hint is no longer described as Claude-only. Runtime capabilities now has explicit `reminders` and `routines` rows with Codex `native-opt-in`; MCP recipes points at the shared hook. Existing mcp/monorepo tests were repointed to `.agent0/hooks/mcp-recipes-hint.sh`.
+**MCP-recipes curation + SessionStart hint decommissioned this session** (no spec — direct implementation). What remains: `.mcp.json.example` (Claude) and `.codex/config.toml.example` (Codex) keep the 6 MCP server blocks intact (playwright / chrome-devtools / dbhub / laravel-boost / next-devtools / fal-ai). What's gone: `.agent0/hooks/mcp-recipes-hint.sh`, `.claude/rules/mcp-recipes.md` (catalog + signal table + recipe sections + hint output shape), and three test suites (`mcp-recipes`, `mcp-recipes-laravel`, `monorepo-stack-detect`) plus the spec 100 `03-mcp-recipes-fixture.sh`. The § Authenticated workflow content was preserved by renaming → `.claude/rules/browser-auth.md` (slimmer, self-contained).
 
-Validation passed: new `multi-runtime-readouts` fixtures (including subdir launch and no-PyYAML/yq degraded reminder fallback), `mcp-recipes`, `mcp-recipes-laravel`, `monorepo-stack-detect`, `runtime-capabilities`, `instruction-drift`, `codex-mcp-recipes`, `memory-multi-runtime`, selected harness-sync scenarios `01/02/05/07/35`, `sync-harness --apply --dry-run` fixture propagation, `skill validate/check-rubric` for `remind`, and `git diff --check`.
+Hook registration: `.claude/settings.json` SessionStart now has 4 hooks (session-start + reminders + routines + memory-decay); `.codex/config.toml.example` has 3 commented SessionStart blocks (memory-decay + reminders + routines). Multi-runtime-readouts fixture `05-toml-parse.sh` updated to expect 3 SessionStart entries (was 4); `04-subdir-launch.sh` lost the mcp-hint assertion.
+
+Cross-refs updated: `CLAUDE.md` / `AGENTS.md` § MCP recipes (templates-only wording) + § Browser auth (points at new rule), `runtime-capabilities.md` (MCP recipes row drops hook ref, new `browser auth` row added), `php-laravel-support.md` § 6 (template-only Laravel Boost block), `image-gen.md`, `secrets-scan.md`, `.runtime-state/README.md`, `.claude/tests/runtime-capabilities/fixtures.sh`, `.claude/skills/image/SKILL.md`, `.claude/skills/product/SKILL.md`, `.agent0/memory/cc-platform-hooks.md`.
 
 Pre-existing/paused: `docs/specs/091-sdd-debate-runner/` remains untracked and out of scope. `.codex/config.toml` + `.codex/.env.local` remain machine-local.
 
@@ -22,13 +24,13 @@ _None active._
 
 ## Next Actions
 
-1. Review/commit the spec 100 diff.
-2. Push the existing local commits plus this spec 100 work when ready.
-3. Leave spec 091 paused unless explicitly resumed.
+1. Review/commit this decommission diff.
+2. Push the 4 (now 5) local commits when ready.
+3. Continue per-capacity Codex port lineage (session-handoff is the next Tier 2 candidate per `runtime-capabilities.md:45` re-audit).
 
 ## Decisions & Gotchas
 
-- `codex exec --json --ephemeral --dangerously-bypass-hook-trust` did not surface SessionStart hook output, even for existing `MEMORY DECAY`; notes record this as a non-faithful interactive preamble probe. Synthetic SessionStart fixtures are the acceptance evidence.
-- `_memory-hook-lib.sh` now resolves stdin `.cwd` through `git rev-parse --show-toplevel` when possible, so Codex launches from subdirectories read root harness state.
-- `memory_runtime` now classifies SessionStart payloads without `CLAUDE_PROJECT_DIR` as Codex, with `apply_patch` still the primary Codex edit-surface signal.
-- The shipped MCP rule intentionally does not link to concrete Agent0 spec paths; lineage stays in spec 100 notes to preserve propagation hygiene.
+- **No spec for this decommission** — user invoked `/goal` to skip SDD; trade-off accepted (audit trail lives in commit + this handoff).
+- `.claude/rules/browser-auth.md` is the new canonical for `BROWSER_AUTH_REQUIRED:` + `.claude/.browser-state/<host>.json` lifecycle. Self-contained, no longer co-located with MCP catalog.
+- Templates (`.mcp.json.example` / `.codex/config.toml.example`) intentionally KEEP all 6 server blocks — `codex-mcp-recipes` test suite (3 scenarios) still passes because it validates the template, not the rule.
+- The `mcp-recipes-hint.sh` SessionStart block in `.codex/config.toml.example` was removed; `.codex/config.toml.example` ships 3 commented SessionStart blocks now (was 4).

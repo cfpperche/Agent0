@@ -23,12 +23,16 @@ For hooks that only need to inspect a subset of Bash commands, use the per-handl
 
 > "The `if` condition `Bash(rm *)` matches because `rm -rf /tmp/build` is a subcommand matching `rm *`, so this handler spawns. If the command had been `npm test`, the `if` check would fail and `block-rm.sh` would never run, avoiding the process spawn overhead."
 
-Applied to:
+**⚠️ Pipe-alternation inside a single `Bash(...)` is NOT valid CC syntax — corrected 2026-05-28 after the spec-108 V8-Claude live dogfood.** The `if`-field accepts permission-rule syntax, where `|` is a recognized *shell command separator* ("a rule must match each subcommand independently"), NOT an alternation operator. Multi-pattern rules must be **separate array elements** (`"Bash(npm run *)", "Bash(git commit *)"`), never `Bash(a|b|c)`. A handler whose `if` is `Bash(a|b|c)` can never match a real single command (which contains no literal `|`), so it **silently never spawns at all** — including on the commands it was supposed to inspect. That is a dormant-hook correctness bug, not narrowing. Confirmed vs <https://code.claude.com/docs/en/permissions.md>; single-pattern `if` (the `Bash(rm *)` quote above) is fine.
 
-- `secrets-preflight.sh` — narrows to `Bash(git commit *|git commit|*git commit *|*git commit)`. The hook itself short-circuits on non-`git commit` after `jq` parse anyway, but matcher-narrowing prevents the spawn outright — a free ~70 ms saving per non-commit Bash call.
-- `supply-chain-scan.sh` — narrows to `Bash(npm *|pnpm *|yarn *|bun *|pip *|uv *|poetry *|pdm *|cargo *|go *|composer *)`. Same logic.
+Originally claimed as applied to (BOTH were pipe-alternation → BOTH were dormant; the "~70 ms saving" was illusory because the hook never ran, not because it was intelligently narrowed):
 
-Not applied to:
+- `secrets-preflight.sh` — was `Bash(git commit *|git commit|*git commit *|*git commit)`. The pattern never matched, so the Claude preflight never fired on any `git commit` (the V8-Claude dogfood caught this — a compound `git add ... && git commit` passed unblocked). **Fixed 2026-05-28: dropped the `if`, now bare `"matcher": "Bash"`** — spawns on every Bash and short-circuits internally (the hook body already exits silently on non-`git commit`, the spec-108 broad-matcher design). Live-verified: `reject-shape` + `override-pass-through` rows now land on real commits.
+- `supply-chain-scan.sh` — still `Bash(npm *|pnpm *|yarn *|bun *|...)`, SAME latent pipe bug → also dormant today. Fix it during the spec-109 port (same remedy: bare matcher + in-script keyword probe).
+
+The lesson: **prefer a bare `"matcher": "Bash"` + a cheap in-script probe over an `if`-field whenever more than one command-prefix must be matched.** A single-prefix hook can use `if: "Bash(<one-glob>)"`; anything needing alternation cannot express it in one `if` and should self-filter in the body. The intrinsic per-spawn cost is small (jq + grep + early exit); a dormant hook that silently skips its contract is far worse than an always-spawning one.
+
+Not narrowed (correctly use bare `Bash` matcher — spawn on every Bash, filter in-body):
 
 - `governance-gate.sh` — destructive patterns can appear anywhere; can't narrow safely.
 - `runtime-pre-mark.sh` — must run on every Bash to stamp the `started_at` timestamp.

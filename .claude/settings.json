@@ -68,7 +68,6 @@
         "hooks": [
           {
             "type": "command",
-            "if": "Bash(git commit *|git commit|*git commit *|*git commit)",
             "command": "bash \"$CLAUDE_PROJECT_DIR\"/.agent0/hooks/secrets-preflight.sh"
           }
         ]

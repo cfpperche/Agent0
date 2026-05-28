@@ -30,7 +30,7 @@ Out-of-scope:
 
 **p95 ≤ 80 ms for fast-path Bash commands** (no-op, `ls`, `cat`, `echo`, `git status`, `git log`, `grep`).
 
-Fast-path is defined as: a Bash command none of the four gates have a real reason to scrutinize. Under the current `if`-field narrowing in `.claude/settings.json`, `secrets-preflight.sh` doesn't spawn unless the command shape contains `git commit`, and `supply-chain-scan.sh` doesn't spawn unless the shape contains a package-manager keyword. The chain on a true fast-path command therefore reduces to:
+Fast-path is defined as: a Bash command none of the four gates have a real reason to scrutinize. **Correction (2026-05-28):** the `if`-field narrowing described below was illusory — `secrets-preflight.sh` and `supply-chain-scan.sh` used pipe-alternation patterns (`Bash(a|b|c)`) that CC does not support, so they never spawned at all (see `hook-chain-maintenance.md` § 1). `secrets-preflight.sh` is now a bare `"matcher": "Bash"` (spawns on every Bash, short-circuits in-body); `supply-chain-scan.sh` still carries the dormant pattern pending the spec-109 port. So in practice the fast-path chain currently includes a `secrets-preflight.sh` spawn (cheap: jq + grep + early exit) that the model below omitted. The IPC/governance/runtime-pre-mark figures still hold; add one more short-circuiting spawn for secrets. The chain the original model assumed:
 
 ```
 IPC floor (bash spawn + stdin pipe)   ~13 ms p95 on WSL2

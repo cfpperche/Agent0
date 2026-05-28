@@ -27,4 +27,4 @@ _Generated from `plan.md` on 2026-05-28._
 - [x] V5. `bash .claude/tests/hook-chain-latency/01-baseline-exists.sh` → PASS post-rename.
 - [x] V6. `grep -rn '.claude/hooks/secrets-scan.sh\|.claude/secrets-audit.jsonl'` → clean (no stale refs outside docs/specs history).
 - [x] V7. `bash .claude/tests/harness-sync/run-all.sh` (or the 13/14/15 trio) → PASS.
-- [ ] V8. Flag the Codex live dogfood (config edit + restart + real commit/rewrite) as a human handoff item.
+- [x] V8. Live PreToolUse dogfood on BOTH runtimes. Codex: PASS 2026-05-28 (block + override rewrite reached Bash/native). Claude: PASS 2026-05-28 after fixing a dormant `if`-pipe registration bug (pipe-alternation inside one `Bash(...)` is invalid CC syntax → preflight never fired; dropped the `if`, now bare `"matcher": "Bash"`). Block row `reject-shape`/`compound-and`/`claude-code`; override row `override-pass-through` + native `override`/`finding_count:1`.

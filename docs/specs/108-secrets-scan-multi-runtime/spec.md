@@ -2,7 +2,7 @@
 
 _Created 2026-05-28._
 
-**Status:** in-progress — all automatable acceptance green; only the live Codex dogfood (V8) pends a human Codex session
+**Status:** shipped — all acceptance green; live PreToolUse dogfood passed on BOTH runtimes (Codex 2026-05-28; Claude 2026-05-28 after fixing a dormant `if`-pipe registration bug, see `notes.md`)
 
 ## Intent
 
@@ -27,10 +27,15 @@ Unlike the governance port (107), this is **not a pure move**: the override pass
   - **When** the preflight accepts it
   - **Then** on Codex the emitted JSON includes `permissionDecision:"allow"` alongside `updatedInput` (required for Codex to honor the rewrite); on Claude the runtime-appropriate shape is emitted (resolved per Q1's Claude-UX sub-question) — in both cases the command is rewritten to prepend `export CLAUDE_SECRETS_OVERRIDE_REASON='<reason>';` so the native `.githooks/pre-commit` inherits and audits `override`
 
-- [ ] **Scenario: live Codex dogfood proves the rewrite reached Bash**
+- [x] **Scenario: live Codex dogfood proves the rewrite reached Bash**
   - **Given** the Codex block is enabled and a command the hook rewrites
   - **When** the rewritten command actually executes
-  - **Then** the executed command observed `CLAUDE_SECRETS_OVERRIDE_REASON` in its environment — verified live, not merely "the hook printed JSON" (107 proved block semantics; rewrite semantics are the new risk)
+  - **Then** the executed command observed `CLAUDE_SECRETS_OVERRIDE_REASON` in its environment — verified live, not merely "the hook printed JSON" (107 proved block semantics; rewrite semantics are the new risk). *Verified live 2026-05-28: preflight `override-pass-through` + native `override` (`finding_count:1`).*
+
+- [x] **Scenario: live Claude PreToolUse dogfood fires (block + override)**
+  - **Given** a cold-started Claude session with the bare-`Bash`-matcher registration loaded (the prior `if: "Bash(git commit *|…)"` pipe-alternation filter was invalid CC syntax → dormant; see `notes.md` 2026-05-28)
+  - **When** the session issues a compound `git add … && git commit` (no override), then a compound commit of a fake-key fixture with a two-line `# OVERRIDE:` marker
+  - **Then** the first is blocked (exit 2, corrected template; Agent0 audit `runtime:"claude-code"`/`decision:"reject-shape"`/`cmd_shape:"compound-and"`) and the second lands (Agent0 audit `override-pass-through`; scratch native audit `decision:"override"`/`finding_count:1`) — proving the env-var bridge reaches the native gitleaks layer on Claude
 
 - [x] **Scenario: non-commit Bash is silent under the broad matcher**
   - **Given** the hook registered under Codex's `^Bash$` matcher (no command-string `if` layer)

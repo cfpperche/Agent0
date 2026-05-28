@@ -50,3 +50,12 @@ Executed the five new synthetic readout fixtures successfully:
 The sync-harness dry-run against a temp consumer project showed the three new files in the managed manifest: `.agent0/hooks/mcp-recipes-hint.sh`, `.agent0/hooks/reminders-readout.sh`, and `.agent0/hooks/routines-readout.sh`.
 
 Additional targeted suites passed: `mcp-recipes/run-all.sh`, all four `mcp-recipes-laravel` tests, `monorepo-stack-detect/run-all.sh`, `runtime-capabilities/run-all.sh`, `instruction-drift/run-all.sh`, `codex-mcp-recipes/run-all.sh`, `memory-multi-runtime/run-all.sh`, and selected harness-sync scenarios `01`, `02`, `05`, `07`, `35`.
+
+### 2026-05-28 — Codex CLI — Re-validation after spec 101
+
+Re-ran the remaining spec-100 readout fixtures after spec 101 added `session-start.sh` as an additional Codex `SessionStart` hook:
+`01-reminders-fixture.sh`, `02-routines-fixture.sh`, `04-subdir-launch.sh`, and `05-toml-parse.sh` all passed.
+
+Updated `05-toml-parse.sh` to require the three readout commands it owns without assuming they are the only `SessionStart` blocks in `.codex/config.toml.example`; spec 101 legitimately adds a fourth `SessionStart` block for session handoff.
+
+Current-state caveat: commit `25ae1a6` (`chore(harness): decommission mcp-recipes curation + SessionStart hint`) removed `.agent0/hooks/mcp-recipes-hint.sh`, its fixture, and its Codex/Claude registrations after spec 100 shipped. Therefore current validation confirms the active spec-100 hooks (`reminders-readout.sh` and `routines-readout.sh`) plus TOML/subdir behavior, not the decommissioned MCP hint.

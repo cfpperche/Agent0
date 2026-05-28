@@ -31,8 +31,8 @@ with open(path, "rb") as f:
     data = tomllib.load(f)
 
 session_start = data.get("hooks", {}).get("SessionStart", [])
-if len(session_start) != 3:
-    raise SystemExit(f"FAIL: expected 3 SessionStart entries, got {len(session_start)}")
+if len(session_start) < 3:
+    raise SystemExit(f"FAIL: expected at least 3 SessionStart entries, got {len(session_start)}")
 
 commands = [
     hook.get("command", "")

@@ -45,3 +45,13 @@ _Questions surfaced during build that the implementer couldn't resolve alone. Ow
 ### {{YYYY-MM-DD}} — {{author}} — {{one-line title}}
 
 {{free-prose body — the question, why it surfaced, what's blocked on it, who can decide}}
+
+## Verification notes
+
+### 2026-05-28 — Codex CLI — Re-validation with hooks enabled
+
+Confirmed the local `.codex/config.toml` has `hooks = true` and registers the expected shared hooks from `.agent0/hooks/`: `session-start.sh`, `memory-decay-readout.sh`, `reminders-readout.sh`, `routines-readout.sh`, `session-stop.sh`, and `session-track-edits.sh`.
+
+Re-ran the spec-101 synthetic suite: `bash .claude/tests/session-handoff-multi-runtime/run-all.sh` passed all six scenarios (`SessionStart` injection, Stop nag-once, `apply_patch` attribution, subdir resolution, TOML parse, Claude regression). The older `session-handoff/run-all.sh` regression suite also passed all ten scenarios.
+
+Supporting suites passed in the same validation pass: `runtime-capabilities/run-all.sh`, `instruction-drift/run-all.sh`, `codex-mcp-recipes/run-all.sh`, and `memory-multi-runtime/run-all.sh`. `git diff --check` passed, both `.codex/config.toml.example` and the local `.codex/config.toml` parsed with `tomllib`, and `sync-harness.sh --apply --dry-run --agent0-path="$PWD" <temp-consumer>` showed the shared `.agent0/hooks/session-*.sh`, `reminders-readout.sh`, and `routines-readout.sh` files propagating to a consumer fixture.

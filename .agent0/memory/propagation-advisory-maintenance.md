@@ -37,7 +37,7 @@ Mirrors `.agent0/memory/propagation-hygiene.md § The shipped file class`:
 
 - `.claude/hooks/*.sh`
 - `.claude/rules/*.md`
-- `.claude/tools/*.{sh,py,ts}`
+- `.agent0/tools/*.{sh,py,ts}`
 - `.claude/validators/*.sh`
 - `.claude/agents/*.md`
 - `.claude/skills/**` (except `vendor/` and `design-systems/`)

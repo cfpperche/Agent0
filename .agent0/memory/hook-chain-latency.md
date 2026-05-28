@@ -47,19 +47,19 @@ If a future Claude Code release lifts the WSL2 IPC floor or the harness changes 
 
 ## Bench tool
 
-`.claude/tools/bench-hooks.sh` measures per-hook p50/p95 against a representative command set. Three modes:
+`.agent0/tools/bench-hooks.sh` measures per-hook p50/p95 against a representative command set. Three modes:
 
 ```bash
 # Capture / re-capture baseline. Writes .claude/.perf-baseline.json.
-bash .claude/tools/bench-hooks.sh --baseline [--reps N]
+bash .agent0/tools/bench-hooks.sh --baseline [--reps N]
 
 # Check current hooks against committed baseline. Exits 2 on regression
 # beyond tolerance (default 25%; override with --tolerance PCT or
 # CLAUDE_HOOK_CHAIN_TOLERANCE_PCT env var).
-bash .claude/tools/bench-hooks.sh --check [--reps N] [--tolerance PCT]
+bash .agent0/tools/bench-hooks.sh --check [--reps N] [--tolerance PCT]
 
 # Pure run — print results to stdout/stderr, no file IO. For ad-hoc inspection.
-bash .claude/tools/bench-hooks.sh [--reps N]
+bash .agent0/tools/bench-hooks.sh [--reps N]
 ```
 
 Default `--reps` is 100. The bench redirects `CLAUDE_PROJECT_DIR` to a per-run tmpdir so the hooks' own audit-log writes (`secrets-audit.jsonl`, `supply-chain-audit.jsonl`, `runtime-state/in-flight/`) never pollute the real project tree. Tmpdir is cleaned at exit.

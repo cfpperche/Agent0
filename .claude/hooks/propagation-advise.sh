@@ -41,7 +41,7 @@ REL="${FILE_PATH#$PROJECT_DIR/}"
 in_shipped=0
 case "$REL" in
   CLAUDE.md|.mcp.json.example|.gitleaks.toml|.gitignore) in_shipped=1 ;;
-  .claude/hooks/*|.claude/rules/*|.claude/tools/*|.claude/validators/*|.claude/agents/*) in_shipped=1 ;;
+  .claude/hooks/*|.claude/rules/*|.claude/validators/*|.claude/agents/*) in_shipped=1 ;;
   .agent0/hooks/*|.agent0/tools/*) in_shipped=1 ;;
   .claude/skills/*|.claude/tests/*|.githooks/*) in_shipped=1 ;;
 esac

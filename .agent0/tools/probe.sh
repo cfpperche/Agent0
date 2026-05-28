@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# .claude/tools/probe.sh
+# .agent0/tools/probe.sh
 # Shell tool for the runtime-introspect capacity. Lets the agent
 # query the latest captured test/build/typecheck run via a structured
 # plain-text summary.
@@ -20,7 +20,7 @@ set -uo pipefail
 
 usage() {
   cat <<'EOF' >&2
-Usage: bash .claude/tools/probe.sh <subcommand> [flags]
+Usage: bash .agent0/tools/probe.sh <subcommand> [flags]
 
 Subcommands:
   last-run                Show the latest captured test/build/typecheck run.
@@ -33,10 +33,10 @@ Subcommands:
                           nested_traversal, include, compact).
 
 Examples:
-  bash .claude/tools/probe.sh last-run
-  bash .claude/tools/probe.sh rule-loads
-  bash .claude/tools/probe.sh rule-loads --reason path_glob_match
-  bash .claude/tools/probe.sh rule-loads --session abc123 --json
+  bash .agent0/tools/probe.sh last-run
+  bash .agent0/tools/probe.sh rule-loads
+  bash .agent0/tools/probe.sh rule-loads --reason path_glob_match
+  bash .agent0/tools/probe.sh rule-loads --session abc123 --json
 EOF
 }
 
@@ -61,7 +61,7 @@ case "$SUBCMD" in
     if [ ! -f "$STATE_FILE" ]; then
       cat <<'EOF'
 status: no-snapshot
-hint: run a recognised verifier (e.g. `bun test`, `pytest`) then re-query with `bash .claude/tools/probe.sh last-run`.
+hint: run a recognised verifier (e.g. `bun test`, `pytest`) then re-query with `bash .agent0/tools/probe.sh last-run`.
 EOF
       exit 0
     fi

@@ -8,9 +8,9 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-Umbrella 102 (`harness-consolidate-agent0`) consolidating the harness into `.agent0/` as the runtime-neutral home (`.claude/`+`.codex/` keep only runtime-exclusive files). **Phase 1 (103)** shipped: reminders + routines → `.agent0/`. **Phase 2 (104, shipped this session)**: the three shared state dirs relocated `.claude/` → `.agent0/` — `.session-state/` (reverses 101 OQ-E), `.runtime-state/` (path only; producer hooks stay Claude-only), `.browser-state/`. All 8 affected suites green (~102 tests: session-*, runtime-introspect, runtime-capture-php, harness-sync 36, instruction-drift); sync-harness dry-run confirms capacity-only propagation of the two sentinels + `.agent0/.*-state/` gitignore additions. Committed this session (umbrella 102 phase 2).
+Umbrella 102 (`harness-consolidate-agent0`) consolidating the harness into `.agent0/` as the runtime-neutral home (`.claude/`+`.codex/` keep only runtime-exclusive files). **Phase 1 (103)**: reminders + routines. **Phase 2 (104)**: the three shared state dirs (`.session-state/`, `.runtime-state/`, `.browser-state/`). **Phase 3 (105, this session)**: shared shell tools relocated `.claude/tools/` → `.agent0/tools/` — all 8 scripts (`sync-harness`, `probe`, `check-instruction-drift`, `bench-hooks`, `run-routine`, `install`/`uninstall-routines`, `codex-local-env`) + `lib/managed-block.sh`; `.claude/tools/` is gone. All gap-matrix `move` rows (1-6) are now shipped.
 
-Specs 100/101 shipped + committed (`e17be90`) + Codex-validated 2026-05-28. Session lifecycle scripts live in `.agent0/hooks/`; Claude registers via `settings.json`, Codex via commented opt-in blocks in `.codex/config.toml.example`. `mcp-recipes-hint.sh` intentionally absent (decommissioned in `25ae1a6`).
+105 closed the four delicate spots: sync-harness's manifest glob + lib-source + `_self_rebootstrap` self-ref + `MANAGED_BLOCK_LIB` fallback, and the three path-scoped rule `paths:` triggers (`harness-sync`/`runtime-capabilities`/`runtime-introspect`). 87 affected-suite tests green; smoke + scratch-consumer dry-run confirm capacity-only migration (old `.claude/tools/*.sh` orphan-removed, new `.agent0/tools/*.sh` copied). **Uncommitted — 105 changes are in the working tree, not yet committed** (104 + 100/101 are committed: `1273ed4`, `e17be90`).
 
 Pre-existing/paused: `docs/specs/091-sdd-debate-runner/` untracked, out of scope. `.codex/config.toml` + `.codex/.env.local` machine-local.
 
@@ -20,14 +20,15 @@ _None active._
 
 ## Next Actions
 
-1. **Phase 3 — `105-shared-tools-to-agent0`** (umbrella 102 row 6, the last `move`): `.claude/tools/*.sh` (sync-harness, probe, lib, routines, instruction-drift, `codex-local-env`) → `.agent0/tools/`. Largest blast radius (~85 refs across tests/rules/docs); own spec to avoid a mega-diff. This is the row that flips probe.sh's invocation path — 104 deliberately left every `bash .claude/tools/probe.sh` self-ref untouched, so 105 owns all of them. Run `/sdd new shared-tools-to-agent0` to scaffold.
-2. Still open in 102: acceptance criterion 4 (encode § Classification principle durably — new `.claude/rules/harness-home.md` vs extend `memory-placement.md`) + criterion 5 (consumer-migration posture in `harness-sync.md`). Land with 105 or standalone. Umbrella closes once 105 ships + crit 4/5 done.
-3. Continue the runtime-capabilities re-audit later with `runtime introspect` and `delegation/subagents`.
+1. **Commit 105** when the founder is ready (working tree currently dirty with the relocation + spec 105 + umbrella row 6 flip).
+2. **Close umbrella 102** — only acceptance criteria 4 + 5 remain: (4) encode the § Classification principle durably (new `.claude/rules/harness-home.md` vs extend `memory-placement.md`'s bucket model); (5) document the consumer-migration posture in `.claude/rules/harness-sync.md`. The founder reserved these as part of "other refactoring questions" raised after 105 — do NOT pre-empt the where-to-encode decision.
+3. Founder flagged broader refactoring questions to raise post-105 (the "lacuna is not just tests" thread — `.claude/tests/` and `.claude/validators/` placement, the consumer-side `harness-sync-baseline.json` location, etc. — all currently `deferred`/`stays` in 102's matrix).
+4. Continue the runtime-capabilities re-audit later (`runtime introspect` + `delegation/subagents` rows).
 
 ## Decisions & Gotchas
 
-- Codex `Stop` uses continue-with-corrective-prompt semantics: `{"decision":"block","reason":...}` continues the turn once; `stop_hook_active=true` exits silently to avoid loops.
-- Codex SessionStart emits plain framed stdout; Claude keeps JSON dual-channel (`hookSpecificOutput.additionalContext` + `systemMessage`). The branch keys off `CLAUDE_PROJECT_DIR` being unset = "assume Codex" (heuristic, correct in practice since the harness always sets it for Claude).
-- `apply_patch` attribution parses patch headers via `_memory-hook-lib.sh::memory_extract_paths`; Bash/MCP writes fall back to porcelain comparison.
-- Residual risk (review): if Codex `session_id` carries chars outside `^[a-zA-Z0-9_-]+$`, all such sessions collapse to the shared `unknown/` state dir → cross-session nag interference. Couldn't verify Codex's charset without live tool — worth a live smoke (pairs with reminder `r-2026-05-18`).
-- 104 gotcha: `bash .claude/tools/probe.sh` self-references were left untouched on purpose (probe.sh itself is row 6 / Phase 3); only the state paths probe *reads* moved to `.agent0/`. Harness-sync gitignore-merge test fixtures (13/14/15) were updated to `.agent0/.*-state/` for shipped-fixture fidelity even though they're mechanism-only (they ship to consumers).
+- **105 live-vs-frozen rule:** rewrote every `.claude/tools/` ref outside `docs/specs/`; left frozen specs AND one historical memory narrative (`.agent0/memory/cc-platform-hooks.md:138`, a past-tense CC hook-dedup observation citing probe.sh) untouched. The acceptance grep whitelists that one line.
+- **105 fixture gotcha:** sync-harness's "looks like an Agent0 repo" check needs `.claude/` (still valid post-102); fixtures `harness-sync/33` + `instruction-drift/05` had it only as a side effect of the old `mkdir …/tools/lib` → add explicit `$SRC/.claude`. Three bare-dir `mkdir` refs (no trailing slash) escaped the sed — grep the bare-dir form on future path moves.
+- **105 self-rebootstrap:** the relocation `--apply` self-overwrites once (old `.claude/tools/sync-harness.sh` deleted while bash reads it); harmless re-run-completes, documented in `harness-sync.md` § Gotchas. No mitigation code.
+- Codex `Stop` uses continue-with-corrective-prompt: `{"decision":"block","reason":...}` continues once; `stop_hook_active=true` exits silently. SessionStart branches on `CLAUDE_PROJECT_DIR` unset = "assume Codex".
+- Residual review risk: a Codex `session_id` with chars outside `^[a-zA-Z0-9_-]+$` collapses all such sessions to the shared `unknown/` state dir — worth a live smoke (reminder `r-2026-05-18`).

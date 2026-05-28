@@ -20,7 +20,7 @@ set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 HOOK="$AGENT0_ROOT/.claude/hooks/runtime-capture.sh"
-PROBE="$AGENT0_ROOT/.claude/tools/probe.sh"
+PROBE="$AGENT0_ROOT/.agent0/tools/probe.sh"
 
 TMPDIR="$(mktemp -d -t spec-011-V9-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT

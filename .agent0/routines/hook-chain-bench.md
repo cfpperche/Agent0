@@ -14,7 +14,7 @@ You are running the monthly hook-chain latency regression check against the comm
 
 Steps:
 
-1. Run: `bash .claude/tools/bench-hooks.sh --check`
+1. Run: `bash .agent0/tools/bench-hooks.sh --check`
 2. Inspect the exit code:
    - **Exit 0** → no regression beyond tolerance. Respond with exactly: `no-regression-detected since {{LAST_COMPLETED_TS}}` (no edits).
    - **Exit non-zero** → a hook cell regressed past the tolerance threshold. The tool prints the offending `<hook>:<cmd>` cell(s) on stderr with measured-vs-baseline p95.

@@ -1,6 +1,6 @@
 # Routines
 
-`.agent0/routines/<slug>.md` is the project-scoped sibling of Claude Code's native `/schedule` skill. Where `/schedule` stores recurring agent runs on Anthropic's user-account cloud (the user-level memory analog), `.agent0/routines/` git-tracks recurring intent at the repo level — propagating via clone, surviving consumer project via `.claude/tools/sync-harness.sh`, and visible in PR diff. It occupies the gap between three other state files in this project:
+`.agent0/routines/<slug>.md` is the project-scoped sibling of Claude Code's native `/schedule` skill. Where `/schedule` stores recurring agent runs on Anthropic's user-account cloud (the user-level memory analog), `.agent0/routines/` git-tracks recurring intent at the repo level — propagating via clone, surviving consumer project via `.agent0/tools/sync-harness.sh`, and visible in PR diff. It occupies the gap between three other state files in this project:
 
 - **`.agent0/HANDOFF.md`** — *in-flight* work-state (cross-session, cross-runtime handoff).
 - **`.agent0/reminders.yaml`** — *one-shot deferred do-this-thing* items with no cadence.
@@ -63,7 +63,7 @@ Keys are absolute repo paths (resolved via `git rev-parse --show-toplevel`); val
 
 **Flow:**
 
-1. Developer clones repo on machine A, runs `./.claude/tools/install-routines.sh`. Script prompts: `Designate this machine as routines leader for <repo-path>? [y/N]`. Developer answers `y` (or `Y` / yes).
+1. Developer clones repo on machine A, runs `./.agent0/tools/install-routines.sh`. Script prompts: `Designate this machine as routines leader for <repo-path>? [y/N]`. Developer answers `y` (or `Y` / yes).
 2. Same developer clones same repo on machine B, runs `install-routines.sh`. Script asks the same question. Developer answers `N` (default).
 3. Machine A's cron fires; `run-routine.sh` checks the file, sees `true`, proceeds. Machine B's cron fires; checks file, sees `false`, exits 0 silently.
 
@@ -158,9 +158,9 @@ The marker is scoped — it skips the named check, not all validation:
 - `.agent0/.routines-state/<slug>/last-queue.json` — last enqueue metadata. Gitignored.
 - `.agent0/.routines-state/cron.log` — cron stdout/stderr capture. Gitignored.
 - `~/.claude/.agent0-routines-leaders.json` — per-user leader designations. NOT in any repo.
-- `.claude/tools/install-routines.sh` — interactive bootstrap (leader prompt + crontab block install + WSL2 advisory).
-- `.claude/tools/uninstall-routines.sh` — symmetric removal.
-- `.claude/tools/run-routine.sh` — invoked by cron; leader check + interpolate + enqueue + rotation.
+- `.agent0/tools/install-routines.sh` — interactive bootstrap (leader prompt + crontab block install + WSL2 advisory).
+- `.agent0/tools/uninstall-routines.sh` — symmetric removal.
+- `.agent0/tools/run-routine.sh` — invoked by cron; leader check + interpolate + enqueue + rotation.
 - `.agent0/hooks/routines-readout.sh` — `SessionStart` hook; surfaces pending queue.
 - `.claude/skills/routine/SKILL.md` — `/routine` slash command (new / list / run / validate / dismiss).
 - `.claude/skills/routine/scripts/validate.sh` — frontmatter + cron + body validator.

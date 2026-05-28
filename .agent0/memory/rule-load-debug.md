@@ -45,7 +45,7 @@ Paths in `file` and `trigger_file` are relativized against `$CLAUDE_PROJECT_DIR`
 
 ## Probe
 
-`bash .claude/tools/probe.sh rule-loads` — reads the JSONL, emits a human-readable table of the last 20 events:
+`bash .agent0/tools/probe.sh rule-loads` — reads the JSONL, emits a human-readable table of the last 20 events:
 
 ```
 2026-05-13T14:22:18Z  path_glob_match     .claude/rules/secrets-scan.md  ← .claude/hooks/secrets-scan.sh

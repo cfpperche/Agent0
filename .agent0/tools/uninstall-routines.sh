@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# .claude/tools/uninstall-routines.sh
+# .agent0/tools/uninstall-routines.sh
 # Symmetric removal: strip the AGENT0-ROUTINES marker block for THIS repo
 # from the user crontab; remove this repo's entry from the leaders file.
 #

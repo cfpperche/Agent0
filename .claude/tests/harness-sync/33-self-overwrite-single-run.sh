@@ -11,21 +11,21 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-REAL_TOOL="$AGENT0_ROOT/.claude/tools/sync-harness.sh"
-REAL_LIB="$AGENT0_ROOT/.claude/tools/lib/managed-block.sh"
+REAL_TOOL="$AGENT0_ROOT/.agent0/tools/sync-harness.sh"
+REAL_LIB="$AGENT0_ROOT/.agent0/tools/lib/managed-block.sh"
 
 TMPDIR="$(mktemp -d -t spec-072-33-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 SRC="$TMPDIR/agent0"
 CONSUMER="$TMPDIR/consumer"
-mkdir -p "$SRC/.claude/tools/lib" "$CONSUMER/.claude/tools"
+mkdir -p "$SRC/.agent0/tools/lib" "$SRC/.claude" "$CONSUMER/.agent0/tools" "$CONSUMER/.claude"
 
 # Agent0 source ships the real sync-harness.sh, its sourced helper lib, and a
 # minimal harness. The rebootstrap temp copy falls back to --agent0-path for
 # this lib because the temp directory has no sibling lib/ directory.
-cp "$REAL_TOOL" "$SRC/.claude/tools/sync-harness.sh"
-cp "$REAL_LIB" "$SRC/.claude/tools/lib/managed-block.sh"
+cp "$REAL_TOOL" "$SRC/.agent0/tools/sync-harness.sh"
+cp "$REAL_LIB" "$SRC/.agent0/tools/lib/managed-block.sh"
 printf '{"hooks":{}}\n' > "$SRC/.claude/settings.json"
 printf '# CLAUDE\n\n## Compact Instructions\n' > "$SRC/CLAUDE.md"
 
@@ -38,27 +38,27 @@ awk '!done && /^set -euo pipefail$/ {
        for (i = 0; i < 40; i++) print "# spec-072 fixture padding line " i
        done = 1
        next
-     } 1' "$REAL_TOOL" > "$CONSUMER/.claude/tools/sync-harness.sh"
+     } 1' "$REAL_TOOL" > "$CONSUMER/.agent0/tools/sync-harness.sh"
 printf '{"hooks":{}}\n' > "$CONSUMER/.claude/settings.json"
 printf '# CLAUDE consumer project\n\n## Compact Instructions\n' > "$CONSUMER/CLAUDE.md"
 
 # Baseline records the consumer project's padded-copy sha → classifies `stale`, not
 # `customized` → the run auto-updates (overwrites) it without --force.
-consumer_sha="$(sha256sum "$CONSUMER/.claude/tools/sync-harness.sh" | awk '{print $1}')"
+consumer_sha="$(sha256sum "$CONSUMER/.agent0/tools/sync-harness.sh" | awk '{print $1}')"
 cat > "$CONSUMER/.claude/harness-sync-baseline.json" <<EOF
 {
   "agent0_commit": null,
   "synced_at": "2026-05-01T00:00:00Z",
   "tool_version": 1,
-  "files": { ".claude/tools/sync-harness.sh": "$consumer_sha" }
+  "files": { ".agent0/tools/sync-harness.sh": "$consumer_sha" }
 }
 EOF
 
-src_sha="$(sha256sum "$SRC/.claude/tools/sync-harness.sh" | awk '{print $1}')"
+src_sha="$(sha256sum "$SRC/.agent0/tools/sync-harness.sh" | awk '{print $1}')"
 
 # Run the CONSUMER's own copy once — this is the invocation that self-overwrites.
 actual_exit=0
-out="$(bash "$CONSUMER/.claude/tools/sync-harness.sh" --apply --agent0-path="$SRC" "$CONSUMER" 2>&1)" || actual_exit=$?
+out="$(bash "$CONSUMER/.agent0/tools/sync-harness.sh" --apply --agent0-path="$SRC" "$CONSUMER" 2>&1)" || actual_exit=$?
 
 if [ "$actual_exit" -ne 0 ]; then
   printf 'FAIL: single --apply expected exit 0, got %d\n%s\n' "$actual_exit" "$out"
@@ -75,7 +75,7 @@ if ! printf '%s' "$out" | grep -q 'synced:'; then
   exit 1
 fi
 
-after_sha="$(sha256sum "$CONSUMER/.claude/tools/sync-harness.sh" | awk '{print $1}')"
+after_sha="$(sha256sum "$CONSUMER/.agent0/tools/sync-harness.sh" | awk '{print $1}')"
 if [ "$after_sha" != "$src_sha" ]; then
   printf 'FAIL: consumer project sync-harness.sh not updated to Agent0 version in one run\n'
   exit 1

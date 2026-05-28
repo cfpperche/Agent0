@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# .claude/tools/sync-harness.sh
+# .agent0/tools/sync-harness.sh
 # One-way sync of upstream harness state into a consumer project.
 # See .claude/rules/harness-sync.md for the full discipline.
 
@@ -117,8 +117,8 @@ fi
 
 SYNC_HARNESS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MANAGED_BLOCK_LIB="$SYNC_HARNESS_DIR/lib/managed-block.sh"
-if [ ! -f "$MANAGED_BLOCK_LIB" ] && [ -f "$AGENT0_ROOT/.claude/tools/lib/managed-block.sh" ]; then
-  MANAGED_BLOCK_LIB="$AGENT0_ROOT/.claude/tools/lib/managed-block.sh"
+if [ ! -f "$MANAGED_BLOCK_LIB" ] && [ -f "$AGENT0_ROOT/.agent0/tools/lib/managed-block.sh" ]; then
+  MANAGED_BLOCK_LIB="$AGENT0_ROOT/.agent0/tools/lib/managed-block.sh"
 fi
 if [ ! -f "$MANAGED_BLOCK_LIB" ]; then
   printf 'sync-harness: missing managed-block helper library: %s\n' "$MANAGED_BLOCK_LIB" >&2
@@ -180,9 +180,9 @@ COPY_CHECK_RECURSIVE=(
 COPY_CHECK_GLOBS=(
   ".claude/hooks|*.sh"
   ".claude/rules|*.md"
-  ".claude/tools|*.sh"
   ".claude/validators|*.sh"
   ".agent0/hooks|*.sh"
+  ".agent0/tools|*.sh"
   ".agent0/tools|memory-*"
 )
 
@@ -193,7 +193,7 @@ COPY_CHECK_FILES=(
   ".codex/config.toml.example"
   ".gitleaks.toml"
   ".githooks/pre-commit"
-  ".claude/tools/lib/managed-block.sh"
+  ".agent0/tools/lib/managed-block.sh"
   ".agent0/memory/.gitkeep"
   ".agent0/memory.config.json"
   ".agent0/.browser-state/.gitkeep"
@@ -327,7 +327,7 @@ _self_rebootstrap() {
   # Only a real --apply writes; --check and --apply --dry-run never overwrite.
   [ "$MODE" = "apply" ] && [ "$DRY_RUN" -eq 0 ] || return 0
 
-  local rel=".claude/tools/sync-harness.sh"
+  local rel=".agent0/tools/sync-harness.sh"
   local src="$AGENT0_ROOT/$rel"
   local dst="$CONSUMER_ROOT/$rel"
   # No source, or consumer project has no copy → no in-place self-overwrite to guard.

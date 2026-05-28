@@ -4,7 +4,7 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-TOOL="$AGENT0_ROOT/.claude/tools/codex-local-env.sh"
+TOOL="$AGENT0_ROOT/.agent0/tools/codex-local-env.sh"
 
 if [ ! -f "$TOOL" ]; then
   printf 'FAIL: missing %s\n' "$TOOL"
@@ -15,9 +15,9 @@ TMPDIR="$(mktemp -d -t codex-local-env-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 ROOT="$TMPDIR/project"
-mkdir -p "$ROOT/.claude/tools" "$ROOT/.codex" "$TMPDIR/bin"
-cp "$TOOL" "$ROOT/.claude/tools/codex-local-env.sh"
-chmod +x "$ROOT/.claude/tools/codex-local-env.sh"
+mkdir -p "$ROOT/.agent0/tools" "$ROOT/.codex" "$TMPDIR/bin"
+cp "$TOOL" "$ROOT/.agent0/tools/codex-local-env.sh"
+chmod +x "$ROOT/.agent0/tools/codex-local-env.sh"
 
 cat > "$ROOT/.codex/.env.local" <<'EOF'
 FAL_KEY=LOCAL-FAL-MARKER
@@ -33,7 +33,7 @@ printf 'DATABASE_URL=%s\n' "${DATABASE_URL:-}" >> "$CODEX_CAPTURE"
 EOF
 chmod +x "$TMPDIR/bin/codex"
 
-CODEX_CAPTURE="$TMPDIR/capture.txt" PATH="$TMPDIR/bin:$PATH" "$ROOT/.claude/tools/codex-local-env.sh" exec "probe"
+CODEX_CAPTURE="$TMPDIR/capture.txt" PATH="$TMPDIR/bin:$PATH" "$ROOT/.agent0/tools/codex-local-env.sh" exec "probe"
 
 if ! grep -Fxq "args=-C $ROOT exec probe" "$TMPDIR/capture.txt"; then
   printf 'FAIL: launcher did not exec codex with repo root -C\n'

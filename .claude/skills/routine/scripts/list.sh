@@ -83,7 +83,7 @@ fi
 # Footer if leader missing AND routines exist.
 if [[ "$leader_status" == "n/a" ]]; then
   echo
-  echo "(no leader designated for this repo — run .claude/tools/install-routines.sh to schedule)"
+  echo "(no leader designated for this repo — run .agent0/tools/install-routines.sh to schedule)"
 fi
 
 exit 0

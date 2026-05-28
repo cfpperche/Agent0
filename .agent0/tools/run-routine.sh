@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# .claude/tools/run-routine.sh
+# .agent0/tools/run-routine.sh
 # Cron-invoked routine renderer: leader-check + interpolate prompt + enqueue.
 #
 # Usage:   bash run-routine.sh <slug>

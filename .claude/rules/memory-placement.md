@@ -219,7 +219,7 @@ Shipped as a starter template. Consumer projects override values directly. Missi
 
 ## Multi-runtime usage
 
-**Operational triggers.** Read `.agent0/memory/MEMORY.md` before work that touches project architecture, first-party capacities, `.claude/rules/`, `.claude/hooks/`, `.claude/skills/`, `.claude/tools/sync-harness.sh`, `.claude/rules/runtime-capabilities.md`, or `.agent0/memory/`. Follow only relevant entries; ordinary reads do not mutate memory.
+**Operational triggers.** Read `.agent0/memory/MEMORY.md` before work that touches project architecture, first-party capacities, `.claude/rules/`, `.claude/hooks/`, `.claude/skills/`, `.agent0/tools/sync-harness.sh`, `.claude/rules/runtime-capabilities.md`, or `.agent0/memory/`. Follow only relevant entries; ordinary reads do not mutate memory.
 
 **Activation.** Claude Code uses `.claude/settings.json`, which points the four memory hook registrations at `.agent0/hooks/memory-*.sh`. Codex CLI users opt in by copying `.codex/config.toml.example` to `.codex/config.toml`, enabling `[features].hooks = true`, and uncommenting the `SessionStart`, `PreToolUse(apply_patch)`, and `PostToolUse(apply_patch)` memory hook blocks.
 

@@ -11,7 +11,7 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-TOOL="$AGENT0_ROOT/.claude/tools/sync-harness.sh"
+TOOL="$AGENT0_ROOT/.agent0/tools/sync-harness.sh"
 
 TMPDIR="$(mktemp -d -t spec-019-02-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT

@@ -12,7 +12,7 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-BENCH="$AGENT0_ROOT/.claude/tools/bench-hooks.sh"
+BENCH="$AGENT0_ROOT/.agent0/tools/bench-hooks.sh"
 
 [ -f "$BENCH" ] || { echo "FAIL: bench-hooks.sh missing at $BENCH"; exit 1; }
 [ -x "$BENCH" ] || { echo "FAIL: bench-hooks.sh not executable"; exit 1; }

@@ -58,5 +58,5 @@ In-flight start marks live at `.agent0/.runtime-state/in-flight/<tool_use_id>.t`
 
 - `.claude/rules/runtime-introspect.md` — consumer-facing companion (what fires, detector table, probe output shape, escape hatches)
 - `.claude/hooks/runtime-capture.sh` / `.claude/hooks/runtime-pre-mark.sh` — implementation
-- `.claude/tools/probe.sh` — probe surface
+- `.agent0/tools/probe.sh` — probe surface
 - `.claude/rules/supply-chain.md` § *Gotchas* — sibling tokeniser whose discipline both hooks share

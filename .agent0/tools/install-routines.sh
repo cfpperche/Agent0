@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# .claude/tools/install-routines.sh
+# .agent0/tools/install-routines.sh
 # Bootstrap: (1) WSL2 detection + advisory, (2) interactive leader prompt,
 # (3) regenerate the AGENT0-ROUTINES crontab block from .agent0/routines/*.md.
 #
@@ -13,7 +13,7 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 PROJECT_DIR=$(cd "$SCRIPT_DIR/../.." && pwd)
 
 ROUTINES_DIR="$PROJECT_DIR/.agent0/routines"
-RUN_SCRIPT="$PROJECT_DIR/.claude/tools/run-routine.sh"
+RUN_SCRIPT="$PROJECT_DIR/.agent0/tools/run-routine.sh"
 LEADERS_FILE="$HOME/.claude/.agent0-routines-leaders.json"
 LOG_FILE="$PROJECT_DIR/.agent0/.routines-state/cron.log"
 

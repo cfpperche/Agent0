@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# .claude/tools/bench-hooks.sh
+# .agent0/tools/bench-hooks.sh
 # Benchmark + regression check for PreToolUse(Bash) hook chain latency.
 #
 # Modes:

@@ -127,4 +127,4 @@ Missing snapshot is the conservative fallback: Stop skips comparison and uses th
 
 ## Cross-capacity dependency
 
-`.claude/tools/probe.sh` reads `started-at` as the "session boundary" signal to detect stale snapshots. It scans `.agent0/.session-state/*/started-at` and takes the maximum mtime as the conservative boundary. Parallel sessions can produce conservative false positives; safe direction is to re-run the verifier.
+`.agent0/tools/probe.sh` reads `started-at` as the "session boundary" signal to detect stale snapshots. It scans `.agent0/.session-state/*/started-at` and takes the maximum mtime as the conservative boundary. Parallel sessions can produce conservative false positives; safe direction is to re-run the verifier.

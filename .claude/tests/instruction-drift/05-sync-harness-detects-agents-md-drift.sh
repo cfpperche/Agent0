@@ -4,19 +4,19 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-TOOL="$AGENT0_ROOT/.claude/tools/check-instruction-drift.sh"
+TOOL="$AGENT0_ROOT/.agent0/tools/check-instruction-drift.sh"
 
 TMPDIR="$(mktemp -d -t instruction-drift-05-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 SRC="$TMPDIR/agent0"
 CONSUMER="$TMPDIR/consumer"
-mkdir -p "$SRC/.claude/tools/lib" "$CONSUMER/.claude/tools/lib"
+mkdir -p "$SRC/.agent0/tools/lib" "$SRC/.claude" "$CONSUMER/.agent0/tools/lib"
 
-cp "$AGENT0_ROOT/.claude/tools/sync-harness.sh" "$SRC/.claude/tools/sync-harness.sh"
-cp "$AGENT0_ROOT/.claude/tools/sync-harness.sh" "$CONSUMER/.claude/tools/sync-harness.sh"
-cp "$AGENT0_ROOT/.claude/tools/lib/managed-block.sh" "$SRC/.claude/tools/lib/managed-block.sh"
-cp "$AGENT0_ROOT/.claude/tools/lib/managed-block.sh" "$CONSUMER/.claude/tools/lib/managed-block.sh"
+cp "$AGENT0_ROOT/.agent0/tools/sync-harness.sh" "$SRC/.agent0/tools/sync-harness.sh"
+cp "$AGENT0_ROOT/.agent0/tools/sync-harness.sh" "$CONSUMER/.agent0/tools/sync-harness.sh"
+cp "$AGENT0_ROOT/.agent0/tools/lib/managed-block.sh" "$SRC/.agent0/tools/lib/managed-block.sh"
+cp "$AGENT0_ROOT/.agent0/tools/lib/managed-block.sh" "$CONSUMER/.agent0/tools/lib/managed-block.sh"
 
 cat > "$SRC/CLAUDE.md" <<'EOF'
 # Claude

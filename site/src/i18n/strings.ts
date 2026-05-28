@@ -209,7 +209,7 @@ export const STRINGS: Record<Locale, Strings> = {
         },
         {
           q: "How does it stay in sync across forks?",
-          a: "The harness-sync tool (.claude/tools/sync-harness.sh) brings a fork's hooks/rules/tools up to date with Agent0. Hash-compare per file; structured merge for settings.json + CLAUDE.md. Never touches src/ or product manifests. One-way by design — improvements flow upstream via PR.",
+          a: "The harness-sync tool (.agent0/tools/sync-harness.sh) brings a fork's hooks/rules/tools up to date with Agent0. Hash-compare per file; structured merge for settings.json + CLAUDE.md. Never touches src/ or product manifests. One-way by design — improvements flow upstream via PR.",
         },
         {
           q: "Can I disable a capacity I don't want?",
@@ -348,7 +348,7 @@ export const STRINGS: Record<Locale, Strings> = {
         },
         {
           q: "Como mantém sincronia entre forks?",
-          a: "A ferramenta harness-sync (.claude/tools/sync-harness.sh) atualiza hooks/regras/ferramentas de um fork com Agent0. Hash-compare por arquivo; merge estruturado para settings.json + CLAUDE.md. Nunca toca src/ ou manifestos do produto. One-way por design — melhorias sobem via PR.",
+          a: "A ferramenta harness-sync (.agent0/tools/sync-harness.sh) atualiza hooks/regras/ferramentas de um fork com Agent0. Hash-compare por arquivo; merge estruturado para settings.json + CLAUDE.md. Nunca toca src/ ou manifestos do produto. One-way por design — melhorias sobem via PR.",
         },
         {
           q: "Posso desativar uma capacidade que não quero?",
@@ -487,7 +487,7 @@ export const STRINGS: Record<Locale, Strings> = {
         },
         {
           q: "¿Cómo mantiene la sincronía entre forks?",
-          a: "La herramienta harness-sync (.claude/tools/sync-harness.sh) actualiza los hooks/reglas/herramientas de un fork con Agent0. Hash-compare por archivo; merge estructurado para settings.json + CLAUDE.md. Nunca toca src/ ni manifiestos del producto. One-way por diseño — las mejoras suben vía PR.",
+          a: "La herramienta harness-sync (.agent0/tools/sync-harness.sh) actualiza los hooks/reglas/herramientas de un fork con Agent0. Hash-compare por archivo; merge estructurado para settings.json + CLAUDE.md. Nunca toca src/ ni manifiestos del producto. One-way por diseño — las mejoras suben vía PR.",
         },
         {
           q: "¿Puedo desactivar una capacidad que no quiero?",

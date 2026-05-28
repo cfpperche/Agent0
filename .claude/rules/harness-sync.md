@@ -1,11 +1,11 @@
 ---
 paths:
-  - ".claude/tools/sync-harness.sh"
+  - ".agent0/tools/sync-harness.sh"
 ---
 
 # Harness sync
 
-A one-way sync tool (`.claude/tools/sync-harness.sh <consumer-path>`) that brings a consumer project's harness state up to date with this Agent0 repo. Hooks, rules, tools, validators, skills, tests, `AGENTS.md`, `.mcp.json.example`, `.codex/config.toml.example` plus structured merges of `.claude/settings.json` and `CLAUDE.md`. Conservative by design: `--check` is the default (read-only); the plain-file path AND the CLAUDE.md managed block do 3-way reconciliation against a recorded baseline so *stale* content (consumer untouched, Agent0 moved) auto-updates while genuinely *customized* content (consumer edited) is refused without `--force`; product code (`src/`, the consumer project's `tests/`, package manifests, `.mcp.json`, `.codex/config.toml`, `.codex/.env.local`) is never touched.
+A one-way sync tool (`.agent0/tools/sync-harness.sh <consumer-path>`) that brings a consumer project's harness state up to date with this Agent0 repo. Hooks, rules, tools, validators, skills, tests, `AGENTS.md`, `.mcp.json.example`, `.codex/config.toml.example` plus structured merges of `.claude/settings.json` and `CLAUDE.md`. Conservative by design: `--check` is the default (read-only); the plain-file path AND the CLAUDE.md managed block do 3-way reconciliation against a recorded baseline so *stale* content (consumer untouched, Agent0 moved) auto-updates while genuinely *customized* content (consumer edited) is refused without `--force`; product code (`src/`, the consumer project's `tests/`, package manifests, `.mcp.json`, `.codex/config.toml`, `.codex/.env.local`) is never touched.
 
 ## Glossary
 
@@ -25,24 +25,24 @@ Nothing automatically. The sync runs only when a developer invokes it explicitly
 
 ```bash
 # Read-only drift survey (default)
-bash .claude/tools/sync-harness.sh --agent0-path=~/Agent0 --check ~/some-consumer
+bash .agent0/tools/sync-harness.sh --agent0-path=~/Agent0 --check ~/some-consumer
 
 # Apply changes
-bash .claude/tools/sync-harness.sh --agent0-path=~/Agent0 --apply ~/some-consumer
+bash .agent0/tools/sync-harness.sh --agent0-path=~/Agent0 --apply ~/some-consumer
 
 # Dry-run (apply-shaped output, no writes)
-bash .claude/tools/sync-harness.sh --agent0-path=~/Agent0 --apply --dry-run ~/some-consumer
+bash .agent0/tools/sync-harness.sh --agent0-path=~/Agent0 --apply --dry-run ~/some-consumer
 
 # Force-overwrite consumer project customizations
-bash .claude/tools/sync-harness.sh --agent0-path=~/Agent0 --apply --force ~/some-consumer
+bash .agent0/tools/sync-harness.sh --agent0-path=~/Agent0 --apply --force ~/some-consumer
 
 # Env-var form — convenient when scripting several consumer project syncs
-AGENT0_HARNESS_PATH=~/Agent0 bash .claude/tools/sync-harness.sh --apply ~/some-consumer
+AGENT0_HARNESS_PATH=~/Agent0 bash .agent0/tools/sync-harness.sh --apply ~/some-consumer
 ```
 
 If neither `--agent0-path` nor `AGENT0_HARNESS_PATH` is given, the tool refuses with exit code 2 and a usage hint naming both.
 
-**Why no auto-detection.** `sync-harness.sh` is in its own propagation manifest (§ Self-rebootstrap) — an identical copy lives at `.claude/tools/sync-harness.sh` inside *every consumer project*. So neither the current directory nor `$BASH_SOURCE` can distinguish the Agent0 source from a consumer project: the script's location only reveals "which repo this copy lives in", never "is this repo Agent0". Inferring the source from either would silently sync a consumer project onto itself whenever a consumer project's own copy is run. The explicit-path requirement is the deliberate safe floor — a clean refusal beats a wrong-source sync.
+**Why no auto-detection.** `sync-harness.sh` is in its own propagation manifest (§ Self-rebootstrap) — an identical copy lives at `.agent0/tools/sync-harness.sh` inside *every consumer project*. So neither the current directory nor `$BASH_SOURCE` can distinguish the Agent0 source from a consumer project: the script's location only reveals "which repo this copy lives in", never "is this repo Agent0". Inferring the source from either would silently sync a consumer project onto itself whenever a consumer project's own copy is run. The explicit-path requirement is the deliberate safe floor — a clean refusal beats a wrong-source sync.
 
 ## Modes
 
@@ -217,8 +217,8 @@ Consumer project-authored sections are always preserved verbatim — the sync on
 Encoded in three arrays at the top of `sync-harness.sh`:
 
 - **`COPY_CHECK_RECURSIVE`** — `find -type f` under each base: `.claude/skills/`, `.claude/tests/`, `.claude/agents/`. Recursive walks; subdirs preserved.
-- **`COPY_CHECK_GLOBS`** — `dir|pattern` pairs, single-level: `.claude/hooks/*.sh`, `.claude/rules/*.md`, `.claude/tools/*.sh`, `.claude/validators/*.sh`.
-- **`COPY_CHECK_FILES`** — literal paths: `AGENTS.md`, `.mcp.json.example`, `.codex/config.toml.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.claude/tools/lib/managed-block.sh`, `.agent0/memory/.gitkeep`, `.agent0/memory.config.json`, `.agent0/.browser-state/.gitkeep`, `.agent0/routines/.gitkeep`.
+- **`COPY_CHECK_GLOBS`** — `dir|pattern` pairs, single-level: `.claude/hooks/*.sh`, `.claude/rules/*.md`, `.agent0/tools/*.sh`, `.claude/validators/*.sh`.
+- **`COPY_CHECK_FILES`** — literal paths: `AGENTS.md`, `.mcp.json.example`, `.codex/config.toml.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.agent0/tools/lib/managed-block.sh`, `.agent0/memory/.gitkeep`, `.agent0/memory.config.json`, `.agent0/.browser-state/.gitkeep`, `.agent0/routines/.gitkeep`.
 - **Structured merge** (not in COPY_CHECK): `.claude/settings.json`, `CLAUDE.md`, `.gitignore`.
 
 The walk only reads from Agent0 manifest paths. Out-of-scope consumer project content (`src/`, consumer project's `tests/` outside `.claude/tests/`, `docs/`, `package.json`, `Cargo.toml`, `pyproject.toml`, `.mcp.json`, `.codex/config.toml`, `.codex/.env.local`, `.env*`, `target/`, `node_modules/`, `.venv/`, `dist/`, `build/`) is **implicitly invisible** — no denylist guard fires because nothing in the manifest points at those paths. This means adding a new path to the manifest is the only way to extend scope; the safety floor is the manifest itself.
@@ -237,9 +237,9 @@ Deliberate: auto-moving consumer content would cross the manifest's "never touch
 
 ## Self-rebootstrap
 
-`sync-harness.sh` is itself in the propagation manifest (`COPY_CHECK_GLOBS` → `.claude/tools/*.sh`) — the tool syncs *itself*. That is a hazard: when a consumer project's copy is stale, an `--apply` invoked as `bash <consumer-path>/.claude/tools/sync-harness.sh …` overwrites the very file bash is executing. Bash reads scripts incrementally, tracking a byte offset into the file; an in-place whole-file overwrite mid-run leaves that offset pointing into misaligned bytes, and the run crashes (`unbound variable`, a syntax error) or — worse — silently executes the wrong code.
+`sync-harness.sh` is itself in the propagation manifest (`COPY_CHECK_GLOBS` → `.agent0/tools/*.sh`) — the tool syncs *itself*. That is a hazard: when a consumer project's copy is stale, an `--apply` invoked as `bash <consumer-path>/.agent0/tools/sync-harness.sh …` overwrites the very file bash is executing. Bash reads scripts incrementally, tracking a byte offset into the file; an in-place whole-file overwrite mid-run leaves that offset pointing into misaligned bytes, and the run crashes (`unbound variable`, a syntax error) or — worse — silently executes the wrong code.
 
-An `--apply` therefore runs a **self-rebootstrap pre-flight** immediately after `load_baseline` and before the first write (`walk_copy_check`). The pre-flight computes whether *this run will overwrite the consumer project's `.claude/tools/sync-harness.sh`* — true when that file is `stale` (auto-update) or `customized` under `--force`; false when it is up to date, or `customized` and refused without `--force`. If the run will overwrite it, the tool copies Agent0's current `sync-harness.sh` to a `mktemp` file and `exec`s that copy with the original arguments. The re-exec'd process executes from the stable temp file, so when it later overwrites the consumer project's `sync-harness.sh` it is writing a file it is not reading from — single run, no crash. One stderr line (`sync-harness: self-update detected — re-executing from a stable copy`) marks the re-exec; otherwise it is invisible.
+An `--apply` therefore runs a **self-rebootstrap pre-flight** immediately after `load_baseline` and before the first write (`walk_copy_check`). The pre-flight computes whether *this run will overwrite the consumer project's `.agent0/tools/sync-harness.sh`* — true when that file is `stale` (auto-update) or `customized` under `--force`; false when it is up to date, or `customized` and refused without `--force`. If the run will overwrite it, the tool copies Agent0's current `sync-harness.sh` to a `mktemp` file and `exec`s that copy with the original arguments. The re-exec'd process executes from the stable temp file, so when it later overwrites the consumer project's `sync-harness.sh` it is writing a file it is not reading from — single run, no crash. One stderr line (`sync-harness: self-update detected — re-executing from a stable copy`) marks the re-exec; otherwise it is invisible.
 
 The re-exec is guarded by the internal env var `AGENT0_SYNC_REBOOTSTRAPPED` (exported onto the re-exec'd process so it never loops), and the temp copy is removed by `_sync_cleanup` on exit (its path travels in `AGENT0_SYNC_REBOOTSTRAP_TMP`). `--check` and `--apply --dry-run` never write, so the pre-flight is a no-op for them.
 
@@ -272,7 +272,7 @@ The sync baseline file subsumes the need for a separate audit log — it is both
 - **Bash 3.2 / macOS portability.** The script uses `mapfile`-free patterns (`while IFS= read -r ... done < <(...)` instead of `mapfile`) and avoids `declare -A`. Same baseline every other hook in this repo follows.
 - **First sync on a long-stale consumer project produces a large diff.** A consumer project that skipped several upstream releases will see ~30+ new files in one apply. Review the diff section-by-section, not as one giant blob: hooks first, rules second, tools third, then settings.json + CLAUDE.md. Commit in one go (`chore(harness-sync): adopt Agent0 specs NNN-MMM`) so the audit trail is clean.
 - **One-time first-sync reconciliation for consumer projects with no baseline.** A consumer project with no `harness-sync-baseline.json` cannot tell stale from customized on its first `--apply` — every differing file is refused as `!! customized (no baseline)`. Resolve once with `--force` / `--force-except`; the baseline is then seeded and every subsequent sync is clean 3-way. See § Sync baseline § *First sync*.
-- **A pre-rebootstrap consumer project still crashes once on the upgrade that installs the fix.** The self-rebootstrap guard (§ Self-rebootstrap) lives *inside* `sync-harness.sh`, so a consumer project whose copy predates it runs the old, unguarded script on the very `--apply` that updates `sync-harness.sh` — that one run self-overwrites and crashes (or stops short). It is harmless: the crashed run already wrote the new `sync-harness.sh`, so re-running `--apply` completes cleanly (the now-current script rebootstraps correctly, or no longer needs to). Same one-time-transitional shape as a no-baseline first sync; every `--apply` after it is single-run and crash-free.
+- **A pre-rebootstrap consumer project still crashes once on the upgrade that installs the fix.** The self-rebootstrap guard (§ Self-rebootstrap) lives *inside* `sync-harness.sh`, so a consumer project whose copy predates it runs the old, unguarded script on the very `--apply` that updates `sync-harness.sh` — that one run self-overwrites and crashes (or stops short). It is harmless: the crashed run already wrote the new `sync-harness.sh`, so re-running `--apply` completes cleanly (the now-current script rebootstraps correctly, or no longer needs to). Same one-time-transitional shape as a no-baseline first sync; every `--apply` after it is single-run and crash-free. The same one-time crash occurs on the spec-105 relocation `--apply` (the one that moves `sync-harness.sh` from `.claude/tools/` to `.agent0/tools/`): the consumer's old `.claude/tools/sync-harness.sh` is deleted as an orphan while bash reads it, and the pre-relocation script guards the old path — but the new `.agent0/tools/sync-harness.sh` is already written, so the re-run completes from the new location. No mitigation code; accepted transitional cost.
 - **Baseline lookup is Bash-3.2-safe.** No `declare -A` (repo-wide constraint). `load_baseline` dumps the baseline's `.files` map to a sorted `relpath<TAB>sha` temp file via one `jq` call; per-file lookup is an `awk` exact-match scan against that file — no per-file `jq` invocation (a 500-file consumer project would be slow). The deletion pass likewise reads the manifest/baseline as sorted temp files.
 - **Hand-editing `harness-sync-baseline.json` is a footgun.** A wrong sha just mislabels one file stale-vs-customized — recoverable on the next sync, lower-severity than copier's `.copier-answers.yml` warning, but the file is still tool-owned: let `--apply` maintain it.
 - **A malformed baseline fails open.** If the JSON is unreadable, the sync logs `!! harness-sync-baseline.json unreadable/malformed — treating as no baseline` and proceeds 2-state for that run, then rewrites a clean baseline on `--apply`. A broken baseline never blocks a sync.

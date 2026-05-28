@@ -33,7 +33,7 @@ Scaffold a new routine. Parse `$ARGUMENTS`: first token must be `new`, second to
    - slug is empty or contains uppercase / non-alphanumeric (besides hyphen)
    - `.agent0/routines/<slug>.md` already exists (suggest a different slug, or edit the existing file)
 2. **Invoke**: `bash .claude/skills/routine/scripts/new.sh <slug>`. The script copies `templates/routine.md.tmpl` → `.agent0/routines/<slug>.md`, substitutes `{{SLUG}}` and `{{DATE}}`, and runs `validate.sh` as a self-check (should pass).
-3. **Report**: surface the script's stdout (`new: created <path>` + the re-install hint). Tell the user to edit the file (especially the `schedule:` field, default `0 9 * * *` is rarely what they want), then re-run `.claude/tools/install-routines.sh` to register the new routine with cron.
+3. **Report**: surface the script's stdout (`new: created <path>` + the re-install hint). Tell the user to edit the file (especially the `schedule:` field, default `0 9 * * *` is rarely what they want), then re-run `.agent0/tools/install-routines.sh` to register the new routine with cron.
 
 ## Subcommand: `list`
 
@@ -46,7 +46,7 @@ Show the status of every routine in this repo. No arguments.
    - `leader` reads `~/.claude/.agent0-routines-leaders.json`: `yes` if this repo's abs path is `true`, `no` if `false`, `n/a` if missing or repo not in file.
    - `queue` counts files in `.agent0/.routines-state/<slug>/queue/*.md` (0 if dir absent).
    - `last-completed` reads `.agent0/.routines-state/<slug>/last-completed.json` for the `ts` field, or `never` if file absent.
-2. **Footer** (script-emitted): if leader is `n/a` AND routines exist, the script appends `(no leader designated — run .claude/tools/install-routines.sh to schedule)`.
+2. **Footer** (script-emitted): if leader is `n/a` AND routines exist, the script appends `(no leader designated — run .agent0/tools/install-routines.sh to schedule)`.
 3. **Empty case** (script-emitted): if no routines exist, the script emits `(no routines defined — use /routine new <slug> to create one)`.
 
 ## Subcommand: `run <slug>`
@@ -108,7 +108,7 @@ _Consumer-extension surface — append consumer-local bullets to this section. S
 - **Don't auto-stage, don't auto-commit.** `new` writes the file; `git add` is the developer's call. Same discipline as `/remind`.
 - **Routine definitions are git-tracked; state is NOT.** `.agent0/routines/<slug>.md` ships in git; `.agent0/.routines-state/` is gitignored (per-machine). This split is what makes the capacity multi-developer-safe.
 - **Sync-harness propagates the capacity (rule + scripts + skill + hook), NOT instances.** A consumer project that adopts Agent0's harness gets `/routine` for free, but the consumer project's own routines are consumer-local.
-- **Cron registration is separate from routine definition.** `/routine new` creates the file; `.claude/tools/install-routines.sh` (re-)generates the crontab block. After `new`, the routine is NOT scheduled until install runs.
+- **Cron registration is separate from routine definition.** `/routine new` creates the file; `.agent0/tools/install-routines.sh` (re-)generates the crontab block. After `new`, the routine is NOT scheduled until install runs.
 - **Idempotency is the routine author's responsibility.** The validator rejects `idempotent: false` in frontmatter, but it can't verify the prompt body is actually idempotent. The 4-layer N-fold defense (per `.claude/rules/routines.md`) catches drift; the routine author writes the guard.
 - **`run` dispatches in the current session.** Unlike Phase 2 (autonomous `claude -p`), v1 `run` means "you, the current Claude Code session, do what the routine prompt asks". The session is the executor.
 - See `.claude/rules/routines.md` for the full capacity description, gotchas, and cross-references.

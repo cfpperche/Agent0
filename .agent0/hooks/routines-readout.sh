@@ -122,7 +122,7 @@ if [[ "$need_advisory" -eq 1 ]]; then
     printf '\n'
   fi
   printf 'Advisory: %d routine(s) defined but no leader designated for this repo.\n' "$routine_count"
-  printf '  Run: bash .claude/tools/install-routines.sh\n'
+  printf '  Run: bash .agent0/tools/install-routines.sh\n'
 fi
 
 printf '=== end ROUTINES ===\n'

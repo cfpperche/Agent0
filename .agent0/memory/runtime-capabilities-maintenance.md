@@ -17,7 +17,7 @@ Every future spec that changes runtime support for a capability must update `.cl
 
 ## Drift enforcement
 
-`.claude/tools/check-instruction-drift.sh` protects the anchor-level contract without parsing per-cell values:
+`.agent0/tools/check-instruction-drift.sh` protects the anchor-level contract without parsing per-cell values:
 
 - The registry file exists.
 - `CLAUDE.md` and `AGENTS.md` managed blocks point to this file.
@@ -34,6 +34,6 @@ Extra rows are permitted. Duplicate minimum-set rows are drift.
 ## Cross-references
 
 - `.claude/rules/runtime-capabilities.md` — consumer-facing companion (status vocabulary + matrix + future-runtimes placeholders)
-- `.claude/tools/check-instruction-drift.sh` — the drift enforcement implementation
+- `.agent0/tools/check-instruction-drift.sh` — the drift enforcement implementation
 - `docs/specs/093-runtime-capability-registry/spec.md` § *Scenario: users can inspect one canonical capability matrix* — the source of truth for the minimum-set list embedded in the drift checker
 - `.claude/skills/skill/references/portability-tiers.md` — the separate skill-portability axis

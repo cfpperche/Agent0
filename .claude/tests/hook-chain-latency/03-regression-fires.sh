@@ -13,18 +13,18 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-BENCH="$AGENT0_ROOT/.claude/tools/bench-hooks.sh"
+BENCH="$AGENT0_ROOT/.agent0/tools/bench-hooks.sh"
 BASELINE="$AGENT0_ROOT/.claude/.perf-baseline.json"
 
 TMPDIR="$(mktemp -d -t hcl-regression-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 # Mirror enough of the project tree for the bench to run:
-mkdir -p "$TMPDIR/.claude/hooks" "$TMPDIR/.claude/tools"
+mkdir -p "$TMPDIR/.claude/hooks" "$TMPDIR/.agent0/tools"
 cp "$AGENT0_ROOT/.claude/hooks/"*.sh "$TMPDIR/.claude/hooks/"
-cp "$BENCH" "$TMPDIR/.claude/tools/bench-hooks.sh"
+cp "$BENCH" "$TMPDIR/.agent0/tools/bench-hooks.sh"
 cp "$BASELINE" "$TMPDIR/.claude/.perf-baseline.json"
-chmod +x "$TMPDIR/.claude/tools/bench-hooks.sh"
+chmod +x "$TMPDIR/.agent0/tools/bench-hooks.sh"
 
 # Inject a 100ms sleep into governance-gate.sh after its shebang/setup. The
 # baseline's governance-gate.noop p95 is ~20ms; +100ms is well past the 25%
@@ -46,7 +46,7 @@ chmod +x "$SLOW_HOOK"
 # the bench reads the slow hooks. We expect exit 2 + stderr REGRESSION line.
 exit_code=0
 stderr_file="$TMPDIR/stderr.txt"
-CLAUDE_PROJECT_DIR="$TMPDIR" bash "$TMPDIR/.claude/tools/bench-hooks.sh" \
+CLAUDE_PROJECT_DIR="$TMPDIR" bash "$TMPDIR/.agent0/tools/bench-hooks.sh" \
   --check --reps 20 --tolerance 25 --quiet 2>"$stderr_file" >/dev/null || exit_code=$?
 
 if [ "$exit_code" -eq 0 ]; then

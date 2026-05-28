@@ -1,7 +1,7 @@
 ---
 paths:
   - ".claude/hooks/runtime-*.sh"
-  - ".claude/tools/probe.sh"
+  - ".agent0/tools/probe.sh"
   - ".agent0/.runtime-state/**"
 ---
 
@@ -15,7 +15,7 @@ The wedge is deliberately framework-agnostic and minimal — it complements matu
 
 - **Pre-mark — `PreToolUse(Bash)` → `.claude/hooks/runtime-pre-mark.sh`.** Stamps a `started_at` timestamp into `.agent0/.runtime-state/in-flight/<tool_use_id>.t` so the post hook can compute `duration_ms`.
 - **Capture — `PostToolUse(Bash)` AND `PostToolUseFailure(Bash)` → `.claude/hooks/runtime-capture.sh`.** Tokenises `tool_input.command`, matches against the detector pair list below, and writes `.agent0/.runtime-state/last-run.json` atomically when a verifier runs. Honours `CLAUDE_SKIP_RUNTIME_INTROSPECT=1`. Always exits 0.
-- **Probe — `.claude/tools/probe.sh last-run`.** Reads the state file and emits a plain-text block the agent pattern-matches. Missing state → friendly empty-state message; exit 0.
+- **Probe — `.agent0/tools/probe.sh last-run`.** Reads the state file and emits a plain-text block the agent pattern-matches. Missing state → friendly empty-state message; exit 0.
 - **SessionStart hint — `.agent0/hooks/session-start.sh`.** Appends one line naming the probe path and example invocation.
 
 ## Detector pair list (v1)
@@ -82,7 +82,7 @@ Single snapshot at `.agent0/.runtime-state/last-run.json`, gitignored, overwritt
 
 ## Probe output shape
 
-`bash .claude/tools/probe.sh last-run` emits plain text:
+`bash .agent0/tools/probe.sh last-run` emits plain text:
 
 ```
 status: PASS
@@ -111,7 +111,7 @@ When the state file is missing:
 
 ```
 status: no-snapshot
-hint: run a recognised verifier (e.g. `bun test`, `pytest`) then re-query with `bash .claude/tools/probe.sh last-run`.
+hint: run a recognised verifier (e.g. `bun test`, `pytest`) then re-query with `bash .agent0/tools/probe.sh last-run`.
 ```
 
 The shape is plain text by design — agents read stdout, not structured tool returns, in v1. JSON output is a candidate v2 if MCP promotion happens.
@@ -126,7 +126,7 @@ Missing `jq`: both hooks fail open (`exit 0`, no capture). The probe tool prints
 
 ## Gotchas
 
-- **Probe inside the SAME Bash tool call does NOT see its own capture.** PostToolUse fires AFTER the underlying Bash command returns. A command of the shape `bun test && bash .claude/tools/probe.sh last-run` will probe the PREVIOUS snapshot, not the one being produced. To read the current run's snapshot, the probe must be in the agent's *next* Bash invocation.
+- **Probe inside the SAME Bash tool call does NOT see its own capture.** PostToolUse fires AFTER the underlying Bash command returns. A command of the shape `bun test && bash .agent0/tools/probe.sh last-run` will probe the PREVIOUS snapshot, not the one being produced. To read the current run's snapshot, the probe must be in the agent's *next* Bash invocation.
 - **`PostToolUse(Bash)` fires only on exit-zero.** Failing Bash commands route to `PostToolUseFailure(Bash)` instead. The capture hook is registered on both events.
 - **Claude Code's `tool_response.exit_code` does NOT exist.** Status inference IS the canonical signal under Claude Code; the `exit` field stays `null`. The probe reads `inferred_status` accordingly.
 - **SessionStart hint is one line.** Agents may scan past it. The hint exists for discoverability, not for forced behaviour. Reinforce in `.claude/rules/tdd.md` and PR reviews that the probe is the canonical way for the agent to verify its own work.
@@ -139,6 +139,6 @@ Maintainer-binding surface (detector extension contract via `CLAUDE_RUNTIME_INTR
 
 - `.agent0/memory/runtime-introspect-maintenance.md` — maintainer-binding companion
 - `.claude/hooks/runtime-capture.sh` / `.claude/hooks/runtime-pre-mark.sh` — implementation
-- `.claude/tools/probe.sh` — probe surface
+- `.agent0/tools/probe.sh` — probe surface
 - `.claude/rules/supply-chain.md` — sibling tokeniser whose discipline this hook shares
 - `.claude/rules/tdd.md` — verification convention the probe supports

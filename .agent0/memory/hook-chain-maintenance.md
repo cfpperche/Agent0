@@ -66,7 +66,7 @@ Reduction: runtime-pre-mark.sh noop p95 from ~35 ms → ~26 ms (-24%).
 
 Contract for any new `PreToolUse(Bash)` hook contributed upstream:
 
-1. **Benchmark before merge.** `bash .claude/tools/bench-hooks.sh --baseline` to add the new hook's cells. Verify p95 against the budget on the default command set.
+1. **Benchmark before merge.** `bash .agent0/tools/bench-hooks.sh --baseline` to add the new hook's cells. Verify p95 against the budget on the default command set.
 2. **Narrow with `if` if possible.** If the hook only inspects a subset of commands (anything narrower than "every Bash invocation"), declare an `if:` field on the hook handler in `.claude/settings.json`. Use permission-rule syntax: `Bash(<glob>|<glob>|...)`. Add a comment in `settings.json` near the new entry explaining why the pattern is sufficient.
 3. **Pre-jq probe inside the hook body** for any hook that can't narrow at the matcher layer. Cheapest possible check first (grep against raw stdin), full logic only on probe-hit.
 4. **Commit the updated baseline.** The PR adding the hook must also update `.claude/.perf-baseline.json` so the regression check stays calibrated.

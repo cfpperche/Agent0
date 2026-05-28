@@ -52,7 +52,7 @@ ROOT="$(cd "$ROOT" && pwd)"
 AGENT0_PATH="$(cd "$AGENT0_PATH" && pwd)"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LIB="$ROOT/.claude/tools/lib/managed-block.sh"
+LIB="$ROOT/.agent0/tools/lib/managed-block.sh"
 if [ ! -f "$LIB" ]; then
   LIB="$SCRIPT_DIR/lib/managed-block.sh"
 fi
@@ -108,7 +108,7 @@ fi
 if [ "$SKIP_SYNC_CHECK" -eq 1 ]; then
   ok "sync-harness AGENTS.md baseline check skipped by flag"
 else
-  sync_tool="$ROOT/.claude/tools/sync-harness.sh"
+  sync_tool="$ROOT/.agent0/tools/sync-harness.sh"
   if [ ! -f "$sync_tool" ]; then
     fail "missing sync-harness.sh for AGENTS.md baseline check"
   else

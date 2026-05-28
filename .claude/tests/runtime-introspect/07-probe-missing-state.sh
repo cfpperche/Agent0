@@ -6,7 +6,7 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-PROBE="$AGENT0_ROOT/.claude/tools/probe.sh"
+PROBE="$AGENT0_ROOT/.agent0/tools/probe.sh"
 
 TMPDIR="$(mktemp -d -t spec-011-V7-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT

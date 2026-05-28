@@ -9,7 +9,7 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-HOOK="$AGENT0_ROOT/.claude/hooks/session-start.sh"
+HOOK="$AGENT0_ROOT/.agent0/hooks/session-start.sh"
 
 TMPDIR="$(mktemp -d -t spec-017-V6-XXXXXX)"
 trap 'chmod -R u+rwx "$TMPDIR" 2>/dev/null || true; rm -rf "$TMPDIR"' EXIT

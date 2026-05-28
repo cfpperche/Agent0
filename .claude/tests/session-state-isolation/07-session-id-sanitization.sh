@@ -9,7 +9,7 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-HOOK="$AGENT0_ROOT/.claude/hooks/session-start.sh"
+HOOK="$AGENT0_ROOT/.agent0/hooks/session-start.sh"
 
 assert_unknown() {
   local label="$1" TMPDIR="$2"

@@ -7,22 +7,24 @@
 #                 single-file COMPACT_NOTES.md model)
 #
 # State is isolated per-session_id: markers live at
-# `<.session-state>/<session_id>/{started-at,nagged}`. Parallel Claude Code
+# `<.session-state>/<session_id>/{started-at,nagged}`. Parallel runtime
 # sessions in the same project don't interfere with each other's nag state.
 # Sanitization (regex `^[a-zA-Z0-9_-]+$`) defends against path traversal in
 # malformed/malicious payloads; failures fall to the literal `unknown` subdir.
 
 set -euo pipefail
 
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
-SESSION_STATE_ROOT="$PROJECT_DIR/.claude/.session-state"
-SESSION_FILE="$PROJECT_DIR/.agent0/HANDOFF.md"
-LEGACY_SESSION_FILE="$PROJECT_DIR/.claude/SESSION.md"
-HANDOFF_POINTER_MARKER="<!-- AGENT0_HANDOFF_POINTER -->"
-COMPACT_HISTORY_DIR="$PROJECT_DIR/.claude/.compact-history"
-
 # Read stdin payload FIRST so we can extract session_id before any state ops.
 INPUT="$(cat 2>/dev/null || true)"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=_memory-hook-lib.sh
+. "$SCRIPT_DIR/_memory-hook-lib.sh"
+
+PROJECT_DIR="$(memory_project_dir "$INPUT")"
+SESSION_STATE_ROOT="$PROJECT_DIR/.claude/.session-state"
+SESSION_FILE="$PROJECT_DIR/.agent0/HANDOFF.md"
+COMPACT_HISTORY_DIR="$PROJECT_DIR/.claude/.compact-history"
 
 SOURCE="startup"
 SESSION_ID_RAW=""
@@ -46,8 +48,9 @@ rm -f "$STATE_DIR/nagged"
 # Edit attribution: create an empty edited-files.txt marker so Stop can distinguish
 # "tracker is installed and this session edited nothing" (bystander → exit 0)
 # from "tracker is not installed at all" (legacy session → fall to porcelain-compare).
-# The tracker hook only fires on Edit/Write/MultiEdit, so without this seed a
-# real bystander session would have no file and fall to the legacy path.
+# The tracker hook fires on Claude Edit/Write/MultiEdit and Codex apply_patch,
+# so without this seed a real bystander session would have no file and fall to
+# the legacy path.
 touch "$STATE_DIR/edited-files.txt"
 
 # Porcelain snapshot: snapshot `git status --porcelain` so Stop can discriminate
@@ -58,31 +61,14 @@ if git -C "$PROJECT_DIR" rev-parse --git-dir >/dev/null 2>&1; then
   git -C "$PROJECT_DIR" status --porcelain >"$STATE_DIR/start-porcelain.txt" 2>/dev/null || true
 fi
 
-# Accumulate all banner blocks into BANNER, then emit a single JSON object at
-# the end with both `hookSpecificOutput.additionalContext` (model context) and
-# `systemMessage` (user-visible banner). CC v2.1.0+ silently drops SessionStart
-# stdout from the user-visible surface — plain `printf` only reaches the model.
-# The dual-emit pattern restores the
-# banner so the user sees the handoff at session boot without having to type.
+# Accumulate all banner blocks into BANNER, then emit at the end. Claude gets a
+# dual-channel JSON object; Codex gets plain framed stdout.
 BANNER=""
-
-first_nonblank_line() {
-  sed -n '/[^[:space:]]/ { p; q; }' "$1" 2>/dev/null || true
-}
-
-is_handoff_pointer_file() {
-  [[ -f "$1" ]] && [[ "$(first_nonblank_line "$1")" == "$HANDOFF_POINTER_MARKER" ]]
-}
 
 if [[ -f "$SESSION_FILE" ]]; then
   BANNER+=$'=== HANDOFF.md (canonical handoff) ===\n'
   BANNER+="$(cat "$SESSION_FILE" 2>/dev/null || true)"
   BANNER+=$'\n=== end HANDOFF.md ===\n'
-elif [[ -f "$LEGACY_SESSION_FILE" ]] && ! is_handoff_pointer_file "$LEGACY_SESSION_FILE"; then
-  BANNER+=$'=== SESSION.md (handoff from prior session) ===\n'
-  BANNER+="$(cat "$LEGACY_SESSION_FILE" 2>/dev/null || true)"
-  BANNER+=$'\n=== end SESSION.md ===\n'
-  BANNER+=$'\nmigration-advisory: .claude/SESSION.md is legacy; create .agent0/HANDOFF.md to migrate\n'
 else
   BANNER+=$'=== handoff-advisory ===\n'
   BANNER+="'.agent0/HANDOFF.md' missing — create it to enable handoff"
@@ -130,11 +116,19 @@ fi
 # 7 days. Failure NEVER blocks the hook — silenced with 2>/dev/null || true.
 find "$SESSION_STATE_ROOT" -mindepth 1 -maxdepth 1 -type d -mtime +7 -exec rm -rf {} + 2>/dev/null || true
 
-# Emit the dual-channel JSON only when there is content AND jq is available.
-# Best-effort: a jq failure must NEVER block session start (|| true).
-if [[ -n "$BANNER" ]] && command -v jq >/dev/null 2>&1; then
-  jq -n --arg msg "$BANNER" '{
-    hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: $msg },
-    systemMessage: $msg
-  }' 2>/dev/null || true
+# Emit runtime-specific output. Claude keeps the dual-channel JSON so the
+# banner remains visible in the UI; Codex SessionStart accepts plain stdout as
+# developer context and existing Agent0 Codex readout hooks already use that
+# shape.
+if [[ -n "$BANNER" ]]; then
+  if [[ "$(memory_runtime "$INPUT")" == "codex-cli" ]]; then
+    printf '%s' "$BANNER"
+  elif command -v jq >/dev/null 2>&1; then
+    jq -n --arg msg "$BANNER" '{
+      hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: $msg },
+      systemMessage: $msg
+    }' 2>/dev/null || true
+  else
+    printf '%s' "$BANNER"
+  fi
 fi

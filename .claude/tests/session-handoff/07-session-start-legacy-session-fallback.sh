@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Scenario 7: missing HANDOFF.md falls back to non-pointer legacy SESSION.md.
+# Scenario 7: missing HANDOFF.md ignores legacy SESSION.md and emits advisory.
 
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-START_HOOK="$AGENT0_ROOT/.claude/hooks/session-start.sh"
+START_HOOK="$AGENT0_ROOT/.agent0/hooks/session-start.sh"
 
 TMPDIR="$(mktemp -d -t spec-092-07-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
@@ -19,20 +19,20 @@ EOF
 export CLAUDE_PROJECT_DIR="$TMPDIR"
 output="$(printf '%s' '{"source":"startup","session_id":"test-092-07"}' | bash "$START_HOOK" 2>&1)"
 
-if ! printf '%s' "$output" | grep -q '=== SESSION.md (handoff from prior session) ==='; then
-  printf 'FAIL: legacy SESSION.md banner missing\n%s\n' "$output"
+if printf '%s' "$output" | grep -q 'LEGACY_SESSION_SENTINEL'; then
+  printf 'FAIL: legacy SESSION.md content was injected\n%s\n' "$output"
   exit 1
 fi
-if ! printf '%s' "$output" | grep -q 'LEGACY_SESSION_SENTINEL'; then
-  printf 'FAIL: legacy SESSION.md content missing\n%s\n' "$output"
+if printf '%s' "$output" | grep -q '=== SESSION.md (handoff from prior session) ==='; then
+  printf 'FAIL: legacy SESSION.md banner emitted\n%s\n' "$output"
   exit 1
 fi
-if ! printf '%s' "$output" | grep -q 'migration-advisory: .claude/SESSION.md is legacy; create .agent0/HANDOFF.md to migrate'; then
-  printf 'FAIL: migration advisory missing\n%s\n' "$output"
+if printf '%s' "$output" | grep -q 'migration-advisory'; then
+  printf 'FAIL: migration advisory emitted after hard cutover\n%s\n' "$output"
   exit 1
 fi
-if printf '%s' "$output" | grep -q 'handoff-advisory'; then
-  printf 'FAIL: missing-handoff advisory emitted despite legacy fallback\n%s\n' "$output"
+if ! printf '%s' "$output" | grep -q "'.agent0/HANDOFF.md' missing"; then
+  printf 'FAIL: missing-handoff advisory not emitted\n%s\n' "$output"
   exit 1
 fi
 

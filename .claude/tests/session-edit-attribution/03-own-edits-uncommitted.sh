@@ -4,14 +4,14 @@
 #
 # Given session A tracked an edit to foo.ts (via the tracker hook) and the
 # file is still dirty in the worktree, when A's Stop fires without
-# SESSION.md being updated, then the block decision must be emitted.
+# HANDOFF.md being updated, then the block decision must be emitted.
 
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-START_HOOK="$AGENT0_ROOT/.claude/hooks/session-start.sh"
-STOP_HOOK="$AGENT0_ROOT/.claude/hooks/session-stop.sh"
-TRACK_HOOK="$AGENT0_ROOT/.claude/hooks/session-track-edits.sh"
+START_HOOK="$AGENT0_ROOT/.agent0/hooks/session-start.sh"
+STOP_HOOK="$AGENT0_ROOT/.agent0/hooks/session-stop.sh"
+TRACK_HOOK="$AGENT0_ROOT/.agent0/hooks/session-track-edits.sh"
 
 TMPDIR="$(mktemp -d -t spec-030-03-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
@@ -24,8 +24,8 @@ echo "initial" >foo.ts
 git add foo.ts
 git commit -q -m initial
 
-mkdir -p "$TMPDIR/.claude"
-touch "$TMPDIR/.claude/SESSION.md"
+mkdir -p "$TMPDIR/.claude" "$TMPDIR/.agent0"
+touch "$TMPDIR/.agent0/HANDOFF.md"
 export CLAUDE_PROJECT_DIR="$TMPDIR"
 
 SESSION_ID="test-own-uncommitted-03"
@@ -45,7 +45,7 @@ if ! grep -Fxq 'foo.ts' "$TRACK_FILE"; then
   exit 1
 fi
 
-# SESSION.md NOT updated this session → stale relative to started-at.
+# HANDOFF.md NOT updated this session → stale relative to started-at.
 sleep 1
 stop_output="$(printf '%s' "$stdin_json" | bash "$STOP_HOOK" 2>&1 || true)"
 

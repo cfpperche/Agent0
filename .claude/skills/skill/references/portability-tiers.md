@@ -9,7 +9,7 @@ Agent0 classifies every first-party skill into one of three tiers, declared in t
 **Definition.** The skill's body references Claude Code-specific paths, environment variables, hooks, or tools. It works correctly only inside a Claude Code session where those primitives exist.
 
 **Signals in the body:**
-- References to `.claude/rules/*.md`, `.agent0/memory/*.md`, `.claude/hooks/*.sh`, `.claude/reminders.yaml`, `.claude/SESSION.md`
+- References to `.claude/rules/*.md`, `.agent0/memory/*.md`, `.claude/hooks/*.sh`, `.claude/reminders.yaml`, `.agent0/HANDOFF.md`
 - The `${CLAUDE_SKILL_DIR}` or `$CLAUDE_PROJECT_DIR` env vars
 - CC-only tools invoked by name (`TaskCreate`, `ExitPlanMode`, the `Skill` tool recursive call, `ScheduleWakeup`)
 - Calls into CC settings (`.claude/settings.json`) or per-session state (`.claude/.session-state/`)

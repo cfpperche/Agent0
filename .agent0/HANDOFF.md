@@ -1,6 +1,6 @@
 # Session handoff
 
-Canonical runtime-neutral handoff for Agent0 sessions. Claude Code injects and enforces this file through hooks; Codex reads and updates it by convention through `AGENTS.md`.
+Canonical runtime-neutral handoff for Agent0 sessions. Claude Code injects and enforces this file through hooks; Codex can do the same after the `.codex/config.toml.example` Agent0 hook blocks are enabled.
 
 See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, fallback behavior, and reader-side truncation defense.
 
@@ -8,15 +8,13 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-**Spec 100 committed** (`97159e9`) — three SessionStart readouts now live under `.agent0/hooks/`.
+Spec 101 (`session-handoff-multi-runtime`) is implemented, code-reviewed, and marked shipped. Review verdict: implementation correct, all contracts hold. The three session lifecycle scripts live under `.agent0/hooks/`: `session-start.sh`, `session-stop.sh`, `session-track-edits.sh`.
 
-**MCP-recipes curation + SessionStart hint decommissioned this session** (no spec — direct implementation). What remains: `.mcp.json.example` (Claude) and `.codex/config.toml.example` (Codex) keep the 6 MCP server blocks intact (playwright / chrome-devtools / dbhub / laravel-boost / next-devtools / fal-ai). What's gone: `.agent0/hooks/mcp-recipes-hint.sh`, `.claude/rules/mcp-recipes.md` (catalog + signal table + recipe sections + hint output shape), and three test suites (`mcp-recipes`, `mcp-recipes-laravel`, `monorepo-stack-detect`) plus the spec 100 `03-mcp-recipes-fixture.sh`. The § Authenticated workflow content was preserved by renaming → `.claude/rules/browser-auth.md` (slimmer, self-contained).
+Review found one actionable item (F1) — now fixed: task 9's done-when ("no shipped file references `.claude/SESSION.md`") was not actually met. Cleaned 5 dangling refs across 3 shipped files: `.claude/skills/remind/SKILL.md` (:3, :18, :142 — :142 was the only semantic one, now points in-flight work to `.agent0/HANDOFF.md`), `.claude/skills/skill/references/portability-tiers.md:12`, `.claude/skills/product/templates/pipeline/02-prototype/prompt.md:107`. Grep confirms zero shipped-surface refs remain (negative-assertion tests in `tests/session-handoff/` excluded by design).
 
-Hook registration: `.claude/settings.json` SessionStart now has 4 hooks (session-start + reminders + routines + memory-decay); `.codex/config.toml.example` has 3 commented SessionStart blocks (memory-decay + reminders + routines). Multi-runtime-readouts fixture `05-toml-parse.sh` updated to expect 3 SessionStart entries (was 4); `04-subdir-launch.sh` lost the mcp-hint assertion.
+Claude registrations in `.claude/settings.json` point at the new shared scripts. Codex has commented opt-in blocks in `.codex/config.toml.example` for `SessionStart`, `Stop`, and `PostToolUse` on `^apply_patch$`. Old `.claude/hooks/session-*.sh` + pointer-only `.claude/SESSION.md` removed; shared state stays at `.claude/.session-state/<session_id>/`.
 
-Cross-refs updated: `CLAUDE.md` / `AGENTS.md` § MCP recipes (templates-only wording) + § Browser auth (points at new rule), `runtime-capabilities.md` (MCP recipes row drops hook ref, new `browser auth` row added), `php-laravel-support.md` § 6 (template-only Laravel Boost block), `image-gen.md`, `secrets-scan.md`, `.runtime-state/README.md`, `.claude/tests/runtime-capabilities/fixtures.sh`, `.claude/skills/image/SKILL.md`, `.claude/skills/product/SKILL.md`, `.agent0/memory/cc-platform-hooks.md`.
-
-Pre-existing/paused: `docs/specs/091-sdd-debate-runner/` remains untracked and out of scope. `.codex/config.toml` + `.codex/.env.local` remain machine-local.
+Pre-existing/paused: `docs/specs/091-sdd-debate-runner/` untracked, out of scope. `.codex/config.toml` + `.codex/.env.local` machine-local.
 
 ## Active Work
 
@@ -24,13 +22,13 @@ _None active._
 
 ## Next Actions
 
-1. Review/commit this decommission diff.
-2. Push the 4 (now 5) local commits when ready.
-3. Continue per-capacity Codex port lineage (session-handoff is the next Tier 2 candidate per `runtime-capabilities.md:45` re-audit).
+1. Commit spec 101 implementation + the F1 doc cleanup (bundle or split as preferred). F1 edits are doc-only and propagate to forks via sync-harness.
+2. Continue the runtime-capabilities re-audit later with `runtime introspect` and `delegation/subagents`.
 
 ## Decisions & Gotchas
 
-- **No spec for this decommission** — user invoked `/goal` to skip SDD; trade-off accepted (audit trail lives in commit + this handoff).
-- `.claude/rules/browser-auth.md` is the new canonical for `BROWSER_AUTH_REQUIRED:` + `.claude/.browser-state/<host>.json` lifecycle. Self-contained, no longer co-located with MCP catalog.
-- Templates (`.mcp.json.example` / `.codex/config.toml.example`) intentionally KEEP all 6 server blocks — `codex-mcp-recipes` test suite (3 scenarios) still passes because it validates the template, not the rule.
-- The `mcp-recipes-hint.sh` SessionStart block in `.codex/config.toml.example` was removed; `.codex/config.toml.example` ships 3 commented SessionStart blocks now (was 4).
+- Codex `Stop` uses continue-with-corrective-prompt semantics: `{"decision":"block","reason":...}` continues the turn once; `stop_hook_active=true` exits silently to avoid loops.
+- Codex SessionStart emits plain framed stdout; Claude keeps JSON dual-channel (`hookSpecificOutput.additionalContext` + `systemMessage`). The branch keys off `CLAUDE_PROJECT_DIR` being unset = "assume Codex" (heuristic, correct in practice since the harness always sets it for Claude).
+- `apply_patch` attribution parses patch headers via `_memory-hook-lib.sh::memory_extract_paths`; Bash/MCP writes fall back to porcelain comparison.
+- Residual risk (review): if Codex `session_id` carries chars outside `^[a-zA-Z0-9_-]+$`, all such sessions collapse to the shared `unknown/` state dir → cross-session nag interference. Couldn't verify Codex's charset without live tool — worth a live smoke (pairs with reminder `r-2026-05-18`).
+- Validation: all spec 101 fixtures (6/6) + session-handoff (10/10) + edit-attribution (8/8) re-run green this session; full activated `.codex/config.toml.example` parses with correct matchers (SessionStart×4, Stop no-matcher, PostToolUse/PreToolUse `^apply_patch$`).

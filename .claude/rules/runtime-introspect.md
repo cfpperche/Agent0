@@ -16,7 +16,7 @@ The wedge is deliberately framework-agnostic and minimal — it complements matu
 - **Pre-mark — `PreToolUse(Bash)` → `.claude/hooks/runtime-pre-mark.sh`.** Stamps a `started_at` timestamp into `.claude/.runtime-state/in-flight/<tool_use_id>.t` so the post hook can compute `duration_ms`.
 - **Capture — `PostToolUse(Bash)` AND `PostToolUseFailure(Bash)` → `.claude/hooks/runtime-capture.sh`.** Tokenises `tool_input.command`, matches against the detector pair list below, and writes `.claude/.runtime-state/last-run.json` atomically when a verifier runs. Honours `CLAUDE_SKIP_RUNTIME_INTROSPECT=1`. Always exits 0.
 - **Probe — `.claude/tools/probe.sh last-run`.** Reads the state file and emits a plain-text block the agent pattern-matches. Missing state → friendly empty-state message; exit 0.
-- **SessionStart hint — `.claude/hooks/session-start.sh`.** Appends one line naming the probe path and example invocation.
+- **SessionStart hint — `.agent0/hooks/session-start.sh`.** Appends one line naming the probe path and example invocation.
 
 ## Detector pair list (v1)
 

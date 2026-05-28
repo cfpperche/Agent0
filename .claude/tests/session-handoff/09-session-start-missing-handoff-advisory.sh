@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Scenario 9: missing HANDOFF.md and SESSION.md emits advisory and proceeds.
+# Scenario 9: missing HANDOFF.md emits advisory and proceeds.
 
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-START_HOOK="$AGENT0_ROOT/.claude/hooks/session-start.sh"
+START_HOOK="$AGENT0_ROOT/.agent0/hooks/session-start.sh"
 
 TMPDIR="$(mktemp -d -t spec-092-09-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT

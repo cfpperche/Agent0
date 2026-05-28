@@ -104,7 +104,7 @@ Brief shape per direction (composed by the parent — `product_get_delegation_br
 - **DELIVERABLE** — the written HTML file at the named path. In the final message back to the parent: file path, the 1-3 OD design systems chosen with their vendored `design-systems/<system>/DESIGN.md` paths, a 2-3 sentence summary of the specific design choices, and any honest tension with the OD catalogue (partial fits disclosed by name, accents that were brief-specified rather than DS-inherited).
 - **DONE_WHEN** — file exists at the path, size ≥ 10 KB, every required `contains` substring literally present, OD design system paths cited in an HTML comment header at the top of the file, and the final message reports all four items above.
 
-Use `model: opus` for each sub-agent — sonnet times out on heavy step-2 templates (SESSION.md captures this empirically). Dispatch all 3 in the **same response** so they run concurrently rather than sequentially.
+Use `model: opus` for each sub-agent — sonnet times out on heavy step-2 templates (observed empirically). Dispatch all 3 in the **same response** so they run concurrently rather than sequentially.
 
 **Why this pattern** — not just parallelism for speed:
 

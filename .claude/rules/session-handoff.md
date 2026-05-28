@@ -1,22 +1,25 @@
 ---
 paths:
   - ".agent0/HANDOFF.md"
-  - ".claude/SESSION.md"
-  - ".claude/hooks/session-start.sh"
-  - ".claude/hooks/session-stop.sh"
+  - ".agent0/hooks/session-start.sh"
+  - ".agent0/hooks/session-stop.sh"
+  - ".agent0/hooks/session-track-edits.sh"
+  - ".codex/config.toml.example"
   - ".claude/.session-state/**"
 ---
 
 # Session handoff
 
-`.agent0/HANDOFF.md` is the canonical work-state handoff for Agent0 sessions. It is runtime-neutral: Claude Code receives it automatically through hooks, and Codex reads/updates it by convention through `AGENTS.md`.
+`.agent0/HANDOFF.md` is the canonical work-state handoff for Agent0 sessions. It is runtime-neutral: Claude Code receives it automatically through hooks, and Codex receives it through opt-in hooks plus the `AGENTS.md` convention.
 
-`.claude/SESSION.md` is now a pointer-only compatibility file. Its first non-blank line is the marker `<!-- AGENT0_HANDOFF_POINTER -->`, followed by a short redirect to `.agent0/HANDOFF.md`. It must not contain live work-state content.
+Codex receives the same hook-backed handoff behavior after the user copies `.codex/config.toml.example` to `.codex/config.toml`, enables hooks, and uncomments the session-handoff blocks.
 
-## Asymmetric enforcement
+## Runtime enforcement
 
-- **Claude Code**: `SessionStart` (`.claude/hooks/session-start.sh`) injects `.agent0/HANDOFF.md`; `Stop` (`.claude/hooks/session-stop.sh`) blocks once per session when Claude leaves dirty own work without updating `.agent0/HANDOFF.md`.
-- **Codex**: `AGENTS.md` instructs Codex to read `.agent0/HANDOFF.md` before non-trivial work and update it before finishing. Codex lifecycle hook parity is future scope, so this is convention-only in v1.
+- **Claude Code**: `SessionStart` (`.agent0/hooks/session-start.sh`) injects `.agent0/HANDOFF.md`; `Stop` (`.agent0/hooks/session-stop.sh`) nags once per session when Claude leaves dirty own work without updating `.agent0/HANDOFF.md`; `PostToolUse(Edit|Write|MultiEdit)` (`.agent0/hooks/session-track-edits.sh`) records edited paths for bystander discrimination.
+- **Codex CLI**: after opt-in via `.codex/config.toml.example`, `SessionStart` injects `.agent0/HANDOFF.md`; `Stop` uses Codex's continue-with-corrective-prompt contract (`{"decision":"block","reason":...}`) for nag-once parity; `PostToolUse(^apply_patch$)` records edited paths parsed from patch headers.
+
+Codex `Stop` does not reject termination byte-for-byte like a Claude stop block. `decision: "block"` tells Codex to continue and creates a new continuation prompt from `reason`. The shared hook exits silently when Codex sends `stop_hook_active=true` or when the per-session `nagged` marker is already set.
 
 ## What to write in HANDOFF.md
 
@@ -39,7 +42,7 @@ Examples:
 
 ```markdown
 - Claude Code — implementing auth spec — paths: `src/auth/*`, `tests/auth/*` — release: when PR #42 is merged.
-- Codex CLI — auditing handoff hooks — paths: `.claude/hooks/session-*.sh` — release: when validation commands in spec 092 pass.
+- Codex CLI — auditing handoff hooks — paths: `.agent0/hooks/session-*.sh` — release: when validation commands in spec 101 pass.
 ```
 
 Rules:
@@ -52,11 +55,10 @@ Rules:
 
 ## SessionStart fallback
 
-`session-start.sh` uses a three-layer handoff source decision:
+`session-start.sh` uses a two-layer handoff source decision:
 
 1. If `.agent0/HANDOFF.md` exists, inject it under `=== HANDOFF.md (canonical handoff) ===`.
-2. Else if `.claude/SESSION.md` exists and its first non-blank line is not `<!-- AGENT0_HANDOFF_POINTER -->`, inject it as legacy handoff content and emit `migration-advisory: .claude/SESSION.md is legacy; create .agent0/HANDOFF.md to migrate`.
-3. Else emit a one-line `handoff-advisory` that `.agent0/HANDOFF.md` is missing and proceed without aborting the session.
+2. Else emit a one-line `handoff-advisory` that `.agent0/HANDOFF.md` is missing and proceed without aborting the session.
 
 `SessionStart` applies the same handoff decision for `source=startup`, `source=resume`, `source=clear`, and `source=compact`. On `source=compact`, it also injects the latest `.claude/.compact-history/*.md` snapshot additively; compact-history never replaces the canonical handoff.
 
@@ -98,9 +100,9 @@ Set `CLAUDE_SKIP_SESSION_HOOKS=1` to disable Stop-hook enforcement for quick Q&A
 
 ## State files
 
-`.claude/.session-state/<session_id>/` holds four ephemeral artifacts per Claude Code session: `started-at` (touched by `SessionStart`), `nagged` (touched by `Stop` when it blocks), `start-porcelain.txt` (a snapshot of `git status --porcelain` captured by `SessionStart`), and `edited-files.txt` (per-session list of Edit/Write/MultiEdit `file_path`s, append-only with dedup, populated by `session-track-edits.sh`; seeded empty by `SessionStart` so presence means "tracker-enabled"). Gitignored — do not commit.
+`.claude/.session-state/<session_id>/` holds four ephemeral artifacts per runtime session: `started-at` (touched by `SessionStart`), `nagged` (touched by `Stop` when it nags), `start-porcelain.txt` (a snapshot of `git status --porcelain` captured by `SessionStart`), and `edited-files.txt` (per-session list of Claude Edit/Write/MultiEdit paths and Codex `apply_patch` paths, append-only with dedup, populated by `session-track-edits.sh`; seeded empty by `SessionStart` so presence means "tracker-enabled"). Gitignored — do not commit.
 
-`session_id` comes from the stdin payload Claude Code passes to hooks (`$.session_id`). When absent, or when it contains characters outside `^[a-zA-Z0-9_-]+$`, both hooks fall to the literal subdir `unknown`.
+`session_id` comes from the stdin payload each runtime passes to hooks (`$.session_id`). When absent, or when it contains characters outside `^[a-zA-Z0-9_-]+$`, hooks fall to the literal subdir `unknown`.
 
 `SessionStart` runs a best-effort cleanup of `.claude/.session-state/*` subdirs older than 7 days. Cleanup failures never block the hook.
 
@@ -113,7 +115,7 @@ The primary signal is `edited-files.txt`:
 - **File present, non-empty, at least one listed path still dirty** → fall through to the block-unless-HANDOFF-updated path.
 - **File absent** → legacy session or tracker disabled → fall through to porcelain-compare fallback.
 
-Tradeoff: file-present-and-empty treats pure bystander and Bash-only-edit sessions the same. Sessions that edit exclusively through shell commands may not be nagged. Accepted because the dominant agent edit path is Edit/Write/MultiEdit and Bash path attribution is fragile.
+Tradeoff: file-present-and-empty treats pure bystander and Bash-only-edit sessions the same. Sessions that edit exclusively through shell commands may not be nagged. Accepted because the dominant agent edit paths are Claude Edit/Write/MultiEdit and Codex `apply_patch`; Bash path attribution is fragile.
 
 ### Carryover discrimination
 

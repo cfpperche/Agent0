@@ -12,17 +12,23 @@ set -euo pipefail
 
 [[ "${CLAUDE_SKIP_SESSION_HOOKS:-0}" == "1" ]] && exit 0
 
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
+# Parse session_id from stdin payload — same sanitization shape as
+# session-start.sh.
+INPUT="$(cat 2>/dev/null || true)"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=_memory-hook-lib.sh
+. "$SCRIPT_DIR/_memory-hook-lib.sh"
+
+PROJECT_DIR="$(memory_project_dir "$INPUT")"
 SESSION_STATE_ROOT="$PROJECT_DIR/.claude/.session-state"
 SESSION_FILE="$PROJECT_DIR/.agent0/HANDOFF.md"
 
-# Parse session_id from stdin payload — same sanitization shape as
-# session-start.sh. Inlined-duplicated (not extracted to a helper) because
-# the snippet is small and avoiding a `source` keeps both hooks self-contained.
-INPUT="$(cat 2>/dev/null || true)"
 SESSION_ID_RAW=""
+STOP_HOOK_ACTIVE="false"
 if [[ -n "$INPUT" ]] && command -v jq >/dev/null 2>&1; then
   SESSION_ID_RAW="$(printf '%s' "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || true)"
+  STOP_HOOK_ACTIVE="$(printf '%s' "$INPUT" | jq -r 'if .stop_hook_active == true then "true" else "false" end' 2>/dev/null || echo false)"
 fi
 if [[ -n "$SESSION_ID_RAW" && "$SESSION_ID_RAW" =~ ^[a-zA-Z0-9_-]+$ ]]; then
   SESSION_ID="$SESSION_ID_RAW"
@@ -36,6 +42,13 @@ NAGGED="$STATE_DIR/nagged"
 
 # No session-start marker → nothing to enforce.
 [[ -f "$STARTED_AT" ]] || exit 0
+
+# Codex Stop sets stop_hook_active=true when this turn has already been
+# continued by a Stop hook. Treat it like the local nagged marker to avoid
+# recursive continuation prompts.
+if [[ "$STOP_HOOK_ACTIVE" == "true" ]]; then
+  exit 0
+fi
 
 # Already nagged this session → don't loop.
 if [[ -f "$NAGGED" && "$NAGGED" -nt "$STARTED_AT" ]]; then
@@ -52,12 +65,12 @@ if [[ -z "$CURRENT_PORCELAIN" ]]; then
 fi
 
 # Per-session edit attribution via the PostToolUse tracker hook.
-# The tracker (`.claude/hooks/session-track-edits.sh`) appends each Edit /
-# Write / MultiEdit `file_path` to `edited-files.txt`. Reading that file is
-# the primary signal — it tells us what THIS session actually touched,
-# independent of what other sessions or out-of-band processes did to the
-# worktree during our lifetime. Absent file → legacy session (tracker
-# not yet deployed) or tracker disabled → fall through to porcelain-compare.
+# The tracker appends each Claude Edit/Write/MultiEdit file path and each Codex
+# apply_patch path to `edited-files.txt`. Reading that file is the primary
+# signal — it tells us what THIS session actually touched, independent of what
+# other sessions or out-of-band processes did to the worktree during our
+# lifetime. Absent file → legacy session (tracker not yet deployed) or tracker
+# disabled → fall through to porcelain-compare.
 TRACK_FILE="$STATE_DIR/edited-files.txt"
 USE_TRACKER=0
 OWN_DIRTY_WIP=0

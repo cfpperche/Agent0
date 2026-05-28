@@ -1,6 +1,6 @@
-# Agent0 - Codex MCP recipes
+# Agent0 - Codex MCP recipes + optional hooks
 #
-# MCP-only template. This is NOT a complete Codex project config and Agent0
+# This is NOT a complete Codex project config and Agent0
 # does not own model, provider, sandbox, approval, or tool-permission defaults.
 #
 # Workflow:
@@ -12,13 +12,20 @@
 #
 # Full recipe docs: .claude/rules/mcp-recipes.md
 #
-# Optional project-memory hooks:
+# Optional Agent0 hooks:
 #   Uncomment the [features] + [[hooks.*]] block below after copying this file
 #   to .codex/config.toml and trusting repo-local hooks. The commands resolve
 #   from the git root because Codex may start in a subdirectory.
 
 # [features]
 # hooks = true
+
+# [[hooks.SessionStart]]
+# matcher = "startup|resume|clear|compact"
+# [[hooks.SessionStart.hooks]]
+# type = "command"
+# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/session-start.sh"'
+# statusMessage = "Reading session handoff"
 
 # [[hooks.SessionStart]]
 # matcher = "startup|resume|clear|compact"
@@ -40,6 +47,19 @@
 # type = "command"
 # command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/routines-readout.sh"'
 # statusMessage = "Reading routine queue"
+
+# [[hooks.Stop]]
+# [[hooks.Stop.hooks]]
+# type = "command"
+# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/session-stop.sh"'
+# statusMessage = "Checking session handoff"
+
+# [[hooks.PostToolUse]]
+# matcher = "^apply_patch$"
+# [[hooks.PostToolUse.hooks]]
+# type = "command"
+# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/session-track-edits.sh"'
+# statusMessage = "Tracking session edits"
 
 # [[hooks.PreToolUse]]
 # matcher = "^apply_patch$"

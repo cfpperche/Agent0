@@ -26,7 +26,7 @@ jq -cn '{
       {matcher:"Bash", hooks:[{type:"command", command:"bash $CLAUDE_PROJECT_DIR/.claude/hooks/supply-chain-scan.sh"}]}
     ],
     SessionStart: [
-      {matcher:"*", hooks:[{type:"command", command:"bash $CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh"}]}
+      {matcher:"*", hooks:[{type:"command", command:"bash $CLAUDE_PROJECT_DIR/.agent0/hooks/session-start.sh"}]}
     ]
   }
 }' > "$SRC/.claude/settings.json"

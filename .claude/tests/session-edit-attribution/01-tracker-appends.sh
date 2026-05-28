@@ -10,7 +10,7 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-TRACK_HOOK="$AGENT0_ROOT/.claude/hooks/session-track-edits.sh"
+TRACK_HOOK="$AGENT0_ROOT/.agent0/hooks/session-track-edits.sh"
 
 TMPDIR="$(mktemp -d -t spec-030-01-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT

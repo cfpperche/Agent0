@@ -14,8 +14,8 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-START_HOOK="$AGENT0_ROOT/.claude/hooks/session-start.sh"
-STOP_HOOK="$AGENT0_ROOT/.claude/hooks/session-stop.sh"
+START_HOOK="$AGENT0_ROOT/.agent0/hooks/session-start.sh"
+STOP_HOOK="$AGENT0_ROOT/.agent0/hooks/session-stop.sh"
 
 TMPDIR="$(mktemp -d -t spec-030-06-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
@@ -28,8 +28,8 @@ echo "initial" >bar.md
 git add bar.md
 git commit -q -m initial
 
-mkdir -p "$TMPDIR/.claude"
-touch "$TMPDIR/.claude/SESSION.md"
+mkdir -p "$TMPDIR/.claude" "$TMPDIR/.agent0"
+touch "$TMPDIR/.agent0/HANDOFF.md"
 export CLAUDE_PROJECT_DIR="$TMPDIR"
 
 SESSION_ID="test-bash-fallback-06"

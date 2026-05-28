@@ -33,7 +33,7 @@ jq -cn '{
   "$schema": "https://example.com/schema.json",
   hooks: {
     SessionStart: [
-      {matcher:"*", hooks:[{type:"command", command:"bash $CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh"}]}
+      {matcher:"*", hooks:[{type:"command", command:"bash $CLAUDE_PROJECT_DIR/.agent0/hooks/session-start.sh"}]}
     ]
   }
 }' > "$SRC/.claude/settings.json"

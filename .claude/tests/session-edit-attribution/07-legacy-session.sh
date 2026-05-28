@@ -6,13 +6,13 @@
 # before 030 deployed, or with CLAUDE_SKIP_SESSION_HOOKS during start), when
 # Stop fires with a dirty porcelain that differs from start-porcelain, then
 # the spec-023 fallback path is followed and the nag fires (assuming
-# SESSION.md is stale relative to started-at). This pins the contract:
+# HANDOFF.md is stale relative to started-at). This pins the contract:
 # missing tracker file = legacy session = porcelain-compare fully in charge.
 
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-STOP_HOOK="$AGENT0_ROOT/.claude/hooks/session-stop.sh"
+STOP_HOOK="$AGENT0_ROOT/.agent0/hooks/session-stop.sh"
 
 TMPDIR="$(mktemp -d -t spec-030-07-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
@@ -25,8 +25,8 @@ echo "initial" >tracked.txt
 git add tracked.txt
 git commit -q -m initial
 
-mkdir -p "$TMPDIR/.claude"
-touch "$TMPDIR/.claude/SESSION.md"
+mkdir -p "$TMPDIR/.claude" "$TMPDIR/.agent0"
+touch "$TMPDIR/.agent0/HANDOFF.md"
 export CLAUDE_PROJECT_DIR="$TMPDIR"
 
 SESSION_ID="test-legacy-07"
@@ -42,12 +42,12 @@ git status --porcelain >"$STATE_DIR/start-porcelain.txt"
 sleep 1
 echo "modified" >>tracked.txt
 
-# SESSION.md mtime is older than started-at (touched at TMPDIR setup, before
+# HANDOFF.md mtime is older than started-at (touched at TMPDIR setup, before
 # started-at). Verify pre-Stop:
-SESSION_MD_MTIME="$(stat -c %Y "$TMPDIR/.claude/SESSION.md")"
+HANDOFF_MTIME="$(stat -c %Y "$TMPDIR/.agent0/HANDOFF.md")"
 STARTED_MTIME="$(stat -c %Y "$STATE_DIR/started-at")"
-if [ "$SESSION_MD_MTIME" -gt "$STARTED_MTIME" ]; then
-  printf 'FAIL: precondition broken — SESSION.md newer than started-at\n'
+if [ "$HANDOFF_MTIME" -gt "$STARTED_MTIME" ]; then
+  printf 'FAIL: precondition broken — HANDOFF.md newer than started-at\n'
   exit 1
 fi
 
@@ -61,7 +61,7 @@ stdin_json="{\"session_id\":\"$SESSION_ID\"}"
 stop_output="$(printf '%s' "$stdin_json" | bash "$STOP_HOOK" 2>&1 || true)"
 
 # fallback should fire the block because porcelain differs from
-# start-porcelain (which was empty) AND SESSION.md is stale.
+# start-porcelain (which was empty) AND HANDOFF.md is stale.
 if ! printf '%s' "$stop_output" | grep -q '"decision":"block"'; then
   printf 'FAIL: legacy session should have blocked via spec-023 fallback\n'
   printf 'stop_output: %s\n' "$stop_output"

@@ -16,6 +16,12 @@ _Choices made where the spec/plan was ambiguous. The decision itself + why this 
 
 {{free-prose body — what was ambiguous, what was decided, why}}
 
+### 2026-05-28 — Codex CLI — Codex hook output contracts
+
+Official Codex hook docs confirm the Phase 0 gate: `SessionStart` accepts plain stdout as extra developer context and also accepts JSON stdout with `hookSpecificOutput.hookEventName = "SessionStart"` plus `additionalContext`. Agent0 will keep Claude's JSON dual-channel output for Claude Code and emit plain framed stdout for Codex, matching the existing Codex readout hooks.
+
+For `Stop`, Codex expects JSON on stdout when exit 0; plain text stdout is invalid. `decision: "block"` does not reject the turn. It continues Codex with a generated continuation prompt using `reason` as the prompt text. `stop_hook_active` means the turn was already continued by `Stop`, so the shared stop hook can exit 0 when it is true and rely on the existing `nagged` marker as the runtime-agnostic backstop.
+
 ## Deviations
 
 _Places where implementation intentionally departed from `plan.md`. The departure + the reason it was necessary or better._

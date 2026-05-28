@@ -66,7 +66,7 @@ Canonical doc: `.claude/rules/lint-validator.md` § *What fires, what advises* (
 
 ## 6. MCP recipes hint laravel-boost-mcp
 
-`.claude/hooks/mcp-recipes-hint.sh` detects Laravel via `artisan` file at root (canonical) OR `composer.json` declaring `laravel/framework` in `require` / `require-dev`. When detected, the SessionStart hint adds:
+`.agent0/hooks/mcp-recipes-hint.sh` detects Laravel via `artisan` file at root (canonical) OR `composer.json` declaring `laravel/framework` in `require` / `require-dev`. When detected, the SessionStart hint adds:
 
 - `laravel-boost-mcp` — Laravel framework introspection (Eloquent models, DB schema, logs, docs)
 - `playwright-mcp` — browser observation (Laravel apps commonly need browser-driven E2E)
@@ -97,7 +97,7 @@ CLAUDE.md folds PHP/Laravel detection inline into the capacity sections that enu
 - `.claude/rules/tdd.md` — PHP test patterns
 - `.claude/rules/mcp-recipes.md` — Laravel Boost MCP recipe
 - `.claude/validators/run.sh` — the validator's PHP elif
-- `.claude/hooks/{supply-chain-scan,supply-chain-advise,runtime-capture,mcp-recipes-hint}.sh` — the four hooks PHP touches
+- `.claude/hooks/{supply-chain-scan,supply-chain-advise,runtime-capture}.sh` + `.agent0/hooks/mcp-recipes-hint.sh` — the four hooks PHP touches
 - `.claude/tests/{validator-php,supply-chain-composer,runtime-capture-php,mcp-recipes-laravel}/` — the test surface that locks the behavior
 
 ## Gotchas

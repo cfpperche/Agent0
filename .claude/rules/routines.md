@@ -26,7 +26,7 @@ If both `/remind` and `/routine` seem to fit, the cadence question disambiguates
 
 ## Two-phase execution model
 
-**Phase 1 (v1, ships today):** cron renders the routine prompt with fresh temporal context and writes it to `.claude/.routines-state/<slug>/queue/<unix-ts>.md`. The next interactive Claude Code session reads the queue via the `routines-readout.sh` `SessionStart` hook and surfaces a `=== ROUTINES ===` block; the human or Claude dispatches each pending routine via `/routine run <slug>`. **No Anthropic API key required.** The cron-side is purely a "render + enqueue" primitive; actual LLM execution happens in the next session.
+**Phase 1 (v1, ships today):** cron renders the routine prompt with fresh temporal context and writes it to `.claude/.routines-state/<slug>/queue/<unix-ts>.md`. The next interactive agent session reads the queue via the `routines-readout.sh` `SessionStart` hook and surfaces a `=== ROUTINES ===` block; the human or agent dispatches each pending routine via `/routine run <slug>`. **No Anthropic API key required.** The cron-side is purely a "render + enqueue" primitive; actual LLM execution happens in the next session.
 
 **Phase 2 (future, when API key available):** `autonomous: true` opt-in frontmatter; cron-side invokes `claude -p` directly with the rendered prompt and writes output to PR / issue / file per the routine's `output:` declaration. Deferred per the rule-of-three demand test — built when ≥3 routines have demonstrated value in Phase 1 mode.
 
@@ -161,7 +161,7 @@ The marker is scoped — it skips the named check, not all validation:
 - `.claude/tools/install-routines.sh` — interactive bootstrap (leader prompt + crontab block install + WSL2 advisory).
 - `.claude/tools/uninstall-routines.sh` — symmetric removal.
 - `.claude/tools/run-routine.sh` — invoked by cron; leader check + interpolate + enqueue + rotation.
-- `.claude/hooks/routines-readout.sh` — `SessionStart` hook; surfaces pending queue.
+- `.agent0/hooks/routines-readout.sh` — `SessionStart` hook; surfaces pending queue.
 - `.claude/skills/routine/SKILL.md` — `/routine` slash command (new / list / run / validate / dismiss).
 - `.claude/skills/routine/scripts/validate.sh` — frontmatter + cron + body validator.
 - `.claude/skills/routine/scripts/new.sh` — template instantiation.

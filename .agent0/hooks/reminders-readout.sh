@@ -4,20 +4,27 @@
 # the legacy .claude/REMINDERS.md plain-bullet format).
 #
 # Tool tier (degraded gracefully):
-#   1. python3 + PyYAML available → invoke reminders-helper.py readout
+#   1. python3 + PyYAML available -> invoke reminders-helper.py readout
 #      (canonical formatted output)
-#   2. yq (Go-yq) available → filter + emit one line per entry as fallback
-#   3. neither → raw YAML inside frame with one-line install advisory
+#   2. yq (Go-yq) available -> filter + emit one line per entry as fallback
+#   3. neither -> raw YAML inside frame with one-line install advisory
 #
+# Honors CLAUDE_SKIP_REMINDERS_READOUT=1 or AGENT0_SKIP_REMINDERS_READOUT=1.
 # Always exits 0; never blocks SessionStart.
-#
-# NOTE: priority is python-first rather than yq-first.
-# Helper produces the canonical output; yq path is a structural fallback
-# that emits a simpler shape.
 
 set -uo pipefail
 
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
+INPUT="$(cat 2>/dev/null || true)"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=_memory-hook-lib.sh
+. "$SCRIPT_DIR/_memory-hook-lib.sh"
+
+if [[ "${CLAUDE_SKIP_REMINDERS_READOUT:-0}" = "1" || "${AGENT0_SKIP_REMINDERS_READOUT:-0}" = "1" ]]; then
+  exit 0
+fi
+
+PROJECT_DIR="$(memory_project_dir "$INPUT")"
 YAML_FILE="$PROJECT_DIR/.claude/reminders.yaml"
 HELPER="$PROJECT_DIR/.claude/skills/remind/scripts/reminders-helper.py"
 TODAY="$(date -u +%Y-%m-%d)"
@@ -31,7 +38,7 @@ try_helper() {
   [[ -x "$HELPER" ]] || return 1
   python3 -c "import yaml" 2>/dev/null || return 1
   local out
-  out="$(CLAUDE_PROJECT_DIR="$PROJECT_DIR" python3 "$HELPER" readout 2>/dev/null)"
+  out="$(AGENT0_PROJECT_DIR="$PROJECT_DIR" CLAUDE_PROJECT_DIR="$PROJECT_DIR" python3 "$HELPER" readout 2>/dev/null)"
   if [[ -z "$out" ]]; then
     emit_empty
   else
@@ -59,7 +66,8 @@ try_yq() {
 
 # Tier 3: raw YAML fallback.
 emit_raw_fallback() {
-  printf '(yq/python3+yaml absent — install yq or pip install pyyaml for filtered readout)\n'
+  printf 'reminders-degraded-advisory: python3+PyYAML and yq unavailable; emitting raw .claude/reminders.yaml without filtering\n' >&2
+  printf '(yq/python3+yaml absent; install yq or pip install pyyaml for filtered readout)\n'
   cat "$YAML_FILE"
 }
 
@@ -74,3 +82,5 @@ else
   emit_raw_fallback
 fi
 emit_frame_close
+
+exit 0

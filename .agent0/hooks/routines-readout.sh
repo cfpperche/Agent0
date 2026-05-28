@@ -1,22 +1,27 @@
 #!/usr/bin/env bash
-# .claude/hooks/routines-readout.sh
-# SessionStart hook — surface pending routine queue entries + leader status.
+# SessionStart hook: surface pending routine queue entries + leader status.
 #
 # Emits framed === ROUTINES === block when:
-#   - ≥1 queue entry pending (lists per-slug with age + count + dispatch hint), OR
+#   - >=1 queue entry pending (lists per-slug with age + count + dispatch hint), OR
 #   - .claude/routines/*.md exists AND this repo has no leader entry (advisory)
 # Silent when queue is empty AND leader is designated (or no routines defined).
 #
-# Honors CLAUDE_SKIP_ROUTINES_READOUT=1 to suppress regardless.
+# Honors CLAUDE_SKIP_ROUTINES_READOUT=1 or AGENT0_SKIP_ROUTINES_READOUT=1.
 # POSIX-friendly: bash + grep + ls + date + stat. Falls back gracefully if jq absent.
 
 set -uo pipefail
 
-if [[ "${CLAUDE_SKIP_ROUTINES_READOUT:-0}" = "1" ]]; then
+INPUT="$(cat 2>/dev/null || true)"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=_memory-hook-lib.sh
+. "$SCRIPT_DIR/_memory-hook-lib.sh"
+
+if [[ "${CLAUDE_SKIP_ROUTINES_READOUT:-0}" = "1" || "${AGENT0_SKIP_ROUTINES_READOUT:-0}" = "1" ]]; then
   exit 0
 fi
 
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
+PROJECT_DIR="$(memory_project_dir "$INPUT")"
 ROUTINES_DIR="$PROJECT_DIR/.claude/routines"
 STATE_DIR="$PROJECT_DIR/.claude/.routines-state"
 LEADERS_FILE="$HOME/.claude/.agent0-routines-leaders.json"
@@ -36,12 +41,10 @@ if [[ -d "$ROUTINES_DIR" ]]; then
 
     slug_queue_dir="$STATE_DIR/$base/queue"
     if [[ -d "$slug_queue_dir" ]]; then
-      # Count *.md files; gather oldest unix-ts from filenames.
       count=$(ls -1 "$slug_queue_dir"/*.md 2>/dev/null | wc -l | tr -d ' ')
       if [[ "$count" -gt 0 ]]; then
         slugs_with_queue+=("$base")
         queue_count["$base"]="$count"
-        # Filename format: <unix-ts>.md; min by sort.
         oldest_filename=$(ls -1 "$slug_queue_dir"/*.md 2>/dev/null | sort | head -1)
         oldest_epoch=$(basename "$oldest_filename" .md)
         oldest_ts["$base"]="$oldest_epoch"
@@ -51,7 +54,7 @@ if [[ -d "$ROUTINES_DIR" ]]; then
 fi
 
 # --- Step 2: leader status for THIS repo --------------------------------------
-leader_status="n/a"   # unset → n/a; true → yes; false → no
+leader_status="n/a"   # unset -> n/a; true -> yes; false -> no
 if [[ -f "$LEADERS_FILE" ]]; then
   if command -v jq >/dev/null 2>&1; then
     raw=$(jq -r --arg path "$PROJECT_DIR" '
@@ -90,7 +93,6 @@ fi
 # --- Step 4: emit block --------------------------------------------------------
 NOW_EPOCH=$(date -u +%s)
 
-# Helper: humanize age (seconds → "Nh Mm" or "Nd Mh").
 humanize_age() {
   local secs="$1"
   if [[ "$secs" -lt 3600 ]]; then

@@ -16,7 +16,7 @@ set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 SESSION_HOOK="$AGENT0_ROOT/.claude/hooks/session-start.sh"
-MCP_HOOK="$AGENT0_ROOT/.claude/hooks/mcp-recipes-hint.sh"
+MCP_HOOK="$AGENT0_ROOT/.agent0/hooks/mcp-recipes-hint.sh"
 
 TMPDIR="$(mktemp -d -t spec-012-V5-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT

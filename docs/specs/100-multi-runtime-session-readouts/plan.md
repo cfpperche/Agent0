@@ -29,6 +29,7 @@ Resolutions to the three remaining open questions, each locked at the start of p
 
 **Modify:**
 
+- `.agent0/hooks/_memory-hook-lib.sh` — tighten `memory_project_dir` so a stdin `.cwd` from a nested Codex launch resolves through `git rev-parse --show-toplevel` before falling back to the literal directory, and extend `memory_runtime` so `SessionStart` payloads without `CLAUDE_PROJECT_DIR` classify as Codex. The original plan assumed both behaviors were already provided by the helper; implementation verified the first version did not.
 - `.claude/settings.json` — three `SessionStart.hooks[].command` entries repointed from `.claude/hooks/reminders-readout.sh` / `routines-readout.sh` / `mcp-recipes-hint.sh` to `.agent0/hooks/<same>.sh`. Done when grep `.claude/hooks/reminders-readout\|.claude/hooks/routines-readout\|.claude/hooks/mcp-recipes-hint` against settings.json returns zero matches.
 - `.codex/config.toml.example` — three new commented `[[hooks.SessionStart]]` blocks added under the existing `memory-decay-readout` block, each matching the same shape (matcher `startup|resume|clear|compact`, command resolves via `git rev-parse --show-toplevel`, statusMessage one-liner naming the readout).
 - `.claude/rules/mcp-recipes.md` — § *How it works* updated: the bullet "**`.claude/hooks/mcp-recipes-hint.sh`** (`SessionStart`) — Claude-only hint" becomes runtime-neutral wording ("…fires on both Claude Code via `.claude/settings.json` and Codex CLI via `.codex/config.toml`"). § *Hint output shape* example updates to show the runtime-aware install-pointer line.

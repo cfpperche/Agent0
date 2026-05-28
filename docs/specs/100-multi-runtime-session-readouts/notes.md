@@ -12,30 +12,41 @@ _In-flight design memory for this spec — decisions, deviations, tradeoffs, and
 
 _Choices made where the spec/plan was ambiguous. The decision itself + why this option over others considered in the moment._
 
-### {{YYYY-MM-DD}} — {{author}} — {{one-line title}}
-
-{{free-prose body — what was ambiguous, what was decided, why}}
+_No additional in-flight design decisions recorded._
 
 ## Deviations
 
 _Places where implementation intentionally departed from `plan.md`. The departure + the reason it was necessary or better._
 
-### {{YYYY-MM-DD}} — {{author}} — {{one-line title}}
+### 2026-05-27 — Codex CLI — Helper tightened for subdir SessionStart
 
-{{free-prose body — what the plan said, what was done instead, why}}
+The plan treated `_memory-hook-lib.sh` as already sufficient for subdirectory Codex launches and runtime-aware `SessionStart` detection. Implementation verified `memory_project_dir` returned stdin `.cwd` literally before trying `git rev-parse`, and `memory_runtime` only classified Codex when `tool_name=apply_patch`. The helper was updated so nested `.cwd` resolves to the git root when possible, and `SessionStart` payloads without `CLAUDE_PROJECT_DIR` classify as Codex. This keeps the three readout hooks thin and makes the subdir acceptance test exercise the shared helper directly.
+
+### 2026-05-27 — Codex CLI — Shipped docs avoid concrete spec backlinks
+
+Task 7 asked for a cross-reference to spec 100 and spec 098 in `.claude/rules/mcp-recipes.md`. That rule is shipped to consumer projects by sync-harness, and Agent0's propagation-hygiene discipline forbids concrete `docs/specs/NNN-*` pointers in shipped rules because consumer projects do not receive Agent0's spec corpus. The implementation kept the runtime-neutral operational wording in the rule and left the lineage in this spec's own artifacts instead.
 
 ## Tradeoffs
 
 _Alternatives weighed during implementation (not at plan time). The chosen path + what was given up + why the tradeoff was worth it._
 
-### {{YYYY-MM-DD}} — {{author}} — {{one-line title}}
+### 2026-05-27 — Codex CLI — Live Codex dogfood limited by non-interactive exec
 
-{{free-prose body — options considered in-flight, chosen path, accepted cost}}
+Tried `codex exec --json --ephemeral --dangerously-bypass-hook-trust` against both a temp fixture with only the three SessionStart readouts enabled and this repo's current local Codex config. Both invocations completed successfully and returned the model response, but neither surfaced SessionStart hook output in the JSON stream (`MEMORY DECAY` was absent in the current-repo probe too). Treating that as a fresh interactive preamble check would be misleading: either `codex exec` does not run interactive SessionStart hooks, or it does not expose their stdout in JSONL. The validation therefore relies on direct synthetic SessionStart fixtures plus the real current-session evidence that interactive Codex SessionStart output reaches the preamble (`=== MEMORY DECAY ===` was visible at this turn's start before the new blocks were enabled).
 
 ## Open questions
 
 _Questions surfaced during build that the implementer couldn't resolve alone. Owner (who decides) or path to resolution if known. Promote answered questions to `spec.md` § Open questions or as retroactive acceptance scenarios when the spec is updated._
 
-### {{YYYY-MM-DD}} — {{author}} — {{one-line title}}
+_No unresolved implementation-time questions._
 
-{{free-prose body — the question, why it surfaced, what's blocked on it, who can decide}}
+## Verification notes
+
+### 2026-05-27 — Codex CLI — Fixture and sync evidence
+
+Executed the five new synthetic readout fixtures successfully:
+`for t in .claude/tests/multi-runtime-readouts/*.sh; do bash "$t" || { echo "FAIL: $t"; exit 1; }; done`.
+
+The sync-harness dry-run against a temp consumer project showed the three new files in the managed manifest: `.agent0/hooks/mcp-recipes-hint.sh`, `.agent0/hooks/reminders-readout.sh`, and `.agent0/hooks/routines-readout.sh`.
+
+Additional targeted suites passed: `mcp-recipes/run-all.sh`, all four `mcp-recipes-laravel` tests, `monorepo-stack-detect/run-all.sh`, `runtime-capabilities/run-all.sh`, `instruction-drift/run-all.sh`, `codex-mcp-recipes/run-all.sh`, `memory-multi-runtime/run-all.sh`, and selected harness-sync scenarios `01`, `02`, `05`, `07`, `35`.

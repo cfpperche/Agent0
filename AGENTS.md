@@ -50,7 +50,7 @@ A `PreToolUse(Bash)` preflight (`.claude/hooks/supply-chain-scan.sh`) blocks dep
 
 ## MCP recipes
 
-Opt-in MCP recipes for mature external MCPs (Playwright, Chrome DevTools, DBHub, Laravel Boost, Next.js DevTools, fal.ai); Claude uses `.mcp.json.example`, Codex uses `.codex/config.toml.example`, and only Claude receives the `SessionStart` stack hint. Pure recommendation — activate explicitly from the provider-neutral docs. See `.claude/rules/mcp-recipes.md`.
+Opt-in MCP recipes for mature external MCPs (Playwright, Chrome DevTools, DBHub, Laravel Boost, Next.js DevTools, fal.ai); Claude uses `.mcp.json.example`, Codex uses `.codex/config.toml.example`, and both runtimes can receive the `SessionStart` stack hint when their hooks are enabled. Pure recommendation — activate explicitly from the provider-neutral docs. See `.claude/rules/mcp-recipes.md`.
 
 ## Image generation
 

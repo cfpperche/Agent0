@@ -3,24 +3,24 @@ paths:
   - ".mcp.json"
   - ".mcp.json.example"
   - ".codex/config.toml.example"
-  - ".claude/hooks/mcp-recipes-hint.sh"
+  - ".agent0/hooks/mcp-recipes-hint.sh"
   - ".claude/.browser-state/**"
 ---
 
 # MCP recipes
 
-A curated, opt-in set of MCP server recipes that complement the runtime-introspect capacity. Claude Code activates through `.mcp.json`; Codex CLI activates through project `.codex/config.toml` copied from `.codex/config.toml.example` after the project is trusted in Codex. A `SessionStart` companion hook detects the consumer project's stack and emits a one-block hint naming applicable recipes for Claude sessions. Pure recommendation capacity — no auto-installs, no audit log, no blocks.
+A curated, opt-in set of MCP server recipes that complement the runtime-introspect capacity. Claude Code activates through `.mcp.json`; Codex CLI activates through project `.codex/config.toml` copied from `.codex/config.toml.example` after the project is trusted in Codex. A shared `SessionStart` companion hook detects the consumer project's stack and emits a one-block hint naming applicable recipes for sessions whose runtime hooks are enabled. Pure recommendation capacity — no auto-installs, no audit log, no blocks.
 
 ## How it works
 
-Four artifacts plus one Claude-only hook:
+Five artifacts plus one shared hook:
 
 - **`.claude/rules/mcp-recipes.md`** (this file) — authoritative per-MCP reference.
 - **`.mcp.json.example`** at repo root — Claude Code copy-paste-ready file with all blocks commented out by leading `//` markers. Workflow: `cp .mcp.json.example .mcp.json`, then remove `//` lines on the blocks you want active.
 - **`.codex/config.toml.example`** — Codex MCP-only project config template. Workflow: `cp .codex/config.toml.example .codex/config.toml`, keep secrets in local `.codex/.env.local` by default, then flip `enabled = true` only on recipes you want active. Real `.codex/config.toml` and `.codex/.env.local` stay local and gitignored.
 - **`.claude/tools/codex-local-env.sh`** — Codex launcher that loads `.codex/.env.local` for this project only, then execs `codex -C <repo>`. Use this instead of OS-level exports when different consumer projects need different keys.
 - **`codex mcp add ...`** — Codex CLI operator convenience. In `codex-cli 0.133.0`, `codex mcp add` writes the global `$CODEX_HOME/config.toml` by default; use direct project TOML when the desired scope is the trusted project.
-- **`.claude/hooks/mcp-recipes-hint.sh`** (`SessionStart`) — Claude-only hint. Runs the signal table below and emits a single `=== mcp-recipes ===` block listing applicable recipes when ≥1 signal fires. Silent when no signals match (bare-repository case). Honors `CLAUDE_SKIP_MCP_RECIPES=1` to suppress regardless.
+- **`.agent0/hooks/mcp-recipes-hint.sh`** (`SessionStart`) — shared Claude Code + Codex CLI hint. Runs the signal table below and emits a single `=== mcp-recipes ===` block listing applicable recipes when ≥1 signal fires. Silent when no signals match (bare-repository case). Claude registers it through `.claude/settings.json`; Codex registers it through the commented hook block in `.codex/config.toml.example`. Honors `CLAUDE_SKIP_MCP_RECIPES=1` or `AGENT0_SKIP_MCP_RECIPES=1` to suppress regardless.
 
 The consumer project chooses what to enable. Recipes recommend; the developer activates explicitly.
 
@@ -48,9 +48,9 @@ The list is deliberately small. Same lesson as the runtime-introspect detector a
 
 ### Walk scope
 
-Detection runs at `$CLAUDE_PROJECT_DIR` root AND one level deep into common monorepo workspace dirs. Default set: `apps packages services workspaces` (covers pnpm workspaces, Turborepo, Nx apps, Yarn workspaces — the dominant JS/TS monorepo conventions). For each workspace dir that exists, the hook walks its direct children (depth-1) and runs the same signal table at each. Workspace-detected signals carry a path prefix (e.g. `apps/web/next.config.js`) so the agent can see which workspace fired; root-detected signals stay bare (e.g. `next.config.js`). Recipe set is the deduplicated union across all walked paths.
+Detection runs at the resolved project root AND one level deep into common monorepo workspace dirs. The shared hook resolves the root from `AGENT0_PROJECT_DIR`, `CLAUDE_PROJECT_DIR`, stdin `.cwd`, `git rev-parse --show-toplevel`, then `pwd`, so a Codex session launched from a subdirectory still scans the repository root. Default workspace set: `apps packages services workspaces` (covers pnpm workspaces, Turborepo, Nx apps, Yarn workspaces — the dominant JS/TS monorepo conventions). For each workspace dir that exists, the hook walks its direct children (depth-1) and runs the same signal table at each. Workspace-detected signals carry a path prefix (e.g. `apps/web/next.config.js`) so the agent can see which workspace fired; root-detected signals stay bare (e.g. `next.config.js`). Recipe set is the deduplicated union across all walked paths.
 
-Override via `CLAUDE_MCP_RECIPES_WORKSPACE_DIRS` (space-separated, **replaces** the default — does not merge):
+Override via `CLAUDE_MCP_RECIPES_WORKSPACE_DIRS` or `AGENT0_MCP_RECIPES_WORKSPACE_DIRS` (space-separated, **replaces** the default — does not merge). If both are set, the `CLAUDE_*` name wins to preserve the original public contract:
 
 | Value | Effect |
 | --- | --- |
@@ -326,7 +326,7 @@ Swap is a `.mcp.json` edit (replace the HTTP block with the chosen alternative's
 
 ## Hint output shape
 
-When ≥1 stack signal matches and `CLAUDE_SKIP_MCP_RECIPES` is unset, the SessionStart hook emits a single block:
+When ≥1 stack signal matches and neither skip env var is set, the SessionStart hook emits a single block. Claude Code points at `.mcp.json.example`; Codex CLI points at `.codex/config.toml.example`:
 
 ```
 === mcp-recipes ===
@@ -343,9 +343,10 @@ Signal labels are bare for root-detected files (`next.config.js`) and workspace-
 
 ## Escape hatch
 
-- **`CLAUDE_SKIP_MCP_RECIPES=1`** — suppresses the hint block regardless of stack signals. Use in throwaway scratch sessions or when the suggestions are noise.
+- **`CLAUDE_SKIP_MCP_RECIPES=1`** — canonical skip flag; suppresses the hint block regardless of stack signals. Use in throwaway scratch sessions or when the suggestions are noise.
+- **`AGENT0_SKIP_MCP_RECIPES=1`** — runtime-neutral alias for the same behavior.
 
-That's the only env var for this capacity. No `BLOCK` / `ADVISE_ON_EDIT` variants — pure recommendation has nothing to gate.
+Those are the only disable env vars for this capacity. No `BLOCK` / `ADVISE_ON_EDIT` variants — pure recommendation has nothing to gate.
 
 ## Activation workflow
 
@@ -524,12 +525,12 @@ Chrome DevTools MCP is the right choice when you need **observation**, not **dri
 - **Literal-token config is invalid for fal.ai streamable HTTP in Codex 0.133.0.** Use `bearer_token_env_var = "FAL_KEY"`. The shipped `.codex/config.toml.example` must remain secret-free.
 - **Codex duplicate-ID scope.** A server ID can exist in both user-global `$CODEX_HOME/config.toml` and project `.codex/config.toml`. Avoid defining the same active ID twice unless you have intentionally checked how your Codex version resolves the collision.
 - **Package-name drift.** MCP packages are early-stage (most v0.x). A package can rename or restructure across minor releases. Each recipe section links to the upstream's source-of-truth README; if your `.mcp.json` block stops working after `@latest` resolves to a newer version, **check the upstream README first**, then update the recipe block. v1 of this spec uses `@latest` throughout; consumer projects that hit churn pain can pin manually (e.g. `@playwright/mcp@0.0.30`) — Agent0 does not maintain a version manifest.
-- **Monorepo walk is depth-1 only.** The stack detector scans `CLAUDE_PROJECT_DIR` at the top level AND walks depth-1 into the workspace dirs listed in § Walk scope (default `apps packages services workspaces`). A file at depth-2+ — e.g. `apps/web/nested/deep/next.config.js` — does NOT trigger the hint. Workarounds for deeply nested setups: (a) symlink the relevant config up to a depth-1 child, (b) point `CLAUDE_PROJECT_DIR` at the workspace you're actively working in, (c) `CLAUDE_MCP_RECIPES_WORKSPACE_DIRS="<deeper-roots>"` if the deep parent is a stable convention. The depth cap is intentional — arbitrary tree walks scale poorly on large repos.
-- **Workspace-walk default set is JS/TS-flavored.** Default `apps packages services workspaces` covers pnpm/Turborepo/Nx/Yarn conventions but not Cargo (`crates/`), Python `src/<pkg>/` layouts, or Bazel `//...` paths. Consumer projects with non-JS monorepos point `CLAUDE_MCP_RECIPES_WORKSPACE_DIRS` at their convention. Revisit the default set when/if a Cargo monorepo with embedded JS/Python sub-projects surfaces — until then, scope creep deferred.
+- **Monorepo walk is depth-1 only.** The stack detector scans the resolved project root at the top level AND walks depth-1 into the workspace dirs listed in § Walk scope (default `apps packages services workspaces`). A file at depth-2+ — e.g. `apps/web/nested/deep/next.config.js` — does NOT trigger the hint. Workarounds for deeply nested setups: (a) symlink the relevant config up to a depth-1 child, (b) launch the runtime at the workspace root only when root-level harness state is intentionally out of scope, (c) set `CLAUDE_MCP_RECIPES_WORKSPACE_DIRS="<deeper-roots>"` or `AGENT0_MCP_RECIPES_WORKSPACE_DIRS="<deeper-roots>"` if the deep parent is a stable convention. The depth cap is intentional — arbitrary tree walks scale poorly on large repos.
+- **Workspace-walk default set is JS/TS-flavored.** Default `apps packages services workspaces` covers pnpm/Turborepo/Nx/Yarn conventions but not Cargo (`crates/`), Python `src/<pkg>/` layouts, or Bazel `//...` paths. Consumer projects with non-JS monorepos point `CLAUDE_MCP_RECIPES_WORKSPACE_DIRS` or `AGENT0_MCP_RECIPES_WORKSPACE_DIRS` at their convention. Revisit the default set when/if a Cargo monorepo with embedded JS/Python sub-projects surfaces — until then, scope creep deferred.
 - **Bring-your-own-bundler blind spot.** A consumer project using esbuild / rollup / parcel / swc without React / Vue / Svelte / Vite / Astro deps in `package.json` won't trigger the "browser-stack non-Next" branch. Acceptable — the recipe doc is one click away. The hint is a convenience, not a contract.
 - **Chrome DevTools MCP needs Chrome installed.** Headless CI runners and minimal Linux containers usually lack it. The hint blindly suggests the recipe based on stack; if your environment can't run Chrome, ignore the suggestion and stick with Playwright (which manages its own binaries).
 - **DBHub `DATABASE_URL` false-positive.** A consumer project with `DATABASE_URL=` only in `.env.example` for documentation purposes may not actually use a database yet. The hint will still suggest DBHub. Acceptable since the hint is *suggestion*, not auto-activation — you decide whether to copy the block.
 - **`.mcp.json` is a secret-adjacent file.** DBHub's `DATABASE_URL` is the obvious case, but other MCPs may grow env-var requirements. Treat `.mcp.json` like `.env`: never commit a populated copy with credentials. Use env-var indirection (`"env": {"DATABASE_URL": "${DATABASE_URL}"}` when supported, or set the variable in your shell before launching `claude`).
-- **Settings.json mutation surface.** Consumer projects that have already customised `.claude/settings.json` may hit merge conflicts when adopting this spec via `git pull`. The diff is small (one SessionStart entry); the conflict is mechanical. Same caveat as every other hook-shipping spec.
+- **Settings.json mutation surface.** Consumer projects that have already customised `.claude/settings.json` may hit merge conflicts when pulling hook registration changes. The diff is small; the conflict is mechanical. Same caveat as every other hook-shipping change.
 - **Recipe security docs are NOT duplicated here.** Each MCP has its own security stance (Playwright navigation policy, Chrome CDP scope, DBHub readonly default, Next dev-only positioning). The recipe sections link to upstream; Agent0 does NOT re-summarise (those summaries would rot). A consumer project enabling an MCP should read the linked upstream section.
 - **No new audit log.** This capacity is pure recommendation. The supply-chain / secrets / delegation / runtime-introspect capacities all write JSONL audit lines for their decisions; mcp-recipes writes nothing. If forensic analysis of "which MCPs consumer projects have enabled" ever becomes a real need, that's a follow-up spec.

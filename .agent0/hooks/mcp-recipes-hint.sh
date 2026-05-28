@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# .claude/hooks/mcp-recipes-hint.sh
-# SessionStart hook — detect consumer project's stack and emit MCP recipe suggestions.
+# SessionStart hook: detect consumer project's stack and emit MCP recipe suggestions.
 #
 # Pure recommendation: never blocks, never audits, exit 0 always. Honors
-# CLAUDE_SKIP_MCP_RECIPES=1 to suppress regardless of stack signals. Silent
-# when no signals match (bare-repository case).
+# CLAUDE_SKIP_MCP_RECIPES=1 or AGENT0_SKIP_MCP_RECIPES=1 to suppress
+# regardless of stack signals. Silent when no signals match.
 #
-# Detection runs at $CLAUDE_PROJECT_DIR root AND one level deep into
-# common monorepo workspace dirs (apps/*, packages/*, services/*, workspaces/*).
-# Override the workspace set via CLAUDE_MCP_RECIPES_WORKSPACE_DIRS (space-
-# separated; replaces default; empty string disables walk entirely).
+# Detection runs at the project root AND one level deep into common monorepo
+# workspace dirs (apps/*, packages/*, services/*, workspaces/*). Override the
+# workspace set via CLAUDE_MCP_RECIPES_WORKSPACE_DIRS or
+# AGENT0_MCP_RECIPES_WORKSPACE_DIRS (space-separated; replaces default; empty
+# string disables walk entirely).
 #
 # Signal table (see .claude/rules/mcp-recipes.md for full reference):
 #   Next.js   next.config.{js,ts,mjs,cjs} OR package.json next dep
@@ -20,22 +20,29 @@
 #             database/migrations/ / db/migrate/ / DATABASE_URL in .env.example
 #             -> dbhub
 #   Image-gen assets/brand/ OR assets/generated/ OR README has hero/img markdown
-#             OR .claude/skills/product/ installed
+#             OR .claude/skills/product/ OR .claude/skills/image/ installed
 #             -> fal-ai
 #
 # Reference:
-#   .claude/rules/mcp-recipes.md          — full recipes + workflow
+#   .claude/rules/mcp-recipes.md          - full recipes + workflow
 
 set -uo pipefail
+
+INPUT="$(cat 2>/dev/null || true)"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=_memory-hook-lib.sh
+. "$SCRIPT_DIR/_memory-hook-lib.sh"
 
 # ---------------------------------------------------------------------------
 # Phase 1: User-facing escape hatch
 # ---------------------------------------------------------------------------
-if [ "${CLAUDE_SKIP_MCP_RECIPES:-0}" = "1" ]; then
+if [ "${CLAUDE_SKIP_MCP_RECIPES:-0}" = "1" ] || [ "${AGENT0_SKIP_MCP_RECIPES:-0}" = "1" ]; then
   exit 0
 fi
 
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
+PROJECT_DIR="$(memory_project_dir "$INPUT")"
+RUNTIME="$(memory_runtime "$INPUT")"
 
 # ---------------------------------------------------------------------------
 # Phase 2: Stack signal detection
@@ -45,14 +52,14 @@ have_next=0
 have_browser=0         # react/vue/svelte/vite/astro
 have_db=0
 have_laravel=0         # artisan file OR composer.json with laravel/framework
-have_image_gen=0       # assets/brand/, assets/generated/, README hero img, /product skill
+have_image_gen=0       # assets/brand/, assets/generated/, README hero img, /product or /image skill
 
 # detect_at <abs_path> [<label_prefix>]
 #
 # Scans a single directory for stack signals and mutates the globals
 # `signals`, `have_next`, `have_browser`, `have_db`. The `<label_prefix>` is
 # prepended to each emitted signal label (e.g. "apps/web/" so the user can
-# see which workspace fired). Empty prefix → bare labels (root case).
+# see which workspace fired). Empty prefix -> bare labels (root case).
 #
 # Per-call locality: the "is this dir Next?" check is local so a non-Next
 # workspace (e.g. `apps/api/` with just react) still flips `have_browser`
@@ -61,7 +68,7 @@ detect_at() {
   local path="$1"
   local prefix="${2:-}"
   local local_have_next=0
-  local f d dep next_dep match
+  local f d dep next_dep match laravel_dep
 
   # --- Next.js signal: config files ---
   for f in next.config.js next.config.ts next.config.mjs next.config.cjs; do
@@ -192,23 +199,26 @@ detect_at() {
   fi
 }
 
-# Root scan — bare signal labels, no prefix (the original-version behaviour).
+# Root scan - bare signal labels, no prefix.
 detect_at "$PROJECT_DIR" ""
 
-# Project-only signals (not per-workspace): the /product and /image skills are
-# harness artifacts living under PROJECT_DIR/.claude/skills/, never inside a
-# workspace dir. Probe once at root.
-if [ -d "$PROJECT_DIR/.claude/skills/product" ]; then
-  have_image_gen=1
-  signals="$signals .claude/skills/product/"
-fi
+# Project-only signals (not per-workspace): these skills are harness artifacts
+# living under PROJECT_DIR/.claude/skills/, never inside a workspace dir.
+for d in .claude/skills/product .claude/skills/image; do
+  if [ -d "$PROJECT_DIR/$d" ]; then
+    have_image_gen=1
+    signals="$signals $d/"
+  fi
+done
 
-# Workspace walk — depth-1 scan into common monorepo layouts.
+# Workspace walk - depth-1 scan into common monorepo layouts.
 # Default set: apps packages services workspaces.
-# CLAUDE_MCP_RECIPES_WORKSPACE_DIRS overrides (space-separated; empty string
-# disables walk entirely so detection is root-only).
+# CLAUDE_MCP_RECIPES_WORKSPACE_DIRS is the canonical env var; AGENT0_* is an
+# alias for non-Claude runtimes. Either overrides the default when set.
 if [ -n "${CLAUDE_MCP_RECIPES_WORKSPACE_DIRS+set}" ]; then
   workspace_dirs="$CLAUDE_MCP_RECIPES_WORKSPACE_DIRS"
+elif [ -n "${AGENT0_MCP_RECIPES_WORKSPACE_DIRS+set}" ]; then
+  workspace_dirs="$AGENT0_MCP_RECIPES_WORKSPACE_DIRS"
 else
   workspace_dirs="apps packages services workspaces"
 fi
@@ -269,10 +279,15 @@ fi
 # Phase 4: Emit the hint block
 # ---------------------------------------------------------------------------
 signals_trim="${signals# }"
+if [ "$RUNTIME" = "codex-cli" ]; then
+  install_pointer=".codex/config.toml.example"
+else
+  install_pointer=".mcp.json.example"
+fi
 
 printf '\n=== mcp-recipes ===\n'
 printf 'Stack signals detected: %s\n' "$signals_trim"
-printf 'Suggested MCP recipes (copy + uncomment from .mcp.json.example):\n'
+printf 'Suggested MCP recipes (copy + uncomment from %s):\n' "$install_pointer"
 for r in $recipes; do
   case "$r" in
     next-devtools-mcp)

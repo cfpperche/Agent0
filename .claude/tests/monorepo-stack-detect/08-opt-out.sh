@@ -8,7 +8,7 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-HOOK="$AGENT0_ROOT/.claude/hooks/mcp-recipes-hint.sh"
+HOOK="$AGENT0_ROOT/.agent0/hooks/mcp-recipes-hint.sh"
 
 TMPDIR="$(mktemp -d -t spec-015-V8-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT

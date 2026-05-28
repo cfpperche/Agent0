@@ -2,19 +2,29 @@
 # Shared helpers for Agent0 project-memory hooks.
 
 memory_project_dir() {
-  local input="$1" cwd=""
+  local input="$1" cwd="" candidate="" root=""
   if command -v jq >/dev/null 2>&1 && [ -n "$input" ]; then
     cwd="$(printf '%s' "$input" | jq -r '.cwd // empty' 2>/dev/null || true)"
   fi
   if [ -n "${AGENT0_PROJECT_DIR:-}" ]; then
-    printf '%s' "$AGENT0_PROJECT_DIR"
+    candidate="$AGENT0_PROJECT_DIR"
   elif [ -n "${CLAUDE_PROJECT_DIR:-}" ]; then
-    printf '%s' "$CLAUDE_PROJECT_DIR"
+    candidate="$CLAUDE_PROJECT_DIR"
   elif [ -n "$cwd" ]; then
-    printf '%s' "$cwd"
+    candidate="$cwd"
   else
-    git rev-parse --show-toplevel 2>/dev/null || pwd
+    candidate="$(pwd)"
   fi
+
+  if [ -n "$candidate" ] && [ -d "$candidate" ]; then
+    root="$(cd "$candidate" 2>/dev/null && git rev-parse --show-toplevel 2>/dev/null || true)"
+    if [ -n "$root" ]; then
+      printf '%s' "$root"
+      return 0
+    fi
+  fi
+
+  printf '%s' "$candidate"
 }
 
 memory_relpath() {
@@ -104,10 +114,18 @@ memory_actor() {
 }
 
 memory_runtime() {
-  local input="$1" tool_name
+  local input="$1" tool_name hook_event source
   tool_name="$(printf '%s' "$input" | jq -r '.tool_name // ""' 2>/dev/null || true)"
   case "$tool_name" in
     apply_patch) printf 'codex-cli' ;;
-    *) printf 'claude-code' ;;
+    *)
+      hook_event="$(printf '%s' "$input" | jq -r '.hook_event_name // ""' 2>/dev/null || true)"
+      source="$(printf '%s' "$input" | jq -r '.source // ""' 2>/dev/null || true)"
+      if [ -z "${CLAUDE_PROJECT_DIR:-}" ] && { [ "$hook_event" = "SessionStart" ] || [ -n "$source" ] || [ -n "$input" ] || [ -n "${AGENT0_PROJECT_DIR:-}" ]; }; then
+        printf 'codex-cli'
+      else
+        printf 'claude-code'
+      fi
+      ;;
   esac
 }

@@ -8,7 +8,7 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-**Multi-runtime hook migration — porting `.claude/hooks/*` to `.agent0/` hook-by-hook.** 106 delegation + 107 governance + **108 secrets-preflight all SHIPPED** (live-dogfooded both runtimes). 108 is on branch `feat/108-secrets-preflight-multi-runtime` — being committed + pushed this session.
+**Multi-runtime hook migration — porting `.claude/hooks/*` to `.agent0/` hook-by-hook.** 106 delegation + 107 governance + **108 secrets-preflight all SHIPPED + merged to `main`** (live-dogfooded both runtimes). 108 merged fast-forward (`8ccaf20 → 7d0ff53`) and its `feat/108-…` branch was deleted (local + remote). Working tree clean except the pre-existing untracked `docs/specs/091-sdd-debate-runner/`.
 
 - **108 done** — `git mv .claude/hooks/secrets-scan.sh → .agent0/hooks/secrets-preflight.sh`; runtime-aware override output via `memory_runtime()`; root via `memory_project_dir()`; silent non-commit; audit → `.agent0/secrets-audit.jsonl` + `runtime` field. **V8 live dogfood PASS on both runtimes (2026-05-28).** Headline finding: the Claude registration's `if: "Bash(git commit *|…)"` filter used **pipe-alternation, which CC does not support** (`|` is a shell separator) → the preflight was DORMANT (zero `claude-code` rows ever); harness tests + direct invocation passed while it was dead because neither exercises CC's real `if` evaluation. Fixed → bare `"matcher": "Bash"`; re-verified live (block + override end-to-end). Rule/spec/notes/memory all reconciled.
 

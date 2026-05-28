@@ -12,7 +12,7 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-HOOK="$AGENT0_ROOT/.claude/hooks/delegation-stop.sh"
+HOOK="$AGENT0_ROOT/.agent0/hooks/delegation-stop.sh"
 
 if [ "$(id -u)" = "0" ]; then
   printf 'PASS: %s (skipped — running as root, chmod -w is a no-op)\n' "$(basename "$0")"
@@ -20,10 +20,10 @@ if [ "$(id -u)" = "0" ]; then
 fi
 
 TMP="$(mktemp -d -t spec-061-07-XXXXXX)"
-trap 'chmod u+w "$TMP/.claude/delegation-audit.jsonl" 2>/dev/null || true; rm -rf "$TMP"' EXIT
+trap 'chmod u+w "$TMP/.agent0/delegation-audit.jsonl" 2>/dev/null || true; rm -rf "$TMP"' EXIT
 
-mkdir -p "$TMP/.claude"
-AUDIT="$TMP/.claude/delegation-audit.jsonl"
+mkdir -p "$TMP/.agent0"
+AUDIT="$TMP/.agent0/delegation-audit.jsonl"
 
 AGENT_ID="agent-test-0007"
 TUID="toolu_TEST0000000000000007"

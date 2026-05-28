@@ -147,7 +147,7 @@ One JSONL line per memory write. Five `event_type` values:
 
 ### Per-machine journal (gitignored)
 
-`.agent0/.memory-events.jsonl` is **gitignored** — per-machine cache, sibling to `.claude/delegation-audit.jsonl` and `.agent0/.runtime-state/`. A git-tracked journal would produce merge conflicts on every concurrent commit across a multi-contributor consumer project; entry files themselves are git-tracked and carry the durable record via `git log --follow`. On a new leader machine, run `bash .agent0/tools/memory-backfill.sh` once to seed the journal with one `add` event per existing entry (`ts` derived from git-introduction time). Idempotent — re-running on a populated journal is a no-op.
+`.agent0/.memory-events.jsonl` is **gitignored** — per-machine cache, sibling to `.agent0/delegation-audit.jsonl` and `.agent0/.runtime-state/`. A git-tracked journal would produce merge conflicts on every concurrent commit across a multi-contributor consumer project; entry files themselves are git-tracked and carry the durable record via `git log --follow`. On a new leader machine, run `bash .agent0/tools/memory-backfill.sh` once to seed the journal with one `add` event per existing entry (`ts` derived from git-introduction time). Idempotent — re-running on a populated journal is a no-op.
 
 The first invocation of the journal hook on an empty journal emits a one-time `memory-journal-advisory: journal empty; run bash .agent0/tools/memory-backfill.sh` to mitigate the otherwise-silent add-vs-update misclassification.
 
@@ -159,7 +159,7 @@ A human running `vim .agent0/memory/MEMORY.md && git commit` bypasses the tool-s
 
 - `.agent0/hooks/memory-events-journal.sh` / `.agent0/hooks/memory-index-gate.sh` — implementations
 - `.agent0/tools/memory-project.sh` / `.agent0/tools/memory-backfill.sh` — operator commands
-- `.claude/rules/delegation.md` § *Advisories* / *Audit log* — `memory-journal-advisory:` follows the project advisory grammar; the JSONL shape mirrors `.claude/delegation-audit.jsonl`
+- `.claude/rules/delegation.md` § *Advisories* / *Audit log* — `memory-journal-advisory:` follows the project advisory grammar; the JSONL shape mirrors `.agent0/delegation-audit.jsonl`
 
 ## Cap / query / decay
 

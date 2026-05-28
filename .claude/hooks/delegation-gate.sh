@@ -45,7 +45,9 @@ MODEL="$(printf '%s' "$INPUT" | jq -r '.tool_input.model // ""')"
 ISOLATION="$(printf '%s' "$INPUT" | jq -r '.tool_input.isolation // ""')"
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
-AUDIT_LOG="$PROJECT_DIR/.claude/delegation-audit.jsonl"
+# Single canonical multi-runtime audit log (spec 106 hard cutover; formerly
+# under .claude/). Rows carry schema_version/runtime/event discriminators.
+AUDIT_LOG="$PROJECT_DIR/.agent0/delegation-audit.jsonl"
 
 # --- Phase 1: Override marker ---
 override_reason=""
@@ -255,6 +257,9 @@ else
 fi
 
 audit_line="$(jq -c -n \
+  --argjson schema_version 1 \
+  --arg runtime "claude-code" \
+  --arg event "dispatch" \
   --arg ts "$ts" \
   --arg session_id "$SESSION_ID" \
   --arg tool_use_id "$TOOL_USE_ID" \
@@ -269,7 +274,7 @@ audit_line="$(jq -c -n \
   --argjson skill_directed "$skill_directed_field" \
   --argjson escalation_signals "$signals_json" \
   --arg task_summary "$task_summary" \
-  '{ts:$ts, session_id:$session_id, tool_use_id:$tool_use_id, subagent_type:$subagent_type, model:$model, model_specified:$model_specified, isolation:$isolation, formatted:$formatted, override:$override, advisory_emitted:$advisory_emitted, advisory_kind:$advisory_kind, skill_directed:$skill_directed, escalation_signals:$escalation_signals, task_summary:$task_summary}')"
+  '{schema_version:$schema_version, runtime:$runtime, event:$event, ts:$ts, session_id:$session_id, tool_use_id:$tool_use_id, subagent_type:$subagent_type, model:$model, model_specified:$model_specified, isolation:$isolation, formatted:$formatted, override:$override, advisory_emitted:$advisory_emitted, advisory_kind:$advisory_kind, skill_directed:$skill_directed, escalation_signals:$escalation_signals, task_summary:$task_summary}')"
 
 printf '%s\n' "$audit_line" >> "$AUDIT_LOG"
 

@@ -4,7 +4,7 @@ description: Codex CLI lifecycle hook surface (10 events) and the payload-shape 
 metadata:
   type: reference
   created_at: '2026-05-27T15:35:00-03:00'
-  last_accessed: '2026-05-27'
+  last_accessed: '2026-05-28'
   confirmed_count: 0
 ---
 
@@ -52,6 +52,16 @@ The biggest blocker for a 1:1 hook port is the **tool-name catalog**:
 A hook that matches on `Edit|Write|MultiEdit` in Claude's `.claude/settings.json` will not fire in Codex. The Codex equivalent registers on `apply_patch` (and possibly `Bash` for non-patch edits) and the script discovers affected paths by parsing `tool_input` patch text or running `git diff --name-only`.
 
 Other tool-name differences: Claude `Glob` / `Grep` ≠ Codex's tool surface (Codex relies more on Bash for these); MCP tools follow `mcp__<server>__<tool>` naming on both runtimes — identical.
+
+## Subagent dispatch surface (verified 2026-05-28 against official docs)
+
+Codex **does** have subagents — the `runtime-capabilities.md` matrix cell `delegation/subagents | Codex = unsupported` is **stale** (same drift class as the spec 099 lifecycle-hooks cell). Verified facts:
+
+- **Dispatch exists, but is conversational, not a tool.** Codex spawns subagents only on explicit request ("spawn two agents", "delegate this in parallel", `/agent`). There is **no `Agent` tool** with a structured `tool_input.prompt` — so there is nothing field-shaped to validate at dispatch time the way Claude's `delegation-gate.sh` validates the 5-field handoff against `tool_input.prompt`. Subagents carry `agent_id`/`agent_type`, not a tool-name. `agents.max_depth` defaults to `1` (a child can spawn, deeper nesting blocked).
+- **`SubagentStart` CANNOT block.** This is the load-bearing asymmetry for any delegation-gate port. Docs verbatim: *"continue: false is parsed for compatibility, but it doesn't stop the subagent from starting."* Exit 2 / `continue:false` are accepted syntactically but do **not** prevent launch. Claude's `PreToolUse(Agent)` blocks (exit 2 → re-prompt); Codex has no pre-dispatch blocking equivalent. A "gate" on Codex can only be a non-blocking advisory or convention-only discipline.
+- **`SubagentStop` is symmetric and portable.** Fires on both runtimes with near-identical payloads (`agent_id`/`agent_type`). Pure observation/audit — no blocking semantics needed — so a close-row audit hook ports cleanly. The Claude-specific part is only the dispatch↔stop bridge (`tool_use_id` ↔ sidecar `.meta.json`); Codex correlates via `agent_id` directly.
+
+Canonical sources: <https://developers.openai.com/codex/subagents> + <https://developers.openai.com/codex/hooks>. This finding drives spec 106 (delegation-hooks-multi-runtime).
 
 ## Matcher syntax: identical
 

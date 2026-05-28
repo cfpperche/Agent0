@@ -112,7 +112,7 @@ Filenames are derived from the prompt: `<YYYY-MM-DD>-<kebab-first-5-words>.png` 
 | `output_path` | string | Relative to repo root |
 | `dimensions` | string | e.g. `1024x1024` |
 
-The four core fields (`ts`, `session_id`, `model`, `cost_usd`) align with `.claude/delegation-audit.jsonl` and `.claude/secrets-audit.jsonl` field naming so cross-domain forensics queries work: `jq -c 'select(.session_id == "X")' assets/generated/.manifest.jsonl .claude/delegation-audit.jsonl` returns every image call + every Agent dispatch in that session.
+The four core fields (`ts`, `session_id`, `model`, `cost_usd`) align with `.agent0/delegation-audit.jsonl` and `.claude/secrets-audit.jsonl` field naming so cross-domain forensics queries work: `jq -c 'select(.session_id == "X")' assets/generated/.manifest.jsonl .agent0/delegation-audit.jsonl` returns every image call + every Agent dispatch in that session.
 
 The manifest is append-only by convention. No retention cap in v1 — image-gen frequency is much lower than delegation events, so growth is acceptable. If forensics becomes painful, a future spec adds rotation.
 

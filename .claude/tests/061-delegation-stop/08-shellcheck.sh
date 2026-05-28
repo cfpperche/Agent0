@@ -9,23 +9,26 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-STOP_HOOK="$AGENT0_ROOT/.claude/hooks/delegation-stop.sh"
+# Three delegation hooks after spec 106: gate stays in .claude/ (Claude-only,
+# blocking); stop + start-audit moved to .agent0/ (shared multi-runtime).
+STOP_HOOK="$AGENT0_ROOT/.agent0/hooks/delegation-stop.sh"
+START_HOOK="$AGENT0_ROOT/.agent0/hooks/delegation-start-audit.sh"
 GATE_HOOK="$AGENT0_ROOT/.claude/hooks/delegation-gate.sh"
 
-for h in "$STOP_HOOK" "$GATE_HOOK"; do
+for h in "$STOP_HOOK" "$START_HOOK" "$GATE_HOOK"; do
   [ -f "$h" ] || { printf 'FAIL: hook not found: %s\n' "$h"; exit 1; }
 done
 
 if command -v shellcheck >/dev/null 2>&1; then
   sc_exit=0
-  shellcheck -S warning "$STOP_HOOK" "$GATE_HOOK" || sc_exit=$?
+  shellcheck -S warning "$STOP_HOOK" "$START_HOOK" "$GATE_HOOK" || sc_exit=$?
   if [ "$sc_exit" -ne 0 ]; then
     printf 'FAIL: shellcheck reported warnings/errors (exit %d)\n' "$sc_exit"
     exit 1
   fi
   printf 'PASS: %s (shellcheck clean)\n' "$(basename "$0")"
 else
-  for h in "$STOP_HOOK" "$GATE_HOOK"; do
+  for h in "$STOP_HOOK" "$START_HOOK" "$GATE_HOOK"; do
     if ! bash -n "$h"; then
       printf 'FAIL: bash -n syntax error in %s\n' "$h"
       exit 1

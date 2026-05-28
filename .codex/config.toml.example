@@ -79,6 +79,23 @@
 # command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/memory-events-journal.sh"'
 # statusMessage = "Projecting project-memory index"
 
+# Delegation observability (spec 106). SubagentStart audits the dispatch
+# (non-blocking — Codex cannot block a spawn); SubagentStop appends the close
+# row. Both write the single canonical .agent0/delegation-audit.jsonl. The
+# 5-field handoff discipline itself is convention-only on Codex (no hook
+# enforces it — see .claude/rules/delegation.md § Codex: convention-only).
+# [[hooks.SubagentStart]]
+# [[hooks.SubagentStart.hooks]]
+# type = "command"
+# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/delegation-start-audit.sh"'
+# statusMessage = "Auditing subagent dispatch"
+
+# [[hooks.SubagentStop]]
+# [[hooks.SubagentStop.hooks]]
+# type = "command"
+# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/delegation-stop.sh"'
+# statusMessage = "Closing delegation audit row"
+
 [mcp_servers.playwright]
 enabled = false
 command = "npx"

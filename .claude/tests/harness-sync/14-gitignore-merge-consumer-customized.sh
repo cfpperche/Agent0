@@ -25,7 +25,7 @@ printf '%s\n' \
   '# Claude Code state' \
   '.agent0/.runtime-state/' \
   '.claude/secrets-audit.jsonl' \
-  '.claude/delegation-audit.jsonl' \
+  '.agent0/delegation-audit.jsonl' \
   '.agent0/.session-state/' \
   > "$SRC/.gitignore"
 printf '{"hooks":{}}\n' > "$SRC/.claude/settings.json"
@@ -72,7 +72,7 @@ for entry in '/vendor' '/node_modules' '.env'; do
 done
 
 # Assert (b): missing Agent0 entries appended.
-for entry in '.agent0/.runtime-state/' '.claude/secrets-audit.jsonl' '.claude/delegation-audit.jsonl'; do
+for entry in '.agent0/.runtime-state/' '.claude/secrets-audit.jsonl' '.agent0/delegation-audit.jsonl'; do
   if ! grep -Fxq "$entry" "$CONSUMER/.gitignore"; then
     printf 'FAIL(b): Agent0 entry %s missing from merged file\n' "$entry"
     cat "$CONSUMER/.gitignore"

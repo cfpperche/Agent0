@@ -129,7 +129,7 @@ Result: consumer-only hook entries (e.g. a consumer-specific custom hook) are pr
 
 ## .gitignore merge strategy
 
-`.gitignore` is **additively merged**, not hash-compared. Agent0's `.gitignore` carries harness-runtime entries (`.agent0/.runtime-state/`, `.claude/secrets-audit.jsonl`, `.claude/delegation-audit.jsonl`, `.agent0/.session-state/`, etc.) that MUST exist in every consumer project for the harness to run cleanly. Consumer projects typically ship stack-canonical `.gitignore` files (Laravel's `/vendor`, Next.js's `/node_modules`, Cargo's `/target`, etc.) that would be lost under naive overwrite. Algorithm:
+`.gitignore` is **additively merged**, not hash-compared. Agent0's `.gitignore` carries harness-runtime entries (`.agent0/.runtime-state/`, `.claude/secrets-audit.jsonl`, `.agent0/delegation-audit.jsonl`, `.agent0/.session-state/`, etc.) that MUST exist in every consumer project for the harness to run cleanly. Consumer projects typically ship stack-canonical `.gitignore` files (Laravel's `/vendor`, Next.js's `/node_modules`, Cargo's `/target`, etc.) that would be lost under naive overwrite. Algorithm:
 
 1. If consumer project has no `.gitignore` → copy Agent0's verbatim via `process_file` (counted as `copied`, NOT `merged`).
 2. Else extract non-comment, non-empty, trimmed lines from both files as the entry set; compute `comm -23` to find Agent0 entries the consumer project is missing.

@@ -22,7 +22,7 @@ printf '%s\n' \
   '# Claude Code state' \
   '.agent0/.runtime-state/' \
   '.claude/secrets-audit.jsonl' \
-  '.claude/delegation-audit.jsonl' \
+  '.agent0/delegation-audit.jsonl' \
   > "$SRC/.gitignore"
 printf '{"hooks":{}}\n' > "$SRC/.claude/settings.json"
 printf '# CLAUDE\n\n## Compact Instructions\n' > "$SRC/CLAUDE.md"

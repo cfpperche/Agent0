@@ -9,13 +9,13 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-HOOK="$AGENT0_ROOT/.claude/hooks/delegation-stop.sh"
+HOOK="$AGENT0_ROOT/.agent0/hooks/delegation-stop.sh"
 
 TMP="$(mktemp -d -t spec-061-04-XXXXXX)"
 trap 'rm -rf "$TMP"' EXIT
 
-mkdir -p "$TMP/.claude"
-AUDIT="$TMP/.claude/delegation-audit.jsonl"
+mkdir -p "$TMP/.agent0"
+AUDIT="$TMP/.agent0/delegation-audit.jsonl"
 
 AGENT_ID="agent-test-0004"
 TUID="toolu_TEST0000000000000004"
@@ -27,7 +27,7 @@ printf '%s\n' '{"type":"assistant","message":[{"type":"text","text":"orphan"}]}'
 printf '%s\n' "{\"toolUseId\":\"$TUID\",\"agentType\":\"$ATYPE\"}" >"$TMP/agent-${AGENT_ID}.meta.json"
 
 # Seed an UNRELATED dispatch row — proves the hook does not false-match.
-printf '%s\n' '{"ts":"2026-01-01T00:00:00Z","session_id":"some-other-session","tool_use_id":"toolu_UNRELATED","subagent_type":"general-purpose","task_summary":"unrelated"}' >"$AUDIT"
+printf '%s\n' '{"event":"dispatch","ts":"2026-01-01T00:00:00Z","session_id":"some-other-session","tool_use_id":"toolu_UNRELATED","subagent_type":"general-purpose","task_summary":"unrelated"}' >"$AUDIT"
 
 PAYLOAD="$(jq -cn --arg s "$SESSION" --arg a "$AGENT_ID" --arg t "$ATYPE" --arg tr "$TRANSCRIPT" \
   '{session_id:$s,agent_id:$a,agent_type:$t,agent_transcript_path:$tr,last_assistant_message:"orphaned stop",stop_hook_active:false,hook_event_name:"SubagentStop"}')"

@@ -9,13 +9,13 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-HOOK="$AGENT0_ROOT/.claude/hooks/delegation-stop.sh"
+HOOK="$AGENT0_ROOT/.agent0/hooks/delegation-stop.sh"
 
 TMP="$(mktemp -d -t spec-061-05-XXXXXX)"
 trap 'rm -rf "$TMP"' EXIT
 
-mkdir -p "$TMP/.claude"
-AUDIT="$TMP/.claude/delegation-audit.jsonl"
+mkdir -p "$TMP/.agent0"
+AUDIT="$TMP/.agent0/delegation-audit.jsonl"
 : >"$AUDIT"
 
 # (a) empty stdin

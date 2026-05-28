@@ -29,6 +29,14 @@ Canonical template (verbatim from `delegation-gate.sh` stderr):
 
 **Budgeted artifacts and the overshoot cascade** — when a brief declares a size target for the artifact the sub-agent produces, CONSTRAINTS MUST inline the two-threshold cascade per `.claude/rules/artifact-budgets.md`: `target_max × 1.2 → partial-result with oversize_reason` (soft, sub-agent has agency); `target_max × 1.8 → STOP, emit partial-result, no further production` (hard, no agency). Trim-loop and re-emit-at-smaller-scope are forbidden in every zone above 1.0× — both are "redo to fit budget" antipatterns that hide the scope-mismatch signal. Override marker reuses the project's grammar with `budget-exempt:` prefix (mirrors `tdd-exempt:` here). Rule-only in v1.
 
+## Codex: convention-only
+
+The 5-field handoff is **enforced by a blocking hook on Claude** (`delegation-gate.sh` at `PreToolUse(Agent)`, exit 2 → re-prompt). On **Codex it is convention-only** — there is no enforcement hook, because no Codex hook surface can block a subagent spawn. This was verified against the official Codex hooks docs (2026-05-28): `SubagentStart` is observational (`continue:false` "doesn't stop the subagent from starting"); `PreToolUse` never fires on a spawn (spawn is not a tool call); `PermissionRequest` does not fire on spawn and is an approval allow/deny, not a field validator. See `.agent0/memory/codex-cli-hooks.md` § Subagent dispatch surface.
+
+So on Codex the discipline binds the **orchestrator**, not a gate: when composing a subagent dispatch (`/agent`, "spawn N agents"), the orchestrator self-applies `TASK / CONTEXT / CONSTRAINTS / DELIVERABLE-or-DONE_WHEN` in the natural-language instruction **because this rule says so**. The `.agent0/hooks/delegation-start-audit.sh` hook records that a dispatch happened (`event: "subagent-start"`) but, because the Codex `SubagentStart` payload carries no brief text, it cannot check compliance — it logs `brief_observable: false` / `formatted: null` and asserts nothing about the contract.
+
+This is the exact precedent of `.claude/rules/user-prompt-framing.md`: when the actor being disciplined is the one composing the next message and there is no pre-submit blocker, Agent0 uses a **rule-only self-discipline layer** rather than pretending a post-hoc advisory is enforcement. The audit hook is observability; the rule is the discipline.
+
 ## Why DONE_WHEN exists (the /goal connection)
 
 DONE_WHEN is the local materialization of the same primitive that Codex CLI and Claude Code (v2.1.139+, May 2026) ship as `/goal` — a done-state declared up front so the agent works toward a contract instead of a sequence of prompts. The frame is **contract, not promise**: a goal statement without a verifier is just a fancier prompt.
@@ -62,25 +70,31 @@ The validator may also append a `warnings` array to its JSON output on stack-det
 
 ## Audit log
 
-`.claude/delegation-audit.jsonl` (gitignored, append-only). Read with `jq -c .` or `tail -f`. Blocked calls are NOT logged — only allowed dispatches reach the audit phase. Two row shapes coexist in the same file, distinguished by the `event` field (absent on dispatch rows, `"subagent-stop"` on close rows).
+`.agent0/delegation-audit.jsonl` (gitignored, append-only) — the single canonical log for **both** runtimes (hard cutover from the former `.agent0/delegation-audit.jsonl`, removed entirely; no legacy-read). Read with `jq -c .` or `tail -f`. Blocked calls are NOT logged — only allowed dispatches reach the audit phase. Every row carries three discriminator fields: `schema_version` (currently `1`), `runtime` (`"claude-code"` | `"codex-cli"`), and `event` (`"dispatch"` | `"subagent-start"` | `"subagent-stop"`). Three row shapes coexist, keyed by `event` + `runtime`: Claude dispatch rows, Codex `subagent-start` rows, and shared `subagent-stop` close rows.
 
 ### Dispatch row (written by `delegation-gate.sh` at PreToolUse(Agent))
 
-Fourteen fields: `ts`, `session_id`, `tool_use_id`, `subagent_type`, `model`, `model_specified`, `isolation`, `formatted`, `override`, `advisory_emitted`, `advisory_kind`, `skill_directed`, `escalation_signals`, `task_summary`. `advisory_kind` is one of `"model-discipline"`, `"escalation"`, or `null` when no advisory fired — the bool `advisory_emitted` answers "did anything fire", the string `advisory_kind` answers "which one". `skill_directed` is the slug extracted from a `# SKILL-DIRECTED: <slug>` marker in the prompt body (string, or `null` when the marker is absent or its slug failed validation) — same string-or-null shape as `override`; see § Advisories for what the marker suppresses. `tool_use_id` is the harness-supplied `toolu_*` identifier and acts as the join key into the close row (see below) — this field is the prerequisite for exact dispatch↔stop correlation under parallel same-type dispatches. `isolation` mirrors the value of `tool_input.isolation` (e.g. `"worktree"` or `""` when unset) — this field provides forensic visibility into worktree-isolation choices; see § Worktree isolation below.
+Fourteen fields: `ts`, `session_id`, `tool_use_id`, `subagent_type`, `model`, `model_specified`, `isolation`, `formatted`, `override`, `advisory_emitted`, `advisory_kind`, `skill_directed`, `escalation_signals`, `task_summary`. `advisory_kind` is one of `"model-discipline"`, `"escalation"`, or `null` when no advisory fired — the bool `advisory_emitted` answers "did anything fire", the string `advisory_kind` answers "which one". `skill_directed` is the slug extracted from a `# SKILL-DIRECTED: <slug>` marker in the prompt body (string, or `null` when the marker is absent or its slug failed validation) — same string-or-null shape as `override`; see § Advisories for what the marker suppresses. `tool_use_id` is the harness-supplied `toolu_*` identifier and acts as the join key into the close row (see below) — this field is the prerequisite for exact dispatch↔stop correlation under parallel same-type dispatches. `isolation` mirrors the value of `tool_input.isolation` (e.g. `"worktree"` or `""` when unset) — this field provides forensic visibility into worktree-isolation choices; see § Worktree isolation below. As of spec 106 every dispatch row also carries the three discriminators `schema_version` (`1`), `runtime` (`"claude-code"`), and `event` (`"dispatch"`).
 
-### Close row (written by `delegation-stop.sh` at SubagentStop)
+### Close row (written by `.agent0/hooks/delegation-stop.sh` at SubagentStop — shared multi-runner)
 
-Thirteen fields: `ts`, `event` (always `"subagent-stop"`), `session_id`, `agent_id`, `tool_use_id`, `agent_type`, `exit`, `duration_ms`, `edit_count`, `last_assistant_message_head`, `agent_transcript_path`, `correlation`, `stop_hook_active`. Denormalised — `agent_type` mirrors the dispatch row's `subagent_type` and the 200-char `last_assistant_message_head` is inlined so standalone `jq` queries (`select(.event == "subagent-stop" and .exit == "loop-budget-exceeded")`) work without a join.
+Shared across both runtimes. Carries the three discriminators (`schema_version`, `runtime`, `event` = `"subagent-stop"`) plus: `ts`, `session_id`, `agent_id`, `tool_use_id`, `agent_type`, `exit`, `duration_ms`, `edit_count`, `last_assistant_message_head`, `agent_transcript_path`, `correlation`, `stop_hook_active`. Denormalised — `agent_type` mirrors the dispatch/start row's type and the 200-char `last_assistant_message_head` is inlined so standalone `jq` queries (`select(.event == "subagent-stop" and .exit == "loop-budget-exceeded")`) work without a join.
 
-- `exit` — `"ok"` for normal completion, `"loop-budget-exceeded"` when the per-agent `consecutive_failures` state file (maintained by the post-edit validator) ≥ `CLAUDE_DELEGATION_LOOP_BUDGET` (default 5)
-- `duration_ms` — client-computed (close_ts − dispatch_ts), `null` when the dispatch row can't be located (orphan stop)
-- `edit_count` — counted from the per-sub-agent transcript JSONL (`agent_transcript_path`) by filtering `assistant.message[].tool_use` blocks with `.name ∈ {Edit, Write, MultiEdit}`. `null` on any read/jq error
-- `correlation` — `"tool_use_id"` when the bridge resolved via the sidecar `.meta.json.toolUseId` lookup (preferred), `"heuristic-session-type"` for the `(session_id, agent_type)` fallback under missing sidecar, `"unmatched"` when no dispatch row matched at all
-- `agent_transcript_path` — pointer to the full per-sub-agent transcript for verbose forensics
+The hook branches on `runtime`. The fields split into three tiers:
+
+- **runtime-neutral** (both): `ts`, `runtime`, `session_id`, `agent_id`, `agent_type`, `event`.
+- **correlation** (runtime-specific): `correlation` — `"tool_use_id"` (Claude, bridge resolved via the sidecar `.meta.json.toolUseId` lookup), `"heuristic-session-type"` (Claude fallback under missing sidecar), `"agent_id-direct"` (**Codex** — the close row pairs to its `subagent-start` row by matching `agent_id`), `"unmatched"` (no prior dispatch/start row found — applies to both runtimes; on Codex, an `agent_id` with no matching start row stays `unmatched`, surfacing hook-disabled starts / crashes / partial rollouts).
+- **best-effort / null** (Claude-rich, Codex-null): `exit` — `"ok"` / `"loop-budget-exceeded"` (the `consecutive_failures` state lives at `.claude/.delegation-state/`, a Claude-only loop-budget counter; **`null` on Codex** — loop-budget enforcement is deferred there); `edit_count` — counted from the Claude per-sub-agent transcript `tool_use` blocks (`.name ∈ {Edit, Write, MultiEdit}`), **`null` on Codex** (no equivalent transcript edit attribution); `duration_ms` — client-computed (close_ts − start/dispatch_ts), `null` when no prior row is located; `agent_transcript_path` — Claude transcript pointer, may be empty on Codex.
 
 ### Bridge mechanism (dispatch ↔ stop)
 
 `PreToolUse(Agent)` payload carries `tool_use_id` (no `agent_id` yet — sub-agent doesn't exist), while `SubagentStop` payload carries `agent_id` (no `tool_use_id`). The two identifiers are disjoint. Bridge: Claude Code writes a per-sub-agent transcript at `<cc-storage>/<session_id>/subagents/agent-<agent_id>.jsonl` with a sidecar `agent-<agent_id>.meta.json` that contains `{ agentType, description, toolUseId }`. The `toolUseId` field matches the dispatch row's `tool_use_id`. The close hook reads the sidecar at SubagentStop time to obtain both identifiers and joins exactly.
+
+**Codex has no sidecar — and needs none.** Codex's `SubagentStart`/`SubagentStop` payloads both carry `agent_id` directly, so the close hook pairs to the `subagent-start` row by matching `agent_id` (correlation `"agent_id-direct"`). Simpler than the Claude bridge, not harder. Codex `SubagentStart` carries **no brief/instruction text** (verified — fields are `session_id`, `turn_id`, `transcript_path`, `cwd`, `hook_event_name`, `model`, `permission_mode`, `agent_id`, `agent_type`), so the start-audit row records `brief_observable: false` / `formatted: null` — it observes that a dispatch happened, never whether the 5-field contract was followed (that discipline is convention-only on Codex — see § Codex: convention-only).
+
+### Codex `subagent-start` row (written by `.agent0/hooks/delegation-start-audit.sh` at SubagentStart)
+
+Codex-only (Claude's "start" record is the dispatch row from `delegation-gate.sh`). Non-blocking — `SubagentStart` cannot stop a spawn. Fields: the three discriminators (`schema_version`, `runtime: "codex-cli"`, `event: "subagent-start"`) plus `ts`, `session_id`, `agent_id`, `agent_type`, `brief_observable` (always `false` on current Codex), `formatted` (always `null`). It exists to give the `subagent-stop` close row a correlation/duration anchor, nothing more.
 
 ### Example queries
 
@@ -89,15 +103,15 @@ Pair every dispatch with its close row (when present):
 ```bash
 jq -s 'group_by(.tool_use_id) | map({
   tool_use_id: .[0].tool_use_id,
-  open: (.[]? | select((.event // "") == "")),
+  open: (.[]? | select(.event == "dispatch")),
   close: (.[]? | select(.event == "subagent-stop"))
-})' .claude/delegation-audit.jsonl
+})' .agent0/delegation-audit.jsonl
 ```
 
 Find loop-budget exhaustions in the last 24 hours:
 
 ```bash
-tail -10000 .claude/delegation-audit.jsonl | jq -c '
+tail -10000 .agent0/delegation-audit.jsonl | jq -c '
   select(.event == "subagent-stop" and .exit == "loop-budget-exceeded")
 '
 ```
@@ -107,9 +121,9 @@ Find sub-agents that dispatched but never closed (orphans — session crash or h
 ```bash
 jq -s '
   group_by(.tool_use_id)
-  | map(select(length == 1 and ((.[0].event // "") == "")))
+  | map(select(length == 1 and (.[0].event == "dispatch")))
   | .[]
-' .claude/delegation-audit.jsonl
+' .agent0/delegation-audit.jsonl
 ```
 
 ## Worktree isolation
@@ -128,7 +142,7 @@ This is canonical CC behavior — **Agent0 does NOT mediate the mechanism**. The
 - **Audit** — `delegation-gate.sh` extracts `tool_input.isolation` and records it in the dispatch row as the 13th field (see § Audit log above). Empty string when unset, `"worktree"` when set. Forensic queries can ask "did this dispatch isolate, given the complexity signals it carried?":
   ```bash
   jq -c 'select(.isolation == "" and (.escalation_signals | length) >= 2)' \
-    .claude/delegation-audit.jsonl
+    .agent0/delegation-audit.jsonl
   ```
 - **Validator scoping** — `post-edit-validate.sh` derives the validator's cwd from the git toplevel of the edit's `tool_input.file_path`. Parent-tree edits resolve to `$PROJECT_DIR` (no change from the prior behavior); worktree-isolated edits resolve to the worktree path, so the validator runs against the isolated tree state, not stale parent state. Fail-open: `git rev-parse` failure (non-git scratch dir, etc.) falls back to `$PROJECT_DIR`.
 

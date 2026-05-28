@@ -8,13 +8,13 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-HOOK="$AGENT0_ROOT/.claude/hooks/delegation-stop.sh"
+HOOK="$AGENT0_ROOT/.agent0/hooks/delegation-stop.sh"
 
 TMP="$(mktemp -d -t spec-061-03-XXXXXX)"
 trap 'rm -rf "$TMP"' EXIT
 
-mkdir -p "$TMP/.claude"
-AUDIT="$TMP/.claude/delegation-audit.jsonl"
+mkdir -p "$TMP/.agent0"
+AUDIT="$TMP/.agent0/delegation-audit.jsonl"
 
 AGENT_ID="agent-test-0003"
 TUID="toolu_TEST0000000000000003"
@@ -32,7 +32,7 @@ printf '%s\n' "{\"toolUseId\":\"$TUID\",\"agentType\":\"$ATYPE\"}" >"$TMP/agent-
 
 DTS="$(date -u -d '-2 seconds' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null \
   || date -u -v-2S +%Y-%m-%dT%H:%M:%SZ 2>/dev/null)"
-printf '%s\n' "{\"ts\":\"$DTS\",\"session_id\":\"$SESSION\",\"tool_use_id\":\"$TUID\",\"subagent_type\":\"$ATYPE\",\"task_summary\":\"seed\"}" >"$AUDIT"
+printf '%s\n' "{\"event\":\"dispatch\",\"ts\":\"$DTS\",\"session_id\":\"$SESSION\",\"tool_use_id\":\"$TUID\",\"subagent_type\":\"$ATYPE\",\"task_summary\":\"seed\"}" >"$AUDIT"
 
 PAYLOAD="$(jq -cn --arg s "$SESSION" --arg a "$AGENT_ID" --arg t "$ATYPE" --arg tr "$TRANSCRIPT" \
   '{session_id:$s,agent_id:$a,agent_type:$t,agent_transcript_path:$tr,last_assistant_message:"loop budget hit",stop_hook_active:false,hook_event_name:"SubagentStop"}')"

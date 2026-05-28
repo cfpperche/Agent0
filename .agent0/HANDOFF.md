@@ -8,11 +8,16 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-**Umbrella 102 (`harness-consolidate-agent0`) is CLOSED — `Status: shipped`, all 5 acceptance boxes checked (2026-05-28).** The harness is consolidated into `.agent0/` as the runtime-neutral home; `.claude/`+`.codex/` keep only runtime-exclusive files. Move rows shipped: reminders+routines (103, `1a537e9`), state dirs (104, `1273ed4`), shared shell tools (105, `c4a10a1`). AC4+AC5 + box closure committed in `25c2a0f` / this session's close commit.
+**Spec 106 (`delegation-hooks-multi-runtime`) is SHIPPED — implemented + validated (2026-05-28).** Decided via a 3-round Claude↔Codex `/sdd debate`, then built. Two-layer architecture:
+- **Discipline (5-field handoff):** Claude `delegation-gate.sh` blocks (unchanged). Codex = **convention-only** (`delegation.md` § Codex: convention-only; no hook can block a spawn — verified across SubagentStart/PreToolUse/PermissionRequest).
+- **Observability:** new `.agent0/hooks/delegation-start-audit.sh` (Codex SubagentStart, non-blocking) + `.agent0/hooks/delegation-stop.sh` (moved from `.claude/`, shared multi-runner, branches Claude vs Codex `agent_id-direct`). One canonical `.agent0/delegation-audit.jsonl` (hard cutover — old `.claude/` log + all refs purged). Rows carry `schema_version`/`runtime`/`event`.
+- `.claude/.delegation-state/` stays Claude-only (loop-budget producer deferred for Codex).
 
-Deferred rows remain open **by recorded decision, not as 102 loose ends**: rows 7-9 (rules/skills/validators) + row 14 (brainstorm-state) — all gated on the "Codex actually consumes rules/skills" trigger; revisit decides shared-`.agent0/` vs per-runtime then.
+Validation: `bash .claude/tests/061-delegation-stop/run-all.sh` = 10/10 PASS (incl. new `10-codex-branch.sh`); `bash -n` clean on all 3 hooks; gate still blocks (exit 2) + writes only `.agent0/`; harness-sync gitignore tests green.
 
-Pre-existing/paused: `docs/specs/091-sdd-debate-runner/` untracked, out of scope. `.codex/config.toml` + `.codex/.env.local` machine-local.
+**Codex live dogfood completed after restart.** Local `.codex/config.toml` has `[features] hooks = true` plus active `SubagentStart`/`SubagentStop` delegation blocks. One Codex subagent (`019e700f-c249-7681-abde-b6aa1320f22b`) was spawned with the 5-field convention-only brief and completed read-only. Audit log grew from 4 to 6 lines with matched `codex-cli` `subagent-start` + `subagent-stop` rows.
+
+Umbrella 102 remains CLOSED. Uncommitted: all of spec 106 line (hooks, settings.json, .codex example, rules, .gitignore, tests, docs/specs/106/*) + `.agent0/memory/codex-cli-hooks.md` edit.
 
 ## Active Work
 
@@ -20,13 +25,15 @@ _None active._
 
 ## Next Actions
 
-1. **Push** — `main` is ahead of `origin/main` by 5 commits (102 line + closure). Founder hadn't pushed as of session close; not yet authorized.
-2. Broader refactoring questions the founder flagged post-105 (the "lacuna is not just tests" thread — `.claude/tests/` and `.claude/validators/` placement, the consumer-side `harness-sync-baseline.json` location). These are NOT 102 rows; they're a fresh decision the founder reserved. Don't pre-empt where-to-encode.
-3. Continue the runtime-capabilities re-audit later (`runtime introspect` + `delegation/subagents` rows).
+1. **Review + commit the spec 106 line** after successful Codex live dogfood (nothing committed this session). Notable: `delegation-stop.sh` moved `.claude/`→`.agent0/` (git shows delete+add); the live `.claude/delegation-audit.jsonl` (gitignored) was deleted.
+2. Resume the alphabetical hook walkthrough if desired: `governance-gate.sh` is next portable Bash-surface gate. Other portable hooks remain scoped out of 106.
+3. Still unpushed: `main` ahead of `origin/main`; push not authorized.
 
 ## Decisions & Gotchas
 
-- 105 archaeology (live-vs-frozen rewrite rule, sync-harness fixture `.claude/` dependency, self-rebootstrap self-overwrite) is captured in commit `c4a10a1`, spec 105, and `harness-sync.md` § Gotchas — not duplicated here.
-- AC4 placement decision: the § Classification principle went to **project memory** (`.agent0/memory/harness-home.md`), not a shipped rule — it's maintainer-binding, consume-only forks never read it. The spec's original "a rule under `.claude/rules/`" framing was superseded by the `memory-placement.md` rule-vs-memory routing.
-- Codex `Stop` uses continue-with-corrective-prompt: `{"decision":"block","reason":...}` continues once; `stop_hook_active=true` exits silently. SessionStart branches on `CLAUDE_PROJECT_DIR` unset = "assume Codex".
-- Residual review risk: a Codex `session_id` with chars outside `^[a-zA-Z0-9_-]+$` collapses all such sessions to the shared `unknown/` state dir — worth a live smoke (reminder `r-2026-05-18`).
+- **Hard cutover (user decision) over the debate's freeze-legacy synthesis:** `.claude/delegation-audit.jsonl` removed entirely, no legacy-read, `absence⇒v1` rule dropped. Aligns with `forks-ephemeral-dogfood.md`.
+- **Dispatch rows now carry `event:"dispatch"`** — this broke the old `(.event // "") == ""` "dispatch = no event" convention. Fixed everywhere: `delegation-stop.sh` correlation queries + `delegation.md` example queries now use `.event == "dispatch"`. Any future query MUST use explicit `event` values, not absence.
+- **Codex facts (verified 2026-05-28, in `.agent0/memory/codex-cli-hooks.md`):** SubagentStart carries NO brief text → `brief_observable:false`/`formatted:null` always; no hook can block a spawn; `SubagentStop` symmetric, correlates by `agent_id`.
+- **Both `.agent0/` delegation hooks source `_memory-hook-lib.sh`** for `memory_project_dir` (Codex cwd-from-payload support); runtime detected by `CLAUDE_PROJECT_DIR` set/unset.
+- **Live Codex dogfood result (2026-05-28):** baseline audit log `4` lines; after one subagent, `6` lines. Start row: `schema_version:1`, `runtime:"codex-cli"`, `event:"subagent-start"`, `brief_observable:false`, `formatted:null`, `agent_id:"019e700f-c249-7681-abde-b6aa1320f22b"`. Stop row: same `agent_id`, `event:"subagent-stop"`, `correlation:"agent_id-direct"`, `exit:null`, `edit_count:null`, numeric `duration_ms:14000`.
+- **Local Codex config gotcha:** `.codex/config.toml` is gitignored and session-loaded. Delegation blocks must exist before Codex starts; otherwise stop may log `correlation:"unmatched"` because the start hook never wrote.

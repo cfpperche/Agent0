@@ -23,7 +23,7 @@ _Umbrella acceptance = every § Gap matrix row reaches a terminal disposition (`
 
 - [ ] Every `move` row in § Gap matrix has its child spec shipped (path relocated, all references updated, tests green, sync-harness manifest updated).
 - [ ] Every `stays` row has a one-line reasoning recorded in the matrix (why it is runtime-exclusive).
-- [x] Every `undecided` row is resolved to `move`, `stays`, or `deferred` before this umbrella closes. A `deferred` row must name its revisit trigger (e.g. "when Codex needs rules") — deferral is a recorded decision, not an open ambiguity. _(Done 2026-05-28: rows 3/4/5/6 → `move`; rows 7-9 already `deferred` with named triggers; rows 10-13 `stays`. No `undecided` row remains.)_
+- [x] Every `undecided` row is resolved to `move`, `stays`, or `deferred` before this umbrella closes. A `deferred` row must name its revisit trigger (e.g. "when Codex needs rules") — deferral is a recorded decision, not an open ambiguity. _(Done 2026-05-28: rows 3/4/5/6 → `move`; rows 7-9 + 14 `deferred` with named triggers; rows 10-13 `stays`. No `undecided` row remains. Row 14 (brainstorm-state) added 2026-05-28 tied to row 8.)_
 - [ ] The § Classification principle is encoded durably where future contributors find it (a rule under `.claude/rules/`, or `.claude/rules/memory-placement.md` extended), so the split survives this umbrella as a convention.
 - [ ] Consumer-migration posture is documented once in `.claude/rules/harness-sync.md`: relocations are **capacity-only** (new forks are born under `.agent0/`; existing forks migrate their own data manually on next sync) — no upstream auto-migration of consumer content.
 
@@ -46,6 +46,7 @@ Disposition: `move` → relocate to `.agent0/`; `stays` → runtime-exclusive, k
 | 11 | delegation state + audit | `.claude/.delegation-state/`, `.claude/delegation-audit.jsonl` | `stays` | — | Claude `Agent` tool is Claude-exclusive (Codex has no subagent surface) |
 | 12 | compact-history snapshots | `.claude/.compact-history/` | `stays` (provisional) | — | produced by Claude `PreCompact`; Codex compaction port deferred (101 non-goal) |
 | 13 | Claude-only hooks | `.claude/hooks/*.sh` (delegation, governance, secrets, supply-chain, runtime-capture, pre-compact, propagation-advise, rule-load-debug) | `stays` | — | registered only via Claude `settings.json`; no Codex analogue wired |
+| 14 | brainstorm session state | `.claude/.brainstorm-state/` → `.agent0/.brainstorm-state/` | `deferred` | tied to row 8 (skills) | Added 2026-05-28 (closes a classification lacuna — was invisible to this matrix, like `.claude/tests/`). Gitignored, **zero tracked content** (not even a `.gitkeep`); not in the sync-harness manifest. Its **sole** producer/consumer is `.claude/skills/brainstorm/SKILL.md` (10 hardcoded `.claude/.brainstorm-state/` paths). By the co-location-with-producer pattern (104: state moves *with* its producer — runtime-state followed probe.sh, session-state followed its `.agent0/hooks/`), this state must NOT move ahead of its skill. Revisit trigger = row 8's (when a Codex brainstorm port lands / skills get their shared-vs-per-runtime decision); the state relocates in the same diff as the skill, rewriting the 10 hardcoded paths then. Moving it now would re-create the exact state/producer split this umbrella kills |
 
 ## Non-goals
 

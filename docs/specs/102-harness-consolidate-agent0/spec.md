@@ -2,7 +2,7 @@
 
 _Created 2026-05-28._
 
-**Status:** in-progress
+**Status:** shipped
 **Type:** umbrella
 
 ## Intent
@@ -21,8 +21,8 @@ The "shared" test: _in a Codex-only consumer project that never opens Claude Cod
 
 _Umbrella acceptance = every § Gap matrix row reaches a terminal disposition (`shipped` move, or `stays` with recorded reasoning). No code ships from this spec; child specs do the work._
 
-- [ ] Every `move` row in § Gap matrix has its child spec shipped (path relocated, all references updated, tests green, sync-harness manifest updated).
-- [ ] Every `stays` row has a one-line reasoning recorded in the matrix (why it is runtime-exclusive).
+- [x] Every `move` row in § Gap matrix has its child spec shipped (path relocated, all references updated, tests green, sync-harness manifest updated). _(Done 2026-05-28: rows 1-2 via 103 (`1a537e9`), rows 3-5 via 104 (`1273ed4`), row 6 via 105 (`c4a10a1`). All shipped with tests green + manifest updated.)_
+- [x] Every `stays` row has a one-line reasoning recorded in the matrix (why it is runtime-exclusive). _(Done: rows 10-13 each carry one-line reasoning in § Gap matrix — `settings.json` hook-config format, `Agent`-tool delegation state, PreCompact snapshots, Claude-only hooks.)_
 - [x] Every `undecided` row is resolved to `move`, `stays`, or `deferred` before this umbrella closes. A `deferred` row must name its revisit trigger (e.g. "when Codex needs rules") — deferral is a recorded decision, not an open ambiguity. _(Done 2026-05-28: rows 3/4/5/6 → `move`; rows 7-9 + 14 `deferred` with named triggers; rows 10-13 `stays`. No `undecided` row remains. Row 14 (brainstorm-state) added 2026-05-28 tied to row 8.)_
 - [x] The § Classification principle is encoded durably where future contributors find it, so the split survives this umbrella as a convention. _(Done 2026-05-28: encoded as project memory `.agent0/memory/harness-home.md`, NOT a shipped rule. The principle binds the upstream maintainer relocating a surface; a consumer-side agent in a consume-only fork never reads it, so by the rule-vs-memory criterion in `.claude/rules/memory-placement.md` § Routing decision tree it routes to `.agent0/memory/` rather than `.claude/rules/`. The AC's original "a rule under `.claude/rules/`" framing was superseded by that routing analysis.)_
 - [x] Consumer-migration posture is documented once in `.claude/rules/harness-sync.md`: relocations are **capacity-only** (new consumer projects are born under `.agent0/`; existing consumer projects migrate their own data manually on next sync) — no upstream auto-migration of consumer content. _(Done 2026-05-28: § Path relocations (capacity-only) generalized from the spec-103 example to all of umbrella 102's relocations + "fork"→"consumer project" terminology aligned with the rule's own glossary.)_

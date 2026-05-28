@@ -8,11 +8,9 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-Umbrella 102 (`harness-consolidate-agent0`) consolidating the harness into `.agent0/` as the runtime-neutral home (`.claude/`+`.codex/` keep only runtime-exclusive files). **Phase 1 (103)**: reminders + routines. **Phase 2 (104)**: the three shared state dirs (`.session-state/`, `.runtime-state/`, `.browser-state/`). **Phase 3 (105, this session)**: shared shell tools relocated `.claude/tools/` → `.agent0/tools/` — all 8 scripts (`sync-harness`, `probe`, `check-instruction-drift`, `bench-hooks`, `run-routine`, `install`/`uninstall-routines`, `codex-local-env`) + `lib/managed-block.sh`; `.claude/tools/` is gone. All gap-matrix `move` rows (1-6) are now shipped.
+**Umbrella 102 (`harness-consolidate-agent0`) is CLOSED — `Status: shipped`, all 5 acceptance boxes checked (2026-05-28).** The harness is consolidated into `.agent0/` as the runtime-neutral home; `.claude/`+`.codex/` keep only runtime-exclusive files. Move rows shipped: reminders+routines (103, `1a537e9`), state dirs (104, `1273ed4`), shared shell tools (105, `c4a10a1`). AC4+AC5 + box closure committed in `25c2a0f` / this session's close commit.
 
-105 closed the four delicate spots: sync-harness's manifest glob + lib-source + `_self_rebootstrap` self-ref + `MANAGED_BLOCK_LIB` fallback, and the three path-scoped rule `paths:` triggers (`harness-sync`/`runtime-capabilities`/`runtime-introspect`). 87 affected-suite tests green; smoke + scratch-consumer dry-run confirm capacity-only migration (old `.claude/tools/*.sh` orphan-removed, new `.agent0/tools/*.sh` copied). **Uncommitted — 105 changes are in the working tree, not yet committed** (104 + 100/101 are committed: `1273ed4`, `e17be90`).
-
-**This session (2026-05-28): AC4 + AC5 of umbrella 102 closed** (both spec boxes checked). AC4 → § Classification principle encoded as project memory `.agent0/memory/harness-home.md` (decision: memory, NOT a shipped rule — maintainer-binding, consume-only forks never read it, per `memory-placement.md` routing). AC5 → `harness-sync.md` § *Path relocations (capacity-only)* generalized from the spec-103 example to all of 102's relocations + "fork"→"consumer project" terminology fixed. These edits are also uncommitted (same working tree as 105).
+Deferred rows remain open **by recorded decision, not as 102 loose ends**: rows 7-9 (rules/skills/validators) + row 14 (brainstorm-state) — all gated on the "Codex actually consumes rules/skills" trigger; revisit decides shared-`.agent0/` vs per-runtime then.
 
 Pre-existing/paused: `docs/specs/091-sdd-debate-runner/` untracked, out of scope. `.codex/config.toml` + `.codex/.env.local` machine-local.
 
@@ -22,15 +20,13 @@ _None active._
 
 ## Next Actions
 
-1. **Commit 105 + AC4/AC5** when the founder is ready (one dirty working tree: the 105 relocation + spec 105 + umbrella row 6 flip + this session's `.agent0/memory/harness-home.md` + `MEMORY.md` projection + `harness-sync.md` § Path relocations edit + spec 102 AC4/AC5 boxes). Founder wanted to review the diff before the commit is prepared.
-2. **Close umbrella 102** — AC4 + AC5 done this session. Remaining boxes are the first two: "every `move` row shipped (tests green)" and "every `stays` row reasoned". The `stays` rows already carry one-line reasoning in the matrix; the only real blocker is committing 105 so the move rows count as landed. Once 105 commits, both boxes can flip and the umbrella closes.
-3. Founder flagged broader refactoring questions to raise post-105 (the "lacuna is not just tests" thread — `.claude/tests/` and `.claude/validators/` placement, the consumer-side `harness-sync-baseline.json` location, etc. — all currently `deferred`/`stays` in 102's matrix).
-4. Continue the runtime-capabilities re-audit later (`runtime introspect` + `delegation/subagents` rows).
+1. **Push** — `main` is ahead of `origin/main` by 5 commits (102 line + closure). Founder hadn't pushed as of session close; not yet authorized.
+2. Broader refactoring questions the founder flagged post-105 (the "lacuna is not just tests" thread — `.claude/tests/` and `.claude/validators/` placement, the consumer-side `harness-sync-baseline.json` location). These are NOT 102 rows; they're a fresh decision the founder reserved. Don't pre-empt where-to-encode.
+3. Continue the runtime-capabilities re-audit later (`runtime introspect` + `delegation/subagents` rows).
 
 ## Decisions & Gotchas
 
-- **105 live-vs-frozen rule:** rewrote every `.claude/tools/` ref outside `docs/specs/`; left frozen specs AND one historical memory narrative (`.agent0/memory/cc-platform-hooks.md:138`, a past-tense CC hook-dedup observation citing probe.sh) untouched. The acceptance grep whitelists that one line.
-- **105 fixture gotcha:** sync-harness's "looks like an Agent0 repo" check needs `.claude/` (still valid post-102); fixtures `harness-sync/33` + `instruction-drift/05` had it only as a side effect of the old `mkdir …/tools/lib` → add explicit `$SRC/.claude`. Three bare-dir `mkdir` refs (no trailing slash) escaped the sed — grep the bare-dir form on future path moves.
-- **105 self-rebootstrap:** the relocation `--apply` self-overwrites once (old `.claude/tools/sync-harness.sh` deleted while bash reads it); harmless re-run-completes, documented in `harness-sync.md` § Gotchas. No mitigation code.
+- 105 archaeology (live-vs-frozen rewrite rule, sync-harness fixture `.claude/` dependency, self-rebootstrap self-overwrite) is captured in commit `c4a10a1`, spec 105, and `harness-sync.md` § Gotchas — not duplicated here.
+- AC4 placement decision: the § Classification principle went to **project memory** (`.agent0/memory/harness-home.md`), not a shipped rule — it's maintainer-binding, consume-only forks never read it. The spec's original "a rule under `.claude/rules/`" framing was superseded by the `memory-placement.md` rule-vs-memory routing.
 - Codex `Stop` uses continue-with-corrective-prompt: `{"decision":"block","reason":...}` continues once; `stop_hook_active=true` exits silently. SessionStart branches on `CLAUDE_PROJECT_DIR` unset = "assume Codex".
 - Residual review risk: a Codex `session_id` with chars outside `^[a-zA-Z0-9_-]+$` collapses all such sessions to the shared `unknown/` state dir — worth a live smoke (reminder `r-2026-05-18`).

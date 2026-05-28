@@ -7,7 +7,6 @@ CLAUDE.local.md
 .codex/.env.local
 
 # Ephemeral state under .claude/ — per-machine runtime, never commit
-.claude/.runtime/
 .agent0/.runtime-state/*
 !.agent0/.runtime-state/README.md
 .agent0/.session-state/

@@ -12,6 +12,8 @@ Umbrella 102 (`harness-consolidate-agent0`) consolidating the harness into `.age
 
 105 closed the four delicate spots: sync-harness's manifest glob + lib-source + `_self_rebootstrap` self-ref + `MANAGED_BLOCK_LIB` fallback, and the three path-scoped rule `paths:` triggers (`harness-sync`/`runtime-capabilities`/`runtime-introspect`). 87 affected-suite tests green; smoke + scratch-consumer dry-run confirm capacity-only migration (old `.claude/tools/*.sh` orphan-removed, new `.agent0/tools/*.sh` copied). **Uncommitted — 105 changes are in the working tree, not yet committed** (104 + 100/101 are committed: `1273ed4`, `e17be90`).
 
+**This session (2026-05-28): AC4 + AC5 of umbrella 102 closed** (both spec boxes checked). AC4 → § Classification principle encoded as project memory `.agent0/memory/harness-home.md` (decision: memory, NOT a shipped rule — maintainer-binding, consume-only forks never read it, per `memory-placement.md` routing). AC5 → `harness-sync.md` § *Path relocations (capacity-only)* generalized from the spec-103 example to all of 102's relocations + "fork"→"consumer project" terminology fixed. These edits are also uncommitted (same working tree as 105).
+
 Pre-existing/paused: `docs/specs/091-sdd-debate-runner/` untracked, out of scope. `.codex/config.toml` + `.codex/.env.local` machine-local.
 
 ## Active Work
@@ -20,8 +22,8 @@ _None active._
 
 ## Next Actions
 
-1. **Commit 105** when the founder is ready (working tree currently dirty with the relocation + spec 105 + umbrella row 6 flip).
-2. **Close umbrella 102** — only acceptance criteria 4 + 5 remain: (4) encode the § Classification principle durably (new `.claude/rules/harness-home.md` vs extend `memory-placement.md`'s bucket model); (5) document the consumer-migration posture in `.claude/rules/harness-sync.md`. The founder reserved these as part of "other refactoring questions" raised after 105 — do NOT pre-empt the where-to-encode decision.
+1. **Commit 105 + AC4/AC5** when the founder is ready (one dirty working tree: the 105 relocation + spec 105 + umbrella row 6 flip + this session's `.agent0/memory/harness-home.md` + `MEMORY.md` projection + `harness-sync.md` § Path relocations edit + spec 102 AC4/AC5 boxes). Founder wanted to review the diff before the commit is prepared.
+2. **Close umbrella 102** — AC4 + AC5 done this session. Remaining boxes are the first two: "every `move` row shipped (tests green)" and "every `stays` row reasoned". The `stays` rows already carry one-line reasoning in the matrix; the only real blocker is committing 105 so the move rows count as landed. Once 105 commits, both boxes can flip and the umbrella closes.
 3. Founder flagged broader refactoring questions to raise post-105 (the "lacuna is not just tests" thread — `.claude/tests/` and `.claude/validators/` placement, the consumer-side `harness-sync-baseline.json` location, etc. — all currently `deferred`/`stays` in 102's matrix).
 4. Continue the runtime-capabilities re-audit later (`runtime introspect` + `delegation/subagents` rows).
 

@@ -9,6 +9,7 @@
 - [compaction-continuity](compaction-continuity.md) — PreCompact+SessionStart snapshot pair preserving raw signal across /compact; mechanism + retention details.
 - [Consumer-contract discipline](consumer-contract-discipline.md) — Producer templates must document the consumer-side contract (who reads it, what shape they expect) for any artifact a downstream step consumes structurally.
 - [Forks are ephemeral dogfood](forks-ephemeral-dogfood.md) — Capacity docs' "forks" framing is forward-looking; current reality is all forks are spun-up-then-archived dogfood projects. Hard-cutover is the default back-compat posture.
+- [harness-home](harness-home.md) — Classification principle for where a harness surface lives — .agent0/ (runtime-neutral, both runtimes read/write) vs .claude/-.codex/ (runtime-exclusive). Consult before adding or relocating any harness file.
 - [hook-chain-latency](hook-chain-latency.md) — PreToolUse(Bash) chain latency budget + bench tooling for maintainers extending the hook chain.
 - [hook-chain-maintenance](hook-chain-maintenance.md) — Maintainer discipline for the PreToolUse(Bash) hook chain — optimization techniques + 5-step contract for adding a new hook. Read before adding/editing PreToolUse(Bash) hooks.
 - [OD grounding dogfood](od-grounding-dogfood.md) — Spec 027 step-2 dogfood (2026-05-14) — citation-by-path real, but grounding alone does not buy visual quality. Blind judge result was confounded (1-pass OD vs 4x-refined baseline).

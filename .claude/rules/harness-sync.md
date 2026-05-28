@@ -227,13 +227,15 @@ The walk only reads from Agent0 manifest paths. Out-of-scope consumer project co
 
 ## Path relocations (capacity-only)
 
-When a capacity's canonical home moves within Agent0 (e.g. spec 103 relocated reminders + routines from `.claude/` to `.agent0/`, per umbrella spec 102), propagation is **capacity-only** — the manifest carries the *capacity* (hooks, skills, rules, and the empty `.gitkeep` scaffold of the new location), never the *content*. On a consumer `--apply`:
+When a capacity's canonical home moves within Agent0 — the consolidation tracked by umbrella spec 102, which relocated reminders + routines (103), session/runtime/browser state (104), and shared shell tools (105) from `.claude/` to `.agent0/`, per the § Classification principle (`.agent0/memory/harness-home.md`) — propagation is **capacity-only**. The manifest carries the *capacity* (hooks, skills, rules, tools, and the empty `.gitkeep` scaffold of the new location), never the *content*. The posture is uniform across every relocation row, not specific to any one capacity:
 
-- The new-location scaffold (`.agent0/<x>/.gitkeep`) arrives; the relocated hooks/skills/rules overwrite their stale copies (or refuse if customized).
-- The old-location **data** (a fork's own `.claude/reminders.yaml`, `.claude/routines/*.md`, gitignored `.claude/.routines-state/`) is **not** touched, moved, or deleted — it is consumer content, invisible to the manifest (per § Manifest scope).
-- Result: a freshly-synced fork has working hooks pointing at the new path but its pre-existing data still at the old path. **The fork migrates its own data** with a one-time `git mv .claude/reminders.yaml .agent0/reminders.yaml` (+ routines), exactly as upstream did. No upstream auto-migration — same hard-cutover posture as the `.claude/SESSION.md` removal (spec 101).
+- New consumer projects are **born under `.agent0/`** — a fresh `sync-harness.sh --apply` lays down the relocated capacity at its new home with nothing to migrate.
+- Existing consumer projects **migrate their own data manually** on next sync. On a consumer `--apply`:
+  - The new-location scaffold (`.agent0/<x>/.gitkeep`) arrives; the relocated hooks/skills/rules/tools overwrite their stale copies (or refuse if customized).
+  - The old-location **data** (a consumer project's own `.claude/reminders.yaml`, `.claude/routines/*.md`, gitignored state dirs) is **not** touched, moved, or deleted — it is consumer content, invisible to the manifest (per § Manifest scope).
+  - Result: a freshly-synced consumer project has working hooks/tools pointing at the new path but its pre-existing data still at the old path. The consumer project does a one-time `git mv .claude/reminders.yaml .agent0/reminders.yaml` (+ routines, + any gitignored state), exactly as upstream did.
 
-Deliberate: auto-moving consumer content would cross the manifest's "never touch consumer/product files" floor. The cost is a documented one-time manual step per fork; the benefit is sync never mutates data it does not own.
+**No upstream auto-migration of consumer content** — same hard-cutover posture as the `.claude/SESSION.md` removal (spec 101). Deliberate: auto-moving consumer content would cross the manifest's "never touch consumer/product files" floor. The cost is a documented one-time manual step per consumer project; the benefit is sync never mutates data it does not own.
 
 ## Self-rebootstrap
 

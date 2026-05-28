@@ -6,7 +6,7 @@
 # Exit:    0 on success (including silent-non-leader); 1 on fatal error.
 #
 # Invoked by crontab block installed via install-routines.sh.
-# Writes to .claude/.routines-state/<slug>/queue/<unix-ts>.md when leader.
+# Writes to .agent0/.routines-state/<slug>/queue/<unix-ts>.md when leader.
 # Updates last-queue.json + rotates completed/ to FIFO cap 50.
 
 set -uo pipefail
@@ -21,7 +21,7 @@ fi
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 PROJECT_DIR=$(cd "$SCRIPT_DIR/../.." && pwd)
 
-ROUTINE_FILE="$PROJECT_DIR/.claude/routines/$SLUG.md"
+ROUTINE_FILE="$PROJECT_DIR/.agent0/routines/$SLUG.md"
 if [[ ! -f "$ROUTINE_FILE" ]]; then
   echo "run-routine: routine file not found: $ROUTINE_FILE" >&2
   exit 1
@@ -54,7 +54,7 @@ if [[ "$is_leader" -ne 1 ]]; then
 fi
 
 # --- Phase 2: prepare state dirs ----------------------------------------------
-STATE_DIR="$PROJECT_DIR/.claude/.routines-state/$SLUG"
+STATE_DIR="$PROJECT_DIR/.agent0/.routines-state/$SLUG"
 QUEUE_DIR="$STATE_DIR/queue"
 COMPLETED_DIR="$STATE_DIR/completed"
 mkdir -p "$QUEUE_DIR" "$COMPLETED_DIR"

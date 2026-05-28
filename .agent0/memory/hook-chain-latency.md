@@ -107,7 +107,7 @@ The dedicated test suite `.claude/tests/hook-chain-latency/` carries three scena
 
 Run via `bash .claude/tests/hook-chain-latency/run-all.sh`.
 
-The check is not wired into a `pre-commit` hook in v1. The monthly routine `.claude/routines/hook-chain-bench.md` runs `--check` on day-1 of each month and reports any regression to the next interactive session without auto-fixing or silently re-baselining.
+The check is not wired into a `pre-commit` hook in v1. The monthly routine `.agent0/routines/hook-chain-bench.md` runs `--check` on day-1 of each month and reports any regression to the next interactive session without auto-fixing or silently re-baselining.
 
 ## Cross-references
 

@@ -29,7 +29,7 @@ Steps:
 - Either `no-regression-detected since {{LAST_COMPLETED_TS}}` reported in chat with no edits,
   OR
 - Regression report in chat naming the offending cells with measured-vs-baseline p95 numbers, root-cause hypothesis, and recommended next step.
-- (Automatic) `.claude/.routines-state/hook-chain-bench/completed/<ts>.md` materialized by `/routine run` on archival.
+- (Automatic) `.agent0/.routines-state/hook-chain-bench/completed/<ts>.md` materialized by `/routine run` on archival.
 
 <!--
 Scaffold created 2026-05-26 via /routine new hook-chain-bench.

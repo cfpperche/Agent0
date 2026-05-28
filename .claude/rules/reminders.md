@@ -1,10 +1,10 @@
 # Reminders
 
-`.claude/reminders.yaml` is a structured YAML list of *action-shaped future items* that the agent or founder doesn't want to lose but doesn't want to do now. It occupies the gap between two other state files in this project:
+`.agent0/reminders.yaml` is a structured YAML list of *action-shaped future items* that the agent or founder doesn't want to lose but doesn't want to do now. It occupies the gap between two other state files in this project:
 
 - **`.agent0/HANDOFF.md`** — *in-flight* work-state (cross-session handoff).
 - **`~/.claude/projects/.../memory/MEMORY.md`** — *durable knowledge* (facts, preferences, decisions).
-- **`.claude/reminders.yaml`** — *deferred do-this-thing* items, neither urgent enough to start now nor durable enough to count as knowledge.
+- **`.agent0/reminders.yaml`** — *deferred do-this-thing* items, neither urgent enough to start now nor durable enough to count as knowledge.
 
 The capacity exists because deferred intent otherwise leaks into chat scrollback (lost on `/clear` or compaction), `TODO` comments in code (rot with the file, invisible across the repo), or the founder's head (lossy).
 
@@ -73,15 +73,15 @@ The helper validates required fields and enums at write-time. Schema does NOT li
 ## Discipline
 
 - **No auto-stage, no auto-commit.** `add` / `done` / `snooze` / `dismiss` leave the file dirty in the working tree. The founder reviews `git diff` before history is written.
-- **Soft-delete is the default.** `/remind done <id>` flips `status: done` and stamps `completed_ts`. The entry stays in `reminders.yaml` so the audit history is in-band (no need to `git log -- .claude/reminders.yaml` to recover what was dismissed). Trade-off: monotonic file growth. A `/remind prune` subcommand is deferred until growth becomes real friction (rule-of-three demand test).
+- **Soft-delete is the default.** `/remind done <id>` flips `status: done` and stamps `completed_ts`. The entry stays in `reminders.yaml` so the audit history is in-band (no need to `git log -- .agent0/reminders.yaml` to recover what was dismissed). Trade-off: monotonic file growth. A `/remind prune` subcommand is deferred until growth becomes real friction (rule-of-three demand test).
 - **`check_command` is never autonomous.** The readout hook surfaces `check_command` text inline but never runs it. Execution happens only via explicit `/remind check <id>`, which prints the command's stdout/stderr/exit-code to the agent and leaves the YAML untouched. The human-in-loop decides next action. This preserves the contract-not-promise discipline; see `.claude/rules/delegation.md` § Why DONE_WHEN exists.
 - **Positions are not stable IDs.** Pattern is "list, then act on the position you see right now". Stable IDs (`r-YYYY-MM-DD-<slug>`) are the canonical identifier in storage; positions are a UX convenience that resolves to IDs at command time. The skill body always logs the resolved ID in its report so the user can confirm.
 - **Insertion order is the diff contract.** The helper uses `yaml.safe_dump(..., sort_keys=False)` so adds append to the end and field order within a record is preserved. Hand-edits with other YAML tools (that re-sort alphabetically) will pollute git diffs — re-run through the helper to normalize.
-- **Override marker** — mirroring the project's other gates: a line `# OVERRIDE: <reason ≥10 chars>` in commit context is the audit trail for any direct YAML edit that bypasses the helper. Not enforced by a hook in v1 (no `PreToolUse(Edit)` gate on `.claude/reminders.yaml`); it's a convention for review.
+- **Override marker** — mirroring the project's other gates: a line `# OVERRIDE: <reason ≥10 chars>` in commit context is the audit trail for any direct YAML edit that bypasses the helper. Not enforced by a hook in v1 (no `PreToolUse(Edit)` gate on `.agent0/reminders.yaml`); it's a convention for review.
 
 ## Files
 
-- `.claude/reminders.yaml` — the state file. Git-tracked. Created by the helper on first `add` (not pre-seeded; sync-harness ships the *capacity*, not the *content* — same posture as `.agent0/memory/`).
+- `.agent0/reminders.yaml` — the state file. Git-tracked. Created by the helper on first `add` (not pre-seeded; sync-harness ships the *capacity*, not the *content* — same posture as `.agent0/memory/`).
 - `.claude/skills/remind/SKILL.md` — slash-command definition (subcommands + delegation to helper).
 - `.claude/skills/remind/scripts/reminders-helper.py` — canonical YAML mutator. Python + PyYAML; ~250 LOC. CRUD + filtering + date math + ID generation.
 - `.agent0/hooks/reminders-readout.sh` — SessionStart readout hook. Python-first / yq-fallback / raw-YAML-last tier.
@@ -94,7 +94,7 @@ The helper validates required fields and enums at write-time. Schema does NOT li
 - **Position numbers shift across adds/dismisses.** `list` is 1-indexed against the filtered (pending + past-snoozed) view. An add or dismiss between listing and acting renumbers everything. When chaining commands, re-list between mutations or use the stable ID.
 - **`check_command` runs in the repo root with the current shell.** No sandboxing. The user owns the safety of whatever they wrote in `--check '<cmd>'`. Treat it like any other shell snippet in the repo.
 - **Field order is preserved on write but not on yq read.** `yq eval` may re-order in its output by default. Reading via the Python helper (or via `yq -P` with explicit field ordering) preserves the schema-canonical order. Hand-fixing field order after a yq round-trip is a no-op once the next helper-mediated write happens.
-- **No migration tooling for the old plain-bullet format.** Forks transitioning from the older `.claude/REMINDERS.md` translate entries by hand into `.claude/reminders.yaml`. The cutover is intentionally one-time and unrepeatable — investing in a migration script for a single-time event is over-engineering at this scale.
+- **No migration tooling for the old plain-bullet format.** Forks transitioning from the older `.claude/REMINDERS.md` translate entries by hand into `.agent0/reminders.yaml`. The cutover is intentionally one-time and unrepeatable — investing in a migration script for a single-time event is over-engineering at this scale.
 
 ## Cross-references
 

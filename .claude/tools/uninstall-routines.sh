@@ -58,6 +58,6 @@ else
 fi
 
 # --- Phase 3: leave state intact ----------------------------------------------
-echo "uninstall-routines: .claude/.routines-state/ NOT touched (queue + completed preserved for inspection)"
+echo "uninstall-routines: .agent0/.routines-state/ NOT touched (queue + completed preserved for inspection)"
 
 exit 0

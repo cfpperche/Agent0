@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # .claude/tools/install-routines.sh
 # Bootstrap: (1) WSL2 detection + advisory, (2) interactive leader prompt,
-# (3) regenerate the AGENT0-ROUTINES crontab block from .claude/routines/*.md.
+# (3) regenerate the AGENT0-ROUTINES crontab block from .agent0/routines/*.md.
 #
 # Usage:   bash install-routines.sh
 # Idempotent — re-running replaces the marker block atomically; the leader
@@ -12,10 +12,10 @@ set -uo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 PROJECT_DIR=$(cd "$SCRIPT_DIR/../.." && pwd)
 
-ROUTINES_DIR="$PROJECT_DIR/.claude/routines"
+ROUTINES_DIR="$PROJECT_DIR/.agent0/routines"
 RUN_SCRIPT="$PROJECT_DIR/.claude/tools/run-routine.sh"
 LEADERS_FILE="$HOME/.claude/.agent0-routines-leaders.json"
-LOG_FILE="$PROJECT_DIR/.claude/.routines-state/cron.log"
+LOG_FILE="$PROJECT_DIR/.agent0/.routines-state/cron.log"
 
 MARKER_START="# AGENT0-ROUTINES-START ($PROJECT_DIR)"
 MARKER_END="# AGENT0-ROUTINES-END ($PROJECT_DIR)"
@@ -83,7 +83,7 @@ filtered=$(echo "$existing_crontab" | awk -v start="$MARKER_START" -v end="$MARK
   !skip
 ')
 
-# Build new block from .claude/routines/*.md.
+# Build new block from .agent0/routines/*.md.
 block=""
 block="${block}${MARKER_START}"$'\n'
 routine_count=0

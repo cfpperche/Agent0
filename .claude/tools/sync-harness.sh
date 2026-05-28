@@ -165,7 +165,7 @@ MANIFEST_TSV="$(mktemp -t sync-manifest-XXXXXX)"
 #                           gitignored *.json, only .gitkeep sentinel travels via git.
 # .agent0/memory/           project knowledge; content is project-local.
 #                           The empty .gitkeep IS in COPY_CHECK_FILES — content is not.
-# .claude/routines/         project-scoped routine definitions; content is
+# .agent0/routines/         project-scoped routine definitions; content is
 #                           project-local. Only .gitkeep travels via git so a fresh
 #                           consumer project has the empty directory ready for /routine new.
 
@@ -197,7 +197,7 @@ COPY_CHECK_FILES=(
   ".agent0/memory/.gitkeep"
   ".agent0/memory.config.json"
   ".claude/.browser-state/.gitkeep"
-  ".claude/routines/.gitkeep"
+  ".agent0/routines/.gitkeep"
   ".claude/.runtime-state/README.md"
   "assets/.gitkeep"
   "assets/brand/.gitkeep"

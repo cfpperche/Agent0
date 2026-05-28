@@ -18,7 +18,7 @@ fi
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}"
 PROJECT_DIR="${PROJECT_DIR:-$PWD}"
-FILE="$PROJECT_DIR/.claude/routines/$SLUG.md"
+FILE="$PROJECT_DIR/.agent0/routines/$SLUG.md"
 
 if [[ ! -f "$FILE" ]]; then
   echo "validate: file not found: $FILE" >&2

@@ -8,10 +8,10 @@ HOOK="$AGENT0_ROOT/.agent0/hooks/routines-readout.sh"
 TMPDIR="$(mktemp -d -t multi-readouts-routines-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
-mkdir -p "$TMPDIR/.claude/routines" "$TMPDIR/.claude/.routines-state/weekly/queue"
-printf '%s\n' '---' 'schedule: "0 9 * * 1"' '---' '# Weekly routine' > "$TMPDIR/.claude/routines/weekly.md"
+mkdir -p "$TMPDIR/.agent0/routines" "$TMPDIR/.agent0/.routines-state/weekly/queue"
+printf '%s\n' '---' 'schedule: "0 9 * * 1"' '---' '# Weekly routine' > "$TMPDIR/.agent0/routines/weekly.md"
 oldest="$(( $(date -u +%s) - 120 ))"
-printf 'Run weekly fixture\n' > "$TMPDIR/.claude/.routines-state/weekly/queue/$oldest.md"
+printf 'Run weekly fixture\n' > "$TMPDIR/.agent0/.routines-state/weekly/queue/$oldest.md"
 
 payload="$(printf '{"hook_event_name":"SessionStart","source":"startup","cwd":"%s"}' "$TMPDIR")"
 out="$(printf '%s' "$payload" | AGENT0_PROJECT_DIR="$TMPDIR" bash "$HOOK")"

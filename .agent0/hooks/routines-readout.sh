@@ -3,7 +3,7 @@
 #
 # Emits framed === ROUTINES === block when:
 #   - >=1 queue entry pending (lists per-slug with age + count + dispatch hint), OR
-#   - .claude/routines/*.md exists AND this repo has no leader entry (advisory)
+#   - .agent0/routines/*.md exists AND this repo has no leader entry (advisory)
 # Silent when queue is empty AND leader is designated (or no routines defined).
 #
 # Honors CLAUDE_SKIP_ROUTINES_READOUT=1 or AGENT0_SKIP_ROUTINES_READOUT=1.
@@ -22,8 +22,8 @@ if [[ "${CLAUDE_SKIP_ROUTINES_READOUT:-0}" = "1" || "${AGENT0_SKIP_ROUTINES_READ
 fi
 
 PROJECT_DIR="$(memory_project_dir "$INPUT")"
-ROUTINES_DIR="$PROJECT_DIR/.claude/routines"
-STATE_DIR="$PROJECT_DIR/.claude/.routines-state"
+ROUTINES_DIR="$PROJECT_DIR/.agent0/routines"
+STATE_DIR="$PROJECT_DIR/.agent0/.routines-state"
 LEADERS_FILE="$HOME/.claude/.agent0-routines-leaders.json"
 
 # --- Step 1: enumerate routines + pending queues ------------------------------

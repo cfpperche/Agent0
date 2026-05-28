@@ -27,7 +27,7 @@ CLAUDE.local.md
 .claude/.memory-events.jsonl.lock
 .claude/.browser-state/*.json
 .claude/.brainstorm-state/
-.claude/.routines-state/
+.agent0/.routines-state/
 
 # sync-harness CLAUDE.md migration artifacts (ephemeral; ratified via mv,
 # divergence reports re-generated each sync until resolved)

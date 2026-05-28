@@ -93,7 +93,7 @@ Every first-party `.claude/skills/*/SKILL.md` must pass the agentskills.io front
 
 ## Routines
 
-`.claude/routines/<slug>.md` git-tracks recurring project work; an opt-in leader machine's cron enqueues each run for the next interactive session to dispatch via `/routine run <slug>`. See `.claude/rules/routines.md`.
+`.agent0/routines/<slug>.md` git-tracks recurring project work; an opt-in leader machine's cron enqueues each run for the next interactive session to dispatch via `/routine run <slug>`. See `.claude/rules/routines.md`.
 
 ## Artifact size cap
 

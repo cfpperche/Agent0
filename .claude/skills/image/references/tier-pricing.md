@@ -54,7 +54,7 @@ The skill resolves the tier → endpoint mapping at call time using the values a
 
 Pricing on fal.ai changes occasionally — model providers adjust, fal.ai's margins shift, new tiers appear.
 
-**Refresh trigger:** quarterly (90 days), via a routine in `.claude/routines/`. Procedure:
+**Refresh trigger:** quarterly (90 days), via a routine in `.agent0/routines/`. Procedure:
 
 1. Open [fal.ai/models](https://fal.ai/models) for each endpoint in the table.
 2. Read the current per-image price.

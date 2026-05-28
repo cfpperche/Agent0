@@ -11,7 +11,7 @@ Subcommands invoked from the skill body or the readout hook:
   resolve <id-or-position>         # prints the resolved id (for skill body)
   get-check <id-or-position>       # prints the entry's check_command verbatim
 
-Reads/writes $CLAUDE_PROJECT_DIR/.claude/reminders.yaml (creates with
+Reads/writes $CLAUDE_PROJECT_DIR/.agent0/reminders.yaml (creates with
 `reminders: []` if absent). Field order preserved via sort_keys=False.
 
 Exit codes: 0 ok, 2 user error (invalid arg / unknown id), 3 IO error.
@@ -45,7 +45,7 @@ ID_RE = re.compile(r"^r-[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9-]+$")
 
 def yaml_path() -> Path:
     root = Path(os.environ.get("CLAUDE_PROJECT_DIR", os.getcwd()))
-    return root / ".claude" / "reminders.yaml"
+    return root / ".agent0" / "reminders.yaml"
 
 
 def load() -> dict:

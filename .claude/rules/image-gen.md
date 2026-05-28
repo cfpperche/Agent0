@@ -139,7 +139,7 @@ Swap is a `.mcp.json` edit (replace the `fal-ai` HTTP block with the chosen alte
 
 ## Pricing refresh
 
-The tier-pricing table in `.claude/skills/image/references/tier-pricing.md` is date-stamped and prefixed `approx`. Refresh discipline: a quarterly entry in `.claude/routines/` (per `.claude/rules/routines.md`) re-runs the lookup against fal.ai's pricing page. If pricing has moved >20% on any tier, update the table, bump the date stamp, regenerate `references/tier-pricing.md`.
+The tier-pricing table in `.claude/skills/image/references/tier-pricing.md` is date-stamped and prefixed `approx`. Refresh discipline: a quarterly entry in `.agent0/routines/` (per `.claude/rules/routines.md`) re-runs the lookup against fal.ai's pricing page. If pricing has moved >20% on any tier, update the table, bump the date stamp, regenerate `references/tier-pricing.md`.
 
 Skill scripts read the table at call time; updates apply on next invocation without a session restart.
 

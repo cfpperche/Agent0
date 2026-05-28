@@ -218,12 +218,22 @@ Encoded in three arrays at the top of `sync-harness.sh`:
 
 - **`COPY_CHECK_RECURSIVE`** — `find -type f` under each base: `.claude/skills/`, `.claude/tests/`, `.claude/agents/`. Recursive walks; subdirs preserved.
 - **`COPY_CHECK_GLOBS`** — `dir|pattern` pairs, single-level: `.claude/hooks/*.sh`, `.claude/rules/*.md`, `.claude/tools/*.sh`, `.claude/validators/*.sh`.
-- **`COPY_CHECK_FILES`** — literal paths: `AGENTS.md`, `.mcp.json.example`, `.codex/config.toml.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.claude/tools/lib/managed-block.sh`, `.agent0/memory/.gitkeep`, `.agent0/memory.config.json`, `.claude/.browser-state/.gitkeep`.
+- **`COPY_CHECK_FILES`** — literal paths: `AGENTS.md`, `.mcp.json.example`, `.codex/config.toml.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.claude/tools/lib/managed-block.sh`, `.agent0/memory/.gitkeep`, `.agent0/memory.config.json`, `.claude/.browser-state/.gitkeep`, `.agent0/routines/.gitkeep`.
 - **Structured merge** (not in COPY_CHECK): `.claude/settings.json`, `CLAUDE.md`, `.gitignore`.
 
 The walk only reads from Agent0 manifest paths. Out-of-scope consumer project content (`src/`, consumer project's `tests/` outside `.claude/tests/`, `docs/`, `package.json`, `Cargo.toml`, `pyproject.toml`, `.mcp.json`, `.codex/config.toml`, `.codex/.env.local`, `.env*`, `target/`, `node_modules/`, `.venv/`, `dist/`, `build/`) is **implicitly invisible** — no denylist guard fires because nothing in the manifest points at those paths. This means adding a new path to the manifest is the only way to extend scope; the safety floor is the manifest itself.
 
 **Deletion propagation.** The walk also accumulates Agent0's *current* manifest into a sha-set; the deletion pass compares that set against the recorded baseline's file list. A path present in the baseline but absent from the current set is an upstream removal, propagated per § Customization detection § *Upstream deletions*. Out-of-scope consumer project content stays invisible to this pass too — it only ever considers paths that were *previously* in the manifest (and therefore recorded in the baseline), never arbitrary consumer project files. A consumer project with no baseline skips the deletion pass entirely.
+
+## Path relocations (capacity-only)
+
+When a capacity's canonical home moves within Agent0 (e.g. spec 103 relocated reminders + routines from `.claude/` to `.agent0/`, per umbrella spec 102), propagation is **capacity-only** — the manifest carries the *capacity* (hooks, skills, rules, and the empty `.gitkeep` scaffold of the new location), never the *content*. On a consumer `--apply`:
+
+- The new-location scaffold (`.agent0/<x>/.gitkeep`) arrives; the relocated hooks/skills/rules overwrite their stale copies (or refuse if customized).
+- The old-location **data** (a fork's own `.claude/reminders.yaml`, `.claude/routines/*.md`, gitignored `.claude/.routines-state/`) is **not** touched, moved, or deleted — it is consumer content, invisible to the manifest (per § Manifest scope).
+- Result: a freshly-synced fork has working hooks pointing at the new path but its pre-existing data still at the old path. **The fork migrates its own data** with a one-time `git mv .claude/reminders.yaml .agent0/reminders.yaml` (+ routines), exactly as upstream did. No upstream auto-migration — same hard-cutover posture as the `.claude/SESSION.md` removal (spec 101).
+
+Deliberate: auto-moving consumer content would cross the manifest's "never touch consumer/product files" floor. The cost is a documented one-time manual step per fork; the benefit is sync never mutates data it does not own.
 
 ## Self-rebootstrap
 

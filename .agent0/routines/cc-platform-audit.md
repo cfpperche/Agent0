@@ -30,7 +30,7 @@ Steps:
 - Edit applied to `.agent0/memory/cc-platform-hooks.md` (or other relevant memos) reflecting current drift between CC release notes and our snapshot,
   OR
 - Message `no-drift-detected since {{LAST_COMPLETED_TS}}` explicitly reported in chat with no edits applied.
-- (Automatic) `.claude/.routines-state/cc-platform-audit/completed/<ts>.md` materialized by `/routine run` on archival.
+- (Automatic) `.agent0/.routines-state/cc-platform-audit/completed/<ts>.md` materialized by `/routine run` on archival.
 
 <!--
 Created 2026-05-19 as Agent0's first real routine (dogfood + actual value).

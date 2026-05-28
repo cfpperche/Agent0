@@ -41,7 +41,7 @@ The cascade-with-conservative-default is the discipline: a finding that doesn't 
 Rule-of-three demand test (precedent: [[skill-eval-pattern]] — 5 industry posts converged on the same skill-eval recipe and Agent0 still didn't build). Single sample so far. Three structural reasons compound:
 
 - Agent0 is meta-harness, not product-SaaS — no browser-exploration scenarios to dogfood
-- State-file primitive already exists via `/routine` (`.claude/.routines-state/<slug>/queue/` + `last-completed.json`)
+- State-file primitive already exists via `/routine` (`.agent0/.routines-state/<slug>/queue/` + `last-completed.json`)
 - In-fire TDD-loop + branch-isolation already covered by post-edit-validator + delegation worktree-isolation
 
 ## When to revisit

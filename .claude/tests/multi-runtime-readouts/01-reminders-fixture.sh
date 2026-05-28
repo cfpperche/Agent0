@@ -12,7 +12,8 @@ mkdir -p "$TMPDIR/.claude/skills/remind/scripts"
 cp "$AGENT0_ROOT/.claude/skills/remind/scripts/reminders-helper.py" "$TMPDIR/.claude/skills/remind/scripts/reminders-helper.py"
 chmod +x "$TMPDIR/.claude/skills/remind/scripts/reminders-helper.py"
 
-cat > "$TMPDIR/.claude/reminders.yaml" <<'YAML'
+mkdir -p "$TMPDIR/.agent0"
+cat > "$TMPDIR/.agent0/reminders.yaml" <<'YAML'
 reminders:
   - id: r-2026-05-27-check-session-readout
     created: '2026-05-27'

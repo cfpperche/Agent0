@@ -1,6 +1,6 @@
 ---
 name: routine
-description: Project-scoped recurring routine manager. Use when the user wants to schedule recurring work that the repo's contributors all benefit from ("every quarter audit CC platform changes", "weekly stack defaults snapshot", "monthly dependency drift check"). Distinct from /remind (one-shot deferred) and /schedule (user-account-scoped Anthropic cloud). Subcommands - new <slug>, list, run <slug>, validate <slug>, dismiss <slug>. State lives in .claude/routines/<slug>.md (git-tracked source of truth) and .claude/.routines-state/ (gitignored per-machine cache). See .claude/rules/routines.md for discipline.
+description: Project-scoped recurring routine manager. Use when the user wants to schedule recurring work that the repo's contributors all benefit from ("every quarter audit CC platform changes", "weekly stack defaults snapshot", "monthly dependency drift check"). Distinct from /remind (one-shot deferred) and /schedule (user-account-scoped Anthropic cloud). Subcommands - new <slug>, list, run <slug>, validate <slug>, dismiss <slug>. State lives in .agent0/routines/<slug>.md (git-tracked source of truth) and .agent0/.routines-state/ (gitignored per-machine cache). See .claude/rules/routines.md for discipline.
 argument-hint: <new <slug> | list | run <slug> | validate <slug> | dismiss <slug>>
 license: MIT
 compatibility: Designed for Claude Code. Body references `.claude/` conventional paths and CC-specific tools; cron executor + bootstrap scripts are bash + POSIX utilities, portable to any runtime that maps a `.claude/`-analog directory.
@@ -13,7 +13,7 @@ metadata:
 
 <!-- SKILL-RUBRIC-EXEMPT: subcommand dispatcher with mechanical per-step structure; see docs/specs/087-skill-rubric-freedom-evals/notes.md design-decision 2026-05-25 for rationale and rule-of-three promotion criterion -->
 
-Create, list, execute, validate, and dismiss recurring routines for this repo. Routine definitions live in `.claude/routines/<slug>.md` (git-tracked); cron renders them into `.claude/.routines-state/<slug>/queue/` (gitignored); the next interactive Claude Code session reads the queue and dispatches each pending routine via this skill.
+Create, list, execute, validate, and dismiss recurring routines for this repo. Routine definitions live in `.agent0/routines/<slug>.md` (git-tracked); cron renders them into `.agent0/.routines-state/<slug>/queue/` (gitignored); the next interactive Claude Code session reads the queue and dispatches each pending routine via this skill.
 
 See `.claude/rules/routines.md` for full discipline, frontmatter reference, cron syntax limits, leader-flag model, and the differences vs `/remind` and `/schedule`.
 
@@ -31,21 +31,21 @@ Scaffold a new routine. Parse `$ARGUMENTS`: first token must be `new`, second to
 
 1. **Validate** — refuse if:
    - slug is empty or contains uppercase / non-alphanumeric (besides hyphen)
-   - `.claude/routines/<slug>.md` already exists (suggest a different slug, or edit the existing file)
-2. **Invoke**: `bash .claude/skills/routine/scripts/new.sh <slug>`. The script copies `templates/routine.md.tmpl` → `.claude/routines/<slug>.md`, substitutes `{{SLUG}}` and `{{DATE}}`, and runs `validate.sh` as a self-check (should pass).
+   - `.agent0/routines/<slug>.md` already exists (suggest a different slug, or edit the existing file)
+2. **Invoke**: `bash .claude/skills/routine/scripts/new.sh <slug>`. The script copies `templates/routine.md.tmpl` → `.agent0/routines/<slug>.md`, substitutes `{{SLUG}}` and `{{DATE}}`, and runs `validate.sh` as a self-check (should pass).
 3. **Report**: surface the script's stdout (`new: created <path>` + the re-install hint). Tell the user to edit the file (especially the `schedule:` field, default `0 9 * * *` is rarely what they want), then re-run `.claude/tools/install-routines.sh` to register the new routine with cron.
 
 ## Subcommand: `list`
 
 Show the status of every routine in this repo. No arguments.
 
-1. **Invoke**: `bash .claude/skills/routine/scripts/list.sh`. The script iterates `.claude/routines/*.md` (excluding `.gitkeep`), parses frontmatter, and emits one line per routine in the shape:
+1. **Invoke**: `bash .claude/skills/routine/scripts/list.sh`. The script iterates `.agent0/routines/*.md` (excluding `.gitkeep`), parses frontmatter, and emits one line per routine in the shape:
    ```
    <slug>  schedule=<cron>  leader=<yes|no|n/a>  queue=<N pending>  last-completed=<ts|never>
    ```
    - `leader` reads `~/.claude/.agent0-routines-leaders.json`: `yes` if this repo's abs path is `true`, `no` if `false`, `n/a` if missing or repo not in file.
-   - `queue` counts files in `.claude/.routines-state/<slug>/queue/*.md` (0 if dir absent).
-   - `last-completed` reads `.claude/.routines-state/<slug>/last-completed.json` for the `ts` field, or `never` if file absent.
+   - `queue` counts files in `.agent0/.routines-state/<slug>/queue/*.md` (0 if dir absent).
+   - `last-completed` reads `.agent0/.routines-state/<slug>/last-completed.json` for the `ts` field, or `never` if file absent.
 2. **Footer** (script-emitted): if leader is `n/a` AND routines exist, the script appends `(no leader designated — run .claude/tools/install-routines.sh to schedule)`.
 3. **Empty case** (script-emitted): if no routines exist, the script emits `(no routines defined — use /routine new <slug> to create one)`.
 
@@ -54,20 +54,20 @@ Show the status of every routine in this repo. No arguments.
 Dispatch the oldest pending queue entry for a routine. Parse `$ARGUMENTS`: first token must be `run`, second is the slug.
 
 1. **Validate** — refuse if:
-   - `.claude/routines/<slug>.md` does not exist (suggest `/routine new <slug>` or check spelling)
-   - `.claude/.routines-state/<slug>/queue/*.md` is empty (suggest `/routine run` with a different slug, or note that cron hasn't fired yet)
-2. **Pop oldest queue entry** — pick the file with the lowest unix timestamp in the filename (`ls .claude/.routines-state/<slug>/queue/*.md | sort | head -1`).
+   - `.agent0/routines/<slug>.md` does not exist (suggest `/routine new <slug>` or check spelling)
+   - `.agent0/.routines-state/<slug>/queue/*.md` is empty (suggest `/routine run` with a different slug, or note that cron hasn't fired yet)
+2. **Pop oldest queue entry** — pick the file with the lowest unix timestamp in the filename (`ls .agent0/.routines-state/<slug>/queue/*.md | sort | head -1`).
 3. **Read the queue file** — it contains the rendered prompt (with `{{LAST_COMPLETED_TS}}` etc. already substituted by `run-routine.sh`). The prompt body is between `# Prompt` and `# Done when` (or EOF if no done-when block).
 4. **Dispatch** — execute the prompt as the next action in this session. The work itself happens here: read the prompt, do what it asks, report back. **You are the executor.** Idempotency discipline (per `.claude/rules/routines.md` § *Idempotency mandate*): re-running this prompt should produce no destructive side effect; that's the routine author's responsibility, not yours.
 5. **Archive** — on dispatch completion, move the queue file:
    ```bash
-   mv .claude/.routines-state/<slug>/queue/<ts>.md .claude/.routines-state/<slug>/completed/<ts>.md
+   mv .agent0/.routines-state/<slug>/queue/<ts>.md .agent0/.routines-state/<slug>/completed/<ts>.md
    ```
-   And update `.claude/.routines-state/<slug>/last-completed.json` with the current ISO-8601 UTC timestamp:
+   And update `.agent0/.routines-state/<slug>/last-completed.json` with the current ISO-8601 UTC timestamp:
    ```json
    { "ts": "2026-05-19T18:54:00Z", "queue_file": "1747...md" }
    ```
-6. **FIFO cap on `completed/`** — if `ls .claude/.routines-state/<slug>/completed/*.md | wc -l` > 50, delete oldest until count ≤ 50. Use `ls -t | tail -n +51 | xargs -r rm -f`.
+6. **FIFO cap on `completed/`** — if `ls .agent0/.routines-state/<slug>/completed/*.md | wc -l` > 50, delete oldest until count ≤ 50. Use `ls -t | tail -n +51 | xargs -r rm -f`.
 
 ## Subcommand: `validate <slug>`
 
@@ -88,7 +88,7 @@ Move ALL pending queue entries for a routine to `completed/` with `-dismissed` s
 
 Parse `$ARGUMENTS`: first token must be `dismiss`, second is the slug.
 
-1. **Validate** — refuse if `.claude/.routines-state/<slug>/queue/*.md` is empty (`(no pending entries for <slug>)`).
+1. **Validate** — refuse if `.agent0/.routines-state/<slug>/queue/*.md` is empty (`(no pending entries for <slug>)`).
 2. **Move each queue file** to `completed/<original-name>-dismissed.md`. Preserve original timestamp prefix so audit ordering stays correct.
 3. **Do NOT update `last-completed.json`** — dismissal is not completion. The routine will fire again on its next scheduled tick.
 4. **Report**: `dismissed: <N> pending entries for <slug> (moved to completed/ with -dismissed suffix)`.
@@ -106,7 +106,7 @@ If the first token of `$ARGUMENTS` is missing or not one of `new`, `list`, `run`
 _Consumer-extension surface — append consumer-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add consumer bullets at the end. See `.claude/rules/harness-sync.md` § Consumer-extension convention._
 
 - **Don't auto-stage, don't auto-commit.** `new` writes the file; `git add` is the developer's call. Same discipline as `/remind`.
-- **Routine definitions are git-tracked; state is NOT.** `.claude/routines/<slug>.md` ships in git; `.claude/.routines-state/` is gitignored (per-machine). This split is what makes the capacity multi-developer-safe.
+- **Routine definitions are git-tracked; state is NOT.** `.agent0/routines/<slug>.md` ships in git; `.agent0/.routines-state/` is gitignored (per-machine). This split is what makes the capacity multi-developer-safe.
 - **Sync-harness propagates the capacity (rule + scripts + skill + hook), NOT instances.** A consumer project that adopts Agent0's harness gets `/routine` for free, but the consumer project's own routines are consumer-local.
 - **Cron registration is separate from routine definition.** `/routine new` creates the file; `.claude/tools/install-routines.sh` (re-)generates the crontab block. After `new`, the routine is NOT scheduled until install runs.
 - **Idempotency is the routine author's responsibility.** The validator rejects `idempotent: false` in frontmatter, but it can't verify the prompt body is actually idempotent. The 4-layer N-fold defense (per `.claude/rules/routines.md`) catches drift; the routine author writes the guard.

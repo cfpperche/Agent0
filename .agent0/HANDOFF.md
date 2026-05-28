@@ -8,9 +8,11 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-Spec 101 (`session-handoff-multi-runtime`) is implemented, code-reviewed, and marked shipped. Review verdict: implementation correct, all contracts hold. The three session lifecycle scripts live under `.agent0/hooks/`: `session-start.sh`, `session-stop.sh`, `session-track-edits.sh`.
+Spec 103 (`reminders-routines-to-agent0`) shipped: reminders + routines data/state relocated `.claude/` → `.agent0/` (`reminders.yaml`, `routines/`, `.routines-state/`). Phase 1 of umbrella 102 (`harness-consolidate-agent0`) — makes `.agent0/` the runtime-neutral harness home; `.claude/`+`.codex/` keep only runtime-exclusive files. Verified green (grep-guard, helper, readout fixtures, harness-sync/runtime-capabilities suites, sync-harness dry-run). Migration capacity-only (forks move own data; see `harness-sync.md`).
 
-Review found one actionable item (F1) — now fixed: task 9's done-when ("no shipped file references `.claude/SESSION.md`") was not actually met. Cleaned 5 dangling refs across 3 shipped files: `.claude/skills/remind/SKILL.md` (:3, :18, :142 — :142 was the only semantic one, now points in-flight work to `.agent0/HANDOFF.md`), `.claude/skills/skill/references/portability-tiers.md:12`, `.claude/skills/product/templates/pipeline/02-prototype/prompt.md:107`. Grep confirms zero shipped-surface refs remain (negative-assertion tests in `tests/session-handoff/` excluded by design).
+Specs 100/101 hook validation re-run in Codex on 2026-05-28. Active hooks behave as planned: spec 100 readouts (`reminders-readout.sh`, `routines-readout.sh`) pass fixtures, spec 101 session handoff passes all multi-runtime fixtures, and local `.codex/config.toml` has `hooks = true` pointing at the shared `.agent0/hooks/` scripts. The earlier spec-100 `mcp-recipes-hint.sh` path is intentionally absent in current harness state because commit `25ae1a6` decommissioned MCP recipe curation + SessionStart hint after spec 100 shipped.
+
+Spec 101 (`session-handoff-multi-runtime`) is implemented, code-reviewed, shipped, committed (`e17be90`), and pushed. The three session lifecycle scripts live under `.agent0/hooks/`: `session-start.sh`, `session-stop.sh`, `session-track-edits.sh`.
 
 Claude registrations in `.claude/settings.json` point at the new shared scripts. Codex has commented opt-in blocks in `.codex/config.toml.example` for `SessionStart`, `Stop`, and `PostToolUse` on `^apply_patch$`. Old `.claude/hooks/session-*.sh` + pointer-only `.claude/SESSION.md` removed; shared state stays at `.claude/.session-state/<session_id>/`.
 
@@ -22,7 +24,7 @@ _None active._
 
 ## Next Actions
 
-1. Commit spec 101 implementation + the F1 doc cleanup (bundle or split as preferred). F1 edits are doc-only and propagate to forks via sync-harness.
+1. Umbrella 102 next phases (all `undecided`/`deferred` in the gap matrix): decide row 3 (`.claude/.session-state/` → `.agent0/`? reverses 101 OQ-E), then rows 4-6 (runtime-state, browser-state, shared tools). Rows 7-9 (rules/skills/validators) deferred until Codex needs them.
 2. Continue the runtime-capabilities re-audit later with `runtime introspect` and `delegation/subagents`.
 
 ## Decisions & Gotchas
@@ -31,4 +33,4 @@ _None active._
 - Codex SessionStart emits plain framed stdout; Claude keeps JSON dual-channel (`hookSpecificOutput.additionalContext` + `systemMessage`). The branch keys off `CLAUDE_PROJECT_DIR` being unset = "assume Codex" (heuristic, correct in practice since the harness always sets it for Claude).
 - `apply_patch` attribution parses patch headers via `_memory-hook-lib.sh::memory_extract_paths`; Bash/MCP writes fall back to porcelain comparison.
 - Residual risk (review): if Codex `session_id` carries chars outside `^[a-zA-Z0-9_-]+$`, all such sessions collapse to the shared `unknown/` state dir → cross-session nag interference. Couldn't verify Codex's charset without live tool — worth a live smoke (pairs with reminder `r-2026-05-18`).
-- Validation: all spec 101 fixtures (6/6) + session-handoff (10/10) + edit-attribution (8/8) re-run green this session; full activated `.codex/config.toml.example` parses with correct matchers (SessionStart×4, Stop no-matcher, PostToolUse/PreToolUse `^apply_patch$`).
+- Validation: spec 100 readout fixtures (4/4 current active tests), spec 101 fixtures (6/6), session-handoff (10/10), runtime-capabilities, instruction-drift, codex-mcp-recipes, memory-multi-runtime, `git diff --check`, and TOML parse for `.codex/config.toml{.example,}` all passed this session. Sync-harness dry-run propagates `.agent0/hooks/session-*.sh`, `reminders-readout.sh`, and `routines-readout.sh`.

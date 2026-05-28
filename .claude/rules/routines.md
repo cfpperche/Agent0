@@ -1,10 +1,10 @@
 # Routines
 
-`.claude/routines/<slug>.md` is the project-scoped sibling of Claude Code's native `/schedule` skill. Where `/schedule` stores recurring agent runs on Anthropic's user-account cloud (the user-level memory analog), `.claude/routines/` git-tracks recurring intent at the repo level — propagating via clone, surviving consumer project via `.claude/tools/sync-harness.sh`, and visible in PR diff. It occupies the gap between three other state files in this project:
+`.agent0/routines/<slug>.md` is the project-scoped sibling of Claude Code's native `/schedule` skill. Where `/schedule` stores recurring agent runs on Anthropic's user-account cloud (the user-level memory analog), `.agent0/routines/` git-tracks recurring intent at the repo level — propagating via clone, surviving consumer project via `.claude/tools/sync-harness.sh`, and visible in PR diff. It occupies the gap between three other state files in this project:
 
 - **`.agent0/HANDOFF.md`** — *in-flight* work-state (cross-session, cross-runtime handoff).
-- **`.claude/reminders.yaml`** — *one-shot deferred do-this-thing* items with no cadence.
-- **`.claude/routines/<slug>.md`** — *cadence-driven recurring* work that the repo's contributors all benefit from.
+- **`.agent0/reminders.yaml`** — *one-shot deferred do-this-thing* items with no cadence.
+- **`.agent0/routines/<slug>.md`** — *cadence-driven recurring* work that the repo's contributors all benefit from.
 
 The capacity exists because recurring project work otherwise leaks into the founder's head, a personal calendar, or `TODO` comments in code — all of which fail the "another developer cloning the repo on a fresh machine should inherit it" test. Routines pass that test by construction.
 
@@ -12,8 +12,8 @@ The capacity exists because recurring project work otherwise leaks into the foun
 
 | Capacity | Cadence | Scope | Storage | Best for |
 | --- | --- | --- | --- | --- |
-| `/remind` | One-shot deferred | Project (git-tracked file) | `.claude/reminders.yaml` | "Review pricing in Q3", "Circle back on caching when first user complains" — no recurring schedule. |
-| `/routine` | Recurring (cron) | Project (git-tracked file) | `.claude/routines/<slug>.md` + state in `.claude/.routines-state/` | "Audit `cc-platform-hooks.md` against CC release notes every quarter", "Re-snapshot stack defaults every 90 days" — recurring work that any contributor benefits from. |
+| `/remind` | One-shot deferred | Project (git-tracked file) | `.agent0/reminders.yaml` | "Review pricing in Q3", "Circle back on caching when first user complains" — no recurring schedule. |
+| `/routine` | Recurring (cron) | Project (git-tracked file) | `.agent0/routines/<slug>.md` + state in `.agent0/.routines-state/` | "Audit `cc-platform-hooks.md` against CC release notes every quarter", "Re-snapshot stack defaults every 90 days" — recurring work that any contributor benefits from. |
 | `/schedule` (CC native) | Recurring (cron) | User (Anthropic cloud) | Anthropic backend | Personal automations tied to the user's account — cross-repo and cross-machine, but invisible to other contributors. |
 
 Worked examples:
@@ -26,7 +26,7 @@ If both `/remind` and `/routine` seem to fit, the cadence question disambiguates
 
 ## Two-phase execution model
 
-**Phase 1 (v1, ships today):** cron renders the routine prompt with fresh temporal context and writes it to `.claude/.routines-state/<slug>/queue/<unix-ts>.md`. The next interactive agent session reads the queue via the `routines-readout.sh` `SessionStart` hook and surfaces a `=== ROUTINES ===` block; the human or agent dispatches each pending routine via `/routine run <slug>`. **No Anthropic API key required.** The cron-side is purely a "render + enqueue" primitive; actual LLM execution happens in the next session.
+**Phase 1 (v1, ships today):** cron renders the routine prompt with fresh temporal context and writes it to `.agent0/.routines-state/<slug>/queue/<unix-ts>.md`. The next interactive agent session reads the queue via the `routines-readout.sh` `SessionStart` hook and surfaces a `=== ROUTINES ===` block; the human or agent dispatches each pending routine via `/routine run <slug>`. **No Anthropic API key required.** The cron-side is purely a "render + enqueue" primitive; actual LLM execution happens in the next session.
 
 **Phase 2 (future, when API key available):** `autonomous: true` opt-in frontmatter; cron-side invokes `claude -p` directly with the rendered prompt and writes output to PR / issue / file per the routine's `output:` declaration. Deferred per the rule-of-three demand test — built when ≥3 routines have demonstrated value in Phase 1 mode.
 
@@ -106,7 +106,7 @@ Both `# Prompt` and `# Done when` headers are required; `/routine validate` reje
 
 | Placeholder | Value |
 | --- | --- |
-| `{{LAST_COMPLETED_TS}}` | ISO-8601 UTC timestamp of the last successful run (from `.claude/.routines-state/<slug>/last-completed.json`), or `"never"` if no prior run. |
+| `{{LAST_COMPLETED_TS}}` | ISO-8601 UTC timestamp of the last successful run (from `.agent0/.routines-state/<slug>/last-completed.json`), or `"never"` if no prior run. |
 | `{{GIT_HEAD}}` | Output of `git rev-parse HEAD` at enqueue time. |
 | `{{REPO_ROOT}}` | Absolute path to repo root (`git rev-parse --show-toplevel`). |
 | `{{NOW}}` | ISO-8601 UTC timestamp at enqueue time. |
@@ -150,13 +150,13 @@ The marker is scoped — it skips the named check, not all validation:
 
 ## Files
 
-- `.claude/routines/<slug>.md` — routine definitions. Git-tracked. Created via `/routine new <slug>`.
-- `.claude/routines/.gitkeep` — empty sentinel so the directory exists in fresh clones.
-- `.claude/.routines-state/<slug>/queue/<ts>.md` — pending render. Gitignored, per-machine.
-- `.claude/.routines-state/<slug>/completed/<ts>.md` — archived render. Gitignored. FIFO-capped at 50.
-- `.claude/.routines-state/<slug>/last-completed.json` — last successful execution metadata. Gitignored.
-- `.claude/.routines-state/<slug>/last-queue.json` — last enqueue metadata. Gitignored.
-- `.claude/.routines-state/cron.log` — cron stdout/stderr capture. Gitignored.
+- `.agent0/routines/<slug>.md` — routine definitions. Git-tracked. Created via `/routine new <slug>`.
+- `.agent0/routines/.gitkeep` — empty sentinel so the directory exists in fresh clones.
+- `.agent0/.routines-state/<slug>/queue/<ts>.md` — pending render. Gitignored, per-machine.
+- `.agent0/.routines-state/<slug>/completed/<ts>.md` — archived render. Gitignored. FIFO-capped at 50.
+- `.agent0/.routines-state/<slug>/last-completed.json` — last successful execution metadata. Gitignored.
+- `.agent0/.routines-state/<slug>/last-queue.json` — last enqueue metadata. Gitignored.
+- `.agent0/.routines-state/cron.log` — cron stdout/stderr capture. Gitignored.
 - `~/.claude/.agent0-routines-leaders.json` — per-user leader designations. NOT in any repo.
 - `.claude/tools/install-routines.sh` — interactive bootstrap (leader prompt + crontab block install + WSL2 advisory).
 - `.claude/tools/uninstall-routines.sh` — symmetric removal.
@@ -170,7 +170,7 @@ The marker is scoped — it skips the named check, not all validation:
 ## Discipline
 
 - **No auto-stage, no auto-commit.** `/routine new` writes the file; `git add` is the developer's call.
-- **Sync-harness propagates the capacity, NOT instances.** The `.claude/routines/` directory ships as `.gitkeep`-only via sync; individual routines a consumer project creates are consumer-local by design.
+- **Sync-harness propagates the capacity, NOT instances.** The `.agent0/routines/` directory ships as `.gitkeep`-only via sync; individual routines a consumer project creates are consumer-local by design.
 - **Leader-flag mutation requires explicit script invocation.** `install-routines.sh` and `uninstall-routines.sh` are the only sanctioned ways to mutate `~/.claude/.agent0-routines-leaders.json`. Hand-editing the file is allowed but the JSON shape must be preserved.
 - **Queue file accumulation is informative.** Multiple unactioned queue entries for the same slug (e.g. "3 pending since 10 days ago") is the signal that either the routine is firing too often, or no one's been opening sessions in this repo. Both are real signals — the readout surfaces them rather than collapsing them silently.
 - **Bash regex validation has gaps.** The 30-line cron validator catches obvious malformation but doesn't verify semantic plausibility (`0 25 * * *` is malformed AND rejected; `0 0 31 2 *` is semantically impossible — Feb 31 — but syntactically valid and accepted). Operator's responsibility to author plausible schedules.
@@ -180,8 +180,8 @@ The marker is scoped — it skips the named check, not all validation:
 - **`SessionStart` hook registration is per-session.** Adding `routines-readout.sh` to `settings.json` doesn't activate until the next session boot. Same as `reminders-readout.sh`.
 - **WSL2 cron is opt-in.** `service cron status` often reports inactive on fresh WSL2 distros. `install-routines.sh` detects WSL2 via `grep -qi microsoft /proc/version` and emits `wsl-advisory:` to stderr if cron isn't running. Document the `sudo service cron start` + `.profile` persistence pattern.
 - **Crontab marker block is the only safe edit surface.** `install-routines.sh` rewrites the block between `# AGENT0-ROUTINES-START` and `# AGENT0-ROUTINES-END` on every run; manual edits inside the block are clobbered. Edit outside the block freely.
-- **Renaming a routine slug requires re-running install.** The crontab block is generated from `.claude/routines/*.md` at install time; a `.md → different .md` rename leaves the old crontab entry referencing a now-missing file. Re-run `install-routines.sh` after any rename or addition.
-- **`.claude/.routines-state/` is per-machine.** State doesn't sync between dev machines; that's by design (leader is one machine). If you switch leader, the new leader starts with empty state (`last-completed=never`), which is correct.
+- **Renaming a routine slug requires re-running install.** The crontab block is generated from `.agent0/routines/*.md` at install time; a `.md → different .md` rename leaves the old crontab entry referencing a now-missing file. Re-run `install-routines.sh` after any rename or addition.
+- **`.agent0/.routines-state/` is per-machine.** State doesn't sync between dev machines; that's by design (leader is one machine). If you switch leader, the new leader starts with empty state (`last-completed=never`), which is correct.
 - **Queue file timestamps are unix epoch.** `<unix-ts>.md` not `<iso-8601>.md` because filenames sorted lexicographically by epoch == sorted chronologically; ISO-8601 requires `sort -V`. Lexicographic sort is portable across `ls`, `find`, `glob`.
 - **`completed/` rotation is best-effort.** FIFO cap at 50 via `ls -t | tail -n +51 | xargs rm -f` — under high-concurrency edge cases (two routines complete simultaneously) the count can briefly drift; the soft cap is intentional, not a quota.
 - **No global routine disable env var.** Unlike `CLAUDE_SKIP_MCP_RECIPES` etc., there is no `CLAUDE_SKIP_ROUTINES` — disabling routines means running `uninstall-routines.sh`, which is the sanctioned audit-leaving path. Throwaway sessions just don't hit the routines surface (no readout if queue is empty).

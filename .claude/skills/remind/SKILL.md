@@ -1,6 +1,6 @@
 ---
 name: remind
-description: Deferred-intent reminder list for this project. Use when the user wants to capture a future to-do that isn't urgent enough to act on now ("circle back on caching when first user complains", "review pricing in Q3", "update README after auth refactor lands"). Subcommands - add "<text>" [--due <YYYY-MM-DD>] [--check '<cmd>'] [--links <a,b,c>], list, done <N-or-id>, dismiss <N-or-id> (alias for done), snooze <N-or-id> <Nd|Nw|Nm|YYYY-MM-DD>, check <N-or-id>. State lives in .claude/reminders.yaml (git-tracked) and is auto-injected at session start by .agent0/hooks/reminders-readout.sh. See .claude/rules/reminders.md for what belongs here vs MEMORY vs HANDOFF.md.
+description: Deferred-intent reminder list for this project. Use when the user wants to capture a future to-do that isn't urgent enough to act on now ("circle back on caching when first user complains", "review pricing in Q3", "update README after auth refactor lands"). Subcommands - add "<text>" [--due <YYYY-MM-DD>] [--check '<cmd>'] [--links <a,b,c>], list, done <N-or-id>, dismiss <N-or-id> (alias for done), snooze <N-or-id> <Nd|Nw|Nm|YYYY-MM-DD>, check <N-or-id>. State lives in .agent0/reminders.yaml (git-tracked) and is auto-injected at session start by .agent0/hooks/reminders-readout.sh. See .claude/rules/reminders.md for what belongs here vs MEMORY vs HANDOFF.md.
 argument-hint: <add "<text>" [--due <DATE>] [--check '<cmd>'] [--links <a,b,c>] | list | done <N|id> | dismiss <N|id> | snooze <N|id> <Nd|Nw|Nm|DATE> | check <N|id>>
 license: MIT
 compatibility: Designed for Claude Code. Body references `.claude/` conventional paths and CC-specific tools; portable to any runtime that maps a `.claude/`-analog directory and surfaces the referenced tools. Requires python3 + PyYAML for state mutation; readout hook degrades to yq or raw-YAML when PyYAML is absent.
@@ -13,7 +13,7 @@ metadata:
 
 <!-- SKILL-RUBRIC-EXEMPT: subcommand dispatcher with mechanical per-step structure; rationale recorded in Agent0 design history and revisit only after rule-of-three demand -->
 
-Capture, list, snooze, complete, and probe action-shaped future items that aren't urgent enough to act on now but shouldn't be lost. State lives in `.claude/reminders.yaml` (git-tracked YAML, one entry per record), auto-injected into context at session start. Not a task manager, not a knowledge base, not a session work-state log — reminders are *future do-this-thing* items only.
+Capture, list, snooze, complete, and probe action-shaped future items that aren't urgent enough to act on now but shouldn't be lost. State lives in `.agent0/reminders.yaml` (git-tracked YAML, one entry per record), auto-injected into context at session start. Not a task manager, not a knowledge base, not a session work-state log — reminders are *future do-this-thing* items only.
 
 See `.claude/rules/reminders.md` for what belongs here vs `MEMORY.md` vs `HANDOFF.md`, and the discipline (no auto-commit, no autonomous check execution, soft-delete via `status: done + completed_ts`).
 
@@ -25,9 +25,9 @@ User invokes as `/remind <subcommand> [args]`. The raw argument string is `$ARGU
 
 Raw invocation: `$ARGUMENTS`
 
-State file: `.claude/reminders.yaml` (resolve relative to `$CLAUDE_PROJECT_DIR`).
+State file: `.agent0/reminders.yaml` (resolve relative to `$CLAUDE_PROJECT_DIR`).
 
-Helper script: `.claude/skills/remind/scripts/reminders-helper.py`. Invoke as `python3 .claude/skills/remind/scripts/reminders-helper.py <subcommand> [args...]`, with `CLAUDE_PROJECT_DIR` set in env. The helper is the canonical mutator — never edit `.claude/reminders.yaml` by hand from this skill body.
+Helper script: `.claude/skills/remind/scripts/reminders-helper.py`. Invoke as `python3 .claude/skills/remind/scripts/reminders-helper.py <subcommand> [args...]`, with `CLAUDE_PROJECT_DIR` set in env. The helper is the canonical mutator — never edit `.agent0/reminders.yaml` by hand from this skill body.
 
 ## Subcommand: `add`
 

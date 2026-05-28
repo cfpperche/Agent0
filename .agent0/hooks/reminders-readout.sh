@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SessionStart hook: inject pending + past-snoozed reminders into the agent's
-# context. Reads .claude/reminders.yaml (the structured replacement for
+# context. Reads .agent0/reminders.yaml (the structured replacement for
 # the legacy .claude/REMINDERS.md plain-bullet format).
 #
 # Tool tier (degraded gracefully):
@@ -25,7 +25,7 @@ if [[ "${CLAUDE_SKIP_REMINDERS_READOUT:-0}" = "1" || "${AGENT0_SKIP_REMINDERS_RE
 fi
 
 PROJECT_DIR="$(memory_project_dir "$INPUT")"
-YAML_FILE="$PROJECT_DIR/.claude/reminders.yaml"
+YAML_FILE="$PROJECT_DIR/.agent0/reminders.yaml"
 HELPER="$PROJECT_DIR/.claude/skills/remind/scripts/reminders-helper.py"
 TODAY="$(date -u +%Y-%m-%d)"
 
@@ -66,7 +66,7 @@ try_yq() {
 
 # Tier 3: raw YAML fallback.
 emit_raw_fallback() {
-  printf 'reminders-degraded-advisory: python3+PyYAML and yq unavailable; emitting raw .claude/reminders.yaml without filtering\n' >&2
+  printf 'reminders-degraded-advisory: python3+PyYAML and yq unavailable; emitting raw .agent0/reminders.yaml without filtering\n' >&2
   printf '(yq/python3+yaml absent; install yq or pip install pyyaml for filtered readout)\n'
   cat "$YAML_FILE"
 }

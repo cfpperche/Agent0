@@ -21,7 +21,7 @@ fi
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}"
 PROJECT_DIR="${PROJECT_DIR:-$PWD}"
 
-ROUTINES_DIR="$PROJECT_DIR/.claude/routines"
+ROUTINES_DIR="$PROJECT_DIR/.agent0/routines"
 TEMPLATE="$PROJECT_DIR/.claude/skills/routine/templates/routine.md.tmpl"
 DEST="$ROUTINES_DIR/$SLUG.md"
 

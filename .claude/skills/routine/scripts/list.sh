@@ -10,8 +10,8 @@ set -uo pipefail
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}"
 PROJECT_DIR="${PROJECT_DIR:-$PWD}"
 
-ROUTINES_DIR="$PROJECT_DIR/.claude/routines"
-STATE_DIR="$PROJECT_DIR/.claude/.routines-state"
+ROUTINES_DIR="$PROJECT_DIR/.agent0/routines"
+STATE_DIR="$PROJECT_DIR/.agent0/.routines-state"
 LEADERS_FILE="$HOME/.claude/.agent0-routines-leaders.json"
 
 # --- Leader status for this repo ----------------------------------------------

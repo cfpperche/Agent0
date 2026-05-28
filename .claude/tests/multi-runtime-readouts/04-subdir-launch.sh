@@ -11,13 +11,13 @@ git init -q "$TMPDIR"
 mkdir -p \
   "$TMPDIR/apps/web" \
   "$TMPDIR/.claude/skills/remind/scripts" \
-  "$TMPDIR/.claude/routines" \
-  "$TMPDIR/.claude/.routines-state/weekly/queue"
+  "$TMPDIR/.agent0/routines" \
+  "$TMPDIR/.agent0/.routines-state/weekly/queue"
 
 cp "$AGENT0_ROOT/.claude/skills/remind/scripts/reminders-helper.py" "$TMPDIR/.claude/skills/remind/scripts/reminders-helper.py"
 chmod +x "$TMPDIR/.claude/skills/remind/scripts/reminders-helper.py"
 
-cat > "$TMPDIR/.claude/reminders.yaml" <<'YAML'
+cat > "$TMPDIR/.agent0/reminders.yaml" <<'YAML'
 reminders:
   - id: r-2026-05-27-subdir-readout
     created: '2026-05-27'
@@ -25,9 +25,9 @@ reminders:
     status: pending
 YAML
 
-printf '%s\n' '---' 'schedule: "0 9 * * 1"' '---' '# Weekly routine' > "$TMPDIR/.claude/routines/weekly.md"
+printf '%s\n' '---' 'schedule: "0 9 * * 1"' '---' '# Weekly routine' > "$TMPDIR/.agent0/routines/weekly.md"
 oldest="$(( $(date -u +%s) - 120 ))"
-printf 'Run weekly fixture\n' > "$TMPDIR/.claude/.routines-state/weekly/queue/$oldest.md"
+printf 'Run weekly fixture\n' > "$TMPDIR/.agent0/.routines-state/weekly/queue/$oldest.md"
 
 payload="$(printf '{"hook_event_name":"SessionStart","source":"startup","cwd":"%s"}' "$TMPDIR/apps/web")"
 

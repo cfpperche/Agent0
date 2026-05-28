@@ -63,7 +63,7 @@ if ! printf '%s' "$out_A1" | grep -q '"decision":"block"'; then
   printf 'Got: %s\n' "$out_A1"
   exit 1
 fi
-if [ ! -f "$TMPDIR/.claude/.session-state/sess-A/nagged" ]; then
+if [ ! -f "$TMPDIR/.agent0/.session-state/sess-A/nagged" ]; then
   printf 'FAIL: First Stop for sess-A did not create sess-A/nagged\n'
   exit 1
 fi
@@ -85,7 +85,7 @@ if ! printf '%s' "$out_B1" | grep -q '"decision":"block"'; then
   printf 'Got: %s\n' "$out_B1"
   exit 1
 fi
-if [ ! -f "$TMPDIR/.claude/.session-state/sess-B/nagged" ]; then
+if [ ! -f "$TMPDIR/.agent0/.session-state/sess-B/nagged" ]; then
   printf 'FAIL: First Stop for sess-B did not create sess-B/nagged\n'
   exit 1
 fi

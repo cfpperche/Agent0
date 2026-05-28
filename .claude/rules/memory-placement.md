@@ -147,7 +147,7 @@ One JSONL line per memory write. Five `event_type` values:
 
 ### Per-machine journal (gitignored)
 
-`.agent0/.memory-events.jsonl` is **gitignored** — per-machine cache, sibling to `.claude/delegation-audit.jsonl` and `.claude/.runtime-state/`. A git-tracked journal would produce merge conflicts on every concurrent commit across a multi-contributor consumer project; entry files themselves are git-tracked and carry the durable record via `git log --follow`. On a new leader machine, run `bash .agent0/tools/memory-backfill.sh` once to seed the journal with one `add` event per existing entry (`ts` derived from git-introduction time). Idempotent — re-running on a populated journal is a no-op.
+`.agent0/.memory-events.jsonl` is **gitignored** — per-machine cache, sibling to `.claude/delegation-audit.jsonl` and `.agent0/.runtime-state/`. A git-tracked journal would produce merge conflicts on every concurrent commit across a multi-contributor consumer project; entry files themselves are git-tracked and carry the durable record via `git log --follow`. On a new leader machine, run `bash .agent0/tools/memory-backfill.sh` once to seed the journal with one `add` event per existing entry (`ts` derived from git-introduction time). Idempotent — re-running on a populated journal is a no-op.
 
 The first invocation of the journal hook on an empty journal emits a one-time `memory-journal-advisory: journal empty; run bash .agent0/tools/memory-backfill.sh` to mitigate the otherwise-silent add-vs-update misclassification.
 

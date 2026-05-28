@@ -30,7 +30,7 @@ touch -d "1 hour ago" "$TMPDIR/.agent0/HANDOFF.md"
 export CLAUDE_PROJECT_DIR="$TMPDIR"
 
 SESSION_ID="test-fallback-05"
-STATE_DIR="$TMPDIR/.claude/.session-state/$SESSION_ID"
+STATE_DIR="$TMPDIR/.agent0/.session-state/$SESSION_ID"
 mkdir -p "$STATE_DIR"
 # Simulate "SessionStart ran but snapshot write failed" — started-at exists,
 # snapshot does NOT.

@@ -76,7 +76,7 @@ run_case() {
     exit 1
   fi
 
-  local state_file="$TMPDIR/.claude/.runtime-state/last-run.json"
+  local state_file="$TMPDIR/.agent0/.runtime-state/last-run.json"
   if [ ! -f "$state_file" ]; then
     printf 'FAIL [%s]: last-run.json not created\n' "$label"
     exit 1

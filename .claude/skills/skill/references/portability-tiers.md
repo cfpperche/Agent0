@@ -12,7 +12,7 @@ Agent0 classifies every first-party skill into one of three tiers, declared in t
 - References to `.claude/rules/*.md`, `.agent0/memory/*.md`, `.claude/hooks/*.sh`, `.agent0/reminders.yaml`, `.agent0/HANDOFF.md`
 - The `${CLAUDE_SKILL_DIR}` or `$CLAUDE_PROJECT_DIR` env vars
 - CC-only tools invoked by name (`TaskCreate`, `ExitPlanMode`, the `Skill` tool recursive call, `ScheduleWakeup`)
-- Calls into CC settings (`.claude/settings.json`) or per-session state (`.claude/.session-state/`)
+- Calls into CC settings (`.claude/settings.json`) or per-session state (`.agent0/.session-state/`)
 
 **Canonical `compatibility:` text:**
 

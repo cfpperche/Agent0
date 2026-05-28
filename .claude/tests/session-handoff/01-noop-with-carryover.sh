@@ -35,7 +35,7 @@ stdin_json="{\"source\":\"startup\",\"session_id\":\"$SESSION_ID\"}"
 # SessionStart captures porcelain snapshot
 printf '%s' "$stdin_json" | bash "$START_HOOK" >/dev/null 2>&1
 
-SNAPSHOT="$TMPDIR/.claude/.session-state/$SESSION_ID/start-porcelain.txt"
+SNAPSHOT="$TMPDIR/.agent0/.session-state/$SESSION_ID/start-porcelain.txt"
 if [ ! -f "$SNAPSHOT" ]; then
   printf 'FAIL: snapshot file not created at %s\n' "$SNAPSHOT"
   exit 1

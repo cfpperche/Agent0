@@ -161,7 +161,7 @@ MANIFEST_TSV="$(mktemp -t sync-manifest-XXXXXX)"
 # ---------------------------------------------------------------------------
 
 # Project-local paths — MUST NOT be added to any COPY_CHECK array below.
-# .claude/.browser-state/  session credentials (cookies/localStorage); project-specific,
+# .agent0/.browser-state/  session credentials (cookies/localStorage); project-specific,
 #                           gitignored *.json, only .gitkeep sentinel travels via git.
 # .agent0/memory/           project knowledge; content is project-local.
 #                           The empty .gitkeep IS in COPY_CHECK_FILES — content is not.
@@ -196,9 +196,9 @@ COPY_CHECK_FILES=(
   ".claude/tools/lib/managed-block.sh"
   ".agent0/memory/.gitkeep"
   ".agent0/memory.config.json"
-  ".claude/.browser-state/.gitkeep"
+  ".agent0/.browser-state/.gitkeep"
   ".agent0/routines/.gitkeep"
-  ".claude/.runtime-state/README.md"
+  ".agent0/.runtime-state/README.md"
   "assets/.gitkeep"
   "assets/brand/.gitkeep"
   "assets/generated/.gitkeep"

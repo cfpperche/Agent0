@@ -33,12 +33,12 @@ if ! printf '%s' "$output" | grep -q 'Root handoff from subdir.'; then
   exit 1
 fi
 
-if [ ! -f "$TMPDIR/.claude/.session-state/$SESSION_ID/started-at" ]; then
+if [ ! -f "$TMPDIR/.agent0/.session-state/$SESSION_ID/started-at" ]; then
   printf 'FAIL: root session-state marker missing\n'
   exit 1
 fi
 
-if [ -e "$TMPDIR/apps/web/.claude/.session-state/$SESSION_ID/started-at" ]; then
+if [ -e "$TMPDIR/apps/web/.agent0/.session-state/$SESSION_ID/started-at" ]; then
   printf 'FAIL: SessionStart wrote session state under cwd subdirectory\n'
   exit 1
 fi

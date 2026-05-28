@@ -39,7 +39,7 @@ track_payload='{"session_id":"'"$SESSION_ID"'","tool_input":{"file_path":"foo.ts
 printf '%s' "$track_payload" | bash "$TRACK_HOOK"
 
 # Sanity: tracker recorded the path.
-TRACK_FILE="$TMPDIR/.claude/.session-state/$SESSION_ID/edited-files.txt"
+TRACK_FILE="$TMPDIR/.agent0/.session-state/$SESSION_ID/edited-files.txt"
 if ! grep -Fxq 'foo.ts' "$TRACK_FILE"; then
   printf 'FAIL: tracker did not record foo.ts (precondition)\n'
   exit 1

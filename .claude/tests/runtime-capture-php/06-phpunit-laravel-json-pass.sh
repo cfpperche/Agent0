@@ -31,7 +31,7 @@ hook_exit=0
 printf '%s' "$stdin_json" | bash "$HOOK" || hook_exit=$?
 [ "$hook_exit" -eq 0 ] || { printf 'FAIL: hook exit=%d\n' "$hook_exit"; exit 1; }
 
-state="$TMPDIR/.claude/.runtime-state/last-run.json"
+state="$TMPDIR/.agent0/.runtime-state/last-run.json"
 for check in \
   '.detector == "phpunit"' \
   '.inferred_status == "PASS"' \

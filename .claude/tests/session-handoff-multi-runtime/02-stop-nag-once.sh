@@ -53,7 +53,7 @@ if ! printf '%s' "$stop_output" | grep -q '"decision":"block"'; then
   exit 1
 fi
 
-if [ ! -f "$TMPDIR/.claude/.session-state/$SESSION_ID/nagged" ]; then
+if [ ! -f "$TMPDIR/.agent0/.session-state/$SESSION_ID/nagged" ]; then
   printf 'FAIL: Stop did not write nagged marker\n'
   exit 1
 fi

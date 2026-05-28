@@ -39,7 +39,7 @@ stdin_json="{\"source\":\"startup\",\"session_id\":\"$SESSION_ID\"}"
 # SessionStart captures porcelain "?? carryover.txt"
 printf '%s' "$stdin_json" | bash "$START_HOOK" >/dev/null 2>&1
 
-start_porcelain="$(cat "$TMPDIR/.claude/.session-state/$SESSION_ID/start-porcelain.txt")"
+start_porcelain="$(cat "$TMPDIR/.agent0/.session-state/$SESSION_ID/start-porcelain.txt")"
 if [ -z "$start_porcelain" ]; then
   printf 'FAIL: snapshot is empty; test premise broken (need non-empty carryover)\n'
   exit 1

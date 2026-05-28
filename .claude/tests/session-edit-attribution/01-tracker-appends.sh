@@ -20,7 +20,7 @@ mkdir -p "$TMPDIR/.claude"
 export CLAUDE_PROJECT_DIR="$TMPDIR"
 
 SESSION_ID="test-tracker-01"
-TRACK_FILE="$TMPDIR/.claude/.session-state/$SESSION_ID/edited-files.txt"
+TRACK_FILE="$TMPDIR/.agent0/.session-state/$SESSION_ID/edited-files.txt"
 
 # --- Case A: simple append ---
 payload_a='{"session_id":"'"$SESSION_ID"'","tool_input":{"file_path":"foo.ts"}}'
@@ -80,11 +80,11 @@ fi
 # --- Case F: malformed session_id falls to "unknown" subdir ---
 payload_f='{"session_id":"../etc/passwd","tool_input":{"file_path":"x.ts"}}'
 printf '%s' "$payload_f" | bash "$TRACK_HOOK"
-if [ ! -f "$TMPDIR/.claude/.session-state/unknown/edited-files.txt" ]; then
+if [ ! -f "$TMPDIR/.agent0/.session-state/unknown/edited-files.txt" ]; then
   printf 'FAIL: malformed session_id did not fall to "unknown" subdir\n'
   exit 1
 fi
-if [ -e "$TMPDIR/.claude/.session-state/../etc/passwd" ]; then
+if [ -e "$TMPDIR/.agent0/.session-state/../etc/passwd" ]; then
   printf 'FAIL: path-traversal sanitization breached\n'
   exit 1
 fi

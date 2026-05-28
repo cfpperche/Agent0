@@ -62,7 +62,7 @@ BENCH_TMPDIR="$(mktemp -d -t agent0-bench.XXXXXX)"
 trap 'rm -rf "$BENCH_TMPDIR"' EXIT
 mkdir -p "$BENCH_TMPDIR/.claude"
 # Initialize the redirected project tree just enough for hook side-writes.
-mkdir -p "$BENCH_TMPDIR/.claude/.runtime-state/in-flight"
+mkdir -p "$BENCH_TMPDIR/.agent0/.runtime-state/in-flight"
 ORIGINAL_PROJECT_DIR="$PROJECT_DIR"
 export CLAUDE_PROJECT_DIR="$BENCH_TMPDIR"
 

@@ -4,7 +4,7 @@
 #
 # Tokenises tool_input.command, matches against the v1 detector pair list
 # plus CLAUDE_RUNTIME_INTROSPECT_EXTRA_DETECT globs, and on a match writes
-# .claude/.runtime-state/last-run.json atomically (mktemp + mv). Non-matches
+# .agent0/.runtime-state/last-run.json atomically (mktemp + mv). Non-matches
 # exit silently with no state write. Always exits 0 — capture failure is
 # invisible to the underlying Bash; one diagnostic line goes to stderr only
 # when CLAUDE_RUNTIME_INTROSPECT_DEBUG=1.
@@ -154,7 +154,7 @@ STDERR_RAW="$(printf '%s' "$STDERR_RAW" | sed "s/${ANSI_ESC}\[[0-9;]*[a-zA-Z]//g
 STDERR_RAW="${STDERR_RAW%x}"
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
-STATE_DIR="$PROJECT_DIR/.claude/.runtime-state"
+STATE_DIR="$PROJECT_DIR/.agent0/.runtime-state"
 IN_FLIGHT_DIR="$STATE_DIR/in-flight"
 
 # ---------------------------------------------------------------------------

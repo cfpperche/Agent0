@@ -22,7 +22,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$SCRIPT_DIR/_memory-hook-lib.sh"
 
 PROJECT_DIR="$(memory_project_dir "$INPUT")"
-SESSION_STATE_ROOT="$PROJECT_DIR/.claude/.session-state"
+SESSION_STATE_ROOT="$PROJECT_DIR/.agent0/.session-state"
 SESSION_FILE="$PROJECT_DIR/.agent0/HANDOFF.md"
 COMPACT_HISTORY_DIR="$PROJECT_DIR/.claude/.compact-history"
 

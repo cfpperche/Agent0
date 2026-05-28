@@ -11,7 +11,7 @@ trap 'rm -rf "$TMPDIR"' EXIT
 
 mkdir -p "$TMPDIR"
 SESSION_ID="codex-track-03"
-TRACK_FILE="$TMPDIR/.claude/.session-state/$SESSION_ID/edited-files.txt"
+TRACK_FILE="$TMPDIR/.agent0/.session-state/$SESSION_ID/edited-files.txt"
 
 patch_body=$'*** Begin Patch\n*** Add File: src/new.ts\n+export const value = 1;\n*** Update File: tracked.txt\n@@\n-old\n+new\n*** Delete File: old.txt\n*** Update File: rename-source.txt\n*** Move to: moved.txt\n@@\n-old\n+new\n*** Update File: tracked.txt\n@@\n-new\n+newer\n*** End Patch\n'
 payload="$(jq -cn --arg sid "$SESSION_ID" --arg cwd "$TMPDIR" --arg patch "$patch_body" '{

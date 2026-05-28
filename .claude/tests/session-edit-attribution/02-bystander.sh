@@ -35,7 +35,7 @@ printf '%s' "$stdin_json" | bash "$START_HOOK" >/dev/null 2>&1
 
 # Mark this session as tracker-aware by creating an EMPTY edited-files.txt
 # — represents a session that loaded with tracker enabled but did zero edits.
-STATE_DIR="$TMPDIR/.claude/.session-state/$SESSION_ID"
+STATE_DIR="$TMPDIR/.agent0/.session-state/$SESSION_ID"
 touch "$STATE_DIR/edited-files.txt"
 
 # Sibling process modifies a tracked file during A's lifetime.

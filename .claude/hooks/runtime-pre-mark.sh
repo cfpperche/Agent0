@@ -3,7 +3,7 @@
 # PreToolUse(Bash) companion to runtime-capture.sh.
 #
 # Stamps started_at (ISO-8601 UTC) for the current tool_use_id into
-# .claude/.runtime-state/in-flight/<id>.t so the PostToolUse capture hook
+# .agent0/.runtime-state/in-flight/<id>.t so the PostToolUse capture hook
 # can compute duration_ms. Silent skip when tool_use_id is absent.
 # Always exits 0.
 #
@@ -46,7 +46,7 @@ if [ -z "$TOOL_USE_ID" ]; then
 fi
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
-IN_FLIGHT_DIR="$PROJECT_DIR/.claude/.runtime-state/in-flight"
+IN_FLIGHT_DIR="$PROJECT_DIR/.agent0/.runtime-state/in-flight"
 
 mkdir -p "$IN_FLIGHT_DIR" 2>/dev/null || exit 0
 

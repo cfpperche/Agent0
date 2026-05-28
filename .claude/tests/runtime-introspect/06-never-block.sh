@@ -13,11 +13,11 @@ HOOK="$AGENT0_ROOT/.claude/hooks/runtime-capture.sh"
 TMPDIR="$(mktemp -d -t spec-011-V6-XXXXXX)"
 trap 'chmod -R u+rwX "$TMPDIR" 2>/dev/null; rm -rf "$TMPDIR"' EXIT
 
-mkdir -p "$TMPDIR/.claude/.runtime-state"
+mkdir -p "$TMPDIR/.agent0/.runtime-state"
 export CLAUDE_PROJECT_DIR="$TMPDIR"
 
-# Make .claude/.runtime-state read-only so atomic-write fails.
-chmod 555 "$TMPDIR/.claude/.runtime-state"
+# Make .agent0/.runtime-state read-only so atomic-write fails.
+chmod 555 "$TMPDIR/.agent0/.runtime-state"
 
 stdin_json="$(jq -cn '{
   tool_name: "Bash",

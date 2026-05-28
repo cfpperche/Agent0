@@ -3,7 +3,7 @@
 # V5 — Scenario: probe flags stale snapshot.
 #
 # Given a last-run.json with started_at predating the current
-# .claude/.session-state/started-at, probe.sh last-run must include
+# .agent0/.session-state/started-at, probe.sh last-run must include
 # `stale: true` in its header.
 
 set -euo pipefail
@@ -14,13 +14,13 @@ PROBE="$AGENT0_ROOT/.claude/tools/probe.sh"
 TMPDIR="$(mktemp -d -t spec-011-V5-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
-mkdir -p "$TMPDIR/.claude/.runtime-state" "$TMPDIR/.claude/.session-state/V5-test-session"
+mkdir -p "$TMPDIR/.agent0/.runtime-state" "$TMPDIR/.agent0/.session-state/V5-test-session"
 export CLAUDE_PROJECT_DIR="$TMPDIR"
 
 # Session started "now"; snapshot from a minute ago = stale.
 # session-state is per-session_id, so the marker lives in a subdir.
 session_now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-touch -d "$session_now" "$TMPDIR/.claude/.session-state/V5-test-session/started-at"
+touch -d "$session_now" "$TMPDIR/.agent0/.session-state/V5-test-session/started-at"
 
 # Snapshot started_at = 5 minutes BEFORE the session-state touch.
 snapshot_started_at="$(date -u -d "5 minutes ago" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null \
@@ -41,7 +41,7 @@ jq -n --arg sa "$snapshot_started_at" '{
   stderr_head: "",
   stderr_tail: "",
   stderr_truncated: false
-}' > "$TMPDIR/.claude/.runtime-state/last-run.json"
+}' > "$TMPDIR/.agent0/.runtime-state/last-run.json"
 
 out="$(bash "$PROBE" last-run 2>&1)"
 
@@ -68,7 +68,7 @@ jq -n --arg sa "$fresh_started_at" '{
   stderr_head: "",
   stderr_tail: "",
   stderr_truncated: false
-}' > "$TMPDIR/.claude/.runtime-state/last-run.json"
+}' > "$TMPDIR/.agent0/.runtime-state/last-run.json"
 
 out_fresh="$(bash "$PROBE" last-run 2>&1)"
 

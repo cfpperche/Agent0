@@ -40,7 +40,7 @@ printf '%s' "$track_payload" | bash "$TRACK_HOOK"
 git restore foo.ts
 
 # Sanity: tracker remembers it, porcelain clean.
-TRACK_FILE="$TMPDIR/.claude/.session-state/$SESSION_ID/edited-files.txt"
+TRACK_FILE="$TMPDIR/.agent0/.session-state/$SESSION_ID/edited-files.txt"
 if ! grep -Fxq 'foo.ts' "$TRACK_FILE"; then
   printf 'FAIL: tracker should remember foo.ts (precondition)\n'
   exit 1

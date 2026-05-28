@@ -19,7 +19,7 @@ mkdir -p "$SRC/.claude" "$CONSUMER/.claude"
 
 printf '%s\n' \
   '# Claude Code state' \
-  '.claude/.runtime-state/' \
+  '.agent0/.runtime-state/' \
   '.claude/secrets-audit.jsonl' \
   > "$SRC/.gitignore"
 printf '{"hooks":{}}\n' > "$SRC/.claude/settings.json"

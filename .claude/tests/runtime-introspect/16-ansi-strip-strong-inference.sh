@@ -31,7 +31,7 @@ trap 'rm -rf "$TMPDIR"' EXIT
 mkdir -p "$TMPDIR/.claude"
 export CLAUDE_PROJECT_DIR="$TMPDIR"
 
-state_file="$TMPDIR/.claude/.runtime-state/last-run.json"
+state_file="$TMPDIR/.agent0/.runtime-state/last-run.json"
 
 # ANSI-colored bun test output — modeled on real bun test session output.
 # `\e[0m`, `\e[32m`, `\e[2m`, `\e[1m` are typical SGR codes bun emits.

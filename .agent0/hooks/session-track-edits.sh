@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # PostToolUse edit tracker that appends each Claude Edit/Write/MultiEdit path
 # and Codex apply_patch path to
-# `.claude/.session-state/<session_id>/edited-files.txt`. The Stop hook reads
+# `.agent0/.session-state/<session_id>/edited-files.txt`. The Stop hook reads
 # this as the primary signal for "did THIS session edit anything?", replacing
 # the worktree-delta-compare on the primary path (the porcelain compare stays
 # live as fallback for legacy sessions; Bash-driven edits in tracker-enabled
@@ -28,7 +28,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$SCRIPT_DIR/_memory-hook-lib.sh"
 
 PROJECT_DIR="$(memory_project_dir "$INPUT")"
-SESSION_STATE_ROOT="$PROJECT_DIR/.claude/.session-state"
+SESSION_STATE_ROOT="$PROJECT_DIR/.agent0/.session-state"
 
 SESSION_ID_RAW="$(printf '%s' "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || true)"
 if [[ -n "$SESSION_ID_RAW" && "$SESSION_ID_RAW" =~ ^[a-zA-Z0-9_-]+$ ]]; then

@@ -5,7 +5,7 @@
 # plain-text summary.
 #
 # Subcommands (v1):
-#   last-run  — read .claude/.runtime-state/last-run.json and emit a
+#   last-run  — read .agent0/.runtime-state/last-run.json and emit a
 #               PASS/FAIL/UNKNOWN status header, age in seconds, stale
 #               flag (vs session-start), and stdout/stderr tails.
 #
@@ -48,8 +48,8 @@ if [ -z "$SUBCMD" ]; then
 fi
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
-STATE_FILE="$PROJECT_DIR/.claude/.runtime-state/last-run.json"
-SESSION_STATE_DIR="$PROJECT_DIR/.claude/.session-state"
+STATE_FILE="$PROJECT_DIR/.agent0/.runtime-state/last-run.json"
+SESSION_STATE_DIR="$PROJECT_DIR/.agent0/.session-state"
 
 case "$SUBCMD" in
   last-run)

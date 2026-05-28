@@ -30,7 +30,7 @@ touch "$TMPDIR/.agent0/HANDOFF.md"
 export CLAUDE_PROJECT_DIR="$TMPDIR"
 
 SESSION_ID="test-legacy-07"
-STATE_DIR="$TMPDIR/.claude/.session-state/$SESSION_ID"
+STATE_DIR="$TMPDIR/.agent0/.session-state/$SESSION_ID"
 
 # Manually seed legacy-shape state: started-at + clean start-porcelain
 # snapshot, NO edited-files.txt.

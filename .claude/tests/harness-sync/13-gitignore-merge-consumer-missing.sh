@@ -20,7 +20,7 @@ mkdir -p "$SRC/.claude" "$CONSUMER/.claude"
 # Agent0: minimal valid harness with a .gitignore containing 3 entries.
 printf '%s\n' \
   '# Claude Code state' \
-  '.claude/.runtime-state/' \
+  '.agent0/.runtime-state/' \
   '.claude/secrets-audit.jsonl' \
   '.claude/delegation-audit.jsonl' \
   > "$SRC/.gitignore"

@@ -50,7 +50,7 @@ if ! printf '%s' "$first_stop" | grep -q '"decision":"block"'; then
 fi
 
 # Confirm the nagged marker exists.
-NAGGED="$TMPDIR/.claude/.session-state/$SESSION_ID/nagged"
+NAGGED="$TMPDIR/.agent0/.session-state/$SESSION_ID/nagged"
 if [ ! -f "$NAGGED" ]; then
   printf 'FAIL: nagged marker not created after first block\n'
   exit 1

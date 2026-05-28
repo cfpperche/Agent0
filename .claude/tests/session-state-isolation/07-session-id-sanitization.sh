@@ -13,24 +13,24 @@ HOOK="$AGENT0_ROOT/.agent0/hooks/session-start.sh"
 
 assert_unknown() {
   local label="$1" TMPDIR="$2"
-  if [ ! -f "$TMPDIR/.claude/.session-state/unknown/started-at" ]; then
+  if [ ! -f "$TMPDIR/.agent0/.session-state/unknown/started-at" ]; then
     printf 'FAIL [%s]: unknown/started-at not created — sanitization fallback missing\n' "$label"
     printf 'Tree:\n'
-    find "$TMPDIR/.claude/.session-state" -print 2>/dev/null || true
+    find "$TMPDIR/.agent0/.session-state" -print 2>/dev/null || true
     exit 1
   fi
 }
 
 assert_no_escape() {
   local label="$1" TMPDIR="$2"
-  # Nothing should exist OUTSIDE .claude/.session-state/ under TMPDIR that
+  # Nothing should exist OUTSIDE .agent0/.session-state/ under TMPDIR that
   # the hook could have created
   if [ -e "$TMPDIR/escape-marker" ]; then
     printf 'FAIL [%s]: path traversal created file outside .session-state/\n' "$label"
     exit 1
   fi
   # The .session-state/ dir should NOT contain anything starting with "..".
-  if find "$TMPDIR/.claude/.session-state" -name '..*' -mindepth 1 2>/dev/null | grep -q .; then
+  if find "$TMPDIR/.agent0/.session-state" -name '..*' -mindepth 1 2>/dev/null | grep -q .; then
     printf 'FAIL [%s]: found suspicious dotdot entries under .session-state/\n' "$label"
     exit 1
   fi
@@ -53,7 +53,7 @@ export CLAUDE_PROJECT_DIR="$TMPDIR_B"
 printf '{"source":"startup","session_id":"foo/bar"}' | bash "$HOOK" >/dev/null 2>&1
 assert_unknown "embedded-slash" "$TMPDIR_B"
 # Specifically: foo/bar must not have been created
-if [ -e "$TMPDIR_B/.claude/.session-state/foo/bar/started-at" ]; then
+if [ -e "$TMPDIR_B/.agent0/.session-state/foo/bar/started-at" ]; then
   printf 'FAIL [embedded-slash]: foo/bar/started-at created — sanitization missing\n'
   exit 1
 fi
@@ -84,11 +84,11 @@ trap 'rm -rf "$TMPDIR_E"' EXIT
 export CLAUDE_PROJECT_DIR="$TMPDIR_E"
 uuid="abc123-DEF456_ghi789"
 printf '{"source":"startup","session_id":"%s"}' "$uuid" | bash "$HOOK" >/dev/null 2>&1
-if [ ! -f "$TMPDIR_E/.claude/.session-state/$uuid/started-at" ]; then
+if [ ! -f "$TMPDIR_E/.agent0/.session-state/$uuid/started-at" ]; then
   printf 'FAIL [legitimate-uuid]: started-at not created for valid id "%s"\n' "$uuid"
   exit 1
 fi
-if [ -f "$TMPDIR_E/.claude/.session-state/unknown/started-at" ]; then
+if [ -f "$TMPDIR_E/.agent0/.session-state/unknown/started-at" ]; then
   printf 'FAIL [legitimate-uuid]: fell to unknown despite valid id\n'
   exit 1
 fi

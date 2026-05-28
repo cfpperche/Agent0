@@ -24,9 +24,9 @@ git -C "$TMPDIR" commit -q -m "init"
 echo "modified" > "$TMPDIR/file.txt"
 
 # Pre-populate <foo>/ with both markers, nagged newer (means "already nagged")
-mkdir -p "$TMPDIR/.claude/.session-state/foo"
-touch -d "2 minutes ago" "$TMPDIR/.claude/.session-state/foo/started-at"
-touch -d "1 minute ago" "$TMPDIR/.claude/.session-state/foo/nagged"
+mkdir -p "$TMPDIR/.agent0/.session-state/foo"
+touch -d "2 minutes ago" "$TMPDIR/.agent0/.session-state/foo/started-at"
+touch -d "1 minute ago" "$TMPDIR/.agent0/.session-state/foo/nagged"
 
 # Stop call for foo: must silence (foo/nagged is newer than foo/started-at)
 out_foo="$(printf '{"session_id":"foo"}' | bash "$STOP_HOOK" 2>&1)"
@@ -37,8 +37,8 @@ if printf '%s' "$out_foo" | grep -q '"decision":"block"'; then
 fi
 
 # Pre-populate <baz>/ with just started-at (no nagged → must block on first Stop)
-mkdir -p "$TMPDIR/.claude/.session-state/baz"
-touch -d "2 minutes ago" "$TMPDIR/.claude/.session-state/baz/started-at"
+mkdir -p "$TMPDIR/.agent0/.session-state/baz"
+touch -d "2 minutes ago" "$TMPDIR/.agent0/.session-state/baz/started-at"
 
 # Stop call for baz: must block (baz never nagged, regardless of foo's state)
 out_baz="$(printf '{"session_id":"baz"}' | bash "$STOP_HOOK" 2>&1)"
@@ -49,13 +49,13 @@ if ! printf '%s' "$out_baz" | grep -q '"decision":"block"'; then
 fi
 
 # baz/nagged should now exist (created by the block path)
-if [ ! -f "$TMPDIR/.claude/.session-state/baz/nagged" ]; then
+if [ ! -f "$TMPDIR/.agent0/.session-state/baz/nagged" ]; then
   printf 'FAIL: baz/nagged not created after blocking Stop\n'
   exit 1
 fi
 
 # foo/nagged should be untouched
-if [ ! -f "$TMPDIR/.claude/.session-state/foo/nagged" ]; then
+if [ ! -f "$TMPDIR/.agent0/.session-state/foo/nagged" ]; then
   printf 'FAIL: foo/nagged was removed by baz Stop call\n'
   exit 1
 fi

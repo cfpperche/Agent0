@@ -26,7 +26,7 @@ trap 'rm -rf "$TMPDIR"' EXIT
 mkdir -p "$TMPDIR/.claude"
 export CLAUDE_PROJECT_DIR="$TMPDIR"
 
-state_file="$TMPDIR/.claude/.runtime-state/last-run.json"
+state_file="$TMPDIR/.agent0/.runtime-state/last-run.json"
 
 run_skip_case() {
   local label="$1"

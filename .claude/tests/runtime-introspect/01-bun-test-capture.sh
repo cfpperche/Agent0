@@ -4,7 +4,7 @@
 #
 # Asserts:
 #   (a) capture hook exits 0
-#   (b) .claude/.runtime-state/last-run.json is created
+#   (b) .agent0/.runtime-state/last-run.json is created
 #   (c) JSON contains correct command, detector="bun-test", exit code, and
 #       non-empty started_at
 
@@ -39,7 +39,7 @@ if [ "$hook_exit" -ne 0 ]; then
   exit 1
 fi
 
-state_file="$TMPDIR/.claude/.runtime-state/last-run.json"
+state_file="$TMPDIR/.agent0/.runtime-state/last-run.json"
 if [ ! -f "$state_file" ]; then
   printf 'FAIL: last-run.json not created at %s\n' "$state_file"
   exit 1

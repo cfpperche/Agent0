@@ -8,9 +8,9 @@ CLAUDE.local.md
 
 # Ephemeral state under .claude/ — per-machine runtime, never commit
 .claude/.runtime/
-.claude/.runtime-state/*
-!.claude/.runtime-state/README.md
-.claude/.session-state/
+.agent0/.runtime-state/*
+!.agent0/.runtime-state/README.md
+.agent0/.session-state/
 .claude/.delegation-state/
 .claude/.compact-history/
 .claude/delegation-audit.jsonl
@@ -25,7 +25,7 @@ CLAUDE.local.md
 .agent0/.memory-events.jsonl.lock
 .claude/.memory-events.jsonl
 .claude/.memory-events.jsonl.lock
-.claude/.browser-state/*.json
+.agent0/.browser-state/*.json
 .claude/.brainstorm-state/
 .agent0/.routines-state/
 

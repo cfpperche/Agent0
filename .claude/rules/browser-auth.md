@@ -1,6 +1,6 @@
 ---
 paths:
-  - ".claude/.browser-state/**"
+  - ".agent0/.browser-state/**"
   - ".mcp.json"
   - ".mcp.json.example"
   - ".codex/config.toml.example"
@@ -8,7 +8,7 @@ paths:
 
 # Browser auth
 
-Authenticated-content reads happen through Playwright MCP in a headed-login → save → headless-reuse pattern. This rule documents the signaling convention that bridges the human login step (`BROWSER_AUTH_REQUIRED: <host>`), the per-host state directory (`.claude/.browser-state/<host>.json`), and the X/Twitter shortcut that avoids the full auth path for a common case.
+Authenticated-content reads happen through Playwright MCP in a headed-login → save → headless-reuse pattern. This rule documents the signaling convention that bridges the human login step (`BROWSER_AUTH_REQUIRED: <host>`), the per-host state directory (`.agent0/.browser-state/<host>.json`), and the X/Twitter shortcut that avoids the full auth path for a common case.
 
 Playwright MCP is the prerequisite — its server block lives in `.mcp.json.example` (Claude) and `.codex/config.toml.example` (Codex); consumer projects opt in by copying the template and removing the `//` markers / flipping `enabled = true`.
 
@@ -54,19 +54,19 @@ where `<host>` is the bare hostname (e.g. `x.com`, `linkedin.com`). The agent fo
 BROWSER_AUTH_REQUIRED: x.com
 Next step: open Playwright MCP in headed mode, log in at x.com, then run
   browser_run_code_unsafe with `page.context().storageState({ path: '...' })`
-  to save state to .claude/.browser-state/x.com.json.
+  to save state to .agent0/.browser-state/x.com.json.
 See .claude/rules/browser-auth.md.
 ```
 
 The phrase is all-caps with a colon-space separator — agents and humans alike can grep for it. The agent does NOT retry the same host until the human signals the state was saved (e.g. by replying "done" or by the agent detecting the state file exists on disk).
 
-## Storage state — `.claude/.browser-state/<host>.json`
+## Storage state — `.agent0/.browser-state/<host>.json`
 
-Session state is stored one file per host under `.claude/.browser-state/`. The directory ships as an empty scaffold (`.gitkeep` sentinel committed); individual state files are gitignored because they contain session cookies and localStorage — equivalent blast radius to a leaked password. Convention:
+Session state is stored one file per host under `.agent0/.browser-state/`. The directory ships as an empty scaffold (`.gitkeep` sentinel committed); individual state files are gitignored because they contain session cookies and localStorage — equivalent blast radius to a leaked password. Convention:
 
 - Filename: lowercase hostname, `.json` extension. Examples: `x.com.json`, `linkedin.com.json`, `github.com.json`.
-- Path: `.claude/.browser-state/<host>.json` relative to the project root.
-- Never commit these files. The `.gitignore` entry `.claude/.browser-state/*.json` excludes the state files while leaving the `.gitkeep` sentinel tracked (the sentinel does not match `*.json`, so no `!`-exclusion is needed). See `.claude/rules/secrets-scan.md` for the credential-class framing.
+- Path: `.agent0/.browser-state/<host>.json` relative to the project root.
+- Never commit these files. The `.gitignore` entry `.agent0/.browser-state/*.json` excludes the state files while leaving the `.gitkeep` sentinel tracked (the sentinel does not match `*.json`, so no `!`-exclusion is needed). See `.claude/rules/secrets-scan.md` for the credential-class framing.
 
 ## Playwright MCP — headed login, then headless reuse
 
@@ -96,7 +96,7 @@ Once the human is logged in, ask the agent to capture the Playwright context's s
 ```js
 async (page) => {
   const state = await page.context().storageState({
-    path: '/absolute/path/.claude/.browser-state/<host>.json'
+    path: '/absolute/path/.agent0/.browser-state/<host>.json'
   });
   return { cookies: state.cookies.length, origins: state.origins.length };
 }
@@ -117,7 +117,7 @@ Two reuse paths, depending on whether the consumer project wants a static one-ho
   "mcpServers": {
     "playwright": {
       "command": "npx",
-      "args": ["@playwright/mcp@latest", "--storage-state=/abs/.claude/.browser-state/<host>.json"]
+      "args": ["@playwright/mcp@latest", "--storage-state=/abs/.agent0/.browser-state/<host>.json"]
     }
   }
 }
@@ -134,7 +134,7 @@ async (page) => {
   // re-attaching httpOnly cookies on an already-running context requires
   // navigation to the target origin to bind them.
   const fs = await import('node:fs/promises'); // may be blocked by sandbox
-  const state = JSON.parse(await fs.readFile('/abs/.claude/.browser-state/<host>.json', 'utf8'));
+  const state = JSON.parse(await fs.readFile('/abs/.agent0/.browser-state/<host>.json', 'utf8'));
   await page.context().addCookies(state.cookies);
   return 'cookies loaded';
 }
@@ -142,13 +142,13 @@ async (page) => {
 
 Caveat: the Playwright MCP sandbox may block `node:fs` imports (verified empirically — both `require('fs/promises')` and `await import('fs/promises')` failed in this dogfood pass on 2026-05). When `fs` is unavailable, the only viable reuse path is the `--storage-state` startup flag. The multi-host workflow then needs to either (a) merge multiple `<host>.json` files into one combined storage-state JSON at consumer-prep time, or (b) restart the session each time a different host is needed.
 
-The reuse step is silent: when `.claude/.browser-state/<host>.json` exists and is loaded (either via `--storage-state` or via mid-session injection), the agent navigates as authenticated and `BROWSER_AUTH_REQUIRED: <host>` is NOT emitted.
+The reuse step is silent: when `.agent0/.browser-state/<host>.json` exists and is loaded (either via `--storage-state` or via mid-session injection), the agent navigates as authenticated and `BROWSER_AUTH_REQUIRED: <host>` is NOT emitted.
 
 ## Expired-state recovery
 
 Storage state expires when the site rotates session tokens — typically within days to weeks depending on the site. The agent recognises expiry when a navigation that previously succeeded now returns 401, 403, or redirects to a login page. On detection:
 
-1. Delete or archive the stale state file: `rm .claude/.browser-state/<host>.json`.
+1. Delete or archive the stale state file: `rm .agent0/.browser-state/<host>.json`.
 2. Re-emit `BROWSER_AUTH_REQUIRED: <host>` to the chat.
 3. Repeat the headed-login → save cycle.
 
@@ -158,9 +158,9 @@ The agent does NOT retry silently or guess at token refresh; re-authentication r
 
 Chrome DevTools MCP is the right choice when you need **observation**, not **driving**: watching network requests during a Playwright-driven session, capturing console logs, running Lighthouse audits, or taking heap snapshots. It is NOT the default for authenticated content reads.
 
-When you need both (drive + observe), run Playwright MCP as the driver and Chrome DevTools MCP as the observer, using a **dedicated `--user-data-dir` Chrome profile** that contains only the accounts relevant to the task — not `--autoConnect`, which attaches to every open tab in your main Chrome and exposes Gmail, banking, and other active sessions to the agent. `--autoConnect` is opt-in for consumer projects that consciously accept that surface; it should NOT appear in a default `.mcp.json` block. The per-host state directory convention (`.claude/.browser-state/<host>.json`) applies to both Playwright state files and dedicated Chrome profile directories.
+When you need both (drive + observe), run Playwright MCP as the driver and Chrome DevTools MCP as the observer, using a **dedicated `--user-data-dir` Chrome profile** that contains only the accounts relevant to the task — not `--autoConnect`, which attaches to every open tab in your main Chrome and exposes Gmail, banking, and other active sessions to the agent. `--autoConnect` is opt-in for consumer projects that consciously accept that surface; it should NOT appear in a default `.mcp.json` block. The per-host state directory convention (`.agent0/.browser-state/<host>.json`) applies to both Playwright state files and dedicated Chrome profile directories.
 
 ## Cross-references
 
-- `.claude/rules/secrets-scan.md` § *Soft advisory* — `.claude/.browser-state/*.json` are credential-class files; gitleaks treats high-entropy strings inside them as real findings.
-- `.claude/.runtime-state/README.md` — index of project-local state directories; pairs `.claude/.browser-state/` with this rule.
+- `.claude/rules/secrets-scan.md` § *Soft advisory* — `.agent0/.browser-state/*.json` are credential-class files; gitleaks treats high-entropy strings inside them as real findings.
+- `.agent0/.runtime-state/README.md` — index of project-local state directories; pairs `.agent0/.browser-state/` with this rule.

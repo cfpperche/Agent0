@@ -5,7 +5,7 @@ paths:
   - ".agent0/hooks/session-stop.sh"
   - ".agent0/hooks/session-track-edits.sh"
   - ".codex/config.toml.example"
-  - ".claude/.session-state/**"
+  - ".agent0/.session-state/**"
 ---
 
 # Session handoff
@@ -100,11 +100,11 @@ Set `CLAUDE_SKIP_SESSION_HOOKS=1` to disable Stop-hook enforcement for quick Q&A
 
 ## State files
 
-`.claude/.session-state/<session_id>/` holds four ephemeral artifacts per runtime session: `started-at` (touched by `SessionStart`), `nagged` (touched by `Stop` when it nags), `start-porcelain.txt` (a snapshot of `git status --porcelain` captured by `SessionStart`), and `edited-files.txt` (per-session list of Claude Edit/Write/MultiEdit paths and Codex `apply_patch` paths, append-only with dedup, populated by `session-track-edits.sh`; seeded empty by `SessionStart` so presence means "tracker-enabled"). Gitignored — do not commit.
+`.agent0/.session-state/<session_id>/` holds four ephemeral artifacts per runtime session: `started-at` (touched by `SessionStart`), `nagged` (touched by `Stop` when it nags), `start-porcelain.txt` (a snapshot of `git status --porcelain` captured by `SessionStart`), and `edited-files.txt` (per-session list of Claude Edit/Write/MultiEdit paths and Codex `apply_patch` paths, append-only with dedup, populated by `session-track-edits.sh`; seeded empty by `SessionStart` so presence means "tracker-enabled"). Gitignored — do not commit.
 
 `session_id` comes from the stdin payload each runtime passes to hooks (`$.session_id`). When absent, or when it contains characters outside `^[a-zA-Z0-9_-]+$`, hooks fall to the literal subdir `unknown`.
 
-`SessionStart` runs a best-effort cleanup of `.claude/.session-state/*` subdirs older than 7 days. Cleanup failures never block the hook.
+`SessionStart` runs a best-effort cleanup of `.agent0/.session-state/*` subdirs older than 7 days. Cleanup failures never block the hook.
 
 ### Edit attribution
 
@@ -127,4 +127,4 @@ Missing snapshot is the conservative fallback: Stop skips comparison and uses th
 
 ## Cross-capacity dependency
 
-`.claude/tools/probe.sh` reads `started-at` as the "session boundary" signal to detect stale snapshots. It scans `.claude/.session-state/*/started-at` and takes the maximum mtime as the conservative boundary. Parallel sessions can produce conservative false positives; safe direction is to re-run the verifier.
+`.claude/tools/probe.sh` reads `started-at` as the "session boundary" signal to detect stale snapshots. It scans `.agent0/.session-state/*/started-at` and takes the maximum mtime as the conservative boundary. Parallel sessions can produce conservative false positives; safe direction is to re-run the verifier.

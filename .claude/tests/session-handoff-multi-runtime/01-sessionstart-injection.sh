@@ -47,7 +47,7 @@ if printf '%s' "$output" | grep -q 'hookSpecificOutput'; then
   exit 1
 fi
 
-if [ ! -f "$TMPDIR/.claude/.session-state/$SESSION_ID/started-at" ]; then
+if [ ! -f "$TMPDIR/.agent0/.session-state/$SESSION_ID/started-at" ]; then
   printf 'FAIL: SessionStart did not create root session-state marker\n'
   exit 1
 fi

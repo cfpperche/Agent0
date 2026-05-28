@@ -66,7 +66,7 @@ A `PreToolUse(Bash)` preflight (`.claude/hooks/supply-chain-scan.sh`) blocks dep
 
 ## Runtime introspect
 
-`PreToolUse` / `PostToolUse(Bash)` hooks snapshot the last verifier run (test / build / typecheck / lint, allowlisted) to `.claude/.runtime-state/last-run.json`; read it back with `bash .claude/tools/probe.sh last-run`. See `.claude/rules/runtime-introspect.md`.
+`PreToolUse` / `PostToolUse(Bash)` hooks snapshot the last verifier run (test / build / typecheck / lint, allowlisted) to `.agent0/.runtime-state/last-run.json`; read it back with `bash .claude/tools/probe.sh last-run`. See `.claude/rules/runtime-introspect.md`.
 
 ## MCP recipes
 
@@ -101,7 +101,7 @@ See `.claude/rules/memory-placement.md` § Multi-runtime usage.
 
 ## Browser auth
 
-On an auth-gated URL with no saved state the agent emits `BROWSER_AUTH_REQUIRED: <host>`; the human logs in via a headed Playwright MCP session and the state (`.claude/.browser-state/<host>.json`) is reused for headless reads. See `.claude/rules/browser-auth.md`.
+On an auth-gated URL with no saved state the agent emits `BROWSER_AUTH_REQUIRED: <host>`; the human logs in via a headed Playwright MCP session and the state (`.agent0/.browser-state/<host>.json`) is reused for headless reads. See `.claude/rules/browser-auth.md`.
 
 ## Skill compliance
 

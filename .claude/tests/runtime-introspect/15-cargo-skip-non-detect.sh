@@ -38,9 +38,9 @@ run_skip_case() {
     exit 1
   fi
 
-  if [ -f "$TMPDIR/.claude/.runtime-state/last-run.json" ]; then
+  if [ -f "$TMPDIR/.agent0/.runtime-state/last-run.json" ]; then
     printf 'FAIL [%s]: last-run.json was written for non-verifier cargo command\n' "$label"
-    cat "$TMPDIR/.claude/.runtime-state/last-run.json"
+    cat "$TMPDIR/.agent0/.runtime-state/last-run.json"
     exit 1
   fi
 }

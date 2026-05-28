@@ -28,7 +28,7 @@ hook_exit=0
 printf '%s' "$stdin_json" | bash "$HOOK" || hook_exit=$?
 [ "$hook_exit" -eq 0 ] || { printf 'FAIL: hook exit=%d\n' "$hook_exit"; exit 1; }
 
-state="$TMPDIR/.claude/.runtime-state/last-run.json"
+state="$TMPDIR/.agent0/.runtime-state/last-run.json"
 [ -f "$state" ] || { printf 'FAIL: state file missing\n'; exit 1; }
 
 for check in \

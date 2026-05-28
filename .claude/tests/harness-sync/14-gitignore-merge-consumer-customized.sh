@@ -23,21 +23,21 @@ mkdir -p "$SRC/.claude" "$CONSUMER/.claude"
 # Agent0: harness entries
 printf '%s\n' \
   '# Claude Code state' \
-  '.claude/.runtime-state/' \
+  '.agent0/.runtime-state/' \
   '.claude/secrets-audit.jsonl' \
   '.claude/delegation-audit.jsonl' \
-  '.claude/.session-state/' \
+  '.agent0/.session-state/' \
   > "$SRC/.gitignore"
 printf '{"hooks":{}}\n' > "$SRC/.claude/settings.json"
 printf '# CLAUDE\n\n## Compact Instructions\n' > "$SRC/CLAUDE.md"
 
-# Consumer project: Laravel-style .gitignore with ONE overlapping entry (.claude/.session-state/)
+# Consumer project: Laravel-style .gitignore with ONE overlapping entry (.agent0/.session-state/)
 # plus 3 consumer-specific entries that must survive.
 printf '%s\n' \
   '/vendor' \
   '/node_modules' \
   '.env' \
-  '.claude/.session-state/' \
+  '.agent0/.session-state/' \
   > "$CONSUMER/.gitignore"
 printf '{"hooks":{}}\n' > "$CONSUMER/.claude/settings.json"
 printf '# CLAUDE consumer project\n\n## Compact Instructions\n' > "$CONSUMER/CLAUDE.md"
@@ -72,7 +72,7 @@ for entry in '/vendor' '/node_modules' '.env'; do
 done
 
 # Assert (b): missing Agent0 entries appended.
-for entry in '.claude/.runtime-state/' '.claude/secrets-audit.jsonl' '.claude/delegation-audit.jsonl'; do
+for entry in '.agent0/.runtime-state/' '.claude/secrets-audit.jsonl' '.claude/delegation-audit.jsonl'; do
   if ! grep -Fxq "$entry" "$CONSUMER/.gitignore"; then
     printf 'FAIL(b): Agent0 entry %s missing from merged file\n' "$entry"
     cat "$CONSUMER/.gitignore"
@@ -88,8 +88,8 @@ if [ "$marker_count" -ne 1 ]; then
   exit 1
 fi
 
-# Assert (c): overlap entry (.claude/.session-state/) appears exactly once.
-session_count="$(grep -cFx '.claude/.session-state/' "$CONSUMER/.gitignore" || true)"
+# Assert (c): overlap entry (.agent0/.session-state/) appears exactly once.
+session_count="$(grep -cFx '.agent0/.session-state/' "$CONSUMER/.gitignore" || true)"
 if [ "$session_count" -ne 1 ]; then
   printf 'FAIL(c): overlap entry duplicated — count=%s\n' "$session_count"
   cat "$CONSUMER/.gitignore"

@@ -14,14 +14,14 @@ STOP_HOOK="$AGENT0_ROOT/.agent0/hooks/session-stop.sh"
 
 assert_unknown_subdir() {
   local tag="$1" TMPDIR="$2"
-  if [ ! -f "$TMPDIR/.claude/.session-state/unknown/started-at" ]; then
+  if [ ! -f "$TMPDIR/.agent0/.session-state/unknown/started-at" ]; then
     printf 'FAIL [%s]: unknown/started-at not created\n' "$tag"
     printf 'Tree:\n'
-    find "$TMPDIR/.claude/.session-state" -print 2>/dev/null || true
+    find "$TMPDIR/.agent0/.session-state" -print 2>/dev/null || true
     exit 1
   fi
   # Legacy root file must NOT be created
-  if [ -f "$TMPDIR/.claude/.session-state/started-at" ]; then
+  if [ -f "$TMPDIR/.agent0/.session-state/started-at" ]; then
     printf 'FAIL [%s]: legacy root started-at was created instead of unknown/started-at\n' "$tag"
     exit 1
   fi

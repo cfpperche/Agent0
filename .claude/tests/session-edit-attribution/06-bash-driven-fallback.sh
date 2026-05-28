@@ -39,7 +39,7 @@ printf '%s' "$stdin_json" | bash "$START_HOOK" >/dev/null 2>&1
 
 # Tracker file exists but is empty (simulates tracker enabled, but the
 # session's mutations went through Bash and never triggered PostToolUse Edit).
-STATE_DIR="$TMPDIR/.claude/.session-state/$SESSION_ID"
+STATE_DIR="$TMPDIR/.agent0/.session-state/$SESSION_ID"
 touch "$STATE_DIR/edited-files.txt"
 
 # Bash-driven mutation: porcelain now non-empty, but tracker stays empty.

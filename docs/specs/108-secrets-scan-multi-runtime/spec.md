@@ -2,7 +2,7 @@
 
 _Created 2026-05-28._
 
-**Status:** draft
+**Status:** in-progress — all automatable acceptance green; only the live Codex dogfood (V8) pends a human Codex session
 
 ## Intent
 
@@ -12,17 +12,17 @@ Unlike the governance port (107), this is **not a pure move**: the override pass
 
 ## Acceptance criteria
 
-- [ ] **Scenario: hook runs from `.agent0/` on Claude**
+- [x] **Scenario: hook runs from `.agent0/` on Claude**
   - **Given** the hook has been moved+renamed to `.agent0/hooks/secrets-preflight.sh` and `settings.json` repointed
   - **When** a Claude Code session issues `git commit --no-verify` with no override marker
   - **Then** the call is blocked with exit 2 and the verbatim corrected stderr template, identical to pre-move behavior
 
-- [ ] **Scenario: hook fires on Codex via the Bash gate**
+- [x] **Scenario: hook fires on Codex via the Bash gate**
   - **Given** `.codex/config.toml` has the new `[[hooks.PreToolUse]] matcher = "^Bash$"` block enabled and Codex restarted
   - **When** a Codex session issues a dangerous commit shape with no override
   - **Then** the commit is blocked equivalently (exit 2, corrected template) — `tool_input.command` extraction is shared, no Codex-specific branch needed for the block path
 
-- [ ] **Scenario: override pass-through emits runtime-aware rewrite**
+- [x] **Scenario: override pass-through emits runtime-aware rewrite**
   - **Given** a `git commit` carrying a valid `# OVERRIDE: <reason ≥10 chars>` marker
   - **When** the preflight accepts it
   - **Then** on Codex the emitted JSON includes `permissionDecision:"allow"` alongside `updatedInput` (required for Codex to honor the rewrite); on Claude the runtime-appropriate shape is emitted (resolved per Q1's Claude-UX sub-question) — in both cases the command is rewritten to prepend `export CLAUDE_SECRETS_OVERRIDE_REASON='<reason>';` so the native `.githooks/pre-commit` inherits and audits `override`
@@ -32,17 +32,17 @@ Unlike the governance port (107), this is **not a pure move**: the override pass
   - **When** the rewritten command actually executes
   - **Then** the executed command observed `CLAUDE_SECRETS_OVERRIDE_REASON` in its environment — verified live, not merely "the hook printed JSON" (107 proved block semantics; rewrite semantics are the new risk)
 
-- [ ] **Scenario: non-commit Bash is silent under the broad matcher**
+- [x] **Scenario: non-commit Bash is silent under the broad matcher**
   - **Given** the hook registered under Codex's `^Bash$` matcher (no command-string `if` layer)
   - **When** an arbitrary non-`git commit` Bash command runs
   - **Then** the hook exits silently with **no audit row** (no `skip-not-commit` spam) — a deliberate reversal of the current Claude behavior, documented in the rule
 
-- [ ] Audit log is `.agent0/secrets-audit.jsonl` (hard cutover, no legacy-read) with an added `runtime` field (`claude-code`/`codex-cli`/`native-git`) + retained `scan_mode`; decision values unchanged; native `.githooks/pre-commit` repointed to the new path
-- [ ] Project-root resolution sources `.agent0/hooks/_memory-hook-lib.sh` (`memory_project_dir()`), not `PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"`; a subdirectory-cwd fixture proves the log lands at repo root
-- [ ] All 7 scenario tests in `.claude/tests/secrets-scan/` pass against the moved hook (path + audit refs updated; dir name stays `secrets-scan`)
-- [ ] No stale `.claude/hooks/secrets-scan.sh` references remain anywhere (`grep -rn` clean across tests, rules, docs, settings)
-- [ ] Perf/latency harness updated for the rename: `.agent0/tools/bench-hooks.sh` (`HOOK_NAMES`), `.claude/.perf-baseline.json` (filename-keyed baseline), and `.claude/tests/hook-chain-latency/01-baseline-exists.sh` all reference `secrets-preflight.sh`; `bash .claude/tests/hook-chain-latency/01-baseline-exists.sh` passes
-- [ ] `.claude/rules/secrets-scan.md` updated: new path + name, Codex activation note, runtime-branched output shape, the guardrail-not-shell-boundary wording, and the dropped `skip-not-commit` signal documented as a deliberate decision
+- [x] Audit log is `.agent0/secrets-audit.jsonl` (hard cutover, no legacy-read) with an added `runtime` field (`claude-code`/`codex-cli`/`native-git`) + retained `scan_mode`; decision values unchanged; native `.githooks/pre-commit` repointed to the new path
+- [x] Project-root resolution sources `.agent0/hooks/_memory-hook-lib.sh` (`memory_project_dir()`), not `PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"`; a subdirectory-cwd fixture proves the log lands at repo root
+- [x] All 7 scenario tests in `.claude/tests/secrets-scan/` pass against the moved hook (path + audit refs updated; dir name stays `secrets-scan`)
+- [x] No stale `.claude/hooks/secrets-scan.sh` references remain anywhere (`grep -rn` clean across tests, rules, docs, settings)
+- [x] Perf/latency harness updated for the rename: `.agent0/tools/bench-hooks.sh` (`HOOK_NAMES`), `.claude/.perf-baseline.json` (filename-keyed baseline), and `.claude/tests/hook-chain-latency/01-baseline-exists.sh` all reference `secrets-preflight.sh`; `bash .claude/tests/hook-chain-latency/01-baseline-exists.sh` passes
+- [x] `.claude/rules/secrets-scan.md` updated: new path + name, Codex activation note, runtime-branched output shape, the guardrail-not-shell-boundary wording, and the dropped `skip-not-commit` signal documented as a deliberate decision
 
 ## Non-goals
 

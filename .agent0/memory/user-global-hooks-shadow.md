@@ -20,7 +20,7 @@ This is a normal CC platform behavior, not a bug — but it has a non-obvious bl
 
 Dogfood of secrets-scan in shrnk-mono surfaced this: a `~/.claude/hooks/pre-commit-secrets-scan.sh` (user-installed, not Agent0-managed) registered as `PreToolUse(Bash)` matched any `git commit` shape with a fake-AKIA fixture in the diff and blocked it with its own grep pattern + an unrelated bypass env-var convention. Two consequences:
 
-1. **The project's preflight `.claude/hooks/secrets-scan.sh` still fired and audited correctly** (`passthrough` rows in `.claude/secrets-audit.jsonl`), because both PreToolUse handlers run in sequence in the order CC registers them — the first one to exit non-zero blocks. So the project's audit log was honest.
+1. **The project's preflight `.agent0/hooks/secrets-preflight.sh` still fired and audited correctly** (`passthrough` rows in `.agent0/secrets-audit.jsonl`), because both PreToolUse handlers run in sequence in the order CC registers them — the first one to exit non-zero blocks. So the project's audit log was honest.
 2. **The project's NATIVE `.githooks/pre-commit` gitleaks layer never ran**, because git's commit pipeline was never reached. The user-global block returned before git was invoked.
 
 The user-global hook's bypass env-var cannot be set mid-session via a `Bash` tool call — same sibling-process gotcha as `CLAUDE_RUNTIME_INTROSPECT_EXTRA_DETECT` (see `.agent0/memory/runtime-introspect-maintenance.md` § Deep gotchas and `.agent0/memory/cc-platform-hooks.md` for the canonical statement). Disabling the user-global shadow requires either (a) editing `~/.claude/settings.json` to remove the hook registration, or (b) launching `claude` with the user-global hook's bypass env var pre-set in the shell.

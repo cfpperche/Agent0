@@ -6,7 +6,7 @@
 # yarn, bun, pip, uv, poetry, pdm, cargo, go), audits them, and either blocks
 # (block-mode default) or advises (advisory-mode, opt-in via env var). Honors
 # the `# OVERRIDE: <reason ≥10 chars>` marker (start-of-line anchored, same
-# shape as .claude/hooks/secrets-scan.sh) to record intent and bypass block.
+# shape as .agent0/hooks/secrets-preflight.sh) to record intent and bypass block.
 #
 # Modes (resolved at hook entry):
 #   block (default)  — detected dep-install + no valid override → exit 2,
@@ -44,7 +44,7 @@
 #
 # Reference:
 #   .claude/rules/supply-chain.md      — full discipline
-#   .claude/hooks/secrets-scan.sh      — sibling preflight (primitives reused);
+#   .agent0/hooks/secrets-preflight.sh      — sibling preflight (primitives reused);
 #                                        block-template-as-contract pattern
 #                                        from the secrets-scan capacity (issue #24327)
 #
@@ -178,7 +178,7 @@ append_audit() {
 # ---------------------------------------------------------------------------
 # Phase 3: Override marker parsing
 # ---------------------------------------------------------------------------
-# Same regex as secrets-scan.sh: `^[[:space:]]*# OVERRIDE: <reason>` anchored
+# Same regex as secrets-preflight.sh: `^[[:space:]]*# OVERRIDE: <reason>` anchored
 # at start-of-line. Reason must be ≥10 chars after trim.
 #
 # Outcomes:

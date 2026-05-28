@@ -16,7 +16,7 @@
 #
 # Timing: bash 5+ $EPOCHREALTIME (microsecond precision) — no external timing tool.
 # Side-effects: redirects CLAUDE_PROJECT_DIR to a per-run tmpdir so the hooks' own
-# audit logs (.claude/secrets-audit.jsonl, .claude/supply-chain-audit.jsonl) and
+# audit logs (.agent0/secrets-audit.jsonl, .claude/supply-chain-audit.jsonl) and
 # in-flight runtime-mark files land in tmp, never in the real project tree.
 # Tmpdir is cleaned at exit.
 #
@@ -72,7 +72,7 @@ export CLAUDE_PROJECT_DIR="$BENCH_TMPDIR"
 # --- Hooks under test (resolved from .agent0/hooks/ then .claude/hooks/) ---
 # Order matches settings.json PreToolUse(Bash) registration. governance-gate.sh
 # lives in .agent0/hooks/ (spec 107); the rest remain in .claude/hooks/.
-HOOK_NAMES=( "governance-gate.sh" "secrets-scan.sh" "supply-chain-scan.sh" "runtime-pre-mark.sh" )
+HOOK_NAMES=( "governance-gate.sh" "secrets-preflight.sh" "supply-chain-scan.sh" "runtime-pre-mark.sh" )
 
 # --- Command set ---
 # label::: command-string  (the ':::' separator is intentional — unlikely in any real cmd)

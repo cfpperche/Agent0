@@ -22,7 +22,7 @@ jq -cn '{
   hooks: {
     PreToolUse: [
       {matcher:"Bash", hooks:[{type:"command", command:"bash $CLAUDE_PROJECT_DIR/.agent0/hooks/governance-gate.sh"}]},
-      {matcher:"Bash", hooks:[{type:"command", command:"bash $CLAUDE_PROJECT_DIR/.claude/hooks/secrets-scan.sh"}]},
+      {matcher:"Bash", hooks:[{type:"command", command:"bash $CLAUDE_PROJECT_DIR/.agent0/hooks/secrets-preflight.sh"}]},
       {matcher:"Bash", hooks:[{type:"command", command:"bash $CLAUDE_PROJECT_DIR/.claude/hooks/supply-chain-scan.sh"}]}
     ],
     SessionStart: [

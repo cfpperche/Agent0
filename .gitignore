@@ -14,8 +14,8 @@ CLAUDE.local.md
 .claude/.compact-history/
 .agent0/delegation-audit.jsonl
 .agent0/delegation-audit.jsonl.lock
-.claude/secrets-audit.jsonl
-.claude/secrets-audit.jsonl.lock
+.agent0/secrets-audit.jsonl
+.agent0/secrets-audit.jsonl.lock
 .claude/supply-chain-audit.jsonl
 .claude/supply-chain-audit.jsonl.lock
 .claude/.rule-load-debug.jsonl

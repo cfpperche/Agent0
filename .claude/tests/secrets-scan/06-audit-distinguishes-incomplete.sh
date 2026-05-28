@@ -35,7 +35,7 @@ git config core.hooksPath "$AGENT0_GITHOOKS"
 # Copy .gitleaks.toml so detectors apply correctly.
 cp "$AGENT0_GITLEAKS_TOML" "$TMPDIR/.gitleaks.toml"
 
-AUDIT_LOG="$TMPDIR/.claude/secrets-audit.jsonl"
+AUDIT_LOG="$TMPDIR/.agent0/secrets-audit.jsonl"
 
 # --- Part A: allow-empty commit ---
 commit_exit=0

@@ -36,7 +36,7 @@ The hook script lives at `.claude/hooks/rule-load-debug.sh`, is registered under
   "memory_type": "Project",
   "load_reason": "path_glob_match",
   "globs": [".claude/hooks/secrets-*.sh", ".githooks/**", "..."],
-  "trigger_file": ".claude/hooks/secrets-scan.sh",
+  "trigger_file": ".agent0/hooks/secrets-preflight.sh",
   "parent_file": null
 }
 ```
@@ -48,7 +48,7 @@ Paths in `file` and `trigger_file` are relativized against `$CLAUDE_PROJECT_DIR`
 `bash .agent0/tools/probe.sh rule-loads` — reads the JSONL, emits a human-readable table of the last 20 events:
 
 ```
-2026-05-13T14:22:18Z  path_glob_match     .claude/rules/secrets-scan.md  ← .claude/hooks/secrets-scan.sh
+2026-05-13T14:22:18Z  path_glob_match     .claude/rules/secrets-scan.md  ← .agent0/hooks/secrets-preflight.sh
 2026-05-13T14:22:18Z  session_start       .claude/rules/delegation.md
 2026-05-13T14:22:18Z  session_start       CLAUDE.md
 ```
@@ -63,7 +63,7 @@ Missing log file → `status: no-snapshot` with hint to set `CLAUDE_RULE_LOAD_DE
 
 ## Use cases
 
-1. **Verify path-scoping after a frontmatter edit.** Enable, restart session, `/memory` shows reduced rule list. Touch a file matching one of the new globs (e.g. `Read .claude/hooks/secrets-scan.sh`). Inspect the log: the matching rule should appear with `load_reason: "path_glob_match"`, the correct glob list, and the triggering file recorded. If it doesn't fire, the glob is wrong.
+1. **Verify path-scoping after a frontmatter edit.** Enable, restart session, `/memory` shows reduced rule list. Touch a file matching one of the new globs (e.g. `Read .agent0/hooks/secrets-preflight.sh`). Inspect the log: the matching rule should appear with `load_reason: "path_glob_match"`, the correct glob list, and the triggering file recorded. If it doesn't fire, the glob is wrong.
 2. **Debug "rule didn't apply when I expected".** When agent behavior suggests a rule wasn't in context, check `--session <id> --reason path_glob_match` to confirm whether the rule actually loaded.
 3. **Measure startup load.** `--reason session_start` shows the unconditional set. Compare against expectations.
 4. **Audit compaction behavior.** `--reason compact` shows which files survived the re-load step. Documented separately (`.agent0/memory/compaction-continuity.md`).

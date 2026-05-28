@@ -1,7 +1,7 @@
 # Starter gitleaks config for Agent0.
 #
 # This file is consumed by the `gitleaks protect --staged` invocation inside
-# `.claude/hooks/secrets-scan.sh` (the PreToolUse(Bash) gate that intercepts
+# `.agent0/hooks/secrets-preflight.sh` (the PreToolUse(Bash) gate that intercepts
 # `git commit`). The discipline — when the scan fires, override grammar,
 # allowlist mechanics, escape hatch, gotchas — is documented in
 # `.claude/rules/secrets-scan.md`. Read that first before editing this file.

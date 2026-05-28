@@ -16,7 +16,7 @@ This entry pairs with `.agent0/memory/hook-chain-maintenance.md` (the upstream-m
 
 In-scope:
 
-- `PreToolUse(Bash)` hooks registered in `.claude/settings.json` — `governance-gate.sh`, `secrets-scan.sh`, `supply-chain-scan.sh`, `runtime-pre-mark.sh` at time of writing.
+- `PreToolUse(Bash)` hooks registered in `.claude/settings.json` — `governance-gate.sh`, `secrets-preflight.sh`, `supply-chain-scan.sh`, `runtime-pre-mark.sh` at time of writing.
 - The full chain's wall-clock p95 against a representative command set.
 
 Out-of-scope:
@@ -30,7 +30,7 @@ Out-of-scope:
 
 **p95 ≤ 80 ms for fast-path Bash commands** (no-op, `ls`, `cat`, `echo`, `git status`, `git log`, `grep`).
 
-Fast-path is defined as: a Bash command none of the four gates have a real reason to scrutinize. Under the current `if`-field narrowing in `.claude/settings.json`, `secrets-scan.sh` doesn't spawn unless the command shape contains `git commit`, and `supply-chain-scan.sh` doesn't spawn unless the shape contains a package-manager keyword. The chain on a true fast-path command therefore reduces to:
+Fast-path is defined as: a Bash command none of the four gates have a real reason to scrutinize. Under the current `if`-field narrowing in `.claude/settings.json`, `secrets-preflight.sh` doesn't spawn unless the command shape contains `git commit`, and `supply-chain-scan.sh` doesn't spawn unless the shape contains a package-manager keyword. The chain on a true fast-path command therefore reduces to:
 
 ```
 IPC floor (bash spawn + stdin pipe)   ~13 ms p95 on WSL2
@@ -86,7 +86,7 @@ The bench invokes each hook directly with a synthetic stdin payload — bypassin
       "...":  { "..." : "..." }
     },
     "governance-gate.sh": { "...": "..." },
-    "secrets-scan.sh":    { "...": "..." },
+    "secrets-preflight.sh":    { "...": "..." },
     "supply-chain-scan.sh": { "...": "..." },
     "runtime-pre-mark.sh":  { "...": "..." }
   }
@@ -113,7 +113,7 @@ The check is not wired into a `pre-commit` hook in v1. The monthly routine `.age
 
 - `.agent0/memory/hook-chain-maintenance.md` — upstream-maintainer discipline (optimization techniques + the 5-step contract for adding a new `PreToolUse(Bash)` hook).
 - `.claude/rules/runtime-introspect.md` — sibling perf-observability rule; the `runtime-pre-mark.sh` hook this entry measures is owned by that capacity.
-- `.claude/rules/secrets-scan.md` — `secrets-scan.sh` contract; the `if`-field narrowing preserves it exactly because the hook body is unchanged.
+- `.claude/rules/secrets-scan.md` — `secrets-preflight.sh` contract; the `if`-field narrowing preserves it exactly because the hook body is unchanged.
 - `.claude/rules/supply-chain.md` — `supply-chain-scan.sh` contract; same.
 - `.claude/rules/delegation.md` — `governance-gate.sh` sits in the broader delegation/governance family.
 

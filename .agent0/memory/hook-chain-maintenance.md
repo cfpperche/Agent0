@@ -11,7 +11,7 @@ metadata:
 
 Maintainer-binding companion to `.agent0/memory/hook-chain-latency.md`. The companion entry documents the chain budget + bench tool + regression check; this memory documents the upstream-maintainer discipline applied when adding or editing a `PreToolUse(Bash)` hook.
 
-Read before adding any new `PreToolUse(Bash)` hook, or editing the optimization-sensitive bodies of `governance-gate.sh`, `secrets-scan.sh`, `supply-chain-scan.sh`, `runtime-pre-mark.sh`.
+Read before adding any new `PreToolUse(Bash)` hook, or editing the optimization-sensitive bodies of `governance-gate.sh`, `secrets-preflight.sh`, `supply-chain-scan.sh`, `runtime-pre-mark.sh`.
 
 ## Optimization techniques
 
@@ -25,7 +25,7 @@ For hooks that only need to inspect a subset of Bash commands, use the per-handl
 
 Applied to:
 
-- `secrets-scan.sh` — narrows to `Bash(git commit *|git commit|*git commit *|*git commit)`. The hook itself short-circuits on non-`git commit` after `jq` parse anyway, but matcher-narrowing prevents the spawn outright — a free ~70 ms saving per non-commit Bash call.
+- `secrets-preflight.sh` — narrows to `Bash(git commit *|git commit|*git commit *|*git commit)`. The hook itself short-circuits on non-`git commit` after `jq` parse anyway, but matcher-narrowing prevents the spawn outright — a free ~70 ms saving per non-commit Bash call.
 - `supply-chain-scan.sh` — narrows to `Bash(npm *|pnpm *|yarn *|bun *|pip *|uv *|poetry *|pdm *|cargo *|go *|composer *)`. Same logic.
 
 Not applied to:

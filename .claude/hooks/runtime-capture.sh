@@ -35,7 +35,7 @@
 # Reference:
 #   .claude/rules/runtime-introspect.md       — full discipline
 #   .claude/hooks/supply-chain-scan.sh        — tokeniser-twin (keep in sync)
-#   .claude/hooks/secrets-scan.sh             — fail-open patterns
+#   .agent0/hooks/secrets-preflight.sh             — fail-open patterns
 
 set -uo pipefail
 

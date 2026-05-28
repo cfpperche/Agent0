@@ -5,7 +5,7 @@
 #   (b) short-reason multi-line override → marker dropped, plain advisory fires
 #
 # Override grammar is start-of-line anchored, ≥10 chars after trim.
-# Mirrors .claude/hooks/secrets-scan.sh grammar. Inline-trailing markers
+# Mirrors .agent0/hooks/secrets-preflight.sh grammar. Inline-trailing markers
 # are NOT accepted (would re-open the spec-002 false-positive regression).
 
 set -euo pipefail

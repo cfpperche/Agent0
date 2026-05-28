@@ -64,7 +64,7 @@ if [ -z "$PROJECT_DIR" ]; then
   exit 0
 fi
 
-AUDIT_LOG="$PROJECT_DIR/.claude/secrets-audit.jsonl"
+AUDIT_LOG="$PROJECT_DIR/.agent0/secrets-audit.jsonl"
 
 # Ensure the audit-log parent directory exists before any append attempt.
 mkdir -p "$(dirname "$AUDIT_LOG")" 2>/dev/null || true
@@ -107,7 +107,7 @@ append_audit() {
     --argjson override_reason "$reason_json" \
     --arg scan_mode "native-pre-commit" \
     --argjson staged_files_count "$staged_files_count" \
-    '{ts:$ts, session_id:null, agent_id:null, decision:$decision, finding_count:$finding_count, override_reason:$override_reason, scan_mode:$scan_mode, staged_files_count:$staged_files_count}')"
+    '{ts:$ts, session_id:null, agent_id:null, runtime:"native-git", decision:$decision, finding_count:$finding_count, override_reason:$override_reason, scan_mode:$scan_mode, staged_files_count:$staged_files_count}')"
 
   # Atomic append via flock when available; fall back to plain append otherwise.
   # Probe writability in a subshell BEFORE the bare `exec 9>...` redirect —

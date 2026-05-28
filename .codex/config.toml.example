@@ -91,6 +91,22 @@
 # command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/governance-gate.sh"'
 # statusMessage = "Checking destructive-op safety floor"
 
+# Secrets preflight shape-gate (spec 108). PreToolUse(Bash) gates dangerous
+# git-commit shapes (compound `&& git commit`, `; git commit`, `git commit -a`,
+# `--no-verify`) and bridges the `# OVERRIDE: <reason ≥10 chars>` marker to the
+# native .githooks/pre-commit gitleaks scanner. It does NOT run gitleaks itself.
+# Block semantics are identical to Claude (exit 2, reads tool_input.command).
+# On override it emits `permissionDecision:"allow"` + `updatedInput` (Codex
+# requires both to honor the rewrite). NOTE the broad `^Bash$` matcher (Codex
+# has no command-string `if` layer) — the hook short-circuits silently on
+# non-commit Bash, so it does not flood .agent0/secrets-audit.jsonl.
+# [[hooks.PreToolUse]]
+# matcher = "^Bash$"
+# [[hooks.PreToolUse.hooks]]
+# type = "command"
+# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/secrets-preflight.sh"'
+# statusMessage = "Checking commit-shape + secrets-scan override"
+
 # Delegation observability (spec 106). SubagentStart audits the dispatch
 # (non-blocking — Codex cannot block a spawn); SubagentStop appends the close
 # row. Both write the single canonical .agent0/delegation-audit.jsonl. The

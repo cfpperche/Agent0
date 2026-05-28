@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # .claude/tests/secrets-scan/run-all.sh
-# Orchestrator: runs all 7 spec-007 scenario scripts in order and prints a
-# summary table. Exits 0 if all pass, 1 if any fail.
+# Orchestrator: runs all scenario scripts in order and prints a summary table.
+# V1-V7 cover spec-007 (two-layer scan); V8-V10 cover spec-108 (multi-runtime
+# port: runtime-aware override shape, silent non-commit, subdir-cwd root).
+# Exits 0 if all pass, 1 if any fail.
 #
 # Usage:
 #   bash run-all.sh        # quiet — only summary table
@@ -23,7 +25,7 @@ fi
 # Collect scripts in order
 # ---------------------------------------------------------------------------
 scripts=""
-for n in 01 02 03 04 05 06 07; do
+for n in 01 02 03 04 05 06 07 08 09 10; do
   match="$(ls "$SCRIPT_DIR/${n}"-*.sh 2>/dev/null | head -1 || true)"
   if [ -n "$match" ]; then
     scripts="$scripts $match"

@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
-# .claude/hooks/secrets-scan.sh
-# PreToolUse(Bash) hook — preflight shape-gate for secrets-scan.
+# .agent0/hooks/secrets-preflight.sh
+# PreToolUse(Bash) hook — runtime-neutral preflight shape-gate for the
+# secrets-scan capacity (spec 108: moved from .claude/hooks/secrets-scan.sh,
+# renamed because it scans no secrets — it gates commit *shape* + bridges the
+# override env-var to the native .githooks/pre-commit scanner). Runs on both
+# Claude Code and Codex CLI.
 #
 # This script is a PURE PREFLIGHT GATE. It does NOT call gitleaks.
 # The actual gitleaks scan lives in .githooks/pre-commit (the native git
@@ -18,7 +22,7 @@
 #   4. Override pass-through: when a valid override marker is present, rewrite
 #      the command to prepend CLAUDE_SECRETS_OVERRIDE_REASON='<reason>' so the
 #      native hook reads it and audits correctly. Exit 0 with JSON stdout.
-#   5. Append one audit line per git-commit invocation to .claude/secrets-audit.jsonl.
+#   5. Append one audit line per git-commit invocation to .agent0/secrets-audit.jsonl.
 #
 # Decision values (ONLY these; "block"/"allow"/"skip-no-engine"/"override" are
 # now exclusively emitted by .githooks/pre-commit):
@@ -42,7 +46,7 @@
 #
 # Lazarus vector note: the override env-var is injected via PreToolUse
 # updatedInput — NOT via a post-clone script. The install step (core.hooksPath)
-# must be manual per README. See .claire/rules/secrets-scan.md § Gotchas.
+# must be manual per README. See .claude/rules/secrets-scan.md § Gotchas.
 #
 # Exit codes: 0 = allow/pass-through, 2 = reject-shape.
 # jq is a hard dependency; if missing the hook fails open (exit 0).
@@ -75,8 +79,21 @@ COMMAND="$(printf '%s' "$INPUT" | jq -r '.tool_input.command // ""' 2>/dev/null 
 SESSION_ID="$(printf '%s' "$INPUT" | jq -r '.session_id // ""' 2>/dev/null || true)"
 AGENT_ID="$(printf '%s' "$INPUT" | jq -r '.agent_id // ""' 2>/dev/null || true)"
 
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
-AUDIT_LOG="$PROJECT_DIR/.claude/secrets-audit.jsonl"
+# Runtime-neutral project-root + runtime detection via the shared hook lib
+# (spec 108). memory_project_dir resolves the git toplevel, so a Codex session
+# started in a subdirectory still writes the audit log at repo root.
+_HOOK_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
+# shellcheck source=/dev/null
+. "$_HOOK_DIR/_memory-hook-lib.sh" 2>/dev/null || true
+if command -v memory_project_dir >/dev/null 2>&1; then
+  PROJECT_DIR="$(memory_project_dir "$INPUT")"
+  RUNTIME="$(memory_runtime "$INPUT")"
+else
+  # Fail-open fallback if the lib is missing — never lock the agent out.
+  PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
+  RUNTIME="claude-code"
+fi
+AUDIT_LOG="$PROJECT_DIR/.agent0/secrets-audit.jsonl"
 
 # ---------------------------------------------------------------------------
 # Phase 2: Short-circuit for non-commit invocations
@@ -91,46 +108,12 @@ is_git_commit() {
 }
 
 if [ -z "$COMMAND" ] || ! is_git_commit "$COMMAND"; then
-  # Not a git commit — short-circuit silently. No audit row (skip-not-commit
-  # rationale: audit rows prove the hook ran; but for truly non-commit commands,
-  # the volume would be enormous — audit only git-commit shapes).
-  # NOTE: per DONE_WHEN spec T1, we DO audit skip-not-commit. So we must
-  # proceed to the audit path even here. Fall through to audit below.
-  mkdir -p "$(dirname "$AUDIT_LOG")" 2>/dev/null || exit 0
-  ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-
-  # Helper inline for skip-not-commit path only.
-  _agent_id_json="null"
-  if [ -n "$AGENT_ID" ]; then
-    _agent_id_json="$(printf '%s' "$AGENT_ID" | jq -R -s -c 'rtrimstr("\n")')"
-  fi
-  _session_id_json="null"
-  if [ -n "$SESSION_ID" ]; then
-    _session_id_json="$(printf '%s' "$SESSION_ID" | jq -R -s -c 'rtrimstr("\n")')"
-  fi
-
-  _line="$(jq -c -n \
-    --arg ts "$ts" \
-    --argjson session_id "$_session_id_json" \
-    --argjson agent_id "$_agent_id_json" \
-    --arg decision "skip-not-commit" \
-    --arg scan_mode "preflight" \
-    '{ts:$ts, session_id:$session_id, agent_id:$agent_id, decision:$decision, scan_mode:$scan_mode}')"
-
-  if command -v flock >/dev/null 2>&1; then
-    _lock_path="$AUDIT_LOG.lock"
-    ( : >>"$_lock_path" ) 2>/dev/null || {
-      printf '%s\n' "$_line" >> "$AUDIT_LOG" 2>/dev/null || true
-      exit 0
-    }
-    exec 9>"$_lock_path"
-    flock 9
-    printf '%s\n' "$_line" >> "$AUDIT_LOG"
-    flock -u 9
-    exec 9>&-
-  else
-    printf '%s\n' "$_line" >> "$AUDIT_LOG" 2>/dev/null || true
-  fi
+  # Not a git commit — exit silently with NO audit row (spec 108). Under Codex's
+  # broad `^Bash$` matcher (no command-string `if` layer like Claude's
+  # settings.json), the hook sees EVERY Bash call; auditing each non-commit
+  # invocation would turn secrets-audit.jsonl into a shell-activity firehose.
+  # This deliberately reverses the prior `skip-not-commit` row-per-bash
+  # behavior — see .claude/rules/secrets-scan.md § Audit log.
   exit 0
 fi
 
@@ -181,11 +164,12 @@ append_audit() {
     --arg ts "$ts" \
     --argjson session_id "$session_id_json" \
     --argjson agent_id "$agent_id_json" \
+    --arg runtime "$RUNTIME" \
     --arg decision "$decision" \
     --arg scan_mode "preflight" \
     --argjson cmd_shape "$cmd_shape_json" \
     --argjson override_reason "$override_reason_json" \
-    '{ts:$ts, session_id:$session_id, agent_id:$agent_id, decision:$decision, scan_mode:$scan_mode, cmd_shape:$cmd_shape, override_reason:$override_reason}')"
+    '{ts:$ts, session_id:$session_id, agent_id:$agent_id, runtime:$runtime, decision:$decision, scan_mode:$scan_mode, cmd_shape:$cmd_shape, override_reason:$override_reason}')"
 
   # Atomic append via flock when available; fall back to plain append otherwise.
   # Probe writability in a subshell BEFORE the bare `exec 9>...` redirect —
@@ -366,11 +350,24 @@ if [ "$override_valid" -eq 1 ]; then
   # block in the native hook.
   rewritten_cmd="export CLAUDE_SECRETS_OVERRIDE_REASON='${escaped_reason}'; ${COMMAND}"
 
-  # Emit JSON stdout for hookSpecificOutput.updatedInput.
-  # Use jq to build the JSON safely (no manual quoting of the command string).
-  rewritten_json="$(jq -c -n \
-    --arg cmd "$rewritten_cmd" \
-    '{"hookSpecificOutput":{"hookEventName":"PreToolUse","updatedInput":{"command":$cmd}}}')"
+  # Emit JSON stdout for hookSpecificOutput.updatedInput. The shape is
+  # RUNTIME-AWARE (spec 108, verified vs official Codex hooks docs 2026-05-28):
+  #   - Codex CLI requires `permissionDecision:"allow"` alongside updatedInput,
+  #     otherwise the rewrite is silently ignored and the override never reaches
+  #     the native scanner.
+  #   - Claude Code emits updatedInput-only. Emitting `permissionDecision:"allow"`
+  #     on Claude would auto-approve the tool call and bypass the normal
+  #     permission prompt — a silent UX change we do NOT want for an overridden
+  #     commit. So Claude keeps the narrower shape.
+  if [ "$RUNTIME" = "codex-cli" ]; then
+    rewritten_json="$(jq -c -n \
+      --arg cmd "$rewritten_cmd" \
+      '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","updatedInput":{"command":$cmd}}}')"
+  else
+    rewritten_json="$(jq -c -n \
+      --arg cmd "$rewritten_cmd" \
+      '{"hookSpecificOutput":{"hookEventName":"PreToolUse","updatedInput":{"command":$cmd}}}')"
+  fi
 
   printf '%s\n' "$rewritten_json"
 

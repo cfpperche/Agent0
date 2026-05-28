@@ -82,7 +82,7 @@ if ! grep -qF "secrets-scan: blocked" "$commit_stderr_file"; then
 fi
 
 # (c) Assert consumer project audit log entry.
-CONSUMER_AUDIT="$CONSUMER_DIR/.claude/secrets-audit.jsonl"
+CONSUMER_AUDIT="$CONSUMER_DIR/.agent0/secrets-audit.jsonl"
 if [ ! -f "$CONSUMER_AUDIT" ]; then
   printf 'FAIL: audit log not created in consumer project at %s\n' "$CONSUMER_AUDIT"
   exit 1

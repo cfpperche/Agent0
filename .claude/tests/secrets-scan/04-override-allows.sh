@@ -33,7 +33,7 @@ set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 AGENT0_GITHOOKS="$AGENT0_ROOT/.githooks"
-AGENT0_PREFLIGHT="$AGENT0_ROOT/.claude/hooks/secrets-scan.sh"
+AGENT0_PREFLIGHT="$AGENT0_ROOT/.agent0/hooks/secrets-preflight.sh"
 AGENT0_GITLEAKS_TOML="$AGENT0_ROOT/.gitleaks.toml"
 
 TMPDIR="$(mktemp -d -t spec-007-test-XXXXXX)"
@@ -102,7 +102,7 @@ case "$rewritten_cmd" in
 esac
 
 # (b) Assert preflight audit has override-pass-through + reason.
-AUDIT_LOG="$TMPDIR/.claude/secrets-audit.jsonl"
+AUDIT_LOG="$TMPDIR/.agent0/secrets-audit.jsonl"
 if [ ! -f "$AUDIT_LOG" ]; then
   printf 'FAIL: preflight audit log not created\n'
   exit 1

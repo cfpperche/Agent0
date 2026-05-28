@@ -60,7 +60,7 @@ The override marker `# OVERRIDE: <reason ≥10 chars>` is honored by the governa
 
 7. **Reset `.agent0/HANDOFF.md`.** Replace the handoff content with a short "fresh project, nothing in flight" state or your own starting context. Keep the four sections (`Current State`, `Active Work`, `Next Actions`, `Decisions & Gotchas`). The Stop hook will nag you to update it on commit-day Claude Code sessions.
 
-8. **(Optional) Drop the harness self-verification suite.** `.claude/tests/secrets-scan/` ships 8 scenario scripts (~780 LOC) that verify spec 007's two-layer scan against gitleaks — useful when modifying `.githooks/pre-commit` or `.claude/hooks/secrets-scan.sh`, otherwise unused. The suite lives under `.claude/` (not the project's `tests/`) because it tests *the harness*, not the fork's code; forks that won't touch the secrets-scan internals can delete the dir to drop ~780 LOC from their initial commit. The harness keeps working without it.
+8. **(Optional) Drop the harness self-verification suite.** `.claude/tests/secrets-scan/` ships 8 scenario scripts (~780 LOC) that verify spec 007's two-layer scan against gitleaks — useful when modifying `.githooks/pre-commit` or `.agent0/hooks/secrets-preflight.sh`, otherwise unused. The suite lives under `.claude/` (not the project's `tests/`) because it tests *the harness*, not the fork's code; forks that won't touch the secrets-scan internals can delete the dir to drop ~780 LOC from their initial commit. The harness keeps working without it.
 
 ## Workflow
 
@@ -92,7 +92,9 @@ Future to-dos that don't belong in `.agent0/HANDOFF.md` (in-flight) or memory (k
 ├── CLAUDE.md                          # project instructions (placeholders + template-stable rules)
 ├── README.md                          # this file
 ├── .agent0/
-│   └── HANDOFF.md                     # runtime-neutral session handoff (git-tracked)
+│   ├── HANDOFF.md                     # runtime-neutral session handoff (git-tracked)
+│   ├── hooks/secrets-preflight.sh     # runtime-neutral commit-shape preflight (spec 108; Claude + Codex)
+│   └── secrets-audit.jsonl            # secrets-scan audit log (gitignored)
 ├── .gitleaks.toml                     # starter secrets-scan config (allowlists + builtin detectors)
 ├── .githooks/                         # versioned native git hooks (activate per-fork via core.hooksPath)
 │   └── pre-commit                     # primary secrets-scan layer (gitleaks over staged diff)
@@ -106,8 +108,7 @@ Future to-dos that don't belong in `.agent0/HANDOFF.md` (in-flight) or memory (k
 │   ├── validators/run.sh              # auto-detect typecheck+test
 │   ├── agents/                        # custom subagent definitions (empty)
 │   ├── tests/secrets-scan/            # harness self-verification suite for spec 007 (run-all.sh + V1-V7; optional, see step 7)
-│   ├── delegation-audit.jsonl         # delegation audit log (gitignored)
-│   └── secrets-audit.jsonl            # secrets-scan audit log (gitignored)
+│   └── delegation-audit.jsonl         # (moved to .agent0/ in spec 106 — see .agent0/ above)
 └── docs/
     └── specs/NNN-<slug>/              # design memory, one dir per feature
         ├── spec.md                    # what + why

@@ -109,7 +109,7 @@
         "n": 100
       }
     },
-    "secrets-scan.sh": {
+    "secrets-preflight.sh": {
       "noop": {
         "p50_ms": 61.57,
         "p95_ms": 76.78,

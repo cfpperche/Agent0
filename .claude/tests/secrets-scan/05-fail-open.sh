@@ -87,7 +87,7 @@ if ! printf '%s' "$output_content" | grep -qF "gitleaks not found"; then
 fi
 
 # (c) Assert audit-log entry
-AUDIT_LOG="$TMPDIR/.claude/secrets-audit.jsonl"
+AUDIT_LOG="$TMPDIR/.agent0/secrets-audit.jsonl"
 if [ ! -f "$AUDIT_LOG" ]; then
   printf 'FAIL: audit log not created at %s\n' "$AUDIT_LOG"
   exit 1

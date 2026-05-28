@@ -1,7 +1,8 @@
 ---
 paths:
+  - ".agent0/hooks/secrets-preflight.sh"
   - ".claude/hooks/secrets-*.sh"
-  - ".claude/secrets-audit.jsonl"
+  - ".agent0/secrets-audit.jsonl"
   - ".githooks/**"
   - ".gitleaks.toml"
 ---
@@ -14,7 +15,7 @@ Two layers keep credentials out of the repo, plus a soft-advisory hook on edits.
 
 **Primary block — `.githooks/pre-commit` (native git hook).** Activated per-consumer by `git config core.hooksPath .githooks` once after `git init`. Fires inside git's commit process *after* staging finalises — so a compound `git add ... && git commit ...` invocation still sees the real index. Runs `gitleaks git --pre-commit --staged --no-banner --report-format=json --report-path=<mktemp>` from repo root and parses the report defensively. Blocks on findings with exit 1 (NOT 2 — native pre-commit convention); passes with `decision: "override"` when `CLAUDE_SECRETS_OVERRIDE_REASON` is set; fail-open on missing gitleaks or unparseable JSON. `scan_mode: "native-pre-commit"`; `session_id` and `agent_id` are `null` (no Claude Code payload). Full decision values in § *Audit log*.
 
-**Preflight shape-gate — `PreToolUse(Bash)` → `.claude/hooks/secrets-scan.sh`.** Broad matcher (any Bash with `git`); the script short-circuits with `skip-not-commit` unless the command is a real `git commit` (covers `git commit`, `git  commit` double-space, `git -C <path> commit`, `git commit --amend`). On a real commit it does NOT call gitleaks — that's exclusively the native layer's job. Instead: (a) parses `# OVERRIDE: <reason ≥10 chars>` (start-of-line anchored); (b) rejects compound `&& git commit` / `; git commit`, `git commit -a` / `-am` / `-ma`, `--no-verify` when no override is present, emitting the verbatim corrected stderr template (issue #24327 mitigation — see § *Gotchas*); (c) on valid override, rewrites the command to prepend `export CLAUDE_SECRETS_OVERRIDE_REASON='<reason>'; ` and outputs `{"hookSpecificOutput":{"hookEventName":"PreToolUse","updatedInput":{"command":"<rewritten>"}}}` on stdout so the native layer inherits the env var; (d) clean shape, no marker → silent `passthrough`. All preflight rows carry `scan_mode: "preflight"` and capture `session_id` + `agent_id` (which the native layer cannot).
+**Preflight shape-gate — `PreToolUse(Bash)` → `.agent0/hooks/secrets-preflight.sh`** (runtime-neutral; runs on Claude Code and Codex CLI — spec 108). On Claude the registration carries an `if Bash(... git commit ...)` matcher so the hook rarely spawns on non-commit Bash; on Codex the matcher is the broad `^Bash$` (Codex has no command-string `if` layer), so the hook sees every Bash call and short-circuits internally. Either way, on a non-`git commit` command it **exits silently with no audit row** (the prior `skip-not-commit` row was dropped in 108 — under Codex's broad matcher it would flood the log; see § *Audit log*). On a real `git commit` (covers `git commit`, `git  commit` double-space, `git -C <path> commit`, `git commit --amend`) it does NOT call gitleaks — that's exclusively the native layer's job. Instead: (a) parses `# OVERRIDE: <reason ≥10 chars>` (start-of-line anchored); (b) rejects compound `&& git commit` / `; git commit`, `git commit -a` / `-am` / `-ma`, `--no-verify` when no override is present, emitting the verbatim corrected stderr template (issue #24327 mitigation — see § *Gotchas*); (c) on valid override, rewrites the command to prepend `export CLAUDE_SECRETS_OVERRIDE_REASON='<reason>'; ` and outputs a **runtime-aware** `hookSpecificOutput.updatedInput` JSON (see § *Env-var bridge* for the per-runtime shape) so the native layer inherits the env var; (d) clean shape, no marker → silent `passthrough`. All preflight rows carry `scan_mode: "preflight"`, a `runtime` provenance field (`claude-code` / `codex-cli`), and `session_id` + `agent_id` (which the native layer cannot). The preflight is a guardrail over commits issued through the supported `Bash` tool path — not a complete shell-enforcement boundary; a commit performed by some other mechanism is out of its reach by design.
 
 **Soft advisory — `PostToolUse(Edit|Write|MultiEdit)` → `.claude/hooks/secrets-advise.sh`.** Opt-in via `CLAUDE_SECRETS_ADVISE_ON_EDIT=1`. Sub-agent only — exits 0 silently for parent edits, matching the actor split in `.claude/rules/delegation.md` § *Post-edit validator loop*. On a delegated edit, runs gitleaks against the new content in a temp dir; each finding becomes one `secrets-advisory: <detector> at <file>:<line>` stderr line. Always exits 0 — never blocks, never reverts, never enters the commit audit log. Same shape as `tdd-advisory:` (see `.claude/rules/tdd.md` § *Reading the validator advisory*).
 
@@ -41,6 +42,13 @@ git add tests/fixtures/aws-key.txt && git commit -m "fixture"
 ### Env-var bridge
 
 The override marker lives in `tool_input.command` — visible to the preflight (stdin JSON) but invisible to the native hook (no Claude Code payload, and the shell strips `#`-comments before git runs). The bridge is `CLAUDE_SECRETS_OVERRIDE_REASON`: the preflight prepends `export CLAUDE_SECRETS_OVERRIDE_REASON='<escaped-reason>'; ` (single-quoted, with the close-escape-open `'\''` idiom against shell injection). The `export` makes the var inheritable; every chained command sees it; the native hook reads it and audits `override`.
+
+**Runtime-aware rewrite output (spec 108, verified against the official Codex hooks docs 2026-05-28).** The `hookSpecificOutput` JSON the preflight emits to apply the rewrite differs by runtime, resolved via `memory_runtime` from `.agent0/hooks/_memory-hook-lib.sh`:
+
+- **Codex CLI** → `{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","updatedInput":{"command":"<rewritten>"}}}`. Codex requires `permissionDecision:"allow"` *alongside* `updatedInput` — without it the rewrite is silently ignored, the env var never propagates, and the native scanner blocks despite a valid override.
+- **Claude Code** → `{"hookSpecificOutput":{"hookEventName":"PreToolUse","updatedInput":{"command":"<rewritten>"}}}` (the historical `updatedInput`-only shape). Claude is NOT given `permissionDecision:"allow"` deliberately: on Claude that value auto-approves the tool call and bypasses the normal permission prompt — a silent UX change we do not want for an overridden commit. The narrower shape preserves the usual permission flow.
+
+The hook fails open to the Claude shape if the lib is missing.
 
 The injection MUST be `export VAR='...'; cmd` (standalone statement + `;`), NOT the inline prefix `VAR=val cmd`. The prefix form scopes the assignment to its single command — on `VAR=val git add foo && git commit -m "..."` the var reaches `git add` but NOT the chained commit, so the native hook blocks. Latent bug, fixed in `4b47a42`; V4 test (`.claude/tests/secrets-scan/04-override-allows.sh`) asserts the rewriting starts with `export CLAUDE_SECRETS_OVERRIDE_REASON=` as a regression guard.
 
@@ -70,11 +78,10 @@ Missing gitleaks: both hooks fail open with `secrets-scan: gitleaks not found, s
 
 ## Audit log
 
-`.claude/secrets-audit.jsonl`, gitignored, append-only, `flock`-atomic. Every invocation of either commit-time layer writes exactly one line. Decision values split cleanly by layer:
+`.agent0/secrets-audit.jsonl` (moved from `.claude/` in spec 108, hard cutover — no legacy-read), gitignored, append-only, `flock`-atomic. Every **commit-shaped** invocation of either commit-time layer writes exactly one line; non-commit Bash writes nothing (the `skip-not-commit` row was dropped in 108 — see below). Decision values split cleanly by layer:
 
 | Decision | Layer | Meaning |
 | --- | --- | --- |
-| `skip-not-commit` | preflight | Command does not match `git commit` shape; harness passes through |
 | `passthrough` | preflight | Real `git commit`, clean shape, no override — fall through to native |
 | `reject-shape` | preflight | Compound / `-a` / `--no-verify` without override; exits 2 with corrected template on stderr. `cmd_shape` names which pattern matched (`compound-and`, `compound-semicolon`, `git-commit-dash-a`, `git-commit-no-verify`, `override-too-short`) |
 | `override-pass-through` | preflight | Valid override marker parsed; command rewritten with `export ...;` prefix; `override_reason` populated |
@@ -85,7 +92,9 @@ Missing gitleaks: both hooks fail open with `secrets-scan: gitleaks not found, s
 | `block` | native | Findings present, no override, exit 1 (native pre-commit convention) |
 | `skip-no-engine` | native | gitleaks missing from PATH; fail-open |
 
-Both layers tag `scan_mode` (`"preflight"` / `"native-pre-commit"`) so a single `jq` can split or join. Preflight rows include `session_id` + `agent_id`; native rows have those `null` (git's commit process is outside Claude Code's payload reach). The advisory hook does **not** write here — advisories are a stderr stream. Read with `jq -c .` or `tail -f`.
+Both layers tag `scan_mode` (`"preflight"` / `"native-pre-commit"`) and a `runtime` provenance field (preflight: `"claude-code"` / `"codex-cli"`; native: `"native-git"` — added in 108) so a single `jq` can split or join by layer AND by runtime. Preflight rows include `session_id` + `agent_id`; native rows have those `null` (git's commit process is outside the runtime's payload reach). The advisory hook does **not** write here — advisories are a stderr stream. Read with `jq -c .` or `tail -f`.
+
+**Dropped `skip-not-commit` signal (spec 108).** The preflight previously wrote one `skip-not-commit` row per non-commit Bash invocation as proof-the-hook-ran. That was viable only under Claude's narrow `if Bash(... git commit ...)` matcher; once the hook also runs on Codex under the broad `^Bash$` matcher (no command-string `if` layer), a per-non-commit row would turn the log into a shell-activity firehose. The row was removed: non-commit Bash now exits silently with no audit entry. This is a deliberate decision, not a regression — the audit log records commit-shaped invocations only.
 
 ## Gotchas
 

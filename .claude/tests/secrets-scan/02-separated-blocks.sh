@@ -61,7 +61,7 @@ if ! printf '%s' "$stderr_content" | grep -qF "secrets-scan: blocked"; then
 fi
 
 # (c) Assert native audit-log entry
-AUDIT_LOG="$TMPDIR/.claude/secrets-audit.jsonl"
+AUDIT_LOG="$TMPDIR/.agent0/secrets-audit.jsonl"
 if [ ! -f "$AUDIT_LOG" ]; then
   printf 'FAIL: audit log not created at %s\n' "$AUDIT_LOG"
   exit 1

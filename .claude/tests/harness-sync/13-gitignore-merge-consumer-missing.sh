@@ -21,7 +21,7 @@ mkdir -p "$SRC/.claude" "$CONSUMER/.claude"
 printf '%s\n' \
   '# Claude Code state' \
   '.agent0/.runtime-state/' \
-  '.claude/secrets-audit.jsonl' \
+  '.agent0/secrets-audit.jsonl' \
   '.agent0/delegation-audit.jsonl' \
   > "$SRC/.gitignore"
 printf '{"hooks":{}}\n' > "$SRC/.claude/settings.json"

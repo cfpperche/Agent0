@@ -18,7 +18,7 @@ set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 AGENT0_GITHOOKS="$AGENT0_ROOT/.githooks"
-AGENT0_PREFLIGHT="$AGENT0_ROOT/.claude/hooks/secrets-scan.sh"
+AGENT0_PREFLIGHT="$AGENT0_ROOT/.agent0/hooks/secrets-preflight.sh"
 
 TMPDIR="$(mktemp -d -t spec-007-test-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
@@ -62,7 +62,7 @@ if ! printf '%s' "$stderr_content" | grep -qF "Run as two separate Bash invocati
 fi
 
 # (c) Assert audit-log entry
-AUDIT_LOG="$TMPDIR/.claude/secrets-audit.jsonl"
+AUDIT_LOG="$TMPDIR/.agent0/secrets-audit.jsonl"
 if [ ! -f "$AUDIT_LOG" ]; then
   printf 'FAIL: audit log not created at %s\n' "$AUDIT_LOG"
   exit 1

@@ -1,0 +1,19 @@
+PASS  pre-compact.sh removed
+PASS  tests/compaction-continuity removed
+PASS  memory entry removed
+PASS  runtime dir removed
+PASS  settings.json no PreCompact
+PASS  baseline clean — absent (nothing to clean)
+PASS  gitignore no compact-history
+PASS  session-start.sh no compact
+PASS  session-start.sh bash -n
+PASS  smoke source=compact exit0+HANDOFF+no-banner — rc=0
+PASS  MEMORY.md no compaction-continuity
+PASS  capacities.ts no card
+PASS  capacities.ts braces balanced
+FAIL  no capacity-token pointers in live surfaces — 3 found
+--- remaining (review) ---
+  ./.agent0/memory/rule-load-debug.md:69: 4. **Audit compaction behavior.** `--reason compact` shows which files survived the re-load step. Documented separately 
+  ./.claude/rules/memory-placement.md:58: `compaction-continuity.md` / `rule-load-debug.md` moved rule → memory
+  ./.claude/rules/memory-placement.md:247: 2. **The 2026-05-27 maintainer-rules-to-memory audit (spec 096).** Three rules (`hook-chain-latency.md`, `compaction-con
+=== VERDICT: 13 PASS / 1 FAIL ===

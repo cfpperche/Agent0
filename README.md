@@ -26,7 +26,6 @@ Eight capacities are live on `main`. Each one is documented in its own rule file
 
 | Capacity | Mechanism | Rule | Spec |
 | --- | --- | --- | --- |
-| Compaction continuity | `PreCompact` snapshots last 12 user turns → `SessionStart(source=compact)` re-injects them | `compaction-continuity.md` | — |
 | Spec-driven development | `/sdd` skill scaffolds `docs/specs/NNN-<slug>/{spec,plan,tasks}.md` | `spec-driven.md` | — |
 | Governance gate | `PreToolUse(Bash)` blocks destructive ops, hook bypass, blanket staging | — | `001-governance-gate/` |
 | Delegation gate + stop-time verifier | 5-field handoff required for every `Agent` call (`delegation-gate.sh`); a runtime-neutral `SubagentStop` hook (`delegation-verify.sh`, Claude + Codex) runs the project validator once when a delegated sub-agent closes — block-then-one-continuation-then-partial-result, keyed by `agent_id` | `delegation.md` | `002-delegation/` + `111-delegation-verify-subagent-stop/` |

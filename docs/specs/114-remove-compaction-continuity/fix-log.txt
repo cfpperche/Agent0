@@ -1,0 +1,2 @@
+OK reminders.md: removed 'and any compact-history context'
+REVIEW rule-load-debug.md:69: 4. **Audit compaction behavior.** `--reason compact` shows which files survived the re-load step. Documented separately (`.agent0/memory/compaction-continuity.md`).

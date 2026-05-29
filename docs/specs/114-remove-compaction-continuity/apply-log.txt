@@ -1,0 +1,29 @@
+OK   settings.json: removed PreCompact, valid JSON
+OK   git rm .claude/hooks/pre-compact.sh
+OK   git rm .claude/tests/compaction-continuity
+OK   git rm .agent0/memory/compaction-continuity.md
+INFO runtime dir .claude/.compact-history already absent
+OK   .agent0/hooks/session-start.sh: edited ('header comment')
+OK   .agent0/hooks/session-start.sh: edited ('SOURCE default')
+OK   .agent0/hooks/session-start.sh: edited ('SOURCE jq parse')
+OK   .agent0/hooks/session-start.sh: edited ('COMPACT_HISTORY_DIR var')
+OK   .agent0/hooks/session-start.sh: edited ('compact injection block')
+OK   .gitignore: removed .compact-history line
+OK   CLAUDE.md: edited ('CLAUDE.md snapshot sentence')
+OK   .claude/rules/session-handoff.md: edited ('session-handoff SessionStart fallback')
+OK   .claude/rules/session-handoff.md: edited ('session-handoff reader-side example')
+OK   .claude/rules/artifact-budgets.md: edited ('artifact-budgets state-file clause')
+INFO .claude/harness-sync-baseline.json: absent
+INFO REVIEW .claude/rules/runtime-capabilities.md: 1 match(es) — NOT auto-edited:
+  .claude/rules/runtime-capabilities.md:34: | lifecycle hooks | `native` | `native` | `.claude/settings.json`; `.claude/hooks/*.sh`; `.agent0/hooks/*.sh`; `.codex/c
+INFO REVIEW .agent0/memory/harness-home.md: 2 match(es) — NOT auto-edited:
+  .agent0/memory/harness-home.md:16: A harness surface belongs under **`.agent0/`** if **both** runtimes (or a future runtime) would read/write it through th
+  .agent0/memory/harness-home.md:34: - **`stays`:** `settings.json` (Claude hook-config format), delegation state + audit (`Agent` tool is Claude-exclusive),
+INFO REVIEW .agent0/.runtime-state/README.md: 2 match(es) — NOT auto-edited:
+  .agent0/.runtime-state/README.md:3: Catalogue of the per-machine, per-project ephemeral-state directories the Agent0 harness writes. Each is owned by exactl
+  .agent0/.runtime-state/README.md:16: | `.claude/.compact-history/` | [`compaction-continuity`](../memory/compaction-continuity.md) | Per-compaction snapshot 
+INFO REVIEW .agent0/memory/cc-platform-hooks.md: 3 match(es) — NOT auto-edited:
+  .agent0/memory/cc-platform-hooks.md:54: | `PreCompact` | Before context compaction |
+  .agent0/memory/cc-platform-hooks.md:68: - `PreCompact` (pre-compact)
+  .agent0/memory/cc-platform-hooks.md:153: - `.agent0/memory/compaction-continuity.md` — uses `PreCompact` + `SessionStart` (with `source: "compact"`).
+OK   .codex/config.toml.example: no matches

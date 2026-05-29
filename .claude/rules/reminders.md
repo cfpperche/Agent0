@@ -13,7 +13,7 @@ An earlier format used plain-bullet markdown at `.claude/REMINDERS.md`. The curr
 ## Flow
 
 - **Write** — via the `/remind` skill (`.claude/skills/remind/SKILL.md`). Subcommands `add`, `list`, `done`, `dismiss` (alias for `done`), `snooze`, `check`. All state mutation routes through `.claude/skills/remind/scripts/reminders-helper.py` so field order and YAML shape stay consistent. Hand-edits are allowed but the schema (top-level `reminders:` list, per-entry shape below) must be preserved.
-- **Read** — automatic at session start. The `SessionStart` hook (`.agent0/hooks/reminders-readout.sh`) parses `reminders.yaml`, filters to surfaceable entries (`status: pending` plus `status: snoozed` with `snoozed_until ≤ today`), and emits a framed `=== REMINDERS ===` block alongside the canonical `.agent0/HANDOFF.md` injection and any compact-history context.
+- **Read** — automatic at session start. The `SessionStart` hook (`.agent0/hooks/reminders-readout.sh`) parses `reminders.yaml`, filters to surfaceable entries (`status: pending` plus `status: snoozed` with `snoozed_until ≤ today`), and emits a framed `=== REMINDERS ===` block alongside the canonical `.agent0/HANDOFF.md` injection.
 
 ## Schema
 

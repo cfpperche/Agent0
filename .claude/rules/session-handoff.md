@@ -60,7 +60,7 @@ Rules:
 1. If `.agent0/HANDOFF.md` exists, inject it under `=== HANDOFF.md (canonical handoff) ===`.
 2. Else emit a one-line `handoff-advisory` that `.agent0/HANDOFF.md` is missing and proceed without aborting the session.
 
-`SessionStart` applies the same handoff decision for `source=startup`, `source=resume`, `source=clear`, and `source=compact`. On `source=compact`, it also injects the latest `.claude/.compact-history/*.md` snapshot additively; compact-history never replaces the canonical handoff.
+`SessionStart` applies the same handoff decision for `source=startup`, `source=resume`, `source=clear`, and `source=compact`.
 
 ## Size discipline
 
@@ -90,7 +90,7 @@ Markers that mean the block is partial:
 
 Before responding to anything that depends on a truncated block:
 
-1. Identify the source file, usually `.agent0/HANDOFF.md`, `.claude/.compact-history/<snapshot>.md`, or another hook-injected file.
+1. Identify the source file, usually `.agent0/HANDOFF.md`, or another hook-injected file.
 2. Read it directly, full file.
 3. Then answer from the source, not the partial preview.
 

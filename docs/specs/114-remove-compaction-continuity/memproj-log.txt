@@ -1,0 +1,2 @@
+memory-cap-advisory: bertolini-dogfood-loop.md projects to 289 chars (cap 250) — shorten description
+memory-project: regenerated /home/goat/Agent0/.agent0/memory/MEMORY.md with 23 entries (cap 250)

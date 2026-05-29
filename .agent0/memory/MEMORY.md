@@ -6,7 +6,6 @@
 - [Capacity → spec index](capacity-spec-index.md) — Which Agent0 spec(s) designed each capacity — Agent0-internal index relocated by spec 070 to keep fork-bound files free of docs/specs/ pointers.
 - [Claude Code platform hooks](cc-platform-hooks.md) — Canonical surface of 29 Claude Code hook events and the exit-zero PostToolUse gotcha; consult before designing any hook-based capacity
 - [codex-cli-hooks](codex-cli-hooks.md) — Codex CLI lifecycle hook surface (10 events) and the payload-shape / tool-name compatibility profile vs Claude Code — read before designing any cross-runtime hook capacity
-- [compaction-continuity](compaction-continuity.md) — PreCompact+SessionStart snapshot pair preserving raw signal across /compact; mechanism + retention details.
 - [Consumer-contract discipline](consumer-contract-discipline.md) — Producer templates must document the consumer-side contract (who reads it, what shape they expect) for any artifact a downstream step consumes structurally.
 - [Forks are ephemeral dogfood](forks-ephemeral-dogfood.md) — Capacity docs' "forks" framing is forward-looking; current reality is all forks are spun-up-then-archived dogfood projects. Hard-cutover is the default back-compat posture.
 - [harness-home](harness-home.md) — Classification principle for where a harness surface lives — .agent0/ (runtime-neutral, both runtimes read/write) vs .claude/-.codex/ (runtime-exclusive). Consult before adding or relocating any harness file.

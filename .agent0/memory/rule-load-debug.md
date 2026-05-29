@@ -66,7 +66,7 @@ Missing log file → `status: no-snapshot` with hint to set `CLAUDE_RULE_LOAD_DE
 1. **Verify path-scoping after a frontmatter edit.** Enable, restart session, `/memory` shows reduced rule list. Touch a file matching one of the new globs (e.g. `Read .agent0/hooks/secrets-preflight.sh`). Inspect the log: the matching rule should appear with `load_reason: "path_glob_match"`, the correct glob list, and the triggering file recorded. If it doesn't fire, the glob is wrong.
 2. **Debug "rule didn't apply when I expected".** When agent behavior suggests a rule wasn't in context, check `--session <id> --reason path_glob_match` to confirm whether the rule actually loaded.
 3. **Measure startup load.** `--reason session_start` shows the unconditional set. Compare against expectations.
-4. **Audit compaction behavior.** `--reason compact` shows which files survived the re-load step. Documented separately (`.agent0/memory/compaction-continuity.md`).
+4. **Audit compaction behavior.** `--reason compact` shows which files survived the re-load step.
 
 ## Escape hatch
 

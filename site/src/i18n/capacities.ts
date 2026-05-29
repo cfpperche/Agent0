@@ -152,16 +152,6 @@ export const CAPACITIES: Capacity[] = [
     },
   },
   {
-    id: "compaction-continuity",
-    name: "Compaction continuity",
-    ruleDoc: `${REPO_TREE}/.claude/memory/compaction-continuity.md`,
-    desc: {
-      en: "PreCompact snapshots the last 12 user turns to .claude/COMPACT_NOTES.md; SessionStart(source=compact) re-injects the snapshot post-compaction so raw signal survives summarization.",
-      pt: "PreCompact captura os últimos 12 turnos do usuário em .claude/COMPACT_NOTES.md; SessionStart(source=compact) re-injeta o snapshot pós-compactação para o sinal cru sobreviver à sumarização.",
-      es: "PreCompact captura los últimos 12 turnos del usuario en .claude/COMPACT_NOTES.md; SessionStart(source=compact) re-inyecta el snapshot tras la compactación para que la señal cruda sobreviva.",
-    },
-  },
-  {
     id: "rule-load-debug",
     name: "Rule load debug",
     ruleDoc: `${REPO_TREE}/.claude/memory/rule-load-debug.md`,

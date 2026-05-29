@@ -52,7 +52,6 @@ _Supply chain (`008`/`009`/`109`) was removed by `112-prune-supply-chain-and-sec
 | Session state isolation | `017-session-state-isolation` | — |
 | Session handoff / stop (`session-handoff.md`) | `023-session-stop-noop-aware` | `030-session-edit-attribution`, `061-subagent-stop-hook` |
 | Project memory (`memory-placement.md`) | `019-project-memory` | — |
-| Compaction continuity (`.agent0/memory/compaction-continuity.md`) | no dedicated spec dir | — |
 | Rule load debug (`.agent0/memory/rule-load-debug.md`) | no dedicated spec dir | — |
 
 ## MCP & browser

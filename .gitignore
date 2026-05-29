@@ -11,7 +11,6 @@ CLAUDE.local.md
 !.agent0/.runtime-state/README.md
 .agent0/.session-state/
 .claude/.delegation-state/
-.claude/.compact-history/
 .agent0/delegation-audit.jsonl
 .agent0/delegation-audit.jsonl.lock
 .agent0/secrets-audit.jsonl

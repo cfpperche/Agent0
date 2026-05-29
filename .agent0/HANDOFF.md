@@ -8,10 +8,22 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-**Specs 112 + 113 shipped and committed (not pushed).** Working tree clean except the pre-existing untracked `docs/specs/091-sdd-debate-runner/` (out of scope).
+**Spec 114 (remove compaction-continuity) implemented + validated — NOT committed.** The whole
+compaction-continuity capacity is gone: the PreCompact `pre-compact.sh` producer + the
+`SessionStart` `source=compact` snapshot-injection consumer, the test suite, the memory entry, the
+runtime-state dir row, and every live pointer. Decision: native `/compact` summarization suffices;
+the capacity was dormant (0 snapshots ever), redundant with HANDOFF/memory/specs/git, and its
+"last 12 turns" window mis-targeted. Full rationale + audit trail in
+`docs/specs/114-remove-compaction-continuity/` (`spec.md` § Outcome, `validation.txt`, `*-log.txt`).
 
-- **112** (`edbaaf1` feat + `624c46f` docs) — removed the supply-chain capacity entirely + the `secrets-advise.sh` hook; `propagation-advise` confirmed maintainer-only. vuln-audit is the replacement direction (detect vulnerable installed libs, never block installs).
-- **113** (`08d5cfc` feat + `6a8d5fa` docs) — ported `propagation-advise.sh` to runtime-neutral `.agent0/hooks/`; fires on Claude `Edit|Write|MultiEdit` and Codex `apply_patch`, live-validated on both runtimes. Suite 14/14.
+Validation: all removal checks PASS. `session-start.sh` is `bash -n` clean and its `source=compact`
+smoke run still emits the HANDOFF block (no compact-history banner). `settings.json` valid JSON.
+Only surviving "compact-history"/"compaction-continuity" strings are the **deliberate** historical
+case-study lines in `memory-placement.md:58,247` (spec-096 narrative) + platform-event/native-feature
+mentions (`PreCompact` event table, `--reason compact`, FAQ) — all correct to keep.
+
+Pre-existing untracked `docs/specs/091-sdd-debate-runner/` is unrelated (out of scope).
+Specs 112 + 113 from the prior session are committed but still **unpushed**.
 
 ## Active Work
 
@@ -19,13 +31,27 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Next Actions
 
-1. **Continue the hook-migration arc — the runtime-introspect pair** (`.claude/hooks/runtime-capture.sh` + `runtime-pre-mark.sh`) → runtime-neutral `.agent0/`. This is the last of the original `.claude/hooks/*` migration; after it the arc is closed.
-2. `git push` the 112 + 113 commits when ready (4 commits unpushed on `main`).
-3. **vuln-audit** spec when prioritized (reminder `r-2026-05-29-spec-the-vuln-audit-capacity`): research osv-scanner vs npm/pip-audit + trigger surface.
+1. **Review `git status` / `git diff` and commit spec 114.** Deletions are `git rm`-staged; edits
+   unstaged. Suggested: "feat(114): remove compaction-continuity capacity". Commits are user-gated.
+2. **Rebuild the site** (`site/`) so `site/dist/*` drops the removed capacity card —
+   `site/src/i18n/capacities.ts` was updated but generated HTML was not hand-edited.
+3. `git push` the 112 + 113 + 114 commits when ready.
+4. Continue the hook-migration arc — the runtime-introspect pair (`.claude/hooks/runtime-capture.sh`
+   + `runtime-pre-mark.sh`) → `.agent0/`. (`pre-compact.sh` is now gone; remaining `.claude/hooks/*`
+   are the runtime-introspect pair + `delegation-gate.sh` + `rule-load-debug.sh`.)
+5. vuln-audit spec when prioritized (reminder `r-2026-05-29-spec-the-vuln-audit-capacity`).
 
 ## Decisions & Gotchas
 
-- **Codex advisory hooks need JSON stdout, NOT stderr.** Codex drops a PostToolUse hook's exit-0 stderr; only `hookSpecificOutput.additionalContext` (JSON stdout) surfaces as developer context. Any advisory hook ported to Codex must branch the channel — stderr for Claude, JSON additionalContext for Codex. Canonical impl: `emit_one` in `propagation-advise.sh`; corrected table in `.agent0/memory/codex-cli-hooks.md` § Exit-code semantics.
-- **Don't assume Codex wire-shape — verify it.** Spec 113 hit three assumption errors in a row (apply_patch Add-File raw content; exit-0 stderr dropped; plain stdout vs JSON additionalContext), each caught by live Codex dogfood, not by synthetic tests. `AGENT0_PROPAGATION_DEBUG=1` dumps the raw payload for diagnosis. Cross-model live dogfood before flipping shipped is load-bearing.
-- **Maintainer-only hooks: no block in the shipped `.codex/config.toml.example`** (it ships verbatim → dangling ref). Register in the maintainer's own gitignored `.codex/config.toml`.
-- **Env constraints:** gitleaks pre-commit is active (`core.hooksPath=.githooks`); the governance gate blocks `rm -rf` and blanket `git add` (`.`/`-A`/`-u`) — use explicit paths + `git rm` for deletions; commits are user-gated.
+- **PreCompact is Claude-only by nature** — Codex has no compaction-hook surface, so the capacity
+  was correctly `.claude/`-homed (not migration debt). Removal was a scope/value call, not a port.
+- **Intentional KEEPs** (not dangling): `memory-placement.md:58,247` (accurate spec-096 history);
+  all `PreCompact`/`PostCompact`/`/compact`/"compaction" platform-event + native-feature mentions
+  in `cc-platform-hooks.md` event table, `runtime-capabilities.md`, `codex-cli-hooks.md`,
+  `strings.ts` FAQ, `harness-sync.md`, `rule-load-debug.md` (`--reason compact`); all `docs/specs/*`.
+- **No `harness-sync-baseline.json` exists** here — nothing to scrub there.
+- **Tool-output channel dropped results intermittently this session** — all mutations used
+  assertion-guarded Python scripts (fail-fast + git-reversible) with logs persisted under the 114
+  spec dir, so the on-disk record is authoritative where live output didn't render.
+- **Env:** gitleaks pre-commit active (`core.hooksPath=.githooks`); governance gate blocks `rm -rf`
+  + blanket `git add` — use explicit paths + `git rm`; commits are user-gated.

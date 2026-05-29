@@ -1,0 +1,12 @@
+OK   AGENTS.md: Compact Instructions snapshot sentence
+OK   README.md: dropped 1 line(s) — README capacity row
+OK   .agent0/memory/capacity-spec-index.md: dropped 1 line(s) — capacity-spec-index row
+OK   .agent0/memory/cc-platform-hooks.md: usage count 8->7
+OK   .agent0/memory/cc-platform-hooks.md: dropped 1 line(s) — PreCompact usage bullet
+OK   .agent0/memory/cc-platform-hooks.md: unused count 21->22
+OK   .agent0/memory/cc-platform-hooks.md: dropped 1 line(s) — compaction-continuity cross-ref
+OK   .agent0/memory/harness-home.md: principle example
+OK   .agent0/memory/harness-home.md: stays-row example
+OK   .agent0/.runtime-state/README.md: framing parenthetical
+OK   .agent0/.runtime-state/README.md: dropped 1 line(s) — state-subsystem row
+OK   site/src/i18n/capacities.ts: removed card (lines 154-163)

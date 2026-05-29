@@ -57,7 +57,7 @@ Quoted from the docs Hook lifecycle table (last audited 2026-05-25 via the cc-pl
 | `ElicitationResult` | An elicitation completes (same form-driven shape) |
 | `SessionEnd` | The session ends |
 
-Agent0 currently uses **8 of these 29** (counted from `.claude/settings.json`):
+Agent0 currently uses **7 of these 29** (counted from `.claude/settings.json`):
 
 - `PreToolUse` (4 matchers: governance-gate, secrets-preflight, runtime-pre-mark, delegation-gate)
 - `PostToolUse` (2 matchers: session-track-edits, runtime-capture) — post-edit-validate removed in spec 111 (verification moved to SubagentStop); secrets-advise + supply-chain-advise removed in spec 112
@@ -65,10 +65,9 @@ Agent0 currently uses **8 of these 29** (counted from `.claude/settings.json`):
 - `SessionStart` (3 hooks: session-start, reminders-readout, routines-readout — plus memory-decay-readout from `.agent0/hooks/`)
 - `Stop` (session-stop)
 - `SubagentStop` (2 hooks: delegation-verify [spec 111], delegation-stop [spec 061])
-- `PreCompact` (pre-compact)
 - `InstructionsLoaded` (rule-load-debug, opt-in)
 
-The remaining 21 are unused capacity surfaces. Notable underexplored ones: `WorktreeCreate`/`WorktreeRemove` (spec 063 territory), `TaskCreated`/`TaskCompleted` (potential hook surface for /goal + task tracking integrations), `Elicitation`/`ElicitationResult` (MCP form workflows), `FileChanged` (file-watcher capacity not yet built).
+The remaining 22 are unused capacity surfaces. Notable underexplored ones: `WorktreeCreate`/`WorktreeRemove` (spec 063 territory), `TaskCreated`/`TaskCompleted` (potential hook surface for /goal + task tracking integrations), `Elicitation`/`ElicitationResult` (MCP form workflows), `FileChanged` (file-watcher capacity not yet built).
 
 ## Exit-code semantics for PostToolUse / PostToolUseFailure
 
@@ -150,7 +149,6 @@ This is correct CC behavior (avoids audit-log inflation and context waste); not 
 - `.agent0/memory/rule-load-debug.md` — uses `InstructionsLoaded`; opt-in observability for the dedup behavior documented in § Empirical above.
 - `.claude/rules/secrets-scan.md` — uses `PreToolUse(Bash)` (preflight shape gate); doesn't depend on the success/failure split.
 - `.claude/rules/delegation.md` — uses `PreToolUse(Agent)` + `PostToolUse(Edit|Write|MultiEdit)`.
-- `.agent0/memory/compaction-continuity.md` — uses `PreCompact` + `SessionStart` (with `source: "compact"`).
 - `.claude/rules/session-handoff.md` — uses `SessionStart` + `Stop`.
 - `.claude/rules/reminders.md` — uses `SessionStart`.
 

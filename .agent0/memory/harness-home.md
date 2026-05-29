@@ -13,7 +13,7 @@ The durable encoding of umbrella spec 102's § Classification principle. It bind
 
 ## The principle
 
-A harness surface belongs under **`.agent0/`** if **both** runtimes (or a future runtime) would read/write it through the harness. It stays under **`.claude/`** / **`.codex/`** only if it is **genuinely exclusive** to that runtime's mechanism — e.g. Claude's `settings.json` hook-config format, the Claude-only `Agent` delegation tool and its audit log, Claude's PreCompact snapshot pair, Codex's `config.toml`.
+A harness surface belongs under **`.agent0/`** if **both** runtimes (or a future runtime) would read/write it through the harness. It stays under **`.claude/`** / **`.codex/`** only if it is **genuinely exclusive** to that runtime's mechanism — e.g. Claude's `settings.json` hook-config format, the Claude-only `Agent` delegation tool and its audit log, Codex's `config.toml`.
 
 `.claude/` is Claude Code's *conventional* home, not a runtime-neutral one. Keeping shared harness state there forces every multi-runtime port to re-decide "is this Claude-owned or shared?" path-by-path. Routing by this principle makes the multi-runtime story mechanical: a new runtime registers the `.agent0/` capacities through its own native surface, and the only runtime-specific files are the registration manifests.
 
@@ -31,7 +31,7 @@ A corollary surfaced by spec 104 and reaffirmed by row 14 (brainstorm-state): **
 ## Worked dispositions (umbrella 102 gap matrix, all terminal as of 2026-05-28)
 
 - **`move` (shipped):** reminders, routines, session-state, runtime-state, browser-state, shared shell tools — written/read by both runtimes through the harness.
-- **`stays`:** `settings.json` (Claude hook-config format), delegation state + audit (`Agent` tool is Claude-exclusive), compact-history (Claude PreCompact), Claude-only hooks (registered only via `settings.json`).
+- **`stays`:** `settings.json` (Claude hook-config format), delegation state + audit (`Agent` tool is Claude-exclusive), Claude-only hooks (registered only via `settings.json`).
 - **`deferred`:** rules, skills, validators, brainstorm-state — runtime-neutral in principle but their relocation waits on the "Codex actually consumes rules/skills" trigger; decide shared-`.agent0/` vs per-runtime then.
 
 ## Cross-references

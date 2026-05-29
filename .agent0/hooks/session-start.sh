@@ -2,9 +2,6 @@
 # SessionStart hook: inject canonical handoff and start-source context.
 #
 # - all sources → .agent0/HANDOFF.md (canonical cross-runtime handoff)
-# - compact     → also inject lex-greatest .claude/.compact-history/*.md
-#                 (the latest pre-compact snapshot; supersedes the legacy
-#                 single-file COMPACT_NOTES.md model)
 #
 # State is isolated per-session_id: markers live at
 # `<.session-state>/<session_id>/{started-at,nagged}`. Parallel runtime
@@ -24,12 +21,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(memory_project_dir "$INPUT")"
 SESSION_STATE_ROOT="$PROJECT_DIR/.agent0/.session-state"
 SESSION_FILE="$PROJECT_DIR/.agent0/HANDOFF.md"
-COMPACT_HISTORY_DIR="$PROJECT_DIR/.claude/.compact-history"
 
-SOURCE="startup"
 SESSION_ID_RAW=""
 if [[ -n "$INPUT" ]] && command -v jq >/dev/null 2>&1; then
-  SOURCE="$(printf '%s' "$INPUT" | jq -r '.source // "startup"' 2>/dev/null || echo startup)"
   SESSION_ID_RAW="$(printf '%s' "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || true)"
 fi
 
@@ -74,22 +68,6 @@ else
   BANNER+="'.agent0/HANDOFF.md' missing — create it to enable handoff"
   BANNER+=$'\n'
   BANNER+=$'=== end handoff-advisory ===\n'
-fi
-
-if [[ "$SOURCE" == "compact" ]]; then
-  # Read the lex-greatest .compact-history/*.md — equals chronologically-latest
-  # because filenames are fixed-width ISO-second prefixes. Graceful no-op when
-  # the dir is missing or empty (no banner, no error). `|| true` is scoped to
-  # the ls step so an unmatched glob does NOT trip set -e + pipefail.
-  LATEST_SNAPSHOT=""
-  if [[ -d "$COMPACT_HISTORY_DIR" ]]; then
-    LATEST_SNAPSHOT="$({ ls -1 "$COMPACT_HISTORY_DIR"/*.md 2>/dev/null || true; } | tail -1)"
-  fi
-  if [[ -n "$LATEST_SNAPSHOT" && -f "$LATEST_SNAPSHOT" ]]; then
-    BANNER+=$'=== compact-history (pre-compact snapshot — raw signal /compact would have lost) ===\n'
-    BANNER+="$(cat "$LATEST_SNAPSHOT" 2>/dev/null || true)"
-    BANNER+=$'\n=== end compact-history ===\n'
-  fi
 fi
 
 # Runtime-introspect: point the agent at the probe tool so it can

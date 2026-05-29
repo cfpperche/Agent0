@@ -15,7 +15,6 @@
 - [/product pipeline empirical baseline](product-pipeline-empirical-baseline.md) — First end-to-end full /product run with all 4 mature gates (2026-05-23) — ~3.1M tokens, ~83min, 44 dispatches, 17/17 judges. Cost+shape envelope for planning.
 - [propagation-advisory-maintenance](propagation-advisory-maintenance.md) — Maintainer discipline for propagation-advisory — pattern table + shipped-surface set + audit-log policy + deep gotchas.
 - [Propagation hygiene](propagation-hygiene.md) — Maintainer discipline — shipped files (CLAUDE.md, .claude/rules/, sync manifest) must carry no Agent0-internal pointers. Read before editing CLAUDE.md or a rule.
-- [rule-load-debug](rule-load-debug.md) — Opt-in InstructionsLoaded JSONL audit log for diagnosing path-scoped rule loads; off by default.
 - [runtime-capabilities-maintenance](runtime-capabilities-maintenance.md) — Maintainer discipline for the runtime-capabilities matrix — Update rule + drift enforcement + skill-portability relationship.
 - [runtime-introspect-maintenance](runtime-introspect-maintenance.md) — Maintainer discipline for runtime-introspect — detector extension contract + inference heuristics + dogfood archaeology + deep gotchas.
 - [Skill-eval pattern (observed externally)](skill-eval-pattern.md) — 5 industry posts converged on the same skill-eval recipe in early 2026; not adopted in Agent0 yet — wait for rule-of-three regression demand before building

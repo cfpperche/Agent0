@@ -16,8 +16,6 @@ CLAUDE.local.md
 .agent0/secrets-audit.jsonl
 .agent0/secrets-audit.jsonl.lock
 .agent0/.propagation-debug.json
-.claude/.rule-load-debug.jsonl
-.claude/.rule-load-debug.jsonl.lock
 .agent0/.memory-events.jsonl
 .agent0/.memory-events.jsonl.lock
 .claude/.memory-events.jsonl

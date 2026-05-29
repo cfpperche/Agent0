@@ -57,7 +57,7 @@ Quoted from the docs Hook lifecycle table (last audited 2026-05-25 via the cc-pl
 | `ElicitationResult` | An elicitation completes (same form-driven shape) |
 | `SessionEnd` | The session ends |
 
-Agent0 currently uses **7 of these 29** (counted from `.claude/settings.json`):
+Agent0 currently uses **6 of these 29** (counted from `.claude/settings.json`):
 
 - `PreToolUse` (4 matchers: governance-gate, secrets-preflight, runtime-pre-mark, delegation-gate)
 - `PostToolUse` (2 matchers: session-track-edits, runtime-capture) — post-edit-validate removed in spec 111 (verification moved to SubagentStop); secrets-advise + supply-chain-advise removed in spec 112
@@ -65,9 +65,8 @@ Agent0 currently uses **7 of these 29** (counted from `.claude/settings.json`):
 - `SessionStart` (3 hooks: session-start, reminders-readout, routines-readout — plus memory-decay-readout from `.agent0/hooks/`)
 - `Stop` (session-stop)
 - `SubagentStop` (2 hooks: delegation-verify [spec 111], delegation-stop [spec 061])
-- `InstructionsLoaded` (rule-load-debug, opt-in)
 
-The remaining 22 are unused capacity surfaces. Notable underexplored ones: `WorktreeCreate`/`WorktreeRemove` (spec 063 territory), `TaskCreated`/`TaskCompleted` (potential hook surface for /goal + task tracking integrations), `Elicitation`/`ElicitationResult` (MCP form workflows), `FileChanged` (file-watcher capacity not yet built).
+The remaining 23 are unused capacity surfaces. Notable underexplored ones: `WorktreeCreate`/`WorktreeRemove` (spec 063 territory), `TaskCreated`/`TaskCompleted` (potential hook surface for /goal + task tracking integrations), `Elicitation`/`ElicitationResult` (MCP form workflows), `FileChanged` (file-watcher capacity not yet built).
 
 ## Exit-code semantics for PostToolUse / PostToolUseFailure
 
@@ -134,19 +133,18 @@ Key differences from `PostToolUse`:
 
 Validated 2026-05-13 across Agent0 + shrnk-mono fork dogfood. Once a path-scoped rule loads in a session — via any matching glob — **subsequent reads of any file matching ANY of that rule's globs produce NO new `InstructionsLoaded` event**. The dedup is scoped to the rule (one event per session per rule), not to the specific glob that triggered the first load.
 
-First-pass observation framed this as a multi-glob-on-same-rule quirk (e.g. `.claude/tools/probe.sh` is in BOTH `runtime-introspect.md`'s globs AND `rule-load-debug.md`'s globs; reading `probe.sh` after `runtime-pre-mark.sh` was already read fires only `rule-load-debug.md`'s event). Dedup is per-rule, period.
+First-pass observation framed this as a multi-glob-on-same-rule quirk (e.g. when one file path matches the globs of two different path-scoped rules, reading it after one of those rules already loaded that session fires only the other rule's event). Dedup is per-rule, period.
 
 Implication for path-scoping validation playbooks:
 - A trigger→rule mapping table is only fully exercisable in a fresh session per trigger.
 - Multi-trigger dogfood reads (Step 2 style) work because the FIRST matching trigger per rule fires; subsequent matches dedupe silently.
 - "Edit foo to verify it triggers rule X" only works if rule X hasn't already loaded this session. Prior reads / SessionStart-by-source-resume could have loaded it.
 
-This is correct CC behavior (avoids audit-log inflation and context waste); not a regression. Documented also in `.agent0/memory/rule-load-debug.md` § Gotchas.
+This is correct CC behavior (avoids audit-log inflation and context waste); not a regression.
 
 ## Cross-references
 
 - `.claude/rules/runtime-introspect.md` — spec 011 capacity that uses `PreToolUse(Bash)` + `PostToolUse(Bash)`; spec 020 added `PostToolUseFailure(Bash)`.
-- `.agent0/memory/rule-load-debug.md` — uses `InstructionsLoaded`; opt-in observability for the dedup behavior documented in § Empirical above.
 - `.claude/rules/secrets-scan.md` — uses `PreToolUse(Bash)` (preflight shape gate); doesn't depend on the success/failure split.
 - `.claude/rules/delegation.md` — uses `PreToolUse(Agent)` + `PostToolUse(Edit|Write|MultiEdit)`.
 - `.claude/rules/session-handoff.md` — uses `SessionStart` + `Stop`.

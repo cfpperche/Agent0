@@ -152,16 +152,6 @@ export const CAPACITIES: Capacity[] = [
     },
   },
   {
-    id: "rule-load-debug",
-    name: "Rule load debug",
-    ruleDoc: `${REPO_TREE}/.claude/memory/rule-load-debug.md`,
-    desc: {
-      en: "Opt-in observability for the InstructionsLoaded hook. CLAUDE_RULE_LOAD_DEBUG=1 appends a JSONL row per rule load (file, load_reason, globs, trigger_file, session_id) — verify path-scoped rules fire on the right triggers without disturbing the default path.",
-      pt: "Observabilidade opt-in para o hook InstructionsLoaded. CLAUDE_RULE_LOAD_DEBUG=1 anexa uma linha JSONL por carregamento de regra (file, load_reason, globs, trigger_file, session_id) — verifica que regras path-scoped disparam nos triggers certos sem afetar o caminho padrão.",
-      es: "Observabilidad opt-in para el hook InstructionsLoaded. CLAUDE_RULE_LOAD_DEBUG=1 anexa una línea JSONL por carga de regla (file, load_reason, globs, trigger_file, session_id) — verifica que las reglas path-scoped disparan en los triggers correctos sin tocar el camino por defecto.",
-    },
-  },
-  {
     id: "memory",
     name: "Project memory",
     ruleDoc: `${REPO_TREE}/.claude/rules/memory-placement.md`,

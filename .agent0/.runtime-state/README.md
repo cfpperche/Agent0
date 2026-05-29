@@ -1,6 +1,6 @@
 # `.agent0/.*-state/` + `.claude/.*-state/` — runtime state subsystems
 
-Catalogue of the per-machine, per-project ephemeral-state directories the Agent0 harness writes. Each is owned by exactly one capacity and is gitignored — only this README is git-tracked (via an explicit `.gitignore` exception), so a fresh clone has an entry point into "what's that hidden state and who owns it" without grepping rules. Since umbrella spec 102, the **runtime-neutral** state lives under `.agent0/` (read/written by any runtime); the **Claude-exclusive** state stays under `.claude/` (delegation, rule-load-debug — surfaces with no cross-runtime analogue).
+Catalogue of the per-machine, per-project ephemeral-state directories the Agent0 harness writes. Each is owned by exactly one capacity and is gitignored — only this README is git-tracked (via an explicit `.gitignore` exception), so a fresh clone has an entry point into "what's that hidden state and who owns it" without grepping rules. Since umbrella spec 102, the **runtime-neutral** state lives under `.agent0/` (read/written by any runtime); the **Claude-exclusive** state stays under `.claude/` (delegation — surfaces with no cross-runtime analogue).
 
 Lives at `.agent0/.runtime-state/README.md` rather than a top-level `STATE-LAYOUT.md` because the discovery angle is "I see `.agent0/.*-state/` / `.claude/.*-state/` dirs — what's here?". Pattern borrowed from Anthill's `.anthill/runtime/README.md` (shape only — Agent0's surface is smaller and the storage-substrate framing is Anthill-specific).
 
@@ -12,7 +12,6 @@ Lives at `.agent0/.runtime-state/README.md` rather than a top-level `STATE-LAYOU
 | `.agent0/.browser-state/` | [`browser-auth`](../rules/browser-auth.md) | Playwright MCP session state (`<host>.json` cookie/localStorage snapshots) reused for headless reads after an interactive login. Empty `.gitkeep` sentinel travels via git so the dir exists in fresh forks; actual `*.json` files are project-local. |
 | `.claude/.delegation-state/` | [`delegation`](../rules/delegation.md) § Post-edit validator loop | Per-`agent_id` consecutive-failure counters for the post-edit validator loop budget (default cap 5). Reset on a passing validation; consulted at SubagentStop to mark `exit: loop-budget-exceeded` in the audit log. |
 | `.agent0/.routines-state/` | [`routines`](../rules/routines.md) | Per-`<slug>` recurring-routine state — `queue/<unix-ts>.md` (pending renders awaiting dispatch), `completed/<unix-ts>.md` (FIFO cap 50), `last-completed.json`, `last-queue.json`, plus shared `cron.log`. Populated by `.agent0/tools/run-routine.sh` at cron-fire time. |
-| `.claude/.rule-load-debug.jsonl` | [`rule-load-debug`](../memory/rule-load-debug.md) | Opt-in (`CLAUDE_RULE_LOAD_DEBUG=1`) instrumentation log for the `InstructionsLoaded` hook event — one JSONL row per loaded CLAUDE.md / rule file. Read back via `bash .agent0/tools/probe.sh rule-loads`. |
 
 ## Discipline
 

@@ -8,17 +8,20 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-**Spec 114 (remove compaction-continuity) shipped + committed (`cd4c45c`), NOT pushed.** The whole
-compaction-continuity capacity is gone: the PreCompact `pre-compact.sh` producer, the `SessionStart`
-`source=compact` consumer branch, the test suite, the memory entry, and every live pointer. Decision:
-native `/compact` summarization suffices; the capacity was dormant (0 snapshots ever), redundant with
-HANDOFF/memory/specs/git, and its "last 12 turns" window mis-targeted. Rationale + audit trail in
-`docs/specs/114-remove-compaction-continuity/` (`spec.md` § Outcome, `validation.txt`, `*-log.txt`).
-Validation all PASS; `session-start.sh` `bash -n` clean and `source=compact` smoke run still emits
-the HANDOFF block.
+**Spec 115 (remove rule-load-debug) shipped, NOT yet committed.** The whole `rule-load-debug`
+capacity is gone: hook script + memory doc `git rm`'d, runtime log/lock + their `.gitignore` lines
+deleted, `InstructionsLoaded` registration dropped from `settings.json`, `rule-loads` subcommand
+stripped from `probe.sh`, `MEMORY.md` regenerated, and the runtime-state README / capacity-spec-index
+/ `capacities.ts` rows removed. `cc-platform-hooks.md` corrected (`6 of these 29`, attribution + dead
+pointers severed; event row + empirical dedup finding preserved). Rationale: exercised exactly once
+on its 2026-05-13 creation day (18 log rows, 0 since) — canonical `feedback_speculative_observability`
+case. Full audit trail in `docs/specs/115-remove-rule-load-debug/` (`spec.md` § Outcome, `notes.md`).
+All acceptance scenarios verified PASS; site rebuilt (`dist/` clean — also dropped spec 114's
+compaction card; `site/dist` is gitignored).
 
-`main` now has **5 unpushed commits**: 112 + 113 (prior session) + 114 (this one).
-Pre-existing untracked `docs/specs/091-sdd-debate-runner/` is unrelated (out of scope).
+`main` has **5 committed-unpushed commits** (112 + 113 + 114 from prior sessions). Spec 115's
+working-tree changes are **uncommitted** (commits are user-gated). Pre-existing untracked
+`docs/specs/091-sdd-debate-runner/` is unrelated (out of scope).
 
 ## Active Work
 
@@ -26,22 +29,22 @@ Pre-existing untracked `docs/specs/091-sdd-debate-runner/` is unrelated (out of 
 
 ## Next Actions
 
-1. **Rebuild the site** (`site/`) so `site/dist/*` drops the removed capacity card —
-   `site/src/i18n/capacities.ts` was updated but generated HTML was not hand-edited.
-2. `git push` the 112 + 113 + 114 commits when ready.
-3. Continue the hook-migration arc — the runtime-introspect pair (`.claude/hooks/runtime-capture.sh`
-   + `runtime-pre-mark.sh`) → `.agent0/`. (`pre-compact.sh` is now gone; remaining `.claude/hooks/*`
-   are the runtime-introspect pair + `delegation-gate.sh` + `rule-load-debug.sh`.)
-4. vuln-audit spec when prioritized (reminder `r-2026-05-29-spec-the-vuln-audit-capacity`).
+1. **Commit spec 115** (working tree is staged/dirty: 1 deletion staged via `git rm`, ~8 modified +
+   2 untracked spec dirs). Then `git push` the 112 + 113 + 114 + 115 commits when ready.
+2. Continue the hook-migration arc — the runtime-introspect pair (`.claude/hooks/runtime-capture.sh`
+   + `runtime-pre-mark.sh`) → `.agent0/`. After 115, the only remaining `.claude/hooks/*` are that
+   pair + `delegation-gate.sh`.
+3. vuln-audit spec when prioritized (reminder `r-2026-05-29-spec-the-vuln-audit-capacity`).
 
 ## Decisions & Gotchas
 
-- **PreCompact is Claude-only by nature** — Codex has no compaction-hook surface, so the capacity
-  was correctly `.claude/`-homed (not migration debt). Removal was a scope/value call, not a port.
-- **Intentional KEEPs** (not dangling): `memory-placement.md:58,247` (accurate spec-096 history);
-  all `PreCompact`/`PostCompact`/`/compact`/"compaction" platform-event + native-feature mentions
-  in `cc-platform-hooks.md` event table, `runtime-capabilities.md`, `codex-cli-hooks.md`,
-  `strings.ts` FAQ, `harness-sync.md`, `rule-load-debug.md` (`--reason compact`); all `docs/specs/*`.
-- **No `harness-sync-baseline.json` exists** here — nothing to scrub there.
+- **Three historical-narrative mentions KEPT by design** (not dangling): `propagation-hygiene.md:66`
+  (frozen spec-070 cleanup record) and `memory-placement.md:58,247` (accurate spec-096 move-full
+  history). Test applied: line describes a *past event that's still true* → keep; describes *live
+  wiring of the deleted capacity* → remove. Same precedent spec 114 used for its KEEPs. See
+  `docs/specs/115-remove-rule-load-debug/notes.md` § Design decisions.
+- **`InstructionsLoaded` is Claude-only** — no Codex analogue, so the hook was correctly `.claude/`-homed;
+  removal was a scope/value call, not a migration port. The platform event itself still exists (kept
+  in `cc-platform-hooks.md`'s 29-event table).
 - **Env:** gitleaks pre-commit active (`core.hooksPath=.githooks`); governance gate blocks `rm -rf`
   + blanket `git add` — use explicit paths + `git rm`; commits are user-gated.

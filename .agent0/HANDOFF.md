@@ -8,23 +8,19 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-**Multi-runtime hook migration:** specs 106-110 shipped+merged. **111 delegation-verify-subagent-stop shipped+merged** (`444bf70`) and now live-dogfooded on both Claude and Codex. The user asked whether the dogfood fully passed; answer given: yes for the requested Codex CLI scenario, with the caveat that the valid proof came from Codex TUI, not `codex exec`.
+**Multi-runtime hook migration — `.claude/hooks/*` → `.agent0/` hook-by-hook.** Specs 106-111 ALL shipped+merged+pushed. **111 delegation-verify-subagent-stop is fully closed** — live-dogfooded on BOTH runtimes, README updated. Working tree clean except pre-existing untracked `docs/specs/091-sdd-debate-runner/` (out of scope).
 
-- 111 replaced `post-edit-validate.sh` with `.agent0/hooks/delegation-verify.sh` on `SubagentStop`, keyed by `agent_id`. Test suite was green before this session: 8 verifier scenarios + `061-delegation-stop`.
-- Claude live proof: real `Agent` dispatch `acb46fdc0a91cab59` produced `decision:"pass"` in `.agent0/delegation-audit.jsonl`; SubagentStop hooks fire in parallel.
-- Codex live proof: Codex TUI `codex-cli 0.135.0`, real `.codex/config.toml` SubagentStop verify block enabled/trusted, temporary failing `package.json` used and then removed. Canonical `subagent-verify` rows are recorded in `docs/specs/111-delegation-verify-subagent-stop/notes.md`.
-- Codex rows: blocked at `2026-05-29T14:23:42Z`, then exhausted at `2026-05-29T14:23:55Z`, both with `agent_id:"019e741e-4344-7b93-b782-a1f10484e1da"`. `stop_hook_active` flipped `false -> true`, proving no infinite stop loop.
+- 111 replaced per-edit `post-edit-validate.sh` with `.agent0/hooks/delegation-verify.sh` on `SubagentStop` (runtime-neutral, keyed by `agent_id`; block → one continuation → partial-result via `stop_hook_active`). 8 verifier scenarios + `061-delegation-stop` green.
+- Live proof both runtimes (rows in `docs/specs/111-*/notes.md`): Claude pass (`acb46fdc…`, parallel with the close row); Codex blocked→exhausted (`019e741e…`, `stop_hook_active` false→true, no loop). Both OQs resolved by evidence. Design pivot: SubagentStop hooks run in PARALLEL → counter-contract, not a sentinel.
 
 ## Active Work
 
-- _None in flight._ 111 evidence is captured; no Codex TUI sessions are left running; the temporary failing `package.json` was removed.
-- Working tree remains intentionally uncommitted: `.agent0/HANDOFF.md` and `docs/specs/111-delegation-verify-subagent-stop/notes.md` modified; pre-existing untracked `docs/specs/091-sdd-debate-runner/` is out of scope.
+- _None in flight._ The full 106-111 migration arc is committed and pushed; nothing uncommitted except the out-of-scope untracked `091` dir.
 
 ## Next Actions
 
-1. Review/commit the 111 evidence docs if desired: `docs/specs/111-delegation-verify-subagent-stop/notes.md` and `.agent0/HANDOFF.md`.
-2. Leave `docs/specs/091-sdd-debate-runner/` alone unless the user explicitly resumes that work.
-3. Next migration candidates: PostToolUse edit-surface advisories (`propagation-advise`, `supply-chain-advise`, `secrets-advise`, `apply_patch` path extraction) plus `runtime-capture.sh` / `runtime-pre-mark.sh`.
+1. **Continue the hook migration (next session).** Remaining `.claude/hooks/*` to port to runtime-neutral `.agent0/`: the PostToolUse(Edit) edit-surface advisories (`propagation-advise.sh`, `supply-chain-advise.sh`, `secrets-advise.sh` — share the `apply_patch` path-extraction already in `_memory-hook-lib.sh`) and the runtime-introspect pair (`runtime-capture.sh` / `runtime-pre-mark.sh`). Apply the proven 106-111 pattern: bare/standard matcher, `_memory-hook-lib.sh` sourcing, runtime-tagged output, and a **live both-runtime dogfood via real audit rows before flipping shipped** (the session's hard-won lesson: check the live state, don't assume cold-restart-gating).
+2. Leave `docs/specs/091-sdd-debate-runner/` untouched unless explicitly resumed.
 
 ## Decisions & Gotchas
 

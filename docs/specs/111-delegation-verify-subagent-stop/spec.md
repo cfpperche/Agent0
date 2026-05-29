@@ -2,7 +2,7 @@
 
 _Created 2026-05-29._
 
-**Status:** shipped — hook built; 8-scenario suite green; `061-delegation-stop` green; cascade removed; docs swept; **Claude pass path LIVE-dogfooded** (real `SubagentStop` fire, parallel execution confirmed). Block/exhausted paths are synthetic-validated (live fire needs a failing stack — Agent0 has none). Codex live dogfood remains a flagged handoff (prompt in `notes.md`), same posture as 108.
+**Status:** shipped — fully dogfooded on BOTH runtimes. Claude pass path LIVE (real `SubagentStop`, parallel execution confirmed); Codex block + exhausted paths LIVE (Codex TUI 0.135.0, real audit rows). Both runtime OQs resolved by live evidence (`agent_id` preserved across the continuation; `stop_hook_active` flips true → `exhausted`, no infinite loop). 8-scenario suite + `061-delegation-stop` green; `post-edit-validate.sh` deleted; cascade removed; docs swept.
 
 ## Intent
 
@@ -22,15 +22,15 @@ Why: `post-edit-validate.sh` runs the full project test suite + typecheck on *ev
   - **When** the sub-agent reaches `SubagentStop`
   - **Then** the hook blocks closure (exit 2) with the validator tail surfaced, requests one focused continuation, and appends a `subagent-verify` row with `decision=blocked`. _(Design pivot: the hooks run in parallel, so `delegation-stop.sh` still writes its close row — suppression is not achievable without a race; the close row's `exit` field reflects the verify-failure counter instead. See `notes.md`.)_
 
-- [x] **Scenario: second consecutive failing stop escalates** _(logic validated via test `03-exhausted-partial.sh`; live cold-restart fire pending)_
+- [x] **Scenario: second consecutive failing stop escalates** _(synthetic test `03-exhausted-partial.sh` + **LIVE-confirmed on Codex** 2026-05-29: `decision:exhausted`, `stop_hook_active:true`, no infinite loop)_
   - **Given** a sub-agent that was continued once after a block and still fails the validator (`stop_hook_active=true`)
   - **When** it reaches `SubagentStop` again
   - **Then** the hook accepts the closure as a partial result (exit 0, `decision=exhausted`) rather than blocking again — `stop_hook_active` is the loop guard
 
-- [ ] **Scenario: Codex delegated sub-agent close (live dogfood)** _(pending — Codex prompt in handoff)_
+- [x] **Scenario: Codex delegated sub-agent close (live dogfood)** _(LIVE-dogfooded 2026-05-29, Codex TUI 0.135.0)_
   - **Given** the Codex `.codex/config.toml` `SubagentStop` block enabled + cold restart/trust
-  - **When** a Codex sub-agent closes after a delegated task
-  - **Then** `delegation-verify.sh` fires via the real `SubagentStop`, runs the validator keyed by `agent_id`, and blocks via `decision:"block"` on failure — proven by a recorded run, not fixtures (108/109 lesson)
+  - **When** a Codex sub-agent closes after a delegated task with a failing validator
+  - **Then** `delegation-verify.sh` fired via the real `SubagentStop`, keyed by `agent_id`, → `decision:blocked` (`validator_exit:1`, `stop_hook_active:false`) at 14:23:42, then `decision:exhausted` (`stop_hook_active:true`, same `agent_id`) at 14:23:55 — both `runtime:"codex-cli"`, recorded in `notes.md`. Proven by real audit rows, not fixtures (108/109 lesson)
 
 - [x] `.claude/hooks/post-edit-validate.sh` is deleted and its `PostToolUse(Edit|Write|MultiEdit)` registration removed from `.claude/settings.json`
 - [x] No LIVE `post-edit-validate` references remain (deleted hook + registration); only intentional "replaced by / removed in 111" breadcrumbs persist in rules/memory/config — same convention as 109's "moved from" breadcrumbs
@@ -50,9 +50,9 @@ Why: `post-edit-validate.sh` runs the full project test suite + typecheck on *ev
 
 _Two facts MUST be resolved by live dogfood before the budget/continuation design is locked — carried forward from spec 110 OQ2._
 
-- [ ] **OQ1: does a continued sub-agent preserve its `agent_id`?** The Agent0-owned continuation counter is keyed by `agent_id`. If a post-`verify-blocked` continuation runs under a fresh `agent_id`, the counter loses its key and the "second failing stop → partial-result" escalation never trips. Resolve via Claude + Codex live dogfood, not assumption.
-- [ ] **OQ2: how does `stop_hook_active` behave across a validation-blocked stop?** Determines whether the hook can distinguish "first close attempt" from "continued after a block" without its own counter, and guards against an infinite block loop. Resolve via dogfood.
-- [ ] **OQ3: audit ordering edge** — confirm that emitting `verify-blocked` instead of `subagent-stop` on a blocked closure does not orphan the dispatch row in `delegation-audit.jsonl` (the dispatch↔stop correlation queries in `delegation.md` § Audit log must still resolve).
+- [x] **OQ1: does a continued sub-agent preserve its `agent_id`? RESOLVED — yes** (Codex live dogfood 2026-05-29): the `blocked` and `exhausted` rows carry the same `agent_id:"019e741e-4344-7b93-b782-a1f10484e1da"`. The counter keeps its key across the continuation. (Note: the design keys escalation on `stop_hook_active`, not the counter, so it is robust even if a runtime ever does NOT preserve `agent_id`.)
+- [x] **OQ2: how does `stop_hook_active` behave across a validation-blocked stop? RESOLVED — flips false→true** (Codex live dogfood): first failing close `stop_hook_active:false`/`decision:blocked`; continued failing close `stop_hook_active:true`/`decision:exhausted`; Codex returned to the parent prompt — no infinite stop loop. The escalation guard works as designed.
+- [x] **OQ3: audit ordering edge — RESOLVED by the parallel-execution pivot** (see `notes.md`). There is no `verify-blocked`-instead-of-`subagent-stop` suppression: the hooks run in parallel, so `delegation-stop.sh` still writes its `subagent-stop` close row and `delegation-verify.sh` writes a separate `subagent-verify` row. The dispatch↔stop correlation in `delegation.md` § Audit log is unchanged; the verify row is additive.
 
 ## Context / references
 

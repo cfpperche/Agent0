@@ -85,3 +85,19 @@ PASSOS:
 5. VERIFICAR e REPORTAR: agent_id preservado no stop continuado? stop_hook_active vira true? Colar as rows reais. NÃO afirmar sucesso sem as rows (lição 108/109).
 DONE_WHEN: rows subagent-verify com runtime:"codex-cli" (blocked + exhausted) registradas neste notes.md + resposta às 2 OQs.
 ```
+
+### 2026-05-29 — parent — LIVE Codex dogfood PASSED (block + exhausted path)
+
+Runtime proof was collected with Codex TUI, not `codex exec`: `codex-cli 0.135.0`, real `.codex/config.toml` `[[hooks.SubagentStop]]` enabled for `delegation-verify.sh` before `delegation-stop.sh`, cold-started via `codex --no-alt-screen -C /home/goat/Agent0 -s read-only ...`, then trusted the two changed `SubagentStop` hooks. A temporary root `package.json` supplied a stack-detected failing `npm test --silent` (`agent0-dogfood-failing-test`) and was removed after the proof. Earlier `codex exec` probes produced `subagent-start` rows only; the real `SubagentStop`/verify proof came from the TUI runtime surface.
+
+Canonical audit rows from `.agent0/delegation-audit.jsonl`:
+
+```json
+{"schema_version":1,"runtime":"codex-cli","ts":"2026-05-29T14:23:42Z","event":"subagent-verify","session_id":"019e741d-d76b-7ec3-a742-f2ba30252f7d","agent_id":"019e741e-4344-7b93-b782-a1f10484e1da","agent_type":"default","decision":"blocked","validator_exit":1,"stop_hook_active":false}
+{"schema_version":1,"runtime":"codex-cli","ts":"2026-05-29T14:23:55Z","event":"subagent-verify","session_id":"019e741d-d76b-7ec3-a742-f2ba30252f7d","agent_id":"019e741e-4344-7b93-b782-a1f10484e1da","agent_type":"default","decision":"exhausted","validator_exit":1,"stop_hook_active":true}
+```
+
+OQ answers:
+
+- OQ1, continued sub-agent `agent_id` preservation: **yes**. The blocked and exhausted rows both use `agent_id:"019e741e-4344-7b93-b782-a1f10484e1da"`.
+- OQ2, `stop_hook_active` across blocked stop: **yes**. The first failing close has `stop_hook_active:false` and `decision:"blocked"`; the continued failing close has `stop_hook_active:true` and `decision:"exhausted"`. Codex returned to the parent prompt after the exhausted row, so no infinite stop loop occurred.

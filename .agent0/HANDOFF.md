@@ -8,27 +8,28 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-**Multi-runtime hook migration — porting `.claude/hooks/*` to `.agent0/` hook-by-hook.** 106–110 SHIPPED+merged. **111 delegation-verify-subagent-stop SHIPPED + merged** (`444bf70`) — Claude pass path LIVE-dogfooded; Codex dogfood is a flagged handoff (108 posture). Working tree: 111 doc-status updates (uncommitted at write time) + pre-existing untracked `docs/specs/091-sdd-debate-runner/`.
+**Multi-runtime hook migration:** specs 106-110 shipped+merged. **111 delegation-verify-subagent-stop shipped+merged** (`444bf70`) and now live-dogfooded on both Claude and Codex. The user asked whether the dogfood fully passed; answer given: yes for the requested Codex CLI scenario, with the caveat that the valid proof came from Codex TUI, not `codex exec`.
 
-- **111 done:** `post-edit-validate.sh` DELETED (+ PostToolUse registration); new `.agent0/hooks/delegation-verify.sh` runs the validator once at `SubagentStop`, keyed by `agent_id`. 8-scenario suite + `061-delegation-stop` green; `delegation.md` rewritten; advisory family (lint/typecheck/tdd) relocated; spec-067 cascade tests removed; Codex config block added; refs swept.
-- **LIVE Claude dogfood DONE (pass path):** real `Agent` dispatch `acb46fdc0a91cab59` → `SubagentStop` fired `delegation-verify.sh` → `decision:pass` row, **in parallel** with the `subagent-stop` close row (same ts). The "cold-restart-gated" worry was empirically wrong — the registration fired in-session.
-- **Design pivot (docs + live-confirmed):** Claude SubagentStop hooks run **in parallel** → sentinel/close-row-suppression non-viable. Counter-contract instead: `delegation-verify.sh` WRITES `consecutive_failures`; `delegation-stop.sh` (UNCHANGED) READS it for the close row `exit`. Escalation keys on `stop_hook_active`.
+- 111 replaced `post-edit-validate.sh` with `.agent0/hooks/delegation-verify.sh` on `SubagentStop`, keyed by `agent_id`. Test suite was green before this session: 8 verifier scenarios + `061-delegation-stop`.
+- Claude live proof: real `Agent` dispatch `acb46fdc0a91cab59` produced `decision:"pass"` in `.agent0/delegation-audit.jsonl`; SubagentStop hooks fire in parallel.
+- Codex live proof: Codex TUI `codex-cli 0.135.0`, real `.codex/config.toml` SubagentStop verify block enabled/trusted, temporary failing `package.json` used and then removed. Canonical `subagent-verify` rows are recorded in `docs/specs/111-delegation-verify-subagent-stop/notes.md`.
+- Codex rows: blocked at `2026-05-29T14:23:42Z`, then exhausted at `2026-05-29T14:23:55Z`, both with `agent_id:"019e741e-4344-7b93-b782-a1f10484e1da"`. `stop_hook_active` flipped `false -> true`, proving no infinite stop loop.
 
 ## Active Work
 
-- _None in flight._ 111 shipped+merged; only the Codex dogfood (human-gated) remains as a flagged handoff.
+- _None in flight._ 111 evidence is captured; no Codex TUI sessions are left running; the temporary failing `package.json` was removed.
+- Working tree remains intentionally uncommitted: `.agent0/HANDOFF.md` and `docs/specs/111-delegation-verify-subagent-stop/notes.md` modified; pre-existing untracked `docs/specs/091-sdd-debate-runner/` is out of scope.
 
 ## Next Actions
 
-1. **Codex dogfood (only open 111 item)** — prompt at `docs/specs/111-*/notes.md` § Open questions: enable the `.codex/config.toml` `SubagentStop` verify block, cold-restart Codex, run a delegated sub-agent that fails the validator → expect `decision:blocked` → continuation → `decision:exhausted`, `runtime:"codex-cli"`. Record rows + OQ1/OQ2 answers in `notes.md`.
-2. _(optional)_ Live Claude **block-path** dogfood needs a stack-detected scratch repo with failing tests (Agent0 has no stack → only the pass path fires here); block/exhausted are synthetic-validated. This would just upgrade them to live.
-3. Next migration surfaces — PostToolUse edit-surface advisories (`propagation-advise` / `supply-chain-advise` / `secrets-advise`, `apply_patch` path extraction) + `runtime-capture.sh` / `runtime-pre-mark.sh`.
+1. Review/commit the 111 evidence docs if desired: `docs/specs/111-delegation-verify-subagent-stop/notes.md` and `.agent0/HANDOFF.md`.
+2. Leave `docs/specs/091-sdd-debate-runner/` alone unless the user explicitly resumes that work.
+3. Next migration candidates: PostToolUse edit-surface advisories (`propagation-advise`, `supply-chain-advise`, `secrets-advise`, `apply_patch` path extraction) plus `runtime-capture.sh` / `runtime-pre-mark.sh`.
 
 ## Decisions & Gotchas
 
-- **Tests pass even while a registration is dormant** — none exercise CC's `if`/matcher dispatch. Only a real PreToolUse fire (post-cold-restart) proves a hook-registration spec; 109 is marked shipped only because both live rows are now recorded. (CC `if` pipe-alternation invalidity + the bare-matcher fix are fully in `.claude/rules/supply-chain.md` § What fires and `.agent0/memory/hook-chain-maintenance.md`.)
-- **Codex hook trust is a separate runtime gate** — after editing project `.codex/config.toml`, a cold Codex start showed `1 hook is new or changed`; until trusted, the new project hook did not run. Trust state landed in `~/.codex/config.toml` for `/home/goat/Agent0/.codex/config.toml:pre_tool_use:3:0`.
-- **Codex shell launcher wrapper matters** — real `codex exec` surfaced commands as `/bin/bash -lc '<cmd>'`; the supply-chain tokenizer now unwraps common `bash/sh -c/-lc` launchers before looking for manager+verb.
-- **`/resume` and `/clear` do NOT reload settings.json hooks** — only a COLD `claude` restart does. The git-mv'd 109 hook did not break the pre-restart session because the old dormant `if` never fired anyway.
-- **Hook-move cascade:** a rename breaks hardcoded paths AND the filename-keyed perf harness (`bench-hooks.sh`, `.perf-baseline.json`, latency test). ALWAYS `grep -rn '<oldname>'` after a move.
-- **Gates block your own tooling:** feed `--no-verify` / `rm -r` via a file or split calls, never a multi-line inline Bash (governance scans the whole string); `git commit -F`. `091-sdd-debate-runner` is pre-existing untracked, out of scope.
+- **Artifact proof beats test assumptions:** hook-registration work is not shipped unless real runtime audit rows prove the hook fired. Tests can pass while a registration is dormant.
+- **Codex trust gate:** project `.codex/config.toml` hook changes require a cold Codex start and trust approval. Spec 111 trust landed for `subagent_stop:0:0` (verify) and `subagent_stop:1:0` (stop).
+- **Codex TUI vs `codex exec`:** in 0.135.0, `codex exec` probes emitted `subagent-start` rows only; real `SubagentStop` + `subagent-verify` rows came from the TUI surface (`codex --no-alt-screen ...`).
+- **111 design pivot:** SubagentStop hooks run in parallel, so sentinel/close-row suppression is invalid. `delegation-verify.sh` writes `consecutive_failures`; unchanged `delegation-stop.sh` reads it for close-row `exit`; escalation keys on `stop_hook_active`.
+- **Existing gotchas still apply:** launcher-wrapped Bash commands (`/bin/bash -lc`), cold-restart requirements for settings reloads, hook-move path cascades, and governance hooks blocking broad inline shell strings.

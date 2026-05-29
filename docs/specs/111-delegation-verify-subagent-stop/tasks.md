@@ -9,7 +9,7 @@ _Generated from `plan.md` on 2026-05-29. Work top-to-bottom. Check boxes as task
 - ✅ Tasks 1–5, 7–15 done: `delegation-verify.sh` built; 8-scenario test suite green; registered on `SubagentStop`; `post-edit-validate.sh` + its registration deleted; spec-067 cascade tests removed; `delegation.md` rewritten; advisory family + all path refs swept; Codex config block added.
 - ✅ Task 6 (chain-semantics spike) — resolved by DOCS **and confirmed LIVE**: Claude SubagentStop hooks run in parallel (empirically proven — `subagent-stop` + `subagent-verify` rows at the same ts for one stop), exit-2 blocks-and-continues, `agent_id` present, `stop_hook_active` delivered. This invalidated the sentinel design → counter-contract (see `notes.md`). My initial "cold-restart-gated" assumption was **wrong** — the registration fired in-session.
 - ✅ **Live Claude dogfood (pass path) DONE** — real `Agent` dispatch `acb46fdc0a91cab59` → `SubagentStop` fired `delegation-verify.sh` → `decision:pass` row. Scenarios 2/3 (block/exhausted) stay synthetic (`02`/`03` tests) — a live fire needs a failing stack, which Agent0 lacks; the block path reuses the now-proven fire mechanism.
-- ⏳ **Codex dogfood** (scenario 4) is the only open item — human-gated on `.codex/config.toml` enable + Codex restart. Prompt in `notes.md` § Open questions. Spec flipped to `shipped` (Codex as flagged handoff, 108 posture).
+- ✅ **Codex dogfood DONE** (scenario 4, Codex TUI 0.135.0, 2026-05-29) — live `block` + `exhausted` rows recorded; **both OQs resolved by live evidence** (agent_id preserved; stop_hook_active false→true → exhausted, no loop). Spec `shipped`, fully dogfooded on BOTH runtimes. Nothing open.
 
 ## Implementation
 

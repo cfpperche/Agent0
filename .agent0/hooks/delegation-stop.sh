@@ -177,7 +177,7 @@ close_row="$(jq -c -n \
 
 [ -z "$close_row" ] && exit 0
 
-# Atomic append via flock (mirror runtime-capture.sh / original stop hook).
+# Atomic append via flock.
 (
   flock 9
   printf '%s\n' "$close_row" >>"$AUDIT_LOG"

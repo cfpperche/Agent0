@@ -57,16 +57,15 @@ Quoted from the docs Hook lifecycle table (last audited 2026-05-25 via the cc-pl
 | `ElicitationResult` | An elicitation completes (same form-driven shape) |
 | `SessionEnd` | The session ends |
 
-Agent0 currently uses **6 of these 29** (counted from `.claude/settings.json`):
+Agent0 currently uses **5 of these 29** (counted from `.claude/settings.json`):
 
-- `PreToolUse` (4 matchers: governance-gate, secrets-preflight, runtime-pre-mark, delegation-gate)
-- `PostToolUse` (2 matchers: session-track-edits, runtime-capture) — post-edit-validate removed in spec 111 (verification moved to SubagentStop); secrets-advise + supply-chain-advise removed in spec 112
-- `PostToolUseFailure` (runtime-capture, added by spec 020)
+- `PreToolUse` (4 matchers: governance-gate, secrets-preflight, delegation-gate, memory-index-gate) — runtime-pre-mark removed in spec 116 (runtime-introspect removal)
+- `PostToolUse` (4 matchers: session-track-edits, memory-frontmatter-validate, memory-events-journal, propagation-advise) — post-edit-validate removed in spec 111 (verification moved to SubagentStop); secrets-advise + supply-chain-advise removed in spec 112; runtime-capture removed in spec 116
 - `SessionStart` (3 hooks: session-start, reminders-readout, routines-readout — plus memory-decay-readout from `.agent0/hooks/`)
 - `Stop` (session-stop)
 - `SubagentStop` (2 hooks: delegation-verify [spec 111], delegation-stop [spec 061])
 
-The remaining 23 are unused capacity surfaces. Notable underexplored ones: `WorktreeCreate`/`WorktreeRemove` (spec 063 territory), `TaskCreated`/`TaskCompleted` (potential hook surface for /goal + task tracking integrations), `Elicitation`/`ElicitationResult` (MCP form workflows), `FileChanged` (file-watcher capacity not yet built).
+`PostToolUseFailure` was used by runtime-capture (spec 020) until spec 116 removed runtime-introspect; no hook registers on it now. The remaining 24 are unused capacity surfaces. Notable underexplored ones: `WorktreeCreate`/`WorktreeRemove` (spec 063 territory), `TaskCreated`/`TaskCompleted` (potential hook surface for /goal + task tracking integrations), `Elicitation`/`ElicitationResult` (MCP form workflows), `FileChanged` (file-watcher capacity not yet built).
 
 ## Exit-code semantics for PostToolUse / PostToolUseFailure
 
@@ -82,7 +81,7 @@ For all PreToolUse/PostToolUse/PostToolUseFailure events, stdin JSON includes:
 - `tool_name` — string (e.g. `"Bash"`, `"Edit"`)
 - `tool_input` — object, shape depends on tool
 - `tool_response` — present on PostToolUse / PostToolUseFailure; shape varies by tool
-- `tool_use_id` — unique per tool call; lets PreToolUse and PostToolUse correlate (used by `.claude/hooks/runtime-pre-mark.sh` for duration measurement)
+- `tool_use_id` — unique per tool call; lets PreToolUse and PostToolUse correlate (e.g. a PreToolUse hook stamps a start time keyed by `tool_use_id` for a PostToolUse hook to read back for duration measurement)
 - `duration_ms` — present on PostToolUse / PostToolUseFailure (real wall-clock ms, harness-provided)
 - `effort` — object `{level: "low"|"medium"|"high"|"xhigh"|"max"}`, present on `PreToolUse`, `PostToolUse`, `Stop`, `SubagentStop` when the model supports effort levels (Opus 4.x family). Verified 2026-05-19 via cc-platform-audit second-run.
 - `agent_id`, `agent_type` — present when running under `--agent` flag OR inside a sub-agent dispatched via the `Agent` tool. `agent_type` is the dispatched subagent name (e.g. `"Explore"`, `"general-purpose"`). Used by `.claude/hooks/delegation-gate.sh` for parent-vs-subagent attribution and by `.claude/hooks/session-track-edits.sh` to scope edits per actor.
@@ -101,7 +100,7 @@ For `SessionStart`, `Setup`, `CwdChanged`, `FileChanged`: also supports `CLAUDE_
 }
 ```
 
-**Note:** Claude Code's Bash `tool_response` does NOT include an `exit_code` field. Status inference is required (see `.agent0/memory/runtime-introspect-maintenance.md` § Inference heuristics and `.claude/hooks/runtime-capture.sh`).
+**Note:** Claude Code's Bash `tool_response` does NOT include an `exit_code` field — a hook that needs pass/fail from a Bash command must infer it from stdout/stderr patterns.
 
 **PostToolUseFailure(Bash) payload diverges (verified empirically 2026-05-11 by spec 020 dump-probe).** Under tool failure, the stdin payload to the hook script does NOT contain a `tool_response` field at all. Instead:
 
@@ -127,7 +126,7 @@ Key differences from `PostToolUse`:
 - `is_interrupt` (boolean) replaces `tool_response.interrupted`
 - `hook_event_name: "PostToolUseFailure"` is present — used by shared hook scripts to dispatch on event identity
 
-`session_id`, `transcript_path`, `cwd`, `tool_name`, `tool_input`, `tool_use_id`, `duration_ms` carry over unchanged. `tool_use_id` correlates with the corresponding `PreToolUse` stamp — `runtime-pre-mark.sh`'s in-flight mark is read and removed correctly.
+`session_id`, `transcript_path`, `cwd`, `tool_name`, `tool_input`, `tool_use_id`, `duration_ms` carry over unchanged. `tool_use_id` correlates with the corresponding `PreToolUse` stamp.
 
 ## Empirical: `InstructionsLoaded` intra-session dedup (rule-scope, not glob-scope)
 
@@ -144,7 +143,6 @@ This is correct CC behavior (avoids audit-log inflation and context waste); not 
 
 ## Cross-references
 
-- `.claude/rules/runtime-introspect.md` — spec 011 capacity that uses `PreToolUse(Bash)` + `PostToolUse(Bash)`; spec 020 added `PostToolUseFailure(Bash)`.
 - `.claude/rules/secrets-scan.md` — uses `PreToolUse(Bash)` (preflight shape gate); doesn't depend on the success/failure split.
 - `.claude/rules/delegation.md` — uses `PreToolUse(Agent)` + `PostToolUse(Edit|Write|MultiEdit)`.
 - `.claude/rules/session-handoff.md` — uses `SessionStart` + `Stop`.

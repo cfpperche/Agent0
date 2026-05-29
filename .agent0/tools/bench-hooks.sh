@@ -65,15 +65,14 @@ BENCH_TMPDIR="$(mktemp -d -t agent0-bench.XXXXXX)"
 trap 'rm -rf "$BENCH_TMPDIR"' EXIT
 mkdir -p "$BENCH_TMPDIR/.claude"
 # Initialize the redirected project tree just enough for hook side-writes.
-mkdir -p "$BENCH_TMPDIR/.agent0/.runtime-state/in-flight"
+mkdir -p "$BENCH_TMPDIR/.agent0"
 ORIGINAL_PROJECT_DIR="$PROJECT_DIR"
 export CLAUDE_PROJECT_DIR="$BENCH_TMPDIR"
 
 # --- Hooks under test (resolved from .agent0/hooks/ then .claude/hooks/) ---
 # Order matches settings.json PreToolUse(Bash) registration. governance-gate.sh
-# and secrets-preflight.sh live in .agent0/hooks/ (specs 107/108);
-# runtime-pre-mark.sh remains in .claude/hooks/.
-HOOK_NAMES=( "governance-gate.sh" "secrets-preflight.sh" "runtime-pre-mark.sh" )
+# and secrets-preflight.sh live in .agent0/hooks/ (specs 107/108).
+HOOK_NAMES=( "governance-gate.sh" "secrets-preflight.sh" )
 
 # --- Command set ---
 # label::: command-string  (the ':::' separator is intentional — unlikely in any real cmd)

@@ -11,7 +11,7 @@ metadata:
 
 Maintainer-binding companion to `.agent0/memory/hook-chain-latency.md`. The companion entry documents the chain budget + bench tool + regression check; this memory documents the upstream-maintainer discipline applied when adding or editing a `PreToolUse(Bash)` hook.
 
-Read before adding any new `PreToolUse(Bash)` hook, or editing the optimization-sensitive bodies of `governance-gate.sh`, `secrets-preflight.sh`, `runtime-pre-mark.sh`.
+Read before adding any new `PreToolUse(Bash)` hook, or editing the optimization-sensitive bodies of `governance-gate.sh`, `secrets-preflight.sh`.
 
 ## Optimization techniques
 
@@ -34,7 +34,6 @@ The lesson: **prefer a bare `"matcher": "Bash"` + a cheap in-script probe over a
 Not narrowed (correctly use bare `Bash` matcher — spawn on every Bash, filter in-body):
 
 - `governance-gate.sh` — destructive patterns can appear anywhere; can't narrow safely.
-- `runtime-pre-mark.sh` — must run on every Bash to stamp the `started_at` timestamp.
 
 ### 2. Pre-jq raw-stdin probe (governance-gate.sh)
 
@@ -51,9 +50,9 @@ The probe is **sufficient-but-not-necessary**: a probe-miss is a guaranteed no-b
 
 Reduction: governance-gate.sh noop p95 from ~62 ms → ~20 ms (-68%).
 
-### 3. sed instead of jq for single-field extraction (runtime-pre-mark.sh)
+### 3. sed instead of jq for single-field extraction
 
-Where a hook only needs one JSON field (`tool_use_id` for runtime-pre-mark), `sed` extraction is faster than a `jq -r` spawn:
+Where a hook only needs one JSON field (e.g. a single `tool_use_id`), `sed` extraction is faster than a `jq -r` spawn:
 
 ```bash
 TOOL_USE_ID="$(printf '%s' "$INPUT" \
@@ -61,9 +60,7 @@ TOOL_USE_ID="$(printf '%s' "$INPUT" \
   | head -1)"
 ```
 
-JSON is key-order-independent and this regex finds the key wherever it appears. The hook falls back to `jq` if `sed` fails (defensive — fail-open posture is preserved).
-
-Reduction: runtime-pre-mark.sh noop p95 from ~35 ms → ~26 ms (-24%).
+JSON is key-order-independent and this regex finds the key wherever it appears. Fall back to `jq` if `sed` fails (defensive — fail-open posture preserved). Measured saving on the original single-field hook: noop p95 ~35 ms → ~26 ms (-24%).
 
 ## Adding a new PreToolUse(Bash) hook
 

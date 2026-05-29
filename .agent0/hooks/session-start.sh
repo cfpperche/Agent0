@@ -70,14 +70,6 @@ else
   BANNER+=$'=== end handoff-advisory ===\n'
 fi
 
-# Runtime-introspect: point the agent at the probe tool so it can
-# verify its own edits via cached test/build snapshots. Silent when the tool
-# is absent — the capacity isn't installed in every consumer project.
-PROBE_TOOL="$PROJECT_DIR/.agent0/tools/probe.sh"
-if [[ -x "$PROBE_TOOL" ]]; then
-  BANNER+=$'\n=== runtime-introspect ===\nProbe the latest captured test/build run with: bash .agent0/tools/probe.sh last-run\n=== end runtime-introspect ===\n'
-fi
-
 # githooks-activation: surface the manual core.hooksPath activation
 # command when .githooks/ is present but config doesn't point at it.
 # Auto-activation is refused on purpose (Lazarus vector — see

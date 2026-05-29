@@ -16,7 +16,7 @@ This entry pairs with `.agent0/memory/hook-chain-maintenance.md` (the upstream-m
 
 In-scope:
 
-- `PreToolUse(Bash)` hooks registered in `.claude/settings.json` — `governance-gate.sh`, `secrets-preflight.sh`, `runtime-pre-mark.sh` at time of writing.
+- `PreToolUse(Bash)` hooks registered in `.claude/settings.json` — `governance-gate.sh`, `secrets-preflight.sh` (a third, `runtime-pre-mark.sh`, was in the chain until spec 116 removed runtime-introspect). The dated figures below reflect the 3-hook era and are kept as the historical derivation.
 - The full chain's wall-clock p95 against a representative command set.
 
 Out-of-scope:
@@ -111,7 +111,6 @@ The check is not wired into a `pre-commit` hook in v1. The monthly routine `.age
 ## Cross-references
 
 - `.agent0/memory/hook-chain-maintenance.md` — upstream-maintainer discipline (optimization techniques + the 5-step contract for adding a new `PreToolUse(Bash)` hook).
-- `.claude/rules/runtime-introspect.md` — sibling perf-observability rule; the `runtime-pre-mark.sh` hook this entry measures is owned by that capacity.
 - `.claude/rules/secrets-scan.md` — `secrets-preflight.sh` contract; the `if`-field narrowing preserves it exactly because the hook body is unchanged.
 - `.claude/rules/delegation.md` — `governance-gate.sh` sits in the broader delegation/governance family.
 

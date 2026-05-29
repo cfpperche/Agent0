@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/session-state-isolation/run-all.sh
-# Orchestrator for spec-017 scenarios. Mirrors the runtime-introspect runner.
+# Orchestrator for spec-017 scenarios.
 
 set -euo pipefail
 

@@ -142,7 +142,6 @@ check_runtime_capabilities_registry() {
     "SDD"
     "debate"
     "lifecycle hooks"
-    "runtime introspect"
     "delegation/subagents"
     "MCP recipes"
     "image generation"

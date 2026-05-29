@@ -47,7 +47,6 @@ EOF
 | SDD | `native` | `convention` | `.claude/skills/sdd/SKILL.md` | ok |
 | debate | `native` | `planned: 091-sdd-debate-runner` | `.claude/skills/sdd/templates/debate.md.tmpl` | ok |
 | lifecycle hooks | `native` | `unsupported` | `.claude/hooks/*.sh` | ok |
-| runtime introspect | `native` | `read-only` | `.agent0/tools/probe.sh` | ok |
 | delegation/subagents | `native` | `unsupported` | `.claude/rules/delegation.md` | ok |
 | MCP recipes | `native-opt-in` | `native-opt-in` | `.mcp.json.example`; `.codex/config.toml.example` | ok |
 | browser auth | `native-opt-in` | `native-opt-in` | `.claude/rules/browser-auth.md` | ok |

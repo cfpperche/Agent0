@@ -87,17 +87,6 @@ export const CAPACITIES: Capacity[] = [
     },
   },
   {
-    id: "runtime-introspect",
-    name: "Runtime introspect",
-    ruleDoc: `${REPO_TREE}/.claude/rules/runtime-introspect.md`,
-    spec: "011/020/022",
-    desc: {
-      en: "PostToolUse(Bash) captures the latest test/build/typecheck run to .claude/.runtime-state/last-run.json. Agent reads it back via `probe.sh last-run` — closing the edit→verify loop.",
-      pt: "PostToolUse(Bash) captura a última execução de test/build/typecheck em .claude/.runtime-state/last-run.json. Agente lê com `probe.sh last-run` — fechando o loop edit→verify.",
-      es: "PostToolUse(Bash) captura la última ejecución de test/build/typecheck en .claude/.runtime-state/last-run.json. El agente la lee con `probe.sh last-run` — cerrando el bucle edit→verify.",
-    },
-  },
-  {
     id: "mcp-recipes",
     name: "MCP recipes",
     ruleDoc: `${REPO_TREE}/.claude/rules/mcp-recipes.md`,

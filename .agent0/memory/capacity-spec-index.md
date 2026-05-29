@@ -32,7 +32,6 @@ This index is Agent0-internal. Do not cite it from CLAUDE.md or `.claude/rules/*
 | BDD / acceptance-scenario shape | `004-bdd` | — |
 | Lint validator (`lint-validator.md`) | `013-lint-validator-extension` | — |
 | Typecheck advisory (`typecheck-advisory.md`) | no dedicated spec — shipped as a validator fix (shrnk-mono dogfood 2026-05-12); lineage in `013` / `015` | — |
-| Runtime introspect (`runtime-introspect.md`) | `011-runtime-introspect` | `020-runtime-capture-on-failure`, `022-runtime-introspect-cargo` |
 | Goal skill | `062-goal-skill` | — |
 
 ## Secrets

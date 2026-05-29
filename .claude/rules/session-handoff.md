@@ -124,7 +124,3 @@ For legacy or tracker-absent sessions, `SessionStart` writes `start-porcelain.tx
 Missing snapshot is the conservative fallback: Stop skips comparison and uses the mtime check.
 
 `/compact` and `/resume` both fire `SessionStart` with the same `session_id`, so the snapshot is overwritten at compaction/resume time and becomes the new baseline. Correct: pre-compact work should already be committed or reflected in `.agent0/HANDOFF.md`.
-
-## Cross-capacity dependency
-
-`.agent0/tools/probe.sh` reads `started-at` as the "session boundary" signal to detect stale snapshots. It scans `.agent0/.session-state/*/started-at` and takes the maximum mtime as the conservative boundary. Parallel sessions can produce conservative false positives; safe direction is to re-run the verifier.

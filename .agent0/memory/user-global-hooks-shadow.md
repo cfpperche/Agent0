@@ -23,7 +23,7 @@ Dogfood of secrets-scan in shrnk-mono surfaced this: a `~/.claude/hooks/pre-comm
 1. **The project's preflight `.agent0/hooks/secrets-preflight.sh` still fired and audited correctly** (`passthrough` rows in `.agent0/secrets-audit.jsonl`), because both PreToolUse handlers run in sequence in the order CC registers them — the first one to exit non-zero blocks. So the project's audit log was honest.
 2. **The project's NATIVE `.githooks/pre-commit` gitleaks layer never ran**, because git's commit pipeline was never reached. The user-global block returned before git was invoked.
 
-The user-global hook's bypass env-var cannot be set mid-session via a `Bash` tool call — same sibling-process gotcha as `CLAUDE_RUNTIME_INTROSPECT_EXTRA_DETECT` (see `.agent0/memory/runtime-introspect-maintenance.md` § Deep gotchas and `.agent0/memory/cc-platform-hooks.md` for the canonical statement). Disabling the user-global shadow requires either (a) editing `~/.claude/settings.json` to remove the hook registration, or (b) launching `claude` with the user-global hook's bypass env var pre-set in the shell.
+The user-global hook's bypass env-var cannot be set mid-session via a `Bash` tool call — hooks are spawned by the harness as sibling processes, not children of the agent's Bash shell, so a mid-session `export` never reaches them (a `Bash` tool call's environment is not inherited by a sibling-spawned hook). Disabling the user-global shadow requires either (a) editing `~/.claude/settings.json` to remove the hook registration, or (b) launching `claude` with the user-global hook's bypass env var pre-set in the shell.
 
 ## When to consult this memory
 
@@ -42,5 +42,4 @@ The fork dogfood lesson is operational, not architectural: when validating end-t
 ## Cross-references
 
 - `.claude/rules/secrets-scan.md` — project's two-layer secrets-scan capacity.
-- `.agent0/memory/runtime-introspect-maintenance.md` § Deep gotchas — canonical statement of the hook-is-harness-sibling-not-Bash-child rule (same mechanism that prevents mid-session env-var injection).
 - `.agent0/memory/cc-platform-hooks.md` — canonical CC hook event surface.

@@ -6,7 +6,7 @@
 #   (a) file exists
 #   (b) parses as JSON
 #   (c) has expected top-level fields: git_sha, harness_version, os, ts, reps, cells
-#   (d) the four real hook cells are populated with p50_ms + p95_ms per command
+#   (d) the real hook cells are populated with p50_ms + p95_ms per command
 
 set -euo pipefail
 
@@ -23,7 +23,7 @@ for field in git_sha harness_version os ts reps cells; do
   fi
 done
 
-for hook in governance-gate.sh secrets-preflight.sh runtime-pre-mark.sh; do
+for hook in governance-gate.sh secrets-preflight.sh; do
   if [ "$(jq -r --arg h "$hook" '.cells | has($h)' "$BASELINE")" != "true" ]; then
     echo "FAIL: baseline missing cells for hook $hook"
     exit 1

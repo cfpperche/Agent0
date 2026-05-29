@@ -114,9 +114,8 @@ elif [ -f "composer.json" ]; then
   # Detect Pest vs PHPUnit via composer.json deps. Pest depends on PHPUnit so
   # checking pestphp/pest first is correct precedence. Default to phpunit when
   # neither is explicitly declared (Laravel ships with phpunit by default).
-  # --colors=never disables ANSI at source; runtime-capture.sh strips ANSI
-  # anyway, but disabling at source is cleaner and inference patterns stay
-  # simpler.
+  # --colors=never disables ANSI at source, keeping the validator's output
+  # parsing simple.
   if jq -e '(.["require-dev"]["pestphp/pest"] // .require["pestphp/pest"]) // empty' composer.json >/dev/null 2>&1; then
     command_str='vendor/bin/pest --colors=never'
   else

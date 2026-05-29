@@ -129,3 +129,13 @@ reminders:
   links:
   - .claude/rules/harness-sync.md
   - .claude/skills/image/SKILL.md
+- id: r-2026-05-29-spec-the-vuln-audit-capacity
+  created: '2026-05-29'
+  context: 'Spec the vuln-audit capacity (replaces removed supply-chain block, spec
+    112): research osv-scanner vs npm audit vs pip-audit vs per-ecosystem, decide
+    trigger surface (on-demand /skill vs routine/cron vs commit gate), scope coverage.
+    Philosophy: don''t limit lib usage at install time — detect vulnerable installed
+    libs and act.'
+  status: pending
+  links:
+  - docs/specs/112-prune-supply-chain-and-secrets-advise/spec.md

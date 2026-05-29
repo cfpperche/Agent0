@@ -29,7 +29,7 @@ Eight capacities are live on `main`. Each one is documented in its own rule file
 | Compaction continuity | `PreCompact` snapshots last 12 user turns → `SessionStart(source=compact)` re-injects them | `compaction-continuity.md` | — |
 | Spec-driven development | `/sdd` skill scaffolds `docs/specs/NNN-<slug>/{spec,plan,tasks}.md` | `spec-driven.md` | — |
 | Governance gate | `PreToolUse(Bash)` blocks destructive ops, hook bypass, blanket staging | — | `001-governance-gate/` |
-| Delegation gate + post-edit validator | 5-field handoff required for every `Agent` call; sub-agent edits revalidated in a fix-then-retry loop | `delegation.md` | `002-delegation/` |
+| Delegation gate + stop-time verifier | 5-field handoff required for every `Agent` call (`delegation-gate.sh`); a runtime-neutral `SubagentStop` hook (`delegation-verify.sh`, Claude + Codex) runs the project validator once when a delegated sub-agent closes — block-then-one-continuation-then-partial-result, keyed by `agent_id` | `delegation.md` | `002-delegation/` + `111-delegation-verify-subagent-stop/` |
 | Reminders | `/remind` skill writes `.claude/REMINDERS.md`, auto-read at session start | `reminders.md` | `003-reminders/` |
 | BDD acceptance scenarios | `/sdd` template scaffolds Given/When/Then scenarios in `spec.md` | `spec-driven.md` § *Acceptance scenarios* | `004-bdd/` |
 | TDD working agreement | Cultural red→green→refactor + non-blocking validator advisory when prod files move without tests | `tdd.md` | `005-tdd/` |
@@ -94,6 +94,7 @@ Future to-dos that don't belong in `.agent0/HANDOFF.md` (in-flight) or memory (k
 ├── .agent0/
 │   ├── HANDOFF.md                     # runtime-neutral session handoff (git-tracked)
 │   ├── hooks/secrets-preflight.sh     # runtime-neutral commit-shape preflight (spec 108; Claude + Codex)
+│   ├── hooks/delegation-verify.sh     # runtime-neutral SubagentStop verifier (spec 111; Claude + Codex)
 │   └── secrets-audit.jsonl            # secrets-scan audit log (gitignored)
 ├── .gitleaks.toml                     # starter secrets-scan config (allowlists + builtin detectors)
 ├── .githooks/                         # versioned native git hooks (activate per-fork via core.hooksPath)
@@ -102,7 +103,7 @@ Future to-dos that don't belong in `.agent0/HANDOFF.md` (in-flight) or memory (k
 │   ├── settings.json                  # hooks + permissions
 │   ├── SESSION.md                     # pointer to .agent0/HANDOFF.md
 │   ├── REMINDERS.md                   # deferred-intent list (git-tracked)
-│   ├── hooks/                         # 9 lifecycle hooks
+│   ├── hooks/                         # 8 lifecycle hooks (delegation-verify moved to .agent0/ in spec 111)
 │   ├── rules/                         # behavior rules (loaded into context)
 │   ├── skills/                        # /sdd, /remind
 │   ├── validators/run.sh              # auto-detect typecheck+test

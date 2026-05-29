@@ -4,7 +4,7 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-HOOK="$AGENT0_ROOT/.claude/hooks/propagation-advise.sh"
+HOOK="$AGENT0_ROOT/.agent0/hooks/propagation-advise.sh"
 
 TMPDIR_T="$(mktemp -d -t pa-09-XXXXXX)"
 trap 'rm -rf "$TMPDIR_T"' EXIT

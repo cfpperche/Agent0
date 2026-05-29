@@ -5,7 +5,7 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-HOOK="$AGENT0_ROOT/.claude/hooks/propagation-advise.sh"
+HOOK="$AGENT0_ROOT/.agent0/hooks/propagation-advise.sh"
 
 # Use a tempdir as CLAUDE_PROJECT_DIR so the file_path resolves relative to it.
 TMPDIR_T="$(mktemp -d -t pa-01-XXXXXX)"

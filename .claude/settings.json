@@ -141,7 +141,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/propagation-advise.sh"
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.agent0/hooks/propagation-advise.sh"
           }
         ]
       },

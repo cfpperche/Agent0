@@ -213,7 +213,7 @@ COPY_CHECK_FILES=(
 # no advisory. Companion filter in `merge_settings_json` drops the matching
 # hook command from the settings merge so the registration is invisible too.
 COPY_CHECK_EXCLUDE=(
-  ".claude/hooks/propagation-advise.sh"
+  ".agent0/hooks/propagation-advise.sh"
   ".claude/rules/propagation-advisory.md"
   ".claude/tests/propagation-advisory/*"
 )

@@ -8,18 +8,18 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-**Multi-runtime hook migration — porting `.claude/hooks/*` to `.agent0/` hook-by-hook.** 106 delegation + 107 governance + 108 secrets-preflight SHIPPED + merged. **109 supply-chain-preflight SHIPPED in spec state (tasks 21-24 green; Claude + Codex live dogfoods recorded), but still uncommitted.** Working tree dirty with the 109 changes (uncommitted) + pre-existing untracked `docs/specs/091-sdd-debate-runner/`.
+**Multi-runtime hook migration — porting `.claude/hooks/*` to `.agent0/` hook-by-hook.** 106 delegation + 107 governance + 108 secrets-preflight + **109 supply-chain-preflight ALL SHIPPED + merged to `main`** (109 merged FF as `6de0d92`, pushed). Working tree clean except pre-existing untracked `docs/specs/091-sdd-debate-runner/` (out of scope, untouched).
 
-- **109 done, pending commit** — `git mv supply-chain-scan.sh → .agent0/hooks/supply-chain-preflight.sh`; sources `_memory-hook-lib.sh` (root + `memory_runtime` audit tag); **NO rewrite path → no runtime-aware stdout** (simpler than 108); bare `"matcher": "Bash"` (dropped dormant `if`-pipe); dropped `skip-not-install` (silent no-row, mirrors 108); audit → `.agent0/supply-chain-audit.jsonl` + `runtime`. Codex live dogfood required trusting the new project hook (`pre_tool_use:3:0`) and unwrapping Codex local shell launcher commands (`/bin/bash -lc '<cmd>'`) before tokenization. `supply-chain-advise.sh` (NOT ported) `AUDIT_LOG` repointed to `.agent0/` to avoid a split log. **Verified:** 19/19 tests + wrapper regressions, composer tests, synthetic block on both runtime tags, grep-clean, Claude live block+override rows, Codex live block+override rows in `notes.md`.
+- **109 shipped** — `git mv supply-chain-scan.sh → .agent0/hooks/supply-chain-preflight.sh`; sources `_memory-hook-lib.sh` (root + `memory_runtime` audit tag); **NO rewrite path → no runtime-aware stdout** (simpler than 108); bare `"matcher": "Bash"` (dropped dormant `if`-pipe); dropped `skip-not-install` (silent no-row, mirrors 108); audit → `.agent0/supply-chain-audit.jsonl` + `runtime`. Codex live dogfood required trusting the new project hook (`pre_tool_use:3:0`) and unwrapping Codex local-shell launcher commands (`/bin/bash -lc '<cmd>'`) before tokenization (regression tests 07 + 09). Both live dogfoods (Claude `cargo add tokio`, Codex `pip install requests` — block + override) recorded in `docs/specs/109-*/notes.md`.
 
 ## Active Work
 
-- Claude Code / Codex — spec 109 supply-chain port — paths: `.agent0/hooks/supply-chain-preflight.sh`, `.claude/{settings.json,rules/supply-chain.md,tests/supply-chain*}`, `.codex/config.toml.example`, `docs/specs/109-*` — release action left: branch if needed, commit the shipped slice.
+- _None in flight._ 109 is closed; next session resumes the migration backlog from a clean `main`.
 
 ## Next Actions
 
-1. **Commit 109 intentionally.** Branch first if staying off `main`; include the untracked `docs/specs/109-supply-chain-scan-multi-runtime/` spec dir, the git-mv, hook/rule/test/config/docs/memory edits, and `.agent0/HANDOFF.md`. Leave pre-existing untracked `docs/specs/091-sdd-debate-runner/` out of scope.
-2. After 109 ships: `post-edit-validate.sh`, PostToolUse edit-surface advisories (`apply_patch` path extraction), runtime-capture/pre-mark.
+1. **Continue the hook migration to `.agent0/`** — remaining surfaces: `post-edit-validate.sh` (delegated-edit validator), the PostToolUse edit-surface advisories (`apply_patch` path extraction for Codex), and `runtime-capture.sh` / `runtime-pre-mark.sh`. Apply the cutover pattern proven across 106-109: bare matcher, `_memory-hook-lib.sh` sourcing, runtime-tagged audit, and a **mandatory live PreToolUse dogfood on BOTH runtimes** before flipping shipped (108 dormant-`if` lesson — tests passing is never proof a registration fires).
+2. Scaffold the next spec via `/sdd new <slug>` before touching code.
 
 ## Decisions & Gotchas
 

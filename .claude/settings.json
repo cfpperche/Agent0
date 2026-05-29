@@ -77,8 +77,7 @@
         "hooks": [
           {
             "type": "command",
-            "if": "Bash(npm *|pnpm *|yarn *|bun *|pip *|uv *|poetry *|pdm *|cargo *|go *|composer *)",
-            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/supply-chain-scan.sh"
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.agent0/hooks/supply-chain-preflight.sh"
           }
         ]
       },

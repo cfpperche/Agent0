@@ -10,7 +10,7 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-HOOK="$AGENT0_ROOT/.claude/hooks/supply-chain-scan.sh"
+HOOK="$AGENT0_ROOT/.agent0/hooks/supply-chain-preflight.sh"
 
 TMPDIR="$(mktemp -d -t spec-047-V2c-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
@@ -49,7 +49,7 @@ if ! grep -q "composer.json" "$stderr_file"; then
   exit 1
 fi
 
-audit_log="$TMPDIR/.claude/supply-chain-audit.jsonl"
+audit_log="$TMPDIR/.agent0/supply-chain-audit.jsonl"
 row=$(cat "$audit_log")
 for check in \
   '.decision == "advisory-bare-install"' \

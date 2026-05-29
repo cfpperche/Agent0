@@ -41,7 +41,7 @@ if ! grep -q "^supply-chain-advisory: edit package.json — manifest may have ne
   exit 1
 fi
 
-audit_log="$TMPDIR/.claude/supply-chain-audit.jsonl"
+audit_log="$TMPDIR/.agent0/supply-chain-audit.jsonl"
 if [ ! -f "$audit_log" ]; then
   printf 'FAIL: audit log not created\n'
   exit 1

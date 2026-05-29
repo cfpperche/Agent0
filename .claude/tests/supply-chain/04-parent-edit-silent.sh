@@ -53,7 +53,7 @@ stdin_b="$(jq -cn '{
 assert_silent "sub-agent on README.md" "$stdin_b"
 
 # Audit log MUST NOT EXIST (both cases silent → no row written → no file created)
-audit_log="$TMPDIR/.claude/supply-chain-audit.jsonl"
+audit_log="$TMPDIR/.agent0/supply-chain-audit.jsonl"
 if [ -f "$audit_log" ] && [ -s "$audit_log" ]; then
   printf 'FAIL: audit log has content but expected empty/missing:\n%s\n' "$(cat "$audit_log")"
   exit 1

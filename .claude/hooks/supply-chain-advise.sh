@@ -2,7 +2,7 @@
 # .claude/hooks/supply-chain-advise.sh
 # PostToolUse(Edit|Write|MultiEdit) hook — supply-chain manifest-edit advisory.
 #
-# Sub-agent companion to .claude/hooks/supply-chain-scan.sh (the Bash preflight).
+# Sub-agent companion to .agent0/hooks/supply-chain-preflight.sh (the Bash preflight).
 # Fires when a delegated sub-agent edits a dependency manifest or lockfile by
 # basename — `package.json`, `pyproject.toml`, `Cargo.toml`, etc. The advisory
 # is informational only (never blocks, never reverts the edit) and is meant to
@@ -14,7 +14,8 @@
 # post-edit validator).
 #
 # Audit: one row per manifest-matching sub-agent edit, in
-# `.claude/supply-chain-audit.jsonl`. No audit row for parent edits or
+# `.agent0/supply-chain-audit.jsonl` (co-written with the preflight; path moved
+# to .agent0/ in spec 109 to keep one log). No audit row for parent edits or
 # non-manifest edits (the volume would be enormous and the signal-to-noise
 # would tank).
 #
@@ -26,7 +27,7 @@
 #
 # Reference:
 #   .claude/rules/supply-chain.md        — full discipline
-#   .claude/hooks/supply-chain-scan.sh   — sibling Bash preflight
+#   .agent0/hooks/supply-chain-preflight.sh — sibling Bash preflight
 #   .claude/hooks/secrets-advise.sh      — shape for actor-split + opt-out
 #
 # Exit codes: 0 always.
@@ -77,7 +78,7 @@ esac
 SESSION_ID="$(printf '%s' "$INPUT" | jq -r '.session_id // ""' 2>/dev/null || true)"
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
-AUDIT_LOG="$PROJECT_DIR/.claude/supply-chain-audit.jsonl"
+AUDIT_LOG="$PROJECT_DIR/.agent0/supply-chain-audit.jsonl"
 
 mkdir -p "$(dirname "$AUDIT_LOG")" 2>/dev/null || exit 0
 ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"

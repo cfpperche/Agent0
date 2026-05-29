@@ -107,6 +107,23 @@
 # command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/secrets-preflight.sh"'
 # statusMessage = "Checking commit-shape + secrets-scan override"
 
+# Supply-chain dep-install gate (spec 109). PreToolUse(Bash) detects dep-install
+# commands across 11 package managers (npm/pnpm/yarn/bun/pip/uv/poetry/pdm/cargo/
+# go/composer) and blocks them in block-mode default (exit 2 + corrective
+# template) unless a `# OVERRIDE: <reason ≥10 chars>` marker is present; advisory
+# mode (CLAUDE_SUPPLY_CHAIN_BLOCK=0) downgrades to a non-blocking stderr line.
+# Block semantics are identical to Claude (reads only tool_input.command). There
+# is NO command-rewrite path, so no permissionDecision/updatedInput shape — the
+# hook only blocks or advises. NOTE the broad `^Bash$` matcher (Codex has no
+# command-string `if` layer) — the hook short-circuits silently with no audit
+# row on non-dep-install Bash, so it does not flood .agent0/supply-chain-audit.jsonl.
+# [[hooks.PreToolUse]]
+# matcher = "^Bash$"
+# [[hooks.PreToolUse.hooks]]
+# type = "command"
+# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/supply-chain-preflight.sh"'
+# statusMessage = "Checking supply-chain dep-install gate"
+
 # Delegation observability (spec 106). SubagentStart audits the dispatch
 # (non-blocking — Codex cannot block a spawn); SubagentStop appends the close
 # row. Both write the single canonical .agent0/delegation-audit.jsonl. The

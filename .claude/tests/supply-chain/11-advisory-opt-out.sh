@@ -22,7 +22,7 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-HOOK="$AGENT0_ROOT/.claude/hooks/supply-chain-scan.sh"
+HOOK="$AGENT0_ROOT/.agent0/hooks/supply-chain-preflight.sh"
 
 TMPDIR="$(mktemp -d -t spec-009-V11-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
@@ -31,7 +31,7 @@ mkdir -p "$TMPDIR/.claude"
 export CLAUDE_PROJECT_DIR="$TMPDIR"
 export CLAUDE_SUPPLY_CHAIN_BLOCK=0  # the whole point of this test
 
-audit_log="$TMPDIR/.claude/supply-chain-audit.jsonl"
+audit_log="$TMPDIR/.agent0/supply-chain-audit.jsonl"
 
 # ---------------------------------------------------------------------------
 # (a) Advisory mode + no override → decision="advisory", stderr advisory line

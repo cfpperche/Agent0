@@ -1,12 +1,24 @@
 #!/usr/bin/env bash
-# .claude/hooks/supply-chain-scan.sh
-# PreToolUse(Bash) hook — supply-chain dep-install gate + audit.
+# .agent0/hooks/supply-chain-preflight.sh
+# PreToolUse(Bash) hook — runtime-neutral supply-chain dep-install gate + audit.
+# Runs on both Claude Code and Codex CLI (spec 109: moved from
+# .claude/hooks/supply-chain-scan.sh, renamed because it scans no dependency
+# contents — it gates dep-install command *shapes*). Sources
+# .agent0/hooks/_memory-hook-lib.sh for runtime-neutral project-root + runtime
+# detection. Registered under a bare `Bash` matcher on both runtimes (Claude
+# "matcher": "Bash", Codex `^Bash$`) — the script self-filters to real
+# dep-install shapes, so no command-string `if` layer is used (CC `if`
+# permission-rule syntax has no pipe-alternation; the old
+# `if: "Bash(npm *|pnpm *|...)"` matched nothing → dormant. See the rule).
 #
-# Detects dep-mutating Bash commands across 10 package managers (npm, pnpm,
-# yarn, bun, pip, uv, poetry, pdm, cargo, go), audits them, and either blocks
-# (block-mode default) or advises (advisory-mode, opt-in via env var). Honors
-# the `# OVERRIDE: <reason ≥10 chars>` marker (start-of-line anchored, same
-# shape as .agent0/hooks/secrets-preflight.sh) to record intent and bypass block.
+# Detects dep-mutating Bash commands across 11 package managers (npm, pnpm,
+# yarn, bun, pip, uv, poetry, pdm, cargo, go, composer), audits them, and either
+# blocks (block-mode default) or advises (advisory-mode, opt-in via env var).
+# Honors the `# OVERRIDE: <reason ≥10 chars>` marker (start-of-line anchored,
+# same shape as .agent0/hooks/secrets-preflight.sh) to record intent and bypass
+# block. There is NO command-rewrite path (no env-var bridge), so unlike
+# secrets-preflight this hook emits no runtime-aware stdout — `memory_runtime`
+# is used only to tag the audit `runtime` provenance field.
 #
 # Modes (resolved at hook entry):
 #   block (default)  — detected dep-install + no valid override → exit 2,
@@ -18,14 +30,20 @@
 #                      Never exit 2. Decision values: "advisory" / "advisory-override".
 #                      Too-short override silently degrades to plain advisory.
 #
-# Decision values:
-#   "skip-not-install"  — not a recognised dep-install shape (both modes)
+# Non-detection (no recognised dep-install shape) → silent exit 0, NO audit row
+# (spec 109 dropped the former "skip-not-install" row; under the broad `Bash`
+# matcher it would flood the log — mirrors 108's `skip-not-commit` drop).
+#
+# Decision values (every row also carries a `runtime` field — claude-code /
+# codex-cli — from memory_runtime):
 #   "advisory"          — advisory mode, no valid override; stderr advisory line
 #   "advisory-override" — advisory mode + valid override; silent, reason recorded
 #   "block"             — block mode, no valid override (or too-short); exit 2
 #                         + corrective stderr; override_reason populated only
 #                         when too-short marker was rejected (forensics)
 #   "block-override"    — block mode + valid override; silent, reason recorded
+#   "advisory-bare-install" / "advisory-bare-install-override"
+#                       — bare lockfile-resolve install + uncommitted manifest
 #
 # Override grammar: line matching `^[[:space:]]*# OVERRIDE: <reason>` in the
 # raw command string, reason ≥10 chars after trim. Start-of-line anchored;
@@ -43,10 +61,14 @@
 # (CLAUDE_SUPPLY_CHAIN_BLCOK=0) leaves the discipline ON, not silently OFF.
 #
 # Reference:
-#   .claude/rules/supply-chain.md      — full discipline
-#   .agent0/hooks/secrets-preflight.sh      — sibling preflight (primitives reused);
-#                                        block-template-as-contract pattern
-#                                        from the secrets-scan capacity (issue #24327)
+#   .claude/rules/supply-chain.md       — full discipline
+#   .agent0/hooks/_memory-hook-lib.sh   — memory_project_dir() / memory_runtime()
+#   .agent0/hooks/secrets-preflight.sh  — sibling preflight (primitives reused);
+#                                         block-template-as-contract pattern
+#                                         from the secrets-scan capacity (issue #24327)
+#   .claude/hooks/supply-chain-advise.sh — PostToolUse Edit/Write companion
+#                                         (co-writer of the audit log; not yet
+#                                         ported to .agent0/ — see spec 109 non-goals)
 #
 # Exit codes: 0 (pass / advisory / valid-override) or 2 (block mode reject).
 # jq is a hard dependency; if missing the hook fails open (exit 0).
@@ -89,8 +111,55 @@ COMMAND="$(printf '%s' "$INPUT" | jq -r '.tool_input.command // ""' 2>/dev/null 
 SESSION_ID="$(printf '%s' "$INPUT" | jq -r '.session_id // ""' 2>/dev/null || true)"
 AGENT_ID="$(printf '%s' "$INPUT" | jq -r '.agent_id // ""' 2>/dev/null || true)"
 
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
-AUDIT_LOG="$PROJECT_DIR/.claude/supply-chain-audit.jsonl"
+unwrap_shell_launcher() {
+  local command="$1" prefix inner
+
+  # Codex's local shell execution may hand hooks the launcher form it executes
+  # (`/bin/bash -lc '<command>'`) instead of just the authored command. The
+  # detector wants the authored command so manager+verb stays token 0/1.
+  for prefix in "/bin/bash -lc '" "/usr/bin/bash -lc '" "bash -lc '" "/bin/bash -c '" "/usr/bin/bash -c '" "bash -c '" "/bin/sh -c '" "/usr/bin/sh -c '" "sh -c '"; do
+    case "$command" in
+      "$prefix"*)
+        inner="${command#"$prefix"}"
+        case "$inner" in
+          *"'") printf '%s' "${inner%?}"; return 0 ;;
+        esac
+        ;;
+    esac
+  done
+
+  for prefix in '/bin/bash -lc "' '/usr/bin/bash -lc "' 'bash -lc "' '/bin/bash -c "' '/usr/bin/bash -c "' 'bash -c "' '/bin/sh -c "' '/usr/bin/sh -c "' 'sh -c "'; do
+    case "$command" in
+      "$prefix"*)
+        inner="${command#"$prefix"}"
+        case "$inner" in
+          *'"') printf '%s' "${inner%?}"; return 0 ;;
+        esac
+        ;;
+    esac
+  done
+
+  printf '%s' "$command"
+}
+
+COMMAND="$(unwrap_shell_launcher "$COMMAND")"
+
+# Runtime-neutral project-root + runtime detection via the shared hook lib
+# (spec 109). memory_project_dir resolves the git toplevel, so a Codex session
+# started in a subdirectory still writes the audit log — and runs the
+# bare-install dirty-manifest probe — at repo root.
+_HOOK_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
+# shellcheck source=/dev/null
+. "$_HOOK_DIR/_memory-hook-lib.sh" 2>/dev/null || true
+if command -v memory_project_dir >/dev/null 2>&1; then
+  PROJECT_DIR="$(memory_project_dir "$INPUT")"
+  RUNTIME="$(memory_runtime "$INPUT")"
+else
+  # Fail-open fallback if the lib is missing — never lock the agent out.
+  PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
+  RUNTIME="claude-code"
+fi
+AUDIT_LOG="$PROJECT_DIR/.agent0/supply-chain-audit.jsonl"
 
 mkdir -p "$(dirname "$AUDIT_LOG")" 2>/dev/null || exit 0
 ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -150,11 +219,12 @@ append_audit() {
     --argjson agent_id "$agent_id_json" \
     --arg decision "$decision" \
     --arg scope "bash" \
+    --arg runtime "$RUNTIME" \
     --argjson manager "$manager_json" \
     --argjson action "$action_json" \
     --argjson packages "$packages_json" \
     --argjson override_reason "$override_reason_json" \
-    '{ts:$ts, session_id:$session_id, agent_id:$agent_id, decision:$decision, scope:$scope, manager:$manager, action:$action, packages:$packages, override_reason:$override_reason}')"
+    '{ts:$ts, session_id:$session_id, agent_id:$agent_id, decision:$decision, scope:$scope, runtime:$runtime, manager:$manager, action:$action, packages:$packages, override_reason:$override_reason}')"
 
   # Atomic append via flock; probe writability in a subshell first to avoid
   # the sticky `exec 9>file 2>/dev/null` trap (silences all stderr).
@@ -238,8 +308,8 @@ detected_packages=""
 # advisory/block-mode detection). When a manager+verb pair matches but no packages are
 # collected AND the verb is a lockfile-resolve shape (npm/pnpm/bun `install` |
 # `i`), record it for the post-scan dirty-manifest advisory below. Defaults
-# stay empty so the existing skip-not-install path is unchanged when no bare
-# install was seen.
+# stay empty so the silent no-detection exit (spec 109) is unchanged when no
+# bare install was seen.
 bare_install_manager=""
 bare_install_action=""
 
@@ -392,8 +462,11 @@ if [ -z "$detected_manager" ]; then
   fi
 
   # No install pattern matched (or bare-install without dirty manifest) →
-  # skip-not-install audit + silent exit. Same in both modes.
-  append_audit "skip-not-install"
+  # silent exit, NO audit row. Under the broad `Bash` matcher (spec 109) the
+  # hook runs on every Bash command, so the former `skip-not-install` forensic
+  # row would turn the log into a shell-activity firehose. Dropped deliberately,
+  # mirroring 108's `skip-not-commit` drop. Real detections (block / advisory /
+  # bare-install) still audit. Same in both modes.
   exit 0
 fi
 

@@ -9,10 +9,10 @@
 # invisible to the underlying Bash; one diagnostic line goes to stderr only
 # when CLAUDE_RUNTIME_INTROSPECT_DEBUG=1.
 #
-# Tokeniser TWIN: shares pattern with .claude/hooks/supply-chain-scan.sh's
+# Tokeniser TWIN: shares pattern with .agent0/hooks/supply-chain-preflight.sh's
 # package-collection loop — same chain/pipe/redirect terminators and
 # value-taking flag skip. See .agent0/memory/runtime-introspect-maintenance.md
-# § Deep gotchas ("Tokeniser drift with supply-chain-scan").
+# § Deep gotchas ("Tokeniser drift with supply-chain preflight").
 #
 # Detector pair list (v1):
 #   bun test                        → bun-test
@@ -34,7 +34,7 @@
 #
 # Reference:
 #   .claude/rules/runtime-introspect.md       — full discipline
-#   .claude/hooks/supply-chain-scan.sh        — tokeniser-twin (keep in sync)
+#   .agent0/hooks/supply-chain-preflight.sh   — tokeniser-twin (keep in sync)
 #   .agent0/hooks/secrets-preflight.sh             — fail-open patterns
 
 set -uo pipefail

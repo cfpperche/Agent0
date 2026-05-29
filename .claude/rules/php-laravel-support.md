@@ -26,7 +26,7 @@ PHP detection in Agent0 is triggered by **`composer.json` at the project root** 
 
 ## 2. Supply-chain knows composer
 
-`.claude/hooks/supply-chain-scan.sh` includes `composer` as the 11th manager in the detection table (`require remove update install` verbs). `composer require <pkg>` blocks by default (exit 2 + corrective template) just like `npm install <pkg>`; the `# OVERRIDE: <reason ≥10 chars>` marker on its own line bypasses with `decision="block-override"`. Bare `composer install` with an uncommitted `composer.json` fires the `advisory-bare-install` sub-path (same shape as bare `npm install` with dirty `package.json`).
+`.agent0/hooks/supply-chain-preflight.sh` includes `composer` as the 11th manager in the detection table (`require remove update install` verbs). `composer require <pkg>` blocks by default (exit 2 + corrective template) just like `npm install <pkg>`; the `# OVERRIDE: <reason ≥10 chars>` marker on its own line bypasses with `decision="block-override"`. Bare `composer install` with an uncommitted `composer.json` fires the `advisory-bare-install` sub-path (same shape as bare `npm install` with dirty `package.json`).
 
 `.claude/hooks/supply-chain-advise.sh` adds `composer.json` and `composer.lock` to the manifest+lockfile basename allowlist — a delegated sub-agent's Edit/Write on either basename emits `supply-chain-advisory: edit composer.json — manifest may have new dep`.
 
@@ -90,7 +90,7 @@ CLAUDE.md folds PHP/Laravel detection inline into the capacity sections that enu
 - `.claude/rules/tdd.md` — PHP test patterns
 - `.mcp.json.example` / `.codex/config.toml.example` — Laravel Boost MCP template block (`[mcp_servers.laravel-boost]`)
 - `.claude/validators/run.sh` — the validator's PHP elif
-- `.claude/hooks/{supply-chain-scan,supply-chain-advise,runtime-capture}.sh` — the three hooks PHP touches
+- `.agent0/hooks/supply-chain-preflight.sh` + `.claude/hooks/{supply-chain-advise,runtime-capture}.sh` — the three hooks PHP touches
 - `.claude/tests/{validator-php,supply-chain-composer,runtime-capture-php}/` — the test surface that locks the behavior
 
 ## Gotchas

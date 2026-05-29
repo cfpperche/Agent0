@@ -19,7 +19,7 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-HOOK="$AGENT0_ROOT/.claude/hooks/supply-chain-scan.sh"
+HOOK="$AGENT0_ROOT/.agent0/hooks/supply-chain-preflight.sh"
 
 TMPDIR="$(mktemp -d -t spec-009-V10-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
@@ -66,7 +66,7 @@ if ! printf '%s\n' "$last_two" | grep -qF '# OVERRIDE: <reason ≥10 chars — w
 fi
 
 # (d) audit row shape — override_reason MUST be populated with "skip"
-audit_log="$TMPDIR/.claude/supply-chain-audit.jsonl"
+audit_log="$TMPDIR/.agent0/supply-chain-audit.jsonl"
 if [ ! -f "$audit_log" ]; then
   printf 'FAIL: audit log not created\n'
   exit 1

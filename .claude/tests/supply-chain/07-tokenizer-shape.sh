@@ -21,11 +21,13 @@
 #       supply-chain signal) — added after the cargo-stack live-dogfood pass
 #       (2026-05-11) surfaced `cargo add tokio --features full` capturing
 #       `["tokio","full"]`. Symmetric short form `-F derive` covered too.
+#   (f) Codex local shell launcher form (`/bin/bash -lc '<command>'`) is
+#       unwrapped before manager+verb tokenization.
 
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-HOOK="$AGENT0_ROOT/.claude/hooks/supply-chain-scan.sh"
+HOOK="$AGENT0_ROOT/.agent0/hooks/supply-chain-preflight.sh"
 
 TMPDIR="$(mktemp -d -t spec-008-V7-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
@@ -54,7 +56,7 @@ run_case() {
     exit 1
   fi
 
-  row="$(tail -1 "$TMPDIR/.claude/supply-chain-audit.jsonl")"
+  row="$(tail -1 "$TMPDIR/.agent0/supply-chain-audit.jsonl")"
   for check in \
     ".decision == \"advisory\"" \
     ".manager == \"$want_manager\"" \
@@ -113,6 +115,10 @@ run_case "cargo add with --features (long form)" \
 run_case "cargo add with -F (short form)" \
   "cargo add serde -F derive" \
   '["serde"]' "cargo" "add"
+
+run_case "codex shell launcher wrapper" \
+  "/bin/bash -lc 'pip install requests'" \
+  '["requests"]' "pip" "install"
 
 printf 'PASS\n'
 exit 0

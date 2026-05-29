@@ -8,7 +8,7 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-BASH_HOOK="$AGENT0_ROOT/.claude/hooks/supply-chain-scan.sh"
+BASH_HOOK="$AGENT0_ROOT/.agent0/hooks/supply-chain-preflight.sh"
 ADVISE_HOOK="$AGENT0_ROOT/.claude/hooks/supply-chain-advise.sh"
 
 TMPDIR="$(mktemp -d -t spec-008-V6-XXXXXX)"
@@ -50,7 +50,7 @@ if [ -s "$stderr_file" ]; then
 fi
 
 # Audit log MUST NOT EXIST (env-var disable should write nothing).
-audit_log="$TMPDIR/.claude/supply-chain-audit.jsonl"
+audit_log="$TMPDIR/.agent0/supply-chain-audit.jsonl"
 if [ -f "$audit_log" ] && [ -s "$audit_log" ]; then
   printf 'FAIL: audit log has content but env-var should have suppressed:\n%s\n' "$(cat "$audit_log")"
   exit 1

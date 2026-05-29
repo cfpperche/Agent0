@@ -16,7 +16,7 @@ This entry pairs with `.agent0/memory/hook-chain-maintenance.md` (the upstream-m
 
 In-scope:
 
-- `PreToolUse(Bash)` hooks registered in `.claude/settings.json` — `governance-gate.sh`, `secrets-preflight.sh`, `supply-chain-scan.sh`, `runtime-pre-mark.sh` at time of writing.
+- `PreToolUse(Bash)` hooks registered in `.claude/settings.json` — `governance-gate.sh`, `secrets-preflight.sh`, `supply-chain-preflight.sh`, `runtime-pre-mark.sh` at time of writing.
 - The full chain's wall-clock p95 against a representative command set.
 
 Out-of-scope:
@@ -30,7 +30,7 @@ Out-of-scope:
 
 **p95 ≤ 80 ms for fast-path Bash commands** (no-op, `ls`, `cat`, `echo`, `git status`, `git log`, `grep`).
 
-Fast-path is defined as: a Bash command none of the four gates have a real reason to scrutinize. **Correction (2026-05-28):** the `if`-field narrowing described below was illusory — `secrets-preflight.sh` and `supply-chain-scan.sh` used pipe-alternation patterns (`Bash(a|b|c)`) that CC does not support, so they never spawned at all (see `hook-chain-maintenance.md` § 1). `secrets-preflight.sh` is now a bare `"matcher": "Bash"` (spawns on every Bash, short-circuits in-body); `supply-chain-scan.sh` still carries the dormant pattern pending the spec-109 port. So in practice the fast-path chain currently includes a `secrets-preflight.sh` spawn (cheap: jq + grep + early exit) that the model below omitted. The IPC/governance/runtime-pre-mark figures still hold; add one more short-circuiting spawn for secrets. The chain the original model assumed:
+Fast-path is defined as: a Bash command none of the four gates have a real reason to scrutinize. **Correction (2026-05-28):** the `if`-field narrowing described below was illusory — `secrets-preflight.sh` and `supply-chain-scan.sh` used pipe-alternation patterns (`Bash(a|b|c)`) that CC does not support, so they never spawned at all (see `hook-chain-maintenance.md` § 1). Both are now bare `"matcher": "Bash"` (spawn on every Bash, short-circuit in-body): `secrets-preflight.sh` (spec 108) and `supply-chain-preflight.sh` (spec 109, moved from `.claude/hooks/supply-chain-scan.sh`). So in practice the fast-path chain now includes TWO extra short-circuiting spawns (each cheap: jq + grep/tokenise + early exit) that the model below omitted. The IPC/governance/runtime-pre-mark figures still hold; add the secrets + supply-chain short-circuiting spawns. The chain the original model assumed:
 
 ```
 IPC floor (bash spawn + stdin pipe)   ~13 ms p95 on WSL2
@@ -41,7 +41,7 @@ IPC floor (bash spawn + stdin pipe)   ~13 ms p95 on WSL2
 
 Slow-path commands (those a gate exists to inspect — `git commit`, `npm install`, etc.) are NOT bounded by this budget. The gate runs its full logic — pattern matching, audit-row writing, override-marker parsing. Those costs are paid in service of the gate's contract.
 
-The 80 ms target is empirical, not aspirational. It corresponds to ~3× improvement over the 2026-05-26 baseline (governance-gate 62 ms + secrets-scan 68 ms + supply-chain-scan 73 ms + runtime-pre-mark 35 ms = ~238 ms uncoordinated chain).
+The 80 ms target is empirical, not aspirational. It corresponds to ~3× improvement over the 2026-05-26 baseline (governance-gate 62 ms + secrets-preflight 68 ms + supply-chain-preflight 73 ms + runtime-pre-mark 35 ms = ~238 ms uncoordinated chain).
 
 If a future Claude Code release lifts the WSL2 IPC floor or the harness changes its `if`-field semantics, the budget moves with concrete reasoning recorded in this section. Don't lower the budget unless measurement on the current floor proves room exists; don't raise it without measurement either.
 
@@ -87,7 +87,7 @@ The bench invokes each hook directly with a synthetic stdin payload — bypassin
     },
     "governance-gate.sh": { "...": "..." },
     "secrets-preflight.sh":    { "...": "..." },
-    "supply-chain-scan.sh": { "...": "..." },
+    "supply-chain-preflight.sh": { "...": "..." },
     "runtime-pre-mark.sh":  { "...": "..." }
   }
 }
@@ -114,7 +114,7 @@ The check is not wired into a `pre-commit` hook in v1. The monthly routine `.age
 - `.agent0/memory/hook-chain-maintenance.md` — upstream-maintainer discipline (optimization techniques + the 5-step contract for adding a new `PreToolUse(Bash)` hook).
 - `.claude/rules/runtime-introspect.md` — sibling perf-observability rule; the `runtime-pre-mark.sh` hook this entry measures is owned by that capacity.
 - `.claude/rules/secrets-scan.md` — `secrets-preflight.sh` contract; the `if`-field narrowing preserves it exactly because the hook body is unchanged.
-- `.claude/rules/supply-chain.md` — `supply-chain-scan.sh` contract; same.
+- `.claude/rules/supply-chain.md` — `supply-chain-preflight.sh` contract (renamed + moved to `.agent0/` in spec 109); same.
 - `.claude/rules/delegation.md` — `governance-gate.sh` sits in the broader delegation/governance family.
 
 ## Gotchas

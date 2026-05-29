@@ -12,7 +12,7 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-HOOK="$AGENT0_ROOT/.claude/hooks/supply-chain-scan.sh"
+HOOK="$AGENT0_ROOT/.agent0/hooks/supply-chain-preflight.sh"
 
 TMPDIR="$(mktemp -d -t spec-008-V1-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
@@ -38,7 +38,7 @@ if ! grep -q "^supply-chain-advisory: npm install — axios$" "$stderr_file"; th
   exit 1
 fi
 
-audit_log="$TMPDIR/.claude/supply-chain-audit.jsonl"
+audit_log="$TMPDIR/.agent0/supply-chain-audit.jsonl"
 if [ ! -f "$audit_log" ]; then
   printf 'FAIL: audit log not created\n'
   exit 1

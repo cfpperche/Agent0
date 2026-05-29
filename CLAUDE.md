@@ -62,7 +62,7 @@ Two layers — the native `.githooks/pre-commit` runs gitleaks over the staged d
 
 ## Supply chain
 
-A `PreToolUse(Bash)` preflight (`.claude/hooks/supply-chain-scan.sh`) blocks dependency-install commands across 11 managers with an exit-2 corrective template + override marker; a `PostToolUse` hook advises on manifest/lockfile edits. See `.claude/rules/supply-chain.md`.
+A runtime-neutral `PreToolUse(Bash)` preflight (`.agent0/hooks/supply-chain-preflight.sh`) blocks dependency-install commands across 11 managers with an exit-2 corrective template + override marker; a `PostToolUse` hook advises on manifest/lockfile edits. See `.claude/rules/supply-chain.md`.
 
 ## Runtime introspect
 

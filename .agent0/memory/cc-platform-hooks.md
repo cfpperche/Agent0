@@ -59,7 +59,7 @@ Quoted from the docs Hook lifecycle table (last audited 2026-05-25 via the cc-pl
 
 Agent0 currently uses **8 of these 29** (counted from `.claude/settings.json`):
 
-- `PreToolUse` (5 matchers: governance-gate, secrets-scan, supply-chain-scan, runtime-pre-mark, delegation-gate)
+- `PreToolUse` (5 matchers: governance-gate, secrets-preflight, supply-chain-preflight, runtime-pre-mark, delegation-gate)
 - `PostToolUse` (5 matchers: post-edit-validate, secrets-advise, supply-chain-advise, session-track-edits, runtime-capture)
 - `PostToolUseFailure` (runtime-capture, added by spec 020)
 - `SessionStart` (3 hooks: session-start, reminders-readout, routines-readout — plus memory-decay-readout from `.agent0/hooks/`)
@@ -135,7 +135,7 @@ Key differences from `PostToolUse`:
 
 Validated 2026-05-13 across Agent0 + shrnk-mono fork dogfood. Once a path-scoped rule loads in a session — via any matching glob — **subsequent reads of any file matching ANY of that rule's globs produce NO new `InstructionsLoaded` event**. The dedup is scoped to the rule (one event per session per rule), not to the specific glob that triggered the first load.
 
-First-pass observation framed this as a multi-glob-on-same-rule quirk (e.g. `.claude/tools/probe.sh` is in BOTH `runtime-introspect.md`'s globs AND `rule-load-debug.md`'s globs; reading `probe.sh` after `runtime-pre-mark.sh` was already read fires only `rule-load-debug.md`'s event). Shrnk-mono Step 3d expanded the picture: editing `package.json` (matches `supply-chain.md`'s `**/package.json` glob) after an earlier batch read of `.claude/hooks/supply-chain-scan.sh` (matches `supply-chain.md`'s `supply-*.sh` glob) produced NO new path_glob_match row — even though the second trigger is a completely different file and a completely different glob within the same rule. Dedup is per-rule, period.
+First-pass observation framed this as a multi-glob-on-same-rule quirk (e.g. `.claude/tools/probe.sh` is in BOTH `runtime-introspect.md`'s globs AND `rule-load-debug.md`'s globs; reading `probe.sh` after `runtime-pre-mark.sh` was already read fires only `rule-load-debug.md`'s event). Shrnk-mono Step 3d expanded the picture: editing `package.json` (matches `supply-chain.md`'s `**/package.json` glob) after an earlier batch read of `.agent0/hooks/supply-chain-preflight.sh` (matches `supply-chain.md`'s `supply-*.sh` glob) produced NO new path_glob_match row — even though the second trigger is a completely different file and a completely different glob within the same rule. Dedup is per-rule, period.
 
 Implication for path-scoping validation playbooks:
 - A trigger→rule mapping table is only fully exercisable in a fresh session per trigger.

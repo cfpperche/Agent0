@@ -13,8 +13,8 @@
 #
 # Five sub-scenarios in one file (shared heavy setup justifies grouping):
 #   (a) bun install + dirty package.json → advisory + audit "advisory-bare-install"
-#   (b) clean manifest + bun install → skip-not-install (no false positive)
-#   (c) dirty README (non-manifest) + bun install → skip-not-install (filter precise)
+#   (b) clean manifest + bun install → silent, NO audit row (no false positive)
+#   (c) dirty README (non-manifest) + bun install → silent, NO audit row (filter precise)
 #   (d) dirty package.json + bun install + valid OVERRIDE → silent + audit
 #       "advisory-bare-install-override" with reason preserved
 #   (e) dirty package.json + bun install WITH args (`bun install elysia`) →
@@ -24,7 +24,7 @@
 set -uo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-HOOK="$AGENT0_ROOT/.claude/hooks/supply-chain-scan.sh"
+HOOK="$AGENT0_ROOT/.agent0/hooks/supply-chain-preflight.sh"
 
 TMPDIR="$(mktemp -d -t spec-026-V13-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
@@ -38,9 +38,9 @@ echo '{"name":"v13"}' > "$TMPDIR/package.json"
 echo '# v13' > "$TMPDIR/README.md"
 ( cd "$TMPDIR" && git add . && git commit -q -m baseline )
 
-mkdir -p "$TMPDIR/.claude"
+mkdir -p "$TMPDIR/.agent0"
 export CLAUDE_PROJECT_DIR="$TMPDIR"
-audit_log="$TMPDIR/.claude/supply-chain-audit.jsonl"
+audit_log="$TMPDIR/.agent0/supply-chain-audit.jsonl"
 
 cd "$TMPDIR"
 
@@ -100,8 +100,8 @@ exit_code="$(run_hook "bun install" "scenario-b" "$stderr_file")"
 [ "$exit_code" = "0" ] || fail "b" "want exit 0, got $exit_code"
 [ ! -s "$stderr_file" ] || fail "b" "stderr should be empty for clean-tree skip; got: $(cat "$stderr_file")"
 
-decision="$(jq -r '.decision' "$audit_log")"
-[ "$decision" = "skip-not-install" ] || fail "b" "want skip-not-install, got $decision"
+# spec 109: no detection → NO audit row (skip-not-install dropped). Log stays empty.
+[ ! -s "$audit_log" ] || fail "b" "want no audit row for clean-tree bare install, got: $(cat "$audit_log")"
 
 # ---------------------------------------------------------------------------
 # (c) Dirty README only (no manifest) + bun install → skip-not-install
@@ -115,8 +115,8 @@ exit_code="$(run_hook "bun install" "scenario-c" "$stderr_file")"
 [ "$exit_code" = "0" ] || fail "c" "want exit 0, got $exit_code"
 [ ! -s "$stderr_file" ] || fail "c" "stderr should be empty when only non-manifest dirty; got: $(cat "$stderr_file")"
 
-decision="$(jq -r '.decision' "$audit_log")"
-[ "$decision" = "skip-not-install" ] || fail "c" "want skip-not-install when only README dirty, got $decision"
+# spec 109: no manifest dirty → no bare-install advisory → NO audit row.
+[ ! -s "$audit_log" ] || fail "c" "want no audit row when only README dirty, got: $(cat "$audit_log")"
 
 ( cd "$TMPDIR" && git checkout -q -- README.md )
 
@@ -160,5 +160,5 @@ grep -q '^supply-chain-block: bun install detected' "$stderr_file" \
 decision="$(jq -r '.decision' "$audit_log")"
 [ "$decision" = "block" ] || fail "e" "want decision=block (with-args path unaffected), got $decision"
 
-printf 'PASS (5 sub-scenarios: a=advisory  b=clean-skip  c=non-manifest-skip  d=override-silent  e=with-args-blocks)\n'
+printf 'PASS (5 sub-scenarios: a=advisory  b=clean-no-row  c=non-manifest-no-row  d=override-silent  e=with-args-blocks)\n'
 exit 0

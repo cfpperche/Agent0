@@ -39,7 +39,7 @@ if ! grep -q '^supply-chain-advisory: edit composer.json' "$stderr_file"; then
   exit 1
 fi
 
-audit_log="$TMPDIR/.claude/supply-chain-audit.jsonl"
+audit_log="$TMPDIR/.agent0/supply-chain-audit.jsonl"
 row=$(cat "$audit_log")
 for check in \
   '.decision == "advisory"' \

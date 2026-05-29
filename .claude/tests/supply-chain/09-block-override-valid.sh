@@ -6,7 +6,8 @@
 # in tool_input.command bypasses the block: hook exits 0 silently, no
 # stderr template, audit records decision="block-override" with the
 # captured reason. Same shape as the prior advisory-override path but
-# under block mode.
+# under block mode. The command is wrapped in Codex's local shell launcher form
+# to pin the live PreToolUse shape.
 #
 # Asserts:
 #   (a) hook exits 0 (not 2 — valid override passes block)
@@ -17,7 +18,7 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-HOOK="$AGENT0_ROOT/.claude/hooks/supply-chain-scan.sh"
+HOOK="$AGENT0_ROOT/.agent0/hooks/supply-chain-preflight.sh"
 
 TMPDIR="$(mktemp -d -t spec-009-V9-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
@@ -28,7 +29,8 @@ export CLAUDE_PROJECT_DIR="$TMPDIR"
 unset CLAUDE_SUPPLY_CHAIN_BLOCK 2>/dev/null || true
 
 REASON="documented chart-library upgrade per spec-009 verification"
-CMD="$(printf 'npm install axios\n# OVERRIDE: %s' "$REASON")"
+INNER_CMD="$(printf 'npm install axios\n# OVERRIDE: %s' "$REASON")"
+CMD="$(printf "/bin/bash -lc '%s'" "$INNER_CMD")"
 stdin_json="$(jq -cn --arg c "$CMD" '{tool_input:{command:$c}, session_id:"V9-session"}')"
 
 stderr_file="$TMPDIR/stderr.txt"
@@ -49,7 +51,7 @@ if [ -s "$stderr_file" ]; then
 fi
 
 # (c) audit row shape
-audit_log="$TMPDIR/.claude/supply-chain-audit.jsonl"
+audit_log="$TMPDIR/.agent0/supply-chain-audit.jsonl"
 if [ ! -f "$audit_log" ]; then
   printf 'FAIL: audit log not created\n'
   exit 1

@@ -11,7 +11,7 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-HOOK="$AGENT0_ROOT/.claude/hooks/supply-chain-scan.sh"
+HOOK="$AGENT0_ROOT/.agent0/hooks/supply-chain-preflight.sh"
 
 TMPDIR="$(mktemp -d -t spec-008-V5-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
@@ -40,7 +40,7 @@ if [ -s "$stderr_file" ]; then
   exit 1
 fi
 
-row="$(tail -1 "$TMPDIR/.claude/supply-chain-audit.jsonl")"
+row="$(tail -1 "$TMPDIR/.agent0/supply-chain-audit.jsonl")"
 for check in \
   '.decision == "advisory-override"' \
   '.manager == "npm"' \
@@ -73,7 +73,7 @@ if ! grep -q "^supply-chain-advisory: npm install — axios$" "$stderr_file"; th
   exit 1
 fi
 
-row="$(tail -1 "$TMPDIR/.claude/supply-chain-audit.jsonl")"
+row="$(tail -1 "$TMPDIR/.agent0/supply-chain-audit.jsonl")"
 for check in \
   '.decision == "advisory"' \
   '.manager == "npm"' \

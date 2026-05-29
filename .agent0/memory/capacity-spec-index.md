@@ -40,7 +40,7 @@ This index is Agent0-internal. Do not cite it from CLAUDE.md or `.claude/rules/*
 | Capacity / rule | Origin spec | Extending specs |
 |---|---|---|
 | Secrets scan (`secrets-scan.md`) | `006-secrets-scan`, `007-secrets-scan-timing` | `018-githooks-activation-hint` |
-| Supply chain (`supply-chain.md`) | `008-supply-chain-scan`, `009-supply-chain-block` | — |
+| Supply chain (`supply-chain.md`) | `008-supply-chain-scan`, `009-supply-chain-block`, `109-supply-chain-scan-multi-runtime` | — |
 
 ## Harness propagation & session state
 

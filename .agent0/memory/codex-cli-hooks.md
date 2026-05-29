@@ -77,15 +77,22 @@ Two facts still UNVERIFIED (flagged for spec 111 live dogfood, not assumed): (a)
 
 Both runtimes use regex on `tool_name` for matching: `Edit|Write|MultiEdit` (Claude), `apply_patch|Bash` (Codex). Catch-all is `"*"`, `""`, or omitted.
 
-## Exit-code semantics: identical
+## Exit-code semantics (mostly identical; PostToolUse needs JSON stdout on Codex)
 
-| Exit | Behavior (both runtimes) |
+| Exit | Behavior |
 | --- | --- |
-| `0` (plain stdout) | Added as developer context |
-| `0` (JSON stdout) | Interpreted per `hookSpecificOutput` shape |
-| `2` (stderr) | Blocks the tool call; stderr text becomes reason |
+| `0` (plain stdout) | **Codex PostToolUse:** ignored. **Codex UserPromptSubmit:** added as developer context. Do not generalize plain stdout behavior across events. |
+| `0` (JSON stdout) | For Codex `PostToolUse`, `hookSpecificOutput.additionalContext` is added as developer context. Live-proven 2026-05-29 by spec 113 after switching from plain stdout to JSON stdout. |
+| `0` (stderr) | **Claude:** surfaced to the agent's next-turn context. **Codex:** NOT surfaced — exit-0 stderr is dropped. (Empirically verified 2026-05-29, spec 113 live dogfood.) |
+| `2` (stderr) | Blocks the tool call; stderr text becomes reason (both runtimes) |
 
-Override grammars, advisory patterns (`<kind>-advisory:` stderr lines), and block-with-corrective-template patterns port cleanly.
+Override grammars and block-with-corrective-template patterns (exit 2) port cleanly. **Advisory patterns (`<kind>-advisory:` exit-0 lines) do NOT port cleanly via stderr or plain stdout on Codex PostToolUse.** A hook that writes its advisory to stderr and exits 0 is visible to the agent on Claude but invisible on Codex; a hook that writes plain stdout is also ignored by Codex PostToolUse. The portable pattern for non-blocking edit advisories is: Claude path writes advisory lines to stderr; Codex `PostToolUse` path accumulates advisory lines and emits one JSON object on stdout:
+
+```json
+{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":"propagation-advisory: ...\n"}}
+```
+
+Spec 113 live dogfood proved this end-to-end: a real Codex `apply_patch` creating `.claude/rules/_dogfood-113d.md` surfaced `propagation-advisory: spec-NNN in .claude/rules/_dogfood-113d.md:1 — this refs spec 080` as developer context.
 
 ## Config-file layout: 5-layer discovery, project precedence wins
 

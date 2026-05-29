@@ -8,29 +8,29 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-**Spec 112 (prune-supply-chain-and-secrets-advise) implemented — pending commit.** A critical re-eval of the three advise hooks (2026-05-29) led to:
+**Spec 112 is committed; spec 113 (propagation-advise-multi-runtime) is implemented and live-validated in the working tree.** Recent commits include `edbaaf1 feat(112): remove supply-chain capacity + secrets-advise hook` and `624c46f docs(112): spec artifacts + vuln-audit direction`.
 
-- **Supply-chain capacity REMOVED entirely** — `supply-chain-preflight.sh`, `supply-chain-advise.sh`, `supply-chain.md`, both test dirs, settings registrations, `.gitignore` audit entries, CLAUDE.md/AGENTS.md/README sections, perf-baseline cell, bench-hooks entry, `.codex/config.toml.example` block, site capacity card + i18n prose, and all cross-refs across rules/memory. Decision: don't gate lib usage at install time.
-- **`secrets-advise.sh` REMOVED** — redundant with the commit-time gitleaks gate + `secrets-preflight.sh`. secrets-scan.md § Soft advisory excised; native gate + preflight untouched.
-- **`propagation-advise.sh` verified maintainer-only** — already in `sync-harness.sh` `COPY_CHECK_EXCLUDE`; no change needed (verify-only).
+Spec 113 moves `propagation-advise.sh` from `.claude/hooks/` to `.agent0/hooks/`, rewrites it around `_memory-hook-lib.sh`, keeps the Claude `Edit|Write|MultiEdit` path, and adds Codex `apply_patch` added-line content scanning. It intentionally stays maintainer-only: `sync-harness.sh` excludes the new `.agent0/hooks/propagation-advise.sh` path, and `.codex/config.toml.example` must not gain a propagation-advise block.
 
-Working tree dirty with all 112 edits + staged deletions. Pre-existing untracked `docs/specs/091-sdd-debate-runner/` remains out of scope.
+Working tree shape: staged rename `R100 .claude/hooks/propagation-advise.sh -> .agent0/hooks/propagation-advise.sh`; unstaged edits in the moved hook, propagation docs/memory, `sync-harness.sh`, `.claude/settings.json`, and propagation-advisory tests; untracked spec 113 artifacts plus tests `12-codex-apply-patch-triggers.sh`, `13-codex-non-shipped-silent.sh`, and `14-codex-update-hunk-added-only.sh`.
+
+Live dogfood status: CLOSED. The final root cause was channel format, not parser: Codex `PostToolUse` ignores plain stdout/stderr at exit 0, but JSON stdout with `hookSpecificOutput.additionalContext` is surfaced as developer context. `propagation-advise.sh` now emits Claude advisories on stderr and Codex advisories as one JSON stdout object. Live Codex dogfood created `.claude/rules/_dogfood-113d.md` and surfaced `propagation-advisory: spec-NNN in .claude/rules/_dogfood-113d.md:1 — this refs spec 080`; non-shipped `docs/specs/_scratch-113d.md` and override `.claude/rules/_dogfood-113-override-d.md` stayed silent. Final checks: propagation-advisory suite 14/14 green, `git diff --check` clean, `sync-harness.sh --check --agent0-path=/home/goat/Agent0 /home/goat/Agent0` clean, and `.codex/config.toml.example` has no propagation-advise block. The `_dogfood-113-live.md` throwaway was removed at closeout (its live-proof purpose served; it was a leak file in a shipped path). 113 is shipped + validated, uncommitted pending the user's commit go. Pre-existing untracked `docs/specs/091-sdd-debate-runner/` is out of scope.
 
 ## Active Work
 
-- _None in flight._ Spec 112 edits are complete and validated, awaiting the user's commit decision.
+- _None in flight._ Spec 113 is ready for Claude/human approval and commit.
+- `docs/specs/113-propagation-advise-multi-runtime/{spec,tasks,notes}.md` now record the live Codex `apply_patch` positive path as passed end-to-end via JSON stdout `additionalContext`.
 
 ## Next Actions
 
-1. **Commit spec 112** (the user gates commits). Suggested: `feat(112): remove supply-chain capacity + secrets-advise hook; propagation-advise stays maintainer-only`.
-2. **Vuln-audit is the replacement direction** (reminder `r-2026-05-29-spec-the-vuln-audit-capacity`). When prioritized: `/sdd new`, research osv-scanner vs npm audit vs pip-audit vs per-ecosystem, decide trigger surface (on-demand skill vs routine/cron vs commit gate). Philosophy: detect vulnerable *installed* libs and act — never block installs.
-3. **Hook migration arc continues** (prior session's thread): the remaining `.claude/hooks/*` to port to runtime-neutral `.agent0/` are now just `propagation-advise.sh` and the runtime-introspect pair (`runtime-capture.sh` / `runtime-pre-mark.sh`). The supply-chain + secrets advise hooks are gone, not ported.
+1. Claude/human approval of the spec 113 implementation report.
+2. Stage and commit spec 113 when approved. Suggested: `feat(113): port propagation advisory to runtime-neutral hook`.
+3. Remaining hook-migration follow-up after 113: runtime-introspect pair (`runtime-capture.sh` / `runtime-pre-mark.sh`). Vuln-audit remains the replacement direction for removed supply-chain blocking (`r-2026-05-29-spec-the-vuln-audit-capacity`).
 
 ## Decisions & Gotchas
 
-- **"Is it necessary?" precedes "should we port it?"** — 112 deleted two capacities instead of porting them in the 106-111 arc. The migration is the right moment to prune dead weight.
-- **propagation-advise was ALREADY consumer-excluded** — the "consumers don't need it" directive was a no-op; surfaced by reading `sync-harness.sh:216-218`. Don't rubber-stamp work that's already done.
-- **Footprint had hidden surfaces** — initial `--include` greps missed `.codex/config.toml.example` (ships to consumers) and `site/src/i18n/*.ts`. A broad `git grep` (no extension filter) caught them. Always sweep without filters before declaring a removal complete.
-- **Scope-discipline call:** the site's pipeline-prose still names "post-edit validator" (spec 111's debt, not 112's) — intentionally left for a future site refresh.
-- **Settings changes need session restart**; the removed hooks stayed registered+active this session (advisory/non-blocking, no functional impact). Verified removal via `jq` on settings.json, not by triggering hooks.
-- **Consumer auto-prune of orphaned settings entries is deferred** (additive merge); file deletions DO propagate via the sync deletion pass.
+- **Maintainer-only means no shipped Codex example block.** Codex activation for propagation-advise belongs in the maintainer's gitignored `.codex/config.toml`, not `.codex/config.toml.example`, or consumers get a dangling reference to a non-shipped hook.
+- **The dogfood file is intentionally dirty and intentionally leaks `spec 080`.** It exists to prove the real Codex `apply_patch` PostToolUse path; do not clean it up automatically.
+- **Staged/unstaged split matters:** the hook move is staged as a rename, while the actual rewrite is unstaged on the moved file. Preserve that state unless intentionally restaging.
+- **Settings changes need a fresh runtime session to be naturally live.** Direct tests/simulations can validate the script shape, but real Codex proof is the apply_patch dogfood path.
+- **Spec 112 lesson still applies:** migration is also a pruning moment. Removed supply-chain/secrets-advise capacities stay removed; vuln-audit should detect vulnerable installed libraries rather than blocking installs.

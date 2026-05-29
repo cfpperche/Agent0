@@ -2,7 +2,7 @@
 
 _Created 2026-05-29._
 
-**Status:** in-progress — hook built + 8-scenario suite green + cascade removed + docs swept (in-session validated); live `SubagentStop` dogfood on both runtimes is the only remaining step (cold-restart-gated, 108/109 lesson)
+**Status:** shipped — hook built; 8-scenario suite green; `061-delegation-stop` green; cascade removed; docs swept; **Claude pass path LIVE-dogfooded** (real `SubagentStop` fire, parallel execution confirmed). Block/exhausted paths are synthetic-validated (live fire needs a failing stack — Agent0 has none). Codex live dogfood remains a flagged handoff (prompt in `notes.md`), same posture as 108.
 
 ## Intent
 
@@ -12,7 +12,7 @@ Why: `post-edit-validate.sh` runs the full project test suite + typecheck on *ev
 
 ## Acceptance criteria
 
-- [x] **Scenario: delegated sub-agent closes with a passing tree (Claude)** _(logic validated via test `01-pass.sh`; live cold-restart fire pending)_
+- [x] **Scenario: delegated sub-agent closes with a passing tree (Claude)** _(LIVE-dogfooded 2026-05-29: real `Agent` dispatch `acb46fdc0a91cab59` → `SubagentStop` fired `delegation-verify.sh` → `decision:pass`/`validator_exit:0` row, in parallel with the `subagent-stop` close row; evidence in `notes.md`)_
   - **Given** a stack-detected project and a delegated Claude sub-agent that has finished its task with the validator passing
   - **When** the sub-agent reaches `SubagentStop`
   - **Then** `delegation-verify.sh` runs the validator once, it returns `ok=true`, the failure counter is reset, the advisory family is surfaced, and closure is accepted (exit 0); `delegation-stop.sh` appends its `subagent-stop` close row in parallel

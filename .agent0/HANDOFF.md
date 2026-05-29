@@ -8,20 +8,21 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-**Multi-runtime hook migration — porting `.claude/hooks/*` to `.agent0/` hook-by-hook.** 106–110 SHIPPED+merged. **111 delegation-verify-subagent-stop IMPLEMENTED + in-session-validated** (`in-progress`) — only the live cold-restart dogfood remains. Working tree dirty with the 111 implementation (uncommitted at time of writing) + pre-existing untracked `docs/specs/091-sdd-debate-runner/`.
+**Multi-runtime hook migration — porting `.claude/hooks/*` to `.agent0/` hook-by-hook.** 106–110 SHIPPED+merged. **111 delegation-verify-subagent-stop SHIPPED + merged** (`444bf70`) — Claude pass path LIVE-dogfooded; Codex dogfood is a flagged handoff (108 posture). Working tree: 111 doc-status updates (uncommitted at write time) + pre-existing untracked `docs/specs/091-sdd-debate-runner/`.
 
-- **111 done in-session:** `post-edit-validate.sh` DELETED (+ its PostToolUse registration); new `.agent0/hooks/delegation-verify.sh` runs the validator once at `SubagentStop`, keyed by `agent_id`. 8-scenario test suite green; `061-delegation-stop` still green; `delegation.md` § Post-edit validator loop rewritten; advisory family (lint/typecheck/tdd) relocated; spec-067 cascade tests removed; Codex config block added; all path refs swept (only intentional breadcrumbs remain).
-- **Key design pivot (docs-resolved, see `docs/specs/111-*/notes.md`):** Claude SubagentStop hooks run **in parallel** → the planned sentinel/close-row-suppression is non-viable. Replaced with a **counter-contract**: `delegation-verify.sh` WRITES `.claude/.delegation-state/agents/<id>/consecutive_failures`, `delegation-stop.sh` (UNCHANGED) READS it for the close row's `exit`. Escalation keys on `stop_hook_active`, robust to whether `agent_id` persists.
+- **111 done:** `post-edit-validate.sh` DELETED (+ PostToolUse registration); new `.agent0/hooks/delegation-verify.sh` runs the validator once at `SubagentStop`, keyed by `agent_id`. 8-scenario suite + `061-delegation-stop` green; `delegation.md` rewritten; advisory family (lint/typecheck/tdd) relocated; spec-067 cascade tests removed; Codex config block added; refs swept.
+- **LIVE Claude dogfood DONE (pass path):** real `Agent` dispatch `acb46fdc0a91cab59` → `SubagentStop` fired `delegation-verify.sh` → `decision:pass` row, **in parallel** with the `subagent-stop` close row (same ts). The "cold-restart-gated" worry was empirically wrong — the registration fired in-session.
+- **Design pivot (docs + live-confirmed):** Claude SubagentStop hooks run **in parallel** → sentinel/close-row-suppression non-viable. Counter-contract instead: `delegation-verify.sh` WRITES `consecutive_failures`; `delegation-stop.sh` (UNCHANGED) READS it for the close row `exit`. Escalation keys on `stop_hook_active`.
 
 ## Active Work
 
-- _None in flight._ 111 implementation complete; the two live dogfoods (below) are human-gated.
+- _None in flight._ 111 shipped+merged; only the Codex dogfood (human-gated) remains as a flagged handoff.
 
 ## Next Actions
 
-1. **Live Claude dogfood (cold restart REQUIRED).** This session added `delegation-verify.sh` to `settings.json` `SubagentStop` AFTER session start → NOT yet loaded; only a cold `claude` restart loads it (108/109 lesson). After restart: dispatch a delegated sub-agent against a **stack-detected** scratch repo with failing tests → expect close blocked (exit 2, one continuation) + `subagent-verify`/`decision:blocked` row; then passing close → `decision:pass`/accepted. Confirm `agent_id` preserved + `stop_hook_active` flips true (111 OQ1/OQ2). Full prompt: `docs/specs/111-*/notes.md` § Open questions. Record there, flip `spec.md` Status → shipped.
-2. **Codex dogfood** — prompt ready at `docs/specs/111-*/notes.md` § Open questions; hand to a Codex CLI session.
-3. After 111 ships: remaining surfaces — PostToolUse edit-surface advisories (`propagation-advise` / `supply-chain-advise` / `secrets-advise`, `apply_patch` path extraction) + `runtime-capture.sh` / `runtime-pre-mark.sh`.
+1. **Codex dogfood (only open 111 item)** — prompt at `docs/specs/111-*/notes.md` § Open questions: enable the `.codex/config.toml` `SubagentStop` verify block, cold-restart Codex, run a delegated sub-agent that fails the validator → expect `decision:blocked` → continuation → `decision:exhausted`, `runtime:"codex-cli"`. Record rows + OQ1/OQ2 answers in `notes.md`.
+2. _(optional)_ Live Claude **block-path** dogfood needs a stack-detected scratch repo with failing tests (Agent0 has no stack → only the pass path fires here); block/exhausted are synthetic-validated. This would just upgrade them to live.
+3. Next migration surfaces — PostToolUse edit-surface advisories (`propagation-advise` / `supply-chain-advise` / `secrets-advise`, `apply_patch` path extraction) + `runtime-capture.sh` / `runtime-pre-mark.sh`.
 
 ## Decisions & Gotchas
 

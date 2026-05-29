@@ -26,6 +26,23 @@ Resolved the bulk of task 6 (the chain-semantics spike) by docs — `https://cod
 
 This supersedes plan.md § Approach (sentinel) and tasks 6–8; spec.md scenario 2 ("NO close row") is revised to "close row carries `exit` reflecting verify + a `subagent-verify` row records the block." Live cold-restart dogfood still required to confirm exit-2 actually continues the sub-agent + `agent_id`/`stop_hook_active` runtime values (can't run in-session — settings.json hooks load only at cold start).
 
+### 2026-05-29 — parent — LIVE Claude dogfood PASSED (pass path) + parallel execution empirically confirmed
+
+Initial assumption (cold-restart required to load the new `SubagentStop` registration) was **empirically wrong** — verified by inspecting `.agent0/delegation-audit.jsonl` instead of assuming. The hook fired live in-session:
+
+- A controlled dispatch (`Agent` tool, `general-purpose` sub-agent `acb46fdc0a91cab59`, a read-only probe) closed at `2026-05-29T14:08:53Z`. Both `SubagentStop` hooks fired **at the same ts**:
+  ```json
+  {"event":"subagent-stop","agent_id":"acb46fdc0a91cab59","decision":null,"runtime":"claude-code","ts":"2026-05-29T14:08:53Z"}
+  {"event":"subagent-verify","agent_id":"acb46fdc0a91cab59","agent_type":"general-purpose","decision":"pass","validator_exit":0,"stop_hook_active":false,"runtime":"claude-code","ts":"2026-05-29T14:08:53Z"}
+  ```
+- An earlier organic stop (`a6de78d9856a76348`, 14:07:11Z) showed the same pass-path fire; a pre-registration stop (`a5707de4cf3954546`, 13:42:15Z) shows only a `subagent-stop` row (no verify) — the before/after boundary confirms the registration took effect mid-session.
+
+**What this proves (Claude, pass path):** the registration fires at a real `SubagentStop`; the validator runs (Agent0 has no stack → `ok=true` → `decision:pass`, `validator_exit:0`); the row is keyed by the real `agent_id` with `runtime:claude-code`. **Same-ts dual rows confirm the hooks run in PARALLEL** — the empirical basis for the counter-contract pivot (a sentinel could not have coordinated these two concurrent writers).
+
+**Still synthetic-only (not live):** the block (`decision:blocked`, exit 2) and exhausted (`decision:exhausted`) paths — a live fire needs the validator to return `ok=false`, which requires a stack-detected project with failing tests (Agent0 has none; creating one would pollute the repo). Covered by `02-fail-blocks.sh` / `03-exhausted-partial.sh` via direct invocation with an `ok=false` stub. The block path uses the identical fire mechanism the pass path just proved live — only the validator result differs.
+
+**Codex:** still pending (prompt below). The two runtime OQs (agent_id preservation across a continuation; stop_hook_active flip) need a live FAIL-path continuation, deferred to the block-path live dogfood on a stack project.
+
 ## Deviations
 
 _Places where implementation intentionally departed from `plan.md`. The departure + the reason it was necessary or better._

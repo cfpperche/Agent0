@@ -4,8 +4,8 @@ description: Codex CLI lifecycle hook surface (10 events) and the payload-shape 
 metadata:
   type: reference
   created_at: '2026-05-27T15:35:00-03:00'
-  last_accessed: '2026-05-28'
-  confirmed_count: 0
+  last_accessed: '2026-05-29'
+  confirmed_count: 1
 ---
 
 # Codex CLI hooks
@@ -63,6 +63,16 @@ Codex **does** have subagents — the `runtime-capabilities.md` matrix cell `del
 
 Canonical sources: <https://developers.openai.com/codex/subagents> + <https://developers.openai.com/codex/hooks>. This finding drives spec 106 (delegation-hooks-multi-runtime).
 
+## No per-edit actor attribution → delegated verification must live at SubagentStop (verified 2026-05-29, spec 110)
+
+The payload table above lists `agent_id`/`agent_type` under **Subagent events only** — spec 110 made the design consequence explicit and load-bearing. Docs verbatim: `PostToolUse(apply_patch)` input is `turn_id` / `tool_name` / `tool_use_id` / `tool_input` / `tool_response` (+ the common session/cwd/model/permission fields). There is **no parent-vs-subagent discriminator on `PostToolUse(apply_patch)`** — `agent_id`/`agent_type` appear only on `SubagentStart`/`SubagentStop`.
+
+**Consequence for any per-edit hook that needs to know "was this a delegated sub-agent edit?":** it cannot be ported to Codex. Claude's `post-edit-validate.sh` gates on `agent_id` presence in the `PostToolUse(Edit)` payload ("present → delegated; absent → parent, exempt"); Codex `PostToolUse(apply_patch)` has no equivalent, so a faithful per-edit port is non-viable. The two escape hatches are both rejected: validating *all* Codex edits silently deletes the parent-edit exemption (and verifies ordinary parent iteration); transcript/session heuristics violate the docs-not-training-data discipline and create a brittle hidden contract.
+
+**The portable boundary for delegated verification is therefore `SubagentStop`** (carries `agent_id`/`agent_type`; supports `decision:"block"`/exit-2 to continue the subagent flow). This is exactly the spec 106 finding (`SubagentStop` is symmetric/portable) applied to the *validation* use case rather than the *audit* use case. Spec 110 resolved it as: delete the per-edit hook entirely, run the validator once at `SubagentStop` via a new `delegation-verify.sh` (impl tracked in spec 111).
+
+Two facts still UNVERIFIED (flagged for spec 111 live dogfood, not assumed): (a) does a continued sub-agent preserve its `agent_id` across a validation-blocked stop (the Agent0 continuation counter is keyed on it)? (b) how does `stop_hook_active` behave across a blocked stop? Both gate the budget/continuation design.
+
 ## Matcher syntax: identical
 
 Both runtimes use regex on `tool_name` for matching: `Edit|Write|MultiEdit` (Claude), `apply_patch|Bash` (Codex). Catch-all is `"*"`, `""`, or omitted.
@@ -98,3 +108,4 @@ Two user-side escape hatches the spec design must accommodate: `[features] hooks
 - `.codex/config.toml.example` — already-shipped template (spec 098); extend with `[hooks]` block when porting first-party Agent0 hooks.
 - [[cc-platform-hooks]] — Claude Code's 29-event surface; the meta-lesson on validating event lists against canonical docs applies symmetrically.
 - [[verify-runtime-capabilities]] (user-level feedback) — behavioral discipline that prevents this class of drift in future spec design.
+- `docs/specs/110-post-edit-validate-multi-runtime/` — decision spec where the "no per-edit actor on Codex" consequence was nailed (Claude↔Codex debate); `docs/specs/111-delegation-verify-subagent-stop/` — the `SubagentStop` verifier implementation that replaces `post-edit-validate.sh`.

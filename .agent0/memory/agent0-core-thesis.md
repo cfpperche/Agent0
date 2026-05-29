@@ -15,7 +15,7 @@ Agent0's durable value is:
 
 - **Prompt engineering**: concise, high-signal prompts and reusable prompt contracts for planning, review, audit, debate, and implementation framing.
 - **Context engineering**: specs, notes, handoff, memory, capability registry, runtime entrypoints, and loading discipline that give any capable coding agent the right context at the right time.
-- **Governance**: hooks, gates, drift checks, sync discipline, validation, supply-chain/secrets controls, and release criteria that keep agent work auditable and bounded.
+- **Governance**: hooks, gates, drift checks, sync discipline, validation, secrets controls, and release criteria that keep agent work auditable and bounded.
 
 How to apply:
 

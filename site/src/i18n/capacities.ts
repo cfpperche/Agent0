@@ -87,17 +87,6 @@ export const CAPACITIES: Capacity[] = [
     },
   },
   {
-    id: "supply-chain",
-    name: "Supply chain scan",
-    ruleDoc: `${REPO_TREE}/.claude/rules/supply-chain.md`,
-    spec: "008/009",
-    desc: {
-      en: "PreToolUse(Bash) blocks dep-install commands across 10 managers (npm/pnpm/yarn/bun/pip/uv/poetry/pdm/cargo/go) with exit 2 + corrective template. Edit/Write hook advises on manifest edits.",
-      pt: "PreToolUse(Bash) bloqueia comandos de instalação de deps em 10 managers (npm/pnpm/yarn/bun/pip/uv/poetry/pdm/cargo/go) com exit 2 + template corretivo. Hook Edit/Write avisa sobre edição de manifesto.",
-      es: "PreToolUse(Bash) bloquea comandos de instalación de deps en 10 managers (npm/pnpm/yarn/bun/pip/uv/poetry/pdm/cargo/go) con exit 2 + plantilla correctiva. El hook Edit/Write avisa de ediciones a manifiestos.",
-    },
-  },
-  {
     id: "runtime-introspect",
     name: "Runtime introspect",
     ruleDoc: `${REPO_TREE}/.claude/rules/runtime-introspect.md`,

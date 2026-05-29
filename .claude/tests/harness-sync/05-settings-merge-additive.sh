@@ -23,7 +23,7 @@ jq -cn '{
     PreToolUse: [
       {matcher:"Bash", hooks:[{type:"command", command:"bash $CLAUDE_PROJECT_DIR/.agent0/hooks/governance-gate.sh"}]},
       {matcher:"Bash", hooks:[{type:"command", command:"bash $CLAUDE_PROJECT_DIR/.agent0/hooks/secrets-preflight.sh"}]},
-      {matcher:"Bash", hooks:[{type:"command", command:"bash $CLAUDE_PROJECT_DIR/.agent0/hooks/supply-chain-preflight.sh"}]}
+      {matcher:"Bash", hooks:[{type:"command", command:"bash $CLAUDE_PROJECT_DIR/.claude/hooks/runtime-pre-mark.sh"}]}
     ],
     SessionStart: [
       {matcher:"*", hooks:[{type:"command", command:"bash $CLAUDE_PROJECT_DIR/.agent0/hooks/session-start.sh"}]}
@@ -51,7 +51,7 @@ if [ "$actual_exit" -ne 0 ]; then
   exit 1
 fi
 
-# Assert: consumer project's PreToolUse now has 4 entries (governance dedup'd, secrets+supply added, consumer-only preserved)
+# Assert: consumer project's PreToolUse now has 4 entries (governance dedup'd, secrets+runtime-pre-mark added, consumer-only preserved)
 pre_count="$(jq -r '.hooks.PreToolUse | length' "$CONSUMER/.claude/settings.json")"
 if [ "$pre_count" -ne 4 ]; then
   printf 'FAIL: expected 4 PreToolUse entries, got %s\n' "$pre_count"

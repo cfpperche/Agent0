@@ -16,8 +16,6 @@ CLAUDE.local.md
 .agent0/delegation-audit.jsonl.lock
 .agent0/secrets-audit.jsonl
 .agent0/secrets-audit.jsonl.lock
-.agent0/supply-chain-audit.jsonl
-.agent0/supply-chain-audit.jsonl.lock
 .claude/.rule-load-debug.jsonl
 .claude/.rule-load-debug.jsonl.lock
 .agent0/.memory-events.jsonl

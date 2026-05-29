@@ -11,9 +11,9 @@ paths:
 
 # PHP / Laravel support
 
-This rule is an **index**, not the canonical source. Each Agent0 capacity — validator, supply-chain, runtime-introspect, TDD, lint, MCP recipes — has its own rule doc that documents the per-stack behavior in full. This page exists so a new reader on a Laravel consumer project can find every PHP-aware touchpoint in one place. The canonical per-capacity docs are linked under each section below; read them when you need depth, this page for orientation.
+This rule is an **index**, not the canonical source. Each Agent0 capacity — validator, runtime-introspect, TDD, lint, MCP recipes — has its own rule doc that documents the per-stack behavior in full. This page exists so a new reader on a Laravel consumer project can find every PHP-aware touchpoint in one place. The canonical per-capacity docs are linked under each section below; read them when you need depth, this page for orientation.
 
-PHP detection in Agent0 is triggered by **`composer.json` at the project root** (validator + supply-chain). The capacities below ship dormant in a non-PHP consumer project and activate the moment those signals exist — no env-var to set, no opt-in.
+PHP detection in Agent0 is triggered by **`composer.json` at the project root** (validator). The capacities below ship dormant in a non-PHP consumer project and activate the moment those signals exist — no env-var to set, no opt-in.
 
 ## 1. Validator detects PHP
 
@@ -24,15 +24,7 @@ PHP detection in Agent0 is triggered by **`composer.json` at the project root** 
 
 `--colors=never` disables ANSI at source so inference patterns stay simple (the runtime-capture hook also strips ANSI on storage, but disabling upstream is cleaner). Canonical doc: this rule + the validator's elif chain at `.claude/validators/run.sh`.
 
-## 2. Supply-chain knows composer
-
-`.agent0/hooks/supply-chain-preflight.sh` includes `composer` as the 11th manager in the detection table (`require remove update install` verbs). `composer require <pkg>` blocks by default (exit 2 + corrective template) just like `npm install <pkg>`; the `# OVERRIDE: <reason ≥10 chars>` marker on its own line bypasses with `decision="block-override"`. Bare `composer install` with an uncommitted `composer.json` fires the `advisory-bare-install` sub-path (same shape as bare `npm install` with dirty `package.json`).
-
-`.claude/hooks/supply-chain-advise.sh` adds `composer.json` and `composer.lock` to the manifest+lockfile basename allowlist — a delegated sub-agent's Edit/Write on either basename emits `supply-chain-advisory: edit composer.json — manifest may have new dep`.
-
-Canonical doc: `.claude/rules/supply-chain.md` (the manager detection table + manifest+lockfile basename allowlist now include PHP).
-
-## 3. Runtime-introspect captures PHP test runs
+## 2. Runtime-introspect captures PHP test runs
 
 `.claude/hooks/runtime-capture.sh` detects:
 
@@ -46,13 +38,13 @@ Inference patterns: PHPUnit `OK (N tests, M assertions)` → PASS, `FAILURES!` /
 
 Canonical doc: `.claude/rules/runtime-introspect.md` § *Detector pair list*.
 
-## 4. TDD patterns recognise PHP test files
+## 3. TDD patterns recognise PHP test files
 
 `.claude/validators/run.sh`'s TDD warning path adds `php) default_patterns='tests/* *Test.php *_test.php' ;;` to the per-stack pattern table. This covers PHPUnit and Pest naming conventions plus Laravel's `tests/Feature/` and `tests/Unit/` layout. A delegated sub-agent that edits prod-PHP (e.g. `app/Models/User.php`) without touching any pattern-matched test file in the same diff triggers a `tdd-advisory:` line on the next turn.
 
 Canonical doc: `.claude/rules/tdd.md` § *From scenarios to tests* (per-language test-pattern table).
 
-## 5. Lint validator runs Pint + PHPStan
+## 4. Lint validator runs Pint + PHPStan
 
 `.claude/validators/run.sh` lint extension adds a `php` branch after the Python branch:
 
@@ -64,15 +56,15 @@ PHP is the first stack where TWO lint primitives (Pint + PHPStan) can fire in a 
 
 Canonical doc: `.claude/rules/lint-validator.md` § *What fires, what advises* (PHP paragraph).
 
-## 6. Laravel Boost MCP template
+## 5. Laravel Boost MCP template
 
 `.mcp.json.example` (Claude Code) and `.codex/config.toml.example` (Codex CLI) ship a `laravel-boost` MCP server block, disabled by default. Activation in a Laravel consumer project: `composer require laravel/boost --dev && php artisan boost:install` inside the Laravel project, then copy the relevant `.example` file (or merge the block into an existing config) and remove the `//` markers / flip `enabled = true`.
 
 Pairs naturally with the `playwright` block for browser-driven E2E and the `dbhub` block when the consumer project also has a real DATABASE_URL. Activation is consumer-driven — Agent0 does not auto-detect or auto-suggest. Consult the upstream Laravel Boost README ([github.com/laravel/boost](https://github.com/laravel/boost)) for tool-list specifics and security stance.
 
-## 7. CLAUDE.md capacity index
+## 6. CLAUDE.md capacity index
 
-CLAUDE.md folds PHP/Laravel detection inline into the capacity sections that enumerate stacks (validator, supply-chain, runtime-introspect, lint) — it carries no dedicated PHP/Laravel chapter. This rule doc is the canonical PHP/Laravel reference; it is path-scoped (frontmatter `paths:` on `composer.json` / `artisan` / `phpunit.xml` / `Pest.php`) and auto-loads the moment a consumer project's PHP signals are touched, so a consumer project needs no CLAUDE.md pointer to discover it.
+CLAUDE.md folds PHP/Laravel detection inline into the capacity sections that enumerate stacks (validator, runtime-introspect, lint) — it carries no dedicated PHP/Laravel chapter. This rule doc is the canonical PHP/Laravel reference; it is path-scoped (frontmatter `paths:` on `composer.json` / `artisan` / `phpunit.xml` / `Pest.php`) and auto-loads the moment a consumer project's PHP signals are touched, so a consumer project needs no CLAUDE.md pointer to discover it.
 
 ## What this does NOT add
 
@@ -84,22 +76,19 @@ CLAUDE.md folds PHP/Laravel detection inline into the capacity sections that enu
 
 ## Cross-references
 
-- `.claude/rules/supply-chain.md` — composer manager + manifest basename
 - `.claude/rules/runtime-introspect.md` — PHP detector pairs + inference
 - `.claude/rules/lint-validator.md` — Pint + PHPStan rules
 - `.claude/rules/tdd.md` — PHP test patterns
 - `.mcp.json.example` / `.codex/config.toml.example` — Laravel Boost MCP template block (`[mcp_servers.laravel-boost]`)
 - `.claude/validators/run.sh` — the validator's PHP elif
-- `.agent0/hooks/supply-chain-preflight.sh` + `.claude/hooks/{supply-chain-advise,runtime-capture}.sh` — the three hooks PHP touches
-- `.claude/tests/{validator-php,supply-chain-composer,runtime-capture-php}/` — the test surface that locks the behavior
+- `.claude/hooks/runtime-capture.sh` — the PHP detector hook
+- `.claude/tests/{validator-php,runtime-capture-php}/` — the test surface that locks the behavior
 
 ## Gotchas
 
 - **Lockfile precedence vs PHP.** The validator's elif chain is `bun → pnpm → npm → python → go → rust → php`. A monorepo with `bun.lock` at root and `composer.json` in `services/api/` routes to bun (first match wins). The PHP detection only fires when `composer.json` is at root AND no JS/Python/Go/Rust manifest precedes it. This is the documented limitation; proper multi-stack walking is a future capacity.
 - **Pest detection trumps PHPUnit.** Pest declares `phpstunit/phpunit` as a transitive dep (Pest is built on PHPUnit). Both will appear in `composer.lock`. The validator's check on the *direct* declaration of `pestphp/pest` in composer.json correctly picks Pest in that case; if a consumer project wants the bare PHPUnit invocation despite having Pest installed, drop the Pest declaration from composer.json (the precedent: a single test runner per project).
 - **`vendor/bin/*` checks are filesystem probes.** A consumer project that ran `composer install` but later moved its `vendor/` dir (or is using a non-standard installer like `composer-bin-plugin`) will see "declared but missing" advisories. Symlink `vendor/bin/<tool>` to the actual binary or accept the noise. Same shape as Biome's "missing under monorepo hoisting" gotcha.
-- **`composer install` is a lockfile resolve.** Bare `composer install` with no packages is treated as "apply pending declarations from composer.json" — same semantics as `bun install` / `pnpm install`. It does NOT block (no packages → not a mutation), but emits the `advisory-bare-install` advisory when `composer.json` is uncommitted-modified at hook time.
-- **`composer global require` is captured under `composer require`.** Global installs are still supply-chain actions — they pull third-party code from packagist and run install scripts. The verb whitelist includes `require`; the tokeniser doesn't special-case `global`. Symmetric with `npm install -g` / `pip install --user`.
 - **`composer test` exit-code passthrough.** Composer wraps the script defined in `composer.json` `scripts.test`. Composer's behaviour: if the script exits non-zero, composer exits non-zero. This is well-documented upstream; the runtime-capture inference table still reads stdout patterns (PHPUnit / Pest summary lines) as the primary signal so the snapshot stays auditable even when exit codes are perfect.
 - **PHP fatal-error inference.** A `PHP Fatal error:` line (script-level crash before tests run) is captured as FAIL via the dedicated regex branch. PHP fatals don't go through PHPUnit's summary path — they're raw errors. Inference table handles this case explicitly so a syntax error in `tests/Pest.php` doesn't get mis-inferred as PASS by falling through.
 - **`laravel-boost` MCP requires PHP + artisan in the working dir.** The MCP launches `php artisan boost:mcp` — if the agent's working dir is outside the Laravel project, the command fails. Consumer projects with multi-root layouts (e.g. monorepo with Laravel under `apps/api/`) must set the MCP working dir or stay inside the Laravel root when invoking boost tools.

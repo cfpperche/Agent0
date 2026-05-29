@@ -11,7 +11,7 @@ metadata:
 
 Maintainer-binding companion to `.agent0/memory/hook-chain-latency.md`. The companion entry documents the chain budget + bench tool + regression check; this memory documents the upstream-maintainer discipline applied when adding or editing a `PreToolUse(Bash)` hook.
 
-Read before adding any new `PreToolUse(Bash)` hook, or editing the optimization-sensitive bodies of `governance-gate.sh`, `secrets-preflight.sh`, `supply-chain-preflight.sh`, `runtime-pre-mark.sh`.
+Read before adding any new `PreToolUse(Bash)` hook, or editing the optimization-sensitive bodies of `governance-gate.sh`, `secrets-preflight.sh`, `runtime-pre-mark.sh`.
 
 ## Optimization techniques
 
@@ -28,7 +28,6 @@ For hooks that only need to inspect a subset of Bash commands, use the per-handl
 Originally claimed as applied to (BOTH were pipe-alternation → BOTH were dormant; the "~70 ms saving" was illusory because the hook never ran, not because it was intelligently narrowed):
 
 - `secrets-preflight.sh` — was `Bash(git commit *|git commit|*git commit *|*git commit)`. The pattern never matched, so the Claude preflight never fired on any `git commit` (the V8-Claude dogfood caught this — a compound `git add ... && git commit` passed unblocked). **Fixed 2026-05-28: dropped the `if`, now bare `"matcher": "Bash"`** — spawns on every Bash and short-circuits internally (the hook body already exits silently on non-`git commit`, the spec-108 broad-matcher design). Live-verified: `reject-shape` + `override-pass-through` rows now land on real commits.
-- `supply-chain-preflight.sh` (was `.claude/hooks/supply-chain-scan.sh`) — had the SAME latent pipe bug (`Bash(npm *|pnpm *|yarn *|bun *|...)`) → dormant on every dep-install. **Fixed 2026-05-28 in the spec-109 port: moved to `.agent0/`, dropped the `if`, now bare `"matcher": "Bash"`** — spawns on every Bash and self-filters in-body to real `(manager, verb, packages)` triples (silent no-row on non-detection). Live-verified: `block` rows now land on real `npm install` / `cargo add`.
 
 The lesson: **prefer a bare `"matcher": "Bash"` + a cheap in-script probe over an `if`-field whenever more than one command-prefix must be matched.** A single-prefix hook can use `if: "Bash(<one-glob>)"`; anything needing alternation cannot express it in one `if` and should self-filter in the body. The intrinsic per-spawn cost is small (jq + grep + early exit); a dormant hook that silently skips its contract is far worse than an always-spawning one.
 
@@ -80,7 +79,7 @@ Contract for any new `PreToolUse(Bash)` hook contributed upstream:
 
 - **Pre-jq probes are not free.** `grep -qE` against a 200-byte JSON string costs ~3-5 ms. Worth it when the alternative is a 25-30 ms `jq` spawn, but not free. For hooks with very simple matchers, jq might be acceptable; measure before optimizing.
 - **Hook source edits are user-facing audit trail.** The pre-jq probe added to `governance-gate.sh` is documented in the hook with a reference to spec 094 (`# Pre-jq fast-path probe (the hook-chain-latency spec-hook-chain-latency)`). Future maintainers can grep for the spec slug to understand why the probe exists. Preserve this when editing.
-- **`if`-field syntax: a multi-prefix matcher CANNOT be expressed in one `if` — use a bare matcher + in-script filter.** (Superseded the original "choose generosity" advice after the 108/109 dormant-`if` discovery, see § above.) For supply-chain the tempting pattern `Bash(npm *|pnpm *|...)` is invalid permission-rule syntax — pipe-alternation never matches, so the hook silently never spawns. The valid Claude-only alternative is one `if` handler per prefix (11 entries), but that diverges from Codex (no `if` layer) and is maintenance-heavy. The chosen shape (spec 109): bare `"matcher": "Bash"` + the hook self-filters in-body to real `(manager, verb, packages)` triples. Trade-off: a spawn on every Bash (cheap: jq + tokenise + early exit), but correct on both runtimes and no dormant-hook risk.
+- **`if`-field syntax: a multi-prefix matcher CANNOT be expressed in one `if` — use a bare matcher + in-script filter.** (Superseded the original "choose generosity" advice after the 108/109 dormant-`if` discovery, see § above.) Pipe-alternation inside a `Bash(...)` is invalid permission-rule syntax — it never matches, so the hook silently never spawns. The correct shape for any hook that needs to match multiple command prefixes: bare `"matcher": "Bash"` + the hook self-filters in-body. Trade-off: a spawn on every Bash (cheap: jq + tokenise + early exit), but correct on both runtimes and no dormant-hook risk.
 
 ## Cross-references
 

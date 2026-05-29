@@ -34,9 +34,8 @@ Eight capacities are live on `main`. Each one is documented in its own rule file
 | BDD acceptance scenarios | `/sdd` template scaffolds Given/When/Then scenarios in `spec.md` | `spec-driven.md` § *Acceptance scenarios* | `004-bdd/` |
 | TDD working agreement | Cultural red→green→refactor + non-blocking validator advisory when prod files move without tests | `tdd.md` | `005-tdd/` |
 | Secrets scan | Layered: native `.githooks/pre-commit` runs gitleaks over the staged diff (primary block); `PreToolUse(Bash)` preflight gates command shape + parses override marker + bridges the override via env var to the native layer | `secrets-scan.md` | `006-secrets-scan/`, `007-secrets-scan-timing/` |
-| Supply chain scan | Runtime-neutral `PreToolUse(Bash)` preflight blocks dep-install commands across 11 managers (npm/pnpm/yarn/bun/pip/uv/poetry/pdm/cargo/go/composer) by default (exit 2 + corrective template); `PostToolUse(Edit\|Write\|MultiEdit)` flags sub-agent edits to manifest/lockfile basenames (advisory). `CLAUDE_SUPPLY_CHAIN_BLOCK=0` opts back to spec-008 advisory-only mode | `supply-chain.md` | `008-supply-chain-scan/` + `009-supply-chain-block/` + `109-supply-chain-scan-multi-runtime/` |
 
-The override marker `# OVERRIDE: <reason ≥10 chars>` is honored by the governance, delegation, TDD, secrets-scan, and supply-chain gates. The reason is recorded in the audit log — `"skip"` / `"bypass"` are rejected.
+The override marker `# OVERRIDE: <reason ≥10 chars>` is honored by the governance, delegation, TDD, and secrets-scan gates. The reason is recorded in the audit log — `"skip"` / `"bypass"` are rejected.
 
 ## Per-fork checklist
 
@@ -46,11 +45,9 @@ The override marker `# OVERRIDE: <reason ≥10 chars>` is honored by the governa
 
 3. **Customize test patterns if needed.** The TDD advisory recognizes `*.test.*`, `*.spec.*`, `__tests__/`, `tests/`, `*_test.py`, `*_test.go`, etc. out of the box. Override with `CLAUDE_TDD_TEST_PATTERNS="<space-separated globs>"` if your project uses different naming. The override fully replaces the defaults, so include every pattern you want recognized.
 
-4. **Install gitleaks (optional but recommended).** The secrets-scan hook degrades open when `gitleaks` is missing from `PATH` — commits proceed with a one-line warning. To activate the protection, install gitleaks v8.x (single static Go binary, MIT, no runtime deps: see https://github.com/gitleaks/gitleaks#installing). Customize detector exemptions in `.gitleaks.toml` at repo root, or use inline `# gitleaks:allow` on a single line. `CLAUDE_SKIP_SECRETS_SCAN=1` disables the hook entirely for throwaway sessions; `CLAUDE_SECRETS_ADVISE_ON_EDIT=1` opts into the soft per-edit advisory.
+4. **Install gitleaks (optional but recommended).** The secrets-scan hook degrades open when `gitleaks` is missing from `PATH` — commits proceed with a one-line warning. To activate the protection, install gitleaks v8.x (single static Go binary, MIT, no runtime deps: see https://github.com/gitleaks/gitleaks#installing). Customize detector exemptions in `.gitleaks.toml` at repo root, or use inline `# gitleaks:allow` on a single line. `CLAUDE_SKIP_SECRETS_SCAN=1` disables the hook entirely for throwaway sessions.
 
-5. **Pick supply-chain mode.** The Bash preflight blocks dep-mutating commands (`npm install <pkg>`, `uv add <pkg>`, etc.) by default with an exit-2 corrective template — a fork's first install will be rejected unless the override marker (`# OVERRIDE: <reason ≥10 chars>` on the next line) is present. To stay on the spec-008 advisory-only behaviour (no block, just stderr + audit), `export CLAUDE_SUPPLY_CHAIN_BLOCK=0` in the session env or shell rc. `CLAUDE_SKIP_SUPPLY_CHAIN_SCAN=1` fully disables both Bash and Edit/Write layers for throwaway sessions.
-
-6. **Activate the native pre-commit hook.** Run once, after `git init`:
+5. **Activate the native pre-commit hook.** Run once, after `git init`:
 
    ```bash
    git config core.hooksPath .githooks
@@ -58,9 +55,9 @@ The override marker `# OVERRIDE: <reason ≥10 chars>` is honored by the governa
 
    This points git at the versioned `.githooks/` directory and activates `.githooks/pre-commit`, which is the primary layer of the secrets-scan capacity (spec 007). The step is manual on purpose — automating it via a post-checkout hook would replicate the 2025 Lazarus Group "Contagious Interview" attack pattern, where a poisoned repo's hook runs on clone. Verify with `git config --get core.hooksPath` returning `.githooks`.
 
-7. **Reset `.agent0/HANDOFF.md`.** Replace the handoff content with a short "fresh project, nothing in flight" state or your own starting context. Keep the four sections (`Current State`, `Active Work`, `Next Actions`, `Decisions & Gotchas`). The Stop hook will nag you to update it on commit-day Claude Code sessions.
+6. **Reset `.agent0/HANDOFF.md`.** Replace the handoff content with a short "fresh project, nothing in flight" state or your own starting context. Keep the four sections (`Current State`, `Active Work`, `Next Actions`, `Decisions & Gotchas`). The Stop hook will nag you to update it on commit-day Claude Code sessions.
 
-8. **(Optional) Drop the harness self-verification suite.** `.claude/tests/secrets-scan/` ships 8 scenario scripts (~780 LOC) that verify spec 007's two-layer scan against gitleaks — useful when modifying `.githooks/pre-commit` or `.agent0/hooks/secrets-preflight.sh`, otherwise unused. The suite lives under `.claude/` (not the project's `tests/`) because it tests *the harness*, not the fork's code; forks that won't touch the secrets-scan internals can delete the dir to drop ~780 LOC from their initial commit. The harness keeps working without it.
+7. **(Optional) Drop the harness self-verification suite.** `.claude/tests/secrets-scan/` ships 8 scenario scripts (~780 LOC) that verify spec 007's two-layer scan against gitleaks — useful when modifying `.githooks/pre-commit` or `.agent0/hooks/secrets-preflight.sh`, otherwise unused. The suite lives under `.claude/` (not the project's `tests/`) because it tests *the harness*, not the fork's code; forks that won't touch the secrets-scan internals can delete the dir to drop ~780 LOC from their initial commit. The harness keeps working without it.
 
 ## Workflow
 

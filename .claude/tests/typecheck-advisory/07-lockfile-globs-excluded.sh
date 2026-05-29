@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # .claude/tests/typecheck-advisory/07-lockfile-globs-excluded.sh
-# V7 — Scenario: validator's TDD warning loop must exclude supply-chain
+# V7 — Scenario: validator's TDD warning loop must exclude dependency
 # lockfiles from prod/test classification. A `bun install` (or any
 # manager's lockfile resolve) modifies the tracked lockfile, which
 # `git diff --name-only` surfaces. Without this exclusion the validator

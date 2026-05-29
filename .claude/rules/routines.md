@@ -137,7 +137,7 @@ These limits are by design — the validator stays as a 30-line bash regex with 
 
 ## Override marker
 
-Mirroring the delegation, governance, secrets-scan, and supply-chain gates: a line `# OVERRIDE: <reason ≥10 chars>` (case-sensitive, terminated by end-of-line) anywhere in the routine file body skips ONE specific validate check.
+Mirroring the delegation, governance, and secrets-scan gates: a line `# OVERRIDE: <reason ≥10 chars>` (case-sensitive, terminated by end-of-line) anywhere in the routine file body skips ONE specific validate check.
 
 The reason text is mandatory and is the audit trail — write something a future maintainer can grep. `# OVERRIDE: skip` / `bypass` / `n/a` are rejected (under 10 chars).
 

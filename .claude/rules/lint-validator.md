@@ -44,7 +44,7 @@ The trade-off: a consumer project that copies a `biome.json` from another repo w
 
 ## Advisory format
 
-Both stacks emit single stderr lines with the same shape as supply-chain's corrected-form template:
+Both stacks emit single stderr lines of the form:
 
 ```
 lint-advisory: biome declared in package.json but not installed — run `bun install`
@@ -73,7 +73,7 @@ The validator's existing stack-detect is monolithic — first `if/elif` match wi
 - **`uv tool install ruff` (global) is invisible.** A consumer project that installs ruff globally via uv but does NOT declare it in pyproject deps will hit silent-skip (manifest-as-intent → no declaration → no advisory). Acceptable since the alternative (filesystem-only probe) re-introduces the config-file noise the design pivoted away from.
 - **`node_modules/@biomejs/biome/` hoisting in monorepos.** A workspace setup may hoist biome to a parent `node_modules/`. The validator's filesystem check is at the cwd's `node_modules/`, which can miss hoisted installs. False negative manifests as a spurious advisory; the agent can either install biome into the workspace's local `node_modules/` or set `CLAUDE_VALIDATOR_SKIP_LINT=1` for that session. The monorepo-stack-detect extension may revisit.
 - **Validator stderr is now a real channel.** Before this extension: validator emitted nothing to its own stderr; the inner pipeline's stderr was captured into the JSON `.stderr` field. After it: validator may emit `lint-advisory:` lines to its own stderr (see § Advisory format). Anyone consuming the validator outside `delegation-verify.sh` (custom hooks, manual invocations) needs to be aware of this — `2>&1` will merge advisories into stdout and break JSON parsing.
-- **No audit log.** Coherent with runtime-introspect's "snapshot-as-truth, no per-call audit". The advisory IS the signal; volume of supply-chain's per-Bash audit log is the cautionary tale (`.claude/rules/supply-chain.md` § Gotchas). If forensic queries on lint-advisory frequency become a real need, add in a follow-up spec.
+- **No audit log.** Coherent with runtime-introspect's "snapshot-as-truth, no per-call audit". The advisory IS the signal. If forensic queries on lint-advisory frequency become a real need, add in a follow-up spec.
 - **`bunx biome check` / `pnpm exec biome check` / `npx biome check` semantics.** All three runners invoke the local `node_modules/.bin/biome`. `npx` and `pnpm exec` will fall back to a global install if the local is missing — but the filesystem check above gates on local presence, so that fallback shouldn't fire. `bunx` checks local-first too. If a consumer project moves binaries via custom `.bin/` paths, this may break; document in consumer project's CLAUDE.md.
 - **`CLAUDE_VALIDATOR_SKIP_LINT` is the only opt-out.** No `CLAUDE_LINT_ADVISORY_OFF=1` (advisory is the whole point); no `CLAUDE_LINT_BLOCK_ON_MISSING=1` (advisory-not-block is by design). One env var, one knob.
 - **Agent0 base ships zero linter config.** `git ls-files | grep -E '(biome\.json|ruff\.toml)'` returns empty. Consumer projects own their config. The detection is intent-via-manifest; rule customization is the consumer project's responsibility.
@@ -84,4 +84,3 @@ The validator's existing stack-detect is monolithic — first `if/elif` match wi
   ```
   Symmetric advice for ruff is usually unnecessary — `.claude/` rarely contains `.py` files in any current consumer project; ruff's `extend-exclude` defaults already cover `.venv/`, `__pycache__/`, etc. Caught in 2026-05-12 dogfood.
 - **Biome's defaults are opinionated.** Biome 1.x uses tabs and its own style ruleset by default. A consumer project adopting biome with zero config commits to biome's worldview wholesale — the first `biome check --write` may reformat many files. To preserve existing conventions, ship a `biome.json` with explicit `formatter.indentStyle` / `indentWidth` and any rule overrides. Not a concern here, but worth knowing before the first `bun install && bunx biome check --write`.
-- **State-a transition needs a supply-chain OVERRIDE marker.** The advisory message ends with `run \`bun install\`` (or equivalent). Acting on that advisory hits the supply-chain block on dep-mutating commands. The operator (or agent) must add a multi-line `# OVERRIDE: <reason ≥10 chars>` on its own line — the supply-chain start-of-line anchor rejects inline trailing markers. Documented behavior; no fix needed here.

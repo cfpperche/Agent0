@@ -317,7 +317,7 @@ if git rev-parse --git-dir >/dev/null 2>&1; then
 
   prod_files=""
   test_count=0
-  # *.lock / *.lockb / go.sum cover supply-chain lockfiles across all 10 managers
+  # *.lock / *.lockb / go.sum cover dependency lockfiles across all 10 managers
   # (bun.lock, bun.lockb, yarn.lock, Cargo.lock, poetry.lock, uv.lock, pdm.lock,
   # go.sum; package-lock.json + pnpm-lock.yaml fall through *.json / *.yaml).
   # Surfaced via 2026-05-12 dogfood: `bun install` modified bun.lock,

@@ -46,7 +46,7 @@ A pronoun without antecedent in the immediate prior turn (or referring to someth
 
 ## Override marker
 
-Mirroring the delegation, governance, secrets-scan, and supply-chain gates: a line `# OVERRIDE: <reason ≥10 chars>` anywhere in the prompt skips the 3-question check. The agent proceeds with whatever inference it has and acknowledges the override in its response (one line — "override noted: <reason>"). The marker is documentation, not just bypass — write a reason a future reader can grep.
+Mirroring the delegation, governance, and secrets-scan gates: a line `# OVERRIDE: <reason ≥10 chars>` anywhere in the prompt skips the 3-question check. The agent proceeds with whatever inference it has and acknowledges the override in its response (one line — "override noted: <reason>"). The marker is documentation, not just bypass — write a reason a future reader can grep.
 
 The override does NOT silence the discipline elsewhere in the same turn; if the agent later needs more information to complete the work, it still asks. The marker only covers the initial framing check, not subsequent decisions.
 

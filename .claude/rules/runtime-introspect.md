@@ -140,5 +140,4 @@ Maintainer-binding surface (detector extension contract via `CLAUDE_RUNTIME_INTR
 - `.agent0/memory/runtime-introspect-maintenance.md` — maintainer-binding companion
 - `.claude/hooks/runtime-capture.sh` / `.claude/hooks/runtime-pre-mark.sh` — implementation
 - `.agent0/tools/probe.sh` — probe surface
-- `.claude/rules/supply-chain.md` — sibling tokeniser whose discipline this hook shares
 - `.claude/rules/tdd.md` — verification convention the probe supports

@@ -22,7 +22,7 @@ When saving a learning, fact, or rule, route it by **what kind of knowledge** it
 
 **Use when:** the knowledge is project-specific factual reference, not behavioral mandate. "Claude Code has 29 hook events", "we chose hash-compare because alternatives X/Y had problems Z". The agent reads these on demand when starting relevant work — discovery is via the `## Memory` block in CLAUDE.md (lazy-read of `.agent0/memory/MEMORY.md` index).
 
-**Do NOT use for:** behavioral mandates ("the agent must do X") — those are rules. Capacity operational documentation ("how the supply-chain hook works") — those are rules. Work-specific design context — that lives in the corresponding `docs/specs/NNN-*/` dir.
+**Do NOT use for:** behavioral mandates ("the agent must do X") — those are rules. Capacity operational documentation ("how a hook works") — those are rules. Work-specific design context — that lives in the corresponding `docs/specs/NNN-*/` dir.
 
 **One narrow exception** to "no behavioral mandates here": a mandate that binds the upstream *maintainer* rather than the agent working in any consumer project. Rules ship to consumer projects, so a maintainer-only discipline placed in a rule would be inert cruft in every consumer project that consumes the harness but never extends it. Such disciplines route to project memory despite being mandate-shaped — e.g. a propagation-hygiene memory describing how shipped files must be written so they carry no upstream-internal pointers (a discipline binding the upstream maintainer, inert in any leaf consumer project).
 

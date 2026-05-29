@@ -118,7 +118,7 @@ The manifest is append-only by convention. No retention cap in v1 — image-gen 
 
 ## Override marker
 
-`# OVERRIDE: image-gen-exempt: <reason ≥10 chars>` skips the pre-call cost confirmation in batch scripts where the operator already accepted the cost. Same shape as the project's other gates (`delegation.md`, `secrets-scan.md`, `supply-chain.md`). The reason text is the audit trail — write something a future maintainer can grep. "skip" / "bypass" / "ok" are not reasons.
+`# OVERRIDE: image-gen-exempt: <reason ≥10 chars>` skips the pre-call cost confirmation in batch scripts where the operator already accepted the cost. Same shape as the project's other gates (`delegation.md`, `secrets-scan.md`). The reason text is the audit trail — write something a future maintainer can grep. "skip" / "bypass" / "ok" are not reasons.
 
 Not enforced by a hook in v1 — the skill itself honours the marker by short-circuiting the confirmation prompt. The audit log captures the marker reason in the manifest line's optional `override_reason` field.
 
@@ -147,7 +147,6 @@ Skill scripts read the table at call time; updates apply on next invocation with
 
 - `.mcp.json.example` / `.codex/config.toml.example` — `fal-ai` MCP server block (HTTP transport, `bearer_token_env_var = "FAL_KEY"`)
 - `.claude/rules/secrets-scan.md` — `FAL_KEY` handling; the `<uuid>:<secret>` shape may not match gitleaks default rules (see § *Gotchas*)
-- `.claude/rules/supply-chain.md` — non-applicable: HTTP transport means no `npx`/package install, so the supply-chain hook never fires for this capacity
 - `.claude/rules/delegation.md` § *Why DONE_WHEN exists* — contract-not-promise frame motivating pre-call cost printing
 - `.claude/skills/image/` — skill implementation
 - `.claude/skills/image/references/tier-pricing.md` — static cost table

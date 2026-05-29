@@ -94,7 +94,7 @@ export const STRINGS: Record<Locale, Strings> = {
     meta: {
       title: "Agent0 — the harness for AI coding agents",
       description:
-        "An open-source spec-driven harness for Claude Code: governance gates, delegation discipline, secrets and supply-chain scans, runtime introspection, and more — all opt-in, all auditable.",
+        "An open-source spec-driven harness for Claude Code: governance gates, delegation discipline, secrets scanning, runtime introspection, and more — all opt-in, all auditable.",
     },
     nav: {
       capacities: "Capacities",
@@ -138,7 +138,7 @@ export const STRINGS: Record<Locale, Strings> = {
       paragraphs: [
         "AI coding agents move fast. That speed cuts both ways — a single bad delegation can ship a leaked credential, a force-pushed branch, or an under-specified feature into production before anyone reviews it.",
         "Agent0 is the operating discipline that catches those slips before they land. Not by slowing the agent down, but by giving it the same guardrails a senior engineer has internalized: never run a destructive command without saying why, never delegate without scope, never commit a credential, never install a dependency without leaving a trail.",
-        "Each capacity is a hook that fires at a specific moment in the agent's lifecycle: PreToolUse for destructive shapes, PostToolUse for edit validation, SessionStart for context injection, PreCompact for raw-signal preservation. The capacities compose — a delegation gate plus a post-edit validator plus a secrets scan plus a supply-chain block plus a runtime introspect together form a pipeline the agent cannot drift out of.",
+        "Each capacity is a hook that fires at a specific moment in the agent's lifecycle: PreToolUse for destructive shapes, PostToolUse for edit validation, SessionStart for context injection, PreCompact for raw-signal preservation. The capacities compose — a delegation gate plus a post-edit validator plus a secrets scan plus a runtime introspect together form a pipeline the agent cannot drift out of.",
         "The discipline is spec-driven: intent before code, BDD scenarios as the contract, every override audited with a reason ≥10 characters. The agent stays fast; the surface area for accidents shrinks.",
       ],
     },
@@ -233,7 +233,7 @@ export const STRINGS: Record<Locale, Strings> = {
     meta: {
       title: "Agent0 — o harness para agentes de código IA",
       description:
-        "Um harness open-source spec-driven para Claude Code: governance gates, disciplina de delegação, scans de segredos e supply-chain, introspecção em runtime e mais — tudo opt-in, tudo auditável.",
+        "Um harness open-source spec-driven para Claude Code: governance gates, disciplina de delegação, scan de segredos, introspecção em runtime e mais — tudo opt-in, tudo auditável.",
     },
     nav: {
       capacities: "Capacidades",
@@ -277,7 +277,7 @@ export const STRINGS: Record<Locale, Strings> = {
       paragraphs: [
         "Agentes de código IA são rápidos. Essa velocidade corta dos dois lados — uma única delegação ruim pode colocar uma credencial vazada, um branch force-pushed, ou uma feature sub-especificada em produção antes de qualquer revisão.",
         "Agent0 é a disciplina operacional que pega esses escorregões antes que aconteçam. Não desacelerando o agente, mas dando a ele as mesmas guardrails que um engenheiro sênior já internalizou: nunca rodar comando destrutivo sem dizer por quê, nunca delegar sem escopo, nunca commitar credencial, nunca instalar dependência sem deixar rastro.",
-        "Cada capacidade é um hook que dispara num momento específico do ciclo de vida do agente: PreToolUse para shapes destrutivos, PostToolUse para validação de edit, SessionStart para injeção de contexto, PreCompact para preservar sinal cru. As capacidades compõem — delegation gate + post-edit validator + secrets scan + supply-chain block + runtime introspect formam juntos uma pipeline da qual o agente não consegue derivar.",
+        "Cada capacidade é um hook que dispara num momento específico do ciclo de vida do agente: PreToolUse para shapes destrutivos, PostToolUse para validação de edit, SessionStart para injeção de contexto, PreCompact para preservar sinal cru. As capacidades compõem — delegation gate + post-edit validator + secrets scan + runtime introspect formam juntos uma pipeline da qual o agente não consegue derivar.",
         "A disciplina é spec-driven: intenção antes de código, cenários BDD como contrato, todo override auditado com razão ≥10 caracteres. O agente segue rápido; a superfície de acidentes diminui.",
       ],
     },
@@ -372,7 +372,7 @@ export const STRINGS: Record<Locale, Strings> = {
     meta: {
       title: "Agent0 — el harness para agentes de código IA",
       description:
-        "Un harness open-source spec-driven para Claude Code: governance gates, disciplina de delegación, scans de secretos y supply-chain, introspección en runtime y más — todo opt-in, todo auditable.",
+        "Un harness open-source spec-driven para Claude Code: governance gates, disciplina de delegación, scan de secretos, introspección en runtime y más — todo opt-in, todo auditable.",
     },
     nav: {
       capacities: "Capacidades",
@@ -416,7 +416,7 @@ export const STRINGS: Record<Locale, Strings> = {
       paragraphs: [
         "Los agentes de código IA son rápidos. Esa velocidad corta por ambos lados — una sola delegación mal hecha puede dejar una credencial filtrada, un branch force-pushed, o una feature subespecificada en producción antes de cualquier revisión.",
         "Agent0 es la disciplina operativa que detecta esos resbalones antes de que ocurran. No frenando al agente, sino dándole las mismas guardrails que un ingeniero sénior ya tiene internalizadas: nunca ejecutar un comando destructivo sin decir por qué, nunca delegar sin scope, nunca commitear una credencial, nunca instalar una dependencia sin dejar rastro.",
-        "Cada capacidad es un hook que dispara en un momento específico del ciclo de vida del agente: PreToolUse para shapes destructivos, PostToolUse para validación de edit, SessionStart para inyección de contexto, PreCompact para preservar señal cruda. Las capacidades componen — delegation gate + post-edit validator + secrets scan + supply-chain block + runtime introspect forman juntas un pipeline del que el agente no puede salirse.",
+        "Cada capacidad es un hook que dispara en un momento específico del ciclo de vida del agente: PreToolUse para shapes destructivos, PostToolUse para validación de edit, SessionStart para inyección de contexto, PreCompact para preservar señal cruda. Las capacidades componen — delegation gate + post-edit validator + secrets scan + runtime introspect forman juntas un pipeline del que el agente no puede salirse.",
         "La disciplina es spec-driven: intención antes de código, escenarios BDD como contrato, todo override auditado con razón ≥10 caracteres. El agente sigue rápido; la superficie de accidentes se encoge.",
       ],
     },

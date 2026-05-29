@@ -59,8 +59,8 @@ Quoted from the docs Hook lifecycle table (last audited 2026-05-25 via the cc-pl
 
 Agent0 currently uses **8 of these 29** (counted from `.claude/settings.json`):
 
-- `PreToolUse` (5 matchers: governance-gate, secrets-preflight, supply-chain-preflight, runtime-pre-mark, delegation-gate)
-- `PostToolUse` (4 matchers: secrets-advise, supply-chain-advise, session-track-edits, runtime-capture) — post-edit-validate removed in spec 111 (verification moved to SubagentStop)
+- `PreToolUse` (4 matchers: governance-gate, secrets-preflight, runtime-pre-mark, delegation-gate)
+- `PostToolUse` (2 matchers: session-track-edits, runtime-capture) — post-edit-validate removed in spec 111 (verification moved to SubagentStop); secrets-advise + supply-chain-advise removed in spec 112
 - `PostToolUseFailure` (runtime-capture, added by spec 020)
 - `SessionStart` (3 hooks: session-start, reminders-readout, routines-readout — plus memory-decay-readout from `.agent0/hooks/`)
 - `Stop` (session-stop)
@@ -135,7 +135,7 @@ Key differences from `PostToolUse`:
 
 Validated 2026-05-13 across Agent0 + shrnk-mono fork dogfood. Once a path-scoped rule loads in a session — via any matching glob — **subsequent reads of any file matching ANY of that rule's globs produce NO new `InstructionsLoaded` event**. The dedup is scoped to the rule (one event per session per rule), not to the specific glob that triggered the first load.
 
-First-pass observation framed this as a multi-glob-on-same-rule quirk (e.g. `.claude/tools/probe.sh` is in BOTH `runtime-introspect.md`'s globs AND `rule-load-debug.md`'s globs; reading `probe.sh` after `runtime-pre-mark.sh` was already read fires only `rule-load-debug.md`'s event). Shrnk-mono Step 3d expanded the picture: editing `package.json` (matches `supply-chain.md`'s `**/package.json` glob) after an earlier batch read of `.agent0/hooks/supply-chain-preflight.sh` (matches `supply-chain.md`'s `supply-*.sh` glob) produced NO new path_glob_match row — even though the second trigger is a completely different file and a completely different glob within the same rule. Dedup is per-rule, period.
+First-pass observation framed this as a multi-glob-on-same-rule quirk (e.g. `.claude/tools/probe.sh` is in BOTH `runtime-introspect.md`'s globs AND `rule-load-debug.md`'s globs; reading `probe.sh` after `runtime-pre-mark.sh` was already read fires only `rule-load-debug.md`'s event). Dedup is per-rule, period.
 
 Implication for path-scoping validation playbooks:
 - A trigger→rule mapping table is only fully exercisable in a fresh session per trigger.
@@ -149,7 +149,6 @@ This is correct CC behavior (avoids audit-log inflation and context waste); not 
 - `.claude/rules/runtime-introspect.md` — spec 011 capacity that uses `PreToolUse(Bash)` + `PostToolUse(Bash)`; spec 020 added `PostToolUseFailure(Bash)`.
 - `.agent0/memory/rule-load-debug.md` — uses `InstructionsLoaded`; opt-in observability for the dedup behavior documented in § Empirical above.
 - `.claude/rules/secrets-scan.md` — uses `PreToolUse(Bash)` (preflight shape gate); doesn't depend on the success/failure split.
-- `.claude/rules/supply-chain.md` — uses `PreToolUse(Bash)` (block) + `PostToolUse(Edit|Write|MultiEdit)` (advisory).
 - `.claude/rules/delegation.md` — uses `PreToolUse(Agent)` + `PostToolUse(Edit|Write|MultiEdit)`.
 - `.agent0/memory/compaction-continuity.md` — uses `PreCompact` + `SessionStart` (with `source: "compact"`).
 - `.claude/rules/session-handoff.md` — uses `SessionStart` + `Stop`.

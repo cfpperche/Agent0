@@ -40,10 +40,6 @@ Production code follows red → green → refactor with tests in the same diff; 
 
 Two layers — the native `.githooks/pre-commit` runs gitleaks over the staged diff at commit time; a runtime-neutral `PreToolUse(Bash)` preflight (`.agent0/hooks/secrets-preflight.sh`) gates dangerous commit shapes on Claude Code and Codex CLI. Activate per-consumer with `git config core.hooksPath .githooks`. See `.claude/rules/secrets-scan.md`.
 
-## Supply chain
-
-A runtime-neutral `PreToolUse(Bash)` preflight (`.agent0/hooks/supply-chain-preflight.sh`, activated on Codex by uncommenting the `^Bash$` block in `.codex/config.toml.example`) blocks dependency-install commands across 11 managers with an exit-2 corrective template + override marker; a `PostToolUse` hook advises on manifest/lockfile edits. See `.claude/rules/supply-chain.md`.
-
 ## Runtime introspect
 
 `PreToolUse` / `PostToolUse(Bash)` hooks snapshot the last verifier run (test / build / typecheck / lint, allowlisted) to `.agent0/.runtime-state/last-run.json`; read it back with `bash .agent0/tools/probe.sh last-run`. See `.claude/rules/runtime-introspect.md`.

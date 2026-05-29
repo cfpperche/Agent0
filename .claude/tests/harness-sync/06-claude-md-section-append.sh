@@ -17,7 +17,7 @@ SRC="$TMPDIR/agent0"
 CONSUMER="$TMPDIR/consumer"
 mkdir -p "$SRC/.claude" "$CONSUMER/.claude"
 
-# Agent0 CLAUDE.md: Overview, Spec-driven development, Supply chain, Runtime introspect, Compact Instructions
+# Agent0 CLAUDE.md: Overview, Spec-driven development, Delegation, Runtime introspect, Compact Instructions
 cat > "$SRC/CLAUDE.md" <<'EOF'
 # Agent0
 
@@ -29,9 +29,9 @@ base.
 
 sdd.
 
-## Supply chain
+## Delegation
 
-supply-chain content.
+delegation content.
 
 ## Runtime introspect
 
@@ -74,9 +74,9 @@ if [ "$actual_exit" -ne 0 ]; then
   exit 1
 fi
 
-# Supply chain section must now exist
-if ! grep -q '^## Supply chain' "$CONSUMER/CLAUDE.md"; then
-  printf 'FAIL: ## Supply chain not appended\n'
+# Delegation section must now exist
+if ! grep -q '^## Delegation' "$CONSUMER/CLAUDE.md"; then
+  printf 'FAIL: ## Delegation not appended\n'
   cat "$CONSUMER/CLAUDE.md"
   exit 1
 fi

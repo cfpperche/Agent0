@@ -15,7 +15,7 @@ The pattern-kind name in the advisory line tells you which class fired; read you
 
 ## Override marker
 
-A line matching `^[[:space:]]*# OVERRIDE: propagation-exempt: <reason ≥10 chars>` in the edit content skips the scan entirely. Same grammar as the project's other gates (delegation, secrets-scan, supply-chain, governance, memory-index, image-gen). Mandatory ≥10-char reason — `skip`, `n/a` rejected by the length floor.
+A line matching `^[[:space:]]*# OVERRIDE: propagation-exempt: <reason ≥10 chars>` in the edit content skips the scan entirely. Same grammar as the project's other gates (delegation, secrets-scan, governance, memory-index, image-gen). Mandatory ≥10-char reason — `skip`, `n/a` rejected by the length floor.
 
 Legitimate use cases for the override:
 
@@ -31,7 +31,7 @@ The override does NOT silence the advisory globally — it skips ONLY the specif
 
 ## Gotchas
 
-- **Parent edits fire.** Unlike `tdd-advisory:` and `secrets-advise.sh` (sub-agent only), this hook fires on parent edits too. The maintainer writing new rules is the most common author of fresh leaks, so excluding parent would defeat the purpose. If parent-fire becomes noisy, the env-var escape hatch is the per-session opt-out.
+- **Parent edits fire.** Unlike `tdd-advisory:` (sub-agent only), this hook fires on parent edits too. The maintainer writing new rules is the most common author of fresh leaks, so excluding parent would defeat the purpose. If parent-fire becomes noisy, the env-var escape hatch is the per-session opt-out.
 - **Override marker requires ≥10-char reason.** `# OVERRIDE: propagation-exempt: skip` is rejected by the length floor; write a real reason a future reader can grep.
 
 ## Maintenance

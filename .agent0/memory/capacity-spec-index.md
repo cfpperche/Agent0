@@ -35,12 +35,13 @@ This index is Agent0-internal. Do not cite it from CLAUDE.md or `.claude/rules/*
 | Runtime introspect (`runtime-introspect.md`) | `011-runtime-introspect` | `020-runtime-capture-on-failure`, `022-runtime-introspect-cargo` |
 | Goal skill | `062-goal-skill` | — |
 
-## Supply-chain & secrets
+## Secrets
 
 | Capacity / rule | Origin spec | Extending specs |
 |---|---|---|
-| Secrets scan (`secrets-scan.md`) | `006-secrets-scan`, `007-secrets-scan-timing` | `018-githooks-activation-hint` |
-| Supply chain (`supply-chain.md`) | `008-supply-chain-scan`, `009-supply-chain-block`, `109-supply-chain-scan-multi-runtime` | — |
+| Secrets scan (`secrets-scan.md`) | `006-secrets-scan`, `007-secrets-scan-timing` | `018-githooks-activation-hint`, `112-prune-supply-chain-and-secrets-advise` (removed the soft Edit-time advise hook) |
+
+_Supply chain (`008`/`009`/`109`) was removed by `112-prune-supply-chain-and-secrets-advise` — the install-time block was the wrong shape; vuln-audit is the replacement direction._
 
 ## Harness propagation & session state
 

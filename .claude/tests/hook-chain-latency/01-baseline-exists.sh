@@ -23,7 +23,7 @@ for field in git_sha harness_version os ts reps cells; do
   fi
 done
 
-for hook in governance-gate.sh secrets-preflight.sh supply-chain-preflight.sh runtime-pre-mark.sh; do
+for hook in governance-gate.sh secrets-preflight.sh runtime-pre-mark.sh; do
   if [ "$(jq -r --arg h "$hook" '.cells | has($h)' "$BASELINE")" != "true" ]; then
     echo "FAIL: baseline missing cells for hook $hook"
     exit 1

@@ -9,10 +9,9 @@
 # invisible to the underlying Bash; one diagnostic line goes to stderr only
 # when CLAUDE_RUNTIME_INTROSPECT_DEBUG=1.
 #
-# Tokeniser TWIN: shares pattern with .agent0/hooks/supply-chain-preflight.sh's
-# package-collection loop — same chain/pipe/redirect terminators and
-# value-taking flag skip. See .agent0/memory/runtime-introspect-maintenance.md
-# § Deep gotchas ("Tokeniser drift with supply-chain preflight").
+# Tokeniser: the command-token scan honours chain/pipe/redirect terminators
+# and value-taking flag skips. See .agent0/memory/runtime-introspect-maintenance.md
+# § Deep gotchas.
 #
 # Detector pair list (v1):
 #   bun test                        → bun-test
@@ -34,7 +33,6 @@
 #
 # Reference:
 #   .claude/rules/runtime-introspect.md       — full discipline
-#   .agent0/hooks/supply-chain-preflight.sh   — tokeniser-twin (keep in sync)
 #   .agent0/hooks/secrets-preflight.sh             — fail-open patterns
 
 set -uo pipefail
@@ -72,10 +70,9 @@ COMMAND="$(printf '%s' "$INPUT" | jq -r '.tool_input.command // ""' 2>/dev/null 
 # ---------------------------------------------------------------------------
 # Surfaced by 2026-05-11 validation pass: a `git
 # commit -m "$(cat <<'EOF' ... bun tsc ... EOF)"` invocation tokenised the
-# commit body and matched "bun tsc" → false snapshot. Same family as the
-# supply-chain "commit messages mentioning compound syntax" gotcha but
-# higher prevalence here because verifier verbs ARE common prose. Detect
-# `git commit` as a leading-segment shape and skip.
+# commit body and matched "bun tsc" → false snapshot. Verifier verbs ARE
+# common prose in commit messages, so detect `git commit` as a leading-segment
+# shape and skip.
 #
 # Tolerates: `git commit ...`, `git -C <path> commit ...`, `git  commit`
 # (double space). Whitespace + non-`#` non-newline content allowed between

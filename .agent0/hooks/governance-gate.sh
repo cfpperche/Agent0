@@ -23,7 +23,7 @@
 # Override: append `# OVERRIDE: <reason>` to the command, where the reason
 # (whitespace-trimmed) is >= 10 characters. Case-sensitive marker. This is the
 # canonical override-marker precedent the other gates (delegation, secrets-scan,
-# supply-chain, tdd) cite.
+# tdd) cite.
 #
 # Exit codes: 0 = allow, 2 = block (Claude Code re-prompts the agent with stderr).
 # jq is a hard dependency; if missing, the hook fails closed (exit 2).

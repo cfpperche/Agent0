@@ -85,15 +85,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.agent0/hooks/supply-chain-preflight.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/runtime-pre-mark.sh"
           }
         ]
@@ -118,24 +109,6 @@
       }
     ],
     "PostToolUse": [
-      {
-        "matcher": "Edit|Write|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/secrets-advise.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/supply-chain-advise.sh"
-          }
-        ]
-      },
       {
         "matcher": "Edit|Write|MultiEdit",
         "hooks": [

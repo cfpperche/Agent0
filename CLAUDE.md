@@ -46,7 +46,7 @@ Non-trivial work is spec-first — intent before code under `docs/specs/NNN-<slu
 
 ## Delegation
 
-`Agent` dispatches are gated: `.claude/hooks/delegation-gate.sh` enforces a 5-field handoff (TASK / CONTEXT / CONSTRAINTS / DELIVERABLE-or-DONE_WHEN), and `.claude/hooks/post-edit-validate.sh` re-validates sub-agent edits. See `.claude/rules/delegation.md`.
+`Agent` dispatches are gated: `.claude/hooks/delegation-gate.sh` enforces a 5-field handoff (TASK / CONTEXT / CONSTRAINTS / DELIVERABLE-or-DONE_WHEN), and `.agent0/hooks/delegation-verify.sh` verifies sub-agent work at close (`SubagentStop`, runtime-neutral). See `.claude/rules/delegation.md`.
 
 ## User prompt framing
 

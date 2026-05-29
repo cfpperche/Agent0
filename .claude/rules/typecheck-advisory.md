@@ -37,7 +37,7 @@ typecheck-advisory: no tsconfig.json or 'typecheck' script in package.json — t
 typecheck-advisory: no 'typecheck' script in package.json — typecheck step skipped (declare `npm run typecheck` to enable)
 ```
 
-Same shape as `lint-advisory:` and `tdd-advisory:` — surfaces via `post-edit-validate.sh`'s separated stderr capture into the agent's next-turn context. Never blocks; never increments delegation loop budget; advisory is the WHOLE signal.
+Same shape as `lint-advisory:` and `tdd-advisory:` — surfaces via `delegation-verify.sh`'s separated stderr capture into the agent's next-turn context. Never blocks; never increments delegation loop budget; advisory is the WHOLE signal.
 
 ## Non-goals
 
@@ -50,7 +50,7 @@ Same shape as `lint-advisory:` and `tdd-advisory:` — surfaces via `post-edit-v
 
 - **`has_typecheck_script` requires `jq` AND a parseable `package.json`.** A malformed package.json silently fails the script check (jq returns non-zero) → falls through to advisory. Acceptable: the consumer project has bigger problems than typecheck if package.json doesn't parse.
 - **`scripts.typecheck` value is NOT validated.** The validator checks for the script's presence, not its content. `"typecheck": "true"` (no-op) passes; the validator runs it and exits 0. Mirrors the lint-validator's "manifest-as-intent" decision — content validation is project responsibility.
-- **Multiple advisories can fire in same run.** A consumer project with biome declared+missing AND no typecheck primitive emits BOTH `lint-advisory:` and `typecheck-advisory:` on stderr — each on its own line. Agent reads both via post-edit-validate.sh's stderr surface.
+- **Multiple advisories can fire in same run.** A consumer project with biome declared+missing AND no typecheck primitive emits BOTH `lint-advisory:` and `typecheck-advisory:` on stderr — each on its own line. Agent reads both via delegation-verify.sh's stderr surface.
 - **Bun/pnpm fast-path uses `bunx`-equivalent semantics.** `bun tsc --noEmit` and `pnpm tsc --noEmit` invoke the local `node_modules/.bin/tsc`. If TypeScript isn't installed locally (no `typescript` in devDependencies), the inner `tsc` invocation fails and `ok=false`. That's correct behavior — declaring a tsconfig.json without TypeScript installed IS a project setup error worth blocking on. Different from the typecheck-advisory case (where the consumer project hasn't declared intent at all).
 - **Conservative npm path means npm consumer projects need a `typecheck` script even when they have a tsconfig.json.** Surprise for npm-stack consumer projects — by symmetry with bun/pnpm, a tsconfig.json should suffice. Documented in `validator/run.sh` comments. If npm dogfood surfaces this as routine pain, revisit (probably via `npm exec --no -- tsc --noEmit` after sandboxing the npx-prompt risk).
 - **No yarn branch.** The validator's stack detector doesn't recognize `yarn.lock` — yarn consumer projects fall through to the npm branch (which `package.json` triggers). Same typecheck advisory applies; the runner naming in the advisory is npm-flavored even on yarn consumer projects. Add `yarn.lock` detection separately when a real yarn consumer project lands.

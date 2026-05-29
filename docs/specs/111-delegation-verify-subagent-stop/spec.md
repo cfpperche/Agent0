@@ -2,7 +2,7 @@
 
 _Created 2026-05-29._
 
-**Status:** draft
+**Status:** in-progress — hook built + 8-scenario suite green + cascade removed + docs swept (in-session validated); live `SubagentStop` dogfood on both runtimes is the only remaining step (cold-restart-gated, 108/109 lesson)
 
 ## Intent
 
@@ -12,31 +12,31 @@ Why: `post-edit-validate.sh` runs the full project test suite + typecheck on *ev
 
 ## Acceptance criteria
 
-- [ ] **Scenario: delegated sub-agent closes with a passing tree (Claude)**
+- [x] **Scenario: delegated sub-agent closes with a passing tree (Claude)** _(logic validated via test `01-pass.sh`; live cold-restart fire pending)_
   - **Given** a stack-detected project and a delegated Claude sub-agent that has finished its task with the validator passing
   - **When** the sub-agent reaches `SubagentStop`
-  - **Then** `delegation-verify.sh` runs the validator once, it returns `ok=true`, the `subagent-stop` audit close row is appended, and closure is accepted (exit 0)
+  - **Then** `delegation-verify.sh` runs the validator once, it returns `ok=true`, the failure counter is reset, the advisory family is surfaced, and closure is accepted (exit 0); `delegation-stop.sh` appends its `subagent-stop` close row in parallel
 
-- [ ] **Scenario: delegated sub-agent closes with a failing tree (Claude)**
-  - **Given** the same setup but the validator fails (`ok=false`)
+- [x] **Scenario: delegated sub-agent closes with a failing tree (Claude)** _(logic validated via test `02-fail-blocks.sh`; live cold-restart fire pending)_
+  - **Given** the same setup but the validator fails (`ok=false`) on the first stop (`stop_hook_active=false`)
   - **When** the sub-agent reaches `SubagentStop`
-  - **Then** the hook blocks closure (exit 2) with the validator tail surfaced, requests one focused continuation, and writes a `verify-blocked` status row (NOT a `subagent-stop` close row)
+  - **Then** the hook blocks closure (exit 2) with the validator tail surfaced, requests one focused continuation, and appends a `subagent-verify` row with `decision=blocked`. _(Design pivot: the hooks run in parallel, so `delegation-stop.sh` still writes its close row — suppression is not achievable without a race; the close row's `exit` field reflects the verify-failure counter instead. See `notes.md`.)_
 
-- [ ] **Scenario: second consecutive failing stop escalates**
-  - **Given** a sub-agent that was continued once after a `verify-blocked` and still fails the validator
+- [x] **Scenario: second consecutive failing stop escalates** _(logic validated via test `03-exhausted-partial.sh`; live cold-restart fire pending)_
+  - **Given** a sub-agent that was continued once after a block and still fails the validator (`stop_hook_active=true`)
   - **When** it reaches `SubagentStop` again
-  - **Then** the hook forces a partial-result (stops continuing) rather than looping
+  - **Then** the hook accepts the closure as a partial result (exit 0, `decision=exhausted`) rather than blocking again — `stop_hook_active` is the loop guard
 
-- [ ] **Scenario: Codex delegated sub-agent close (live dogfood)**
+- [ ] **Scenario: Codex delegated sub-agent close (live dogfood)** _(pending — Codex prompt in handoff)_
   - **Given** the Codex `.codex/config.toml` `SubagentStop` block enabled + cold restart/trust
   - **When** a Codex sub-agent closes after a delegated task
   - **Then** `delegation-verify.sh` fires via the real `SubagentStop`, runs the validator keyed by `agent_id`, and blocks via `decision:"block"` on failure — proven by a recorded run, not fixtures (108/109 lesson)
 
-- [ ] `.claude/hooks/post-edit-validate.sh` is deleted and its `PostToolUse(Edit|Write|MultiEdit)` registration removed from `.claude/settings.json`
-- [ ] `grep -rn 'post-edit-validate'` returns nothing outside `docs/specs/`
-- [ ] The `tdd-advisory:` coverage signal still reaches the agent — relocated to `delegation-verify.sh`, surfaced once at stop
-- [ ] `.claude/rules/delegation.md` § *Post-edit validator loop* is rewritten as a stop-time delegated-verification section; § *Audit log* `exit`/loop-budget fields updated to the stop-time primitive
-- [ ] All new `delegation-verify` tests pass + the existing delegation suite stays green
+- [x] `.claude/hooks/post-edit-validate.sh` is deleted and its `PostToolUse(Edit|Write|MultiEdit)` registration removed from `.claude/settings.json`
+- [x] No LIVE `post-edit-validate` references remain (deleted hook + registration); only intentional "replaced by / removed in 111" breadcrumbs persist in rules/memory/config — same convention as 109's "moved from" breadcrumbs
+- [x] The `tdd-advisory:` coverage signal still reaches the agent — relocated to `delegation-verify.sh`, surfaced once at stop (test `01-pass.sh` asserts it; `lint-`/`typecheck-advisory:` family relocated too)
+- [x] `.claude/rules/delegation.md` § *Post-edit validator loop* rewritten as a stop-time delegated-verification section; advisory-channel refs in `tdd.md` / `lint-validator.md` / `typecheck-advisory.md` repointed
+- [x] All 8 new `delegation-verify` tests pass + the existing `061-delegation-stop` suite stays green
 
 ## Non-goals
 

@@ -3,7 +3,7 @@
 Sub-agent dispatches via the `Agent` tool are gated. Two cooperating hooks enforce the discipline so under-specified briefs and unverified "done" claims surface immediately instead of after the fact:
 
 - **`PreToolUse(Agent)`** → `.claude/hooks/delegation-gate.sh` validates a 5-field handoff, honours an `# OVERRIDE:` marker, appends an audit line, and may attach a complexity advisory.
-- **`PostToolUse(Edit|Write|MultiEdit)`** → `.claude/hooks/post-edit-validate.sh` re-runs the project validator after a *delegated* agent edits a file. Parent edits are exempt by design.
+- **`SubagentStop`** → `.agent0/hooks/delegation-verify.sh` runs the project validator once when a *delegated* sub-agent closes, keyed by `agent_id`. Parent (main-thread) stops are exempt by design. Runtime-neutral (Claude + Codex). Replaced the per-edit `post-edit-validate.sh` in spec 111.
 
 ## The 5-field handoff
 
@@ -41,7 +41,7 @@ This is the exact precedent of `.claude/rules/user-prompt-framing.md`: when the 
 
 DONE_WHEN is the local materialization of the same primitive that Codex CLI and Claude Code (v2.1.139+, May 2026) ship as `/goal` — a done-state declared up front so the agent works toward a contract instead of a sequence of prompts. The frame is **contract, not promise**: a goal statement without a verifier is just a fancier prompt.
 
-The verifier in this project is `.claude/hooks/post-edit-validate.sh` plus the runtime-introspect probe (`bash .agent0/tools/probe.sh last-run`, see `.claude/rules/runtime-introspect.md`). A sub-agent's self-report — "tests pass", "build succeeded" — is never the final signal. The validator running the actual command and emitting the real exit code is. Same discipline `/goal` enforces upstream via its evaluator model; here it runs through hooks instead of a separate judge, but the contract semantics are the same — and they compose. A parent that submits `/goal` to itself can still dispatch `Agent` calls during the loop, and each of those still passes through the 5-field handoff and the post-edit validator. The two primitives layer rather than compete.
+The verifier in this project is `.agent0/hooks/delegation-verify.sh` (at `SubagentStop`) plus the runtime-introspect probe (`bash .agent0/tools/probe.sh last-run`, see `.claude/rules/runtime-introspect.md`). A sub-agent's self-report — "tests pass", "build succeeded" — is never the final signal. The validator running the actual command and emitting the real exit code is. Same discipline `/goal` enforces upstream via its evaluator model; here it runs through hooks instead of a separate judge, but the contract semantics are the same — and they compose. A parent that submits `/goal` to itself can still dispatch `Agent` calls during the loop, and each of those still passes through the 5-field handoff and the stop-time delegated-task verifier (`delegation-verify.sh`). The two primitives layer rather than compete.
 
 ## Override marker
 
@@ -51,22 +51,32 @@ The marker skips ONLY the 5-field validation. It does NOT skip the audit append 
 
 ## Post-edit validator loop
 
-When a delegated sub-agent edits a file, the post-edit hook runs the project validator (`.claude/validators/run.sh` by default, auto-detecting bun / pnpm / npm / python / go / rust). The validator emits a JSON object with an `ok` field. Fail → `exit 2` with the validator stdout/stderr tail surfaced to the sub-agent, which then has to fix the failing checks and re-edit.
+_(Stop-time since spec 111 — the section name is retained as the stable cross-reference anchor; the trigger is now `SubagentStop`, not per-edit.)_
 
-Counters are per-`agent_id` under `.claude/.delegation-state/agents/`. After `CLAUDE_DELEGATION_LOOP_BUDGET` consecutive failures (default 5), stderr switches to `LOOP BUDGET EXCEEDED` and the sub-agent is directed to **stop editing and report a partial result** describing what worked, what failed validation, and what remains for a fresh delegation or a human to finish. A passing validation resets the counter — recovery in-flight is fine; the cap exists to stop fix-loops that aren't converging.
+When a delegated sub-agent reaches `SubagentStop`, `.agent0/hooks/delegation-verify.sh` runs the project validator (`.claude/validators/run.sh` by default, auto-detecting bun / pnpm / npm / python / go / rust / Laravel) **once**, keyed by the documented `agent_id`. The validator emits a JSON object with an `ok` field. This is the DONE_WHEN enforcement point — the delegated task's *close*, not every edit.
 
-Parent agents do NOT trigger the validator (actor detection keys on the `agent_id` payload field, which is absent for parent edits). This is by design — the parent is expected to be running tests directly.
+Spec 111 replaced the former per-edit `post-edit-validate.sh` with this stop-time hook for two reasons: (1) Codex `PostToolUse(apply_patch)` carries no parent-vs-subagent discriminator, so per-edit delegated-edit attribution is not portable — `SubagentStop` carries `agent_id` on both runtimes; (2) the full suite no longer runs on every edit (expensive, cascade-prone) — it runs once, at close.
+
+Decision (exit codes):
+
+- **Pass** (`ok=true`) → exit 0; the per-`agent_id` failure counter is reset; the validator's advisory family (`lint-advisory:` / `typecheck-advisory:` / `tdd-advisory:`) is surfaced.
+- **Fail, first stop** (`ok=false`, `stop_hook_active` false) → exit 2: closure is blocked and the sub-agent gets **one focused continuation** to fix the failing checks; the validator tail is surfaced.
+- **Fail, after a continuation** (`ok=false`, `stop_hook_active` true) → exit 0: the closure is accepted as a **partial result** rather than blocking again. `stop_hook_active` is the loop guard (Claude's native stop-loop-prevention signal, present on `SubagentStop`), so the escalation is robust even if `agent_id` does not persist across the continuation.
+
+Counters live at `.claude/.delegation-state/agents/<agent_id>/consecutive_failures`. `delegation-verify.sh` is the **writer**; `.agent0/hooks/delegation-stop.sh` **reads** the same counter for the close row's `exit` field (`>= CLAUDE_DELEGATION_LOOP_BUDGET`, default 5 → `loop-budget-exceeded`). The two hooks run **in parallel** (Claude runs all matching `SubagentStop` hooks concurrently — no ordering, no short-circuit), so they coordinate through the counter file, never a sentinel. `delegation-stop.sh` is unchanged: it always appends its `subagent-stop` close row; `delegation-verify.sh` writes its own `subagent-verify` rows (`decision: pass | blocked | exhausted`) adjacent, correlated by `agent_id`.
+
+Parent agents do NOT trigger verification (`agent_id` is the delegated-actor gate; it is absent on a main-thread `Stop`). The parent is expected to run tests directly.
 
 Tuning:
 
-- `CLAUDE_DELEGATION_VALIDATOR=/abs/path/to/script` — override the validator path. The script must emit a JSON `{ ok, command, exit, duration_ms, stdout, stderr }` object on stdout.
-- `CLAUDE_DELEGATION_LOOP_BUDGET=N` — change the consecutive-failure cap. Default 5.
+- `CLAUDE_DELEGATION_VALIDATOR=/abs/path/to/script` — override the validator path. JSON `{ ok, command, exit, duration_ms, stdout, stderr, warnings }` on stdout.
+- `CLAUDE_DELEGATION_LOOP_BUDGET=N` — threshold the close row's `exit` field reads for `loop-budget-exceeded` (default 5). The *escalation to partial-result* fires earlier, on the first continuation, via `stop_hook_active`.
 
-If the validator is missing, non-executable, or emits unparseable output, the hook fails open (no block). A broken validator must never permanently lock the agent out of editing.
+If the validator is missing, non-executable, or emits unparseable output, the hook fails open (exit 0). A broken verifier must never permanently block sub-agent termination.
 
-The validator may also append a `warnings` array to its JSON output on stack-detected paths. The post-edit hook reads any warnings and echoes each one to stderr with a `tdd-advisory:` prefix on the exit-0 path — non-blocking advisories that surface to the agent on its next turn. This is how TDD test-coverage advisories reach the agent today; see `.claude/rules/tdd.md` for the warning shape and the response convention.
+The validator may append a `warnings` array on stack-detected paths; `delegation-verify.sh` echoes each as a `tdd-advisory:` line on the pass path — non-blocking, surfaced once at close. See `.claude/rules/tdd.md` for the warning shape and response convention.
 
-**Parallel fan-out and the validator-cascade.** The validator typechecks and lints the **whole project** — `tsc --noEmit` and `biome check` are both project-wide, not per-file. When a parent dispatches a parallel `Agent` fan-out — ≥2 sub-agents editing one *shared* working tree concurrently — each sub-agent's post-edit validation sees the half-written files of its siblings, and `ok` flips to `false` on errors the sub-agent did not cause. This is the **validator-cascade**: sub-agents burn loop budget on sibling-induced failures, stub over each other to silence the checks, and leave broken code (observed across Waves 3-5 of a `/product` dogfood, 2026-05-20). A parent dispatching ≥2 parallel `Agent` calls that may touch overlapping files **MUST declare `isolation: "worktree"`** (see § Worktree isolation) — distinct worktrees give each sub-agent its own tree and its own project-wide check, so siblings never interfere. The validator already scopes its cwd to the edited file's git toplevel, so a worktree-isolated sub-agent is validated against *its own* tree, never a sibling's.
+**Parallel fan-out — the per-edit validator-cascade is gone.** The validator typechecks and lints the **whole project** (`tsc --noEmit`, `biome check`, `go vet ./...` are project-wide). Under the *old* per-edit design, ≥2 sub-agents editing one shared tree concurrently each saw the others' half-written files and flipped `ok` to `false` on errors they did not cause (the **validator-cascade**, observed across Waves 3-5 of a `/product` dogfood, 2026-05-20). Stop-time verification structurally eliminates this: each sub-agent is verified once, at its own close, against its own final tree state — there are no half-written sibling files at a clean close. Worktree isolation (`isolation: "worktree"`) is still recommended for parallel fan-outs that edit overlapping files, but now for **write-collision** reasons (last-writer-wins on shared paths), not validator interference. See § Worktree isolation.
 
 ## Audit log
 
@@ -144,11 +154,11 @@ This is canonical CC behavior — **Agent0 does NOT mediate the mechanism**. The
   jq -c 'select(.isolation == "" and (.escalation_signals | length) >= 2)' \
     .agent0/delegation-audit.jsonl
   ```
-- **Validator scoping** — `post-edit-validate.sh` derives the validator's cwd from the git toplevel of the edit's `tool_input.file_path`. Parent-tree edits resolve to `$PROJECT_DIR` (no change from the prior behavior); worktree-isolated edits resolve to the worktree path, so the validator runs against the isolated tree state, not stale parent state. Fail-open: `git rev-parse` failure (non-git scratch dir, etc.) falls back to `$PROJECT_DIR`.
+- **Validator scoping** — `delegation-verify.sh` derives the validator's cwd from the sub-agent's `cwd` at `SubagentStop` (a worktree-isolated sub-agent closes inside its worktree), resolving its git toplevel. So the close-time validation runs against the sub-agent's own tree, not stale parent state. Fail-open: `git rev-parse` failure (non-git scratch dir, etc.) falls back to the sub-agent `cwd`, then `$PROJECT_DIR`.
 
 ### When parents SHOULD declare `isolation: "worktree"`
 
-- **≥ 2 parallel `Agent` dispatches** that may touch overlapping files (canonical collision case). Without isolation the sub-agents share one working tree: the last writer wins on collisions, AND — the concrete failure mode — each sub-agent's post-edit validator runs a project-wide `tsc`/`biome` that sees the others' half-written files and fails `ok` on errors it did not cause (the **validator-cascade**; see § Post-edit validator loop). This is a **MUST**, not a suggestion, for any parallel fan-out with overlapping targets.
+- **≥ 2 parallel `Agent` dispatches** that may touch overlapping files (canonical collision case). Without isolation the sub-agents share one working tree and the last writer wins on collisions — silent clobbering of each other's edits. This is a **MUST**, not a suggestion, for any parallel fan-out with overlapping targets. (Note: the per-edit *validator-cascade* that was a second reason here is gone since spec 111 — verification is stop-time, so siblings' half-written files no longer fail each other's checks; see § Post-edit validator loop. Write-collision remains the live reason.)
 - **Sub-agent will create new files in unknown locations** — keeps the parent tree clean if the work is exploratory or speculative.
 - **Sub-agent will run destructive operations** (`rm -r`, schema migrations, file rewrites at scale) — worktree provides reversibility via discard-on-exit, parent tree remains untouched.
 - **Long-running sub-agent on a `--worktree` background session** — already isolated via `bgIsolation: "worktree"` config, no extra action needed.

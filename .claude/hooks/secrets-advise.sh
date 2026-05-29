@@ -32,7 +32,7 @@ INPUT="$(cat 2>/dev/null || true)"
 
 command -v jq >/dev/null 2>&1 || exit 0
 
-# Actor split — mirrors post-edit-validate.sh lines 20-21. Parent edits
+# Actor split — same agent_id gate as delegation-verify.sh. Parent edits
 # don't carry `agent_id`; sub-agent edits do. Parent → silent exit.
 AGENT_ID="$(printf '%s' "$INPUT" | jq -r '.agent_id // empty' 2>/dev/null || true)"
 [ -z "$AGENT_ID" ] && exit 0

@@ -8,18 +8,20 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-**Multi-runtime hook migration — porting `.claude/hooks/*` to `.agent0/` hook-by-hook.** 106 delegation + 107 governance + 108 secrets-preflight + 109 supply-chain-preflight ALL SHIPPED + merged. **110 post-edit-validate-multi-runtime SHIPPED (research/decision spec)** — resolved via Claude↔Codex `/sdd debate` + human override; **111 delegation-verify-subagent-stop scaffolded (`draft`)** as the implementation spec. Working tree clean except pre-existing untracked `docs/specs/091-sdd-debate-runner/` (out of scope).
+**Multi-runtime hook migration — porting `.claude/hooks/*` to `.agent0/` hook-by-hook.** 106–110 SHIPPED+merged. **111 delegation-verify-subagent-stop IMPLEMENTED + in-session-validated** (`in-progress`) — only the live cold-restart dogfood remains. Working tree dirty with the 111 implementation (uncommitted at time of writing) + pre-existing untracked `docs/specs/091-sdd-debate-runner/`.
 
-- **110 decision (the key outcome):** the per-edit `post-edit-validate.sh` is to be **deleted entirely**, NOT ported. Codex `PostToolUse(apply_patch)` carries no parent-vs-subagent discriminator (verified at developers.openai.com/codex/hooks — `agent_id`/`agent_type` only on Subagent events), so a per-edit port is non-viable. The debate recommended a two-hook split; the human overrode to **full removal** → one runtime-neutral `delegation-verify.sh` at `SubagentStop`. Mid-flight thrash detection consciously given up for zero per-edit suite cost. Full rationale in `docs/specs/110-*/debate.md`.
+- **111 done in-session:** `post-edit-validate.sh` DELETED (+ its PostToolUse registration); new `.agent0/hooks/delegation-verify.sh` runs the validator once at `SubagentStop`, keyed by `agent_id`. 8-scenario test suite green; `061-delegation-stop` still green; `delegation.md` § Post-edit validator loop rewritten; advisory family (lint/typecheck/tdd) relocated; spec-067 cascade tests removed; Codex config block added; all path refs swept (only intentional breadcrumbs remain).
+- **Key design pivot (docs-resolved, see `docs/specs/111-*/notes.md`):** Claude SubagentStop hooks run **in parallel** → the planned sentinel/close-row-suppression is non-viable. Replaced with a **counter-contract**: `delegation-verify.sh` WRITES `.claude/.delegation-state/agents/<id>/consecutive_failures`, `delegation-stop.sh` (UNCHANGED) READS it for the close row's `exit`. Escalation keys on `stop_hook_active`, robust to whether `agent_id` persists.
 
 ## Active Work
 
-- _None in flight._ 110 closed; 111 is the next build, queued for a fresh focused session.
+- _None in flight._ 111 implementation complete; the two live dogfoods (below) are human-gated.
 
 ## Next Actions
 
-1. **Implement spec 111 (`delegation-verify-subagent-stop`)** in a fresh focused session — it's substantial + risk-tailed (new `SubagentStop` hook on both runtimes + removal cascade + live Codex dogfood). Run `/sdd plan` then `/sdd tasks` on `docs/specs/111-*` first. Scope (from 110 § Follow-up path): add `.agent0/hooks/delegation-verify.sh` (SubagentStop, both runtimes, `agent_id`-keyed, block→one-continuation→partial-result, verify-before-close-row ordering); delete `post-edit-validate.sh` + its `PostToolUse(Edit\|Write\|MultiEdit)` registration; relocate the `tdd-advisory:` surfacing into the new hook; rewrite `delegation.md` § Post-edit validator loop. **Resolve 111's OQs by live dogfood, not assumption:** does a continued sub-agent preserve its `agent_id`, and how does `stop_hook_active` behave across a validation-blocked stop (108/109 lesson — both-runtime live fire before shipped).
-2. After 111: remaining migration surfaces — PostToolUse edit-surface advisories (`propagation-advise` / `supply-chain-advise` / `secrets-advise`, `apply_patch` path extraction) + `runtime-capture.sh` / `runtime-pre-mark.sh`.
+1. **Live Claude dogfood (cold restart REQUIRED).** This session added `delegation-verify.sh` to `settings.json` `SubagentStop` AFTER session start → NOT yet loaded; only a cold `claude` restart loads it (108/109 lesson). After restart: dispatch a delegated sub-agent against a **stack-detected** scratch repo with failing tests → expect close blocked (exit 2, one continuation) + `subagent-verify`/`decision:blocked` row; then passing close → `decision:pass`/accepted. Confirm `agent_id` preserved + `stop_hook_active` flips true (111 OQ1/OQ2). Full prompt: `docs/specs/111-*/notes.md` § Open questions. Record there, flip `spec.md` Status → shipped.
+2. **Codex dogfood** — prompt ready at `docs/specs/111-*/notes.md` § Open questions; hand to a Codex CLI session.
+3. After 111 ships: remaining surfaces — PostToolUse edit-surface advisories (`propagation-advise` / `supply-chain-advise` / `secrets-advise`, `apply_patch` path extraction) + `runtime-capture.sh` / `runtime-pre-mark.sh`.
 
 ## Decisions & Gotchas
 

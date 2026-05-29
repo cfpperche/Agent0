@@ -60,11 +60,11 @@ Quoted from the docs Hook lifecycle table (last audited 2026-05-25 via the cc-pl
 Agent0 currently uses **8 of these 29** (counted from `.claude/settings.json`):
 
 - `PreToolUse` (5 matchers: governance-gate, secrets-preflight, supply-chain-preflight, runtime-pre-mark, delegation-gate)
-- `PostToolUse` (5 matchers: post-edit-validate, secrets-advise, supply-chain-advise, session-track-edits, runtime-capture)
+- `PostToolUse` (4 matchers: secrets-advise, supply-chain-advise, session-track-edits, runtime-capture) — post-edit-validate removed in spec 111 (verification moved to SubagentStop)
 - `PostToolUseFailure` (runtime-capture, added by spec 020)
 - `SessionStart` (3 hooks: session-start, reminders-readout, routines-readout — plus memory-decay-readout from `.agent0/hooks/`)
 - `Stop` (session-stop)
-- `SubagentStop` (delegation-stop, added by spec 061)
+- `SubagentStop` (2 hooks: delegation-verify [spec 111], delegation-stop [spec 061])
 - `PreCompact` (pre-compact)
 - `InstructionsLoaded` (rule-load-debug, opt-in)
 

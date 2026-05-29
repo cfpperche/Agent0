@@ -12,8 +12,8 @@
 # tracker must never block a tool call.
 #
 # Measured latency (2026-05-16, Linux/WSL2): ~30-50ms per invocation; bash
-# startup + jq dominate. Acceptable next to PostToolUse(Edit) siblings like
-# post-edit-validate.sh which run multi-second validator suites.
+# startup + jq dominate. Acceptable — the multi-second validator suite now runs
+# once at SubagentStop (delegation-verify.sh), not per-edit (spec 111).
 
 set -euo pipefail
 

@@ -135,6 +135,20 @@
 # command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/delegation-start-audit.sh"'
 # statusMessage = "Auditing subagent dispatch"
 
+# Delegated-task verification (spec 111). SubagentStop runs the project
+# validator once at delegated-task close, keyed by agent_id. On failure it
+# blocks closure via decision:"block"/exit-2 (Codex continues the subagent for
+# one focused pass); a second failing stop (stop_hook_active) is accepted as a
+# partial result. Runs in PARALLEL with delegation-stop.sh (Codex runs all
+# matching SubagentStop hooks); they coordinate via the consecutive_failures
+# counter file, not ordering. Fail-open. Replaces the removed per-edit
+# post-edit-validate.sh. See .claude/rules/delegation.md § Post-edit validator loop.
+# [[hooks.SubagentStop]]
+# [[hooks.SubagentStop.hooks]]
+# type = "command"
+# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/delegation-verify.sh"'
+# statusMessage = "Verifying delegated task at close"
+
 # [[hooks.SubagentStop]]
 # [[hooks.SubagentStop.hooks]]
 # type = "command"

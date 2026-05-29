@@ -12,9 +12,19 @@ _In-flight design memory for this spec — decisions, deviations, tradeoffs, and
 
 _Choices made where the spec/plan was ambiguous. The decision itself + why this option over others considered in the moment._
 
-### {{YYYY-MM-DD}} — {{author}} — {{one-line title}}
+### 2026-05-29 — parent — parallel-hook execution kills the sentinel design; counter-contract replaces it
 
-{{free-prose body — what was ambiguous, what was decided, why}}
+Resolved the bulk of task 6 (the chain-semantics spike) by docs — `https://code.claude.com/docs/en/hooks` — **before** any cold-restart dogfood, per the verify-not-assume discipline. Findings: (1) exit-2 on `SubagentStop` "Prevents the subagent from stopping" (block + continue) — confirms the block mechanism; (2) **"All matching hooks run in parallel"** with no documented short-circuit — so `delegation-verify.sh` and `delegation-stop.sh` run concurrently, NOT in registration order; (3) `agent_id` is present on `SubagentStop` (OQ1 field-exists confirmed; preservation across a continuation still live-only); (4) the docs page omits `stop_hook_active`, BUT `delegation-stop.sh:54` already reads `.stop_hook_active` from the payload — so the field IS delivered on `SubagentStop`.
+
+**Consequence — the plan's sentinel/ordering/close-row-suppression design is non-viable.** Two parallel hooks cannot coordinate "verify blocks → stop skips the close row" without a race (`delegation-stop.sh` may append the close row before `delegation-verify.sh` writes any sentinel). 
+
+**Replacement design (cleaner, and respects the spec-110 non-goal of leaving `delegation-stop.sh` untouched):**
+- `delegation-verify.sh` becomes the WRITER of `.claude/.delegation-state/agents/<agent_id>/consecutive_failures` — the exact path `delegation-stop.sh:94` already READS for its `exit` field (a path the deleted `post-edit-validate.sh` never wrote — it wrote `agents/<agent_id>` as a flat file, a latent mismatch this fixes).
+- `delegation-stop.sh` stays **byte-for-byte unchanged**: it keeps writing a close row on every stop (parallel, no suppression) and reads the counter for `exit`. The close row's `exit` field now reflects verify state. The contract between the two hooks is the counter file, not a sentinel.
+- Escalation uses `stop_hook_active` as the primary guard (Claude's native stop-loop-prevention signal), NOT the agent_id counter — making the design robust to OQ1 regardless: fail + `!stop_hook_active` → exit 2 (block + one continuation) + increment counter; fail + `stop_hook_active` (already continued once) → exit 0 (accept closure as partial-result, do not block again) + increment. Pass → reset counter to 0. The counter is forensic (feeds `exit`); `stop_hook_active` is the loop guard.
+- `delegation-verify.sh` writes its own `verify` audit rows (`event:"subagent-verify"`, `decision: pass|blocked|exhausted`) for forensics — adjacent to the close row, correlated by `agent_id`.
+
+This supersedes plan.md § Approach (sentinel) and tasks 6–8; spec.md scenario 2 ("NO close row") is revised to "close row carries `exit` reflecting verify + a `subagent-verify` row records the block." Live cold-restart dogfood still required to confirm exit-2 actually continues the sub-agent + `agent_id`/`stop_hook_active` runtime values (can't run in-session — settings.json hooks load only at cold start).
 
 ## Deviations
 
@@ -36,6 +46,25 @@ _Alternatives weighed during implementation (not at plan time). The chosen path 
 
 _Questions surfaced during build that the implementer couldn't resolve alone. Owner (who decides) or path to resolution if known. Promote answered questions to `spec.md` § Open questions or as retroactive acceptance scenarios when the spec is updated._
 
-### {{YYYY-MM-DD}} — {{author}} — {{one-line title}}
+### 2026-05-29 — parent — live dogfood prompts (OQ1/OQ2 resolution path)
 
-{{free-prose body — the question, why it surfaced, what's blocked on it, who can decide}}
+OQ1 (does a continued sub-agent preserve `agent_id`?) and OQ2 (`stop_hook_active` across a blocked stop) are answerable only by a live cold-restart dogfood — the hook logic is fully validated via the 8-scenario synthetic suite, but the runtime VALUES need a real `SubagentStop` fire. The design is robust either way (escalation keys on `stop_hook_active`, not `agent_id` continuity), so these confirm rather than gate.
+
+**Claude (cold restart REQUIRED — settings.json hooks load only at cold start):** after restart, dispatch a delegated sub-agent against a stack-detected scratch repo with failing tests → expect close blocked (exit 2, one continuation) + `subagent-verify`/`decision:blocked` row; then passing close → `decision:pass` accepted. Confirm `agent_id` preserved across the continuation + `stop_hook_active` flips true.
+
+**Codex dogfood prompt:**
+
+```
+TAREFA: Live dogfood do hook delegation-verify.sh no runtime Codex CLI (spec 111, scenario 4).
+CONTEXTO:
+- .agent0/hooks/delegation-verify.sh roda o validator no SubagentStop, keyed por agent_id; bloqueia via decision:"block"/exit-2 na falha, aceita como partial-result no stop continuado (stop_hook_active).
+- O bloco SubagentStop comentado já existe no .codex/config.toml.example (antes do delegation-stop).
+- Audit canônico: .agent0/delegation-audit.jsonl (rows event:"subagent-verify").
+PASSOS:
+1. Habilitar no .codex/config.toml real o bloco [[hooks.SubagentStop]] do delegation-verify.sh (antes do delegation-stop.sh).
+2. Cold restart do Codex + trust do hook novo.
+3. Num repo com stack detectada (ex: package.json com "test" que falha), delegar um subagente cujo trabalho deixe os testes falhando → esperar fechamento bloqueado (decision:"block") com row subagent-verify/decision:blocked/runtime:"codex-cli".
+4. Deixar continuar e ainda falhar → esperar decision:exhausted (partial-result), sem loop infinito.
+5. VERIFICAR e REPORTAR: agent_id preservado no stop continuado? stop_hook_active vira true? Colar as rows reais. NÃO afirmar sucesso sem as rows (lição 108/109).
+DONE_WHEN: rows subagent-verify com runtime:"codex-cli" (blocked + exhausted) registradas neste notes.md + resposta às 2 OQs.
+```

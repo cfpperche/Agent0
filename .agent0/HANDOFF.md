@@ -8,18 +8,18 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-**Multi-runtime hook migration — porting `.claude/hooks/*` to `.agent0/` hook-by-hook.** 106 delegation + 107 governance + 108 secrets-preflight + **109 supply-chain-preflight ALL SHIPPED + merged to `main`** (109 merged FF as `6de0d92`, pushed). Working tree clean except pre-existing untracked `docs/specs/091-sdd-debate-runner/` (out of scope, untouched).
+**Multi-runtime hook migration — porting `.claude/hooks/*` to `.agent0/` hook-by-hook.** 106 delegation + 107 governance + 108 secrets-preflight + 109 supply-chain-preflight ALL SHIPPED + merged. **110 post-edit-validate-multi-runtime SHIPPED (research/decision spec)** — resolved via Claude↔Codex `/sdd debate` + human override; **111 delegation-verify-subagent-stop scaffolded (`draft`)** as the implementation spec. Working tree clean except pre-existing untracked `docs/specs/091-sdd-debate-runner/` (out of scope).
 
-- **109 shipped** — `git mv supply-chain-scan.sh → .agent0/hooks/supply-chain-preflight.sh`; sources `_memory-hook-lib.sh` (root + `memory_runtime` audit tag); **NO rewrite path → no runtime-aware stdout** (simpler than 108); bare `"matcher": "Bash"` (dropped dormant `if`-pipe); dropped `skip-not-install` (silent no-row, mirrors 108); audit → `.agent0/supply-chain-audit.jsonl` + `runtime`. Codex live dogfood required trusting the new project hook (`pre_tool_use:3:0`) and unwrapping Codex local-shell launcher commands (`/bin/bash -lc '<cmd>'`) before tokenization (regression tests 07 + 09). Both live dogfoods (Claude `cargo add tokio`, Codex `pip install requests` — block + override) recorded in `docs/specs/109-*/notes.md`.
+- **110 decision (the key outcome):** the per-edit `post-edit-validate.sh` is to be **deleted entirely**, NOT ported. Codex `PostToolUse(apply_patch)` carries no parent-vs-subagent discriminator (verified at developers.openai.com/codex/hooks — `agent_id`/`agent_type` only on Subagent events), so a per-edit port is non-viable. The debate recommended a two-hook split; the human overrode to **full removal** → one runtime-neutral `delegation-verify.sh` at `SubagentStop`. Mid-flight thrash detection consciously given up for zero per-edit suite cost. Full rationale in `docs/specs/110-*/debate.md`.
 
 ## Active Work
 
-- _None in flight._ 109 is closed; next session resumes the migration backlog from a clean `main`.
+- _None in flight._ 110 closed; 111 is the next build, queued for a fresh focused session.
 
 ## Next Actions
 
-1. **Continue the hook migration to `.agent0/`** — remaining surfaces: `post-edit-validate.sh` (delegated-edit validator), the PostToolUse edit-surface advisories (`apply_patch` path extraction for Codex), and `runtime-capture.sh` / `runtime-pre-mark.sh`. Apply the cutover pattern proven across 106-109: bare matcher, `_memory-hook-lib.sh` sourcing, runtime-tagged audit, and a **mandatory live PreToolUse dogfood on BOTH runtimes** before flipping shipped (108 dormant-`if` lesson — tests passing is never proof a registration fires).
-2. Scaffold the next spec via `/sdd new <slug>` before touching code.
+1. **Implement spec 111 (`delegation-verify-subagent-stop`)** in a fresh focused session — it's substantial + risk-tailed (new `SubagentStop` hook on both runtimes + removal cascade + live Codex dogfood). Run `/sdd plan` then `/sdd tasks` on `docs/specs/111-*` first. Scope (from 110 § Follow-up path): add `.agent0/hooks/delegation-verify.sh` (SubagentStop, both runtimes, `agent_id`-keyed, block→one-continuation→partial-result, verify-before-close-row ordering); delete `post-edit-validate.sh` + its `PostToolUse(Edit\|Write\|MultiEdit)` registration; relocate the `tdd-advisory:` surfacing into the new hook; rewrite `delegation.md` § Post-edit validator loop. **Resolve 111's OQs by live dogfood, not assumption:** does a continued sub-agent preserve its `agent_id`, and how does `stop_hook_active` behave across a validation-blocked stop (108/109 lesson — both-runtime live fire before shipped).
+2. After 111: remaining migration surfaces — PostToolUse edit-surface advisories (`propagation-advise` / `supply-chain-advise` / `secrets-advise`, `apply_patch` path extraction) + `runtime-capture.sh` / `runtime-pre-mark.sh`.
 
 ## Decisions & Gotchas
 

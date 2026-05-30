@@ -93,7 +93,7 @@ for f in "$ROUTINES_DIR"/*.md; do
   [[ "$base" == ".gitkeep" || "$base" == ".gitkeep.md" ]] && continue
 
   # Skip files that fail validation (the install would still proceed for valid ones).
-  if ! bash "$PROJECT_DIR/.claude/skills/routine/scripts/validate.sh" "$base" >/dev/null 2>&1; then
+  if ! bash "$PROJECT_DIR/.agent0/skills/routine/scripts/validate.sh" "$base" >/dev/null 2>&1; then
     echo "install-routines: WARN routine '$base' failed validate; skipping its crontab entry" >&2
     continue
   fi

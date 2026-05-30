@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# .claude/skills/routine/scripts/new.sh
+# .agent0/skills/routine/scripts/new.sh
 # Scaffold a new routine: copy template, substitute placeholders, run validator.
 #
 # Usage:   bash new.sh <slug>
@@ -22,7 +22,7 @@ PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}
 PROJECT_DIR="${PROJECT_DIR:-$PWD}"
 
 ROUTINES_DIR="$PROJECT_DIR/.agent0/routines"
-TEMPLATE="$PROJECT_DIR/.claude/skills/routine/templates/routine.md.tmpl"
+TEMPLATE="$PROJECT_DIR/.agent0/skills/routine/templates/routine.md.tmpl"
 DEST="$ROUTINES_DIR/$SLUG.md"
 
 if [[ ! -f "$TEMPLATE" ]]; then
@@ -45,7 +45,7 @@ DATE=$(date -u +%Y-%m-%d)
 sed -e "s|{{SLUG}}|$SLUG|g" -e "s|{{DATE}}|$DATE|g" "$TEMPLATE" > "$DEST"
 
 # Validate the scaffold (it should pass own validator).
-VALIDATOR="$PROJECT_DIR/.claude/skills/routine/scripts/validate.sh"
+VALIDATOR="$PROJECT_DIR/.agent0/skills/routine/scripts/validate.sh"
 if [[ -x "$VALIDATOR" ]] || [[ -f "$VALIDATOR" ]]; then
   if ! bash "$VALIDATOR" "$SLUG"; then
     echo "new: scaffold failed self-validation — template bug, please report" >&2

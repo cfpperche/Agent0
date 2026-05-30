@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# .claude/skills/routine/scripts/validate.sh
+# .agent0/skills/routine/scripts/validate.sh
 # Validates a routine file: frontmatter shape, required keys, cron expression,
 # required body headers. Honors per-check override markers (# OVERRIDE: <check>: <reason ≥10 chars>).
 #

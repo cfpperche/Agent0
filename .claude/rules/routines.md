@@ -162,10 +162,10 @@ The marker is scoped — it skips the named check, not all validation:
 - `.agent0/tools/uninstall-routines.sh` — symmetric removal.
 - `.agent0/tools/run-routine.sh` — invoked by cron; leader check + interpolate + enqueue + rotation.
 - `.agent0/hooks/routines-readout.sh` — `SessionStart` hook; surfaces pending queue.
-- `.claude/skills/routine/SKILL.md` — `/routine` slash command (new / list / run / validate / dismiss).
-- `.claude/skills/routine/scripts/validate.sh` — frontmatter + cron + body validator.
-- `.claude/skills/routine/scripts/new.sh` — template instantiation.
-- `.claude/skills/routine/templates/routine.md.tmpl` — scaffold template.
+- `.agent0/skills/routine/SKILL.md` — `/routine` slash command (new / list / run / validate / dismiss).
+- `.agent0/skills/routine/scripts/validate.sh` — frontmatter + cron + body validator.
+- `.agent0/skills/routine/scripts/new.sh` — template instantiation.
+- `.agent0/skills/routine/templates/routine.md.tmpl` — scaffold template.
 
 ## Discipline
 

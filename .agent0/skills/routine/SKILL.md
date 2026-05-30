@@ -5,7 +5,7 @@ argument-hint: <new <slug> | list | run <slug> | validate <slug> | dismiss <slug
 license: MIT
 compatibility: Designed for Claude Code. Body references `.claude/` conventional paths and CC-specific tools; cron executor + bootstrap scripts are bash + POSIX utilities, portable to any runtime that maps a `.claude/`-analog directory.
 metadata:
-  agent0-portability-tier: cc-native
+  agent0-portability-tier: agentskills-portable
   version: "0.1"
 ---
 
@@ -32,14 +32,14 @@ Scaffold a new routine. Parse `$ARGUMENTS`: first token must be `new`, second to
 1. **Validate** — refuse if:
    - slug is empty or contains uppercase / non-alphanumeric (besides hyphen)
    - `.agent0/routines/<slug>.md` already exists (suggest a different slug, or edit the existing file)
-2. **Invoke**: `bash .claude/skills/routine/scripts/new.sh <slug>`. The script copies `templates/routine.md.tmpl` → `.agent0/routines/<slug>.md`, substitutes `{{SLUG}}` and `{{DATE}}`, and runs `validate.sh` as a self-check (should pass).
+2. **Invoke**: `bash .agent0/skills/routine/scripts/new.sh <slug>`. The script copies `templates/routine.md.tmpl` → `.agent0/routines/<slug>.md`, substitutes `{{SLUG}}` and `{{DATE}}`, and runs `validate.sh` as a self-check (should pass).
 3. **Report**: surface the script's stdout (`new: created <path>` + the re-install hint). Tell the user to edit the file (especially the `schedule:` field, default `0 9 * * *` is rarely what they want), then re-run `.agent0/tools/install-routines.sh` to register the new routine with cron.
 
 ## Subcommand: `list`
 
 Show the status of every routine in this repo. No arguments.
 
-1. **Invoke**: `bash .claude/skills/routine/scripts/list.sh`. The script iterates `.agent0/routines/*.md` (excluding `.gitkeep`), parses frontmatter, and emits one line per routine in the shape:
+1. **Invoke**: `bash .agent0/skills/routine/scripts/list.sh`. The script iterates `.agent0/routines/*.md` (excluding `.gitkeep`), parses frontmatter, and emits one line per routine in the shape:
    ```
    <slug>  schedule=<cron>  leader=<yes|no|n/a>  queue=<N pending>  last-completed=<ts|never>
    ```
@@ -73,7 +73,7 @@ Dispatch the oldest pending queue entry for a routine. Parse `$ARGUMENTS`: first
 
 Run the frontmatter + body validator against a routine file. Parse `$ARGUMENTS`: first token must be `validate`, second is the slug.
 
-1. **Invoke**: `bash .claude/skills/routine/scripts/validate.sh <slug>`. The script checks: frontmatter shape (two `---` markers, line 1 start); required keys (`name`, `schedule`, `idempotent`); `name` matches file basename; `idempotent: true` (hard reject `false` — no override); cron expression matches the 30-line regex (per `.claude/rules/routines.md` § *Cron expression syntax*); body has `# Prompt` and `# Done when` headers.
+1. **Invoke**: `bash .agent0/skills/routine/scripts/validate.sh <slug>`. The script checks: frontmatter shape (two `---` markers, line 1 start); required keys (`name`, `schedule`, `idempotent`); `name` matches file basename; `idempotent: true` (hard reject `false` — no override); cron expression matches the 30-line regex (per `.claude/rules/routines.md` § *Cron expression syntax*); body has `# Prompt` and `# Done when` headers.
 2. **Report**: surface the script's stdout/stderr verbatim. Exit code 0 = pass; 1 = fail with explanation.
 
 Per-check override markers (placed on their own line in the routine body):

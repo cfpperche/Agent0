@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# .claude/skills/routine/scripts/list.sh
+# .agent0/skills/routine/scripts/list.sh
 # Print status of every routine in this repo: schedule, leader, queue, last-completed.
 #
 # Usage:   bash list.sh

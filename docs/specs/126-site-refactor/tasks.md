@@ -4,17 +4,42 @@ _Generated from `plan.md` on 2026-05-30. Work top-to-bottom. Check boxes as task
 
 ## Implementation
 
-- [ ] 1. {{task 1 — small, unambiguous, ordered}}
-- [ ] 2. {{task 2}}
-- [ ] 3. {{task 3}}
+**Phase 0 — baseline + audit (no user-visible change)**
+- [ ] 1. Pick + verify the audit tool/command (Lighthouse via `npx`, or PageSpeed) is actually runnable locally; record the exact command + viewport.
+- [ ] 2. Capture the pre-refactor baseline for `/en/`, `/pt/`, `/es/` (perf, SEO meta/OG, a11y) into `docs/specs/126-site-refactor/baseline.md`, with pass/fail thresholds.
+- [ ] 3. Audit the real capacity + MCP inventory against `CLAUDE.md` and the repo; produce the truth table (count + per-capacity currency + multi-runtime status) Phase 1 will use. Decide hardcode-snapshot vs build-time-derive and note it in `plan.md`.
+
+**Phase 1 — content/positioning (THE GATE)**
+- [ ] 4. Rewrite the hero copy in `strings.ts` (en/pt/es) to state developer value (governance/discipline of the harness), removing stale/unverifiable claims; keep "harness" framing.
+- [ ] 5. Replace the "Eighteen capacities" copy + sync `capacities.ts` to the audited set; make it multi-runtime-true (Claude Code + Codex CLI, per spec 121), across all three locales.
+- [ ] 6. Currency pass on `mcps.ts` + the remaining section copy (`whyBuilt`, `quickStart`, `howToExtend`, `faq`) for the dev audience, all three locales in lockstep.
+- [ ] 7. Enforce claim classes: every capability claim cites a real basis; remove any business-result-metric copy. **Get the copy architecture approved before Phase 2.**
+
+**Phase 2 — visual/brand**
+- [ ] 8. Extend the `@theme` token seed in `global.css` into a coherent, reusable design system (color/space/type/radius scales, component primitives).
+- [ ] 9. Apply the design system to the components (`Hero`, `CapacityGrid`, `McpGrid`, `WhyBuilt`, `QuickStart`, `HowToExtend`, `Faq`, `Header`, `Footer`), preserving the dev-oriented CTAs.
+
+**Phase 3 — architecture/code**
+- [ ] 10. Restructure component/IA as the new narrative requires (merge/split/reorder sections in `Landing.astro`); record any component create/delete/rename back in `plan.md`. Keep the `STRINGS[locale]` data flow.
+
+**Phase 4 — perf/SEO/a11y guardrail**
+- [ ] 11. Add the `og:image` asset + `og:image`/`twitter:title`/`twitter:description` tags in `Landing.astro`; verify hreflang/canonical still correct.
+- [ ] 12. Fix any contrast/semantics/a11y issues surfaced against the Phase 0 baseline.
 
 ## Verification
 
-_Acceptance checks tied to `spec.md` acceptance criteria. Each one should map to a checklist item there._
-
-- [ ] {{verify criterion 1}}
-- [ ] {{verify criterion 2}}
+_Each maps to a `spec.md` acceptance scenario._
+- [ ] 13. Root (`/Agent0/`) canonicalizes/redirects to `/en/` cleanly — no blank/broken intermediate. *(Scenario: root canonicalizes)*
+- [ ] 14. Each locale hero states developer value accurately; capacity/MCP inventory matches repo reality, no dead "Eighteen". *(Scenarios: hero value + current inventory)*
+- [ ] 15. No business-result-metric claim ships; capability claims all cite a basis. *(Scenario: claim classes)*
+- [ ] 16. Three locales (`/en/`,`/pt/`,`/es/`) carry the refactor with no untranslated fallback. *(Scenario: locales in lockstep)*
+- [ ] 17. `bun run build` succeeds on Astro 5 + Tailwind 4, no stack swap. *(Scenario: build + stack preserved)*
+- [ ] 18. Re-run the Phase 0 audit; perf/SEO-OG (incl. resolved `og:image`)/a11y are equal-or-better vs baseline. *(Scenario: non-functional non-regression)*
+- [ ] 19. Confirm the phase boundary held: Phase 1 copy was approved before Phase 2 visual work started. *(Scenario: phase boundary)*
 
 ## Notes
 
 _Anything that came up during execution that doesn't belong in plan.md but is useful for the PR description or future readers._
+
+- The premise reversal (outcome-led → OSS-dev-landing) is the headline of this spec's history — see `debate.md` Synthesis. The PR description should lead with it so reviewers don't expect a consultancy pivot.
+- `dist/` is gitignored; the deploy is GitHub Pages (`cfpperche.github.io/Agent0/`) — "rebuilt dist" is local verification, not a tracked deliverable.

@@ -34,7 +34,14 @@ const siteUrl = "https://cfpperche.github.io";
     <meta property="og:description" content={meta.description} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={`${siteUrl}${base}/${locale}/`} />
+    <meta property="og:image" content={`${siteUrl}${base}/og-image.png`} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content={locale} />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={meta.title} />
+    <meta name="twitter:description" content={meta.description} />
+    <meta name="twitter:image" content={`${siteUrl}${base}/og-image.png`} />
     <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
     {
       LOCALES.map((loc) => (

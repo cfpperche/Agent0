@@ -29,9 +29,15 @@ _Choices made where the spec/plan was ambiguous. The decision itself + why this 
 
 _Places where implementation intentionally departed from `plan.md`. The departure + the reason it was necessary or better._
 
-### {{YYYY-MM-DD}} — {{author}} — {{one-line title}}
+### 2026-05-30 — parent — Phases 2–4: conservative visual scope; root-redirect + og:image fixes
 
-{{free-prose body — what the plan said, what was done instead, why}}
+**Visual axis (Phase 2) delivered conservatively, on purpose.** The acceptance criterion is "coherent, reusable design system (tokens/components), not ad-hoc" — the existing `@theme` token system in `global.css` already satisfies this (every component consumes `var(--color-*)`; verified by a rendered screenshot). The spec's OQ5 (visual/brand source of truth) explicitly defers *bold* visual direction to the user at plan time, so a speculative full redesign of a clean, working site would have been reckless and out of mandate. The one visual change made is additive and low-risk: a subtle masked grid-accent in the hero that ties the page to the new `og-image` (same visual language). A larger redesign remains available as a follow-on once OQ5 is answered.
+
+**IA (Phase 3) — no restructure.** Task 10 was conditional ("as the new narrative requires"). The dev-OSS-landing narrative is served by the existing section order (Hero → Capacities → MCPs → Why → QuickStart → Extend → FAQ); restructuring working sections without a driving need would add regression risk for no gain. In-scope, not required, not done.
+
+**og:image (Phase 4) generated, not stubbed.** Authored an on-brand 1200×630 OG card (HTML) and rendered it to a real PNG via headless `google-chrome --screenshot` (Lighthouse's protocol couldn't connect in WSL, but the one-shot screenshot path works). Committed at `site/public/og-image.png`; `Landing.astro` now emits `og:image` + dimensions + `twitter:title`/`twitter:description`/`twitter:image`.
+
+**Root redirect (bonus fix).** `astro.config.mjs` had `i18n.routing.redirectToDefaultLocale: true`, which auto-generated a **2-second** meta-refresh root page that overrode the hand-written `src/pages/index.astro`. Set it to `false` so the instant redirect (JS `location.replace` + 0s meta-refresh + canonical) takes effect — eliminates the 2s blank intermediate.
 
 ## Tradeoffs
 

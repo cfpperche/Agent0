@@ -10,7 +10,9 @@ export default defineConfig({
     defaultLocale: "en",
     routing: {
       prefixDefaultLocale: true,
-      redirectToDefaultLocale: true,
+      // Root redirect is handled by src/pages/index.astro (instant: JS replace
+      // + 0s meta-refresh + canonical), not Astro's default 2s meta-refresh.
+      redirectToDefaultLocale: false,
     },
   },
   vite: {

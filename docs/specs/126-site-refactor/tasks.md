@@ -16,26 +16,26 @@ _Generated from `plan.md` on 2026-05-30. Work top-to-bottom. Check boxes as task
 - [x] 7. Enforce claim classes: every capability claim cites a real basis; remove any business-result-metric copy. **Get the copy architecture approved before Phase 2.**
 
 **Phase 2 — visual/brand**
-- [ ] 8. Extend the `@theme` token seed in `global.css` into a coherent, reusable design system (color/space/type/radius scales, component primitives).
-- [ ] 9. Apply the design system to the components (`Hero`, `CapacityGrid`, `McpGrid`, `WhyBuilt`, `QuickStart`, `HowToExtend`, `Faq`, `Header`, `Footer`), preserving the dev-oriented CTAs.
+- [x] 8. Extend the `@theme` token seed in `global.css` into a coherent, reusable design system (color/space/type/radius scales, component primitives).
+- [x] 9. Apply the design system to the components (`Hero`, `CapacityGrid`, `McpGrid`, `WhyBuilt`, `QuickStart`, `HowToExtend`, `Faq`, `Header`, `Footer`), preserving the dev-oriented CTAs.
 
 **Phase 3 — architecture/code**
-- [ ] 10. Restructure component/IA as the new narrative requires (merge/split/reorder sections in `Landing.astro`); record any component create/delete/rename back in `plan.md`. Keep the `STRINGS[locale]` data flow.
+- [x] 10. Restructure component/IA as the new narrative requires (merge/split/reorder sections in `Landing.astro`); record any component create/delete/rename back in `plan.md`. Keep the `STRINGS[locale]` data flow.
 
 **Phase 4 — perf/SEO/a11y guardrail**
-- [ ] 11. Add the `og:image` asset + `og:image`/`twitter:title`/`twitter:description` tags in `Landing.astro`; verify hreflang/canonical still correct.
-- [ ] 12. Fix any contrast/semantics/a11y issues surfaced against the Phase 0 baseline.
+- [x] 11. Add the `og:image` asset + `og:image`/`twitter:title`/`twitter:description` tags in `Landing.astro`; verify hreflang/canonical still correct.
+- [x] 12. Fix any contrast/semantics/a11y issues surfaced against the Phase 0 baseline.
 
 ## Verification
 
 _Each maps to a `spec.md` acceptance scenario._
-- [ ] 13. Root (`/Agent0/`) canonicalizes/redirects to `/en/` cleanly — no blank/broken intermediate. *(Scenario: root canonicalizes)*
-- [ ] 14. Each locale hero states developer value accurately; capacity/MCP inventory matches repo reality, no dead "Eighteen". *(Scenarios: hero value + current inventory)*
-- [ ] 15. No business-result-metric claim ships; capability claims all cite a basis. *(Scenario: claim classes)*
-- [ ] 16. Three locales (`/en/`,`/pt/`,`/es/`) carry the refactor with no untranslated fallback. *(Scenario: locales in lockstep)*
-- [ ] 17. `bun run build` succeeds on Astro 5 + Tailwind 4, no stack swap. *(Scenario: build + stack preserved)*
-- [ ] 18. Re-run the Phase 0 audit; perf/SEO-OG (incl. resolved `og:image`)/a11y are equal-or-better vs baseline. *(Scenario: non-functional non-regression)*
-- [ ] 19. Confirm the phase boundary held: Phase 1 copy was approved before Phase 2 visual work started. *(Scenario: phase boundary)*
+- [x] 13. Root (`/Agent0/`) canonicalizes/redirects to `/en/` cleanly — no blank/broken intermediate. *(Scenario: root canonicalizes)*
+- [x] 14. Each locale hero states developer value accurately; capacity/MCP inventory matches repo reality, no dead "Eighteen". *(Scenarios: hero value + current inventory)*
+- [x] 15. No business-result-metric claim ships; capability claims all cite a basis. *(Scenario: claim classes)*
+- [x] 16. Three locales (`/en/`,`/pt/`,`/es/`) carry the refactor with no untranslated fallback. *(Scenario: locales in lockstep)*
+- [x] 17. `bun run build` succeeds on Astro 5 + Tailwind 4, no stack swap. *(Scenario: build + stack preserved)*
+- [x] 18. Re-run the Phase 0 audit; perf/SEO-OG (incl. resolved `og:image`)/a11y are equal-or-better vs baseline. *(Scenario: non-functional non-regression)*
+- [x] 19. Confirm the phase boundary held: Phase 1 copy was approved before Phase 2 visual work started. *(Scenario: phase boundary)*
 
 ## Notes
 

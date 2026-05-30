@@ -45,6 +45,16 @@ separator, so colons in summaries must be replaced — the script does it, a han
 
 `image` is the first migrated skill with both (a) a real MCP dependency and (b) a hard reason not to auto-fire (paid, side-effecting generation). Per the runbook step 5, that's exactly when `agents/openai.yaml` is warranted, so `image` ships the first one: `policy.allow_implicit_invocation: false` (explicit `$image` / `/skills` only) + a `dependencies.tools` entry declaring the optional fal-ai MCP. It is written to read as the reference template for future skills-with-MCP. Schema taken from developers.openai.com/codex/skills (`interface` / `policy` / `dependencies.tools[].{type,value,description,transport,url}`).
 
+### 2026-05-30 — parent — Live-Codex verification: pilot discovery + `$`-invocation confirmed end-to-end
+
+Closes reminder `r-2026-05-30-live-codex-confirm-spec-121` (the live counterpart to the offline symlink/discovery tests). Two halves, both confirmed against a real Codex CLI 0.135.0 at repo root:
+
+**Half 1 — discovery (headless, `codex debug prompt-input`):** the rendered model-visible prompt-input lists 6 implicitly-invocable Agent0 skills (`brainstorm, remind, routine, sdd, skill, vuln-audit`), each with its realpath-resolved `…/.agent0/skills/<slug>/SKILL.md` reached through the `.agents/skills/<slug>` symlinks. `vuln-audit` present with full description + path. `image` is **correctly absent** from the implicit list — `agents/openai.yaml` `policy.allow_implicit_invocation: false` (paid/side-effecting) suppresses it from auto-fire while `$image` stays explicit. The 6-listed-vs-7-symlinked gap is the designed behavior, not a regression.
+
+**Half 2 — `$vuln-audit` triggers the tool (live TUI turn, human-run):** typing `$vuln-audit` in a real Codex TUI session produced all three expected signals: (a) Codex **announced** "Using the vuln-audit skill now"; (b) it **opened** `SKILL.md` + the `vuln-audit.md` rule and followed the workflow; (c) it **executed** `bash .agent0/tools/vuln-audit.sh` — the real wrapper, not an inlined re-implementation. The run returned `status=unavailable` because the `osv-scanner` binary isn't installed on this machine (the tool degraded cleanly, naming the npm/bun ecosystems it *would* have scanned). That is the separate open smoke-test (`r-2026-05-30-run-vuln-audit-once-against`), **not** a spec-121 failure — the discovery→trigger→wrapper-exec wiring is fully proven.
+
+**Bonus:** the same Codex TUI turn injected the SessionStart brief + per-turn capsule carrying spec 125's `▸` markers, giving a live (TUI, not headless) confirmation of the 125 Codex path on top of scenario 5b.
+
 ## Deviations
 
 _Places where implementation intentionally departed from `plan.md`. The departure + the reason it was necessary or better._

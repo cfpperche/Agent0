@@ -23,14 +23,15 @@ _No active parallel-work claims._
 
 ## Next Actions
 
-1. **cc-only skill multi-runner arc — done (7 portable skills, spec 121).** Only `product` stays cc-native;
-   binding blocker = its CC `Agent`-tool multi-agent orchestration (no Codex pre-dispatch equiv, spec 106).
-   AskUserQuestion gates + Playwright tool-names are secondary/degradable. Not a gap.
-2. **Live-Codex confirm spec 121** (reminder `r-2026-05-30-live-codex-confirm-spec-121`) — fresh Codex:
-   `codex debug prompt-input` lists a migrated skill from `.agents/skills`; `$<slug>` runs it.
-3. **vuln-audit smoke test** (reminder `r-2026-05-30-run-vuln-audit-once-against`) — real osv-scanner vs
-   `site/bun.lock`, confirm live V2 JSON parse. Open from spec 120.
-4. **Optional:** rebuild `site/dist/` (122/123/124 changed source strings; dist not rebuilt).
+1. **cc-only skill multi-runner arc — done (7 portable skills, spec 121); pilot live-Codex-confirmed.** A real
+   Codex TUI `$vuln-audit` turn triggered the skill → read SKILL.md → ran `.agent0/tools/vuln-audit.sh`;
+   `codex debug prompt-input` lists the 6 implicit skills (`image` suppressed by `allow_implicit_invocation:
+   false`). Only `product` stays cc-native (CC `Agent`-tool orchestration, spec 106). Not a gap.
+2. **vuln-audit smoke test** (reminder `r-2026-05-30-run-vuln-audit-once-against`) — `osv-scanner` is NOT
+   installed (live `$vuln-audit` returned `status=unavailable`, degraded clean). Install
+   (`go install github.com/google/osv-scanner/v2/cmd/osv-scanner@latest`), then scan `site/bun.lock` and
+   confirm live V2 JSON parse. Open from spec 120.
+3. **Optional:** rebuild `site/dist/` (122/123/124 changed source strings; dist not rebuilt).
 
 ## Decisions & Gotchas
 

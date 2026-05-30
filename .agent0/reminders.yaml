@@ -158,7 +158,8 @@ reminders:
     root, ''codex debug prompt-input'' should list vuln-audit from .agents/skills,
     and ''$vuln-audit'' should run .agent0/tools/vuln-audit.sh. Offline tests prove
     the symlink/discovery structure; this confirms a live session picks it up.'
-  status: pending
+  status: done
   links:
   - docs/specs/121-multi-runtime-skills/
   - .agent0/skills/vuln-audit/
+  completed_ts: '2026-05-30T20:24:06Z'

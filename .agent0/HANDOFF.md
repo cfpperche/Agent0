@@ -13,8 +13,11 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 Codex empirically probed both live runtimes):
 - Canonical body at `.agent0/skills/<slug>/SKILL.md`; discovery symlinks `.claude/skills/<slug>` (Claude) +
   `.agents/skills/<slug>` (Codex) → `../../.agent0/skills/<slug>`. One source, both runtimes follow the link.
-- **Pilot migrated:** `vuln-audit` moved `.claude/skills/` → `.agent0/skills/vuln-audit/` + both symlinks
-  (git mode 120000). Tool path unchanged (`.agent0/tools/vuln-audit.sh`).
+- **3 skills migrated one-by-one** (each its own commit): `vuln-audit` (pilot, `1be1389`), `remind`
+  (`38c1ef5`), `routine` (`215ad75`) → `.agent0/skills/<slug>/` + both symlinks (mode 120000), tier
+  flipped to `agentskills-portable`. For remind/routine the internal script paths were neutralized to
+  canonical `.agent0/skills/<slug>/scripts/` (readout hook, install-routines, new.sh TEMPLATE/VALIDATOR,
+  rules) so they resolve under Codex without leaning on the Claude-named symlink.
 - **sync-harness** propagates it: `.agent0/skills` in `COPY_CHECK_RECURSIVE` + `sync_skill_discovery_links`
   pass recreates the 2 symlinks, with copy-materialization fallback + `skills-advisory:` on symlink-hostile
   checkouts (Windows/`core.symlinks=false`) — the founder's elevated caveat.
@@ -36,10 +39,10 @@ Pre-existing untracked `docs/specs/091-sdd-debate-runner/` is unrelated (out of 
 1. **Live-Codex confirm spec 121** (reminder `r-2026-05-30-live-codex-confirm-spec-121`) — in a real Codex
    session, `codex debug prompt-input` should list `vuln-audit` from `.agents/skills`; `$vuln-audit` runs the
    tool. Offline tests prove the symlink/discovery structure; this confirms a live pickup.
-2. **Next skills to migrate (one-by-one)** — only `agentskills-portable` ones. `/product` + `/sdd refine`
-   are `cc-native` (`AskUserQuestion`) → stay in `.claude/skills/`. Candidates: skills that already delegate
-   to `.agent0/tools/` or need only a `${CLAUDE_SKILL_DIR}` neutralization. Follow the runbook in
-   `portability-tiers.md` § Per-skill multi-runtime migration runbook.
+2. **Next skills to migrate (one-by-one)** — `sdd` + `skill` need `${CLAUDE_SKILL_DIR}` neutralization
+   (9 + 12 refs → resolve relative to SKILL.md), then portable. `product` is genuinely `cc-native`
+   (`AskUserQuestion` ×7) → stays. `image` is MCP-bound (fal.ai); `brainstorm` renders HTML+state → assess.
+   Runbook: `portability-tiers.md` § Per-skill multi-runtime migration runbook. (`vuln-audit`/`remind`/`routine` done.)
 3. **vuln-audit post-merge smoke test** (reminder `r-2026-05-30-run-vuln-audit-once-against`) — real
    osv-scanner against `site/bun.lock`, confirm live V2 JSON parse. Still open from spec 120.
 4. **Optional: rebuild `site/dist/`** — spec 118 changed `site/src/i18n/strings.ts`; only source changed.

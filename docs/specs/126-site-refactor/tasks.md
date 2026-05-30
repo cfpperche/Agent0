@@ -5,15 +5,15 @@ _Generated from `plan.md` on 2026-05-30. Work top-to-bottom. Check boxes as task
 ## Implementation
 
 **Phase 0 — baseline + audit (no user-visible change)**
-- [ ] 1. Pick + verify the audit tool/command (Lighthouse via `npx`, or PageSpeed) is actually runnable locally; record the exact command + viewport.
-- [ ] 2. Capture the pre-refactor baseline for `/en/`, `/pt/`, `/es/` (perf, SEO meta/OG, a11y) into `docs/specs/126-site-refactor/baseline.md`, with pass/fail thresholds.
-- [ ] 3. Audit the real capacity + MCP inventory against `CLAUDE.md` and the repo; produce the truth table (count + per-capacity currency + multi-runtime status) Phase 1 will use. Decide hardcode-snapshot vs build-time-derive and note it in `plan.md`.
+- [x] 1. Pick + verify the audit tool/command (Lighthouse via `npx`, or PageSpeed) is actually runnable locally; record the exact command + viewport.
+- [x] 2. Capture the pre-refactor baseline for `/en/`, `/pt/`, `/es/` (perf, SEO meta/OG, a11y) into `docs/specs/126-site-refactor/baseline.md`, with pass/fail thresholds.
+- [x] 3. Audit the real capacity + MCP inventory against `CLAUDE.md` and the repo; produce the truth table (count + per-capacity currency + multi-runtime status) Phase 1 will use. Decide hardcode-snapshot vs build-time-derive and note it in `plan.md`.
 
 **Phase 1 — content/positioning (THE GATE)**
-- [ ] 4. Rewrite the hero copy in `strings.ts` (en/pt/es) to state developer value (governance/discipline of the harness), removing stale/unverifiable claims; keep "harness" framing.
-- [ ] 5. Replace the "Eighteen capacities" copy + sync `capacities.ts` to the audited set; make it multi-runtime-true (Claude Code + Codex CLI, per spec 121), across all three locales.
-- [ ] 6. Currency pass on `mcps.ts` + the remaining section copy (`whyBuilt`, `quickStart`, `howToExtend`, `faq`) for the dev audience, all three locales in lockstep.
-- [ ] 7. Enforce claim classes: every capability claim cites a real basis; remove any business-result-metric copy. **Get the copy architecture approved before Phase 2.**
+- [x] 4. Rewrite the hero copy in `strings.ts` (en/pt/es) to state developer value (governance/discipline of the harness), removing stale/unverifiable claims; keep "harness" framing.
+- [x] 5. Replace the "Eighteen capacities" copy + sync `capacities.ts` to the audited set; make it multi-runtime-true (Claude Code + Codex CLI, per spec 121), across all three locales.
+- [x] 6. Currency pass on `mcps.ts` + the remaining section copy (`whyBuilt`, `quickStart`, `howToExtend`, `faq`) for the dev audience, all three locales in lockstep.
+- [x] 7. Enforce claim classes: every capability claim cites a real basis; remove any business-result-metric copy. **Get the copy architecture approved before Phase 2.**
 
 **Phase 2 — visual/brand**
 - [ ] 8. Extend the `@theme` token seed in `global.css` into a coherent, reusable design system (color/space/type/radius scales, component primitives).

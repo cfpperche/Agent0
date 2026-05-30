@@ -12,9 +12,18 @@ _In-flight design memory for this spec — decisions, deviations, tradeoffs, and
 
 _Choices made where the spec/plan was ambiguous. The decision itself + why this option over others considered in the moment._
 
-### {{YYYY-MM-DD}} — {{author}} — {{one-line title}}
+### 2026-05-30 — parent — Phase 0 inventory audit + derive-count decision
 
-{{free-prose body — what was ambiguous, what was decided, why}}
+**Audit (truth table).** `capacities.ts` shipped **14** entries; the hero copy claims "Eighteen"; `CLAUDE.md` lists **20** top-level capacity sections. Resolution:
+- **Keep** (real capacities, not all top-level CLAUDE.md `##`): `governance` (spec 001 rule), `reminders` (skill), `bdd` (acceptance-scenario practice).
+- **Add the 9 missing** that the repo ships now: `vuln-audit`, `image-gen`, `skill-compliance`, `product`, `routines`, `artifact-size-cap`, `user-prompt-framing`, `runtime-capabilities`, `runtime-entrypoints`.
+- Net post-audit set ≈ 23.
+
+**Derive-count decision (plan Risk: inventory re-staling).** A hardcoded word ("Eighteen") went stale once; hardcoding "Twenty-three" repeats the failure. Decision: the displayed count **derives from `CAPACITIES.length`** at render time — the copy can never disagree with the data again. The `whatYouGet` string drops the hardcoded number; the component interpolates the length. (Build-time *generation* of the whole list from the repo was rejected as heavier scope per the plan — the array stays hand-curated, only the *count* is derived.)
+
+**Multi-runtime truth (Codex R2 #2).** Current copy is Claude-Code-only; spec 121 made the harness multi-runtime (Claude Code + Codex CLI). Capacity descriptions and the hero/why copy must stop saying "for Claude Code" exclusively and reflect both runtimes.
+
+**Baseline.** Captured in `baseline.md`; Lighthouse perf deferred (Chrome won't connect in this WSL session) — static SEO/meta/a11y/bundle baseline recorded, `og:image`/`twitter:title|description` confirmed absent (Phase 4 targets).
 
 ## Deviations
 

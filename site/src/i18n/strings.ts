@@ -80,8 +80,8 @@ rm -rf .git && git init
 # Activate the native pre-commit hook (one-time, per-fork)
 git config core.hooksPath .githooks
 
-# Open in Claude Code — SessionStart will surface SESSION.md
-# and any pending reminders automatically.`;
+# Open in Claude Code or Codex CLI — SessionStart surfaces
+# .agent0/HANDOFF.md and any pending reminders automatically.`;
 
 const EXTEND_CODE = `/sdd new my-capacity      # scaffolds docs/specs/NNN-my-capacity/
 # fill spec.md with intent, BDD acceptance scenarios, non-goals
@@ -94,7 +94,7 @@ export const STRINGS: Record<Locale, Strings> = {
     meta: {
       title: "Agent0 — the harness for AI coding agents",
       description:
-        "An open-source spec-driven harness for Claude Code: governance gates, delegation discipline, secrets scanning, and more — all opt-in, all auditable.",
+        "An open-source spec-driven harness for AI coding agents on Claude Code and Codex CLI: governance gates, delegation discipline, secrets scanning, vuln audit, and more — all opt-in, all auditable.",
     },
     nav: {
       capacities: "Capacities",
@@ -117,7 +117,7 @@ export const STRINGS: Record<Locale, Strings> = {
     },
     whatYouGet: {
       eyebrow: "Capacities",
-      title: "Eighteen capacities, all opt-in.",
+      title: "{n} capacities, all opt-in.",
       sub: "Each one is documented in its own rule under .agent0/context/rules/, and the non-trivial ones have a spec under docs/specs/. Every override marker (# OVERRIDE: <reason ≥10 chars>) is recorded — there is no silent bypass.",
       cardLabel: "Capacity",
       specLabel: "spec",
@@ -163,7 +163,7 @@ export const STRINGS: Record<Locale, Strings> = {
         },
       ],
       finalNote:
-        "That's it. Open the directory in Claude Code, and the SessionStart hook will surface SESSION.md and pending reminders on the first turn.",
+        "That's it. Open the directory in Claude Code or Codex CLI, and the SessionStart hook will surface .agent0/HANDOFF.md and pending reminders on the first turn.",
     },
     howToExtend: {
       eyebrow: "Extend",
@@ -196,8 +196,8 @@ export const STRINGS: Record<Locale, Strings> = {
       title: "Common questions.",
       items: [
         {
-          q: "Do I need Claude Code to use Agent0?",
-          a: "Yes — the hooks target Claude Code's lifecycle events (PreToolUse, PostToolUse, SessionStart, PreCompact, Stop). Most capacities have a native fallback that works without Claude Code (the gitleaks pre-commit hook is a real git hook), but the agent-side discipline assumes Claude Code is the driver.",
+          q: "Which agent runtimes does Agent0 support?",
+          a: "Claude Code and Codex CLI both. The hooks target lifecycle events (PreToolUse, PostToolUse, SessionStart, Stop) on each runtime — Claude Code via .claude/settings.json, Codex via tracked .codex/hooks.json. Most capacities also have a native fallback that works without any agent (the gitleaks pre-commit hook is a real git hook).",
         },
         {
           q: "What does it cost?",
@@ -233,7 +233,7 @@ export const STRINGS: Record<Locale, Strings> = {
     meta: {
       title: "Agent0 — o harness para agentes de código IA",
       description:
-        "Um harness open-source spec-driven para Claude Code: governance gates, disciplina de delegação, scan de segredos, introspecção em runtime e mais — tudo opt-in, tudo auditável.",
+        "Um harness open-source spec-driven para agentes de código IA no Claude Code e Codex CLI: governance gates, disciplina de delegação, scan de segredos, vuln audit e mais — tudo opt-in, tudo auditável.",
     },
     nav: {
       capacities: "Capacidades",
@@ -256,7 +256,7 @@ export const STRINGS: Record<Locale, Strings> = {
     },
     whatYouGet: {
       eyebrow: "Capacidades",
-      title: "Dezoito capacidades, todas opt-in.",
+      title: "{n} capacidades, todas opt-in.",
       sub: "Cada uma documentada em sua própria regra em .agent0/context/rules/, e as não-triviais têm spec em docs/specs/. Todo marcador de override (# OVERRIDE: <razão ≥10 chars>) é registrado — não existe bypass silencioso.",
       cardLabel: "Capacidade",
       specLabel: "spec",
@@ -302,7 +302,7 @@ export const STRINGS: Record<Locale, Strings> = {
         },
       ],
       finalNote:
-        "É isso. Abra o diretório no Claude Code e o hook SessionStart vai mostrar SESSION.md e reminders pendentes no primeiro turno.",
+        "É isso. Abra o diretório no Claude Code ou Codex CLI e o hook SessionStart vai mostrar o .agent0/HANDOFF.md e reminders pendentes no primeiro turno.",
     },
     howToExtend: {
       eyebrow: "Estender",
@@ -335,8 +335,8 @@ export const STRINGS: Record<Locale, Strings> = {
       title: "Perguntas frequentes.",
       items: [
         {
-          q: "Preciso do Claude Code pra usar Agent0?",
-          a: "Sim — os hooks miram os eventos de ciclo de vida do Claude Code (PreToolUse, PostToolUse, SessionStart, PreCompact, Stop). A maioria das capacidades tem fallback nativo que funciona sem Claude Code (o pre-commit do gitleaks é um hook real do git), mas a disciplina do lado do agente assume Claude Code como motor.",
+          q: "Quais runtimes de agente o Agent0 suporta?",
+          a: "Claude Code e Codex CLI, os dois. Os hooks miram eventos de ciclo de vida (PreToolUse, PostToolUse, SessionStart, Stop) em cada runtime — Claude Code via .claude/settings.json, Codex via .codex/hooks.json versionado. A maioria das capacidades também tem fallback nativo que funciona sem agente nenhum (o pre-commit do gitleaks é um hook real do git).",
         },
         {
           q: "Quanto custa?",
@@ -372,7 +372,7 @@ export const STRINGS: Record<Locale, Strings> = {
     meta: {
       title: "Agent0 — el harness para agentes de código IA",
       description:
-        "Un harness open-source spec-driven para Claude Code: governance gates, disciplina de delegación, scan de secretos, introspección en runtime y más — todo opt-in, todo auditable.",
+        "Un harness open-source spec-driven para agentes de código IA en Claude Code y Codex CLI: governance gates, disciplina de delegación, scan de secretos, vuln audit y más — todo opt-in, todo auditable.",
     },
     nav: {
       capacities: "Capacidades",
@@ -395,7 +395,7 @@ export const STRINGS: Record<Locale, Strings> = {
     },
     whatYouGet: {
       eyebrow: "Capacidades",
-      title: "Dieciocho capacidades, todas opt-in.",
+      title: "{n} capacidades, todas opt-in.",
       sub: "Cada una documentada en su propia regla en .agent0/context/rules/, y las no-triviales tienen spec en docs/specs/. Todo marcador de override (# OVERRIDE: <razón ≥10 chars>) es registrado — no existe bypass silencioso.",
       cardLabel: "Capacidad",
       specLabel: "spec",
@@ -441,7 +441,7 @@ export const STRINGS: Record<Locale, Strings> = {
         },
       ],
       finalNote:
-        "Eso es todo. Abre el directorio en Claude Code y el hook SessionStart va a mostrar SESSION.md y los reminders pendientes en el primer turno.",
+        "Eso es todo. Abre el directorio en Claude Code o Codex CLI y el hook SessionStart va a mostrar el .agent0/HANDOFF.md y los reminders pendientes en el primer turno.",
     },
     howToExtend: {
       eyebrow: "Extender",
@@ -474,8 +474,8 @@ export const STRINGS: Record<Locale, Strings> = {
       title: "Preguntas frecuentes.",
       items: [
         {
-          q: "¿Necesito Claude Code para usar Agent0?",
-          a: "Sí — los hooks apuntan a los eventos de ciclo de vida de Claude Code (PreToolUse, PostToolUse, SessionStart, PreCompact, Stop). La mayoría de las capacidades tienen un fallback nativo que funciona sin Claude Code (el pre-commit de gitleaks es un hook real de git), pero la disciplina del lado del agente asume a Claude Code como driver.",
+          q: "¿Qué runtimes de agente soporta Agent0?",
+          a: "Claude Code y Codex CLI, ambos. Los hooks apuntan a eventos de ciclo de vida (PreToolUse, PostToolUse, SessionStart, Stop) en cada runtime — Claude Code vía .claude/settings.json, Codex vía .codex/hooks.json versionado. La mayoría de las capacidades también tiene un fallback nativo que funciona sin ningún agente (el pre-commit de gitleaks es un hook real de git).",
         },
         {
           q: "¿Cuánto cuesta?",

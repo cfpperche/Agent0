@@ -1,10 +1,12 @@
-# Agent0 - Codex MCP recipes + local config template
+# Agent0 - Codex MCP recipes only
 #
-# This is NOT a complete Codex project config and Agent0
-# does not own model, provider, sandbox, approval, or tool-permission defaults.
+# This is only a catalog of disabled MCP server recipes. It is NOT a complete
+# Codex project config, and Agent0 does not own model, provider, sandbox,
+# approval, or tool-permission defaults.
 #
 # Workflow:
-#   1. cp .codex/config.toml.example .codex/config.toml
+#   1. If you want project-local MCP recipes, copy this file:
+#        cp .codex/config.toml.example .codex/config.toml
 #   2. Default: put secrets in .codex/.env.local (gitignored), not in this file.
 #   3. Flip enabled = true only for the MCP recipes you want active.
 #   4. Start Codex with: bash .agent0/tools/codex-local-env.sh
@@ -15,8 +17,8 @@
 #
 # Agent0 lifecycle hooks ship as tracked project config in .codex/hooks.json.
 # Codex will ask the user to review/trust project hooks on first launch after
-# this file changes. Keep .codex/config.toml for local preferences and MCP
-# recipes; do not duplicate Agent0 hooks inline here.
+# hook definitions change. Treat .codex/config.toml as operator-local; do not
+# duplicate Agent0 hooks inline there.
 
 [mcp_servers.playwright]
 enabled = false

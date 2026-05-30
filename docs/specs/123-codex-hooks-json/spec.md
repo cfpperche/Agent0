@@ -11,7 +11,7 @@ tracked project hook file:
 
 ```
 .codex/hooks.json                  Codex project hook registration, tracked and synced
-.codex/config.toml.example         MCP/local config template only, no Agent0 hook blocks
+.codex/config.toml.example         MCP recipes template only, no Agent0 hook blocks
 .codex/config.toml                 local operator config, gitignored, no consumer-owned hooks
 ```
 
@@ -59,7 +59,7 @@ uncomment lifecycle hook blocks to get the harness behavior Agent0 owns.
 ## Non-goals
 
 - **Moving MCP recipes out of TOML.** `.codex/config.toml.example` remains the safe template for MCP
-  server recipes and local config defaults.
+  server recipes only, not a complete Codex config default.
 - **Tracking `.codex/config.toml`.** The real TOML config can contain provider/model/MCP choices and
   credentials, so it stays gitignored.
 - **Changing Codex hook trust semantics.** Codex must still review changed project hooks before

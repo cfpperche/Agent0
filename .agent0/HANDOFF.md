@@ -8,7 +8,7 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 
 ## Current State
 
-**Spec 122 context-injection-rules-cutover shipped in the working tree (not committed).** Founder decision:
+**Spec 122 context-injection-rules-cutover shipped and committed (`2060f61`).** Founder decision:
 remove Claude Code native `.claude/rules/` as an Agent0 harness surface and use one Agent0-owned context
 hydrator in both runtimes.
 - Former `.claude/rules/*.md` bodies moved to `.agent0/context/rules/*.md`; `.claude/rules/` now has no
@@ -35,13 +35,15 @@ hydrator in both runtimes.
 - **Codex hooks.json migration shipped:** official Codex docs confirm `.codex/hooks.json` is a native hook
   source with the same event schema as inline `[hooks]`/`[[hooks.*]]` in `.codex/config.toml`; no capability
   loss is expected after removing inline hook blocks to avoid duplicate execution.
-- **Spec 123 codex-hooks-json shipped in the working tree (not committed):** `.codex/hooks.json` is a
+- **Spec 123 codex-hooks-json shipped and committed (`2038c4f`):** `.codex/hooks.json` is a
   tracked, consumer-safe project hook file; `.codex/config.toml.example` and local `.codex/config.toml` no
   longer carry inline Agent0 hook blocks; `sync-harness` includes `.codex/hooks.json`; docs/tests point at
   the tracked hooks surface. Local validation passed, and founder-opened fresh Codex TUI dogfood returned:
   `PASS; injected block present: yes; event value(s): SessionStart, UserPromptSubmit; mode value(s):
   index, prompt-selected; source_dir value(s): .agent0/context/rules; selected: language
   user-prompt-framing spec-driven session-handoff runtime-capabilities harness-sync memory-placement`.
+- **Codex config wording follow-up accepted:** `.codex/config.toml.example` now explicitly says it is
+  "Codex MCP recipes only", not a local config default. Spec 123 notes/spec match that contract.
 
 Spec 121 multi-runtime-skills remains shipped: portable skills use `.agent0/skills/<slug>/` plus
 `.claude/skills/<slug>` + `.agents/skills/<slug>` discovery symlinks. `cc-native` skills stay in
@@ -51,7 +53,7 @@ Pre-existing untracked `docs/specs/091-sdd-debate-runner/` is unrelated (out of 
 
 ## Active Work
 
-- _None in flight._ Spec 122 and spec 123 are complete locally; commit remains user-gated.
+- _None in flight._ Specs 122/123 and the Codex MCP wording follow-up are complete locally.
 
 ## Next Actions
 

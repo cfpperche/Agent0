@@ -6,7 +6,7 @@
 
 Agent0 should ship Codex hooks the way it ships Claude hooks: as a project-owned harness file, not as
 commented setup snippets. `.codex/hooks.json` is the tracked Codex counterpart to
-`.claude/settings.json`; `.codex/config.toml.example` remains a local/MCP template.
+`.claude/settings.json`; `.codex/config.toml.example` remains an MCP recipes template only.
 
 ### 2026-05-30 — parent — consumer-safe first
 

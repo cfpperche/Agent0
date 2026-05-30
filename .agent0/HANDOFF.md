@@ -8,45 +8,51 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-**Spec 116 (remove runtime-introspect) shipped, NOT yet committed.** The capacity is gone in full:
-`runtime-capture.sh` + `runtime-pre-mark.sh`, `probe.sh`, `runtime-introspect.md` rule, the maintainer
-memory, both test suites (`runtime-introspect/` 17 + `runtime-capture-php/` 7), and the
-`.agent0/.runtime-state/` snapshot. 3 settings.json registrations removed (`PostToolUseFailure` event
-now absent). `.claude/hooks/` now holds **only `delegation-gate.sh`**. ~25 cross-refs rewired
-(CLAUDE/AGENTS section, session-start readout, delegation.md `/goal` verifier, runtime-capabilities
-matrix + `check-instruction-drift.sh` required-row list, php-laravel-support, cc-platform-hooks,
-bench-hooks/perf-baseline, site card + marketing copy). Historical-narrative mentions KEPT per the
-spec-115 test. Decision rationale + per-file keep-vs-rewire in `docs/specs/116-remove-runtime-introspect/`
-(`spec.md` § Outcome, `notes.md`). Site rebuilt — `dist/` clean.
+**Spec 120 vuln-audit fully implemented this session (NOT yet committed — tree dirty, user-gated).**
+The capacity replaces the removed supply-chain gate (spec 112). Built via the full SDD flow including a
+2-round cross-model debate (Claude ↔ Codex, `docs/specs/120-vuln-audit/debate.md`, converged):
+- **Engine:** osv-scanner-only (Trivy rejected — Mar-2026 supply-chain compromise; no second-source
+  matrix). Stack-aware via a **three-bucket coverage report** (found/covered/skipped) so partial
+  coverage is never reported as clean. Source-completeness caveat documented (OSV corpus ≠ all-known).
+- **Trigger:** on-demand only (`/vuln-audit` skill + runtime-neutral `.agent0/tools/vuln-audit.sh`).
+  NO install/commit gate (zero `settings.json` registration). Result status
+  `clean|findings|unavailable|failed` decoupled from exit code (default 0; opt-in `--exit-code` for
+  consumer CI). Reports + proposes upgrades, never auto-fixes.
+- **Tests:** `.agent0/tests/vuln-audit/` — 10 scenarios / 48 asserts, ALL PASS, offline via a fake-osv
+  stub. Skill validates (exit 0). Docs: CLAUDE.md + AGENTS.md managed blocks + runtime-capabilities row.
 
-Spec 115 (rule-load-debug) is committed + pushed (`94f1c6e`); `origin/main` == that. Spec 116's
-working-tree changes are **uncommitted** (commits user-gated). Pre-existing untracked
-`docs/specs/091-sdd-debate-runner/` unrelated (out of scope).
+Prior context: consolidation arc 117→118→119 shipped+pushed at `4ffabb7`; all hooks in `.agent0/hooks/`.
+Pre-existing untracked `docs/specs/091-sdd-debate-runner/` is unrelated (out of scope).
 
 ## Active Work
 
-- _None in flight._
+- _None in flight._ (Spec 120 complete in the working tree, awaiting user commit.)
 
 ## Next Actions
 
-1. **Commit + push spec 116** when ready (working tree dirty: ~30 files modified + 5 git-rm deletions
-   + the 116 spec dir).
-2. **Pre-existing test failure to fix separately:** `typecheck-advisory/08-globs-nested-workspace.sh`
-   FAILS because Node 24's default compile cache (`node-compile-cache/`) pollutes the test's isolated
-   TMPDIR git workspace → validator counts 102 prod files. NOT a spec-116 regression (confirmed: no
-   changes under `typecheck-advisory/` or `validators/run.sh`). Fix = set `NODE_DISABLE_COMPILE_CACHE=1`
-   or `.gitignore` the cache in the test's tmp repo. Scope a small spec or one-off.
-3. vuln-audit spec when prioritized (reminder `r-2026-05-29-spec-the-vuln-audit-capacity`).
+1. **Commit spec 120** — review the diff and commit (user-gated). New: `.agent0/tools/vuln-audit.sh`,
+   `.agent0/tests/vuln-audit/`, `.claude/rules/vuln-audit.md`, `.claude/skills/vuln-audit/`,
+   `docs/specs/120-vuln-audit/`. Modified: `CLAUDE.md`, `AGENTS.md`,
+   `.claude/rules/runtime-capabilities.md`. Suggested: `feat(120): vuln-audit capacity`.
+2. **Post-merge smoke test** (reminder `r-2026-05-30-run-vuln-audit-once-against`) — run the tool with
+   the REAL osv-scanner binary against a real project (e.g. `site/` has `bun.lock`) to confirm the JSON
+   parse matches live V2 output (severity / fixed_version / source.path extraction). CI uses an offline stub.
+3. **Optional: rebuild `site/dist/`** — spec 118 changed `site/src/i18n/strings.ts`; only source changed.
 
 ## Decisions & Gotchas
 
-- **The harness pruning arc continues (112→113→114→115→116).** runtime-introspect removed as
-  overengineering: the `SubagentStop` validator (spec 111) is the enforcement path; the parent sees
-  Bash stdout inline; the read-side probe had no evidence of use. After 116 the only first-party
-  `.claude/hooks/` script is `delegation-gate.sh` (legitimately Claude-only — gates the `Agent` tool).
-- **Rode-along marketing fix:** `site/src/i18n/strings.ts` lifecycle sentence also named the
-  already-removed `post-edit validator` (111) + `PreCompact` (114) — rewrote to surviving capacities
-  rather than ship false copy. Documented in `notes.md`.
-- **Env:** gitleaks pre-commit active (`core.hooksPath=.githooks`); governance gate blocks `rm -rf`
-  + blanket `git add` (and blocked my `rm -rf` mid-session — use explicit paths + `git rm`/`git mv`);
-  commits are user-gated.
+- **vuln-audit JSON parse is pinned to osv-scanner V2 fields, verified only against crafted fixtures.**
+  Severity = `database_specific.severity` (word) else bucketed from `groups[].maxSeverity` (CVSS num);
+  fixed = first `affected[].ranges[].events[].fixed`; covered = basenames of `results[].source.path`.
+  If live V2 output differs, the defensive parse degrades (severity→`unknown`, no-fix→"no fix published")
+  rather than crashing — but the smoke-test reminder exists to confirm against the real binary.
+- **`direct|transitive` is a cheap npm-only enrichment** (membership in package.json dep keys); other
+  ecosystems report `unknown` + "no direct remediation path known". osv-scanner base JSON has no
+  reliable dependency-path, so this is honest-by-design, not a gap to close.
+- **bun coverage:** osv-scanner parses text `bun.lock` (Bun ≥1.2) but NOT binary `bun.lockb` → latter
+  lands in `skipped` with a migrate hint. Repo's own `site/bun.lock` is the live dogfood target.
+- **Pre-existing UNRELATED failure:** `typecheck-advisory/08-globs-nested-workspace.sh` (Node-24
+  compile-cache). Fix = `NODE_DISABLE_COMPILE_CACHE=1` or gitignore.
+- **Env:** gitleaks pre-commit active; governance gate blocks `rm -rf` + blanket `git add`;
+  secrets-preflight blocks compound `git add && git commit` (commit standalone); `sleep`-chained Bash is
+  blocked (use Monitor). Commits are user-gated.

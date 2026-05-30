@@ -136,6 +136,19 @@ reminders:
     trigger surface (on-demand /skill vs routine/cron vs commit gate), scope coverage.
     Philosophy: don''t limit lib usage at install time — detect vulnerable installed
     libs and act.'
-  status: pending
+  status: done
   links:
   - docs/specs/112-prune-supply-chain-and-secrets-advise/spec.md
+  completed_ts: '2026-05-30T14:14:44Z'
+- id: r-2026-05-30-run-vuln-audit-once-against
+  created: '2026-05-30'
+  context: Run vuln-audit once against a real project with the real osv-scanner binary
+    (network-bound) to confirm the JSON parse matches live V2 output — spec 120 CI
+    uses an offline fake-osv stub. Verify severity extraction (database_specific.severity
+    + groups.maxSeverity), fixed_version (affected.ranges.events.fixed), and source.path
+    basenames.
+  status: pending
+  check_command: command -v osv-scanner && bash .agent0/tools/vuln-audit.sh site
+  links:
+  - docs/specs/120-vuln-audit/
+  - .agent0/tools/vuln-audit.sh

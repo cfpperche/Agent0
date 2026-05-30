@@ -213,12 +213,15 @@ append_capsule() {
   rel="${file#$PROJECT_DIR/}"
   title="$(rule_title "$file")"
   [ -n "$title" ] || title="$slug"
-  next=$'\n---\n'
+  # Flatten-safe capsule boundary (spec 125): '▸ ---' keeps the '---' substring
+  # while giving each capsule one inline-distinguishable marker, so capsules stay
+  # countable/separable when the renderer collapses newlines.
+  next=$'\n▸ ---\n'
   next+="source: $rel"$'\n'
   next+="title: $title"$'\n'
   next+="capsule: Read this file before acting if the task depends on this Agent0 capacity. This capsule is a pointer, not the full rule body."$'\n'
   if [ $(( ${#block} + ${#next} )) -gt "$MAX_BYTES" ]; then
-    block+=$'\n---\n'
+    block+=$'\n▸ ---\n'
     block+="omitted: context byte cap reached; read selected source files before acting"$'\n'
     printf '%s' "$block"
     return 0

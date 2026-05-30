@@ -8,51 +8,40 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 
 ## Current State
 
-**Spec 124 — hook-context-noise-control is implemented, locally validated, and live-dogfooded.**
-It replaces the five model-visible `SessionStart` readouts with one `.agent0/hooks/startup-brief.sh`
-registration in `.claude/settings.json` + `.codex/hooks.json`, keeps `UserPromptSubmit` on
-`.agent0/hooks/context-inject.sh`, and changes prompt context from full rule bodies to bounded capsules.
+**Spec 125 — hook-context-visual-polish is shipped.** Additive flatten-safe `▸` marker in `startup-brief.sh`
+(handoff sub-headers `- Heading:` → `▸ Heading:`) + `context-inject.sh` (capsule sep `---` → `▸ ---`). The
+3-tier inline vocabulary survives the renderer's newline collapse. Both dogfood artifacts captured in
+`docs/specs/125-*/notes.md` § Dogfood artifacts: 5a (CC) — founder confirms `▸` renders crisp, **no** ASCII
+`>>` fallback needed; 5b (Codex raw-stdout) — no JSON envelope, 2293B/30L under budget, capsules parseable.
+Green: context-injection 13/13 (incl. new `12-flatten-safe-markers.sh`), spec `Status: shipped`.
 
-Founder screenshots confirmed live behavior (`STARTUP_BRIEF=yes`, `PROMPT_MODE=prompt-capsules`,
-`FULL_RULE_BODY_VISIBLE=no`): one startup brief + one capsule block, not full rule bodies.
-
-Validation passed: context-injection, readout-parse, session-handoff, harness-sync, runtime-capabilities
-suites + `jq empty` on hook configs + synthetic probes. Specs 121/122/123/124 shipped.
-Pre-existing untracked `docs/specs/091-sdd-debate-runner/` remains unrelated/out of scope.
+Spec 124 stays shipped (predecessor — fixed volume). Untracked `docs/specs/091-sdd-debate-runner/` still oos.
 
 ## Active Work
 
-- _None in flight._
+_No active parallel-work claims._
 
 ## Next Actions
 
-1. **Optional spec 125: hook-context visual polish.** Spec 124 fixed volume; the live UI still flattens `hook
-   context` into long lines. Investigate preserving newlines / hiding the block while keeping model-visible
-   context, or reduce startup text further.
-2. **cc-only skill multi-runner arc — essentially complete.** `image` (6th) + `brainstorm` (7th) migrated under
-   spec 121; 7 portable skills total. `brainstorm`'s error-prone `done` HTML render was extracted to
-   `scripts/render.py` (deterministic pure `state.json→HTML`; first test surface at `.agent0/tests/brainstorm/`).
-   Only `product` stays **cc-native** — the binding blocker is its CC `Agent`-tool multi-agent orchestration
-   (one-message parallel dispatch + blocking `delegation-gate`, no Codex pre-dispatch equiv per spec 106); the 3
-   AskUserQuestion gates + Playwright-MCP tool-names are secondary/degradable, not the reason. Not a gap; arc done.
-3. **Live-Codex confirm spec 121** (reminder `r-2026-05-30-live-codex-confirm-spec-121`) — fresh Codex:
+1. **cc-only skill multi-runner arc — done (7 portable skills, spec 121).** Only `product` stays cc-native;
+   binding blocker = its CC `Agent`-tool multi-agent orchestration (no Codex pre-dispatch equiv, spec 106).
+   AskUserQuestion gates + Playwright tool-names are secondary/degradable. Not a gap.
+2. **Live-Codex confirm spec 121** (reminder `r-2026-05-30-live-codex-confirm-spec-121`) — fresh Codex:
    `codex debug prompt-input` lists a migrated skill from `.agents/skills`; `$<slug>` runs it.
-4. **vuln-audit smoke test** (reminder `r-2026-05-30-run-vuln-audit-once-against`) — real osv-scanner vs
+3. **vuln-audit smoke test** (reminder `r-2026-05-30-run-vuln-audit-once-against`) — real osv-scanner vs
    `site/bun.lock`, confirm live V2 JSON parse. Open from spec 120.
-5. **Optional:** rebuild `site/dist/` (122/123/124 changed source strings; dist not rebuilt).
+4. **Optional:** rebuild `site/dist/` (122/123/124 changed source strings; dist not rebuilt).
 
 ## Decisions & Gotchas
 
+- **Flatten-safe markers (spec 125).** `▸` (U+25B8) is the shipped hierarchy marker; confirmed crisp at the
+  CC glass. If a future runtime renders it as tofu, the planned fallback is ASCII `>>` (plan Risks).
 - **Rules are context fragments.** Do not reintroduce `.claude/rules/*.md`; prompt capsules require the agent to
   read `.agent0/context/rules/<slug>.md` when omitted detail matters.
 - **Startup readouts are aggregated.** `startup-brief.sh` is the only registered model-visible `SessionStart`;
   `session-start.sh`, reminders/routines/memory readouts remain helper/direct-debug scripts.
-- **Spec 124 solved volume, not UI cosmetics.** Flattened hook-context lines are follow-up UX polish, not a
-  context-contract failure.
 - **Skill symlinks:** edit canonical `.agent0/skills/<slug>/` only; `.claude/skills` + `.agents/skills` are
   relative discovery symlinks. `${CLAUDE_SKILL_DIR}` remains a detection token in the skill meta-tool.
-- **`agents/openai.yaml`:** `image` ships the first one (paid skill → `allow_implicit_invocation: false` + fal-ai
-  MCP dep). Reference template for future skills-with-MCP. Codex-only metadata; Claude ignores it.
 - **Codex hooks:** `.codex/hooks.json` + inline TOML hooks run twice; trust may need reset after source moves.
   `codex exec` is not a faithful `SessionStart` proof; use TUI for live confirmation.
 - **Known env gotchas:** gitleaks pre-commit active; governance blocks `rm -rf` and blanket `git add`;

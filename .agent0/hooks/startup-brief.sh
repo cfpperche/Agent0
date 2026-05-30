@@ -68,7 +68,10 @@ section_body() {
 summarize_handoff_section() {
   local heading="$1" body line display count=0
   body="$(section_body "$heading" "$SESSION_FILE")"
-  printf '%s\n' "- $heading:"
+  # Flatten-safe sub-section marker (spec 125): '▸' makes Current State /
+  # Active Work / Next Actions distinguishable from content bullets even when
+  # the renderer collapses newlines into one physical line.
+  printf '%s\n' "▸ $heading:"
   if [ -z "$body" ]; then
     printf '  - (empty)\n'
     return 0

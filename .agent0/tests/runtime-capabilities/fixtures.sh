@@ -44,8 +44,8 @@ EOF
 | --- | --- | --- | --- | --- |
 | instruction entrypoints | `native` | `native` | `CLAUDE.md`; `AGENTS.md` | ok |
 | session handoff | `native` | `native` | `.agent0/HANDOFF.md`; `.agent0/hooks/session-start.sh`; `.agent0/hooks/session-stop.sh`; `.agent0/hooks/session-track-edits.sh`; `.codex/hooks.json` | ok |
-| SDD | `native` | `convention` | `.claude/skills/sdd/SKILL.md` | ok |
-| debate | `native` | `planned: 091-sdd-debate-runner` | `.claude/skills/sdd/templates/debate.md.tmpl` | ok |
+| SDD | `native` | `convention` | `.agent0/skills/sdd/SKILL.md` | ok |
+| debate | `native` | `planned: 091-sdd-debate-runner` | `.agent0/skills/sdd/templates/debate.md.tmpl` | ok |
 | lifecycle hooks | `native` | `unsupported` | `.claude/hooks/*.sh` | ok |
 | delegation/subagents | `native` | `unsupported` | `.agent0/context/rules/delegation.md` | ok |
 | MCP recipes | `native-opt-in` | `native-opt-in` | `.mcp.json.example`; `.codex/config.toml.example` | ok |

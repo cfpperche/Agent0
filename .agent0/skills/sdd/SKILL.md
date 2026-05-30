@@ -5,7 +5,7 @@ argument-hint: <new <slug> | refine [<idea> | NNN] | debate | plan | tasks | lis
 license: MIT
 compatibility: Designed for Claude Code. Body references `.claude/` conventional paths and CC-specific tools; portable to any runtime that maps a `.claude/`-analog directory and surfaces the referenced tools.
 metadata:
-  agent0-portability-tier: cc-native
+  agent0-portability-tier: agentskills-portable
   version: "0.2"
 ---
 
@@ -32,13 +32,13 @@ Scaffold a new spec dir. Parse `$ARGUMENTS`: first token must be `new`, second t
 
 2. **Find next NNN** — scan `docs/specs/` for existing `NNN-*` dirs (ignore hidden files like `.gitkeep`), take the highest NNN, increment. Start at `001` if none exist. Zero-pad to 3 digits.
 
-3. **Create the dir and copy templates** — use the templates in `${CLAUDE_SKILL_DIR}/templates/`:
+3. **Create the dir and copy templates** — use the templates in `.agent0/skills/sdd/templates/`:
    ```
    mkdir -p docs/specs/NNN-<slug>
-   cp ${CLAUDE_SKILL_DIR}/templates/spec.md.tmpl  docs/specs/NNN-<slug>/spec.md
-   cp ${CLAUDE_SKILL_DIR}/templates/plan.md.tmpl  docs/specs/NNN-<slug>/plan.md
-   cp ${CLAUDE_SKILL_DIR}/templates/tasks.md.tmpl docs/specs/NNN-<slug>/tasks.md
-   cp ${CLAUDE_SKILL_DIR}/templates/notes.md.tmpl docs/specs/NNN-<slug>/notes.md
+   cp .agent0/skills/sdd/templates/spec.md.tmpl  docs/specs/NNN-<slug>/spec.md
+   cp .agent0/skills/sdd/templates/plan.md.tmpl  docs/specs/NNN-<slug>/plan.md
+   cp .agent0/skills/sdd/templates/tasks.md.tmpl docs/specs/NNN-<slug>/tasks.md
+   cp .agent0/skills/sdd/templates/notes.md.tmpl docs/specs/NNN-<slug>/notes.md
    ```
 
 4. **Substitute placeholders** in each created file — replace literally:
@@ -70,7 +70,7 @@ In 2-3 sentences: what context you loaded, which existing specs / rules / module
 
 ### Step 2: Discovery — 🔓 Medium freedom: adaptive questioning
 
-**Read `${CLAUDE_SKILL_DIR}/references/question-bank.md` before this step.**
+**Read `.agent0/skills/sdd/references/question-bank.md` before this step.**
 
 Each round: (1) state your current understanding in 1-2 sentences; (2) ask 1-2 non-obvious questions from the bank; (3) reference actual repo context; (4) state a recommended default per question — the user confirms, corrects, or overrides, never starts from blank. If you have no opinion, say so explicitly rather than fabricating one.
 
@@ -98,11 +98,11 @@ For option 1 on a from-scratch refine: propose a kebab-case slug derived from th
 
 ### Step 4: Output — 🔒 Low freedom: use the existing template
 
-**Read `${CLAUDE_SKILL_DIR}/templates/spec.md.tmpl` before producing.** Fill all five sections — Intent, Acceptance criteria, Non-goals, Open questions, Context / references. Every claim must trace to a discovery-round answer; invent nothing the user did not confirm. Acceptance criteria use the `Scenario: … Given/When/Then` sub-bullet shape for behavior and plain checkbox bullets for static facts (per `.agent0/context/rules/spec-driven.md` § Acceptance scenarios) — Gherkin surfaced during discovery maps directly onto that shape.
+**Read `.agent0/skills/sdd/templates/spec.md.tmpl` before producing.** Fill all five sections — Intent, Acceptance criteria, Non-goals, Open questions, Context / references. Every claim must trace to a discovery-round answer; invent nothing the user did not confirm. Acceptance criteria use the `Scenario: … Given/When/Then` sub-bullet shape for behavior and plain checkbox bullets for static facts (per `.agent0/context/rules/spec-driven.md` § Acceptance scenarios) — Gherkin surfaced during discovery maps directly onto that shape.
 
 ### Step 5: Close — 🟢 High freedom: handoff
 
-**Read `${CLAUDE_SKILL_DIR}/references/checklist.md` and self-review against it.** Then self-assess a quality score:
+**Read `.agent0/skills/sdd/references/checklist.md` and self-review against it.** Then self-assess a quality score:
 
 | Category                  | Weight | Measures                                          |
 |:--------------------------|-------:|:--------------------------------------------------|
@@ -144,13 +144,13 @@ If `debate.md` does NOT exist → this runtime is the **initiating agent**; proc
    - **Line is absent (legacy file pre-dating runtime-neutral metadata)** → do NOT default to "local runtime is initiator"; that lets two ports both think they own the debate. Instead, infer from legacy round headers:
      - Grep the file for `## Round 1 — Claude (position)` → infer Initiating agent = `Claude Code`. Emit advisory `debate-advisory: <path> has no '**Initiating agent:**' metadata; inferred Claude Code from legacy 'Round 1 — Claude (position)' header — add the metadata block manually for forward compatibility` and proceed with role determination using the inferred value (so a Claude Code port resuming a legacy Claude-scaffolded file correctly takes the initiator role).
      - Grep for `## Round 1 — Codex CLI (position)` / `## Round 1 — Cursor (position)` / `## Round 1 — Aider (position)` (or any other known peer-port literal) → infer that runtime as the initiator. Same advisory shape with the inferred name. This runtime then takes the reviewer role per the standard non-match branch.
-     - No inferrable header → **refuse**. Print to stderr and exit: `debate-blocked: <path> has no '**Initiating agent:**' metadata and no inferrable legacy header. Add the metadata block manually (Initiating agent / Reviewing agent / Initiated by — see .claude/skills/sdd/templates/debate.md.tmpl for the shape) and re-invoke /sdd debate.`
+     - No inferrable header → **refuse**. Print to stderr and exit: `debate-blocked: <path> has no '**Initiating agent:**' metadata and no inferrable legacy header. Add the metadata block manually (Initiating agent / Reviewing agent / Initiated by — see .agent0/skills/sdd/templates/debate.md.tmpl for the shape) and re-invoke /sdd debate.`
 
 The Resolution-line check distinguishes in-flight vs complete; the Initiating-agent line (or, for legacy files, the inferred initiator) determines this runtime's role. The section header `## Synthesis` is present from scaffold time and is not a discriminator.
 
 ### Step 3: Scaffold debate.md — 🔒 Low freedom
 
-Copy `${CLAUDE_SKILL_DIR}/templates/debate.md.tmpl` to `docs/specs/NNN-<slug>/debate.md`. Substitute the standard placeholders (`{{NNN}}`, `{{SLUG}}`, `{{DATE}}` — same as `new`) AND the metadata block at the top:
+Copy `.agent0/skills/sdd/templates/debate.md.tmpl` to `docs/specs/NNN-<slug>/debate.md`. Substitute the standard placeholders (`{{NNN}}`, `{{SLUG}}`, `{{DATE}}` — same as `new`) AND the metadata block at the top:
 
 - `{{initiating agent name}}` → this port's identity literal: `Claude Code`
 - `{{reviewing agent name}}` → leave as the literal placeholder string `{{reviewing agent name}}` (the reviewing runtime fills it on its first write)
@@ -423,7 +423,7 @@ If the first token of `$ARGUMENTS` is missing or not one of `new`, `refine`, `de
 
 **Input:** `debate.md` exists, has no `**Initiating agent:**` metadata, AND has no recognisable legacy round header (e.g. a hand-written file or a header pattern from a runtime the inference list doesn't know). User invokes `/sdd debate`.
 
-**Expected:** Step 2 fallback runs the grep, finds no `## Round 1 — <known-runtime> (position)` match. Refuse: print to stderr `debate-blocked: <path> has no '**Initiating agent:**' metadata and no inferrable legacy header. Add the metadata block manually (Initiating agent / Reviewing agent / Initiated by — see .claude/skills/sdd/templates/debate.md.tmpl for the shape) and re-invoke /sdd debate.` Exit. No write to `debate.md`, no role taken, no jump to Step 6.
+**Expected:** Step 2 fallback runs the grep, finds no `## Round 1 — <known-runtime> (position)` match. Refuse: print to stderr `debate-blocked: <path> has no '**Initiating agent:**' metadata and no inferrable legacy header. Add the metadata block manually (Initiating agent / Reviewing agent / Initiated by — see .agent0/skills/sdd/templates/debate.md.tmpl for the shape) and re-invoke /sdd debate.` Exit. No write to `debate.md`, no role taken, no jump to Step 6.
 
 **Failure indicators:** Proceeded with "assume local runtime is initiator". Mutated the file to insert metadata. Proceeded with an incorrect inferred runtime (e.g. inferring Claude Code from a non-matching header).
 

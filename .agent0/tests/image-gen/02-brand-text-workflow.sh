@@ -10,13 +10,13 @@
 #   (a) prepare emits estimated cost line first
 #   (b) JSON envelope resolves tier→model=fal-ai/gpt-image-2
 #   (c) output_path is under assets/brand/<slug>.png (NO date prefix — brand is durable)
-#   (d) approx_cost_usd matches the tier table (~$0.040 - the table's midpoint)
+#   (d) approx_cost_usd matches the tier table (~$0.200 - the quality:high default baked since spec 088)
 #   (e) --name flag overrides the auto-derived slug
 
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-GEN_SH="$AGENT0_ROOT/.claude/skills/image/scripts/gen.sh"
+GEN_SH="$AGENT0_ROOT/.agent0/skills/image/scripts/gen.sh"
 
 TMPDIR="$(mktemp -d -t spec-085-s2-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
@@ -28,7 +28,7 @@ cd "$TMPDIR"
 
 PREPARE_OUT="$(bash "$GEN_SH" prepare --tier=brand-text --name=hero-logo "Minimalist logo design for Agent0" 2>/dev/null)"
 
-if ! printf '%s\n' "$PREPARE_OUT" | head -1 | grep -q '^estimated: \$0\.040 for fal-ai/gpt-image-2 at 1024x1024 (square)$'; then
+if ! printf '%s\n' "$PREPARE_OUT" | head -1 | grep -q '^estimated: \$0\.200 for fal-ai/gpt-image-2 at 1024x1024 (square)$'; then
   echo "FAIL (a): first line of prepare stdout is not the estimated cost line"
   echo "got:"; printf '%s\n' "$PREPARE_OUT" | head -3
   exit 1
@@ -52,8 +52,8 @@ if [ "$OUTPUT_PATH" != "$EXPECTED" ]; then
 fi
 
 COST="$(printf '%s' "$JSON_LINE" | python3 -c 'import json,sys; print(json.loads(sys.stdin.read())["approx_cost_usd"])')"
-if [ "$COST" != "0.04" ] && [ "$COST" != "0.040" ]; then
-  echo "FAIL (d): approx_cost_usd is not 0.04 (got: $COST)"
+if [ "$COST" != "0.2" ] && [ "$COST" != "0.200" ]; then
+  echo "FAIL (d): approx_cost_usd is not 0.200 (got: $COST)"
   exit 1
 fi
 
@@ -64,7 +64,7 @@ printf '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\
 bash "$GEN_SH" record \
   --tier=brand-text \
   --model=fal-ai/gpt-image-2 \
-  --cost=0.040 \
+  --cost=0.200 \
   --prompt="Minimalist logo design for Agent0" \
   --output="$OUTPUT_PATH" \
   --dims=1024x1024 \

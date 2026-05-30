@@ -128,7 +128,7 @@ reminders:
   due: '2026-08-25'
   links:
   - .agent0/context/rules/harness-sync.md
-  - .claude/skills/image/SKILL.md
+  - .agent0/skills/image/SKILL.md
 - id: r-2026-05-29-spec-the-vuln-audit-capacity
   created: '2026-05-29'
   context: 'Spec the vuln-audit capacity (replaces removed supply-chain block, spec

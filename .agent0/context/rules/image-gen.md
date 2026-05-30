@@ -2,7 +2,7 @@
 paths:
   - ".mcp.json"
   - ".mcp.json.example"
-  - ".claude/skills/image/**"
+  - ".agent0/skills/image/**"
   - "assets/**"
 ---
 
@@ -20,9 +20,11 @@ Three steps, one-time per consumer project:
 
 2. **Set `FAL_KEY` in your shell or `.env`.** Sign up at [fal.ai](https://fal.ai) → Dashboard → API Keys to mint one. The key has a `<uuid>:<secret>` shape; never commit it. The `.mcp.json.example` uses `${FAL_KEY}` indirection so a populated `.mcp.json` doesn't carry the literal.
 
-3. **Restart the Claude Code session.** MCPs load at session start, not hot-reloaded.
+3. **Restart the session.** MCPs load at session start, not hot-reloaded.
 
-After restart, `/image --tier=<draft|brand-text|brand-photo> "<prompt>"` is available. Without activation, `/image` errors clean with a pointer back to this section.
+**Codex CLI activation is the same shape.** The skill is multi-runtime (spec 121): its canonical body lives at `.agent0/skills/image/`, discoverable as `$image` in Codex via the `.agents/skills/image` symlink. For the discovery MCP, set `[mcp_servers.fal-ai] enabled = true` in `.codex/config.toml` (copy from `.codex/config.toml.example` — same `url = "https://mcp.fal.ai/mcp"` + `bearer_token_env_var = "FAL_KEY"`), set `FAL_KEY`, restart Codex. Generation (curl path) needs only `FAL_KEY` in either runtime — the MCP is optional (next paragraph).
+
+After restart, `/image --tier=<draft|brand-text|brand-photo> "<prompt>"` (Claude Code) or `$image ...` (Codex) is available. Without activation, the skill errors clean with a pointer back to this section.
 
 **MCP recipe is optional for generation (since spec 088, 2026-05-25).** `gen.sh exec` calls the fal.run REST endpoint directly with `FAL_KEY`, bypassing the MCP transport — so a consumer project that sets `FAL_KEY` but skips the `.mcp.json` recipe still gets full generation capability. The recipe remains valuable for **agent-side discovery tools** (`search_models`, `get_model_schema`, `get_pricing`, `recommend_model`) — skip it only if your consumer project has no use for those.
 
@@ -139,7 +141,7 @@ Swap is a `.mcp.json` edit (replace the `fal-ai` HTTP block with the chosen alte
 
 ## Pricing refresh
 
-The tier-pricing table in `.claude/skills/image/references/tier-pricing.md` is date-stamped and prefixed `approx`. Refresh discipline: a quarterly entry in `.agent0/routines/` (per `.agent0/context/rules/routines.md`) re-runs the lookup against fal.ai's pricing page. If pricing has moved >20% on any tier, update the table, bump the date stamp, regenerate `references/tier-pricing.md`.
+The tier-pricing table in `.agent0/skills/image/references/tier-pricing.md` is date-stamped and prefixed `approx`. Refresh discipline: a quarterly entry in `.agent0/routines/` (per `.agent0/context/rules/routines.md`) re-runs the lookup against fal.ai's pricing page. If pricing has moved >20% on any tier, update the table, bump the date stamp, regenerate `references/tier-pricing.md`.
 
 Skill scripts read the table at call time; updates apply on next invocation without a session restart.
 
@@ -148,8 +150,8 @@ Skill scripts read the table at call time; updates apply on next invocation with
 - `.mcp.json.example` / `.codex/config.toml.example` — `fal-ai` MCP server block (HTTP transport, `bearer_token_env_var = "FAL_KEY"`)
 - `.agent0/context/rules/secrets-scan.md` — `FAL_KEY` handling; the `<uuid>:<secret>` shape may not match gitleaks default rules (see § *Gotchas*)
 - `.agent0/context/rules/delegation.md` § *Why DONE_WHEN exists* — contract-not-promise frame motivating pre-call cost printing
-- `.claude/skills/image/` — skill implementation
-- `.claude/skills/image/references/tier-pricing.md` — static cost table
+- `.agent0/skills/image/` — skill implementation (canonical; symlinked into `.claude/skills/` + `.agents/skills/` per spec 121)
+- `.agent0/skills/image/references/tier-pricing.md` — static cost table
 
 ## Gotchas
 

@@ -13,7 +13,7 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-GEN_SH="$AGENT0_ROOT/.claude/skills/image/scripts/gen.sh"
+GEN_SH="$AGENT0_ROOT/.agent0/skills/image/scripts/gen.sh"
 
 TMPDIR="$(mktemp -d -t spec-085-s4-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT

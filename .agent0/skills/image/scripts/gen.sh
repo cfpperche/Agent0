@@ -1,21 +1,24 @@
 #!/usr/bin/env bash
-# .claude/skills/image/scripts/gen.sh
+# .agent0/skills/image/scripts/gen.sh
 #
-# Pre-flight + post-flight helper for the /image skill.
-# The actual MCP tool call is made by Claude Code's tool surface from the
-# SKILL.md prose; this script handles everything around the call:
+# Self-contained, runtime-neutral helper for the /image skill. The full
+# pipeline runs from bash — no runtime tool surface required:
 #   - prepare : validate inputs, derive output path, print cost estimate,
-#               emit JSON envelope for the agent to pass to the MCP
-#   - record  : append a manifest line after MCP success/failure
+#               emit JSON envelope
+#   - exec    : POST the envelope to the fal.run REST API, download the image,
+#               reconcile dimensions (see spec 088 — generation does NOT use
+#               the fal-ai MCP's run_model, which was diagnosed broken)
+#   - record  : append a manifest line after exec success/failure
 #
-# Two-stage shape is deliberate — the MCP call cannot be made from bash
-# (it goes through CC's tool surface), so the script can't be a single
-# "do everything" invocation. The SKILL.md body coordinates the agent.
+# Three-stage shape is deliberate — prepare is the cost-print contract surface,
+# exec is the network-bound generation step, record is the audit step. The
+# SKILL.md body coordinates the three calls; any agentskills.io runtime that
+# can run bash + curl + jq drives it identically.
 #
 # Reference:
 #   .agent0/context/rules/image-gen.md                       — capacity rule
-#   .claude/skills/image/SKILL.md                    — invocation surface
-#   .claude/skills/image/references/tier-pricing.md  — static cost table
+#   .agent0/skills/image/SKILL.md                    — invocation surface
+#   .agent0/skills/image/references/tier-pricing.md  — static cost table
 
 set -uo pipefail
 
@@ -23,7 +26,7 @@ PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null |
 MANIFEST_PATH="$PROJECT_DIR/assets/generated/.manifest.jsonl"
 
 # ---------------------------------------------------------------------------
-# Tier table — keep in sync with .claude/skills/image/references/tier-pricing.md
+# Tier table — keep in sync with .agent0/skills/image/references/tier-pricing.md
 # ---------------------------------------------------------------------------
 # Format per tier: MODEL|DIR|COST_USD|EXT
 #   EXT is the file extension matching fal.ai's default content-type per model
@@ -469,7 +472,7 @@ Subcommands:
     finishes. Called by the agent post-exec, with envelope + exec-receipt
     values forwarded.
 
-See .claude/skills/image/SKILL.md for the full invocation flow and
+See .agent0/skills/image/SKILL.md for the full invocation flow and
 .agent0/context/rules/image-gen.md for the capacity rule.
 EOF
     [ -z "${1:-}" ] && exit 2 || exit 0

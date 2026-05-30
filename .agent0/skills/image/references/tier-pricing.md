@@ -1,6 +1,6 @@
 # Tier pricing (fal.ai image models)
 
-_Static reference table consumed by `.claude/skills/image/scripts/gen.sh`. Approx values — refresh quarterly via the routine described in § Refresh discipline._
+_Static reference table consumed by `.agent0/skills/image/scripts/gen.sh`. Approx values — refresh quarterly via the routine described in § Refresh discipline._
 
 **Snapshot date:** 2026-05-25
 
@@ -30,7 +30,7 @@ The default of `square` matches the v1 hardcoded behavior; existing callers with
 
 ## gpt-image-2 min-pixel floor
 
-`gpt-image-2`'s input schema declares `total pixels between 655,360 and 8,294,400` (per `mcp__fal-ai__get_model_schema` output, consumer project dogfood 2026-05-25). Two of the three aspect-ratio enums fall below the floor and get upsampled by the model:
+`gpt-image-2`'s input schema declares `total pixels between 655,360 and 8,294,400` (per the fal-ai MCP's `get_model_schema` output, consumer project dogfood 2026-05-25). Two of the three aspect-ratio enums fall below the floor and get upsampled by the model:
 
 | Aspect requested | Documented dims | Pixels | Actual returned (gpt-image-2) | Drift |
 |---|---|---|---:|---|
@@ -38,7 +38,7 @@ The default of `square` matches the v1 hardcoded behavior; existing callers with
 | `landscape` | 1024×576 | 589,824 | **1088×608** | +6.25% / +5.56% |
 | `portrait` | 576×1024 | 589,824 | **608×1088** | +5.56% / +6.25% |
 
-`.claude/skills/image/scripts/gen.sh` § `sub_exec` auto-reconciles via `ffmpeg -vf scale=<w>:<h>` when actual ≠ expected and `ffmpeg` is on PATH; emits `image-skill-advisory:` to stderr and leaves the file at the upsampled dims if ffmpeg is absent (the image is still usable; this is graceful-degrade). FLUX schnell and Imagen 4 Ultra do not enforce this floor — only gpt-image-2.
+`.agent0/skills/image/scripts/gen.sh` § `sub_exec` auto-reconciles via `ffmpeg -vf scale=<w>:<h>` when actual ≠ expected and `ffmpeg` is on PATH; emits `image-skill-advisory:` to stderr and leaves the file at the upsampled dims if ffmpeg is absent (the image is still usable; this is graceful-degrade). FLUX schnell and Imagen 4 Ultra do not enforce this floor — only gpt-image-2.
 
 ## Why these models
 
@@ -67,5 +67,5 @@ Pricing on fal.ai changes occasionally — model providers adjust, fal.ai's marg
 ## Cross-references
 
 - `.agent0/context/rules/image-gen.md` § *Tier table* — user-facing tier semantics
-- `.claude/skills/image/SKILL.md` — invocation surface
-- `.claude/skills/image/scripts/gen.sh` — runtime consumer
+- `.agent0/skills/image/SKILL.md` — invocation surface
+- `.agent0/skills/image/scripts/gen.sh` — runtime consumer

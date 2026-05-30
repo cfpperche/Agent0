@@ -33,7 +33,7 @@
 #
 # Spec: docs/specs/111-delegation-verify-subagent-stop/
 # Rule: .claude/rules/delegation.md § Post-edit validator loop (stop-time)
-#   .claude/validators/run.sh           — the validator invoked (JSON contract)
+#   .agent0/validators/run.sh           — the validator invoked (JSON contract)
 #   .agent0/hooks/delegation-stop.sh     — sibling SubagentStop audit hook (reads the counter)
 #   .agent0/hooks/_memory-hook-lib.sh    — memory_project_dir / memory_runtime
 
@@ -86,8 +86,8 @@ fi
 VALIDATOR=""
 if [ -n "${CLAUDE_DELEGATION_VALIDATOR:-}" ] && [ -x "${CLAUDE_DELEGATION_VALIDATOR:-}" ]; then
   VALIDATOR="$CLAUDE_DELEGATION_VALIDATOR"
-elif [ -x "$PROJECT_DIR/.claude/validators/run.sh" ]; then
-  VALIDATOR="$PROJECT_DIR/.claude/validators/run.sh"
+elif [ -x "$PROJECT_DIR/.agent0/validators/run.sh" ]; then
+  VALIDATOR="$PROJECT_DIR/.agent0/validators/run.sh"
 else
   exit 0
 fi

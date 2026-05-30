@@ -231,7 +231,7 @@ Shipped as a starter template. Consumer projects override values directly. Missi
 
 **Pre-commit backstop.** Activate native git hooks per project with `git config core.hooksPath .githooks`. The memory check is non-mutating: it projects `MEMORY.md` from the staged index into a temp file, diffs it against staged `.agent0/memory/MEMORY.md`, and blocks with a corrective message if drift exists. It never rewrites files or auto-stages.
 
-**Entrypoint budget.** `AGENTS.md` and `CLAUDE.md` keep the `## Memory` block index-shaped and within 12 non-blank lines. Detailed protocol belongs here; `.claude/tests/agents-memory-block-budget.sh` enforces the budget.
+**Entrypoint budget.** `AGENTS.md` and `CLAUDE.md` keep the `## Memory` block index-shaped and within 12 non-blank lines. Detailed protocol belongs here; `.agent0/tests/agents-memory-block-budget.sh` enforces the budget.
 
 ## Cross-cutting artifacts (not buckets, but related)
 

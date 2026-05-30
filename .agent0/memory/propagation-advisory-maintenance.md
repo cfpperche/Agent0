@@ -39,10 +39,10 @@ Mirrors `.agent0/memory/propagation-hygiene.md § The shipped file class`:
 - `.agent0/hooks/*.sh`
 - `.claude/rules/*.md`
 - `.agent0/tools/*.{sh,py,ts}`
-- `.claude/validators/*.sh`
+- `.agent0/validators/*.sh`
 - `.claude/agents/*.md`
 - `.claude/skills/**` (except `vendor/` and `design-systems/`)
-- `.claude/tests/**`
+- `.agent0/tests/**`
 - `.githooks/*`
 - `CLAUDE.md`, `.mcp.json.example`, `.gitleaks.toml`, `.gitignore`
 
@@ -52,7 +52,7 @@ Mirrors `.agent0/memory/propagation-hygiene.md § The shipped file class`:
 - `.claude/skills/*/design-systems/*` — vendor `DESIGN.md` files
 - `.agent0/hooks/propagation-advise.sh` — the hook itself documents patterns inline
 - `.claude/rules/propagation-advisory.md` — the rule documents patterns inline
-- `.claude/tests/propagation-advisory/*` — test fixtures intentionally carry the patterns
+- `.agent0/tests/propagation-advisory/*` — test fixtures intentionally carry the patterns
 
 ## Audit log
 
@@ -104,4 +104,4 @@ If a future Codex format diverges again, set `AGENT0_PROPAGATION_DEBUG=1` in the
 - `.claude/rules/propagation-advisory.md` — consumer-facing companion (override grammar + escape hatch + advisory-line shape)
 - `.agent0/memory/propagation-hygiene.md` — the upstream-maintainer discipline this hook enforces
 - `.agent0/hooks/propagation-advise.sh` — implementation (runtime-neutral; sources `_memory-hook-lib.sh`)
-- `.claude/tests/propagation-advisory/` — scenario tests (incl. Codex `apply_patch` scenarios 12–14)
+- `.agent0/tests/propagation-advisory/` — scenario tests (incl. Codex `apply_patch` scenarios 12–14)

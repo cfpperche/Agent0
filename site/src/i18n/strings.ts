@@ -185,7 +185,7 @@ export const STRINGS: Record<Locale, Strings> = {
         },
         {
           title: "Implement",
-          body: "Work tasks.md top-to-bottom. Hooks are bash scripts under .claude/hooks/; rules are markdown under .claude/rules/. Register new hooks in .claude/settings.json. Test fixtures live in .claude/tests/<capacity>/.",
+          body: "Work tasks.md top-to-bottom. Hooks are bash scripts under .claude/hooks/; rules are markdown under .claude/rules/. Register new hooks in .claude/settings.json. Test fixtures live in .agent0/tests/<capacity>/.",
         },
       ],
       closing:
@@ -324,7 +324,7 @@ export const STRINGS: Record<Locale, Strings> = {
         },
         {
           title: "Implemente",
-          body: "Trabalhe tasks.md de cima pra baixo. Hooks são scripts bash em .claude/hooks/; regras são markdown em .claude/rules/. Registre novos hooks em .claude/settings.json. Fixtures de teste em .claude/tests/<capacidade>/.",
+          body: "Trabalhe tasks.md de cima pra baixo. Hooks são scripts bash em .claude/hooks/; regras são markdown em .claude/rules/. Registre novos hooks em .claude/settings.json. Fixtures de teste em .agent0/tests/<capacidade>/.",
         },
       ],
       closing:
@@ -463,7 +463,7 @@ export const STRINGS: Record<Locale, Strings> = {
         },
         {
           title: "Implementa",
-          body: "Trabaja tasks.md de arriba hacia abajo. Los hooks son scripts bash en .claude/hooks/; las reglas son markdown en .claude/rules/. Registra hooks nuevos en .claude/settings.json. Fixtures de tests viven en .claude/tests/<capacidad>/.",
+          body: "Trabaja tasks.md de arriba hacia abajo. Los hooks son scripts bash en .claude/hooks/; las reglas son markdown en .claude/rules/. Registra hooks nuevos en .claude/settings.json. Fixtures de tests viven en .agent0/tests/<capacidad>/.",
         },
       ],
       closing:

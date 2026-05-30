@@ -172,7 +172,7 @@ MANIFEST_TSV="$(mktemp -t sync-manifest-XXXXXX)"
 # Recursive globs (find -type f under base dir) — encoded as "base/**"
 COPY_CHECK_RECURSIVE=(
   ".claude/skills"
-  ".claude/tests"
+  ".agent0/tests"
   ".claude/agents"
 )
 
@@ -180,7 +180,7 @@ COPY_CHECK_RECURSIVE=(
 COPY_CHECK_GLOBS=(
   ".claude/hooks|*.sh"
   ".claude/rules|*.md"
-  ".claude/validators|*.sh"
+  ".agent0/validators|*.sh"
   ".agent0/hooks|*.sh"
   ".agent0/tools|*.sh"
   ".agent0/tools|memory-*"
@@ -215,7 +215,7 @@ COPY_CHECK_FILES=(
 COPY_CHECK_EXCLUDE=(
   ".agent0/hooks/propagation-advise.sh"
   ".claude/rules/propagation-advisory.md"
-  ".claude/tests/propagation-advisory/*"
+  ".agent0/tests/propagation-advisory/*"
 )
 
 # Structured merge handled by dedicated functions below

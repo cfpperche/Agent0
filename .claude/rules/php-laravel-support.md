@@ -17,22 +17,22 @@ PHP detection in Agent0 is triggered by **`composer.json` at the project root** 
 
 ## 1. Validator detects PHP
 
-`.claude/validators/run.sh` recognises `composer.json` after the rust elif (PHP slotted late in the chain so JS-leading mixed-stack monorepos route to JS via lockfile precedence). Detection chooses the test runner:
+`.agent0/validators/run.sh` recognises `composer.json` after the rust elif (PHP slotted late in the chain so JS-leading mixed-stack monorepos route to JS via lockfile precedence). Detection chooses the test runner:
 
 - `composer.json` declares `pestphp/pest` in `require-dev` or `require` → `command_str='vendor/bin/pest --colors=never'`
 - Otherwise → `command_str='vendor/bin/phpunit --colors=never'`
 
-`--colors=never` disables ANSI at source so the validator's output stays simple. Canonical doc: this rule + the validator's elif chain at `.claude/validators/run.sh`.
+`--colors=never` disables ANSI at source so the validator's output stays simple. Canonical doc: this rule + the validator's elif chain at `.agent0/validators/run.sh`.
 
 ## 2. TDD patterns recognise PHP test files
 
-`.claude/validators/run.sh`'s TDD warning path adds `php) default_patterns='tests/* *Test.php *_test.php' ;;` to the per-stack pattern table. This covers PHPUnit and Pest naming conventions plus Laravel's `tests/Feature/` and `tests/Unit/` layout. A delegated sub-agent that edits prod-PHP (e.g. `app/Models/User.php`) without touching any pattern-matched test file in the same diff triggers a `tdd-advisory:` line on the next turn.
+`.agent0/validators/run.sh`'s TDD warning path adds `php) default_patterns='tests/* *Test.php *_test.php' ;;` to the per-stack pattern table. This covers PHPUnit and Pest naming conventions plus Laravel's `tests/Feature/` and `tests/Unit/` layout. A delegated sub-agent that edits prod-PHP (e.g. `app/Models/User.php`) without touching any pattern-matched test file in the same diff triggers a `tdd-advisory:` line on the next turn.
 
 Canonical doc: `.claude/rules/tdd.md` § *From scenarios to tests* (per-language test-pattern table).
 
 ## 3. Lint validator runs Pint + PHPStan
 
-`.claude/validators/run.sh` lint extension adds a `php` branch after the Python branch:
+`.agent0/validators/run.sh` lint extension adds a `php` branch after the Python branch:
 
 - `composer.json` declares `laravel/pint` in `require-dev` (or `require`) AND `vendor/bin/pint` is executable → append `vendor/bin/pint --test` (test mode — no auto-fix).
 - `composer.json` declares `phpstan/phpstan` OR `larastan/larastan` (in `require-dev` or `require`) AND `vendor/bin/phpstan` is executable → append `vendor/bin/phpstan analyse --no-progress`.
@@ -65,8 +65,8 @@ CLAUDE.md folds PHP/Laravel detection inline into the capacity sections that enu
 - `.claude/rules/lint-validator.md` — Pint + PHPStan rules
 - `.claude/rules/tdd.md` — PHP test patterns
 - `.mcp.json.example` / `.codex/config.toml.example` — Laravel Boost MCP template block (`[mcp_servers.laravel-boost]`)
-- `.claude/validators/run.sh` — the validator's PHP elif
-- `.claude/tests/validator-php/` — the test surface that locks the behavior
+- `.agent0/validators/run.sh` — the validator's PHP elif
+- `.agent0/tests/validator-php/` — the test surface that locks the behavior
 
 ## Gotchas
 

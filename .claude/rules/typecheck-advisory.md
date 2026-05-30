@@ -1,6 +1,6 @@
 ---
 paths:
-  - ".claude/validators/run.sh"
+  - ".agent0/validators/run.sh"
   - "tsconfig.json"
   - "**/tsconfig.json"
   - "**/package.json"
@@ -8,7 +8,7 @@ paths:
 
 # Typecheck advisory
 
-The post-edit validator (`.claude/validators/run.sh`) detects typecheck primitive availability per JS branch and emits a non-blocking `typecheck-advisory:` line on stderr when the consumer project has neither — instead of hard-failing the pipeline by trying `<runner> run typecheck` against a missing script. Mirrors the lint-validator's manifest-as-intent posture: declared = run, missing = advise, neither = skip. Surfaced via dogfood where every sub-agent edit was hard-failing the validator on a fresh consumer project without typecheck infrastructure.
+The post-edit validator (`.agent0/validators/run.sh`) detects typecheck primitive availability per JS branch and emits a non-blocking `typecheck-advisory:` line on stderr when the consumer project has neither — instead of hard-failing the pipeline by trying `<runner> run typecheck` against a missing script. Mirrors the lint-validator's manifest-as-intent posture: declared = run, missing = advise, neither = skip. Surfaced via dogfood where every sub-agent edit was hard-failing the validator on a fresh consumer project without typecheck infrastructure.
 
 ## What fires per branch
 

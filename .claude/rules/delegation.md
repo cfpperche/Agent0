@@ -53,7 +53,7 @@ The marker skips ONLY the 5-field validation. It does NOT skip the audit append 
 
 _(Stop-time since spec 111 — the section name is retained as the stable cross-reference anchor; the trigger is now `SubagentStop`, not per-edit.)_
 
-When a delegated sub-agent reaches `SubagentStop`, `.agent0/hooks/delegation-verify.sh` runs the project validator (`.claude/validators/run.sh` by default, auto-detecting bun / pnpm / npm / python / go / rust / Laravel) **once**, keyed by the documented `agent_id`. The validator emits a JSON object with an `ok` field. This is the DONE_WHEN enforcement point — the delegated task's *close*, not every edit.
+When a delegated sub-agent reaches `SubagentStop`, `.agent0/hooks/delegation-verify.sh` runs the project validator (`.agent0/validators/run.sh` by default, auto-detecting bun / pnpm / npm / python / go / rust / Laravel) **once**, keyed by the documented `agent_id`. The validator emits a JSON object with an `ok` field. This is the DONE_WHEN enforcement point — the delegated task's *close*, not every edit.
 
 Spec 111 replaced the former per-edit `post-edit-validate.sh` with this stop-time hook for two reasons: (1) Codex `PostToolUse(apply_patch)` carries no parent-vs-subagent discriminator, so per-edit delegated-edit attribution is not portable — `SubagentStop` carries `agent_id` on both runtimes; (2) the full suite no longer runs on every edit (expensive, cascade-prone) — it runs once, at close.
 

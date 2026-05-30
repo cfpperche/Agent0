@@ -43,6 +43,6 @@ Maintainer-binding surface (5-pattern regex table, shipped-surface set, audit-lo
 - `.agent0/memory/propagation-hygiene.md` — the maintainer-binding discipline this hook enforces
 - `.agent0/memory/propagation-advisory-maintenance.md` — maintainer-binding companion (pattern table, shipped-surface set, deep gotchas)
 - `.agent0/hooks/propagation-advise.sh` — implementation (runtime-neutral; sources `_memory-hook-lib.sh`)
-- `.claude/tests/propagation-advisory/` — scenario tests (incl. Codex `apply_patch` scenarios 12–14)
+- `.agent0/tests/propagation-advisory/` — scenario tests (incl. Codex `apply_patch` scenarios 12–14)
 - `.claude/rules/delegation.md` § *Advisories* — the `<kind>-advisory:` pattern this follows
 - `.claude/rules/tdd.md` § *Reading the validator advisory* — the canonical advisory-handling convention

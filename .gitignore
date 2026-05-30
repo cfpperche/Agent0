@@ -38,7 +38,7 @@ prototypes/
 
 # Secrets-scan scenario tests run in mktemp /tmp dirs by default, but reserve a
 # scratchpad path in case a future test variant needs in-repo state.
-.claude/tests/secrets-scan/.tmp/
+.agent0/tests/secrets-scan/.tmp/
 
 # Stack-specific patterns — uncomment whichever applies to your fork.
 # Template is stack-agnostic by design; forks add their own.

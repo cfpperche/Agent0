@@ -48,7 +48,7 @@ The override marker lives in `tool_input.command` — visible to the preflight (
 
 The hook fails open to the Claude shape if the lib is missing.
 
-The injection MUST be `export VAR='...'; cmd` (standalone statement + `;`), NOT the inline prefix `VAR=val cmd`. The prefix form scopes the assignment to its single command — on `VAR=val git add foo && git commit -m "..."` the var reaches `git add` but NOT the chained commit, so the native hook blocks. Latent bug, fixed in `4b47a42`; V4 test (`.claude/tests/secrets-scan/04-override-allows.sh`) asserts the rewriting starts with `export CLAUDE_SECRETS_OVERRIDE_REASON=` as a regression guard.
+The injection MUST be `export VAR='...'; cmd` (standalone statement + `;`), NOT the inline prefix `VAR=val cmd`. The prefix form scopes the assignment to its single command — on `VAR=val git add foo && git commit -m "..."` the var reaches `git add` but NOT the chained commit, so the native hook blocks. Latent bug, fixed in `4b47a42`; V4 test (`.agent0/tests/secrets-scan/04-override-allows.sh`) asserts the rewriting starts with `export CLAUDE_SECRETS_OVERRIDE_REASON=` as a regression guard.
 
 Override semantics are surgical: the marker skips ONLY the preflight shape rejection (compound / `-a` / `--no-verify`) AND the native block (when findings are present). The scan still runs, both audit rows are still written, `override_reason` is populated. No silent bypass.
 

@@ -19,13 +19,13 @@ This file is Agent0-internal (memory does not propagate). It records the discipl
 
 A file is **shipped** if `sync-harness.sh` propagates it to consumer projects. That is everything in the sync manifest:
 
-- `.claude/hooks/*.sh`, `.claude/rules/*.md`, `.agent0/tools/*.sh`, `.claude/validators/*.sh`, `.claude/skills/`, `.claude/tests/`, `.claude/agents/`
+- `.claude/hooks/*.sh`, `.claude/rules/*.md`, `.agent0/tools/*.sh`, `.agent0/validators/*.sh`, `.claude/skills/`, `.agent0/tests/`, `.claude/agents/`
 - `.mcp.json.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.gitignore`
 - CLAUDE.md's `## ` capacity sections (structured-merge-appended into a consumer project's CLAUDE.md)
 
 **Not** shipped, by design: `docs/specs/`, `.agent0/memory/` (ships only `.gitkeep`), `src/`, the consumer project's own `tests/`, package manifests. These never travel.
 
-**Explicit exclusions inside the sync manifest** — `COPY_CHECK_EXCLUDE` in `sync-harness.sh` drops three paths from propagation despite their location in otherwise-shipped surface: `.agent0/hooks/propagation-advise.sh`, `.claude/rules/propagation-advisory.md`, `.claude/tests/propagation-advisory/*`. A companion filter in `merge_settings_json` strips the PostToolUse registration whose command points at `propagation-advise.sh`. This is the self-consistency resolution of the propagation-advisory mechanism: the discipline binds the upstream maintainer (this file's whole point), so shipping its enforcement to leaf consumer projects would emit false-positive advisories on a consumer project's legitimate own-spec / own-path content — the exact dangling-pointer flaw this discipline forbids. Same posture as `.agent0/memory/` shipping only `.gitkeep`: the capacity lives in Agent0, the *opt-in* for downstream re-propagators is manual copy of the 4 paths + the settings entry.
+**Explicit exclusions inside the sync manifest** — `COPY_CHECK_EXCLUDE` in `sync-harness.sh` drops three paths from propagation despite their location in otherwise-shipped surface: `.agent0/hooks/propagation-advise.sh`, `.claude/rules/propagation-advisory.md`, `.agent0/tests/propagation-advisory/*`. A companion filter in `merge_settings_json` strips the PostToolUse registration whose command points at `propagation-advise.sh`. This is the self-consistency resolution of the propagation-advisory mechanism: the discipline binds the upstream maintainer (this file's whole point), so shipping its enforcement to leaf consumer projects would emit false-positive advisories on a consumer project's legitimate own-spec / own-path content — the exact dangling-pointer flaw this discipline forbids. Same posture as `.agent0/memory/` shipping only `.gitkeep`: the capacity lives in Agent0, the *opt-in* for downstream re-propagators is manual copy of the 4 paths + the settings entry.
 
 ## The mandate
 
@@ -55,7 +55,7 @@ The CLAUDE.md sync merge is **append-only**: it adds missing `## ` sections, it 
 
 The discipline is documented here; the **mechanical enforcement** lives in `.claude/rules/propagation-advisory.md` + `.agent0/hooks/propagation-advise.sh`. The hook fires on Claude `PostToolUse(Edit|Write|MultiEdit)` and Codex `PostToolUse(apply_patch)` (spec 113) against any file in the shipped surface and emits `propagation-advisory:` stderr lines per leak finding. Patterns covered: `spec-NNN`, `docs/specs/NNN`, `anthill`, `personal-path` (`/home/<user>/`), `memory-pointer` (`.agent0/memory/<file>.md`). Always non-blocking — same `<kind>-advisory:` shape as TDD / lint / typecheck advisories.
 
-The hook + rule + tests are **Agent0-only** by construction — see § The shipped file class § *Explicit exclusions inside the sync manifest*. Tests still run against Agent0's copy (the 11 scenarios in `.claude/tests/propagation-advisory/` are exercised here); the exclusion stops only the sync.
+The hook + rule + tests are **Agent0-only** by construction — see § The shipped file class § *Explicit exclusions inside the sync manifest*. Tests still run against Agent0's copy (the 11 scenarios in `.agent0/tests/propagation-advisory/` are exercised here); the exclusion stops only the sync.
 
 This is the rule-of-three promotion candidate: if the advisory empirically fires more than ~3 times per week on legitimate new leaks (not false positives), promote to a pre-commit gate OR a periodic `/routine`. Until then, the soft signal at edit-time is enough — drift is caught mid-flight, the maintainer fixes in the same edit cycle, no separate cleanup pass needed.
 

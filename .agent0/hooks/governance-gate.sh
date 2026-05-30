@@ -49,7 +49,7 @@ INPUT="$(cat 2>/dev/null || true)"
 # be a SUPERSET of every Family 1-3 trigger — if a family's keyword is absent
 # here, that destructive command silently skips the gate (false-negative). A
 # probe-HIT just pays for the full parse (false-positive is harmless — slower).
-# The `.claude/tests/governance-gate/` drift-guard exercises a representative
+# The `.agent0/tests/governance-gate/` drift-guard exercises a representative
 # blocked command per family end-to-end; if a new family is added without its
 # keyword here, that command stops blocking and the test goes red.
 #

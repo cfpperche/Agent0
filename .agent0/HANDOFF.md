@@ -8,17 +8,18 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 
 ## Current State
 
-**Spec 127 — site-content-refactor: shipped (19/19 tasks, 5 phases).** Deep content-truth pass + IA expansion on
-top of 126. `site/src/i18n/capacities.ts` is now a typed manifest (24 capacities: slug/theme/sourcePath/
-historySpec/per-runtime status from `runtime-capabilities.md`); `site/scripts/check-currency.ts` gates `bun run
-build` and FAILS on stale links / missing pages (proven red→green). Added 5 grouped-by-theme explanatory pages +
-a how-it-works overview, card links re-pointed to on-site pages (never early specs), and the two Codex-caught
-copy defects fixed. **pt/es parity landed (same-day follow-up)** — all theme pages + how-it-works are now full
-3-locale (overview prose extracted to trilingual data behind `OverviewView.astro`); `check-currency.ts` enforces
-`[en,pt,es]`; no standing 126 exception remains. Build green: 22 pages, currency check OK. Spec `Status: shipped`.
+**Spec 128 — codex-exec-skill: shipped and committed (`f4938a7`).** Adds portable `codex-exec` skill at
+`.agent0/skills/codex-exec/`, discovery symlinks in `.claude/skills/` + `.agents/skills/`, wrapper
+`scripts/codex-exec.sh`, Codex metadata with `allow_implicit_invocation: true`, and focused tests under
+`.agent0/tests/codex-exec-skill/`.
 
-**Spec 126 — site-refactor: shipped.** OSS-landing-for-developers; derived capacity count, multi-runtime copy,
-og:image, instant redirect. OQ5 (bolder visual direction) stays open, user-owned. **Spec 125** stays shipped.
+Spec 128 validation passed: fake-Codex test suite, `validate.sh`, `check-rubric.sh`, `bash -n`,
+multi-runtime skill suite, Codex discovery via `codex debug prompt-input`, live Codex smoke, Claude positive
+dogfood, and Claude negative `--output` containment dogfood. The dogfood-discovered `--output` escape was fixed:
+explicit output paths now resolve under `.agent0/.runtime-state/codex-exec` / `CODEX_EXEC_STATE_DIR` and fail
+closed before invoking Codex when outside that state dir.
+
+**Specs 126 and 127 remain shipped.** Spec 126 OQ5 (bolder visual/brand direction) is still optional/user-owned.
 
 Existing untracked `docs/specs/091-sdd-debate-runner/` remains out of scope.
 
@@ -29,26 +30,22 @@ _No active parallel-work claims._
 ## Next Actions
 
 1. **Spec 126 OQ5 (optional):** bolder visual/brand direction if desired — current site is coherent and shipped.
-2. **Deploy:** GitHub Pages publishes `site/` (`cfpperche.github.io/Agent0/`); confirm CI picks up 126+127.
-   Capture live Lighthouse numbers there (Chrome wouldn't connect in WSL).
+2. **Deploy site when ready:** GitHub Pages publishes `site/` (`cfpperche.github.io/Agent0/`); confirm CI picks up
+   the shipped site work and capture live Lighthouse numbers there.
 
 ## Decisions & Gotchas
 
-- **Spec 126 premise reversal (the headline).** The refactor was opened as "lead with outcomes, demote the
-  harness"; the debate + user gate resolved it to an **OSS-project developer landing** — "harness" is the honest
-  category, consultancy/outcomes pivot is now an explicit non-goal (PR desc must lead with this reversal).
-  Inventory is stale (copy "Eighteen" vs ~14 in data vs 20+ real) → make multi-runtime-true (Claude + Codex,
-  spec 121). No lead capture v1; capability/expertise claims only.
+- **Spec 126 premise reversal.** Debate + user gate resolved the site to an **OSS-project developer landing**;
+  "harness" is the honest category, consultancy/outcomes pivot is an explicit non-goal.
 - **`/sdd debate` identity fix shipped (`ca20476`).** Debate identity now derives from the real runtime, not a
   hardcoded `Claude Code` literal — validated live (Codex correctly self-ID'd as `Codex CLI`). Cross-runtime
   debates via symlink-shared skills now work with plain `$sdd debate`.
 - **Flatten-safe markers (spec 125).** `▸` (U+25B8) shipped + confirmed crisp; tofu fallback is ASCII `>>`.
-- **Rules are context fragments.** Do not reintroduce `.claude/rules/*.md`; prompt capsules require the agent to
-  read `.agent0/context/rules/<slug>.md` when omitted detail matters.
-- **Startup readouts are aggregated.** `startup-brief.sh` is the only registered model-visible `SessionStart`;
-  `session-start.sh`, reminders/routines/memory readouts remain helper/direct-debug scripts.
 - **Skill symlinks:** edit canonical `.agent0/skills/<slug>/` only; `.claude/skills` + `.agents/skills` are
   relative discovery symlinks. `${CLAUDE_SKILL_DIR}` remains a detection token in the skill meta-tool.
+- **`codex-exec` bridge:** it is a subprocess bridge, not native shared-memory delegation. Default sandbox is
+  `read-only`; write-capable runs require explicit `--sandbox workspace-write` or `danger-full-access`.
+  `--output` is intentionally state-dir-contained after Claude dogfood found the escape hatch.
 - **Codex hooks:** `.codex/hooks.json` + inline TOML hooks run twice; trust may need reset after source moves.
   `codex exec` is not a faithful `SessionStart` proof; use TUI for live confirmation.
 - **Known env gotchas:** gitleaks pre-commit active; governance blocks `rm -rf` and blanket `git add`;

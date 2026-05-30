@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Scenario: tracked Codex hooks.json registers SessionStart readouts.
+# Scenario: tracked Codex hooks.json registers one aggregate SessionStart readout.
 
 set -euo pipefail
 
@@ -16,17 +16,14 @@ if ! jq -e . "$CONFIG" >/dev/null; then
   exit 1
 fi
 
-required=(
-  ".agent0/hooks/memory-decay-readout.sh"
-  ".agent0/hooks/reminders-readout.sh"
-  ".agent0/hooks/routines-readout.sh"
-)
+if ! jq -e '.hooks.SessionStart[]?.hooks[]? | select((.command // "") | contains(".agent0/hooks/startup-brief.sh"))' "$CONFIG" >/dev/null; then
+  printf 'FAIL: missing aggregate SessionStart startup-brief.sh command\n'
+  exit 1
+fi
 
-for needle in "${required[@]}"; do
-  if ! jq -e --arg needle "$needle" '.hooks.SessionStart[]?.hooks[]? | select((.command // "") | contains($needle))' "$CONFIG" >/dev/null; then
-    printf 'FAIL: missing SessionStart command: %s\n' "$needle"
-    exit 1
-  fi
-done
+if jq -e '.hooks.SessionStart[]?.hooks[]? | select((.command // "") | contains("memory-decay-readout.sh") or contains("reminders-readout.sh") or contains("routines-readout.sh"))' "$CONFIG" >/dev/null; then
+  printf 'FAIL: separate SessionStart readout hooks should not be model-visible\n'
+  exit 1
+fi
 
 echo "PASS: 05-hooks-json-parse"

@@ -14,6 +14,7 @@ JSON
 if ! printf '%s\n' "$out" | jq -e '
   .hookSpecificOutput.hookEventName == "UserPromptSubmit"
   and (.hookSpecificOutput.additionalContext | contains("source: .agent0/context/rules/spec-driven.md"))
+  and (.hookSpecificOutput.additionalContext | contains("mode: prompt-capsules"))
 ' >/dev/null; then
   printf 'FAIL: Claude output should be JSON additionalContext\n%s\n' "$out"
   exit 1

@@ -13,7 +13,7 @@ An earlier format used plain-bullet markdown at `.claude/REMINDERS.md`. The curr
 ## Flow
 
 - **Write** — via the `/remind` skill (`.agent0/skills/remind/SKILL.md` (canonical; symlinked into `.claude/skills/` + `.agents/skills/`)). Subcommands `add`, `list`, `done`, `dismiss` (alias for `done`), `snooze`, `check`. All state mutation routes through `.agent0/skills/remind/scripts/reminders-helper.py` so field order and YAML shape stay consistent. Hand-edits are allowed but the schema (top-level `reminders:` list, per-entry shape below) must be preserved.
-- **Read** — automatic at session start. The `SessionStart` hook (`.agent0/hooks/reminders-readout.sh`) parses `reminders.yaml`, filters to surfaceable entries (`status: pending` plus `status: snoozed` with `snoozed_until ≤ today`), and emits a framed `=== REMINDERS ===` block alongside the canonical `.agent0/HANDOFF.md` injection.
+- **Read** — automatic at session start through the aggregate `SessionStart` hook (`.agent0/hooks/startup-brief.sh`). The helper (`.agent0/hooks/reminders-readout.sh`) parses `reminders.yaml` and filters to surfaceable entries (`status: pending` plus `status: snoozed` with `snoozed_until ≤ today`); the startup brief emits a due/unscheduled top-N summary instead of a separate full `=== REMINDERS ===` block.
 
 ## Schema
 
@@ -84,11 +84,12 @@ The helper validates required fields and enums at write-time. Schema does NOT li
 - `.agent0/reminders.yaml` — the state file. Git-tracked. Created by the helper on first `add` (not pre-seeded; sync-harness ships the *capacity*, not the *content* — same posture as `.agent0/memory/`).
 - `.agent0/skills/remind/SKILL.md` (canonical; symlinked into `.claude/skills/` + `.agents/skills/`) — slash-command definition (subcommands + delegation to helper).
 - `.agent0/skills/remind/scripts/reminders-helper.py` — canonical YAML mutator. Python + PyYAML; ~250 LOC. CRUD + filtering + date math + ID generation.
-- `.agent0/hooks/reminders-readout.sh` — SessionStart readout hook. Python-first / yq-fallback / raw-YAML-last tier.
+- `.agent0/hooks/startup-brief.sh` — registered SessionStart surface; includes a bounded reminder summary.
+- `.agent0/hooks/reminders-readout.sh` — helper/direct readout implementation. Python-first / yq-fallback / raw-YAML-last tier.
 
 ## Gotchas
 
-- **`SessionStart` hook registration is per-session.** Adding or removing the readout from `settings.json` doesn't take effect until the next session start.
+- **`SessionStart` hook registration is per-session.** Adding or removing the startup brief from `settings.json` / `.codex/hooks.json` doesn't take effect until the next session start.
 - **PyYAML is the canonical dep.** The readout hook tries the Python helper first; if PyYAML is absent, falls back to `yq` (Go-yq, `mikefarah/yq`) emitting a simpler one-line shape; if neither is available, emits raw YAML inside the frame with an install advisory. The capacity stays functional in all three tiers — degraded visibly, never silently.
 - **`m` in snooze duration is 30 days, not calendar months.** `/remind snooze <id> 1m` resolves to `today + 30 days`. Calendar-month arithmetic adds 100 LOC for a feature nobody asked for; the 30-day approximation is documented and intentional.
 - **Position numbers shift across adds/dismisses.** `list` is 1-indexed against the filtered (pending + past-snoozed) view. An add or dismiss between listing and acting renumbers everything. When chaining commands, re-list between mutations or use the stable ID.

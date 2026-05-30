@@ -26,7 +26,7 @@ If both `/remind` and `/routine` seem to fit, the cadence question disambiguates
 
 ## Two-phase execution model
 
-**Phase 1 (v1, ships today):** cron renders the routine prompt with fresh temporal context and writes it to `.agent0/.routines-state/<slug>/queue/<unix-ts>.md`. The next interactive agent session reads the queue via the `routines-readout.sh` `SessionStart` hook and surfaces a `=== ROUTINES ===` block; the human or agent dispatches each pending routine via `/routine run <slug>`. **No Anthropic API key required.** The cron-side is purely a "render + enqueue" primitive; actual LLM execution happens in the next session.
+**Phase 1 (v1, ships today):** cron renders the routine prompt with fresh temporal context and writes it to `.agent0/.routines-state/<slug>/queue/<unix-ts>.md`. The next interactive agent session reads the queue through the aggregate `startup-brief.sh` `SessionStart` hook, which calls `routines-readout.sh` as a helper and surfaces routines only when actionable; the human or agent dispatches each pending routine via `/routine run <slug>`. **No Anthropic API key required.** The cron-side is purely a "render + enqueue" primitive; actual LLM execution happens in the next session.
 
 **Phase 2 (future, when API key available):** `autonomous: true` opt-in frontmatter; cron-side invokes `claude -p` directly with the rendered prompt and writes output to PR / issue / file per the routine's `output:` declaration. Deferred per the rule-of-three demand test — built when ≥3 routines have demonstrated value in Phase 1 mode.
 
@@ -161,7 +161,8 @@ The marker is scoped — it skips the named check, not all validation:
 - `.agent0/tools/install-routines.sh` — interactive bootstrap (leader prompt + crontab block install + WSL2 advisory).
 - `.agent0/tools/uninstall-routines.sh` — symmetric removal.
 - `.agent0/tools/run-routine.sh` — invoked by cron; leader check + interpolate + enqueue + rotation.
-- `.agent0/hooks/routines-readout.sh` — `SessionStart` hook; surfaces pending queue.
+- `.agent0/hooks/startup-brief.sh` — registered `SessionStart` surface; includes routines only when queue or leader state is actionable.
+- `.agent0/hooks/routines-readout.sh` — helper/direct readout implementation; surfaces pending queue.
 - `.agent0/skills/routine/SKILL.md` — `/routine` slash command (new / list / run / validate / dismiss).
 - `.agent0/skills/routine/scripts/validate.sh` — frontmatter + cron + body validator.
 - `.agent0/skills/routine/scripts/new.sh` — template instantiation.
@@ -177,7 +178,7 @@ The marker is scoped — it skips the named check, not all validation:
 
 ## Gotchas
 
-- **`SessionStart` hook registration is per-session.** Adding `routines-readout.sh` to `settings.json` doesn't activate until the next session boot. Same as `reminders-readout.sh`.
+- **`SessionStart` hook registration is per-session.** Adding or changing `startup-brief.sh` in `settings.json` / `.codex/hooks.json` doesn't activate until the next session boot. The routines readout helper can still be run directly for debugging.
 - **WSL2 cron is opt-in.** `service cron status` often reports inactive on fresh WSL2 distros. `install-routines.sh` detects WSL2 via `grep -qi microsoft /proc/version` and emits `wsl-advisory:` to stderr if cron isn't running. Document the `sudo service cron start` + `.profile` persistence pattern.
 - **Crontab marker block is the only safe edit surface.** `install-routines.sh` rewrites the block between `# AGENT0-ROUTINES-START` and `# AGENT0-ROUTINES-END` on every run; manual edits inside the block are clobbered. Edit outside the block freely.
 - **Renaming a routine slug requires re-running install.** The crontab block is generated from `.agent0/routines/*.md` at install time; a `.md → different .md` rename leaves the old crontab entry referencing a now-missing file. Re-run `install-routines.sh` after any rename or addition.

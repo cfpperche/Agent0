@@ -6,28 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$(git rev-parse --show-toplevel)/.agent0/hooks/context-inject.sh\"",
-            "statusMessage": "Hydrating Agent0 context"
-          },
-          {
-            "type": "command",
-            "command": "bash \"$(git rev-parse --show-toplevel)/.agent0/hooks/session-start.sh\"",
-            "statusMessage": "Reading session handoff"
-          },
-          {
-            "type": "command",
-            "command": "bash \"$(git rev-parse --show-toplevel)/.agent0/hooks/reminders-readout.sh\"",
-            "statusMessage": "Reading reminders"
-          },
-          {
-            "type": "command",
-            "command": "bash \"$(git rev-parse --show-toplevel)/.agent0/hooks/routines-readout.sh\"",
-            "statusMessage": "Reading routine queue"
-          },
-          {
-            "type": "command",
-            "command": "bash \"$(git rev-parse --show-toplevel)/.agent0/hooks/memory-decay-readout.sh\"",
-            "statusMessage": "Reading project-memory decay"
+            "command": "bash \"$(git rev-parse --show-toplevel)/.agent0/hooks/startup-brief.sh\"",
+            "statusMessage": "Reading Agent0 startup brief"
           }
         ]
       }

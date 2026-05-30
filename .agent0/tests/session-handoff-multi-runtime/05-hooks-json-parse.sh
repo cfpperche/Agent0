@@ -16,8 +16,13 @@ if ! jq -e . "$CONFIG" >/dev/null; then
   exit 1
 fi
 
-if ! jq -e '.hooks.SessionStart[]? | select((.matcher // "") == "startup|resume|clear|compact") | .hooks[]? | select((.command // "") | contains("session-start.sh"))' "$CONFIG" >/dev/null; then
-  printf 'FAIL: SessionStart session-start.sh hook missing or matcher wrong\n'
+if ! jq -e '.hooks.SessionStart[]? | select((.matcher // "") == "startup|resume|clear|compact") | .hooks[]? | select((.command // "") | contains("startup-brief.sh"))' "$CONFIG" >/dev/null; then
+  printf 'FAIL: SessionStart startup-brief.sh hook missing or matcher wrong\n'
+  exit 1
+fi
+
+if jq -e '.hooks.SessionStart[]?.hooks[]? | select((.command // "") | contains("session-start.sh"))' "$CONFIG" >/dev/null; then
+  printf 'FAIL: session-start.sh should be a startup-brief helper, not a registered SessionStart hook\n'
   exit 1
 fi
 

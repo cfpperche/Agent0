@@ -12,20 +12,24 @@ JSON
 
 for needle in \
   "AGENT0_CONTEXT_INJECTION" \
-  "mode: index" \
+  "mode: startup-pointer" \
   "source_dir: .agent0/context/rules" \
-  "spec-driven:" \
-  "runtime-capabilities:" \
+  "normal startup context is emitted by .agent0/hooks/startup-brief.sh" \
   "END_AGENT0_CONTEXT_INJECTION"; do
   if ! printf '%s\n' "$out" | grep -qF "$needle"; then
-    printf 'FAIL: missing SessionStart index needle: %s\n%s\n' "$needle" "$out"
+    printf 'FAIL: missing SessionStart pointer needle: %s\n%s\n' "$needle" "$out"
     exit 1
   fi
 done
 
 if printf '%s\n' "$out" | grep -qF "source: .agent0/context/rules/spec-driven.md"; then
-  printf 'FAIL: SessionStart should emit an index, not full fragments\n%s\n' "$out"
+  printf 'FAIL: normal SessionStart should not emit full fragments\n%s\n' "$out"
   exit 1
 fi
 
-echo "PASS: 02-sessionstart-index"
+if printf '%s\n' "$out" | grep -qF "spec-driven:"; then
+  printf 'FAIL: normal SessionStart should not emit the fragment index\n%s\n' "$out"
+  exit 1
+fi
+
+echo "PASS: 02-sessionstart-pointer"

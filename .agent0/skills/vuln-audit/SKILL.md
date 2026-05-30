@@ -5,7 +5,7 @@ argument-hint: "[path] [--json] [--exit-code] [--severity <low|moderate|high|cri
 license: MIT
 compatibility: Designed for Claude Code. Core logic is the runtime-neutral bash tool `.agent0/tools/vuln-audit.sh` (osv-scanner + jq); the skill is a thin invocation wrapper, portable to any runtime that can run the tool. Codex CLI invokes the tool directly.
 metadata:
-  agent0-portability-tier: cc-native
+  agent0-portability-tier: agentskills-portable
   version: "0.1"
 ---
 

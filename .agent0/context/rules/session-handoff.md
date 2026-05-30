@@ -1,6 +1,7 @@
 ---
 paths:
   - ".agent0/HANDOFF.md"
+  - ".agent0/hooks/startup-brief.sh"
   - ".agent0/hooks/session-start.sh"
   - ".agent0/hooks/session-stop.sh"
   - ".agent0/hooks/session-track-edits.sh"
@@ -16,8 +17,8 @@ Codex receives the same hook-backed handoff behavior from `.codex/hooks.json` af
 
 ## Runtime enforcement
 
-- **Claude Code**: `SessionStart` (`.agent0/hooks/session-start.sh`) injects `.agent0/HANDOFF.md`; `Stop` (`.agent0/hooks/session-stop.sh`) nags once per session when Claude leaves dirty own work without updating `.agent0/HANDOFF.md`; `PostToolUse(Edit|Write|MultiEdit)` (`.agent0/hooks/session-track-edits.sh`) records edited paths for bystander discrimination.
-- **Codex CLI**: tracked `.codex/hooks.json` registers `SessionStart` to inject `.agent0/HANDOFF.md`; `Stop` uses Codex's continue-with-corrective-prompt contract (`{"decision":"block","reason":...}`) for nag-once parity; `PostToolUse(^apply_patch$)` records edited paths parsed from patch headers.
+- **Claude Code**: `SessionStart` (`.agent0/hooks/startup-brief.sh`) injects a compact `.agent0/HANDOFF.md` summary and initializes the same session-state markers formerly initialized by `session-start.sh`; `Stop` (`.agent0/hooks/session-stop.sh`) nags once per session when Claude leaves dirty own work without updating `.agent0/HANDOFF.md`; `PostToolUse(Edit|Write|MultiEdit)` (`.agent0/hooks/session-track-edits.sh`) records edited paths for bystander discrimination.
+- **Codex CLI**: tracked `.codex/hooks.json` registers `SessionStart` to inject the compact startup brief; `Stop` uses Codex's continue-with-corrective-prompt contract (`{"decision":"block","reason":...}`) for nag-once parity; `PostToolUse(^apply_patch$)` records edited paths parsed from patch headers.
 
 Codex `Stop` does not reject termination byte-for-byte like a Claude stop block. `decision: "block"` tells Codex to continue and creates a new continuation prompt from `reason`. The shared hook exits silently when Codex sends `stop_hook_active=true` or when the per-session `nagged` marker is already set.
 
@@ -55,16 +56,18 @@ Rules:
 
 ## SessionStart fallback
 
-`session-start.sh` uses a two-layer handoff source decision:
+`startup-brief.sh` uses a two-layer handoff source decision:
 
-1. If `.agent0/HANDOFF.md` exists, inject it under `=== HANDOFF.md (canonical handoff) ===`.
-2. Else emit a one-line `handoff-advisory` that `.agent0/HANDOFF.md` is missing and proceed without aborting the session.
+1. If `.agent0/HANDOFF.md` exists, summarize its four canonical sections under `=== handoff ===`.
+2. Else emit a one-line handoff advisory that `.agent0/HANDOFF.md` is missing and proceed without aborting the session.
 
 `SessionStart` applies the same handoff decision for `source=startup`, `source=resume`, `source=clear`, and `source=compact`.
 
+`session-start.sh` remains callable as a helper/legacy full readout and for direct fixture coverage. It is no longer registered as a separate model-visible `SessionStart` hook in Agent0's shipped Claude/Codex configs.
+
 ## Size discipline
 
-**Target: `.agent0/HANDOFF.md` ≤ 4 KB.** The SessionStart hook serves the file verbatim via `cat`; the Claude Code harness truncates injected hook outputs past roughly 2-3 KB into a preview + a sidecar persisted-output file. When HANDOFF.md grows past the cap, the next session's agent may receive a partial preview and miss the immediate next step.
+**Target: `.agent0/HANDOFF.md` ≤ 4 KB.** The registered SessionStart hook summarizes this file instead of serving it verbatim, but the file should still stay compact because the next agent may need to open it directly. When HANDOFF.md grows past the cap, summarize durable context elsewhere and leave pointers.
 
 The cap is enforced behaviorally at session end, not by tooling. **Prune before write** when closing a session:
 

@@ -32,7 +32,7 @@ cat > "$SRC/.codex/hooks.json" <<'EOF'
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$(git rev-parse --show-toplevel)/.agent0/hooks/session-start.sh\""
+            "command": "bash \"$(git rev-parse --show-toplevel)/.agent0/hooks/startup-brief.sh\""
           }
         ]
       }
@@ -74,7 +74,7 @@ if [ ! -f "$CONSUMER/.codex/hooks.json" ]; then
   exit 1
 fi
 
-if ! jq -e '.hooks.SessionStart[]?.hooks[]? | select((.command // "") | contains("session-start.sh"))' "$CONSUMER/.codex/hooks.json" >/dev/null; then
+if ! jq -e '.hooks.SessionStart[]?.hooks[]? | select((.command // "") | contains("startup-brief.sh"))' "$CONSUMER/.codex/hooks.json" >/dev/null; then
   printf 'FAIL: .codex/hooks.json content was not propagated\n'
   exit 1
 fi

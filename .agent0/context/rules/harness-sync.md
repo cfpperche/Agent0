@@ -228,9 +228,10 @@ The walk only reads from Agent0 manifest paths. Out-of-scope consumer project co
 ## Context injection propagation
 
 Behavioral context ships from `.agent0/context/rules/`, not from Claude Code's native `.claude/rules/`
-directory. The shared hydrator (`.agent0/hooks/context-inject.sh`) is registered in
-`.claude/settings.json` for Claude Code and tracked `.codex/hooks.json` for Codex CLI. sync-harness
-therefore propagates the neutral source directory plus the shared hook registration, while
+directory. The shared startup aggregator (`.agent0/hooks/startup-brief.sh`) is registered for
+`SessionStart`, and the prompt hydrator (`.agent0/hooks/context-inject.sh`) is registered for
+`UserPromptSubmit` in `.claude/settings.json` for Claude Code and tracked `.codex/hooks.json` for Codex CLI.
+sync-harness therefore propagates the neutral source directory plus the shared hook registrations, while
 `.claude/rules/*.md` is not in the manifest.
 
 On an existing consumer project, stale `.claude/rules/*.md` files are upstream-removed orphans once the

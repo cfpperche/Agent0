@@ -164,3 +164,13 @@ reminders:
   - docs/specs/121-multi-runtime-skills/
   - .agent0/skills/vuln-audit/
   completed_ts: '2026-05-30T20:24:06Z'
+- id: r-2026-05-30-spec-127-follow-up-translate
+  created: '2026-05-30'
+  context: 'Spec 127 follow-up: translate the new explanatory routes (5 theme pages
+    + how-it-works) to pt/es for full locale parity — the documented blocking exception
+    to spec 126''s no-locale-reduction. Add /pt/ and /es/ theme+overview routes; the
+    currency check''s RESOLVED_LOCALES already supports widening to [en,pt,es].'
+  status: pending
+  links:
+  - docs/specs/127-site-content-refactor/spec.md
+  - site/scripts/check-currency.ts

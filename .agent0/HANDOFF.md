@@ -8,31 +8,32 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 
 ## Current State
 
-**Spec 126 — site-refactor: shipped (19/19 tasks, all 5 phases).** The Claude×Codex debate reversed the original
-premise → resolved to an **OSS-project landing for developers** (harness framing is honest, no consultancy pivot).
-Implemented in `site/`: capacities.ts rewritten to the real 23-capacity set (count now derives from
-`CAPACITIES.length`), multi-runtime truth (Claude + Codex), stale refs fixed (SESSION.md→HANDOFF.md, removed-cap
-mentions), og:image PNG generated + wired, instant root redirect (was 2s). Build green, 3 locales lockstep, zero
-stale strings. Spec `Status: shipped`. **Only OQ5 stays open** (bolder visual/brand direction — user-owned,
-non-blocking); the design system criterion is met by the existing token architecture + a hero brand-accent.
+**Spec 127 — site-content-refactor: shipped (19/19 tasks, 5 phases).** Deep content-truth pass + IA expansion on
+top of 126. `site/src/i18n/capacities.ts` is now a typed manifest (24 capacities: slug/theme/sourcePath/
+historySpec/per-runtime status from `runtime-capabilities.md`); `site/scripts/check-currency.ts` gates `bun run
+build` and FAILS on stale links / missing pages (proven red→green). Added 5 grouped-by-theme explanatory pages +
+a how-it-works overview (en), card links re-pointed to on-site pages (never early specs), and the two Codex-caught
+copy defects fixed across en/pt/es. Build green: 10 pages, currency check OK. Spec `Status: shipped`. **pt/es
+parity for the new routes is the one tracked follow-up** (reminder `r-2026-05-30-spec-127-follow-up-translate`),
+a documented exception to 126's no-locale-reduction.
 
-**Spec 125 — hook-context-visual-polish remains shipped.** `▸` is the accepted flatten-safe marker in
-`startup-brief.sh` and `context-inject.sh`; context-injection tests were green 13/13. Spec 124 stays shipped
-as predecessor.
+**Spec 126 — site-refactor: shipped.** OSS-landing-for-developers; derived capacity count, multi-runtime copy,
+og:image, instant redirect. OQ5 (bolder visual direction) stays open, user-owned. **Spec 125** stays shipped.
 
 Existing untracked `docs/specs/091-sdd-debate-runner/` remains out of scope.
 
 ## Active Work
 
-_No active parallel-work claims. Spec 126 is planned and awaiting implementation._
+_No active parallel-work claims._
 
 ## Next Actions
 
-1. **Spec 126 OQ5 (optional, user-owned):** decide bolder visual/brand direction — align to a `/product` or
-   `/image` brand artifact, or run visual discovery — then iterate `site/` visuals. Non-blocking; current site
-   is coherent and shipped.
-2. **Deploy:** the GitHub Pages action publishes `site/` (`cfpperche.github.io/Agent0/`); confirm the next
-   push/CI run picks up the 126 changes. Capture live Lighthouse numbers there (Chrome wouldn't connect in WSL).
+1. **Spec 127 pt/es follow-up** (reminder `r-2026-05-30-spec-127-follow-up-translate`): translate the 5 theme
+   pages + how-it-works to pt/es; widen `RESOLVED_LOCALES` in `check-currency.ts` to `[en,pt,es]` (it already
+   supports it). Blocking exception to 126 until done.
+2. **Spec 126 OQ5 (optional):** bolder visual/brand direction if desired — current site is coherent and shipped.
+3. **Deploy:** GitHub Pages publishes `site/` (`cfpperche.github.io/Agent0/`); confirm CI picks up 126+127.
+   Capture live Lighthouse numbers there (Chrome wouldn't connect in WSL).
 
 ## Decisions & Gotchas
 

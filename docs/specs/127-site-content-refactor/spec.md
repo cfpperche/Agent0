@@ -2,7 +2,7 @@
 
 _Created 2026-05-30._
 
-**Status:** in-progress
+**Status:** shipped
 
 ## Resolved decisions (debate 127 gate — 2026-05-30)
 
@@ -22,43 +22,43 @@ Spec 126 fixed the site's surface currency — capacity counts (now derived), mu
 
 _Observable outcomes. The 126 contract (build, stack, harness-honest positioning) must not regress; the locale contract is amended by the documented en-first exception above._
 
-- [ ] **Scenario: No card links to a superseded/early spec as if it were current**
+- [x] **Scenario: No card links to a superseded/early spec as if it were current**
   - **Given** the capacity inventory on the page
   - **When** a visitor follows a card's "learn more" affordance
   - **Then** it lands on current canonical truth via the resolved hierarchy (on-site page → current rule/skill → optional "history" spec link); no `docs/specs/00*` is the *primary* target, and misleading `spec NNN` badges are removed or re-pointed
 
-- [ ] **Scenario: Grouped explanatory pages + overview exist**
+- [x] **Scenario: Grouped explanatory pages + overview exist**
   - **Given** a visitor wanting to understand the harness without reading raw repo markdown
   - **When** they navigate from a capacity or the nav
   - **Then** ≈5–6 grouped-by-theme pages describe the capacities (what each does, current multi-runtime behavior, how to use it) AND a "how the harness works" overview explains how hooks ↔ rules ↔ skills ↔ runtimes fit as a system
 
-- [ ] **Scenario: Every content surface is audited against current state**
+- [x] **Scenario: Every content surface is audited against current state**
   - **Given** the surfaces in `strings.ts` (hero, whyBuilt, quickStart, howToExtend, faq, mcps, nav, footer, meta), `capacities.ts`, and `mcps.ts`
   - **When** reviewed against the live repo (`CLAUDE.md`, `.agent0/context/rules/`, `runtime-capabilities.md`)
   - **Then** no copy references a refactored-away behavior, superseded path, or stale spec number — including the known defects `howToExtend` "Register new hooks in .claude/settings.json" (Codex uses `.codex/hooks.json`) and `whyBuilt` "the agent cannot drift out of" (enforceability overclaim)
 
-- [ ] **Scenario: Per-capacity runtime status is accurate, not globally "multi-runtime"**
+- [x] **Scenario: Per-capacity runtime status is accurate, not globally "multi-runtime"**
   - **Given** any explanatory page/group
   - **When** it describes a capacity
-  - **Then** it states the current Claude/Codex status sourced from `runtime-capabilities.md`, distinguishing enforcement / advisory / read-only / convention / planned, and "works-now (human-brokered/native)" vs "automation-planned" (e.g. cross-model debate works human-brokered today; the automated runner is 091)
+  - **Then** it states the current Claude/Codex status sourced from `runtime-capabilities.md`, using that matrix's own vocabulary (`native` / `native-opt-in` / `convention` / `read-only` / `planned` / `unsupported`), and the per-capacity `note` carries the "works-now (human-brokered/native)" vs "automation-planned" nuance (e.g. cross-model debate works human-brokered today; the automated runner is 091)
 
-- [ ] **Scenario: Anti-restaling currency check fails the build on drift**
+- [x] **Scenario: Anti-restaling currency check fails the build on drift**
   - **Given** the typed content manifest
   - **When** the build/verification runs
   - **Then** it FAILS if a `sourcePath` 404s locally, a card targets `docs/specs/00*` as primary, a capacity lacks an explanatory route, or a resolved-locale page is missing — staleness is caught mechanically, not by manual vigilance
 
-- [ ] **Scenario: New routes carry full route/nav/meta wiring**
+- [x] **Scenario: New routes carry full route/nav/meta wiring**
   - **Given** each new public route
   - **When** the site builds
   - **Then** it exists for the resolved locale set, has a working language-switch equivalent, is linked from the landing flow (not orphaned), preserves the root redirect, and carries its own title/description/OG — no route strands the user on raw GitHub markdown as the first explanatory surface
 
-- [ ] **Scenario: Build + stack preserved**
+- [x] **Scenario: Build + stack preserved**
   - **Given** the in-place constraint
   - **When** `bun run build` runs in `site/`
   - **Then** it succeeds on Astro 5 + Tailwind 4 with no stack swap
 
-- [ ] Content derived/curated per the resolved boundary (derive ids/counts/links/runtime-status/paths; hand-author prose) — not a machine-rendered mirror of the rules
-- [ ] No business-result-metric claims (126 claim-stance carries over: capability/expertise framing only)
+- [x] Content derived/curated per the resolved boundary (derive ids/counts/links/runtime-status/paths; hand-author prose) — not a machine-rendered mirror of the rules
+- [x] No business-result-metric claims (126 claim-stance carries over: capability/expertise framing only)
 
 ## Non-goals
 

@@ -4,7 +4,7 @@ description: Skill compliance toolkit. Use when scaffolding a new Agent0 skill, 
 license: MIT
 compatibility: Designed for Claude Code. Body references `.claude/skills/` paths and bash scripts at `.claude/skills/skill/scripts/`; portable to any runtime that maps a `.claude/`-analog directory and runs bash 4+.
 metadata:
-  agent0-portability-tier: cc-native
+  agent0-portability-tier: agentskills-portable
   version: "0.1"
 argument-hint: <new <slug> [--tier <tier>] | audit [<slug>|--all] | port <slug> | validate <slug> | list>
 ---
@@ -23,10 +23,10 @@ Raw invocation: `$ARGUMENTS`
 
 State paths used throughout:
 - Skill root: `.claude/skills/<slug>/` (resolved relative to `$CLAUDE_PROJECT_DIR` or repo root)
-- Toolkit root: `${CLAUDE_SKILL_DIR}` (when invoked as `/skill`, this resolves to `.claude/skills/skill/`)
-- Validator: `${CLAUDE_SKILL_DIR}/scripts/validate.sh`
-- Porter: `${CLAUDE_SKILL_DIR}/scripts/port-frontmatter.sh`
-- Templates: `${CLAUDE_SKILL_DIR}/templates/{SKILL.md,cc-native,portable}.tmpl`
+- Toolkit root: `.agent0/skills/skill` (when invoked as `/skill`, this resolves to `.agent0/skills/skill/`)
+- Validator: `.agent0/skills/skill/scripts/validate.sh`
+- Porter: `.agent0/skills/skill/scripts/port-frontmatter.sh`
+- Templates: `.agent0/skills/skill/templates/{SKILL.md,cc-native,portable}.tmpl`
 
 ## Subcommand: `new <slug> [--tier <tier>]` — 🔒 Low freedom: scaffold + validate sequence
 
@@ -45,7 +45,7 @@ Scaffold a new Agent0 skill with a spec-compliant SKILL.md. Parse `$ARGUMENTS`: 
 3. **Scaffold the directory and copy the template**:
    ```bash
    mkdir -p .claude/skills/<slug>
-   cp ${CLAUDE_SKILL_DIR}/templates/<selected>.tmpl .claude/skills/<slug>/SKILL.md
+   cp .agent0/skills/skill/templates/<selected>.tmpl .claude/skills/<slug>/SKILL.md
    ```
 
 4. **Substitute placeholders** in the new SKILL.md (literal replace):
@@ -55,7 +55,7 @@ Scaffold a new Agent0 skill with a spec-compliant SKILL.md. Parse `$ARGUMENTS`: 
 
 5. **Run validate immediately**:
    ```bash
-   bash ${CLAUDE_SKILL_DIR}/scripts/validate.sh .claude/skills/<slug>
+   bash .agent0/skills/skill/scripts/validate.sh .claude/skills/<slug>
    ```
    If non-zero exit, surface stderr and stop with a hint: "scaffolder placeholder values may have been edited; fill `{{DESCRIPTION_PLACEHOLDER}}` and re-run validate".
 
@@ -70,8 +70,8 @@ Inspect skills against the spec and report compliance + tier.
 - `audit --all` (default if no arg) → audit every `.claude/skills/*/SKILL.md` found
 
 **For each target**:
-1. Run `bash ${CLAUDE_SKILL_DIR}/scripts/validate.sh .claude/skills/<slug>` and capture exit code + stderr (agentskills.io frontmatter compliance — upstream spec).
-2. Run `bash ${CLAUDE_SKILL_DIR}/scripts/check-rubric.sh .claude/skills/<slug>` and capture stderr (Agent0 rubric body-shape advisories — repo-local). Always exit 0 — advisory only.
+1. Run `bash .agent0/skills/skill/scripts/validate.sh .claude/skills/<slug>` and capture exit code + stderr (agentskills.io frontmatter compliance — upstream spec).
+2. Run `bash .agent0/skills/skill/scripts/check-rubric.sh .claude/skills/<slug>` and capture stderr (Agent0 rubric body-shape advisories — repo-local). Always exit 0 — advisory only.
 3. Read frontmatter to extract declared `metadata.agent0-portability-tier` (or `unknown` if not present).
 4. Classify:
    - `✓ compliant` — validate.sh exit 0
@@ -109,12 +109,12 @@ Apply `port-frontmatter.sh` to bring a skill's frontmatter into spec compliance.
 
 3. **Run the porter**:
    ```bash
-   bash ${CLAUDE_SKILL_DIR}/scripts/port-frontmatter.sh .claude/skills/<slug>
+   bash .agent0/skills/skill/scripts/port-frontmatter.sh .claude/skills/<slug>
    ```
 
 4. **Validate the result**:
    ```bash
-   bash ${CLAUDE_SKILL_DIR}/scripts/validate.sh .claude/skills/<slug>
+   bash .agent0/skills/skill/scripts/validate.sh .claude/skills/<slug>
    ```
    If validate still fails, surface stderr — the porter does NOT auto-fix every rule (e.g., `rule3-name-dirname-mismatch` requires an editorial decision: rename the file or rename the directory). Hand back to the user.
 
@@ -134,7 +134,7 @@ Wrap `validate.sh` for a single skill. Parse `$ARGUMENTS`: first token `validate
 
 2. **Run**:
    ```bash
-   bash ${CLAUDE_SKILL_DIR}/scripts/validate.sh .claude/skills/<slug>
+   bash .agent0/skills/skill/scripts/validate.sh .claude/skills/<slug>
    ```
 
 3. **Report**: echo "pass" on exit 0 (and any stderr soft-warnings), or "fail" with the stderr block on exit non-0. Exit code mirrors `validate.sh`.
@@ -194,6 +194,6 @@ _Consumer-extension surface — append consumer-local bullets to this section. S
 
 - **Defer to canonical when available.** `validate.sh` `exec`s `skills-ref validate` when that Python tool is on PATH. The bash rule set is the zero-dep fallback; `skills-ref` is the source of truth. If the two disagree, prefer `skills-ref` and re-snapshot `references/spec-snapshot.md`.
 - **Spec drift.** `references/spec-snapshot.md` was retrieved on 2026-05-17. Re-check the live spec (https://agentskills.io/specification) periodically; when it evolves, re-snapshot and audit `scripts/validate.sh` against the diff. A `reminders.yaml` entry is the natural cadence reminder.
-- **Body not validated.** This toolkit checks frontmatter compliance only. Body portability (e.g., declared `agentskills-portable` tier but body uses `${CLAUDE_SKILL_DIR}`) is operator-asserted; a future enhancement could grep for tier-inconsistent signals during `/skill audit`.
+- **Body not validated.** This toolkit checks frontmatter compliance only. Body portability (e.g., declared `agentskills-portable` tier but body uses `.agent0/skills/skill`) is operator-asserted; a future enhancement could grep for tier-inconsistent signals during `/skill audit`.
 - **`argument-hint` stays top-level.** Per Phase C research, Claude Code reads this field only at the top of frontmatter. The porter does NOT migrate it under `metadata:` — see `references/portability-tiers.md` § "On `argument-hint` placement" for the evidence.
 - **No git auto-commit.** All operations leave the working tree dirty for review. The user decides what enters history. Suggest `git diff` after `port` to verify body bytes are untouched.

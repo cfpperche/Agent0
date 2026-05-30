@@ -85,7 +85,7 @@ This is a writing discipline. There is no Cucumber, no Gherkin parser, no test-r
 
 ### Skill-level sibling
 
-Skills with ≥4 step headers carry an analogous discipline at the SKILL.md body level — `## Eval Scenarios` with **Input / Expected / Failure indicators** triples per scenario. Same contract-not-promise filosofia, different unit of work (skill body, not spec body). See `.claude/skills/skill/references/skill-rubric.md` § *Eval scenarios* for the writing convention and `bash .claude/skills/skill/scripts/check-rubric.sh <slug>` (invoked via `/skill audit`) for the non-blocking advisory.
+Skills with ≥4 step headers carry an analogous discipline at the SKILL.md body level — `## Eval Scenarios` with **Input / Expected / Failure indicators** triples per scenario. Same contract-not-promise filosofia, different unit of work (skill body, not spec body). See `.claude/skills/skill/references/skill-rubric.md` § *Eval scenarios* for the writing convention and `bash .agent0/skills/skill/scripts/check-rubric.sh <slug>` (invoked via `/skill audit`) for the non-blocking advisory.
 
 ## Relationship to other rules
 

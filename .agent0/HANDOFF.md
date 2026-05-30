@@ -45,9 +45,12 @@ hydrator in both runtimes.
 - **Codex config wording follow-up accepted:** `.codex/config.toml.example` now explicitly says it is
   "Codex MCP recipes only", not a local config default. Spec 123 notes/spec match that contract.
 
-Spec 121 multi-runtime-skills remains shipped: portable skills use `.agent0/skills/<slug>/` plus
-`.claude/skills/<slug>` + `.agents/skills/<slug>` discovery symlinks. `cc-native` skills stay in
-`.claude/skills/`.
+Spec 121 multi-runtime-skills shipped + **5 skills now migrated** (each its own commit): `vuln-audit`
+(`1be1389`), `remind` (`38c1ef5`), `routine` (`215ad75`), `sdd` (`3a5688a`), `skill` (`4f53c5c`) →
+`.agent0/skills/<slug>/` + `.claude/skills/<slug>` + `.agents/skills/<slug>` relative discovery symlinks,
+tier `agentskills-portable`. `${CLAUDE_SKILL_DIR}` neutralized to canonical `.agent0/skills/<slug>` in
+sdd/skill (skill: SKILL.md only — the token stays as a detection signal in port-frontmatter.sh +
+portability-tiers.md). `cc-native` skills (`brainstorm`, `image`, `product`) stay physical in `.claude/skills/`.
 
 Pre-existing untracked `docs/specs/091-sdd-debate-runner/` is unrelated (out of scope).
 
@@ -60,10 +63,11 @@ Pre-existing untracked `docs/specs/091-sdd-debate-runner/` is unrelated (out of 
 1. **Live-Codex confirm spec 121** (reminder `r-2026-05-30-live-codex-confirm-spec-121`) — in a real Codex
    session, `codex debug prompt-input` should list `vuln-audit` from `.agents/skills`; `$vuln-audit` runs the
    tool. Offline tests prove the symlink/discovery structure; this confirms a live pickup.
-2. **Next skills to migrate (one-by-one)** — `sdd` + `skill` need `${CLAUDE_SKILL_DIR}` neutralization
-   (9 + 12 refs → resolve relative to SKILL.md), then portable. `product` is genuinely `cc-native`
-   (`AskUserQuestion` ×7) → stays. `image` is MCP-bound (fal.ai); `brainstorm` renders HTML+state → assess.
-   Runbook: `portability-tiers.md` § Per-skill multi-runtime migration runbook. (`vuln-audit`/`remind`/`routine` done.)
+2. **Remaining skills are cc-native or need assessment** — `product` genuinely cc-native
+   (`AskUserQuestion` ×7) → stays; `image` MCP-bound (fal.ai); `brainstorm` renders HTML+state → assess if
+   ever worth porting. The 5 portable skills are done. **Follow-up:** `/skill new` still scaffolds at
+   `.claude/skills/<slug>` — it should teach the canonical-source + symlink model for portable skills
+   (flagged in `4f53c5c`, separate task).
 3. **vuln-audit post-merge smoke test** (reminder `r-2026-05-30-run-vuln-audit-once-against`) — real
    osv-scanner against `site/bun.lock`, confirm live V2 JSON parse. Still open from spec 120.
 4. **Optional: rebuild `site/dist/`** — source strings changed; dist not rebuilt.

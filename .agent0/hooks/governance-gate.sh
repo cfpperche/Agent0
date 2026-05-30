@@ -38,7 +38,7 @@ set -uo pipefail
 INPUT="$(cat 2>/dev/null || true)"
 [ -z "$INPUT" ] && exit 0
 
-# --- Pre-jq fast-path probe (see .agent0/memory/hook-chain-latency.md) ---
+# --- Pre-jq fast-path probe ---
 # 99% of Bash commands carry none of this gate's trigger keywords. Checking the
 # raw JSON for any trigger fragment before paying for `jq` short-circuits the
 # no-op path.

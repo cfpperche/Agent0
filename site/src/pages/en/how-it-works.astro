@@ -1,0 +1,107 @@
+---
+import Doc from "../../layouts/Doc.astro";
+import { CAPACITIES, THEMES } from "../../i18n/capacities";
+import { DOC_STRINGS } from "../../i18n/docs";
+
+const locale = "en" as const;
+const d = DOC_STRINGS[locale];
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const title = `${d.overviewTitle} — Agent0`;
+const description =
+  "How the Agent0 harness fits together: rules as context, hooks as enforcement, skills as workflows, and one capability set across Claude Code and Codex CLI.";
+const themeCount = THEMES.map((t) => ({
+  ...t,
+  n: CAPACITIES.filter((c) => c.theme === t.id).length,
+}));
+---
+
+<Doc locale={locale} title={title} description={description}>
+  <section class="border-b border-[var(--color-line)] bg-[var(--color-surface)]">
+    <div class="mx-auto max-w-3xl px-5 pt-16 pb-12 md:px-8 md:pt-20">
+      <a href={`${base}/${locale}/`} class="font-mono text-xs text-[var(--color-ink-muted)] transition hover:text-[var(--color-ink)]">
+        {d.backToHome}
+      </a>
+      <p class="mt-8 mb-3 font-mono text-xs uppercase tracking-[0.18em] text-[var(--color-accent)]">
+        {d.overviewEyebrow}
+      </p>
+      <h1 class="font-sans text-4xl font-semibold tracking-tight text-[var(--color-ink)] md:text-5xl">
+        {d.overviewTitle}
+      </h1>
+      <p class="mt-4 max-w-2xl text-lg leading-relaxed text-[var(--color-ink-soft)]">
+        Agent0 is not a framework you import — it is a set of files that ride along in your repo and shape how an
+        AI coding agent behaves. Four layers do the work, and they compose.
+      </p>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-3xl px-5 py-12 md:px-8">
+    <div class="prose-agent0 flex flex-col gap-10">
+      <div>
+        <h2 class="font-sans text-2xl font-semibold tracking-tight text-[var(--color-ink)]">Rules — context, not enforcement</h2>
+        <p class="mt-3 leading-relaxed text-[var(--color-ink-soft)]">
+          Behavioral guidance lives once under <code class="font-mono text-sm">.agent0/context/rules/</code>. A
+          <code class="font-mono text-sm">SessionStart</code> hook injects one bounded summary; prompt turns receive
+          small capsules that point the agent at the relevant rule. Rules are how the agent <em>knows</em> the
+          discipline — they don't force it.
+        </p>
+      </div>
+
+      <div>
+        <h2 class="font-sans text-2xl font-semibold tracking-tight text-[var(--color-ink)]">Hooks — enforcement at lifecycle moments</h2>
+        <p class="mt-3 leading-relaxed text-[var(--color-ink-soft)]">
+          Where a rule needs teeth, a hook fires at a specific lifecycle event:
+          <code class="font-mono text-sm">PreToolUse(Bash)</code> blocks a destructive command or a blanket
+          <code class="font-mono text-sm">git add</code>; <code class="font-mono text-sm">SessionStart</code> injects
+          the handoff, reminders, and rule context; <code class="font-mono text-sm">Stop</code> nags once if you left
+          dirty work without updating the handoff. The gates that <em>can</em> enforce do; the rest stay advisory and
+          let the agent decide.
+        </p>
+      </div>
+
+      <div>
+        <h2 class="font-sans text-2xl font-semibold tracking-tight text-[var(--color-ink)]">Skills — packaged workflows</h2>
+        <p class="mt-3 leading-relaxed text-[var(--color-ink-soft)]">
+          Multi-step work is packaged as skills: <code class="font-mono text-sm">/sdd</code> for spec-driven
+          development, <code class="font-mono text-sm">/product</code> for the product pipeline,
+          <code class="font-mono text-sm">/vuln-audit</code>, <code class="font-mono text-sm">/image</code>, and more. A
+          portable skill's canonical body lives once at <code class="font-mono text-sm">.agent0/skills/&lt;slug&gt;/</code>
+          and is discovered through symlinks by each runtime.
+        </p>
+      </div>
+
+      <div>
+        <h2 class="font-sans text-2xl font-semibold tracking-tight text-[var(--color-ink)]">Runtimes — one capability set, two front doors</h2>
+        <p class="mt-3 leading-relaxed text-[var(--color-ink-soft)]">
+          The same capabilities run on <strong>Claude Code</strong> (via <code class="font-mono text-sm">.claude/settings.json</code>
+          hooks) and <strong>Codex CLI</strong> (via tracked <code class="font-mono text-sm">.codex/hooks.json</code>).
+          <code class="font-mono text-sm">CLAUDE.md</code> and <code class="font-mono text-sm">AGENTS.md</code> are the two
+          native entrypoints. Not every capability is identical on both — some are native, some opt-in, some
+          convention-only — so each capability below states its exact per-runtime status, taken from the
+          <a href="https://github.com/cfpperche/Agent0/blob/main/.agent0/context/rules/runtime-capabilities.md" target="_blank" rel="noopener" class="text-[var(--color-accent)] hover:text-[var(--color-accent-ink)]">runtime-capabilities matrix</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-line)] bg-[var(--color-bg)]">
+    <div class="mx-auto max-w-3xl px-5 py-12 md:px-8">
+      <h2 class="mb-6 font-sans text-2xl font-semibold tracking-tight text-[var(--color-ink)]">{d.capabilitiesHeading}</h2>
+      <div class="grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-[var(--color-line)] bg-[var(--color-line)] sm:grid-cols-2">
+        {
+          themeCount.map((t) => (
+            <a
+              href={`${base}/${locale}/${t.id}/`}
+              class="group flex flex-col gap-2 bg-[var(--color-surface)] p-6 transition hover:bg-[var(--color-bg)]"
+            >
+              <div class="flex items-center justify-between">
+                <h3 class="font-sans text-base font-semibold text-[var(--color-ink)]">{t.name[locale]}</h3>
+                <span class="font-mono text-[11px] text-[var(--color-ink-muted)]">{t.n}</span>
+              </div>
+              <p class="text-sm leading-relaxed text-[var(--color-ink-soft)]">{t.blurb[locale]}</p>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</Doc>

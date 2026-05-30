@@ -1,0 +1,80 @@
+---
+import { type Capacity, sourceUrl } from "../i18n/capacities";
+import { DOC_STRINGS, STATUS_LABELS } from "../i18n/docs";
+import { REPO_TREE, type Locale } from "../i18n/locales";
+
+interface Props {
+  capacity: Capacity;
+  locale: Locale;
+}
+
+const { capacity, locale } = Astro.props;
+const d = DOC_STRINGS[locale];
+const cap = capacity;
+
+const statusClass = (s: string) =>
+  s === "native"
+    ? "bg-[var(--color-accent-soft)] text-[var(--color-accent-ink)]"
+    : s === "native-opt-in"
+      ? "bg-[var(--color-line)] text-[var(--color-ink)]"
+      : "bg-[var(--color-bg)] text-[var(--color-ink-muted)] border border-[var(--color-line-strong)]";
+---
+
+<article id={cap.slug} class="scroll-mt-24 border-t border-[var(--color-line)] py-8 first:border-t-0">
+  <h3 class="font-sans text-xl font-semibold tracking-tight text-[var(--color-ink)]">
+    {cap.name}
+  </h3>
+  <p class="mt-3 max-w-2xl text-base leading-relaxed text-[var(--color-ink-soft)]">
+    {cap.desc[locale]}
+  </p>
+
+  <div class="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
+    <span class="font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--color-ink-muted)]">
+      {d.runtimeLabel}
+    </span>
+    <span class="inline-flex items-center gap-1.5 text-xs">
+      <span class="font-mono text-[var(--color-ink-soft)]">{d.claude}</span>
+      <span class={`rounded-sm px-1.5 py-0.5 font-mono text-[11px] ${statusClass(cap.runtime.claude)}`}>
+        {STATUS_LABELS[cap.runtime.claude][locale]}
+      </span>
+    </span>
+    <span class="inline-flex items-center gap-1.5 text-xs">
+      <span class="font-mono text-[var(--color-ink-soft)]">{d.codex}</span>
+      <span class={`rounded-sm px-1.5 py-0.5 font-mono text-[11px] ${statusClass(cap.runtime.codex)}`}>
+        {STATUS_LABELS[cap.runtime.codex][locale]}
+      </span>
+    </span>
+  </div>
+
+  {
+    cap.runtime.note && (
+      <p class="mt-3 max-w-2xl border-l-2 border-[var(--color-line-strong)] pl-3 text-sm leading-relaxed text-[var(--color-ink-muted)]">
+        {cap.runtime.note[locale]}
+      </p>
+    )
+  }
+
+  <div class="mt-4 flex flex-wrap items-center gap-4 font-mono text-xs">
+    <a
+      href={sourceUrl(cap.sourcePath)}
+      target="_blank"
+      rel="noopener"
+      class="text-[var(--color-accent)] transition hover:text-[var(--color-accent-ink)]"
+    >
+      {d.sourceLink}
+    </a>
+    {
+      cap.historySpec && (
+        <a
+          href={`${REPO_TREE}/docs/specs/`}
+          target="_blank"
+          rel="noopener"
+          class="text-[var(--color-ink-muted)] transition hover:text-[var(--color-ink-soft)]"
+          title="Originating spec — historical intent, not current behavior"
+        >
+          {d.historyLink.replace("{n}", cap.historySpec)}
+        </a>
+      )
+    }
+  </div>
+</article>

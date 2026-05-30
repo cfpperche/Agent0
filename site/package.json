@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro build",
+    "check:currency": "bun run scripts/check-currency.ts",
+    "build": "bun run scripts/check-currency.ts && astro build",
     "preview": "astro preview",
     "astro": "astro"
   },

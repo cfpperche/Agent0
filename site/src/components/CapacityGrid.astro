@@ -1,6 +1,7 @@
 ---
 import { STRINGS } from "../i18n/strings";
-import { CAPACITIES } from "../i18n/capacities";
+import { CAPACITIES, THEMES } from "../i18n/capacities";
+import { DOC_STRINGS } from "../i18n/docs";
 import type { Locale } from "../i18n/locales";
 
 interface Props {
@@ -9,34 +10,47 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = STRINGS[locale].whatYouGet;
+const d = DOC_STRINGS[locale];
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const themeName = (id: string) => THEMES.find((th) => th.id === id)!.name[locale];
 ---
 
 <section id="capacities" class="border-t border-[var(--color-line)] bg-[var(--color-surface)]">
   <div class="mx-auto max-w-6xl px-5 py-20 md:px-8 md:py-28">
-    <div class="mb-12 max-w-3xl">
-      <p class="mb-3 font-mono text-xs uppercase tracking-[0.18em] text-[var(--color-accent)]">
-        {t.eyebrow}
-      </p>
-      <h2 class="font-sans text-3xl font-semibold tracking-tight text-[var(--color-ink)] md:text-4xl">
-        {t.title.replace("{n}", String(CAPACITIES.length))}
-      </h2>
-      <p class="mt-4 text-base leading-relaxed text-[var(--color-ink-soft)]">
-        {t.sub}
-      </p>
+    <div class="mb-12 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div class="max-w-3xl">
+        <p class="mb-3 font-mono text-xs uppercase tracking-[0.18em] text-[var(--color-accent)]">
+          {t.eyebrow}
+        </p>
+        <h2 class="font-sans text-3xl font-semibold tracking-tight text-[var(--color-ink)] md:text-4xl">
+          {t.title.replace("{n}", String(CAPACITIES.length))}
+        </h2>
+        <p class="mt-4 text-base leading-relaxed text-[var(--color-ink-soft)]">
+          {t.sub}
+        </p>
+      </div>
+      <a
+        href={`${base}/${locale}/how-it-works/`}
+        class="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-[var(--color-line-strong)] bg-[var(--color-bg)] px-4 py-2 text-sm font-medium text-[var(--color-ink)] transition hover:border-[var(--color-ink)]"
+      >
+        {d.overviewTitle}
+        <span aria-hidden="true">→</span>
+      </a>
     </div>
     <div class="grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-[var(--color-line)] bg-[var(--color-line)] md:grid-cols-2 lg:grid-cols-3">
       {
         CAPACITIES.map((cap, idx) => (
-          <article class="group flex flex-col gap-3 bg-[var(--color-surface)] p-6 transition hover:bg-[var(--color-bg)]">
+          <a
+            href={`${base}/${locale}/${cap.theme}/#${cap.slug}`}
+            class="group flex flex-col gap-3 bg-[var(--color-surface)] p-6 transition hover:bg-[var(--color-bg)]"
+          >
             <div class="flex items-center justify-between">
               <span class="font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--color-ink-muted)]">
                 {String(idx + 1).padStart(2, "0")}
               </span>
-              {cap.spec && (
-                <span class="rounded-sm bg-[var(--color-accent-soft)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--color-accent-ink)]">
-                  {t.specLabel} {cap.spec}
-                </span>
-              )}
+              <span class="rounded-sm bg-[var(--color-accent-soft)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--color-accent-ink)]">
+                {themeName(cap.theme)}
+              </span>
             </div>
             <h3 class="font-sans text-base font-semibold leading-tight text-[var(--color-ink)]">
               {cap.name}
@@ -44,15 +58,10 @@ const t = STRINGS[locale].whatYouGet;
             <p class="flex-1 text-sm leading-relaxed text-[var(--color-ink-soft)]">
               {cap.desc[locale]}
             </p>
-            <a
-              href={cap.ruleDoc}
-              target="_blank"
-              rel="noopener"
-              class="mt-1 inline-flex items-center gap-1 font-mono text-xs text-[var(--color-accent)] transition hover:text-[var(--color-accent-ink)]"
-            >
-              {t.ruleDocLink}
-            </a>
-          </article>
+            <span class="mt-1 inline-flex items-center gap-1 font-mono text-xs text-[var(--color-accent)] transition group-hover:text-[var(--color-accent-ink)]">
+              {d.learnMore}
+            </span>
+          </a>
         ))
       }
     </div>

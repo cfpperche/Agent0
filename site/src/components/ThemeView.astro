@@ -1,0 +1,62 @@
+---
+import CapabilityCard from "./CapabilityCard.astro";
+import { CAPACITIES, THEMES, type ThemeId } from "../i18n/capacities";
+import { DOC_STRINGS } from "../i18n/docs";
+import { type Locale } from "../i18n/locales";
+
+interface Props {
+  themeId: ThemeId;
+  locale: Locale;
+}
+
+const { themeId, locale } = Astro.props;
+const d = DOC_STRINGS[locale];
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const theme = THEMES.find((t) => t.id === themeId)!;
+const caps = CAPACITIES.filter((c) => c.theme === themeId);
+const others = THEMES.filter((t) => t.id !== themeId);
+---
+
+<section class="border-b border-[var(--color-line)] bg-[var(--color-surface)]">
+  <div class="mx-auto max-w-3xl px-5 pt-16 pb-12 md:px-8 md:pt-20">
+    <a href={`${base}/${locale}/`} class="font-mono text-xs text-[var(--color-ink-muted)] transition hover:text-[var(--color-ink)]">
+      {d.backToHome}
+    </a>
+    <p class="mt-8 mb-3 font-mono text-xs uppercase tracking-[0.18em] text-[var(--color-accent)]">
+      {d.eyebrow}
+    </p>
+    <h1 class="font-sans text-4xl font-semibold tracking-tight text-[var(--color-ink)] md:text-5xl">
+      {theme.name[locale]}
+    </h1>
+    <p class="mt-4 max-w-2xl text-lg leading-relaxed text-[var(--color-ink-soft)]">
+      {theme.blurb[locale]}
+    </p>
+  </div>
+</section>
+
+<section class="mx-auto max-w-3xl px-5 py-10 md:px-8">
+  {caps.map((cap) => <CapabilityCard capacity={cap} locale={locale} />)}
+</section>
+
+<section class="border-t border-[var(--color-line)] bg-[var(--color-bg)]">
+  <div class="mx-auto max-w-3xl px-5 py-10 md:px-8">
+    <nav class="flex flex-wrap gap-3 font-mono text-xs">
+      <a
+        href={`${base}/${locale}/how-it-works/`}
+        class="rounded-sm border border-[var(--color-line-strong)] px-3 py-1.5 text-[var(--color-ink-soft)] transition hover:border-[var(--color-ink)] hover:text-[var(--color-ink)]"
+      >
+        ↑ {d.overviewTitle}
+      </a>
+      {
+        others.map((t) => (
+          <a
+            href={`${base}/${locale}/${t.id}/`}
+            class="rounded-sm border border-[var(--color-line)] px-3 py-1.5 text-[var(--color-ink-muted)] transition hover:border-[var(--color-ink)] hover:text-[var(--color-ink)]"
+          >
+            {t.name[locale]}
+          </a>
+        ))
+      }
+    </nav>
+  </div>
+</section>

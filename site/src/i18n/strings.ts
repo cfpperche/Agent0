@@ -138,7 +138,7 @@ export const STRINGS: Record<Locale, Strings> = {
       paragraphs: [
         "AI coding agents move fast. That speed cuts both ways — a single bad delegation can ship a leaked credential, a force-pushed branch, or an under-specified feature into production before anyone reviews it.",
         "Agent0 is the operating discipline that catches those slips before they land. Not by slowing the agent down, but by giving it the same guardrails a senior engineer has internalized: never run a destructive command without saying why, never delegate without scope, never commit a credential, never install a dependency without leaving a trail.",
-        "Each capacity is a hook that fires at a specific moment in the agent's lifecycle: PreToolUse for destructive shapes, SessionStart for context injection, SubagentStop for delegated-work verification. The capacities compose — a delegation gate plus a secrets scan plus a stop-time validator together form a pipeline the agent cannot drift out of.",
+        "Each capacity is a hook that fires at a specific moment in the agent's lifecycle: PreToolUse for destructive shapes, SessionStart for context injection, SubagentStop for delegated-work verification. The capacities compose — a delegation gate plus a secrets scan plus a stop-time validator together form a pipeline that catches the slips a single advisory would miss.",
         "The discipline is spec-driven: intent before code, BDD scenarios as the contract, every override audited with a reason ≥10 characters. The agent stays fast; the surface area for accidents shrinks.",
       ],
     },
@@ -185,7 +185,7 @@ export const STRINGS: Record<Locale, Strings> = {
         },
         {
           title: "Implement",
-          body: "Work tasks.md top-to-bottom. Hooks are bash scripts under .claude/hooks/; rules are markdown under .agent0/context/rules/. Register new hooks in .claude/settings.json. Test fixtures live in .agent0/tests/<capacity>/.",
+          body: "Work tasks.md top-to-bottom. Hooks are bash scripts under .agent0/hooks/; rules are markdown under .agent0/context/rules/. Register hooks in .claude/settings.json (Claude Code) and tracked .codex/hooks.json (Codex CLI). Test fixtures live in .agent0/tests/<capacity>/.",
         },
       ],
       closing:
@@ -277,7 +277,7 @@ export const STRINGS: Record<Locale, Strings> = {
       paragraphs: [
         "Agentes de código IA são rápidos. Essa velocidade corta dos dois lados — uma única delegação ruim pode colocar uma credencial vazada, um branch force-pushed, ou uma feature sub-especificada em produção antes de qualquer revisão.",
         "Agent0 é a disciplina operacional que pega esses escorregões antes que aconteçam. Não desacelerando o agente, mas dando a ele as mesmas guardrails que um engenheiro sênior já internalizou: nunca rodar comando destrutivo sem dizer por quê, nunca delegar sem escopo, nunca commitar credencial, nunca instalar dependência sem deixar rastro.",
-        "Cada capacidade é um hook que dispara num momento específico do ciclo de vida do agente: PreToolUse para shapes destrutivos, SessionStart para injeção de contexto, SubagentStop para verificação de trabalho delegado. As capacidades compõem — delegation gate + secrets scan + validator no stop formam juntos uma pipeline da qual o agente não consegue derivar.",
+        "Cada capacidade é um hook que dispara num momento específico do ciclo de vida do agente: PreToolUse para shapes destrutivos, SessionStart para injeção de contexto, SubagentStop para verificação de trabalho delegado. As capacidades compõem — delegation gate + secrets scan + validator no stop formam juntos uma pipeline que pega os escorregões que uma advisory isolada deixaria passar.",
         "A disciplina é spec-driven: intenção antes de código, cenários BDD como contrato, todo override auditado com razão ≥10 caracteres. O agente segue rápido; a superfície de acidentes diminui.",
       ],
     },
@@ -324,7 +324,7 @@ export const STRINGS: Record<Locale, Strings> = {
         },
         {
           title: "Implemente",
-          body: "Trabalhe tasks.md de cima pra baixo. Hooks são scripts bash em .claude/hooks/; regras são markdown em .agent0/context/rules/. Registre novos hooks em .claude/settings.json. Fixtures de teste em .agent0/tests/<capacidade>/.",
+          body: "Trabalhe tasks.md de cima pra baixo. Hooks são scripts bash em .agent0/hooks/; regras são markdown em .agent0/context/rules/. Registre hooks em .claude/settings.json (Claude Code) e no .codex/hooks.json versionado (Codex CLI). Fixtures de teste em .agent0/tests/<capacidade>/.",
         },
       ],
       closing:
@@ -416,7 +416,7 @@ export const STRINGS: Record<Locale, Strings> = {
       paragraphs: [
         "Los agentes de código IA son rápidos. Esa velocidad corta por ambos lados — una sola delegación mal hecha puede dejar una credencial filtrada, un branch force-pushed, o una feature subespecificada en producción antes de cualquier revisión.",
         "Agent0 es la disciplina operativa que detecta esos resbalones antes de que ocurran. No frenando al agente, sino dándole las mismas guardrails que un ingeniero sénior ya tiene internalizadas: nunca ejecutar un comando destructivo sin decir por qué, nunca delegar sin scope, nunca commitear una credencial, nunca instalar una dependencia sin dejar rastro.",
-        "Cada capacidad es un hook que dispara en un momento específico del ciclo de vida del agente: PreToolUse para shapes destructivos, SessionStart para inyección de contexto, SubagentStop para verificación de trabajo delegado. Las capacidades componen — delegation gate + secrets scan + validator en el stop forman juntas un pipeline del que el agente no puede salirse.",
+        "Cada capacidad es un hook que dispara en un momento específico del ciclo de vida del agente: PreToolUse para shapes destructivos, SessionStart para inyección de contexto, SubagentStop para verificación de trabajo delegado. Las capacidades componen — delegation gate + secrets scan + validator en el stop forman juntas un pipeline que atrapa los resbalones que un advisory aislado dejaría pasar.",
         "La disciplina es spec-driven: intención antes de código, escenarios BDD como contrato, todo override auditado con razón ≥10 caracteres. El agente sigue rápido; la superficie de accidentes se encoge.",
       ],
     },
@@ -463,7 +463,7 @@ export const STRINGS: Record<Locale, Strings> = {
         },
         {
           title: "Implementa",
-          body: "Trabaja tasks.md de arriba hacia abajo. Los hooks son scripts bash en .claude/hooks/; las reglas son markdown en .agent0/context/rules/. Registra hooks nuevos en .claude/settings.json. Fixtures de tests viven en .agent0/tests/<capacidad>/.",
+          body: "Trabaja tasks.md de arriba hacia abajo. Los hooks son scripts bash en .agent0/hooks/; las reglas son markdown en .agent0/context/rules/. Registra hooks en .claude/settings.json (Claude Code) y en el .codex/hooks.json versionado (Codex CLI). Fixtures de tests viven en .agent0/tests/<capacidad>/.",
         },
       ],
       closing:

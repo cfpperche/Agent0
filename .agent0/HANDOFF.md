@@ -65,9 +65,8 @@ Pre-existing untracked `docs/specs/091-sdd-debate-runner/` is unrelated (out of 
    tool. Offline tests prove the symlink/discovery structure; this confirms a live pickup.
 2. **Remaining skills are cc-native or need assessment** — `product` genuinely cc-native
    (`AskUserQuestion` ×7) → stays; `image` MCP-bound (fal.ai); `brainstorm` renders HTML+state → assess if
-   ever worth porting. The 5 portable skills are done. **Follow-up:** `/skill new` still scaffolds at
-   `.claude/skills/<slug>` — it should teach the canonical-source + symlink model for portable skills
-   (flagged in `4f53c5c`, separate task).
+   ever worth porting. The 5 portable skills are done, AND `/skill new` now scaffolds portable skills at
+   `.agent0/skills/<slug>` + discovery symlinks per the spec-121 model (`33769e9`).
 3. **vuln-audit post-merge smoke test** (reminder `r-2026-05-30-run-vuln-audit-once-against`) — real
    osv-scanner against `site/bun.lock`, confirm live V2 JSON parse. Still open from spec 120.
 4. **Optional: rebuild `site/dist/`** — source strings changed; dist not rebuilt.

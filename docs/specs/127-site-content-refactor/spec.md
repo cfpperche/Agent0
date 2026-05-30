@@ -9,7 +9,7 @@ _Created 2026-05-30._
 Resolved by the Claude×Codex debate (`Resolution: converged`) + user gate. Acceptance below is written to this single resolved branch:
 
 - **Page granularity:** grouped-by-theme explanatory pages (≈5–6: safety gates / spec workflow / validators / runtime & session / skills & tooling) + a "how the harness works" overview. NOT per-capacity (~23 pages was doc-bloat that duplicates the rules and re-stales).
-- **i18n scope:** **en-first** for the new explanatory routes; `pt`/`es` are a **tracked, blocking follow-up**, documented as an **explicit, named exception to spec 126's no-locale-reduction contract** — routes are never silently absent/stubbed/fallback. The existing landing stays full 3-locale.
+- **i18n scope:** shipped en-first, then **pt/es parity landed via the tracked follow-up** (2026-05-30, reminder `r-2026-05-30-spec-127-follow-up-translate`) — all new explanatory routes now exist for `en`/`pt`/`es`, and `check-currency.ts` `RESOLVED_LOCALES` enforces all three. The temporary en-first window honored the no-silent-fallback rule; 126's no-locale-reduction contract is now fully satisfied (no standing exception remains).
 - **Link hierarchy:** card → on-site explanatory page → "source on GitHub". The source link prefers current `.agent0/context/rules/*` or `.agent0/skills/*`; early `docs/specs/00*` may appear **only** as a labeled "history" link, never the primary current target.
 - **Derive vs curate (anti-restaling boundary):** *derive* from the repo at build time — identifiers, counts, source links, runtime status, source paths; *hand-author* — explanatory prose and examples. No machine-rendered mirror of the rules.
 - **Currency mechanism:** a typed content manifest + a build-time check that fails verification on staleness (conditions pinned in acceptance; schema in `plan.md`).
@@ -68,7 +68,7 @@ _Observable outcomes. The 126 contract (build, stack, harness-honest positioning
 - **No full visual redesign** — 126's visual system + design tokens stay; new pages reuse them. (Bolder visual direction remains 126's OQ5.)
 - **No auto-generated API-style docs dump** — explanatory prose is hand-authored for a developer reader; only the structured bits (ids/counts/links/status/paths) are derived (see § Resolved decisions).
 - **No per-capacity pages** — grouped-by-theme is the resolved IA.
-- **pt/es parity for the new routes is NOT in v1** — explicit, tracked exception to 126; it is a blocking follow-up, not abandoned.
+- ~~**pt/es parity for the new routes is NOT in v1**~~ — RESOLVED 2026-05-30: pt/es parity landed via the tracked follow-up; the new routes are now full 3-locale and the currency check enforces it. No standing 126 exception remains.
 
 ## Open questions
 

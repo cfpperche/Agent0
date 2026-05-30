@@ -170,7 +170,8 @@ reminders:
     + how-it-works) to pt/es for full locale parity — the documented blocking exception
     to spec 126''s no-locale-reduction. Add /pt/ and /es/ theme+overview routes; the
     currency check''s RESOLVED_LOCALES already supports widening to [en,pt,es].'
-  status: pending
+  status: done
   links:
   - docs/specs/127-site-content-refactor/spec.md
   - site/scripts/check-currency.ts
+  completed_ts: '2026-05-30T23:35:08Z'

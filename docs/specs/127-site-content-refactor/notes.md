@@ -32,6 +32,10 @@ The audit treated debate as a notable first-class capability (it has its own run
 
 Mid-verification I broke a `sourcePath` with `sed` to prove the currency check fails (it did, exit 1), then `git checkout src/i18n/capacities.ts` to restore — which reverted to the **last commit** (the pre-127 model), destroying the uncommitted new manifest. Recovered by re-authoring it from context, then committed immediately. Lesson carried forward: never `git checkout` an uncommitted file to "undo" a temp edit — copy/restore in-place, or commit first.
 
+### 2026-05-30 — parent — pt/es follow-up completed same-day; overview prose extracted to data
+
+The en-first window closed fast: pt/es parity for all new routes (5 theme pages + how-it-works × 2 locales = 12 files) landed the same day. Because the manifest (`capacities.ts`) and `docs.ts` were already trilingual and `ThemeView`/`CapabilityCard` render by `locale`, the theme pages were zero-prose thin wrappers. The only bespoke prose was the how-it-works overview — so it was extracted from the (previously en-hardcoded) page into trilingual data (`OVERVIEW_INTRO` + `OVERVIEW_SECTIONS` in `docs.ts`, bodies as trusted `set:html`) behind a new shared `OverviewView.astro`, mirroring the `ThemeView` pattern. `check-currency.ts` `RESOLVED_LOCALES` widened to `["en","pt","es"]`, so the guard now fails the build if any locale page is missing. Build green: 22 pages. The 126 no-locale-reduction exception is fully closed — no standing exception remains.
+
 ## Tradeoffs
 
 _Alternatives weighed during implementation (not at plan time). The chosen path + what was given up + why the tradeoff was worth it._

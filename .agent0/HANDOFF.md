@@ -12,10 +12,10 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 top of 126. `site/src/i18n/capacities.ts` is now a typed manifest (24 capacities: slug/theme/sourcePath/
 historySpec/per-runtime status from `runtime-capabilities.md`); `site/scripts/check-currency.ts` gates `bun run
 build` and FAILS on stale links / missing pages (proven red→green). Added 5 grouped-by-theme explanatory pages +
-a how-it-works overview (en), card links re-pointed to on-site pages (never early specs), and the two Codex-caught
-copy defects fixed across en/pt/es. Build green: 10 pages, currency check OK. Spec `Status: shipped`. **pt/es
-parity for the new routes is the one tracked follow-up** (reminder `r-2026-05-30-spec-127-follow-up-translate`),
-a documented exception to 126's no-locale-reduction.
+a how-it-works overview, card links re-pointed to on-site pages (never early specs), and the two Codex-caught
+copy defects fixed. **pt/es parity landed (same-day follow-up)** — all theme pages + how-it-works are now full
+3-locale (overview prose extracted to trilingual data behind `OverviewView.astro`); `check-currency.ts` enforces
+`[en,pt,es]`; no standing 126 exception remains. Build green: 22 pages, currency check OK. Spec `Status: shipped`.
 
 **Spec 126 — site-refactor: shipped.** OSS-landing-for-developers; derived capacity count, multi-runtime copy,
 og:image, instant redirect. OQ5 (bolder visual direction) stays open, user-owned. **Spec 125** stays shipped.
@@ -28,11 +28,8 @@ _No active parallel-work claims._
 
 ## Next Actions
 
-1. **Spec 127 pt/es follow-up** (reminder `r-2026-05-30-spec-127-follow-up-translate`): translate the 5 theme
-   pages + how-it-works to pt/es; widen `RESOLVED_LOCALES` in `check-currency.ts` to `[en,pt,es]` (it already
-   supports it). Blocking exception to 126 until done.
-2. **Spec 126 OQ5 (optional):** bolder visual/brand direction if desired — current site is coherent and shipped.
-3. **Deploy:** GitHub Pages publishes `site/` (`cfpperche.github.io/Agent0/`); confirm CI picks up 126+127.
+1. **Spec 126 OQ5 (optional):** bolder visual/brand direction if desired — current site is coherent and shipped.
+2. **Deploy:** GitHub Pages publishes `site/` (`cfpperche.github.io/Agent0/`); confirm CI picks up 126+127.
    Capture live Lighthouse numbers there (Chrome wouldn't connect in WSL).
 
 ## Decisions & Gotchas

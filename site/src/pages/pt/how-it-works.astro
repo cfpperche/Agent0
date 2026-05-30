@@ -2,11 +2,11 @@
 import Doc from "../../layouts/Doc.astro";
 import OverviewView from "../../components/OverviewView.astro";
 import { DOC_STRINGS } from "../../i18n/docs";
-const locale = "en" as const;
+const locale = "pt" as const;
 const d = DOC_STRINGS[locale];
 const title = `${d.overviewTitle} — Agent0`;
 const description =
-  "How the Agent0 harness fits together: rules as context, hooks as enforcement, skills as workflows, and one capability set across Claude Code and Codex CLI.";
+  "Como o harness do Agent0 se encaixa: regras como contexto, hooks como imposição, skills como workflows, e um conjunto de capacidades entre Claude Code e Codex CLI.";
 ---
 
 <Doc locale={locale} title={title} description={description}>

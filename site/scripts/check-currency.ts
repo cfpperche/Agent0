@@ -14,9 +14,9 @@ import { CAPACITIES, THEMES } from "../src/i18n/capacities.ts";
 const siteRoot = resolve(import.meta.dir, "..");
 const repoRoot = resolve(siteRoot, "..");
 
-// Spec 127 resolved gate: en-first for the new explanatory routes; pt/es are a
-// tracked, documented exception to spec 126 (blocking follow-up, not abandoned).
-const RESOLVED_LOCALES = ["en"];
+// Spec 127: en-first shipped first; pt/es parity landed as the tracked follow-up
+// (reminder r-2026-05-30-spec-127-follow-up-translate). Full 3-locale parity now.
+const RESOLVED_LOCALES = ["en", "pt", "es"];
 
 const errors: string[] = [];
 const themeIds = new Set(THEMES.map((t) => t.id));

@@ -1,0 +1,11 @@
+---
+import Doc from "../../layouts/Doc.astro";
+import ThemeView from "../../components/ThemeView.astro";
+import { THEMES } from "../../i18n/capacities";
+const locale = "pt" as const;
+const theme = THEMES.find((t) => t.id === "runtime-session")!;
+---
+
+<Doc locale={locale} title={`${theme.name[locale]} — Agent0`} description={theme.blurb[locale]}>
+  <ThemeView themeId="runtime-session" locale={locale} />
+</Doc>

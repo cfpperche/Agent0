@@ -151,7 +151,7 @@ EOF
 
   cat >&2 <<'EOF'
 
-Rule: .claude/rules/delegation.md
+Rule: .agent0/context/rules/delegation.md
 EOF
   exit 2
 fi

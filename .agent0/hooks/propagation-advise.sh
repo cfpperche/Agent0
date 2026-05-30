@@ -17,7 +17,7 @@
 # rules is the most common author of fresh leaks).
 #
 # Discipline: .agent0/memory/propagation-hygiene.md
-# Rule:       .claude/rules/propagation-advisory.md
+# Rule:       .agent0/context/rules/propagation-advisory.md
 #
 # Opt-out:    CLAUDE_SKIP_PROPAGATION_ADVISE=1
 # Override:   `# OVERRIDE: propagation-exempt: <reason ≥10 chars>` in edit content
@@ -59,7 +59,7 @@ in_shipped_surface() {
   in_shipped=0
   case "$rel" in
     CLAUDE.md|.mcp.json.example|.gitleaks.toml|.gitignore) in_shipped=1 ;;
-    .claude/hooks/*|.claude/rules/*|.agent0/validators/*|.claude/agents/*) in_shipped=1 ;;
+    .claude/hooks/*|.agent0/context/rules/*|.agent0/validators/*|.claude/agents/*) in_shipped=1 ;;
     .agent0/hooks/*|.agent0/tools/*) in_shipped=1 ;;
     .claude/skills/*|.agent0/tests/*|.githooks/*) in_shipped=1 ;;
   esac
@@ -68,7 +68,7 @@ in_shipped_surface() {
   case "$rel" in
     .claude/skills/*/vendor/*|.claude/skills/*/design-systems/*) return 1 ;;
     .agent0/hooks/propagation-advise.sh) return 1 ;;
-    .claude/rules/propagation-advisory.md) return 1 ;;
+    .agent0/context/rules/propagation-advisory.md) return 1 ;;
     .agent0/tests/propagation-advisory/*) return 1 ;;
   esac
   return 0

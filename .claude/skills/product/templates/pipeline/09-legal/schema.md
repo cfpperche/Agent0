@@ -13,7 +13,7 @@ The size **ceiling** is retired — artifact scope is judged by the quality judg
 | **+ AI-Specific** | +2 KB | when system-design integration list contains LLM provider |
 | **+ Regulated Aspects** | +2 KB | when vertical hits a named regime (HIPAA / LGPD / FINRA / PCI-DSS / etc) |
 
-**Computation:** the orchestrator sums the `min_size` floor adds across base + each firing condition to produce the effective floor (e.g. a healthtech product with PII + LLM lands at 5+5+2 = 12 KB floor). The Layer 1 JSON `min_size` below is the OPERATIONAL base floor; the full conditional floor check happens orchestrator-side. A uniform 200 KB catastrophe cap applies per `.claude/rules/artifact-budgets.md`.
+**Computation:** the orchestrator sums the `min_size` floor adds across base + each firing condition to produce the effective floor (e.g. a healthtech product with PII + LLM lands at 5+5+2 = 12 KB floor). The Layer 1 JSON `min_size` below is the OPERATIONAL base floor; the full conditional floor check happens orchestrator-side. A uniform 200 KB catastrophe cap applies per `.agent0/context/rules/artifact-budgets.md`.
 
 ## Required sections (legal-posture.md markdown headings)
 

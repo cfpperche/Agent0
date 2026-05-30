@@ -11,7 +11,7 @@ trap 'rm -rf "$TMPDIR_T"' EXIT
 export CLAUDE_PROJECT_DIR="$TMPDIR_T"
 
 payload="$(jq -n \
-  --arg fp "$TMPDIR_T/.claude/rules/example.md" \
+  --arg fp "$TMPDIR_T/.agent0/context/rules/example.md" \
   --arg new "Run with --agent0-path=/home/goat/Agent0 for testing." \
   '{tool_name: "Edit", tool_input: {file_path: $fp, new_string: $new}}')"
 

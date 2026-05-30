@@ -9,7 +9,7 @@
 #
 # Mutation paths require PyYAML; refuses to operate if absent (no degraded
 # query path because filtering frontmatter without YAML parsing would be
-# fragile). See .claude/rules/memory-placement.md § Cap / query / decay.
+# fragile). See .agent0/context/rules/memory-placement.md § Cap / query / decay.
 
 set -uo pipefail
 

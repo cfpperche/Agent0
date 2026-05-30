@@ -9,7 +9,7 @@ Agent0 classifies every first-party skill into one of three tiers, declared in t
 **Definition.** The skill's body references Claude Code-specific paths, environment variables, hooks, or tools. It works correctly only inside a Claude Code session where those primitives exist.
 
 **Signals in the body:**
-- References to `.claude/rules/*.md`, `.agent0/memory/*.md`, `.claude/hooks/*.sh`, `.agent0/reminders.yaml`, `.agent0/HANDOFF.md`
+- References to `.agent0/context/rules/*.md`, `.agent0/memory/*.md`, `.claude/hooks/*.sh`, `.agent0/reminders.yaml`, `.agent0/HANDOFF.md`
 - The `${CLAUDE_SKILL_DIR}` or `$CLAUDE_PROJECT_DIR` env vars
 - CC-only tools invoked by name (`TaskCreate`, `ExitPlanMode`, the `Skill` tool recursive call, `ScheduleWakeup`)
 - Calls into CC settings (`.claude/settings.json`) or per-session state (`.agent0/.session-state/`)
@@ -135,5 +135,5 @@ To make a skill consumable by both Claude Code and Codex CLI, relocate its body 
 6. **Verify both runtimes:** Claude discovers via `.claude/skills/` + `Skill` tool; Codex via `codex debug prompt-input` listing `.agents/skills/<slug>` + explicit `$<slug>` (implicit invocation tested separately). Confirm both resolve to the one canonical `SKILL.md`.
 
 sync-harness propagation of the model (manifest entries, the `sync_skill_discovery_links` pass, the
-symlink-hostile copy fallback) is documented in `.claude/rules/harness-sync.md` § *Skill discovery-link
+symlink-hostile copy fallback) is documented in `.agent0/context/rules/harness-sync.md` § *Skill discovery-link
 propagation*. `vuln-audit` is the reference migration (spec 121).

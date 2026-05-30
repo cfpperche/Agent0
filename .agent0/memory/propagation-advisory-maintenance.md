@@ -9,7 +9,7 @@ metadata:
 ---
 # Propagation advisory maintenance
 
-Maintainer-binding companion to `.claude/rules/propagation-advisory.md`. The companion rule carries the consumer-facing slice (what the advisory line looks like, override grammar, escape hatch); this memory carries the upstream-maintainer surface — the 5-pattern regex table, the shipped-surface set, the audit-log promotion policy, and the deep gotchas a maintainer extending the hook needs.
+Maintainer-binding companion to `.agent0/context/rules/propagation-advisory.md`. The companion rule carries the consumer-facing slice (what the advisory line looks like, override grammar, escape hatch); this memory carries the upstream-maintainer surface — the 5-pattern regex table, the shipped-surface set, the audit-log promotion policy, and the deep gotchas a maintainer extending the hook needs.
 
 ## The 5 patterns
 
@@ -37,7 +37,7 @@ Mirrors `.agent0/memory/propagation-hygiene.md § The shipped file class`:
 
 - `.claude/hooks/*.sh`
 - `.agent0/hooks/*.sh`
-- `.claude/rules/*.md`
+- `.agent0/context/rules/*.md`
 - `.agent0/tools/*.{sh,py,ts}`
 - `.agent0/validators/*.sh`
 - `.claude/agents/*.md`
@@ -51,7 +51,7 @@ Mirrors `.agent0/memory/propagation-hygiene.md § The shipped file class`:
 - `.claude/skills/*/vendor/*` — vendored upstream content (open-design, etc.) has its own provenance
 - `.claude/skills/*/design-systems/*` — vendor `DESIGN.md` files
 - `.agent0/hooks/propagation-advise.sh` — the hook itself documents patterns inline
-- `.claude/rules/propagation-advisory.md` — the rule documents patterns inline
+- `.agent0/context/rules/propagation-advisory.md` — the rule documents patterns inline
 - `.agent0/tests/propagation-advisory/*` — test fixtures intentionally carry the patterns
 
 ## Audit log
@@ -70,7 +70,7 @@ Both upgrades reuse the same regex set; the advisory is the cheapest first deplo
 - **Pattern volume is capped at 5 per category.** An edit that introduces 30 spec refs surfaces 5 advisory lines per pattern, not 30. Signal economy — the maintainer needs proof of a leak class, not an exhaustive list. Run the audit grep manually for the full picture.
 - **The hook doesn't validate `# OVERRIDE:` semantics deeply.** It matches the start-of-line anchor + the 10-char reason floor. Putting the marker inside a quoted heredoc or a Markdown code-fence still counts as "override present" because the hook is regex-based, not shell-aware. Same limitation as the secrets-scan preflight; acceptable for an advisory tier.
 - **Vendor and design-systems are excluded by path, not by content.** A file at a vendored path can carry leak strings freely — the hook never reads it. If vendor content ever migrates out of `vendor/`, the exclusion no longer applies.
-- **No content-aware exclusions** for Markdown code-fences or backtick-quoted examples. A rule that legitimately documents leak patterns inline (e.g. the consumer-facing `.claude/rules/propagation-advisory.md`) is excluded BY PATH at the top of the hook. Adding more such docs requires updating the path-exclusion case statement.
+- **No content-aware exclusions** for Markdown code-fences or backtick-quoted examples. A rule that legitimately documents leak patterns inline (e.g. the consumer-facing `.agent0/context/rules/propagation-advisory.md`) is excluded BY PATH at the top of the hook. Adding more such docs requires updating the path-exclusion case statement.
 
 ## Runtime-neutral + Codex activation (spec 113)
 
@@ -101,7 +101,7 @@ If a future Codex format diverges again, set `AGENT0_PROPAGATION_DEBUG=1` in the
 
 ## Cross-references
 
-- `.claude/rules/propagation-advisory.md` — consumer-facing companion (override grammar + escape hatch + advisory-line shape)
+- `.agent0/context/rules/propagation-advisory.md` — consumer-facing companion (override grammar + escape hatch + advisory-line shape)
 - `.agent0/memory/propagation-hygiene.md` — the upstream-maintainer discipline this hook enforces
 - `.agent0/hooks/propagation-advise.sh` — implementation (runtime-neutral; sources `_memory-hook-lib.sh`)
 - `.agent0/tests/propagation-advisory/` — scenario tests (incl. Codex `apply_patch` scenarios 12–14)

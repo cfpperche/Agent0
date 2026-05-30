@@ -7,7 +7,7 @@
 #
 # Second invocation is a no-op (journal already populated for each entry).
 #
-# Rule: .claude/rules/memory-placement.md § Event journal
+# Rule: .agent0/context/rules/memory-placement.md § Event journal
 
 set -uo pipefail
 LC_ALL=C

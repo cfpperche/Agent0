@@ -94,7 +94,7 @@ Per direction, pin in chat BEFORE writing HTML:
 
 ### 3.5 Fan-out — 3 parallel sub-agents, one direction each
 
-With the 3 angles pinned (§ 3), the parent does **not** produce the directions itself. The parent composes **3 sub-agent briefs** (5-field handoff per `.claude/rules/delegation.md`) and **dispatches them in the same response** so they run concurrently. Each brief locks ONE pre-attributed angle into CONSTRAINTS — the sub-agent does not pick its own angle, does not hedge across angles, does not compare itself to the other two.
+With the 3 angles pinned (§ 3), the parent does **not** produce the directions itself. The parent composes **3 sub-agent briefs** (5-field handoff per `.agent0/context/rules/delegation.md`) and **dispatches them in the same response** so they run concurrently. Each brief locks ONE pre-attributed angle into CONSTRAINTS — the sub-agent does not pick its own angle, does not hedge across angles, does not compare itself to the other two.
 
 Brief shape per direction (composed by the parent — `product_get_delegation_brief(2)` returns one generic brief, not three direction-specific ones; the parent specialises it three times):
 

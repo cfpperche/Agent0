@@ -18,7 +18,7 @@
 #   silently disables override support — not the secrets scan itself.
 #
 # Reference:
-#   .claude/rules/secrets-scan.md   — full discipline, both layers
+#   .agent0/context/rules/secrets-scan.md   — full discipline, both layers
 #
 # Lazarus vector note:
 #   This script is activated via `git config core.hooksPath .githooks` (a
@@ -112,7 +112,7 @@ append_audit() {
   # Atomic append via flock when available; fall back to plain append otherwise.
   # Probe writability in a subshell BEFORE the bare `exec 9>...` redirect —
   # `exec 9>file 2>/dev/null` would permanently silence FD 2 for the rest of
-  # the script, eating every block message. See .claude/rules/delegation.md
+  # the script, eating every block message. See .agent0/context/rules/delegation.md
   # § Gotchas (the sticky exec redirect trap).
   if command -v flock >/dev/null 2>&1; then
     local lock_path="$AUDIT_LOG.lock"
@@ -267,7 +267,7 @@ set -e
 # gitleaks v8 writes a JSON array of findings to the report path.
 # Use `if type == "array" then length else -1 end` — NOT `// empty` — so that
 # a literal `false` or a missing field does not silently collapse to 0.
-# See .claude/rules/delegation.md § Gotchas for the `// empty` collapse trap.
+# See .agent0/context/rules/delegation.md § Gotchas for the `// empty` collapse trap.
 finding_count=0
 if [ -s "$GITLEAKS_REPORT" ]; then
   finding_count="$(jq 'if type == "array" then length else -1 end' "$GITLEAKS_REPORT" 2>/dev/null || printf '%s' '-1')"
@@ -323,7 +323,7 @@ To bypass for a legitimate fixture or test vector, use one of:
        git commit -m "..." # OVERRIDE: <reason ≥10 chars explaining why>
      (The preflight hook parses the marker and injects CLAUDE_SECRETS_OVERRIDE_REASON.)
 
-See .claude/rules/secrets-scan.md for the full discipline.
+See .agent0/context/rules/secrets-scan.md for the full discipline.
 EOF
 
 rm -f "$GITLEAKS_REPORT" "$GITLEAKS_OUT" 2>/dev/null || true

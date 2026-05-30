@@ -73,7 +73,7 @@ fi
 # githooks-activation: surface the manual core.hooksPath activation
 # command when .githooks/ is present but config doesn't point at it.
 # Auto-activation is refused on purpose (Lazarus vector — see
-# .claude/rules/secrets-scan.md § Gotchas); the passive advisory closes the
+# .agent0/context/rules/secrets-scan.md § Gotchas); the passive advisory closes the
 # discoverability gap without crossing into automation.
 if [[ -d "$PROJECT_DIR/.githooks" && "${CLAUDE_SKIP_GITHOOKS_HINT:-0}" != "1" ]]; then
   current_hookspath="$(git -C "$PROJECT_DIR" config --get core.hooksPath 2>/dev/null || true)"

@@ -30,7 +30,7 @@ If both `/remind` and `/routine` seem to fit, the cadence question disambiguates
 
 **Phase 2 (future, when API key available):** `autonomous: true` opt-in frontmatter; cron-side invokes `claude -p` directly with the rendered prompt and writes output to PR / issue / file per the routine's `output:` declaration. Deferred per the rule-of-three demand test — built when ≥3 routines have demonstrated value in Phase 1 mode.
 
-The Phase 1 design is deliberately human-in-loop. A routine that auto-commits without review is a foot-gun; surfacing the queue at SessionStart and requiring an explicit dispatch keeps the contract-not-promise discipline (see `.claude/rules/delegation.md` § *Why DONE_WHEN exists*) intact for every recurring action.
+The Phase 1 design is deliberately human-in-loop. A routine that auto-commits without review is a foot-gun; surfacing the queue at SessionStart and requiring an explicit dispatch keeps the contract-not-promise discipline (see `.agent0/context/rules/delegation.md` § *Why DONE_WHEN exists*) intact for every recurring action.
 
 ## Idempotency mandate (hard rule)
 
@@ -188,8 +188,8 @@ The marker is scoped — it skips the named check, not all validation:
 
 ## Cross-references
 
-- `.claude/rules/reminders.md` — sibling capacity (one-shot deferred); shares the user/project/shipped 3-bucket model.
-- `.claude/rules/memory-placement.md` — the 3-bucket model this rule extends to routines.
-- `.claude/rules/harness-sync.md` — how the capacity propagates to consumer projects (`.claude/{tools,hooks,rules,skills}/` glob coverage).
-- `.claude/rules/delegation.md` § *Why DONE_WHEN exists* — the contract-not-promise discipline that motivates the human-in-loop dispatch.
+- `.agent0/context/rules/reminders.md` — sibling capacity (one-shot deferred); shares the user/project/shipped 3-bucket model.
+- `.agent0/context/rules/memory-placement.md` — the 3-bucket model this rule extends to routines.
+- `.agent0/context/rules/harness-sync.md` — how the capacity propagates to consumer projects (`.claude/{tools,hooks,rules,skills}/` glob coverage).
+- `.agent0/context/rules/delegation.md` § *Why DONE_WHEN exists* — the contract-not-promise discipline that motivates the human-in-loop dispatch.
 - `.claude/skills/skill/references/portability-tiers.md` — the tier definitions; `/routine` targets `cc-native` (depends on CC's slash-command surface for dispatch).

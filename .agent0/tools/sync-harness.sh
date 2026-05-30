@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # .agent0/tools/sync-harness.sh
 # One-way sync of upstream harness state into a consumer project.
-# See .claude/rules/harness-sync.md for the full discipline.
+# See .agent0/context/rules/harness-sync.md for the full discipline.
 
 set -euo pipefail
 
@@ -172,6 +172,7 @@ MANIFEST_TSV="$(mktemp -t sync-manifest-XXXXXX)"
 # Recursive globs (find -type f under base dir) — encoded as "base/**"
 COPY_CHECK_RECURSIVE=(
   ".claude/skills"
+  ".agent0/context"
   ".agent0/skills"
   ".agent0/tests"
   ".claude/agents"
@@ -180,7 +181,6 @@ COPY_CHECK_RECURSIVE=(
 # Single-level globs (find -maxdepth 1 with name pattern) — encoded as "dir|pattern"
 COPY_CHECK_GLOBS=(
   ".claude/hooks|*.sh"
-  ".claude/rules|*.md"
   ".agent0/validators|*.sh"
   ".agent0/hooks|*.sh"
   ".agent0/tools|*.sh"
@@ -191,6 +191,7 @@ COPY_CHECK_GLOBS=(
 COPY_CHECK_FILES=(
   "AGENTS.md"
   ".mcp.json.example"
+  ".codex/hooks.json"
   ".codex/config.toml.example"
   ".gitleaks.toml"
   ".githooks/pre-commit"
@@ -217,7 +218,7 @@ COPY_CHECK_FILES=(
 # hook command from the settings merge so the registration is invisible too.
 COPY_CHECK_EXCLUDE=(
   ".agent0/hooks/propagation-advise.sh"
-  ".claude/rules/propagation-advisory.md"
+  ".agent0/context/rules/propagation-advisory.md"
   ".agent0/tests/propagation-advisory/*"
 )
 

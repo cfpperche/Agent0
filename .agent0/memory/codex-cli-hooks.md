@@ -16,7 +16,7 @@ Canonical source: <https://developers.openai.com/codex/hooks> (verified 2026-05-
 
 ## Why this memory exists
 
-`.claude/rules/runtime-capabilities.md` matrix row `lifecycle hooks` carried `Codex CLI = unsupported` until 2026-05-27. That cell was correct at Codex CLI's open-source moment (April 2025) but drifted as OpenAI shipped the hook surface (issue `openai/codex#14882` is the proposal trail). The drift went uncaught because the quarterly competitive-harness audit (`r-2026-05-19-re-rodar-auditoria`) treats matrix maintenance as a separate workflow from spec design — a spec design conversation will trust the matrix without re-verifying against upstream docs.
+`.agent0/context/rules/runtime-capabilities.md` matrix row `lifecycle hooks` carried `Codex CLI = unsupported` until 2026-05-27. That cell was correct at Codex CLI's open-source moment (April 2025) but drifted as OpenAI shipped the hook surface (issue `openai/codex#14882` is the proposal trail). The drift went uncaught because the quarterly competitive-harness audit (`r-2026-05-19-re-rodar-auditoria`) treats matrix maintenance as a separate workflow from spec design — a spec design conversation will trust the matrix without re-verifying against upstream docs.
 
 **The meta-lesson:** for any cross-runtime decision in a spec or plan, verify runtime capabilities via the runtime's official docs BEFORE deriving design assumptions, even when the project matrix asserts the answer. The matrix is a snapshot; the docs are the truth. See [[verify-runtime-capabilities]] (user-level feedback) for the behavioral discipline.
 
@@ -92,7 +92,7 @@ Override grammars and block-with-corrective-template patterns (exit 2) port clea
 {"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":"propagation-advisory: ...\n"}}
 ```
 
-Spec 113 live dogfood proved this end-to-end: a real Codex `apply_patch` creating `.claude/rules/_dogfood-113d.md` surfaced `propagation-advisory: spec-NNN in .claude/rules/_dogfood-113d.md:1 — this refs spec 080` as developer context.
+Spec 113 live dogfood proved this end-to-end: a real Codex `apply_patch` creating `.agent0/context/rules/_dogfood-113d.md` surfaced `propagation-advisory: spec-NNN in .agent0/context/rules/_dogfood-113d.md:1 — this refs spec 080` as developer context.
 
 ## Config-file layout: 5-layer discovery, project precedence wins
 
@@ -110,7 +110,7 @@ Two user-side escape hatches the spec design must accommodate: `[features] hooks
 
 ## Pointers
 
-- `.claude/rules/runtime-capabilities.md` — matrix row `lifecycle hooks` updated 2026-05-27 to reflect this finding.
+- `.agent0/context/rules/runtime-capabilities.md` — matrix row `lifecycle hooks` updated 2026-05-27 to reflect this finding.
 - `docs/specs/099-memory-multi-runtime/` — first spec that re-opened after the discovery; Round 3 critique invalidates the v1 "Codex convention-only" premise.
 - `.codex/config.toml.example` — already-shipped template (spec 098); extend with `[hooks]` block when porting first-party Agent0 hooks.
 - [[cc-platform-hooks]] — Claude Code's 29-event surface; the meta-lesson on validating event lists against canonical docs applies symmetrically.

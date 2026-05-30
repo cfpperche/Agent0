@@ -217,4 +217,4 @@ No automatic migration. Founders with an in-flight v4 (or older) run must comple
 - `quality-judge.md` — the quality judge: when it runs, rubric assembly, the verdict shape, the verdict→gate routing
 - `sitemap-schema.md` — Step 07's required_categories binding
 - `SKILL.md` — orchestration body that operates this state machine
-- `.claude/rules/delegation.md` — 5-field handoff discipline
+- `.agent0/context/rules/delegation.md` — 5-field handoff discipline

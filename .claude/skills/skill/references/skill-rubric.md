@@ -1,8 +1,8 @@
 # Skill rubric — freedom annotations + eval scenarios
 
-Two writing conventions every Agent0 SKILL.md with ≥4 step headers should follow. Both are **repo-local conventions**, not agentskills.io spec rules — they live in the body of `SKILL.md` (not frontmatter) and the upstream canonical tool (`skills-ref`) does not enforce them. The `/skill audit` invocation surfaces gaps as non-blocking `skill-rubric-advisory:` lines (mirrors the `tdd-advisory:` / `lint-advisory:` family — see `.claude/rules/delegation.md` § *Advisories*).
+Two writing conventions every Agent0 SKILL.md with ≥4 step headers should follow. Both are **repo-local conventions**, not agentskills.io spec rules — they live in the body of `SKILL.md` (not frontmatter) and the upstream canonical tool (`skills-ref`) does not enforce them. The `/skill audit` invocation surfaces gaps as non-blocking `skill-rubric-advisory:` lines (mirrors the `tdd-advisory:` / `lint-advisory:` family — see `.agent0/context/rules/delegation.md` § *Advisories*).
 
-The discipline this enforces is the **skill→LLM-executor** sibling of the **parent→sub** discipline in `.claude/rules/delegation.md` § *The 5-field handoff*. The 5-field handoff disciplines what a parent agent communicates to a dispatched sub-agent so the sub-agent doesn't drift; this rubric disciplines what a skill's body communicates to the LLM executing it, so the LLM doesn't drift between "improvise content" and "follow template literally".
+The discipline this enforces is the **skill→LLM-executor** sibling of the **parent→sub** discipline in `.agent0/context/rules/delegation.md` § *The 5-field handoff*. The 5-field handoff disciplines what a parent agent communicates to a dispatched sub-agent so the sub-agent doesn't drift; this rubric disciplines what a skill's body communicates to the LLM executing it, so the LLM doesn't drift between "improvise content" and "follow template literally".
 
 ## Freedom annotations
 
@@ -46,7 +46,7 @@ Use this table when deciding which marker fits a step:
 
 - Every `^##` header that names a *step* in a pipeline-shaped skill, OR every `^##` header that names a *subcommand* in a dispatcher-shaped skill.
 - NOT on frame sections: `## Notes`, `## Gotchas`, `## Cross-references`, `## Reference Files`, `## Eval Scenarios` (the eval section is the rubric itself, not a step).
-- NOT on rules files (`.claude/rules/*.md`) — rules are by definition fully binding; freedom annotations would be cargo-culted.
+- NOT on rules files (`.agent0/context/rules/*.md`) — rules are by definition fully binding; freedom annotations would be cargo-culted.
 
 ## Eval scenarios
 
@@ -110,7 +110,7 @@ Skills currently above the threshold in Agent0: `/sdd`, `/product`, `/skill`. Sk
 
 ## Override marker
 
-Mirroring the project's other gates (`# OVERRIDE:` grammar from `.claude/rules/delegation.md`, `.claude/rules/secrets-scan.md`, etc.), an HTML-comment marker anywhere in the SKILL.md body bypasses the entire rubric check:
+Mirroring the project's other gates (`# OVERRIDE:` grammar from `.agent0/context/rules/delegation.md`, `.agent0/context/rules/secrets-scan.md`, etc.), an HTML-comment marker anywhere in the SKILL.md body bypasses the entire rubric check:
 
 ```markdown
 <!-- SKILL-RUBRIC-EXEMPT: <reason ≥10 chars> -->
@@ -134,12 +134,12 @@ Forks of Agent0 inherit `check-rubric.sh` via `sync-harness.sh` (it's under `.cl
 
 ## Cross-reference
 
-- `.claude/rules/spec-driven.md` § *Acceptance scenarios* — the spec-level sibling of eval scenarios; same Given/When/Then-style discipline applied to spec.md
-- `.claude/rules/delegation.md` § *The 5-field handoff* — the parent→sub discipline this rubric extends to the skill→LLM-executor boundary
-- `.claude/rules/delegation.md` § *Advisories* — `skill-rubric-advisory:` follows the established `<kind>-advisory:` grammar
+- `.agent0/context/rules/spec-driven.md` § *Acceptance scenarios* — the spec-level sibling of eval scenarios; same Given/When/Then-style discipline applied to spec.md
+- `.agent0/context/rules/delegation.md` § *The 5-field handoff* — the parent→sub discipline this rubric extends to the skill→LLM-executor boundary
+- `.agent0/context/rules/delegation.md` § *Advisories* — `skill-rubric-advisory:` follows the established `<kind>-advisory:` grammar
 - `.claude/skills/skill/scripts/check-rubric.sh` — implementation
 - `.claude/skills/skill/SKILL.md` § *Subcommand: audit* — invocation site
 - `.claude/skills/skill/references/spec-snapshot.md` — agentskills.io frontmatter spec (orthogonal — frontmatter, not body)
-- `.claude/rules/artifact-budgets.md` § *Anti-stub floor* — same anti-stub discipline that motivates "author writes annotations manually; no auto-generation"
+- `.agent0/context/rules/artifact-budgets.md` § *Anti-stub floor* — same anti-stub discipline that motivates "author writes annotations manually; no auto-generation"
 - `/home/goat/anthill/.claude/skills/anthill-codebase-review/SKILL.md` — primary reference for both conventions (10 annotations, 3 eval scenarios)
 - `docs/specs/087-skill-rubric-freedom-evals/` — origin spec for this discipline

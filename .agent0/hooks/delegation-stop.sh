@@ -17,7 +17,7 @@
 # block sub-agent termination or pollute the agent's next turn.
 #
 # Spec: docs/specs/106-delegation-hooks-multi-runtime/
-# Rule: .claude/rules/delegation.md § Audit log + § Codex: convention-only
+# Rule: .agent0/context/rules/delegation.md § Audit log + § Codex: convention-only
 
 set -uo pipefail
 

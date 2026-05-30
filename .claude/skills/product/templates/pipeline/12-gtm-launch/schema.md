@@ -12,7 +12,7 @@ The size **ceiling** is retired — artifact scope is judged by the quality judg
 |---|---|---|
 | `gtm-launch.md` | 4 KB | below this the canvas is too thin or the launch plan misses weeks |
 
-A uniform 200 KB catastrophe cap applies per `.claude/rules/artifact-budgets.md`.
+A uniform 200 KB catastrophe cap applies per `.agent0/context/rules/artifact-budgets.md`.
 
 ## Required H2 sections (in order)
 

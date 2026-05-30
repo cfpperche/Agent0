@@ -13,13 +13,13 @@
 # permission_mode, agent_id, agent_type), so this hook records
 # brief_observable=false / formatted=null — it observes that a dispatch
 # happened, never whether the 5-field contract was followed. That discipline is
-# convention-only on Codex; see .claude/rules/delegation.md § Codex: convention-only.
+# convention-only on Codex; see .agent0/context/rules/delegation.md § Codex: convention-only.
 #
 # Fail-open / never-block: missing jq, unparseable payload, unwritable log —
 # all exit 0 silently.
 #
 # Spec: docs/specs/106-delegation-hooks-multi-runtime/
-# Rule: .claude/rules/delegation.md § Audit log (Codex subagent-start row)
+# Rule: .agent0/context/rules/delegation.md § Audit log (Codex subagent-start row)
 
 set -uo pipefail
 

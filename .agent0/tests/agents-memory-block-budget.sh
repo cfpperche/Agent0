@@ -31,7 +31,7 @@ if [ "$count" = "MISSING" ]; then
 fi
 
 if [ "$count" -gt "$MAX_LINES" ]; then
-  printf 'agents-memory-block-budget: AGENTS.md ## Memory block has %s non-blank lines (max %s). Move detail to .claude/rules/memory-placement.md § Multi-runtime usage.\n' "$count" "$MAX_LINES" >&2
+  printf 'agents-memory-block-budget: AGENTS.md ## Memory block has %s non-blank lines (max %s). Move detail to .agent0/context/rules/memory-placement.md § Multi-runtime usage.\n' "$count" "$MAX_LINES" >&2
   exit 1
 fi
 

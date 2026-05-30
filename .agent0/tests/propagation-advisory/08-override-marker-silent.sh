@@ -16,7 +16,7 @@ new_content="# OVERRIDE: propagation-exempt: documenting historical spec 080 con
 This intentionally mentions spec 080 and anthill for archive purposes."
 
 payload="$(jq -n \
-  --arg fp "$TMPDIR_T/.claude/rules/historical-note.md" \
+  --arg fp "$TMPDIR_T/.agent0/context/rules/historical-note.md" \
   --arg new "$new_content" \
   '{tool_name: "Edit", tool_input: {file_path: $fp, new_string: $new}}')"
 

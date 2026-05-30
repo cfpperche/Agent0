@@ -13,7 +13,7 @@ The size **ceiling** is retired — artifact scope is judged by the quality judg
 | `screens/*.html` (per file, mood-tier) | 4 KB | below this is a stub screen |
 | `REPORT.md` | 6 KB | below this Turn 1 sections are missing |
 
-A uniform 200 KB catastrophe cap (token-runaway circuit-breaker, not a budget) applies per `.claude/rules/artifact-budgets.md`.
+A uniform 200 KB catastrophe cap (token-runaway circuit-breaker, not a budget) applies per `.agent0/context/rules/artifact-budgets.md`.
 
 ## Required sections (REPORT.md markdown headings)
 

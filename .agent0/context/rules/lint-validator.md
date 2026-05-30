@@ -51,7 +51,7 @@ lint-advisory: biome declared in package.json but not installed — run `bun ins
 lint-advisory: ruff declared in pyproject.toml but not installed — run `poetry install`
 ```
 
-The install command is verbatim copy-paste — the agent (or the operator reading `delegation-verify.sh` stderr) runs it and the next validator firing transitions to state (a). Advisories are NEVER blocking; they NEVER increment the delegation loop budget (see `.claude/rules/delegation.md` § *Post-edit validator loop*). Mirrors `tdd-advisory:` and `secrets-advisory:` semantics.
+The install command is verbatim copy-paste — the agent (or the operator reading `delegation-verify.sh` stderr) runs it and the next validator firing transitions to state (a). Advisories are NEVER blocking; they NEVER increment the delegation loop budget (see `.agent0/context/rules/delegation.md` § *Post-edit validator loop*). Mirrors `tdd-advisory:` and `secrets-advisory:` semantics.
 
 The advisory reaches the agent's next-turn context via `delegation-verify.sh` (at `SubagentStop`), which captures validator stderr separately from stdout (the JSON contract) and surfaces it to its own stderr. Before this extension the validator was silent on its own stderr so a `2>&1` merge did no harm; once it started emitting advisories the merge would prepend non-JSON text and break `jq` parsing. The hook update is additive: stdout still carries the JSON contract; stderr is now a real channel.
 

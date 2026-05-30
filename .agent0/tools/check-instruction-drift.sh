@@ -128,7 +128,7 @@ else
 fi
 
 check_runtime_capabilities_registry() {
-  local registry_rel=".claude/rules/runtime-capabilities.md"
+  local registry_rel=".agent0/context/rules/runtime-capabilities.md"
   local registry="$ROOT/$registry_rel"
   local term file label count before_failures
 

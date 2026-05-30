@@ -17,7 +17,7 @@ The size **ceiling** is retired — artifact scope is judged by the quality judg
 | `architecture.json` | 256 B | catches `{}` / near-empty graph regressions |
 | `security.md` | 3 KB | below this the threat model was punted |
 
-A uniform 200 KB catastrophe cap applies per `.claude/rules/artifact-budgets.md`.
+A uniform 200 KB catastrophe cap applies per `.agent0/context/rules/artifact-budgets.md`.
 
 ## Required sections (markdown headings in `system-design.md`)
 

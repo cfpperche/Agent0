@@ -14,7 +14,7 @@
 # emitted (no truncation) — the cap is a writing discipline, not a
 # silent edit. Exit 0 regardless of advisories.
 #
-# Schema: .claude/rules/memory-placement.md § Frontmatter schema
+# Schema: .agent0/context/rules/memory-placement.md § Frontmatter schema
 
 set -uo pipefail
 LC_ALL=C

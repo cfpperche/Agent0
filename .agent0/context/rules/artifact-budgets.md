@@ -46,4 +46,4 @@ The project's `# OVERRIDE: <reason ≥10 chars>` grammar still applies, now scop
 
 - `.claude/skills/product/references/quality-judge.md` — how artifact scope/quality is actually judged now
 - `.claude/skills/product/references/{delegation-briefs,pipeline-coverage}.md` — where the catastrophe cap is noted per step
-- `.claude/rules/delegation.md` — the 5-field handoff; briefs note the cap in CONSTRAINTS
+- `.agent0/context/rules/delegation.md` — the 5-field handoff; briefs note the cap in CONSTRAINTS

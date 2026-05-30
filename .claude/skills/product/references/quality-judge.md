@@ -118,5 +118,5 @@ Phase 4 (step 15) has no gate — a `15a/15b/15c` `fail` cannot pre-populate any
 - `delegation-briefs.md § quality-judge` — the judge sub-agent's 5-field dispatch brief
 - `state-machine.md` — `.state.json` `quality_verdicts`, the phase→gate progression the routing feeds, `§ Gate UX`, `§ Failure handling`
 - `templates/pipeline/<NN-step>/schema.md` — the per-step structural context + `§ Size floor` `min_size`
-- `.claude/rules/artifact-budgets.md` — the retired size budget + the 200 KB catastrophe cap
+- `.agent0/context/rules/artifact-budgets.md` — the retired size budget + the 200 KB catastrophe cap
 - `templates/report.md.tmpl § Quality concerns` — where `concern` / `fail` verdicts surface

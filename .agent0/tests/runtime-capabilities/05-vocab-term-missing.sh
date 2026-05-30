@@ -13,7 +13,7 @@ TMPDIR="$(mktemp -d -t runtime-capabilities-05-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 runtime_caps_write_valid_fixture "$TMPDIR"
-perl -0pi -e 's/`convention`/manual/g' "$TMPDIR/.claude/rules/runtime-capabilities.md"
+perl -0pi -e 's/`convention`/manual/g' "$TMPDIR/.agent0/context/rules/runtime-capabilities.md"
 
 actual_exit=0
 out="$(bash "$TOOL" --root "$TMPDIR" --skip-sync-check 2>&1)" || actual_exit=$?

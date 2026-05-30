@@ -16,7 +16,7 @@ export CLAUDE_PROJECT_DIR="$TMPDIR_T"
 # the patch body under `tool_input.command`; keep RAW new-file content here to
 # guard the parser branch that tolerates no `+` prefix.
 patch='*** Begin Patch
-*** Add File: .claude/rules/foo.md
+*** Add File: .agent0/context/rules/foo.md
 This refs spec 080 in newly added content.
 *** End Patch'
 
@@ -37,7 +37,7 @@ fi
 if ! jq -e '
   .hookSpecificOutput.hookEventName == "PostToolUse"
   and (.hookSpecificOutput.additionalContext | contains("propagation-advisory: spec-NNN"))
-  and (.hookSpecificOutput.additionalContext | contains(".claude/rules/foo.md:1"))
+  and (.hookSpecificOutput.additionalContext | contains(".agent0/context/rules/foo.md:1"))
 ' "$out_capture" >/dev/null 2>&1; then
   printf 'FAIL: missing propagation-advisory JSON additionalContext on Codex path\n'
   printf 'stdout was:\n'; cat "$out_capture"; printf 'stderr was:\n'; cat "$err_capture"

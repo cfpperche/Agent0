@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Scenario: .codex/config.toml.example synced; .codex/config.toml never touched.
+# Scenario: Codex tracked config synced; .codex/config.toml never touched.
 # Asserts:
 #   (a) .codex/config.toml.example copied from Agent0 to consumer project
-#   (b) consumer project's .codex/config.toml remains byte-identical
+#   (b) .codex/hooks.json copied from Agent0 to consumer project
+#   (c) consumer project's .codex/config.toml remains byte-identical
 
 set -euo pipefail
 
@@ -22,6 +23,22 @@ cat > "$SRC/.codex/config.toml.example" <<'EOF'
 enabled = false
 command = "npx"
 args = ["-y", "@playwright/mcp@latest"]
+EOF
+cat > "$SRC/.codex/hooks.json" <<'EOF'
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.agent0/hooks/session-start.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}
 EOF
 printf '{"hooks":{}}\n' > "$SRC/.claude/settings.json"
 printf '# CLAUDE\n\n## Compact Instructions\n' > "$SRC/CLAUDE.md"
@@ -49,6 +66,16 @@ fi
 
 if [ ! -f "$CONSUMER/.codex/config.toml.example" ]; then
   printf 'FAIL: .codex/config.toml.example not copied\n%s\n' "$out"
+  exit 1
+fi
+
+if [ ! -f "$CONSUMER/.codex/hooks.json" ]; then
+  printf 'FAIL: .codex/hooks.json not copied\n%s\n' "$out"
+  exit 1
+fi
+
+if ! jq -e '.hooks.SessionStart[]?.hooks[]? | select((.command // "") | contains("session-start.sh"))' "$CONSUMER/.codex/hooks.json" >/dev/null; then
+  printf 'FAIL: .codex/hooks.json content was not propagated\n'
   exit 1
 fi
 

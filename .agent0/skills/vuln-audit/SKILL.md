@@ -1,6 +1,6 @@
 ---
 name: vuln-audit
-description: On-demand detector for known-vulnerable INSTALLED dependencies in this project, across whatever ecosystems it has (npm/bun, PyPI, Go, crates, Packagist, RubyGems, Maven, NuGet). Use when the user wants to check whether locked dependencies have published CVEs/advisories ("scan for vulnerable deps", "audit dependencies", "any known CVEs in our packages?", "vuln check before release"). Wraps the runtime-neutral .agent0/tools/vuln-audit.sh (engine - osv-scanner). Reports + proposes upgrades; never auto-fixes, never gates install or commit. Flags - [path] --json --exit-code --severity <low|moderate|high|critical>. See .claude/rules/vuln-audit.md.
+description: On-demand detector for known-vulnerable INSTALLED dependencies in this project, across whatever ecosystems it has (npm/bun, PyPI, Go, crates, Packagist, RubyGems, Maven, NuGet). Use when the user wants to check whether locked dependencies have published CVEs/advisories ("scan for vulnerable deps", "audit dependencies", "any known CVEs in our packages?", "vuln check before release"). Wraps the runtime-neutral .agent0/tools/vuln-audit.sh (engine - osv-scanner). Reports + proposes upgrades; never auto-fixes, never gates install or commit. Flags - [path] --json --exit-code --severity <low|moderate|high|critical>. See .agent0/context/rules/vuln-audit.md.
 argument-hint: "[path] [--json] [--exit-code] [--severity <low|moderate|high|critical>]"
 license: MIT
 compatibility: Designed for Claude Code. Core logic is the runtime-neutral bash tool `.agent0/tools/vuln-audit.sh` (osv-scanner + jq); the skill is a thin invocation wrapper, portable to any runtime that can run the tool. Codex CLI invokes the tool directly.
@@ -11,7 +11,7 @@ metadata:
 
 # /vuln-audit — known-vulnerability detector
 
-Thin wrapper over `.agent0/tools/vuln-audit.sh`. The tool is the engine; this skill decides when to run it and how to surface the result. See `.claude/rules/vuln-audit.md` for the full capacity contract (trigger surface, engine choice, status model, non-goals).
+Thin wrapper over `.agent0/tools/vuln-audit.sh`. The tool is the engine; this skill decides when to run it and how to surface the result. See `.agent0/context/rules/vuln-audit.md` for the full capacity contract (trigger surface, engine choice, status model, non-goals).
 
 ## When to run
 
@@ -47,5 +47,5 @@ The capacity proposes; the human disposes. Never run `osv-scanner fix --apply`, 
 
 _Consumer-extension surface — append consumer-local bullets here. Sync flags the file as customized but the conflict region is mechanically this section._
 
-- A recurring cadence is out of scope for v1 — to run this periodically, wire `/routine` to invoke the tool (the documented deferred path; see `.claude/rules/vuln-audit.md`).
+- A recurring cadence is out of scope for v1 — to run this periodically, wire `/routine` to invoke the tool (the documented deferred path; see `.agent0/context/rules/vuln-audit.md`).
 - Real-binary install: https://google.github.io/osv-scanner/installation/

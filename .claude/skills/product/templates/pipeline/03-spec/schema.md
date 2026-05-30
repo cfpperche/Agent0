@@ -16,7 +16,7 @@ The size **ceiling** is retired — artifact scope is judged by the quality judg
 | `functional-spec.md` (combined v3 layout) | 12 KB | below this, pages / states / features are missing |
 | `architecture.md` (skeleton) | 4 KB | the skeleton must still cover all four sections |
 
-A uniform 200 KB catastrophe cap applies per `.claude/rules/artifact-budgets.md`.
+A uniform 200 KB catastrophe cap applies per `.agent0/context/rules/artifact-budgets.md`.
 
 ## Required sections (markdown headings in `functional-spec.md`)
 

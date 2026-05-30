@@ -16,7 +16,7 @@ export CLAUDE_PROJECT_DIR="$TMPDIR_T"
 # Context line refs spec 011, removed line refs spec 022, added line refs spec 080.
 # Only spec 080 (the added content) should surface.
 patch='*** Begin Patch
-*** Update File: .claude/rules/foo.md
+*** Update File: .agent0/context/rules/foo.md
 @@
  context line refs spec 011 here
 -removed line refs spec 022 here

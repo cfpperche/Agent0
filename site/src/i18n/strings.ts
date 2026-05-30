@@ -118,7 +118,7 @@ export const STRINGS: Record<Locale, Strings> = {
     whatYouGet: {
       eyebrow: "Capacities",
       title: "Eighteen capacities, all opt-in.",
-      sub: "Each one is documented in its own rule under .claude/rules/, and the non-trivial ones have a spec under docs/specs/. Every override marker (# OVERRIDE: <reason ≥10 chars>) is recorded — there is no silent bypass.",
+      sub: "Each one is documented in its own rule under .agent0/context/rules/, and the non-trivial ones have a spec under docs/specs/. Every override marker (# OVERRIDE: <reason ≥10 chars>) is recorded — there is no silent bypass.",
       cardLabel: "Capacity",
       specLabel: "spec",
       ruleDocLink: "Read the rule →",
@@ -185,7 +185,7 @@ export const STRINGS: Record<Locale, Strings> = {
         },
         {
           title: "Implement",
-          body: "Work tasks.md top-to-bottom. Hooks are bash scripts under .claude/hooks/; rules are markdown under .claude/rules/. Register new hooks in .claude/settings.json. Test fixtures live in .agent0/tests/<capacity>/.",
+          body: "Work tasks.md top-to-bottom. Hooks are bash scripts under .claude/hooks/; rules are markdown under .agent0/context/rules/. Register new hooks in .claude/settings.json. Test fixtures live in .agent0/tests/<capacity>/.",
         },
       ],
       closing:
@@ -257,7 +257,7 @@ export const STRINGS: Record<Locale, Strings> = {
     whatYouGet: {
       eyebrow: "Capacidades",
       title: "Dezoito capacidades, todas opt-in.",
-      sub: "Cada uma documentada em sua própria regra em .claude/rules/, e as não-triviais têm spec em docs/specs/. Todo marcador de override (# OVERRIDE: <razão ≥10 chars>) é registrado — não existe bypass silencioso.",
+      sub: "Cada uma documentada em sua própria regra em .agent0/context/rules/, e as não-triviais têm spec em docs/specs/. Todo marcador de override (# OVERRIDE: <razão ≥10 chars>) é registrado — não existe bypass silencioso.",
       cardLabel: "Capacidade",
       specLabel: "spec",
       ruleDocLink: "Ler a regra →",
@@ -324,7 +324,7 @@ export const STRINGS: Record<Locale, Strings> = {
         },
         {
           title: "Implemente",
-          body: "Trabalhe tasks.md de cima pra baixo. Hooks são scripts bash em .claude/hooks/; regras são markdown em .claude/rules/. Registre novos hooks em .claude/settings.json. Fixtures de teste em .agent0/tests/<capacidade>/.",
+          body: "Trabalhe tasks.md de cima pra baixo. Hooks são scripts bash em .claude/hooks/; regras são markdown em .agent0/context/rules/. Registre novos hooks em .claude/settings.json. Fixtures de teste em .agent0/tests/<capacidade>/.",
         },
       ],
       closing:
@@ -396,7 +396,7 @@ export const STRINGS: Record<Locale, Strings> = {
     whatYouGet: {
       eyebrow: "Capacidades",
       title: "Dieciocho capacidades, todas opt-in.",
-      sub: "Cada una documentada en su propia regla en .claude/rules/, y las no-triviales tienen spec en docs/specs/. Todo marcador de override (# OVERRIDE: <razón ≥10 chars>) es registrado — no existe bypass silencioso.",
+      sub: "Cada una documentada en su propia regla en .agent0/context/rules/, y las no-triviales tienen spec en docs/specs/. Todo marcador de override (# OVERRIDE: <razón ≥10 chars>) es registrado — no existe bypass silencioso.",
       cardLabel: "Capacidad",
       specLabel: "spec",
       ruleDocLink: "Leer la regla →",
@@ -463,7 +463,7 @@ export const STRINGS: Record<Locale, Strings> = {
         },
         {
           title: "Implementa",
-          body: "Trabaja tasks.md de arriba hacia abajo. Los hooks son scripts bash en .claude/hooks/; las reglas son markdown en .claude/rules/. Registra hooks nuevos en .claude/settings.json. Fixtures de tests viven en .agent0/tests/<capacidad>/.",
+          body: "Trabaja tasks.md de arriba hacia abajo. Los hooks son scripts bash en .claude/hooks/; las reglas son markdown en .agent0/context/rules/. Registra hooks nuevos en .claude/settings.json. Fixtures de tests viven en .agent0/tests/<capacidad>/.",
         },
       ],
       closing:

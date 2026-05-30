@@ -49,7 +49,7 @@ else
 fi
 
 if [[ "$is_leader" -ne 1 ]]; then
-  # Not leader for this repo → silent exit (per .claude/rules/routines.md § Leader-flag model).
+  # Not leader for this repo → silent exit (per .agent0/context/rules/routines.md § Leader-flag model).
   exit 0
 fi
 

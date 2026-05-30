@@ -14,10 +14,10 @@ trap 'rm -rf "$TMPDIR"' EXIT
 
 SRC="$TMPDIR/agent0"
 CONSUMER="$TMPDIR/consumer"
-mkdir -p "$SRC/.claude/hooks" "$SRC/.claude/rules" "$CONSUMER/.claude"
+mkdir -p "$SRC/.claude/hooks" "$SRC/.agent0/context/rules" "$CONSUMER/.claude"
 
 printf '#!/usr/bin/env bash\necho hookA\n' > "$SRC/.claude/hooks/hookA.sh"
-printf '# rule-A\n' > "$SRC/.claude/rules/ruleA.md"
+printf '# rule-A\n' > "$SRC/.agent0/context/rules/ruleA.md"
 printf '{"hooks":{}}\n' > "$SRC/.claude/settings.json"
 printf '# CLAUDE\n\n## Compact Instructions\n' > "$SRC/CLAUDE.md"
 chmod +x "$SRC/.claude/hooks/hookA.sh"

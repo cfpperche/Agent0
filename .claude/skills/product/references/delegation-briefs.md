@@ -1,6 +1,6 @@
 # Delegation briefs — 5-field templates per sub-agent (v0.4.0)
 
-Every `Agent` tool call dispatched by `/product` v0.4.0 MUST use the 5-field handoff per `.claude/rules/delegation.md` (TASK / CONTEXT / CONSTRAINTS / DELIVERABLE / DONE_WHEN). The delegation-gate hook returns exit 2 otherwise.
+Every `Agent` tool call dispatched by `/product` v0.4.0 MUST use the 5-field handoff per `.agent0/context/rules/delegation.md` (TASK / CONTEXT / CONSTRAINTS / DELIVERABLE / DONE_WHEN). The delegation-gate hook returns exit 2 otherwise.
 
 **Briefs cover every `/product` sub-agent dispatch** — one per pipeline step (Step 02 = direction-writer; Step 15 = the three visual-contract sub-agents 15a-atlas / 15b-hi-fi-mood / 15c-fixture-spec) plus the shared **§ Mood-screen-writer** template, used by Step 02 (lo-fi mode) and Step 15b (hi-fi mode). The v2/v3 per-route Next.js/Expo `.tsx` screen-writer is **deleted** — `/product` ends at the visual contract; the runnable app is built by the SDD children scaffolded in Phase 5. The **§ Quality judge** brief is dispatched once per judge-unit AFTER the producer returns — an evaluator, not a producer.
 
@@ -23,7 +23,7 @@ CONTEXT: Read .claude/skills/product/templates/pipeline/01-ideation/prompt.md fo
 
 CONSTRAINTS:
 - Standard tier: ≥ 4 KB (anti-stub floor — NOT a ceiling; the catastrophe cap below is the only upper bound).
-- Catastrophe cap per `.claude/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
+- Catastrophe cap per `.agent0/context/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
 - **Target language: `{{target_language}}`** (BCP-47, resolved at Phase 0.5). All section bodies + persona language + tagline candidates + name candidates in this language; cited sources stay in their original language.
 - Cover the standard-tier minimum sections as H2 headings: Hook (problem + audience) / Mechanics (user flow) / Monetization / Growth loop / Competitive positioning / Risks / Anti-goals / JTBD statement / **Market Sizing (TAM/SAM/SOM — 1 paragraph each, desk research with 1-2 cited sources per number, NOT primary research)**. SKIP critique-mode at standard tier.
 - Cite at least 5 unique sources with inline [N] references. Market Sizing section cites at minimum 1 source per TAM/SAM/SOM number.
@@ -57,7 +57,7 @@ CONSTRAINTS:
 - Includes "Most Popular" string token + ≥1 `<svg` (catalog citation discipline).
 - **Do NOT produce sitemap.yaml** — that's Step 07's deliverable (sitemap-IA is its own step).
 - Size floor: per `.claude/skills/product/templates/pipeline/02-prototype/schema.md § Size floor` — the `min_size` anti-stub floor (no scope ceiling).
-- Catastrophe cap per `.claude/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
+- Catastrophe cap per `.agent0/context/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
 - Write file DIRECTLY to {{out}}/docs/direction-a.html. The 3-5 killer-flow lo-fi mood screens are produced by separate § Mood-screen-writer dispatches in lo-fi mode (sub-agent b — see § Mood-screen-writer below).
 
 DELIVERABLE: {{out}}/docs/direction-a.html (+ killer-flow HTML mood screens at {{out}}/docs/screens/NN-<name>.html produced by sub-agent b in parallel)
@@ -79,7 +79,7 @@ CONTEXT: Read concept-brief.md at {{out}}/docs/concept-brief.md for product scop
 
 CONSTRAINTS:
 - Standard tier: combined functional-spec.md (skip separate architecture.md). Size floor: per `schema.md § Size floor` — the `min_size` anti-stub floor (no scope ceiling).
-- Catastrophe cap per `.claude/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
+- Catastrophe cap per `.agent0/context/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
 - **Target language: `{{target_language}}`** (BCP-47). All section bodies, page descriptions, Gherkin scenario text + acceptance prose in this language. Technical terms (HTTP, JSON, OAuth, etc) stay English. User-story summaries match the language.
 - Sections required (H2): Product Overview / Pages & Surfaces (table per page) / Features (with Gherkin) / Navigation Map / Cross-cutting concerns / Acceptance Scenarios / Edge Cases / Non-goals / Decisions Pending / Preliminary Architecture / **Problem-Validation Interviews (3-5 summaries seeding OST; synthetic-OK at standard tier — clearly marked as synthetic vs sourced from real interviews)**.
 - Scale depth to surface importance; killer flow gets full treatment; trivial pages collapse to 2-4 table rows.
@@ -109,7 +109,7 @@ CONSTRAINTS:
 - YAML frontmatter: `findings[]` with `{id, severity 1-4, heuristic, location, issue, recommendation, fix_skill_hint}` where fix_skill_hint ∈ `{design-system, screen-atlas, deferred}`.
 - ≥ 3 findings minimum.
 - ≥ 5 KB (anti-stub floor; no ceiling).
-- Catastrophe cap per `.claude/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
+- Catastrophe cap per `.agent0/context/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
 - Write file DIRECTLY to {{out}}/docs/validation-report.md.
 
 DELIVERABLE: {{out}}/docs/validation-report.md (with YAML frontmatter)
@@ -131,7 +131,7 @@ CONTEXT: Read concept-brief.md + functional-spec.md + validation-report.md front
 
 CONSTRAINTS:
 - ≥ 4 KB (anti-stub floor; no ceiling). Each section ≤3 bullets to preserve 1-pager honesty.
-- Catastrophe cap per `.claude/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
+- Catastrophe cap per `.agent0/context/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
 - **Target language: `{{target_language}}`** (BCP-47). All H2 body text + user-story summaries + acceptance criteria in this language. H2 section headers themselves stay English-canonical (Problem / Why now / Success metrics / etc) because they ARE the Lenny 1-pager template — match the source attribution.
 - Lenny bones (H2 in this order): Problem · Why now · Success metrics · Solution sketch · User stories · Anti-goals.
 - Plus 3 our-specific sections (H2 after Lenny bones): Release scope (v1 vs v2 vs vN scoped) · NSM (dedicated slot — ONE primary metric, never two equal-priority) · Upstream/downstream refs (links to concept-brief + functional-spec + downstream sitemap/system-design slots).
@@ -164,7 +164,7 @@ CONSTRAINTS:
 - Mark solutions with status: `explored` (already in scope) / `to-test` (next interview cycle) / `parked` (out of v1).
 - Tree rendered as nested markdown bullets OR mermaid diagram (sub-agent's choice based on visual clarity at this depth).
 - ≥ 3 KB (anti-stub floor; no ceiling).
-- Catastrophe cap per `.claude/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
+- Catastrophe cap per `.agent0/context/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
 - Write file DIRECTLY to {{out}}/docs/ost.md.
 
 DELIVERABLE: {{out}}/docs/ost.md
@@ -194,7 +194,7 @@ CONSTRAINTS:
 - Marketing category covers landing + pricing + feature pages.
 - If `deferred_categories` is used, each entry MUST include `reason` (1-2 sentences explaining why category is out of v1 scope).
 - ≥ 2 KB (anti-stub floor; no ceiling).
-- Catastrophe cap per `.claude/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
+- Catastrophe cap per `.agent0/context/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
 - Write file DIRECTLY to {{out}}/docs/sitemap.yaml.
 
 DELIVERABLE: {{out}}/docs/sitemap.yaml
@@ -216,7 +216,7 @@ CONTEXT: Read prd.md at {{out}}/docs/prd/v1.md (scope drives scale assumption) +
 
 CONSTRAINTS:
 - system-design.md: BRIDGE-FLOOR (6+ sections H2): Stack / Integrations / Data Model / Decisions Locked / Security / Observability / **RACI Matrix** / **Risk Register**. Size floor: per `.claude/skills/product/templates/pipeline/08-system-design/schema.md § Size floor` — the `min_size` anti-stub floor (no scope ceiling).
-- Catastrophe cap per `.claude/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
+- Catastrophe cap per `.agent0/context/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
 - RACI Matrix: 5-10 key roles (founder/engineer/designer/data/legal/...) × 5-10 key activities (auth/payments/audit-trail/...). Each cell: R/A/C/I or blank.
 - Risk Register: 5-10 risks with columns: ID · description · probability (L/M/H) · impact (L/M/H) · mitigation · owner.
 - Stack baseline (adapt per product needs): Next.js 16 (matches prototype) + Postgres + Redis + Slack Bot SDK + LLM API (if needed) + S3-compatible blob.
@@ -243,7 +243,7 @@ CONTEXT: Read prd.md at {{out}}/docs/prd/v1.md (audience drives jurisdiction exp
 
 CONSTRAINTS:
 - Standard tier: BRIEF CHECKLIST + POSTURE. Size floor: per `.claude/skills/product/templates/pipeline/09-legal/schema.md § Size floor` — the conditional `min_size` model (base floor plus an additional floor per triggered conditional section); no scope ceiling.
-- Catastrophe cap per `.claude/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
+- Catastrophe cap per `.agent0/context/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
 - TOP-OF-DOCUMENT escape clause (line 1-5): "This is founder's posture, NOT legal advice. Counsel review required before launch."
 - Sections required (H2): Terms Model / Privacy Posture (regulation applicability checklist GDPR/LGPD/CCPA Yes/No based on audience) / Data Handling Snapshot / Licensing (product license + OSS compatibility flag) / Sub-Processor Disclosure (extracted from system-design § Integrations — count must match) / IP Assignment Posture / Open Decisions.
 - **§ DPIA (conditional — fires if data-flow.json contains sensitive categories):** Required when Step 08 data-flow has any `data_categories ⊃ {pii, health, minors, financial}`. Lists each sensitive data flow, the legal basis (consent/contract/legitimate-interest/legal-obligation/vital-interest/public-task), the data subject rights affected (access/erasure/portability/restriction), and the risk-mitigation posture. **DPIA-shift-left per GDPR Art 25 + IAPP guidance** — counsel reviews DPIA section in 1-pager form BEFORE coding starts, not after launch.
@@ -276,7 +276,7 @@ CONSTRAINTS:
 - Milestones are observable end-of-phase deliverables.
 - § Overview 2-3 one-liners. § Horizon (duration estimate + team shape). § Open Decisions table.
 - Size floor: per `.claude/skills/product/templates/pipeline/10-roadmap/schema.md § Size floor` — the `min_size` anti-stub floor (no scope ceiling).
-- Catastrophe cap per `.claude/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
+- Catastrophe cap per `.agent0/context/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
 - Write file DIRECTLY to {{out}}/docs/roadmap.md.
 
 DELIVERABLE: {{out}}/docs/roadmap.md
@@ -296,7 +296,7 @@ CONTEXT: Read **roadmap.md at {{out}}/docs/roadmap.md (phase boundaries drive co
 
 CONSTRAINTS:
 - Standard tier: SINGLE-SCENARIO only. ≥ 5 KB (anti-stub floor; no ceiling).
-- Catastrophe cap per `.claude/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
+- Catastrophe cap per `.agent0/context/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
 - Build cost as a RANGE per phase from Step 10 roadmap (Phase 1 / Phase 2 / Phase 3 user-flow titles). Includes hourly/weekly rate assumption with source/confidence. Default $150-200/hr senior IC range with "indie founder-rate" caveat.
 - Run cost line items at v1 scale: tabular per vendor (vendor / tier / monthly cost / source). Count must match system-design § Integrations list (audit discipline).
 - **Legal review + audit costs in their own table row** — pulls from Step 09 legal posture (counsel-review hours estimate + SOC 2 audit if applicable).
@@ -324,7 +324,7 @@ CONTEXT: Read prd.md at {{out}}/docs/prd/v1.md (NSM + audience for positioning) 
 
 CONSTRAINTS:
 - Standard tier: ≥ 4 KB (anti-stub floor; no ceiling).
-- Catastrophe cap per `.claude/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
+- Catastrophe cap per `.agent0/context/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
 - **Target language: `{{target_language}}`** (BCP-47). Positioning Canvas body lines + launch plan milestones + pricing tier descriptions in this language. The 5 canvas line-labels (`For:`, `Who:`, `We are:`, `Unlike:`, `Our product:`) stay English per Dunford template.
 - Required H2 sections: Positioning Canvas / Launch Plan / Pricing Strategy / Open Decisions.
 - **Positioning Canvas** (Dunford-lite, 3 lines minimum):
@@ -366,7 +366,7 @@ CONSTRAINTS:
 - Voice must REINFORCE Step 12 positioning canvas (e.g. if positioning says "Unlike: enterprise sales-cycle vendors" → brand voice must NOT sound corporate-sales).
 - Header includes **Version:** 0.1 and **Date:** <today>.
 - ≥ 4 KB (anti-stub floor; no ceiling).
-- Catastrophe cap per `.claude/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
+- Catastrophe cap per `.agent0/context/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
 - Write file DIRECTLY to {{out}}/docs/brand-book.md.
 
 DELIVERABLE: {{out}}/docs/brand-book.md
@@ -392,7 +392,7 @@ CONSTRAINTS:
 - tokens.css opens with a one-line comment `/* Tailwind v4 @theme — import after `@import "tailwindcss"` in the app's globals.css */` so the foundation SDD child wires the import order correctly.
 - components.md: per-component anatomy + variants + states for at least Button / Input / Card / Table / Badge / Dialog / EmptyState. 3+ KB.
 - README.md (design-system overview): overview + tokens narrative + audit-response section (which step-04 findings applied as token tunes) + catalog lineage citations. 8+ KB. Required H2: "Audit Response".
-- Catastrophe cap per `.claude/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope). The per-file `min_size` floors remain enforced via schema Layer 1.
+- Catastrophe cap per `.agent0/context/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope). The per-file `min_size` floors remain enforced via schema Layer 1.
 - Write 3 files DIRECTLY to {{out}}/docs/design-system/: tokens.css + components.md + README.md.
 
 DELIVERABLE: 3 files at {{out}}/docs/design-system/: tokens.css + components.md + README.md
@@ -422,7 +422,7 @@ The hi-fi killer-flow mood screens at {{out}}/docs/screens/hifi/ (Step 15b, prod
 CONSTRAINTS:
 - **The atlas markdown file is the ONLY deliverable. Write NO `app/`, NO `.tsx`, NO `.html`.** The atlas is a contract document, not an implementation.
 - Size floor: per `.claude/skills/product/templates/pipeline/15-screen-atlas/schema.md § Size floor` — the `min_size` anti-stub floor (no scope ceiling).
-- Catastrophe cap per `.claude/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
+- Catastrophe cap per `.agent0/context/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
 - **Target language: `{{target_language}}`** (BCP-47). All prose, screen descriptions, and the user-flow walkthrough in this language; H2 section headers stay English-canonical.
 - Required H2 sections (verbatim, in order): Overview / Screens Index / Sitemap Coverage Cross-Check / PRD Coverage Matrix / Design Fidelity / States Coverage Matrix / User Flow Walkthrough / Open Decisions.
 - **Screens Index** — markdown table covering EVERY route in sitemap.yaml: `| Route | Category | Chrome | Covers (US-NN) | States | Screen intent |`. One row per route — this is the full inventory the SDD children build against.
@@ -459,7 +459,7 @@ CONSTRAINTS:
 - **Internal consistency is the whole point.** Dates form a plausible timeline (a record's `created_at` precedes its `updated_at`; an invoice's due date follows its issue date). Foreign keys resolve (every record referencing the persona's account uses the same account id). Money/counts/statuses across screens tell ONE story — a dashboard total equals the sum of the line items a detail screen shows.
 - **Target language: `{{target_language}}`** (BCP-47). Persona name, entity labels, and all example string values in this language.
 - ≥ 2 KB (anti-stub floor; no ceiling).
-- Catastrophe cap per `.claude/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
+- Catastrophe cap per `.agent0/context/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
 - Required H2 sections: Persona / Entities (one H3 per entity, each with an example-records table) / Cross-Screen Consistency Notes (the timeline + the totals that must agree across screens).
 - Write file DIRECTLY to {{out}}/docs/fixture-spec.md.
 
@@ -499,7 +499,7 @@ CONSTRAINTS:
 - **hi-fi copy is real, on-brand, fixture-grounded.** Every user-facing string matches `brand-book.md` voice and respects `## Glossary § We don't say`. Every datum (names, numbers, dates) comes from `fixture-spec.md` — no lorem ipsum, no invented incoherent data. **Target language: `{{target_language}}`.**
 - Buttons carry an explicit `type` attribute; every `<input>` / `<select>` has a matching `<label for>`; interactive elements get a `:focus-visible` outline.
 - Size floor: each mood screen ≥ 4 KB (anti-stub floor — below this is a stub screen); no scope ceiling.
-- Catastrophe cap per `.claude/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
+- Catastrophe cap per `.agent0/context/rules/artifact-budgets.md`: a uniform 200 KB ceiling — if output crosses it, STOP and emit a partial-result naming what was being produced (a token-runaway circuit-breaker, NOT a scope budget; no trim-loop, no re-emit-at-smaller-scope).
 - Write the file DIRECTLY to the output path the orchestrator named.
 
 DELIVERABLE: the {{mood_tier}} mood screen HTML file at the orchestrator-named path.
@@ -533,7 +533,7 @@ CONSTRAINTS:
 - Grade quality, not presence. The `schema.md` anchors were already deterministically checked at submit — your job is whether the present sections are substantive and load-bearing.
 - You NEVER BLOCK, abort, trim, or edit the artifact. Your strongest signal is `outcome: "fail"`, which the orchestrator routes to a phase-gate `iterate` recommendation — the human decides. Deterministic BLOCK/abort is not yours.
 - Emit the verdict in the exact JSON shape of `quality-judge.md § The verdict`: `step` / `judged_at` (UTC ISO-8601) / `model` (`opus`) / `criteria[]` / `scope_assessment` / `outcome`. `outcome` = max-severity rollup (`fail` > `concern` > `pass`).
-- Catastrophe cap per `.claude/rules/artifact-budgets.md`: a uniform 200 KB ceiling — a verdict never approaches it; if you somehow do, STOP and emit a partial-result.
+- Catastrophe cap per `.agent0/context/rules/artifact-budgets.md`: a uniform 200 KB ceiling — a verdict never approaches it; if you somehow do, STOP and emit a partial-result.
 
 DELIVERABLE: the verdict JSON object written to {{verdict_path}}; plus a 1-2 line plain-text summary as your final message (the human-readable trace — `outcome` + `scope_assessment`).
 
@@ -566,5 +566,5 @@ Mood-screen-writer (per-screen) failures within Step 02 or Step 15b: mark the sp
 - `sdd-handoff.md` — the Phase 5 umbrella + foundation-child scaffold contract
 - `quality-checklist.md` — the quality judge's semantic rubric (per-step + visual-contract criteria) + the deterministic orchestrator gates
 - `SKILL.md` — orchestration body that dispatches these briefs
-- `.claude/rules/delegation.md` — 5-field handoff discipline
+- `.agent0/context/rules/delegation.md` — 5-field handoff discipline
 - `templates/pipeline/<step>/prompt.md` — canonical step brief (sub-agents read this directly)

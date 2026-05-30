@@ -11,7 +11,7 @@ trap 'rm -rf "$TMPDIR_T"' EXIT
 export CLAUDE_PROJECT_DIR="$TMPDIR_T"
 
 payload="$(jq -n \
-  --arg fp "$TMPDIR_T/.claude/rules/foo.md" \
+  --arg fp "$TMPDIR_T/.agent0/context/rules/foo.md" \
   --arg new "See .agent0/memory/cc-platform-hooks.md for the canonical surface." \
   '{tool_name: "Edit", tool_input: {file_path: $fp, new_string: $new}}')"
 

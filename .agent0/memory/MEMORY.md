@@ -12,7 +12,7 @@
 - [OD grounding dogfood](od-grounding-dogfood.md) — Spec 027 step-2 dogfood (2026-05-14) — citation-by-path real, but grounding alone does not buy visual quality. Blind judge result was confounded (1-pass OD vs 4x-refined baseline).
 - [/product pipeline empirical baseline](product-pipeline-empirical-baseline.md) — First end-to-end full /product run with all 4 mature gates (2026-05-23) — ~3.1M tokens, ~83min, 44 dispatches, 17/17 judges. Cost+shape envelope for planning.
 - [propagation-advisory-maintenance](propagation-advisory-maintenance.md) — Maintainer discipline for propagation-advisory — pattern table + shipped-surface set + audit-log policy + deep gotchas.
-- [Propagation hygiene](propagation-hygiene.md) — Maintainer discipline — shipped files (CLAUDE.md, .claude/rules/, sync manifest) must carry no Agent0-internal pointers. Read before editing CLAUDE.md or a rule.
+- [Propagation hygiene](propagation-hygiene.md) — Maintainer discipline — shipped files (CLAUDE.md, .agent0/context/rules/, sync manifest) must carry no Agent0-internal pointers. Read before editing CLAUDE.md or a rule.
 - [runtime-capabilities-maintenance](runtime-capabilities-maintenance.md) — Maintainer discipline for the runtime-capabilities matrix — Update rule + drift enforcement + skill-portability relationship.
 - [Skill-eval pattern (observed externally)](skill-eval-pattern.md) — 5 industry posts converged on the same skill-eval recipe in early 2026; not adopted in Agent0 yet — wait for rule-of-three regression demand before building
 - [User-global hooks shadow project hooks](user-global-hooks-shadow.md) — User-global hooks under ~/.claude/hooks/ fire BEFORE project hooks; can shadow Agent0 capacities. If dogfood gives unexpected interception, check there first.

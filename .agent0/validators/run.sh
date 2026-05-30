@@ -376,7 +376,7 @@ $f"
 
   if [ -n "$prod_files" ] && [ "$test_count" -eq 0 ]; then
     files_json="$(printf '%s\n' "$prod_files" | jq -R . | jq -s .)"
-    msg='Production files changed without any test changes in this session diff. If the change is genuinely test-exempt (rename, comment, refactor without behavior change), no action needed; otherwise, consider adding a test. See .claude/rules/tdd.md.'
+    msg='Production files changed without any test changes in this session diff. If the change is genuinely test-exempt (rename, comment, refactor without behavior change), no action needed; otherwise, consider adding a test. See .agent0/context/rules/tdd.md.'
     warnings_json="$(jq -n --argjson files "$files_json" --arg msg "$msg" \
       '[{kind:"no_test_change_for_prod_edit",files:$files,message:$msg}]')"
   else

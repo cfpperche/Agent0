@@ -1,6 +1,6 @@
 ---
 name: remind
-description: Deferred-intent reminder list for this project. Use when the user wants to capture a future to-do that isn't urgent enough to act on now ("circle back on caching when first user complains", "review pricing in Q3", "update README after auth refactor lands"). Subcommands - add "<text>" [--due <YYYY-MM-DD>] [--check '<cmd>'] [--links <a,b,c>], list, done <N-or-id>, dismiss <N-or-id> (alias for done), snooze <N-or-id> <Nd|Nw|Nm|YYYY-MM-DD>, check <N-or-id>. State lives in .agent0/reminders.yaml (git-tracked) and is auto-injected at session start by .agent0/hooks/reminders-readout.sh. See .claude/rules/reminders.md for what belongs here vs MEMORY vs HANDOFF.md.
+description: Deferred-intent reminder list for this project. Use when the user wants to capture a future to-do that isn't urgent enough to act on now ("circle back on caching when first user complains", "review pricing in Q3", "update README after auth refactor lands"). Subcommands - add "<text>" [--due <YYYY-MM-DD>] [--check '<cmd>'] [--links <a,b,c>], list, done <N-or-id>, dismiss <N-or-id> (alias for done), snooze <N-or-id> <Nd|Nw|Nm|YYYY-MM-DD>, check <N-or-id>. State lives in .agent0/reminders.yaml (git-tracked) and is auto-injected at session start by .agent0/hooks/reminders-readout.sh. See .agent0/context/rules/reminders.md for what belongs here vs MEMORY vs HANDOFF.md.
 argument-hint: <add "<text>" [--due <DATE>] [--check '<cmd>'] [--links <a,b,c>] | list | done <N|id> | dismiss <N|id> | snooze <N|id> <Nd|Nw|Nm|DATE> | check <N|id>>
 license: MIT
 compatibility: Designed for Claude Code. Body references `.claude/` conventional paths and CC-specific tools; portable to any runtime that maps a `.claude/`-analog directory and surfaces the referenced tools. Requires python3 + PyYAML for state mutation; readout hook degrades to yq or raw-YAML when PyYAML is absent.
@@ -15,7 +15,7 @@ metadata:
 
 Capture, list, snooze, complete, and probe action-shaped future items that aren't urgent enough to act on now but shouldn't be lost. State lives in `.agent0/reminders.yaml` (git-tracked YAML, one entry per record), auto-injected into context at session start. Not a task manager, not a knowledge base, not a session work-state log — reminders are *future do-this-thing* items only.
 
-See `.claude/rules/reminders.md` for what belongs here vs `MEMORY.md` vs `HANDOFF.md`, and the discipline (no auto-commit, no autonomous check execution, soft-delete via `status: done + completed_ts`).
+See `.agent0/context/rules/reminders.md` for what belongs here vs `MEMORY.md` vs `HANDOFF.md`, and the discipline (no auto-commit, no autonomous check execution, soft-delete via `status: done + completed_ts`).
 
 All state mutation routes through `.agent0/skills/remind/scripts/reminders-helper.py`. The helper uses `yaml.safe_dump(..., sort_keys=False)` so git diffs stay clean (insertion-order preserved, no alphabetic re-sort).
 
@@ -130,14 +130,14 @@ If the first token of `$ARGUMENTS` is missing or not one of `add`, `list`, `done
 
 ## Notes
 
-_Consumer-extension surface — append consumer-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add consumer bullets at the end. See `.claude/rules/harness-sync.md` § Consumer-extension convention._
+_Consumer-extension surface — append consumer-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add consumer bullets at the end. See `.agent0/context/rules/harness-sync.md` § Consumer-extension convention._
 
 - **Don't auto-stage, don't auto-commit.** The founder reviews `git diff` and decides what enters history. Every subcommand leaves the file dirty.
 - **Soft-delete is the default.** `done` flips `status: done` + stamps `completed_ts`; the entry remains in `reminders.yaml` carrying its in-band history. If the file grows enough to feel like noise, a future `/remind prune` subcommand (not v1) can hard-remove `done` entries.
 - **Positions are not stable IDs.** Pattern is "list, then act on the position you see right now" — same as the pre-084 discipline. Stable IDs (`r-YYYY-MM-DD-<slug>`) are the canonical identifier in storage; positions resolve to IDs at command time. The skill body always logs the resolved ID in its report so the user can confirm.
-- **No autonomous `check_command` execution.** The readout hook never runs checks at SessionStart. `check_command` is a probe the agent invokes explicitly via `/remind check <id>` when the entry's relevance comes into question. This preserves the contract-not-promise discipline (see `.claude/rules/delegation.md` § Why DONE_WHEN exists).
+- **No autonomous `check_command` execution.** The readout hook never runs checks at SessionStart. `check_command` is a probe the agent invokes explicitly via `/remind check <id>` when the entry's relevance comes into question. This preserves the contract-not-promise discipline (see `.agent0/context/rules/delegation.md` § Why DONE_WHEN exists).
 - **YAML insertion order is preserved.** The helper uses `yaml.safe_dump(..., sort_keys=False, default_flow_style=False)`. Hand-edit at your own risk — alphabetic re-sort by other YAML tools will pollute git diffs.
-- **Single file, structured YAML only.** No JSON, no per-entry file, no JSON Schema validator. Schema lives in the helper's add-validation logic; the file's shape IS the contract. See `.claude/rules/reminders.md` § Frontmatter schema.
-- **Reminders are not knowledge.** Facts, decisions, conventions belong in `MEMORY.md` (personal) or `.claude/rules/<topic>.md` (project). See `.claude/rules/memory-placement.md`.
-- **Reminders are not session work-state.** In-flight work belongs in `.agent0/HANDOFF.md`. Reminders are *future* work that won't fit the next session's first five minutes. See `.claude/rules/session-handoff.md`.
-- See `.claude/rules/reminders.md` for the full capacity description, override grammar, and migration history.
+- **Single file, structured YAML only.** No JSON, no per-entry file, no JSON Schema validator. Schema lives in the helper's add-validation logic; the file's shape IS the contract. See `.agent0/context/rules/reminders.md` § Frontmatter schema.
+- **Reminders are not knowledge.** Facts, decisions, conventions belong in `MEMORY.md` (personal) or `.agent0/context/rules/<topic>.md` (project). See `.agent0/context/rules/memory-placement.md`.
+- **Reminders are not session work-state.** In-flight work belongs in `.agent0/HANDOFF.md`. Reminders are *future* work that won't fit the next session's first five minutes. See `.agent0/context/rules/session-handoff.md`.
+- See `.agent0/context/rules/reminders.md` for the full capacity description, override grammar, and migration history.

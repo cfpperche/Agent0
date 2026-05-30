@@ -143,10 +143,10 @@ This is correct CC behavior (avoids audit-log inflation and context waste); not 
 
 ## Cross-references
 
-- `.claude/rules/secrets-scan.md` — uses `PreToolUse(Bash)` (preflight shape gate); doesn't depend on the success/failure split.
-- `.claude/rules/delegation.md` — uses `PreToolUse(Agent)` + `PostToolUse(Edit|Write|MultiEdit)`.
-- `.claude/rules/session-handoff.md` — uses `SessionStart` + `Stop`.
-- `.claude/rules/reminders.md` — uses `SessionStart`.
+- `.agent0/context/rules/secrets-scan.md` — uses `PreToolUse(Bash)` (preflight shape gate); doesn't depend on the success/failure split.
+- `.agent0/context/rules/delegation.md` — uses `PreToolUse(Agent)` + `PostToolUse(Edit|Write|MultiEdit)`.
+- `.agent0/context/rules/session-handoff.md` — uses `SessionStart` + `Stop`.
+- `.agent0/context/rules/reminders.md` — uses `SessionStart`.
 
 ## How to use this memory
 

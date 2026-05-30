@@ -14,6 +14,6 @@ Lives at `.agent0/.runtime-state/README.md` rather than a top-level `STATE-LAYOU
 
 ## Discipline
 
-Future state subsystems update this README in the same commit that ships them. The README enumerates only what is present at write-time — speculative or planned subsystems (a `.claude/.skill-state/`, `.claude/.memory-events/` from a future event-sourcing spec, etc.) are NOT listed here until they actually exist. Owner pointers go to the canonical doc for the capacity — `.claude/rules/<topic>.md` when the consumer-side agent acts on it, or `.claude/memory/<topic>.md` when only the upstream maintainer does — not to the hook or tool that writes the state. The doc is the durable contract; hook paths can move.
+Future state subsystems update this README in the same commit that ships them. The README enumerates only what is present at write-time — speculative or planned subsystems (a `.claude/.skill-state/`, `.claude/.memory-events/` from a future event-sourcing spec, etc.) are NOT listed here until they actually exist. Owner pointers go to the canonical doc for the capacity — `.agent0/context/rules/<topic>.md` when the consumer-side agent acts on it, or `.claude/memory/<topic>.md` when only the upstream maintainer does — not to the hook or tool that writes the state. The doc is the durable contract; hook paths can move.
 
 If a subsystem is removed, drop its row in the same commit that removes the writer. A row referring to a path that no longer has a writer is the failure mode this discipline avoids.

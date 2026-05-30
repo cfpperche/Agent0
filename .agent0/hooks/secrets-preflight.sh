@@ -42,11 +42,11 @@
 #
 # Reference:
 #   .githooks/pre-commit           — native git hook (actual scan)
-#   .claude/rules/secrets-scan.md  — full discipline, both layers
+#   .agent0/context/rules/secrets-scan.md  — full discipline, both layers
 #
 # Lazarus vector note: the override env-var is injected via PreToolUse
 # updatedInput — NOT via a post-clone script. The install step (core.hooksPath)
-# must be manual per README. See .claude/rules/secrets-scan.md § Gotchas.
+# must be manual per README. See .agent0/context/rules/secrets-scan.md § Gotchas.
 #
 # Exit codes: 0 = allow/pass-through, 2 = reject-shape.
 # jq is a hard dependency; if missing the hook fails open (exit 0).
@@ -113,7 +113,7 @@ if [ -z "$COMMAND" ] || ! is_git_commit "$COMMAND"; then
   # settings.json), the hook sees EVERY Bash call; auditing each non-commit
   # invocation would turn secrets-audit.jsonl into a shell-activity firehose.
   # This deliberately reverses the prior `skip-not-commit` row-per-bash
-  # behavior — see .claude/rules/secrets-scan.md § Audit log.
+  # behavior — see .agent0/context/rules/secrets-scan.md § Audit log.
   exit 0
 fi
 
@@ -175,7 +175,7 @@ append_audit() {
   # Probe writability in a subshell BEFORE the bare `exec 9>...` redirect —
   # `exec 9>file 2>/dev/null` would permanently silence FD 2 for the rest of
   # the script, eating every block/reject message.
-  # See .claude/rules/delegation.md § Gotchas (the sticky exec redirect trap).
+  # See .agent0/context/rules/delegation.md § Gotchas (the sticky exec redirect trap).
   if command -v flock >/dev/null 2>&1; then
     local lock_path="$AUDIT_LOG.lock"
     ( : >>"$lock_path" ) 2>/dev/null || {

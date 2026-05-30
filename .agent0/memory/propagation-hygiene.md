@@ -1,6 +1,6 @@
 ---
 name: Propagation hygiene
-description: Maintainer discipline — shipped files (CLAUDE.md, .claude/rules/,
+description: Maintainer discipline — shipped files (CLAUDE.md, .agent0/context/rules/,
   sync manifest) must carry no Agent0-internal pointers. Read before editing CLAUDE.md
   or a rule.
 metadata:
@@ -11,7 +11,7 @@ metadata:
 ---
 # Propagation hygiene
 
-A maintainer discipline: **shipped files must carry no Agent0-internal pointers.** When you edit CLAUDE.md or a `.claude/rules/*.md` file, the content you write will be copied verbatim into every consumer project by `sync-harness.sh`. Anything in it that only makes sense inside the Agent0 repo becomes dead weight — or a dangling pointer — in every consumer project.
+A maintainer discipline: **shipped files must carry no Agent0-internal pointers.** When you edit CLAUDE.md or a `.agent0/context/rules/*.md` file, the content you write will be copied verbatim into every consumer project by `sync-harness.sh`. Anything in it that only makes sense inside the Agent0 repo becomes dead weight — or a dangling pointer — in every consumer project.
 
 This file is Agent0-internal (memory does not propagate). It records the discipline; it is not a rule. See `docs/specs/070-propagation-hygiene/` for the design.
 
@@ -19,13 +19,13 @@ This file is Agent0-internal (memory does not propagate). It records the discipl
 
 A file is **shipped** if `sync-harness.sh` propagates it to consumer projects. That is everything in the sync manifest:
 
-- `.claude/hooks/*.sh`, `.claude/rules/*.md`, `.agent0/tools/*.sh`, `.agent0/validators/*.sh`, `.claude/skills/`, `.agent0/tests/`, `.claude/agents/`
+- `.claude/hooks/*.sh`, `.agent0/context/rules/*.md`, `.agent0/tools/*.sh`, `.agent0/validators/*.sh`, `.claude/skills/`, `.agent0/tests/`, `.claude/agents/`
 - `.mcp.json.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.gitignore`
 - CLAUDE.md's `## ` capacity sections (structured-merge-appended into a consumer project's CLAUDE.md)
 
 **Not** shipped, by design: `docs/specs/`, `.agent0/memory/` (ships only `.gitkeep`), `src/`, the consumer project's own `tests/`, package manifests. These never travel.
 
-**Explicit exclusions inside the sync manifest** — `COPY_CHECK_EXCLUDE` in `sync-harness.sh` drops three paths from propagation despite their location in otherwise-shipped surface: `.agent0/hooks/propagation-advise.sh`, `.claude/rules/propagation-advisory.md`, `.agent0/tests/propagation-advisory/*`. A companion filter in `merge_settings_json` strips the PostToolUse registration whose command points at `propagation-advise.sh`. This is the self-consistency resolution of the propagation-advisory mechanism: the discipline binds the upstream maintainer (this file's whole point), so shipping its enforcement to leaf consumer projects would emit false-positive advisories on a consumer project's legitimate own-spec / own-path content — the exact dangling-pointer flaw this discipline forbids. Same posture as `.agent0/memory/` shipping only `.gitkeep`: the capacity lives in Agent0, the *opt-in* for downstream re-propagators is manual copy of the 4 paths + the settings entry.
+**Explicit exclusions inside the sync manifest** — `COPY_CHECK_EXCLUDE` in `sync-harness.sh` drops three paths from propagation despite their location in otherwise-shipped surface: `.agent0/hooks/propagation-advise.sh`, `.agent0/context/rules/propagation-advisory.md`, `.agent0/tests/propagation-advisory/*`. A companion filter in `merge_settings_json` strips the PostToolUse registration whose command points at `propagation-advise.sh`. This is the self-consistency resolution of the propagation-advisory mechanism: the discipline binds the upstream maintainer (this file's whole point), so shipping its enforcement to leaf consumer projects would emit false-positive advisories on a consumer project's legitimate own-spec / own-path content — the exact dangling-pointer flaw this discipline forbids. Same posture as `.agent0/memory/` shipping only `.gitkeep`: the capacity lives in Agent0, the *opt-in* for downstream re-propagators is manual copy of the 4 paths + the settings entry.
 
 ## The mandate
 
@@ -45,7 +45,7 @@ Do NOT cite `capacity-spec-index.md` from a shipped file either — `.agent0/mem
 
 ## The one allowed `docs/specs/` reference
 
-`.claude/rules/spec-driven.md` and CLAUDE.md's `## Spec-driven development` section document the **naming convention** `docs/specs/NNN-<slug>/` — literal capital `NNN`, no digits. That is not a pointer to a specific spec; it is the scheme itself, and a consumer project uses the same scheme for its own specs. Keep it. The distinguishing test: a concrete number (`docs/specs/047-…`) is a leak; the literal `NNN` is the convention.
+`.agent0/context/rules/spec-driven.md` and CLAUDE.md's `## Spec-driven development` section document the **naming convention** `docs/specs/NNN-<slug>/` — literal capital `NNN`, no digits. That is not a pointer to a specific spec; it is the scheme itself, and a consumer project uses the same scheme for its own specs. Keep it. The distinguishing test: a concrete number (`docs/specs/047-…`) is a leak; the literal `NNN` is the convention.
 
 ## Known limitation — already-synced consumer projects
 
@@ -53,7 +53,7 @@ The CLAUDE.md sync merge is **append-only**: it adds missing `## ` sections, it 
 
 ## Mechanical enforcement — the advisory hook
 
-The discipline is documented here; the **mechanical enforcement** lives in `.claude/rules/propagation-advisory.md` + `.agent0/hooks/propagation-advise.sh`. The hook fires on Claude `PostToolUse(Edit|Write|MultiEdit)` and Codex `PostToolUse(apply_patch)` (spec 113) against any file in the shipped surface and emits `propagation-advisory:` stderr lines per leak finding. Patterns covered: `spec-NNN`, `docs/specs/NNN`, `anthill`, `personal-path` (`/home/<user>/`), `memory-pointer` (`.agent0/memory/<file>.md`). Always non-blocking — same `<kind>-advisory:` shape as TDD / lint / typecheck advisories.
+The discipline is documented here; the **mechanical enforcement** lives in `.agent0/context/rules/propagation-advisory.md` + `.agent0/hooks/propagation-advise.sh`. The hook fires on Claude `PostToolUse(Edit|Write|MultiEdit)` and Codex `PostToolUse(apply_patch)` (spec 113) against any file in the shipped surface and emits `propagation-advisory:` stderr lines per leak finding. Patterns covered: `spec-NNN`, `docs/specs/NNN`, `anthill`, `personal-path` (`/home/<user>/`), `memory-pointer` (`.agent0/memory/<file>.md`). Always non-blocking — same `<kind>-advisory:` shape as TDD / lint / typecheck advisories.
 
 The hook + rule + tests are **Agent0-only** by construction — see § The shipped file class § *Explicit exclusions inside the sync manifest*. Tests still run against Agent0's copy (the 11 scenarios in `.agent0/tests/propagation-advisory/` are exercised here); the exclusion stops only the sync.
 
@@ -61,7 +61,7 @@ This is the rule-of-three promotion candidate: if the advisory empirically fires
 
 ## Not-yet-cleaned surfaces (follow-up)
 
-Spec 070 cleaned CLAUDE.md, `.claude/rules/*.md`, and the four root config/hook files (`.mcp.json.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.gitignore`) of `docs/specs/` spec-citation leaks. Follow-up status:
+Spec 070 cleaned CLAUDE.md, `.agent0/context/rules/*.md`, and the four root config/hook files (`.mcp.json.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.gitignore`) of `docs/specs/` spec-citation leaks. Follow-up status:
 
 - **Memory `.agent0/memory/<file>.md` path-pointers — cleaned 2026-05-21 (070 follow-up #1).** 9 citation pointers across 6 rule files (`spec-driven`, `runtime-introspect`, `rule-load-debug`, `routines`, `user-prompt-framing`, `artifact-budgets`) named a specific Agent0 memory file (`feedback_speculative_observability.md`, `cc-platform-hooks.md`). `.agent0/memory/` ships only `.gitkeep`, so each was a dangling pointer in a consumer project — same shape as the spec-citation leak, distinct cause. Stripped per spec 070's resolved OQ1: drop the pointer, keep the operational concept (the rule still describes "rule-of-three demand test" / the 29-event behavior, it just no longer cites where Agent0 records it). The two `.agent0/memory/MEMORY.md` mentions in CLAUDE.md § Memory and `memory-placement.md` were deliberately KEPT — `MEMORY.md` is the index-file *name* (the scheme a consumer project reuses for its own memory bucket), not an Agent0-specific file; same carve-out as the literal `NNN` in `docs/specs/NNN-<slug>/`. A consequential-staleness fix rode along: `memory-placement.md` § Project memory claimed memory discovery happens "via cross-references from specific rule docs" — the exact cross-references this cleanup removed — so that clause was dropped.
 - **Memory basenames-as-examples — residual, not yet cleaned.** A softer adjacent form surfaced during the 2026-05-21 path-pointer sweep: bare memory-file *basenames* used as illustrative examples — `routines.md` (`cc-platform-hooks.md` in two routine examples), `memory-placement.md` § buckets (`agent0-purpose.md`, `visibility-intent.md`, `cc-platform-hooks.md`, `propagation-hygiene.md` listed as "concrete examples currently in this bucket"). These are pedagogical, not navigable pointers; cleaning them means rewriting examples to generic ones — an editorial change, deferred rather than silently folded into the mechanical path-pointer sweep.

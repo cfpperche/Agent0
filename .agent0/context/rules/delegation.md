@@ -25,9 +25,9 @@ Canonical template (verbatim from `delegation-gate.sh` stderr):
   DONE_WHEN: <verifiable condition — tests pass, file exists, etc.>
 ```
 
-**Spec-scoped delegations and `notes.md`** — when `CONTEXT` references a spec dir (`docs/specs/NNN-*`), `DELIVERABLE` SHOULD include the phrase "append any in-flight decisions/deviations/tradeoffs/open-questions to `docs/specs/NNN-*/notes.md`" (verbatim or equivalent). This gives the sub-agent a sanctioned surface for judgment calls that weren't pre-empted by spec/plan — the parent reviews the appended entries rather than reverse-engineering decisions from the diff. Author each entry as the dispatched `subagent_type`. Rule-only in v1 (no gate enforcement); see `.claude/rules/spec-driven.md` § *The four artifacts* for the artifact's purpose and entry shape.
+**Spec-scoped delegations and `notes.md`** — when `CONTEXT` references a spec dir (`docs/specs/NNN-*`), `DELIVERABLE` SHOULD include the phrase "append any in-flight decisions/deviations/tradeoffs/open-questions to `docs/specs/NNN-*/notes.md`" (verbatim or equivalent). This gives the sub-agent a sanctioned surface for judgment calls that weren't pre-empted by spec/plan — the parent reviews the appended entries rather than reverse-engineering decisions from the diff. Author each entry as the dispatched `subagent_type`. Rule-only in v1 (no gate enforcement); see `.agent0/context/rules/spec-driven.md` § *The four artifacts* for the artifact's purpose and entry shape.
 
-**Budgeted artifacts and the overshoot cascade** — when a brief declares a size target for the artifact the sub-agent produces, CONSTRAINTS MUST inline the two-threshold cascade per `.claude/rules/artifact-budgets.md`: `target_max × 1.2 → partial-result with oversize_reason` (soft, sub-agent has agency); `target_max × 1.8 → STOP, emit partial-result, no further production` (hard, no agency). Trim-loop and re-emit-at-smaller-scope are forbidden in every zone above 1.0× — both are "redo to fit budget" antipatterns that hide the scope-mismatch signal. Override marker reuses the project's grammar with `budget-exempt:` prefix (mirrors `tdd-exempt:` here). Rule-only in v1.
+**Budgeted artifacts and the overshoot cascade** — when a brief declares a size target for the artifact the sub-agent produces, CONSTRAINTS MUST inline the two-threshold cascade per `.agent0/context/rules/artifact-budgets.md`: `target_max × 1.2 → partial-result with oversize_reason` (soft, sub-agent has agency); `target_max × 1.8 → STOP, emit partial-result, no further production` (hard, no agency). Trim-loop and re-emit-at-smaller-scope are forbidden in every zone above 1.0× — both are "redo to fit budget" antipatterns that hide the scope-mismatch signal. Override marker reuses the project's grammar with `budget-exempt:` prefix (mirrors `tdd-exempt:` here). Rule-only in v1.
 
 ## Codex: convention-only
 
@@ -35,7 +35,7 @@ The 5-field handoff is **enforced by a blocking hook on Claude** (`delegation-ga
 
 So on Codex the discipline binds the **orchestrator**, not a gate: when composing a subagent dispatch (`/agent`, "spawn N agents"), the orchestrator self-applies `TASK / CONTEXT / CONSTRAINTS / DELIVERABLE-or-DONE_WHEN` in the natural-language instruction **because this rule says so**. The `.agent0/hooks/delegation-start-audit.sh` hook records that a dispatch happened (`event: "subagent-start"`) but, because the Codex `SubagentStart` payload carries no brief text, it cannot check compliance — it logs `brief_observable: false` / `formatted: null` and asserts nothing about the contract.
 
-This is the exact precedent of `.claude/rules/user-prompt-framing.md`: when the actor being disciplined is the one composing the next message and there is no pre-submit blocker, Agent0 uses a **rule-only self-discipline layer** rather than pretending a post-hoc advisory is enforcement. The audit hook is observability; the rule is the discipline.
+This is the exact precedent of `.agent0/context/rules/user-prompt-framing.md`: when the actor being disciplined is the one composing the next message and there is no pre-submit blocker, Agent0 uses a **rule-only self-discipline layer** rather than pretending a post-hoc advisory is enforcement. The audit hook is observability; the rule is the discipline.
 
 ## Why DONE_WHEN exists (the /goal connection)
 
@@ -74,7 +74,7 @@ Tuning:
 
 If the validator is missing, non-executable, or emits unparseable output, the hook fails open (exit 0). A broken verifier must never permanently block sub-agent termination.
 
-The validator may append a `warnings` array on stack-detected paths; `delegation-verify.sh` echoes each as a `tdd-advisory:` line on the pass path — non-blocking, surfaced once at close. See `.claude/rules/tdd.md` for the warning shape and response convention.
+The validator may append a `warnings` array on stack-detected paths; `delegation-verify.sh` echoes each as a `tdd-advisory:` line on the pass path — non-blocking, surfaced once at close. See `.agent0/context/rules/tdd.md` for the warning shape and response convention.
 
 **Parallel fan-out — the per-edit validator-cascade is gone.** The validator typechecks and lints the **whole project** (`tsc --noEmit`, `biome check`, `go vet ./...` are project-wide). Under the *old* per-edit design, ≥2 sub-agents editing one shared tree concurrently each saw the others' half-written files and flipped `ok` to `false` on errors they did not cause (the **validator-cascade**, observed across Waves 3-5 of a `/product` dogfood, 2026-05-20). Stop-time verification structurally eliminates this: each sub-agent is verified once, at its own close, against its own final tree state — there are no half-written sibling files at a clean close. Worktree isolation (`isolation: "worktree"`) is still recommended for parallel fan-outs that edit overlapping files, but now for **write-collision** reasons (last-writer-wins on shared paths), not validator interference. See § Worktree isolation.
 

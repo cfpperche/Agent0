@@ -80,7 +80,7 @@ To update MEMORY.md, do one of:
      The bypass is recorded in .agent0/.memory-events.jsonl as a
      `manual-edit` event with the reason as a field.
 
-Rule: .claude/rules/memory-placement.md § Event journal
+Rule: .agent0/context/rules/memory-placement.md § Event journal
 EOF
   exit 2
 fi
@@ -93,7 +93,7 @@ An `# OVERRIDE: memory-index-edit:` marker was found, but the reason was
 shorter than 10 characters after trimming. Lengthen the reason to a
 greppable justification a future maintainer can audit.
 
-Rule: .claude/rules/memory-placement.md § Event journal
+Rule: .agent0/context/rules/memory-placement.md § Event journal
 EOF
   exit 2
 fi

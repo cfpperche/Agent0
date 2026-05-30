@@ -13,7 +13,7 @@ TMPDIR="$(mktemp -d -t runtime-capabilities-07-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 runtime_caps_write_valid_fixture "$TMPDIR"
-cat >> "$TMPDIR/.claude/rules/runtime-capabilities.md" <<'EOF'
+cat >> "$TMPDIR/.agent0/context/rules/runtime-capabilities.md" <<'EOF'
 | lifecycle hooks | `native` | `unsupported` | duplicate | duplicate |
 EOF
 

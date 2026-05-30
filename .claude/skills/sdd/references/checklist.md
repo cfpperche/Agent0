@@ -4,7 +4,7 @@ Run before delivering the synthesis (Step 3) and again before writing `spec.md` 
 
 ## Context
 
-- [ ] Read available project context before speaking — CLAUDE.md, `.claude/rules/*.md`, `.agent0/memory/MEMORY.md`, the `docs/specs/` listing, recent `git log`
+- [ ] Read available project context before speaking — CLAUDE.md, `.agent0/context/rules/*.md`, `.agent0/memory/MEMORY.md`, the `docs/specs/` listing, recent `git log`
 - [ ] Identified existing specs, rules, modules, or memory entries that overlap with the idea
 - [ ] Told the user which context was loaded and what is relevant — concisely, not a dump
 
@@ -13,7 +13,7 @@ Run before delivering the synthesis (Step 3) and again before writing `spec.md` 
 - [ ] Conducted minimum 3 rounds, even if the idea seemed clear
 - [ ] Challenged the idea at least twice (scope creep, over-engineering, vague value)
 - [ ] Referenced actual repo files, specs, rules, or modules in suggestions — not generic advice
-- [ ] Checked the idea against existing decisions in `docs/specs/` and conventions in `.claude/rules/`
+- [ ] Checked the idea against existing decisions in `docs/specs/` and conventions in `.agent0/context/rules/`
 - [ ] Covered at least 4 of the 7 question-bank categories
 - [ ] Grepped/read the repo before asking anything that the repo could answer
 - [ ] Asked about v1 scope explicitly — what is IN and what is OUT
@@ -31,7 +31,7 @@ Run before delivering the synthesis (Step 3) and again before writing `spec.md` 
 ## Output quality
 
 - [ ] Output fills the existing `templates/spec.md.tmpl` structure — all five sections (Intent, Acceptance criteria, Non-goals, Open questions, Context / references)
-- [ ] Acceptance criteria use the `Scenario: … Given/When/Then` sub-bullet shape for behavior, plain checkbox bullets for static facts (per `.claude/rules/spec-driven.md` § Acceptance scenarios)
+- [ ] Acceptance criteria use the `Scenario: … Given/When/Then` sub-bullet shape for behavior, plain checkbox bullets for static facts (per `.agent0/context/rules/spec-driven.md` § Acceptance scenarios)
 - [ ] Each acceptance criterion is verifiable without re-reading the plan
 - [ ] Open questions are honest — what we genuinely do not know, each with a path to resolution
 - [ ] Every claim traces to a discovery-round answer; nothing invented the user did not confirm

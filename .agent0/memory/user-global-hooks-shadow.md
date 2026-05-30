@@ -41,5 +41,5 @@ The fork dogfood lesson is operational, not architectural: when validating end-t
 
 ## Cross-references
 
-- `.claude/rules/secrets-scan.md` — project's two-layer secrets-scan capacity.
+- `.agent0/context/rules/secrets-scan.md` — project's two-layer secrets-scan capacity.
 - `.agent0/memory/cc-platform-hooks.md` — canonical CC hook event surface.

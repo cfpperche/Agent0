@@ -1,6 +1,6 @@
 ---
 name: sdd
-description: Spec-driven development scaffolding. Use when starting non-trivial work (3+ files, new module, API/schema change, vague request needing decomposition). Creates and progresses docs/specs/NNN-slug/{spec,plan,tasks,notes,debate}.md per the spec-driven workflow. Subcommands - new <slug>, refine, debate, plan, tasks, list. See .claude/rules/spec-driven.md for when SDD applies and when to skip.
+description: Spec-driven development scaffolding. Use when starting non-trivial work (3+ files, new module, API/schema change, vague request needing decomposition). Creates and progresses docs/specs/NNN-slug/{spec,plan,tasks,notes,debate}.md per the spec-driven workflow. Subcommands - new <slug>, refine, debate, plan, tasks, list. See .agent0/context/rules/spec-driven.md for when SDD applies and when to skip.
 argument-hint: <new <slug> | refine [<idea> | NNN] | debate | plan | tasks | list>
 license: MIT
 compatibility: Designed for Claude Code. Body references `.claude/` conventional paths and CC-specific tools; portable to any runtime that maps a `.claude/`-analog directory and surfaces the referenced tools.
@@ -13,7 +13,7 @@ metadata:
 
 Scaffolds and progresses spec folders for non-trivial work. Each feature gets `docs/specs/NNN-<slug>/` with four files: `spec.md` (what + why), `plan.md` (how), `tasks.md` (do), `notes.md` (in-flight design memory populated during implementation).
 
-See `.claude/rules/spec-driven.md` for the workflow rationale and when to apply / skip SDD.
+See `.agent0/context/rules/spec-driven.md` for the workflow rationale and when to apply / skip SDD.
 
 ## Argument parsing
 
@@ -46,7 +46,7 @@ Scaffold a new spec dir. Parse `$ARGUMENTS`: first token must be `new`, second t
    - `{{NNN}}` → the zero-padded number
    - `{{DATE}}` → current date in `YYYY-MM-DD` (UTC)
 
-5. **Report** — output the four paths and tell the user the next step is to fill `spec.md`. Do NOT auto-fill it; the user owns intent. Suggest they describe the change conversationally and you can draft `spec.md` from that, but only after they say so. If the idea is still vague, suggest `/sdd refine` instead. The fourth file `notes.md` stays empty at scaffold time — its purpose is in-flight design memory populated **during** implementation (see `.claude/rules/spec-driven.md` § The four artifacts).
+5. **Report** — output the four paths and tell the user the next step is to fill `spec.md`. Do NOT auto-fill it; the user owns intent. Suggest they describe the change conversationally and you can draft `spec.md` from that, but only after they say so. If the idea is still vague, suggest `/sdd refine` instead. The fourth file `notes.md` stays empty at scaffold time — its purpose is in-flight design memory populated **during** implementation (see `.agent0/context/rules/spec-driven.md` § The four artifacts).
 
 ## Subcommand: `refine` — 🔓 Medium freedom: adaptive interview with structured close
 
@@ -62,7 +62,7 @@ Discovery interview that turns a vague idea into a filled `spec.md`. Opt-in fron
 
 ### Step 0: Context load — 🔒 Low freedom: always silent
 
-Read project context BEFORE speaking; build an internal model, do NOT dump a summary. Read: `CLAUDE.md`, `.claude/rules/*.md`, `.agent0/memory/MEMORY.md` (the lazy index — pull specific memory files only when a round needs them), the `docs/specs/` directory listing (titles, not full bodies), recent `git log`. Reference this naturally during the interview.
+Read project context BEFORE speaking; build an internal model, do NOT dump a summary. Read: `CLAUDE.md`, `.agent0/context/rules/*.md`, `.agent0/memory/MEMORY.md` (the lazy index — pull specific memory files only when a round needs them), the `docs/specs/` directory listing (titles, not full bodies), recent `git log`. Reference this naturally during the interview.
 
 ### Step 1: Opening — 🔓 Medium freedom: brief, grounded
 
@@ -78,7 +78,7 @@ Rules:
 
 - Minimum 3 rounds, even if the idea seems clear. Maximum 6 by default — if not converging, force synthesis.
 - **Deep mode** — if the user passes `--deep` or asks to "go deep", lift the 6-round cap; continue until 3 consecutive rounds surface no new in-scope decisions. Hard ceiling 20.
-- **Grep before asking** — if the repo could answer a question (configs, rules, memory, specs, schemas), read first; asking is the fallback. Per `.claude/rules/research-before-proposing.md`, web research is allowed here: repo first, web second, ask last. Name the file / source you read.
+- **Grep before asking** — if the repo could answer a question (configs, rules, memory, specs, schemas), read first; asking is the fallback. Per `.agent0/context/rules/research-before-proposing.md`, web research is allowed here: repo first, web second, ask last. Name the file / source you read.
 - Challenge the idea at least twice (scope creep, over-engineering, vague value). Never sycophantic — "great idea" is banned.
 - Cover at least 4 of the 7 question-bank categories.
 - Detect convergence (answers stop adding information → synthesis) and kill signals (feature not worth building → say so directly).
@@ -98,7 +98,7 @@ For option 1 on a from-scratch refine: propose a kebab-case slug derived from th
 
 ### Step 4: Output — 🔒 Low freedom: use the existing template
 
-**Read `${CLAUDE_SKILL_DIR}/templates/spec.md.tmpl` before producing.** Fill all five sections — Intent, Acceptance criteria, Non-goals, Open questions, Context / references. Every claim must trace to a discovery-round answer; invent nothing the user did not confirm. Acceptance criteria use the `Scenario: … Given/When/Then` sub-bullet shape for behavior and plain checkbox bullets for static facts (per `.claude/rules/spec-driven.md` § Acceptance scenarios) — Gherkin surfaced during discovery maps directly onto that shape.
+**Read `${CLAUDE_SKILL_DIR}/templates/spec.md.tmpl` before producing.** Fill all five sections — Intent, Acceptance criteria, Non-goals, Open questions, Context / references. Every claim must trace to a discovery-round answer; invent nothing the user did not confirm. Acceptance criteria use the `Scenario: … Given/When/Then` sub-bullet shape for behavior and plain checkbox bullets for static facts (per `.agent0/context/rules/spec-driven.md` § Acceptance scenarios) — Gherkin surfaced during discovery maps directly onto that shape.
 
 ### Step 5: Close — 🟢 High freedom: handoff
 
@@ -429,8 +429,8 @@ If the first token of `$ARGUMENTS` is missing or not one of `new`, `refine`, `de
 
 ## Notes
 
-_Consumer-extension surface — append consumer-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add consumer bullets at the end. See `.claude/rules/harness-sync.md` § Consumer-extension convention._
+_Consumer-extension surface — append consumer-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add consumer bullets at the end. See `.agent0/context/rules/harness-sync.md` § Consumer-extension convention._
 
 - Specs are **git-tracked** — they are project memory, not scratch. Don't gitignore them.
 - The skill provides *structure*; you (Claude) provide *content*. Don't auto-fill `spec.md` — the user owns intent.
-- If the user describes a change conversationally and SDD applies (per `.claude/rules/spec-driven.md`), offer to run `/sdd new <slug>` rather than diving into code.
+- If the user describes a change conversationally and SDD applies (per `.agent0/context/rules/spec-driven.md`), offer to run `/sdd new <slug>` rather than diving into code.

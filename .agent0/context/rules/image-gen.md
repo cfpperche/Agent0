@@ -89,11 +89,11 @@ A consumer project that wants ALL image storage gitignored adds `assets/brand/*`
 
 The same fail-explicit shape applies when `FAL_KEY` is unset or `.mcp.json` is missing the `fal-ai` block — pointer back to § *Activation*, no implicit fallback to a different provider.
 
-Rationale: cost mistakes accumulate silently; quality mistakes are visible and self-correcting. The asymmetry favours fail-explicit — consistent with the contract-not-promise discipline in `.claude/rules/delegation.md` § *Why DONE_WHEN exists*.
+Rationale: cost mistakes accumulate silently; quality mistakes are visible and self-correcting. The asymmetry favours fail-explicit — consistent with the contract-not-promise discipline in `.agent0/context/rules/delegation.md` § *Why DONE_WHEN exists*.
 
 ## Naming convention
 
-Filenames are derived from the prompt: `<YYYY-MM-DD>-<kebab-first-5-words>.png` for draft tier, `<kebab-first-5-words>.png` for brand tiers (no date prefix because brand assets are durable and the file history carries the date). Collision resolution: append `-2`, `-3`, etc. — mirrors the `reminders.yaml` id-collision pattern in `.claude/rules/reminders.md`.
+Filenames are derived from the prompt: `<YYYY-MM-DD>-<kebab-first-5-words>.png` for draft tier, `<kebab-first-5-words>.png` for brand tiers (no date prefix because brand assets are durable and the file history carries the date). Collision resolution: append `-2`, `-3`, etc. — mirrors the `reminders.yaml` id-collision pattern in `.agent0/context/rules/reminders.md`.
 
 `--name=<explicit-slug>` overrides the auto-derivation when the prompt produces a messy or non-ASCII slug. Example: `/image --tier=brand-text --name=hero-banner "Marca da empresa em estilo aquarela"` writes to `assets/brand/hero-banner.png`.
 
@@ -139,15 +139,15 @@ Swap is a `.mcp.json` edit (replace the `fal-ai` HTTP block with the chosen alte
 
 ## Pricing refresh
 
-The tier-pricing table in `.claude/skills/image/references/tier-pricing.md` is date-stamped and prefixed `approx`. Refresh discipline: a quarterly entry in `.agent0/routines/` (per `.claude/rules/routines.md`) re-runs the lookup against fal.ai's pricing page. If pricing has moved >20% on any tier, update the table, bump the date stamp, regenerate `references/tier-pricing.md`.
+The tier-pricing table in `.claude/skills/image/references/tier-pricing.md` is date-stamped and prefixed `approx`. Refresh discipline: a quarterly entry in `.agent0/routines/` (per `.agent0/context/rules/routines.md`) re-runs the lookup against fal.ai's pricing page. If pricing has moved >20% on any tier, update the table, bump the date stamp, regenerate `references/tier-pricing.md`.
 
 Skill scripts read the table at call time; updates apply on next invocation without a session restart.
 
 ## Cross-references
 
 - `.mcp.json.example` / `.codex/config.toml.example` — `fal-ai` MCP server block (HTTP transport, `bearer_token_env_var = "FAL_KEY"`)
-- `.claude/rules/secrets-scan.md` — `FAL_KEY` handling; the `<uuid>:<secret>` shape may not match gitleaks default rules (see § *Gotchas*)
-- `.claude/rules/delegation.md` § *Why DONE_WHEN exists* — contract-not-promise frame motivating pre-call cost printing
+- `.agent0/context/rules/secrets-scan.md` — `FAL_KEY` handling; the `<uuid>:<secret>` shape may not match gitleaks default rules (see § *Gotchas*)
+- `.agent0/context/rules/delegation.md` § *Why DONE_WHEN exists* — contract-not-promise frame motivating pre-call cost printing
 - `.claude/skills/image/` — skill implementation
 - `.claude/skills/image/references/tier-pricing.md` — static cost table
 

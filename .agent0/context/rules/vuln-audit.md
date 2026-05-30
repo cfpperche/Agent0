@@ -8,7 +8,7 @@ See `docs/specs/120-vuln-audit/` for the full spec, the cross-model debate that 
 
 The audit runs **only when invoked** — via `/vuln-audit` in Claude Code, or `bash .agent0/tools/vuln-audit.sh` directly (Codex CLI / any runtime / CI). It is deliberately **not** on the `PreToolUse(Bash)` install path, **not** on the `.githooks/pre-commit` path, and **not** scheduled. Gating install was the wrong shape (spec 112); a commit gate is the same anti-pattern one step later.
 
-**Staleness limitation (honest by design):** a vulnerability published *after* your last run is invisible until you next run it. A recurring cadence is the documented deferred path via the generic `/routine` capacity — point a routine at `bash .agent0/tools/vuln-audit.sh` if you want periodic scans. No v1 code ships for this; see `.claude/rules/routines.md`.
+**Staleness limitation (honest by design):** a vulnerability published *after* your last run is invisible until you next run it. A recurring cadence is the documented deferred path via the generic `/routine` capacity — point a routine at `bash .agent0/tools/vuln-audit.sh` if you want periodic scans. No v1 code ships for this; see `.agent0/context/rules/routines.md`.
 
 ## Engine — osv-scanner-only (v1)
 
@@ -50,7 +50,7 @@ The tool reports exactly one first-class **result status**, decoupled from the p
 
 ## Remediation discipline — propose, never apply
 
-The capacity names the upgrade target for fixable findings but **does not modify any manifest or lockfile**. No `osv-scanner fix --apply`, no `npm audit fix`, no `bun audit fix`. This is the contract-not-promise discipline (`.claude/rules/delegation.md` § Why DONE_WHEN exists): applying an upgrade is a separate action the human confirms. osv-scanner's own `fix` command is explicitly risky on untrusted projects (it can trigger package-manager script execution), which reinforces the no-auto-fix stance.
+The capacity names the upgrade target for fixable findings but **does not modify any manifest or lockfile**. No `osv-scanner fix --apply`, no `npm audit fix`, no `bun audit fix`. This is the contract-not-promise discipline (`.agent0/context/rules/delegation.md` § Why DONE_WHEN exists): applying an upgrade is a separate action the human confirms. osv-scanner's own `fix` command is explicitly risky on untrusted projects (it can trigger package-manager script execution), which reinforces the no-auto-fix stance.
 
 ## No override marker — nothing to bypass
 
@@ -74,6 +74,6 @@ Unlike the project's gates (delegation, secrets-scan, governance, routines), vul
 
 - `docs/specs/120-vuln-audit/` — spec, plan, tasks, debate (Claude Code ↔ Codex CLI, converged in 2 rounds).
 - `docs/specs/112-prune-supply-chain-and-secrets-advise/` — the removal this capacity positively replaces.
-- `.claude/rules/secrets-scan.md` — sibling security capacity (the gate-shaped one this deliberately is *not*).
-- `.claude/rules/tdd.md` § Reading the validator advisory — the `<kind>-advisory:` non-blocking family this mirrors.
-- `.claude/rules/routines.md` — the deferred recurring-cadence path.
+- `.agent0/context/rules/secrets-scan.md` — sibling security capacity (the gate-shaped one this deliberately is *not*).
+- `.agent0/context/rules/tdd.md` § Reading the validator advisory — the `<kind>-advisory:` non-blocking family this mirrors.
+- `.agent0/context/rules/routines.md` — the deferred recurring-cadence path.

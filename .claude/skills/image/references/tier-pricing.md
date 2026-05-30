@@ -66,6 +66,6 @@ Pricing on fal.ai changes occasionally — model providers adjust, fal.ai's marg
 
 ## Cross-references
 
-- `.claude/rules/image-gen.md` § *Tier table* — user-facing tier semantics
+- `.agent0/context/rules/image-gen.md` § *Tier table* — user-facing tier semantics
 - `.claude/skills/image/SKILL.md` — invocation surface
 - `.claude/skills/image/scripts/gen.sh` — runtime consumer

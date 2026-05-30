@@ -12,7 +12,7 @@ export CLAUDE_PROJECT_DIR="$TMPDIR_T"
 export CLAUDE_SKIP_PROPAGATION_ADVISE=1
 
 payload="$(jq -n \
-  --arg fp "$TMPDIR_T/.claude/rules/foo.md" \
+  --arg fp "$TMPDIR_T/.agent0/context/rules/foo.md" \
   --arg new "Refs spec 080, anthill, /home/goat/foo, .agent0/memory/cc-platform-hooks.md." \
   '{tool_name: "Edit", tool_input: {file_path: $fp, new_string: $new}}')"
 

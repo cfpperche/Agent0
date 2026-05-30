@@ -48,7 +48,7 @@ For skills with subcommands (like `/sdd`, `/remind`, `/brainstorm`), enumerate t
 
 ### 5. Reference the rule/spec file at the end (Agent0 convention)
 
-When the skill ships with a deeper rule doc (`.claude/rules/<topic>.md` or a spec under `docs/specs/`), name it at the end of the description: `See <path> for boundary cases.` The agent uses this as a discovery anchor when deciding whether to read more.
+When the skill ships with a deeper rule doc (`.agent0/context/rules/<topic>.md` or a spec under `docs/specs/`), name it at the end of the description: `See <path> for boundary cases.` The agent uses this as a discovery anchor when deciding whether to read more.
 
 ### 6. Stay under 1024 characters
 

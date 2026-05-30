@@ -4,20 +4,20 @@ paths:
   - ".agent0/hooks/session-start.sh"
   - ".agent0/hooks/session-stop.sh"
   - ".agent0/hooks/session-track-edits.sh"
-  - ".codex/config.toml.example"
+  - ".codex/hooks.json"
   - ".agent0/.session-state/**"
 ---
 
 # Session handoff
 
-`.agent0/HANDOFF.md` is the canonical work-state handoff for Agent0 sessions. It is runtime-neutral: Claude Code receives it automatically through hooks, and Codex receives it through opt-in hooks plus the `AGENTS.md` convention.
+`.agent0/HANDOFF.md` is the canonical work-state handoff for Agent0 sessions. It is runtime-neutral: Claude Code receives it automatically through hooks, and Codex receives it through tracked project hooks plus the `AGENTS.md` convention.
 
-Codex receives the same hook-backed handoff behavior after the user copies `.codex/config.toml.example` to `.codex/config.toml`, enables hooks, and uncomments the session-handoff blocks.
+Codex receives the same hook-backed handoff behavior from `.codex/hooks.json` after the project and changed hooks are trusted.
 
 ## Runtime enforcement
 
 - **Claude Code**: `SessionStart` (`.agent0/hooks/session-start.sh`) injects `.agent0/HANDOFF.md`; `Stop` (`.agent0/hooks/session-stop.sh`) nags once per session when Claude leaves dirty own work without updating `.agent0/HANDOFF.md`; `PostToolUse(Edit|Write|MultiEdit)` (`.agent0/hooks/session-track-edits.sh`) records edited paths for bystander discrimination.
-- **Codex CLI**: after opt-in via `.codex/config.toml.example`, `SessionStart` injects `.agent0/HANDOFF.md`; `Stop` uses Codex's continue-with-corrective-prompt contract (`{"decision":"block","reason":...}`) for nag-once parity; `PostToolUse(^apply_patch$)` records edited paths parsed from patch headers.
+- **Codex CLI**: tracked `.codex/hooks.json` registers `SessionStart` to inject `.agent0/HANDOFF.md`; `Stop` uses Codex's continue-with-corrective-prompt contract (`{"decision":"block","reason":...}`) for nag-once parity; `PostToolUse(^apply_patch$)` records edited paths parsed from patch headers.
 
 Codex `Stop` does not reject termination byte-for-byte like a Claude stop block. `decision: "block"` tells Codex to continue and creates a new continuation prompt from `reason`. The shared hook exits silently when Codex sends `stop_hook_active=true` or when the per-session `nagged` marker is already set.
 

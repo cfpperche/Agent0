@@ -55,7 +55,7 @@ BROWSER_AUTH_REQUIRED: x.com
 Next step: open Playwright MCP in headed mode, log in at x.com, then run
   browser_run_code_unsafe with `page.context().storageState({ path: '...' })`
   to save state to .agent0/.browser-state/x.com.json.
-See .claude/rules/browser-auth.md.
+See .agent0/context/rules/browser-auth.md.
 ```
 
 The phrase is all-caps with a colon-space separator — agents and humans alike can grep for it. The agent does NOT retry the same host until the human signals the state was saved (e.g. by replying "done" or by the agent detecting the state file exists on disk).
@@ -66,7 +66,7 @@ Session state is stored one file per host under `.agent0/.browser-state/`. The d
 
 - Filename: lowercase hostname, `.json` extension. Examples: `x.com.json`, `linkedin.com.json`, `github.com.json`.
 - Path: `.agent0/.browser-state/<host>.json` relative to the project root.
-- Never commit these files. The `.gitignore` entry `.agent0/.browser-state/*.json` excludes the state files while leaving the `.gitkeep` sentinel tracked (the sentinel does not match `*.json`, so no `!`-exclusion is needed). See `.claude/rules/secrets-scan.md` for the credential-class framing.
+- Never commit these files. The `.gitignore` entry `.agent0/.browser-state/*.json` excludes the state files while leaving the `.gitkeep` sentinel tracked (the sentinel does not match `*.json`, so no `!`-exclusion is needed). See `.agent0/context/rules/secrets-scan.md` for the credential-class framing.
 
 ## Playwright MCP — headed login, then headless reuse
 
@@ -162,5 +162,5 @@ When you need both (drive + observe), run Playwright MCP as the driver and Chrom
 
 ## Cross-references
 
-- `.claude/rules/secrets-scan.md` § *Soft advisory* — `.agent0/.browser-state/*.json` are credential-class files; gitleaks treats high-entropy strings inside them as real findings.
+- `.agent0/context/rules/secrets-scan.md` § *Soft advisory* — `.agent0/.browser-state/*.json` are credential-class files; gitleaks treats high-entropy strings inside them as real findings.
 - `.agent0/.runtime-state/README.md` — index of project-local state directories; pairs `.agent0/.browser-state/` with this rule.

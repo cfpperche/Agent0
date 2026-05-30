@@ -9,7 +9,7 @@ set -uo pipefail
 
 PROJECT_DIR="${AGENT0_PROJECT_DIR:-${CLAUDE_PROJECT_DIR:-$PWD}}"
 PROJECTOR="$PROJECT_DIR/.agent0/tools/memory-project.sh"
-SCHEMA_REF=".claude/rules/memory-placement.md § Frontmatter schema"
+SCHEMA_REF=".agent0/context/rules/memory-placement.md § Frontmatter schema"
 
 usage() {
   cat <<'USAGE' >&2

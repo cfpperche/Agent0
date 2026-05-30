@@ -13,7 +13,7 @@ export const CAPACITIES: Capacity[] = [
   {
     id: "sdd",
     name: "Spec-driven development",
-    ruleDoc: `${REPO_TREE}/.claude/rules/spec-driven.md`,
+    ruleDoc: `${REPO_TREE}/.agent0/context/rules/spec-driven.md`,
     desc: {
       en: "Intent before code. Every non-trivial change starts with spec.md, plan.md, tasks.md under docs/specs/NNN-slug/. The /sdd skill scaffolds and progresses them.",
       pt: "Intenção antes do código. Toda mudança não-trivial começa com spec.md, plan.md, tasks.md em docs/specs/NNN-slug/. A skill /sdd faz o scaffold e progressão.",
@@ -34,7 +34,7 @@ export const CAPACITIES: Capacity[] = [
   {
     id: "delegation",
     name: "Delegation + post-edit validator",
-    ruleDoc: `${REPO_TREE}/.claude/rules/delegation.md`,
+    ruleDoc: `${REPO_TREE}/.agent0/context/rules/delegation.md`,
     spec: "002",
     desc: {
       en: "Every Agent dispatch requires a 5-field brief (TASK / CONTEXT / CONSTRAINTS / DELIVERABLE-or-DONE_WHEN). Sub-agent edits revalidated in a fix-then-retry loop, capped by a budget.",
@@ -45,7 +45,7 @@ export const CAPACITIES: Capacity[] = [
   {
     id: "reminders",
     name: "Reminders",
-    ruleDoc: `${REPO_TREE}/.claude/rules/reminders.md`,
+    ruleDoc: `${REPO_TREE}/.agent0/context/rules/reminders.md`,
     spec: "003",
     desc: {
       en: "/remind add/list/dismiss writes .claude/REMINDERS.md — deferred intent that auto-reads at every SessionStart. Sits between SESSION.md (WIP) and memory (knowledge).",
@@ -56,7 +56,7 @@ export const CAPACITIES: Capacity[] = [
   {
     id: "bdd",
     name: "BDD acceptance scenarios",
-    ruleDoc: `${REPO_TREE}/.claude/rules/spec-driven.md#acceptance-scenarios`,
+    ruleDoc: `${REPO_TREE}/.agent0/context/rules/spec-driven.md#acceptance-scenarios`,
     spec: "004",
     desc: {
       en: "spec.md acceptance criteria use Given/When/Then prose. A sub-agent reading a scenario can construct the verification without follow-up clarification.",
@@ -67,7 +67,7 @@ export const CAPACITIES: Capacity[] = [
   {
     id: "tdd",
     name: "TDD working agreement",
-    ruleDoc: `${REPO_TREE}/.claude/rules/tdd.md`,
+    ruleDoc: `${REPO_TREE}/.agent0/context/rules/tdd.md`,
     spec: "005",
     desc: {
       en: "Cultural red→green→refactor. Validator emits non-blocking `tdd-advisory:` when prod files change without tests in the same diff. The advisory surfaces — the agent decides.",
@@ -78,7 +78,7 @@ export const CAPACITIES: Capacity[] = [
   {
     id: "secrets-scan",
     name: "Secrets scan",
-    ruleDoc: `${REPO_TREE}/.claude/rules/secrets-scan.md`,
+    ruleDoc: `${REPO_TREE}/.agent0/context/rules/secrets-scan.md`,
     spec: "006/007",
     desc: {
       en: "Two layers: native .githooks/pre-commit runs gitleaks over the staged diff (primary block); PreToolUse(Bash) preflight gates dangerous shapes and bridges override markers via env var.",
@@ -89,7 +89,7 @@ export const CAPACITIES: Capacity[] = [
   {
     id: "mcp-recipes",
     name: "MCP recipes",
-    ruleDoc: `${REPO_TREE}/.claude/rules/mcp-recipes.md`,
+    ruleDoc: `${REPO_TREE}/.mcp.json.example`,
     spec: "012/015",
     desc: {
       en: "Opt-in .mcp.json recipes for Playwright, Chrome DevTools, DBHub, and Next.js DevTools. SessionStart hook detects stack (walks monorepo workspace dirs depth-1) and hints applicable recipes.",
@@ -100,7 +100,7 @@ export const CAPACITIES: Capacity[] = [
   {
     id: "lint-validator",
     name: "Lint validator extension",
-    ruleDoc: `${REPO_TREE}/.claude/rules/lint-validator.md`,
+    ruleDoc: `${REPO_TREE}/.agent0/context/rules/lint-validator.md`,
     spec: "013",
     desc: {
       en: "Validator extends to Biome (JS/TS) and Ruff (Python) when the manifest declares them. Three states: installed → runs and gates; declared+missing → actionable advisory; not declared → silent skip.",
@@ -111,7 +111,7 @@ export const CAPACITIES: Capacity[] = [
   {
     id: "typecheck-advisory",
     name: "Typecheck advisory",
-    ruleDoc: `${REPO_TREE}/.claude/rules/typecheck-advisory.md`,
+    ruleDoc: `${REPO_TREE}/.agent0/context/rules/typecheck-advisory.md`,
     desc: {
       en: "Validator detects typecheck primitives per JS branch (tsconfig.json on bun/pnpm, `typecheck` script on npm). Missing both → omit the step + emit a non-blocking advisory pointing at the declaration that would re-enable it.",
       pt: "Validator detecta primitivos de typecheck por branch JS (tsconfig.json em bun/pnpm, script `typecheck` em npm). Sem ambos → omite o passo + emite advisory não-bloqueante apontando para a declaração que reativa.",
@@ -121,7 +121,7 @@ export const CAPACITIES: Capacity[] = [
   {
     id: "harness-sync",
     name: "Harness sync",
-    ruleDoc: `${REPO_TREE}/.claude/rules/harness-sync.md`,
+    ruleDoc: `${REPO_TREE}/.agent0/context/rules/harness-sync.md`,
     spec: "016",
     desc: {
       en: "One-way sync tool brings a fork's harness up to date with Agent0. Hash-compare per-file, structured merge for settings.json + CLAUDE.md, never touches src/ or product manifests.",
@@ -132,7 +132,7 @@ export const CAPACITIES: Capacity[] = [
   {
     id: "session-handoff",
     name: "Session handoff",
-    ruleDoc: `${REPO_TREE}/.claude/rules/session-handoff.md`,
+    ruleDoc: `${REPO_TREE}/.agent0/context/rules/session-handoff.md`,
     spec: "017/023",
     desc: {
       en: "SessionStart injects SESSION.md into context. Stop hook nags once per session if you touched the repo without updating SESSION.md. Per-session state isolated; no-op sessions exit silent.",
@@ -143,18 +143,18 @@ export const CAPACITIES: Capacity[] = [
   {
     id: "memory",
     name: "Project memory",
-    ruleDoc: `${REPO_TREE}/.claude/rules/memory-placement.md`,
+    ruleDoc: `${REPO_TREE}/.agent0/context/rules/memory-placement.md`,
     spec: "019",
     desc: {
-      en: "Three buckets: per-user preferences (~/.claude/...), project knowledge (.claude/memory/, git-tracked, fork-local), and behavioral rules (.claude/rules/, ship to forks). Routing guidance prevents drift.",
-      pt: "Três buckets: preferências por usuário (~/.claude/...), conhecimento de projeto (.claude/memory/, git-tracked, fork-local) e regras comportamentais (.claude/rules/, vão para forks). Guidance de roteamento evita drift.",
-      es: "Tres buckets: preferencias por usuario (~/.claude/...), conocimiento de proyecto (.claude/memory/, git-tracked, fork-local) y reglas de comportamiento (.claude/rules/, viajan a forks). Guía de ruteo evita drift.",
+      en: "Three buckets: per-user preferences (~/.claude/...), project knowledge (.claude/memory/, git-tracked, fork-local), and behavioral rules (.agent0/context/rules/, ship to forks). Routing guidance prevents drift.",
+      pt: "Três buckets: preferências por usuário (~/.claude/...), conhecimento de projeto (.claude/memory/, git-tracked, fork-local) e regras comportamentais (.agent0/context/rules/, vão para forks). Guidance de roteamento evita drift.",
+      es: "Tres buckets: preferencias por usuario (~/.claude/...), conocimiento de proyecto (.claude/memory/, git-tracked, fork-local) y reglas de comportamiento (.agent0/context/rules/, viajan a forks). Guía de ruteo evita drift.",
     },
   },
   {
     id: "browser-auth",
     name: "Browser auth workflow",
-    ruleDoc: `${REPO_TREE}/.claude/rules/mcp-recipes.md#authenticated-workflow`,
+    ruleDoc: `${REPO_TREE}/.agent0/context/rules/browser-auth.md`,
     spec: "021",
     desc: {
       en: "Agent emits `BROWSER_AUTH_REQUIRED: <host>` on 401/403; human logs in via headed Playwright MCP, saves storage state to .claude/.browser-state/<host>.json; agent reuses headlessly.",

@@ -46,12 +46,12 @@ Rule-of-three demand test (precedent: [[skill-eval-pattern]] — 5 industry post
 
 ## When to revisit
 
-If 2+ further situations surface where cascade classification with default-to-conservative would help — another fork independently arriving at it, a new producer (security-review, validator, judge) needing it, or a real Agent0 use-case for it — then promote the **meta-rule** (not the Bertolini taxonomy) as a short section in `.claude/rules/delegation.md` § Advisories. Don't build a wizard; do edit the rule.
+If 2+ further situations surface where cascade classification with default-to-conservative would help — another fork independently arriving at it, a new producer (security-review, validator, judge) needing it, or a real Agent0 use-case for it — then promote the **meta-rule** (not the Bertolini taxonomy) as a short section in `.agent0/context/rules/delegation.md` § Advisories. Don't build a wizard; do edit the rule.
 
 The Bertolini taxonomy itself (`backend_fix` / `tracking_fix` / `ui_issue` / `needs_product`) is bound to product-SaaS-with-analytics and won't generalize. The exportable pattern is just the meta-shape: ordered buckets, named match criteria, conservative default at the bottom.
 
 ## Cross-references
 
 - [[skill-eval-pattern]] — analogous deferral; same rule-of-three reasoning
-- `.claude/rules/routines.md` — overlapping capacity (cron + state-file)
-- `.claude/rules/delegation.md` — likely landing site if/when the meta-rule promotes
+- `.agent0/context/rules/routines.md` — overlapping capacity (cron + state-file)
+- `.agent0/context/rules/delegation.md` — likely landing site if/when the meta-rule promotes

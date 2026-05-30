@@ -32,7 +32,7 @@
 # bash 3.2-compatible: no associative arrays, no mapfile.
 #
 # Spec: docs/specs/111-delegation-verify-subagent-stop/
-# Rule: .claude/rules/delegation.md § Post-edit validator loop (stop-time)
+# Rule: .agent0/context/rules/delegation.md § Post-edit validator loop (stop-time)
 #   .agent0/validators/run.sh           — the validator invoked (JSON contract)
 #   .agent0/hooks/delegation-stop.sh     — sibling SubagentStop audit hook (reads the counter)
 #   .agent0/hooks/_memory-hook-lib.sh    — memory_project_dir / memory_runtime
@@ -180,7 +180,7 @@ $V_STDOUT
 --- validator stderr (tail) ---
 $V_STDERR
 
-Rule: .claude/rules/delegation.md § Post-edit validator loop (stop-time)
+Rule: .agent0/context/rules/delegation.md § Post-edit validator loop (stop-time)
 EOF
   exit 0
 fi
@@ -199,6 +199,6 @@ $V_STDOUT
 --- validator stderr (tail) ---
 $V_STDERR
 
-Rule: .claude/rules/delegation.md § Post-edit validator loop (stop-time)
+Rule: .agent0/context/rules/delegation.md § Post-edit validator loop (stop-time)
 EOF
 exit 2

@@ -2,7 +2,7 @@
 
 Used by `/sdd refine` (see `../SKILL.md` § Subcommand: refine). 56 questions in 7 categories. Each discovery round picks 2-3 — the ones most relevant to what is still unknown. Do not run the bank as a checklist; it is a menu.
 
-Before asking any question, grep/read the repo first — config files, `.claude/rules/`, `.agent0/memory/`, existing `docs/specs/`, schemas, modules. Asking is the fallback, not the default. State the file you read so the user sees the grounding.
+Before asking any question, grep/read the repo first — config files, `.agent0/context/rules/`, `.agent0/memory/`, existing `docs/specs/`, schemas, modules. Asking is the fallback, not the default. State the file you read so the user sees the grounding.
 
 ## Problem validation (is this worth building?)
 
@@ -36,7 +36,7 @@ Before asking any question, grep/read the repo first — config files, `.claude/
 22. Any caching or persistence implications?
 23. Does this touch authentication, authorization, or trust boundaries?
 24. Schema or format migration needed? Is there existing data to migrate?
-25. Does this conflict with an existing decision in `docs/specs/` or a rule in `.claude/rules/`?
+25. Does this conflict with an existing decision in `docs/specs/` or a rule in `.agent0/context/rules/`?
 26. Monorepo/multi-package impact — does this cross package boundaries?
 27. Does this change a public API, schema, or wire contract another component depends on?
 

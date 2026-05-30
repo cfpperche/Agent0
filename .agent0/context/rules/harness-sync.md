@@ -5,13 +5,13 @@ paths:
 
 # Harness sync
 
-A one-way sync tool (`.agent0/tools/sync-harness.sh <consumer-path>`) that brings a consumer project's harness state up to date with this Agent0 repo. Hooks, rules, tools, validators, skills, tests, `AGENTS.md`, `.mcp.json.example`, `.codex/config.toml.example` plus structured merges of `.claude/settings.json` and `CLAUDE.md`. Conservative by design: `--check` is the default (read-only); the plain-file path AND the CLAUDE.md managed block do 3-way reconciliation against a recorded baseline so *stale* content (consumer untouched, Agent0 moved) auto-updates while genuinely *customized* content (consumer edited) is refused without `--force`; product code (`src/`, the consumer project's `tests/`, package manifests, `.mcp.json`, `.codex/config.toml`, `.codex/.env.local`) is never touched.
+A one-way sync tool (`.agent0/tools/sync-harness.sh <consumer-path>`) that brings a consumer project's harness state up to date with this Agent0 repo. Hooks, context rules, tools, validators, skills, tests, `AGENTS.md`, `.mcp.json.example`, `.codex/hooks.json`, `.codex/config.toml.example` plus structured merges of `.claude/settings.json` and `CLAUDE.md`. Conservative by design: `--check` is the default (read-only); the plain-file path AND the CLAUDE.md managed block do 3-way reconciliation against a recorded baseline so *stale* content (consumer untouched, Agent0 moved) auto-updates while genuinely *customized* content (consumer edited) is refused without `--force`; product code (`src/`, the consumer project's `tests/`, package manifests, `.mcp.json`, `.codex/config.toml`, `.codex/.env.local`) is never touched.
 
 ## Glossary
 
 This rule and its sibling capacities use a precise vocabulary for the Agent0-consumer relationship. The relationship is **unidirectional** (Agent0 ships capacities; consumer projects install them via `sync-harness.sh`), not bidirectional like a git fork.
 
-- **harness** — Agent0 itself, framed as a plugin/framework bundle of capacities (hooks, rules, tools, validators, skills, tests, the two entrypoints). What the consumer installs.
+- **harness** — Agent0 itself, framed as a plugin/framework bundle of capacities (hooks, context rules, tools, validators, skills, tests, the two entrypoints). What the consumer installs.
 - **consumer project** — a project that has run `sync-harness.sh --apply` and now carries a copy of the harness. The thing on the receiving end of the unidirectional sync.
 - **shipped surface** — the file set the sync manifest propagates from Agent0 to the consumer project. Equivalently: the files a consumer ends up with copies of. (Replaces the earlier term *fork-bound surface*.)
 - **consumer customization** — a deliberate edit a consumer made to a shipped file; reconciliation refuses to overwrite without `--force`.
@@ -55,7 +55,7 @@ If neither `--agent0-path` nor `AGENT0_HARNESS_PATH` is given, the tool refuses 
 
 ## Customization detection — 3-way reconciliation
 
-For plain files (the `COPY_CHECK_*` manifest — hooks, rules, tools, validators, skills, tests, agents, `.mcp.json.example`, `.codex/config.toml.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.gitkeep` sentinels), the sync reconciles **three** reference points: the consumer project's copy, the recorded **baseline** (Agent0's version of the file as of the consumer project's last `--apply` — see § Sync baseline), and Agent0's current version. Three points let the tool tell a file the consumer project *deliberately edited* apart from one it simply *hasn't caught up on* — the gap the original 2-state `sha256` compare could not close.
+For plain files (the `COPY_CHECK_*` manifest — hooks, context rules, tools, validators, skills, tests, agents, `.mcp.json.example`, `.codex/hooks.json`, `.codex/config.toml.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.gitkeep` sentinels), the sync reconciles **three** reference points: the consumer project's copy, the recorded **baseline** (Agent0's version of the file as of the consumer project's last `--apply` — see § Sync baseline), and Agent0's current version. Three points let the tool tell a file the consumer project *deliberately edited* apart from one it simply *hasn't caught up on* — the gap the original 2-state `sha256` compare could not close.
 
 For each plain file:
 
@@ -97,15 +97,15 @@ Whitespace-only diffs are still customization. A consumer project that ran `shfm
 
 ## Consumer-extension convention (doc-only, no machinery)
 
-For files the sync ships **without** a structured merge primitive (every shipped `SKILL.md`, every rule, every helper script), there is a **documentation convention** — not a mechanical merge — for where consumer-local extensions should live to keep the post-sync conflict region predictable.
+For files the sync ships **without** a structured merge primitive (every shipped `SKILL.md`, every context rule, every helper script), there is a **documentation convention** — not a mechanical merge — for where consumer-local extensions should live to keep the post-sync conflict region predictable.
 
 **The convention.** For each shipped `SKILL.md`, the `## Notes` section is the designated extension surface. Consumer project-local additions go there. Sync will still flag the file as `!! customized` (sha-compare doesn't know about section semantics), but the conflict region is **always the same place** — making the manual merge mechanical: take the new Agent0 SKILL.md verbatim, then re-add the consumer project's `## Notes` bullets at the end.
 
-**Why a convention, not machinery (yet).** Per-section marker-aware merge (analogous to `CLAUDE.md`'s managed-block) would require shipping `<!-- AGENT0-EXTENSION-START -->` / `<!-- AGENT0-EXTENSION-END -->` markers in every extensible file plus a per-marker merge handler in `sync-harness.sh`. That's ~200 LOC + 7 files of marker overhead. As of 2026-05-25, only **one consumer project** has surfaced this pain, with **two customizations**. Rule-of-three demand test (canonical in this project — see `.claude/rules/reminders.md`, `.claude/rules/spec-driven.md`, etc.) says: **don't pre-build the machinery**. The convention costs zero LOC and reduces manual-merge time to ~30s per file (because the conflict is always at the same heading).
+**Why a convention, not machinery (yet).** Per-section marker-aware merge (analogous to `CLAUDE.md`'s managed-block) would require shipping `<!-- AGENT0-EXTENSION-START -->` / `<!-- AGENT0-EXTENSION-END -->` markers in every extensible file plus a per-marker merge handler in `sync-harness.sh`. That's ~200 LOC + 7 files of marker overhead. As of 2026-05-25, only **one consumer project** has surfaced this pain, with **two customizations**. Rule-of-three demand test (canonical in this project — see `.agent0/context/rules/reminders.md`, `.agent0/context/rules/spec-driven.md`, etc.) says: **don't pre-build the machinery**. The convention costs zero LOC and reduces manual-merge time to ~30s per file (because the conflict is always at the same heading).
 
 **Promotion trigger.** Promote convention → machinery when **≥3 consumer projects have ≥1 `!! customized` entry on a SKILL.md or rule** OR **≥5 distinct customizations surfaced across ≥2 consumer projects**. Reminder `r-2026-05-25-re-evaluate-consumer-extension-con` (due 2026-08-25) re-evaluates against this threshold. The machinery's design template already exists: `CLAUDE.md`'s managed-block merge, `settings.json`'s structured-key merge, `.gitignore`'s additive merge — pick the closest analog and generalize.
 
-**Other files (rules, helper scripts, etc.) don't carry the convention yet** — they're less extensible by nature (rules are policy; scripts are mechanism). If a consumer project legitimately needs to extend a rule, it customizes the file and accepts the `!! customized` flag; if consumer projects start hitting this regularly, that's the rule-of-three signal to add an extension convention to rules too.
+**Other files (context rules, helper scripts, etc.) don't carry the convention yet** — they're less extensible by nature (rules are policy; scripts are mechanism). If a consumer project legitimately needs to extend a rule, it customizes the file and accepts the `!! customized` flag; if consumer projects start hitting this regularly, that's the rule-of-three signal to add an extension convention to rules too.
 
 ## settings.json merge strategy
 
@@ -216,16 +216,28 @@ Consumer project-authored sections are always preserved verbatim — the sync on
 
 Encoded in three arrays at the top of `sync-harness.sh`:
 
-- **`COPY_CHECK_RECURSIVE`** — `find -type f` under each base: `.claude/skills/`, `.agent0/tests/`, `.claude/agents/`. Recursive walks; subdirs preserved.
-- **`COPY_CHECK_GLOBS`** — `dir|pattern` pairs, single-level: `.claude/hooks/*.sh`, `.claude/rules/*.md`, `.agent0/tools/*.sh`, `.agent0/validators/*.sh`.
-- **`COPY_CHECK_FILES`** — literal paths: `AGENTS.md`, `.mcp.json.example`, `.codex/config.toml.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.agent0/tools/lib/managed-block.sh`, `.agent0/memory/.gitkeep`, `.agent0/memory.config.json`, `.agent0/.browser-state/.gitkeep`, `.agent0/routines/.gitkeep`.
+- **`COPY_CHECK_RECURSIVE`** — `find -type f` under each base: `.claude/skills/`, `.agent0/context/`, `.agent0/skills/`, `.agent0/tests/`, `.claude/agents/`. Recursive walks; subdirs preserved.
+- **`COPY_CHECK_GLOBS`** — `dir|pattern` pairs, single-level: `.claude/hooks/*.sh`, `.agent0/tools/*.sh`, `.agent0/validators/*.sh`.
+- **`COPY_CHECK_FILES`** — literal paths: `AGENTS.md`, `.mcp.json.example`, `.codex/hooks.json`, `.codex/config.toml.example`, `.gitleaks.toml`, `.githooks/pre-commit`, `.agent0/tools/lib/managed-block.sh`, `.agent0/memory/.gitkeep`, `.agent0/memory.config.json`, `.agent0/.browser-state/.gitkeep`, `.agent0/routines/.gitkeep`.
 - **Structured merge** (not in COPY_CHECK): `.claude/settings.json`, `CLAUDE.md`, `.gitignore`.
 
 The walk only reads from Agent0 manifest paths. Out-of-scope consumer project content (`src/`, consumer project's `tests/` outside `.agent0/tests/`, `docs/`, `package.json`, `Cargo.toml`, `pyproject.toml`, `.mcp.json`, `.codex/config.toml`, `.codex/.env.local`, `.env*`, `target/`, `node_modules/`, `.venv/`, `dist/`, `build/`) is **implicitly invisible** — no denylist guard fires because nothing in the manifest points at those paths. This means adding a new path to the manifest is the only way to extend scope; the safety floor is the manifest itself.
 
 **Deletion propagation.** The walk also accumulates Agent0's *current* manifest into a sha-set; the deletion pass compares that set against the recorded baseline's file list. A path present in the baseline but absent from the current set is an upstream removal, propagated per § Customization detection § *Upstream deletions*. Out-of-scope consumer project content stays invisible to this pass too — it only ever considers paths that were *previously* in the manifest (and therefore recorded in the baseline), never arbitrary consumer project files. A consumer project with no baseline skips the deletion pass entirely.
 
-## Skill discovery-link propagation (spec 121 — multi-runtime skills)
+## Context injection propagation
+
+Behavioral context ships from `.agent0/context/rules/`, not from Claude Code's native `.claude/rules/`
+directory. The shared hydrator (`.agent0/hooks/context-inject.sh`) is registered in
+`.claude/settings.json` for Claude Code and tracked `.codex/hooks.json` for Codex CLI. sync-harness
+therefore propagates the neutral source directory plus the shared hook registration, while
+`.claude/rules/*.md` is not in the manifest.
+
+On an existing consumer project, stale `.claude/rules/*.md` files are upstream-removed orphans once the
+baseline knows about them. The normal deletion pass removes them when unchanged and refuses them when
+customized, preserving consumer edits.
+
+## Skill discovery-link propagation
 
 Portable skills use a **canonical source + per-runtime discovery symlink** model: the body lives once at
 `.agent0/skills/<slug>/SKILL.md`, and each runtime discovers it through a relative symlink —
@@ -287,13 +299,13 @@ The sync baseline file subsumes the need for a separate audit log — it is both
 ## Gotchas
 
 - **`AGENTS.md` is plain baseline-tracked, not marker-merged.** This asymmetry is intentional. `CLAUDE.md` needs a marker-aware merge because Claude Code has no native override-file chain; Codex does have one (`AGENTS.override.md`, nested `AGENTS.md`), so root `AGENTS.md` remains Agent0-owned and consumer-local Codex guidance belongs in those Codex-native override surfaces. Do not promote `AGENTS.md` to structured merge without a follow-up spec and rule-of-three demand evidence.
-- **`.codex/config.toml.example` ships; `.codex/config.toml` and `.codex/.env.local` do not.** Agent0 owns the MCP-only template and syncs it as a plain baseline-tracked file. The real Codex project config and local dotenv file are operator-local, can contain model/provider/sandbox/approval settings and MCP credentials, and are never in the sync manifest. `.gitignore` ignores both local files, but that does not untrack or scrub a file a consumer project already committed.
+- **`.codex/hooks.json` and `.codex/config.toml.example` ship; `.codex/config.toml` and `.codex/.env.local` do not.** Agent0 owns the tracked Codex hook file plus the MCP-only TOML template. The real Codex project config and local dotenv file are operator-local, can contain model/provider/sandbox/approval settings and MCP credentials, and are never in the sync manifest. `.gitignore` ignores both local files, but that does not untrack or scrub a file a consumer project already committed.
 - **Codex MCP duplicate IDs.** A consumer project can define an MCP server ID in user-global `$CODEX_HOME/config.toml` and again in project `.codex/config.toml`. Sync does not inspect either real config. Prefer one active scope per server ID, or document the intentional override locally.
 - **`## Compact Instructions` anchor missing.** The CLAUDE.md merge looks for this line as the insertion point. A consumer project that has removed or renamed it will trigger the EOF-fallback warning; capacity sections land at EOF, which may not be the right place. Fix: restore the anchor in consumer project's CLAUDE.md, or reorganize after sync.
 - **Whitespace-only customization false-positive.** A consumer project that ran `shfmt` / `prettier` over a hook script will have hash-mismatch despite semantic equivalence. The sync flags it as customized. Fix: revert the formatter, OR use `--force` consciously after reviewing the diff. The tool does NOT normalize whitespace (would mask real customizations).
 - **`settings.json` array growth on hook renames.** When Agent0 renames a hook, both old and new entries land in the consumer project's settings.json (different dedup keys). The consumer project developer must prune manually post-sync. The `git diff` makes this visible; auto-prune deferred to v2.
 - **Consumer project-only files survive the deletion pass.** The deletion pass only removes paths recorded in the baseline — files Agent0 once shipped and has since dropped. A consumer-authored file that was never in Agent0's manifest (e.g. `.agent0/tests/<capacity>/99-consumer-extra.sh`) has no baseline entry, so the deletion pass never considers it. Consumer project-only additions survive every sync.
-- **`core.hooksPath` activation is NOT automatic.** Sync writes `.githooks/pre-commit` but does NOT run `git config core.hooksPath .githooks` in the consumer project. Same Lazarus-vector reasoning as in `.claude/rules/secrets-scan.md` § Gotchas — the consumer project developer activates consciously, post-sync.
+- **`core.hooksPath` activation is NOT automatic.** Sync writes `.githooks/pre-commit` but does NOT run `git config core.hooksPath .githooks` in the consumer project. Same Lazarus-vector reasoning as in `.agent0/context/rules/secrets-scan.md` § Gotchas — the consumer project developer activates consciously, post-sync.
 - **Concurrent `--apply` from two terminals.** No locking. Second writer overwrites first's output. Unlikely in practice; the operation is a deliberate developer action, not a hot loop.
 - **Bash 3.2 / macOS portability.** The script uses `mapfile`-free patterns (`while IFS= read -r ... done < <(...)` instead of `mapfile`) and avoids `declare -A`. Same baseline every other hook in this repo follows.
 - **First sync on a long-stale consumer project produces a large diff.** A consumer project that skipped several upstream releases will see ~30+ new files in one apply. Review the diff section-by-section, not as one giant blob: hooks first, rules second, tools third, then settings.json + CLAUDE.md. Commit in one go (`chore(harness-sync): adopt Agent0 specs NNN-MMM`) so the audit trail is clean.

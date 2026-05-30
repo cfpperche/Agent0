@@ -18,7 +18,7 @@ Memory index lives at .agent0/memory/MEMORY.md.
 A rule may reference .agent0/memory/<topic>.md placeholders.'
 
 payload="$(jq -n \
-  --arg fp "$TMPDIR_T/.claude/rules/foo.md" \
+  --arg fp "$TMPDIR_T/.agent0/context/rules/foo.md" \
   --arg new "$clean_content" \
   '{tool_name: "Edit", tool_input: {file_path: $fp, new_string: $new}}')"
 

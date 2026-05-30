@@ -28,7 +28,7 @@ PHP detection in Agent0 is triggered by **`composer.json` at the project root** 
 
 `.agent0/validators/run.sh`'s TDD warning path adds `php) default_patterns='tests/* *Test.php *_test.php' ;;` to the per-stack pattern table. This covers PHPUnit and Pest naming conventions plus Laravel's `tests/Feature/` and `tests/Unit/` layout. A delegated sub-agent that edits prod-PHP (e.g. `app/Models/User.php`) without touching any pattern-matched test file in the same diff triggers a `tdd-advisory:` line on the next turn.
 
-Canonical doc: `.claude/rules/tdd.md` § *From scenarios to tests* (per-language test-pattern table).
+Canonical doc: `.agent0/context/rules/tdd.md` § *From scenarios to tests* (per-language test-pattern table).
 
 ## 3. Lint validator runs Pint + PHPStan
 
@@ -40,7 +40,7 @@ Canonical doc: `.claude/rules/tdd.md` § *From scenarios to tests* (per-language
 
 PHP is the first stack where TWO lint primitives (Pint + PHPStan) can fire in a single run. Both contribute to the composed `command_str`; both can emit advisories on missing binaries; advisories are concatenated with newlines so each gets its own stderr line.
 
-Canonical doc: `.claude/rules/lint-validator.md` § *What fires, what advises* (PHP paragraph).
+Canonical doc: `.agent0/context/rules/lint-validator.md` § *What fires, what advises* (PHP paragraph).
 
 ## 4. Laravel Boost MCP template
 
@@ -62,8 +62,8 @@ CLAUDE.md folds PHP/Laravel detection inline into the capacity sections that enu
 
 ## Cross-references
 
-- `.claude/rules/lint-validator.md` — Pint + PHPStan rules
-- `.claude/rules/tdd.md` — PHP test patterns
+- `.agent0/context/rules/lint-validator.md` — Pint + PHPStan rules
+- `.agent0/context/rules/tdd.md` — PHP test patterns
 - `.mcp.json.example` / `.codex/config.toml.example` — Laravel Boost MCP template block (`[mcp_servers.laravel-boost]`)
 - `.agent0/validators/run.sh` — the validator's PHP elif
 - `.agent0/tests/validator-php/` — the test surface that locks the behavior

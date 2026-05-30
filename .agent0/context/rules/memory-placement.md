@@ -28,11 +28,11 @@ When saving a learning, fact, or rule, route it by **what kind of knowledge** it
 
 **Typical contents:** platform-knowledge references (canonical hook surfaces, framework constraints), prior decisions and their reasoning, dogfood-surfaced gotchas. Each project accumulates its own; entries are project-local by design.
 
-### 3. Project rules — `.claude/rules/<topic>.md`
+### 3. Project context rules — `.agent0/context/rules/<topic>.md`
 
 **For:** behavioral mandates the agent SHOULD comply with, plus operational documentation of the project's capacities (hooks, validators, tools). Git-tracked AND **shipped to consumer projects** via sync-harness manifest — the rules ride with the capacities they govern.
 
-**Use when:** the knowledge is "the agent must follow X when working in this project" or "here's how capacity Y works in any consumer project that adopts it". Path-scoped variants of these rules use a `paths:` frontmatter to restrict where they apply.
+**Use when:** the knowledge is "the agent must follow X when working in this project" or "here's how capacity Y works in any consumer project that adopts it". Path-scoped variants of these rules use a `paths:` frontmatter that the Agent0 context hydrator can use when selecting fragments.
 
 **Do NOT use for:** factual reference data that's project-internal design context (CC platform knowledge, why-we-chose-X decisions). Those are project memory, not rules — they'd noisily ship to every consumer project that doesn't extend the harness.
 
@@ -48,7 +48,7 @@ Is the knowledge a user-specific preference (language, style)?
 Is the knowledge a behavioral mandate, OR a capacity operational doc that the
 consumer-side agent acts on (invokes the primitive, reads the override grammar,
 inspects an audit log it produces)?
-  Yes → .claude/rules/<topic>.md (will ship to consumer projects)
+  Yes → .agent0/context/rules/<topic>.md (will ship to consumer projects and hydrate via hooks)
   No  → continue
         ↑ This branch ALSO catches capacity operational docs — how to extend,
           calibrate, regression-check — that ONLY the upstream maintainer ever
@@ -73,14 +73,14 @@ When in doubt, route to project memory (`.agent0/memory/`). Demoting from rule �
 | --- | --- | --- | --- | --- | --- |
 | CC per-user memory | `~/.claude/projects/<path>/memory/` | No | No | Yes (MEMORY.md, capped) | Preferences only |
 | Project memory | `.agent0/memory/<topic>.md` | **Yes** | **Empty scaffold only** (`.gitkeep`); content stays project-local | No (lazy-read via CLAUDE.md `## Memory`) | Factual project knowledge — each project accumulates its own |
-| Project rules | `.claude/rules/<topic>.md` | **Yes** | **Yes** | On demand (CLAUDE.md mentions) | Behavioral mandates + capacity docs |
+| Project context rules | `.agent0/context/rules/<topic>.md` | **Yes** | **Yes** | Hydrated by `.agent0/hooks/context-inject.sh` | Behavioral mandates + capacity docs |
 
 <!-- DO NOT RENAME — referenced verbatim by .agent0/hooks/memory-frontmatter-validate.sh advisory messages -->
 ## Frontmatter schema
 
 Project-memory entries (bucket #2 — `.agent0/memory/<topic>.md`, NOT `MEMORY.md` itself, which is the index) carry a YAML frontmatter block fenced by `---`. Three fields are **required**; three are **optional** and populated by the decay engine + event-sourced journal documented below.
 
-The `.agent0/hooks/memory-frontmatter-validate.sh` hook fires on Claude `PostToolUse(Edit|Write|MultiEdit)` and Codex `PostToolUse(apply_patch)` for any file under `.agent0/memory/*.md` (except `MEMORY.md`) and emits a non-blocking `memory-frontmatter-advisory:` line to stderr when the entry violates the schema. Always exit 0 — never blocks the edit. Pattern matches `tdd-advisory:` / `lint-advisory:` / `typecheck-advisory:` (see `.claude/rules/delegation.md` § *Advisories*).
+The `.agent0/hooks/memory-frontmatter-validate.sh` hook fires on Claude `PostToolUse(Edit|Write|MultiEdit)` and Codex `PostToolUse(apply_patch)` for any file under `.agent0/memory/*.md` (except `MEMORY.md`) and emits a non-blocking `memory-frontmatter-advisory:` line to stderr when the entry violates the schema. Always exit 0 — never blocks the edit. Pattern matches `tdd-advisory:` / `lint-advisory:` / `typecheck-advisory:` (see `.agent0/context/rules/delegation.md` § *Advisories*).
 
 ### Required fields
 
@@ -159,7 +159,7 @@ A human running `vim .agent0/memory/MEMORY.md && git commit` bypasses the tool-s
 
 - `.agent0/hooks/memory-events-journal.sh` / `.agent0/hooks/memory-index-gate.sh` — implementations
 - `.agent0/tools/memory-project.sh` / `.agent0/tools/memory-backfill.sh` — operator commands
-- `.claude/rules/delegation.md` § *Advisories* / *Audit log* — `memory-journal-advisory:` follows the project advisory grammar; the JSONL shape mirrors `.agent0/delegation-audit.jsonl`
+- `.agent0/context/rules/delegation.md` § *Advisories* / *Audit log* — `memory-journal-advisory:` follows the project advisory grammar; the JSONL shape mirrors `.agent0/delegation-audit.jsonl`
 
 ## Cap / query / decay
 
@@ -219,9 +219,9 @@ Shipped as a starter template. Consumer projects override values directly. Missi
 
 ## Multi-runtime usage
 
-**Operational triggers.** Read `.agent0/memory/MEMORY.md` before work that touches project architecture, first-party capacities, `.claude/rules/`, `.claude/hooks/`, `.claude/skills/`, `.agent0/tools/sync-harness.sh`, `.claude/rules/runtime-capabilities.md`, or `.agent0/memory/`. Follow only relevant entries; ordinary reads do not mutate memory.
+**Operational triggers.** Read `.agent0/memory/MEMORY.md` before work that touches project architecture, first-party capacities, `.agent0/context/rules/`, `.claude/hooks/`, `.claude/skills/`, `.agent0/tools/sync-harness.sh`, `.agent0/context/rules/runtime-capabilities.md`, or `.agent0/memory/`. Follow only relevant entries; ordinary reads do not mutate memory.
 
-**Activation.** Claude Code uses `.claude/settings.json`, which points the four memory hook registrations at `.agent0/hooks/memory-*.sh`. Codex CLI users opt in by copying `.codex/config.toml.example` to `.codex/config.toml`, enabling `[features].hooks = true`, and uncommenting the `SessionStart`, `PreToolUse(apply_patch)`, and `PostToolUse(apply_patch)` memory hook blocks.
+**Activation.** Claude Code uses `.claude/settings.json`, which points the four memory hook registrations at `.agent0/hooks/memory-*.sh`. Codex CLI uses tracked `.codex/hooks.json`, which registers the `SessionStart`, `PreToolUse(apply_patch)`, and `PostToolUse(apply_patch)` memory hooks after the project and changed hooks are trusted.
 
 **Coverage boundary.** Codex v1 parity covers the `apply_patch` edit surface. Arbitrary Codex `Bash` writes can still touch `.agent0/memory/*.md` without reliable path attribution, so they are out of strict hook parity and are caught only by the pre-commit projection backstop or a later projection run. Hook-disabled sessions must run `bash .agent0/tools/memory-maintain.sh finalize <entry-path>` before session end after memory edits; stale readout without hooks is `bash .agent0/tools/memory-query.sh decay --readout`.
 
@@ -245,7 +245,7 @@ The previous version of this rule had only two buckets: project-shared (rules) a
 
 1. **CC-32-hooks discovery.** Claude Code has 32 hook events (not the ~9 commonly cited). That knowledge is project-shared (other Agent0 contributors benefit), NOT a behavioral mandate (it's reference data), and SHOULD NOT ship to consumer projects (consumer projects consume capacities, they don't extend the harness). No existing bucket fit.
 2. **The 2026-05-27 maintainer-rules-to-memory audit (spec 096).** Three rules (`hook-chain-latency.md`, `compaction-continuity.md`, `rule-load-debug.md`) documented capacity internals that only the upstream maintainer ever acts on — budgets to defend when adding a new hook, the PreCompact/SessionStart mechanism to preserve when editing the snapshot pair, opt-in observability for diagnosing path-scoped loads. They were drifting into consumer-project context noise. Moving them to memory removed that drift AND surfaced the criterion the routing tree above now names explicitly. **This is the canonical case for the `move-full` disposition** — entire rule routes to memory because zero consumer-binding content exists.
-3. **The 2026-05-27 borderline-rules-disposition audit (spec 097).** Three rules (`runtime-capabilities.md`, `propagation-advisory.md`, `runtime-introspect.md`) mixed consumer-binding sections (status vocabulary the agent consults, override grammar the agent invokes, probe output shape the agent pattern-matches, env-var contracts the agent honours) with maintainer-binding sections (update rule + drift-check anchors, regex pattern table + shipped-surface set + audit-log policy, env-var extension contract + per-detector inference heuristics + dogfood archaeology). **This is the canonical case for the `split` disposition** — the rule retains its consumer-facing slice at `.claude/rules/<slug>.md`, and a new `.agent0/memory/<slug>-maintenance.md` carries the maintainer-binding companion. The cross-link is one `## Maintenance` section in the rule pointing at the memory entry. Precedent file pair: `.claude/rules/propagation-advisory.md` ↔ `.agent0/memory/propagation-advisory-maintenance.md`.
+3. **The 2026-05-27 borderline-rules-disposition audit (spec 097).** Three rules (`runtime-capabilities.md`, `propagation-advisory.md`, `runtime-introspect.md`) mixed consumer-binding sections (status vocabulary the agent consults, override grammar the agent invokes, probe output shape the agent pattern-matches, env-var contracts the agent honours) with maintainer-binding sections (update rule + drift-check anchors, regex pattern table + shipped-surface set + audit-log policy, env-var extension contract + per-detector inference heuristics + dogfood archaeology). **This is the canonical case for the `split` disposition** — the rule retains its consumer-facing slice at `.agent0/context/rules/<slug>.md`, and a new `.agent0/memory/<slug>-maintenance.md` carries the maintainer-binding companion. The cross-link is one `## Maintenance` section in the rule pointing at the memory entry. Precedent file pair: `.agent0/context/rules/propagation-advisory.md` ↔ `.agent0/memory/propagation-advisory-maintenance.md`.
 
 **The split-vs-move-full criterion for the next borderline audit.** When a rule mixes consumer-binding sections (override grammar, env vars, behavior the agent invokes) with maintainer-binding sections (extension contracts, internal mechanism, drift tooling), the right disposition is **split** into a thin consumer-facing rule + a `<slug>-maintenance.md` memory companion. Move-full only when ZERO consumer-binding content exists. Keep-as-is only when a re-audit shows the MB sections are themselves consumer-relevant (rare — the canonical sign is that the consumer-side agent actively loads the section to inform its own behavior, not the maintainer extending the capacity).
 

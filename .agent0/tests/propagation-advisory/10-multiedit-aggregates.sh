@@ -12,7 +12,7 @@ trap 'rm -rf "$TMPDIR_T"' EXIT
 export CLAUDE_PROJECT_DIR="$TMPDIR_T"
 
 payload="$(jq -n \
-  --arg fp "$TMPDIR_T/.claude/rules/foo.md" \
+  --arg fp "$TMPDIR_T/.agent0/context/rules/foo.md" \
   '{tool_name: "MultiEdit", tool_input: {
     file_path: $fp,
     edits: [

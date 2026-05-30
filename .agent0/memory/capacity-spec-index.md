@@ -12,9 +12,9 @@ metadata:
 
 The design-memory linkage between each Agent0 capacity and the spec(s) that designed it.
 
-**Why this file exists.** CLAUDE.md capacity sections and `.claude/rules/*.md` propagate to forks via sync-harness; `docs/specs/` never does. A `Spec NNN:` citation or a `docs/specs/NNN-*/` pointer inside a propagated file is therefore a dangling reference in every fork. Spec 070 (propagation-hygiene) stripped those pointers from the fork-bound files and relocated the linkage here — `.agent0/memory/` is git-tracked but not in the sync-harness manifest, so this index stays Agent0-internal. An Agent0 maintainer who needs the rationale behind a capacity looks it up here, then reads `docs/specs/NNN-<slug>/`.
+**Why this file exists.** CLAUDE.md capacity sections and `.agent0/context/rules/*.md` propagate to forks via sync-harness; `docs/specs/` never does. A `Spec NNN:` citation or a `docs/specs/NNN-*/` pointer inside a propagated file is therefore a dangling reference in every fork. Spec 070 (propagation-hygiene) stripped those pointers from the fork-bound files and relocated the linkage here — `.agent0/memory/` is git-tracked but not in the sync-harness manifest, so this index stays Agent0-internal. An Agent0 maintainer who needs the rationale behind a capacity looks it up here, then reads `docs/specs/NNN-<slug>/`.
 
-This index is Agent0-internal. Do not cite it from CLAUDE.md or `.claude/rules/*.md` — that would recreate the dangling-pointer flaw (the index does not propagate either). See `.agent0/memory/propagation-hygiene.md` for the discipline.
+This index is Agent0-internal. Do not cite it from CLAUDE.md or `.agent0/context/rules/*.md` — that would recreate the dangling-pointer flaw (the index does not propagate either). See `.agent0/memory/propagation-hygiene.md` for the discipline.
 
 ## Governance & delegation
 

@@ -12,7 +12,7 @@ The size **ceiling** is retired — artifact scope is judged by the quality judg
 |---|---|---|
 | `sitemap.yaml` | 2 KB | below this the sitemap is too sparse — likely missed categories |
 
-A uniform 200 KB catastrophe cap applies per `.claude/rules/artifact-budgets.md`.
+A uniform 200 KB catastrophe cap applies per `.agent0/context/rules/artifact-budgets.md`.
 
 ## Binding schema
 

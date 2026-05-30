@@ -21,7 +21,7 @@ Use `.claude/skills/sdd/templates/{spec,plan,tasks,notes}.md.tmpl` as the base f
 
 ## The umbrella spec — `001-<slug>/spec.md`
 
-Header: `# 001 — <slug>`, `**Status:** draft`, `**Type:** umbrella` (the `Type:` line per `.claude/rules/spec-driven.md` § The four artifacts).
+Header: `# 001 — <slug>`, `**Status:** draft`, `**Type:** umbrella` (the `Type:` line per `.agent0/context/rules/spec-driven.md` § The four artifacts).
 
 Fill each section from the pipeline artifacts:
 
@@ -63,7 +63,7 @@ Infra children are derived from `docs/roadmap.md § Phases § Fase 1 | Deliverab
 
 Every child spec inherits these — state them once in the umbrella's `## Standing constraints` section so each `/sdd new <child>` reads them as the build contract:
 
-- **Styling.** The styling system is whatever `docs/system-design.md § Stack` declares. If Tailwind, then v4 with `@theme` from `docs/design-system/tokens.css` (Next: `app/globals.css` `@import`s `tokens.css` directly; Expo/NativeWind v4: translate to `tailwind.config.js` `theme.extend` because NativeWind 4 cannot consume a v4 `@theme` file directly — NativeWind v5 / Tailwind v4 is pre-release as of 2026-05). If styled-components / vanilla-extract / Panda CSS / etc., the foundation child's `/sdd plan` researches the canonical token-binding pattern for that system and cites sources per `.claude/rules/research-before-proposing.md`. **No inline `style={{}}` for layout or positioning** regardless of styling system — inline style cannot carry a breakpoint and is how mobile-first dies. (A single dynamic value — a computed bar width — is the lone exception.) This closes F1 (mobile-first) and F2 (sanctioned inline style) at the build layer.
+- **Styling.** The styling system is whatever `docs/system-design.md § Stack` declares. If Tailwind, then v4 with `@theme` from `docs/design-system/tokens.css` (Next: `app/globals.css` `@import`s `tokens.css` directly; Expo/NativeWind v4: translate to `tailwind.config.js` `theme.extend` because NativeWind 4 cannot consume a v4 `@theme` file directly — NativeWind v5 / Tailwind v4 is pre-release as of 2026-05). If styled-components / vanilla-extract / Panda CSS / etc., the foundation child's `/sdd plan` researches the canonical token-binding pattern for that system and cites sources per `.agent0/context/rules/research-before-proposing.md`. **No inline `style={{}}` for layout or positioning** regardless of styling system — inline style cannot carry a breakpoint and is how mobile-first dies. (A single dynamic value — a computed bar width — is the lone exception.) This closes F1 (mobile-first) and F2 (sanctioned inline style) at the build layer.
 - **Mobile-first.** Author for the 375 px viewport; layer wider layouts via Tailwind responsive prefixes (`sm:` / `md:` / `lg:`). Every screen reflows with no horizontal overflow at 375 px. The hi-fi mood screens at `docs/screens/hifi/` are the rendered mobile-first reference.
 - **Fixture coherence.** Every screen imports the ONE shared fixture set the foundation child implements as `lib/mock-data.ts` from `docs/fixture-spec.md`. No screen invents its own mock data (closes F9).
 - **Visual verification.** Each child verifies its screens against the atlas + hi-fi mood with the Playwright MCP (seeded into `<out>/.mcp.json` at Phase 0). Screenshot at 375 px + 1280 px; check horizontal overflow.
@@ -81,7 +81,7 @@ Header: `# 002 — foundation`, `**Status:** draft` (no `Type:` line — it is a
   - One route-group directory exists per distinct `chrome` value in `docs/sitemap.yaml`; each has a thin layout shell appropriate to the declared stack.
   - `lib/mock-data.ts` (or the stack-equivalent location identified during research) implements the `docs/fixture-spec.md` entity set.
 - **Non-goals** — the shared chrome *components* (sidebar, topbar, marketing header) — those belong to child #2; the feature screens — those belong to children #3..N.
-- **Context / references** — `docs/system-design.md § Stack` (the binding stack contract — read it BEFORE planning), `docs/sitemap.yaml`, `docs/design-system/tokens.css`, `docs/fixture-spec.md`. **The foundation child's `/sdd plan` runs web research per `.claude/rules/research-before-proposing.md`** to determine the current canonical setup (package manager, framework version pins, config files, dev scripts) for the declared stack; cites sources in `plan.md § Research / citations`. No Agent0-bundled template is consumed — none ships. Scaffold the app at the `<out>/` root (sibling to `docs/`) so the styling system's relative imports of `docs/design-system/tokens.css` resolve.
+- **Context / references** — `docs/system-design.md § Stack` (the binding stack contract — read it BEFORE planning), `docs/sitemap.yaml`, `docs/design-system/tokens.css`, `docs/fixture-spec.md`. **The foundation child's `/sdd plan` runs web research per `.agent0/context/rules/research-before-proposing.md`** to determine the current canonical setup (package manager, framework version pins, config files, dev scripts) for the declared stack; cites sources in `plan.md § Research / citations`. No Agent0-bundled template is consumed — none ships. Scaffold the app at the `<out>/` root (sibling to `docs/`) so the styling system's relative imports of `docs/design-system/tokens.css` resolve.
 
 `plan.md` / `tasks.md` / `notes.md` for child #1 stay as template scaffolds — the founder runs `/sdd plan` then `/sdd tasks` to fill them. (`/product` fills `spec.md` only because intent is the part that derives mechanically from the pipeline artifacts; the *how* is the founder's engineering judgment.)
 
@@ -100,5 +100,5 @@ Phase 5 copies every row from `docs/system-design.md § Trade-off Triggers → O
 ## Cross-references
 
 - `SKILL.md` § Phase 5 — the orchestration body that executes this contract
-- `.claude/rules/spec-driven.md` § The four artifacts — the `**Type:** umbrella` convention
+- `.agent0/context/rules/spec-driven.md` § The four artifacts — the `**Type:** umbrella` convention
 - `.claude/skills/sdd/templates/` — the four template files used as the scaffold base

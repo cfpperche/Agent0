@@ -9,7 +9,7 @@ metadata:
 ---
 # Harness home — where a surface lives
 
-The durable encoding of umbrella spec 102's § Classification principle. It binds the **upstream maintainer** adding or relocating a harness surface; a consumer-side agent in a fork that only consumes (never extends) the harness never consults it, which is why it lives in project memory rather than a shipped `.claude/rules/*` file (per the rule-vs-memory criterion in `.claude/rules/memory-placement.md` § *Routing decision tree* — maintainer-binding, consumer-side agent does not load it).
+The durable encoding of umbrella spec 102's § Classification principle. It binds the **upstream maintainer** adding or relocating a harness surface; a consumer-side agent in a fork that only consumes (never extends) the harness never consults it, which is why it lives in project memory rather than a shipped `.agent0/context/rules/*` file (per the rule-vs-memory criterion in `.agent0/context/rules/memory-placement.md` § *Routing decision tree* — maintainer-binding, consumer-side agent does not load it).
 
 ## The principle
 
@@ -40,10 +40,11 @@ A corollary surfaced by spec 104: **state moves *with* its producer, never ahead
 - **`move` (shipped):** reminders, routines, session-state, runtime-state, browser-state, shared shell tools (103/104/105); validators + tests (118); **`delegation-gate.sh` + `.delegation-state/` + `.brainstorm-state/` (119)**. The hooks and state files are runtime-neutral *files*; only their registration is runtime-specific.
 - **`stays`:** `settings.json` (Claude hook-config format) + `.codex/config.toml` (Codex format) — the registration manifests themselves; the `Agent`-tool delegation *audit log* path is `.agent0/delegation-audit.jsonl` already, but the tool's *semantics* are Claude-only; `.claude/worktrees/` (CC-native `EnterWorktree`). What stays is format-bound or tool-semantic, never "a script with a Claude-only registration".
 - **`move` (shipped, spec 121):** **portable skills** — a skill's canonical body lives at `.agent0/skills/<slug>/SKILL.md` (shared agentskills.io format), with per-runtime *discovery symlinks* `.claude/skills/<slug>` (Claude) + `.agents/skills/<slug>` (Codex) pointing back at it. Textbook location-neutral / registration-per-runtime: both runtimes follow the symlink to one source (proven on Codex 0.135.0 + Claude 2.1.158). `vuln-audit` is the pilot; migration is one-by-one. The "Codex actually consumes skills" trigger fired — Codex `.agents/skills` is a real native discovery path. sync-harness propagates the source + recreates the links (copy-materialization fallback on symlink-hostile checkouts).
-- **`deferred`:** rules, agents, and **`cc-native` skills** — rules because Codex's AGENTS.md instruction surface has no `@import` + a 32 KiB cap (spec 121 pivoted away from rules-first); `cc-native` skills (those bound to `AskUserQuestion` / `${CLAUDE_SKILL_DIR}` with no Codex analogue) stay physically in `.claude/skills/` and are NOT symlinked into `.agents/skills/`. (Note: a skill staying `deferred` does NOT pin its *state output* to `.claude/` — see § Co-location, spec 119's `.brainstorm-state`.)
+- **`move` (shipped, spec 122):** **context rules** — behavioral rule bodies live at `.agent0/context/rules/<slug>.md`; `.agent0/hooks/context-inject.sh` hydrates selected fragments into both runtimes. `.claude/rules/` is no longer a harness-owned source or discovery surface; Claude receives the same Agent0-owned context channel as Codex, with only the registration living in `.claude/settings.json`.
+- **`deferred`:** agents and **`cc-native` skills** — `cc-native` skills (those bound to `AskUserQuestion` / `${CLAUDE_SKILL_DIR}` with no Codex analogue) stay physically in `.claude/skills/` and are NOT symlinked into `.agents/skills/`. (Note: a skill staying `deferred` does NOT pin its *state output* to `.claude/` — see § Co-location, spec 119's `.brainstorm-state`.)
 
 ## Cross-references
 
 - `docs/specs/102-harness-consolidate-agent0/spec.md` § *Classification principle* + § *Gap matrix* — the source umbrella
-- `.claude/rules/memory-placement.md` § *Routing decision tree* — the rule-vs-memory criterion that routes this principle to memory
-- `.claude/rules/harness-sync.md` § *Path relocations (capacity-only)* — the consumer-migration posture when a surface relocates
+- `.agent0/context/rules/memory-placement.md` § *Routing decision tree* — the rule-vs-memory criterion that routes this principle to memory
+- `.agent0/context/rules/harness-sync.md` § *Path relocations (capacity-only)* — the consumer-migration posture when a surface relocates

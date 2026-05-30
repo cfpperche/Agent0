@@ -10,7 +10,7 @@ The size **ceiling** is retired — artifact scope is judged by the quality judg
 |---|---|---|
 | `screen-atlas.md` | 10 KB | below this the 8 contract sections are not at honest depth |
 
-A uniform 200 KB catastrophe cap applies per `.claude/rules/artifact-budgets.md`.
+A uniform 200 KB catastrophe cap applies per `.agent0/context/rules/artifact-budgets.md`.
 
 ## Required sections
 

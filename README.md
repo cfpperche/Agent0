@@ -18,11 +18,11 @@ rm -rf .git && git init
 git remote add origin git@github.com:you/my-new-project.git
 ```
 
-Then open the directory in Claude Code or Codex. Claude Code's `SessionStart` hook will surface `.agent0/HANDOFF.md` and any pending reminders automatically; Codex reads `AGENTS.md` as its native entrypoint and follows the same handoff by convention.
+Then open the directory in Claude Code or Codex. Claude Code's `SessionStart` hook will surface `.agent0/HANDOFF.md` and any pending reminders automatically; Codex reads `AGENTS.md` as its native entrypoint and, after project hook trust, uses tracked `.codex/hooks.json` for the same handoff/context readouts.
 
 ## What you get
 
-Eight capacities are live on `main`. Each one is documented in its own rule file (`.claude/rules/<topic>.md`) and, where it was non-trivial, has a spec under `docs/specs/`.
+Eight capacities are live on `main`. Each one is documented in its own rule file (`.agent0/context/rules/<topic>.md`) and, where it was non-trivial, has a spec under `docs/specs/`.
 
 | Capacity | Mechanism | Rule | Spec |
 | --- | --- | --- | --- |
@@ -69,7 +69,7 @@ Non-trivial work flows through the `/sdd` skill:
 /sdd list           # show all specs
 ```
 
-Mechanical edits (rename, typo, one-file fix) skip `/sdd` and go straight to the change. See `.claude/rules/spec-driven.md` for the full when-to-apply / when-to-skip rules.
+Mechanical edits (rename, typo, one-file fix) skip `/sdd` and go straight to the change. See `.agent0/context/rules/spec-driven.md` for the full when-to-apply / when-to-skip rules.
 
 Future to-dos that don't belong in `.agent0/HANDOFF.md` (in-flight) or memory (knowledge) go to `/remind`:
 
@@ -115,9 +115,9 @@ Future to-dos that don't belong in `.agent0/HANDOFF.md` (in-flight) or memory (k
 
 ## Pointers
 
-- **All behavior rules** live in `.claude/rules/`. Read them in order if you want the full picture; each one is short and self-contained.
+- **All behavior rules** live in `.agent0/context/rules/`. Read them in order if you want the full picture; each one is short and self-contained.
 - **The harness is configurable** through `.claude/settings.json` (hooks, env vars, permissions). The `/update-config` skill is the sanctioned way to mutate it.
-- **Memory routing** (project-shared vs personal vs path-scoped) is documented in `.claude/rules/memory-placement.md`.
+- **Memory routing** (project-shared vs personal vs path-scoped) is documented in `.agent0/context/rules/memory-placement.md`.
 
 ## License
 

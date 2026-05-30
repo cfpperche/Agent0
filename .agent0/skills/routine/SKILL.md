@@ -1,6 +1,6 @@
 ---
 name: routine
-description: Project-scoped recurring routine manager. Use when the user wants to schedule recurring work that the repo's contributors all benefit from ("every quarter audit CC platform changes", "weekly stack defaults snapshot", "monthly dependency drift check"). Distinct from /remind (one-shot deferred) and /schedule (user-account-scoped Anthropic cloud). Subcommands - new <slug>, list, run <slug>, validate <slug>, dismiss <slug>. State lives in .agent0/routines/<slug>.md (git-tracked source of truth) and .agent0/.routines-state/ (gitignored per-machine cache). See .claude/rules/routines.md for discipline.
+description: Project-scoped recurring routine manager. Use when the user wants to schedule recurring work that the repo's contributors all benefit from ("every quarter audit CC platform changes", "weekly stack defaults snapshot", "monthly dependency drift check"). Distinct from /remind (one-shot deferred) and /schedule (user-account-scoped Anthropic cloud). Subcommands - new <slug>, list, run <slug>, validate <slug>, dismiss <slug>. State lives in .agent0/routines/<slug>.md (git-tracked source of truth) and .agent0/.routines-state/ (gitignored per-machine cache). See .agent0/context/rules/routines.md for discipline.
 argument-hint: <new <slug> | list | run <slug> | validate <slug> | dismiss <slug>>
 license: MIT
 compatibility: Designed for Claude Code. Body references `.claude/` conventional paths and CC-specific tools; cron executor + bootstrap scripts are bash + POSIX utilities, portable to any runtime that maps a `.claude/`-analog directory.
@@ -15,7 +15,7 @@ metadata:
 
 Create, list, execute, validate, and dismiss recurring routines for this repo. Routine definitions live in `.agent0/routines/<slug>.md` (git-tracked); cron renders them into `.agent0/.routines-state/<slug>/queue/` (gitignored); the next interactive Claude Code session reads the queue and dispatches each pending routine via this skill.
 
-See `.claude/rules/routines.md` for full discipline, frontmatter reference, cron syntax limits, leader-flag model, and the differences vs `/remind` and `/schedule`.
+See `.agent0/context/rules/routines.md` for full discipline, frontmatter reference, cron syntax limits, leader-flag model, and the differences vs `/remind` and `/schedule`.
 
 ## Argument parsing
 
@@ -58,7 +58,7 @@ Dispatch the oldest pending queue entry for a routine. Parse `$ARGUMENTS`: first
    - `.agent0/.routines-state/<slug>/queue/*.md` is empty (suggest `/routine run` with a different slug, or note that cron hasn't fired yet)
 2. **Pop oldest queue entry** — pick the file with the lowest unix timestamp in the filename (`ls .agent0/.routines-state/<slug>/queue/*.md | sort | head -1`).
 3. **Read the queue file** — it contains the rendered prompt (with `{{LAST_COMPLETED_TS}}` etc. already substituted by `run-routine.sh`). The prompt body is between `# Prompt` and `# Done when` (or EOF if no done-when block).
-4. **Dispatch** — execute the prompt as the next action in this session. The work itself happens here: read the prompt, do what it asks, report back. **You are the executor.** Idempotency discipline (per `.claude/rules/routines.md` § *Idempotency mandate*): re-running this prompt should produce no destructive side effect; that's the routine author's responsibility, not yours.
+4. **Dispatch** — execute the prompt as the next action in this session. The work itself happens here: read the prompt, do what it asks, report back. **You are the executor.** Idempotency discipline (per `.agent0/context/rules/routines.md` § *Idempotency mandate*): re-running this prompt should produce no destructive side effect; that's the routine author's responsibility, not yours.
 5. **Archive** — on dispatch completion, move the queue file:
    ```bash
    mv .agent0/.routines-state/<slug>/queue/<ts>.md .agent0/.routines-state/<slug>/completed/<ts>.md
@@ -73,7 +73,7 @@ Dispatch the oldest pending queue entry for a routine. Parse `$ARGUMENTS`: first
 
 Run the frontmatter + body validator against a routine file. Parse `$ARGUMENTS`: first token must be `validate`, second is the slug.
 
-1. **Invoke**: `bash .agent0/skills/routine/scripts/validate.sh <slug>`. The script checks: frontmatter shape (two `---` markers, line 1 start); required keys (`name`, `schedule`, `idempotent`); `name` matches file basename; `idempotent: true` (hard reject `false` — no override); cron expression matches the 30-line regex (per `.claude/rules/routines.md` § *Cron expression syntax*); body has `# Prompt` and `# Done when` headers.
+1. **Invoke**: `bash .agent0/skills/routine/scripts/validate.sh <slug>`. The script checks: frontmatter shape (two `---` markers, line 1 start); required keys (`name`, `schedule`, `idempotent`); `name` matches file basename; `idempotent: true` (hard reject `false` — no override); cron expression matches the 30-line regex (per `.agent0/context/rules/routines.md` § *Cron expression syntax*); body has `# Prompt` and `# Done when` headers.
 2. **Report**: surface the script's stdout/stderr verbatim. Exit code 0 = pass; 1 = fail with explanation.
 
 Per-check override markers (placed on their own line in the routine body):
@@ -103,12 +103,12 @@ If the first token of `$ARGUMENTS` is missing or not one of `new`, `list`, `run`
 
 ## Notes
 
-_Consumer-extension surface — append consumer-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add consumer bullets at the end. See `.claude/rules/harness-sync.md` § Consumer-extension convention._
+_Consumer-extension surface — append consumer-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add consumer bullets at the end. See `.agent0/context/rules/harness-sync.md` § Consumer-extension convention._
 
 - **Don't auto-stage, don't auto-commit.** `new` writes the file; `git add` is the developer's call. Same discipline as `/remind`.
 - **Routine definitions are git-tracked; state is NOT.** `.agent0/routines/<slug>.md` ships in git; `.agent0/.routines-state/` is gitignored (per-machine). This split is what makes the capacity multi-developer-safe.
 - **Sync-harness propagates the capacity (rule + scripts + skill + hook), NOT instances.** A consumer project that adopts Agent0's harness gets `/routine` for free, but the consumer project's own routines are consumer-local.
 - **Cron registration is separate from routine definition.** `/routine new` creates the file; `.agent0/tools/install-routines.sh` (re-)generates the crontab block. After `new`, the routine is NOT scheduled until install runs.
-- **Idempotency is the routine author's responsibility.** The validator rejects `idempotent: false` in frontmatter, but it can't verify the prompt body is actually idempotent. The 4-layer N-fold defense (per `.claude/rules/routines.md`) catches drift; the routine author writes the guard.
+- **Idempotency is the routine author's responsibility.** The validator rejects `idempotent: false` in frontmatter, but it can't verify the prompt body is actually idempotent. The 4-layer N-fold defense (per `.agent0/context/rules/routines.md`) catches drift; the routine author writes the guard.
 - **`run` dispatches in the current session.** Unlike Phase 2 (autonomous `claude -p`), v1 `run` means "you, the current Claude Code session, do what the routine prompt asks". The session is the executor.
-- See `.claude/rules/routines.md` for the full capacity description, gotchas, and cross-references.
+- See `.agent0/context/rules/routines.md` for the full capacity description, gotchas, and cross-references.

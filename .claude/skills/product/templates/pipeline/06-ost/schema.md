@@ -12,7 +12,7 @@ The size **ceiling** is retired — artifact scope is judged by the quality judg
 |---|---|---|
 | `ost.md` | 3 KB | below this the tree is too thin or solutions too shallow |
 
-A uniform 200 KB catastrophe cap applies per `.claude/rules/artifact-budgets.md`.
+A uniform 200 KB catastrophe cap applies per `.agent0/context/rules/artifact-budgets.md`.
 
 ## Required structure
 

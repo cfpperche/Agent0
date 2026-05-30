@@ -4,7 +4,7 @@
 # `.agent0/hooks/secrets-preflight.sh` (the PreToolUse(Bash) gate that intercepts
 # `git commit`). The discipline — when the scan fires, override grammar,
 # allowlist mechanics, escape hatch, gotchas — is documented in
-# `.claude/rules/secrets-scan.md`. Read that first before editing this file.
+# `.agent0/context/rules/secrets-scan.md`. Read that first before editing this file.
 #
 # `[extend].useDefault = true` inherits gitleaks' built-in detector ruleset
 # (AWS keys, GitHub tokens, private keys, JWTs, etc.). Project-specific
@@ -16,7 +16,7 @@ useDefault = true
 # Singular `[allowlist]` — NOT `[[allowlists]]`. The plural array-of-tables form
 # is silently ignored by gitleaks 8.21.x (it parses without error but the
 # paths/regexes/commits exemptions never apply); do not "modernise" it.
-# See .claude/rules/secrets-scan.md § Allowlist mechanics for grammar.
+# See .agent0/context/rules/secrets-scan.md § Allowlist mechanics for grammar.
 #
 # Two path exemptions, both required by every fork:
 #  1. secrets-scan.md ships synthetic AKIA/ghp fake credentials documenting the
@@ -38,7 +38,7 @@ paths = [
 # during /image skill activation. The `keywords` array is the performance gate
 # (gitleaks only runs the regex on lines containing any of the listed
 # substrings, case-insensitive); the regex matches the canonical fal.ai key
-# shape produced by the dashboard. Cross-reference: .claude/rules/image-gen.md
+# shape produced by the dashboard. Cross-reference: .agent0/context/rules/image-gen.md
 # § Gotchas (fal.ai key shape vs gitleaks default rules).
 [[rules]]
 id = "fal-ai-api-key"

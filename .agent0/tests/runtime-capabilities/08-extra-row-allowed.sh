@@ -13,8 +13,8 @@ TMPDIR="$(mktemp -d -t runtime-capabilities-08-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 runtime_caps_write_valid_fixture "$TMPDIR"
-cat >> "$TMPDIR/.claude/rules/runtime-capabilities.md" <<'EOF'
-| routines | `native` | `convention` | `.claude/rules/routines.md` | extra row |
+cat >> "$TMPDIR/.agent0/context/rules/runtime-capabilities.md" <<'EOF'
+| routines | `native` | `convention` | `.agent0/context/rules/routines.md` | extra row |
 EOF
 
 out="$(bash "$TOOL" --root "$TMPDIR" --skip-sync-check 2>&1)"

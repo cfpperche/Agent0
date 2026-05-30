@@ -1,6 +1,6 @@
 ---
 name: image
-description: AI image generation via fal.ai (opt-in MCP recipe). Use when the user wants to produce a mockup, brand asset, or hero image for the project. Three tiers cover the cost/quality spectrum - draft (FLUX schnell, ~$0.003/img, jpg, throwaway), brand-text (gpt-image-2, $0.04-0.20/img, png, crisp typography), brand-photo (Imagen 4 Ultra, ~$0.06/img, png, photo-real). Tier flag is REQUIRED - omitted tier errors with the three options. Optional --aspect=square|landscape|portrait (default square) sets image_size. Output paths are mechanical (draft → gitignored assets/generated/mockups/, brand-* → tracked assets/brand/), extension matches tier's default content-type. Every call prints estimated cost BEFORE invoking the MCP. Activation - copy fal-ai block from .mcp.json.example, set FAL_KEY env var, restart session. See .claude/rules/image-gen.md.
+description: AI image generation via fal.ai (opt-in MCP recipe). Use when the user wants to produce a mockup, brand asset, or hero image for the project. Three tiers cover the cost/quality spectrum - draft (FLUX schnell, ~$0.003/img, jpg, throwaway), brand-text (gpt-image-2, $0.04-0.20/img, png, crisp typography), brand-photo (Imagen 4 Ultra, ~$0.06/img, png, photo-real). Tier flag is REQUIRED - omitted tier errors with the three options. Optional --aspect=square|landscape|portrait (default square) sets image_size. Output paths are mechanical (draft → gitignored assets/generated/mockups/, brand-* → tracked assets/brand/), extension matches tier's default content-type. Every call prints estimated cost BEFORE invoking the MCP. Activation - copy fal-ai block from .mcp.json.example, set FAL_KEY env var, restart session. See .agent0/context/rules/image-gen.md.
 argument-hint: <--tier=draft|brand-text|brand-photo> [--aspect=square|landscape|portrait] [--name=<slug>] "<prompt>"
 license: MIT
 compatibility: Designed for Claude Code. Body references `.claude/` conventional paths and CC-specific MCP tool invocation; portable to any runtime that surfaces a fal.ai MCP server (official hosted at mcp.fal.ai/mcp, or community packages like piebro/fal-ai-mcp-server). Requires bash + jq; no Python dependency. Network connectivity required (hosted MCP) unless using a stdio community fallback.
@@ -13,7 +13,7 @@ metadata:
 
 Generate images via fal.ai's hosted MCP. Opt-in capacity — consumer projects that don't activate the `fal-ai` recipe in `.mcp.json` pay zero cost. The skill is a thin wrapper: it parses the tier flag, derives the output path, prints the estimated cost, then delegates to the MCP. Cost discipline: every call prints `estimated: $X.XXX for <model> at <resolution>` BEFORE the MCP fires, so a parent agent or human can ctrl-c if the estimate is wrong-shape.
 
-See `.claude/rules/image-gen.md` for the full capacity rule (activation, tier semantics, storage policy, manifest shape, override marker, trust posture, community fallbacks). This SKILL.md documents the invocation surface only.
+See `.agent0/context/rules/image-gen.md` for the full capacity rule (activation, tier semantics, storage policy, manifest shape, override marker, trust posture, community fallbacks). This SKILL.md documents the invocation surface only.
 
 ## Argument parsing
 
@@ -39,7 +39,7 @@ If `--tier` is missing, error with the three-option message:
   --tier=brand-photo premium photo-real (~$0.06/img, Imagen 4 Ultra)
 ```
 
-If `FAL_KEY` is unset OR `.mcp.json` is missing the `fal-ai` block, error with a one-screen message pointing at `.mcp.json.example` and `.claude/rules/image-gen.md` § *Activation*. No silent fallback.
+If `FAL_KEY` is unset OR `.mcp.json` is missing the `fal-ai` block, error with a one-screen message pointing at `.mcp.json.example` and `.agent0/context/rules/image-gen.md` § *Activation*. No silent fallback.
 
 ## Invocation flow
 
@@ -94,17 +94,17 @@ The 3-stage shape is deliberate — generation is the network-bound step, `prepa
 
 ## Cross-references
 
-- `.claude/rules/image-gen.md` — capacity rule (activation, semantics, gotchas, community fallbacks)
+- `.agent0/context/rules/image-gen.md` — capacity rule (activation, semantics, gotchas, community fallbacks)
 - `.claude/skills/image/references/tier-pricing.md` — static cost table (refresh quarterly)
 - `.claude/skills/image/scripts/gen.sh` — runtime helper
 - `.mcp.json.example` / `.codex/config.toml.example` — `fal-ai` MCP server block (HTTP transport, `bearer_token_env_var = "FAL_KEY"`)
 
 ## Notes
 
-_Consumer-extension surface — append consumer-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add consumer bullets at the end. See `.claude/rules/harness-sync.md` § Consumer-extension convention._
+_Consumer-extension surface — append consumer-local bullets to this section. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add consumer bullets at the end. See `.agent0/context/rules/harness-sync.md` § Consumer-extension convention._
 
 - **Hybrid MCP + REST architecture.** The `.mcp.json` fal-ai recipe (optional now) covers discovery tools — `mcp__fal-ai__search_models`, `get_model_schema`, `get_pricing`, `recommend_model` — which the agent uses to pick the right tier intelligently. Generation routes through `gen.sh exec` (curl POST to `https://fal.run/<model>`) instead of `mcp__fal-ai__run_model`. The split exists because the hosted MCP's generation path was empirically diagnosed broken on 2026-05-25 (hangs ≥990s on gpt-image-2; CC client mis-renders the timeout as "user rejected"). See spec 088 for the full diagnosis. Consumer projects without the MCP recipe still get full generation capability — only discovery is unavailable.
-- **Brand-tier prompts should compose from a consumer-local brand contract** (e.g. `docs/brand/styleguide.md`), not be ad-hoc. Image generators drift toward the stock median for vague prompts ("a banner" → generic SaaS banner, not your brand); the contract turns prompt-writing into transcription and makes drift visible at the contract level instead of at the asset. If your consumer project has no contract document, the prompt is ad-hoc — flag this in the call summary. `draft` tier is exempt. See `.claude/rules/image-gen.md` § *Brand-tier prompt composition*.
+- **Brand-tier prompts should compose from a consumer-local brand contract** (e.g. `docs/brand/styleguide.md`), not be ad-hoc. Image generators drift toward the stock median for vague prompts ("a banner" → generic SaaS banner, not your brand); the contract turns prompt-writing into transcription and makes drift visible at the contract level instead of at the asset. If your consumer project has no contract document, the prompt is ad-hoc — flag this in the call summary. `draft` tier is exempt. See `.agent0/context/rules/image-gen.md` § *Brand-tier prompt composition*.
 - The skill does NOT integrate with `/product` or `/prototype` in v1. Standalone — user invokes explicitly. Cross-skill coupling is deferred until either skill explicitly asks for image-gen.
 - The skill does NOT enforce per-session cost budgets in v1. Pre-call cost printing is the only signal. Add a counter if empirical sub-agent drift surfaces.
 - The skill does NOT cache prompt → output mappings. Every call hits fal.run. Deduplication is the user's responsibility.

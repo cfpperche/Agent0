@@ -1,4 +1,4 @@
-# Agent0 - Codex MCP recipes + optional hooks
+# Agent0 - Codex MCP recipes + local config template
 #
 # This is NOT a complete Codex project config and Agent0
 # does not own model, provider, sandbox, approval, or tool-permission defaults.
@@ -10,133 +10,13 @@
 #   4. Start Codex with: bash .agent0/tools/codex-local-env.sh
 #      Or export the required env vars before running codex directly.
 #
-# Full recipe docs: .claude/rules/mcp-recipes.md
+# MCP recipes are copy-paste templates only. Consult each upstream MCP README
+# before enabling a block.
 #
-# Optional Agent0 hooks:
-#   Uncomment the [features] + [[hooks.*]] block below after copying this file
-#   to .codex/config.toml and trusting repo-local hooks. The commands resolve
-#   from the git root because Codex may start in a subdirectory.
-
-# [features]
-# hooks = true
-
-# [[hooks.SessionStart]]
-# matcher = "startup|resume|clear|compact"
-# [[hooks.SessionStart.hooks]]
-# type = "command"
-# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/session-start.sh"'
-# statusMessage = "Reading session handoff"
-
-# [[hooks.SessionStart]]
-# matcher = "startup|resume|clear|compact"
-# [[hooks.SessionStart.hooks]]
-# type = "command"
-# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/memory-decay-readout.sh"'
-# statusMessage = "Reading project-memory decay"
-
-# [[hooks.SessionStart]]
-# matcher = "startup|resume|clear|compact"
-# [[hooks.SessionStart.hooks]]
-# type = "command"
-# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/reminders-readout.sh"'
-# statusMessage = "Reading reminders"
-
-# [[hooks.SessionStart]]
-# matcher = "startup|resume|clear|compact"
-# [[hooks.SessionStart.hooks]]
-# type = "command"
-# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/routines-readout.sh"'
-# statusMessage = "Reading routine queue"
-
-# [[hooks.Stop]]
-# [[hooks.Stop.hooks]]
-# type = "command"
-# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/session-stop.sh"'
-# statusMessage = "Checking session handoff"
-
-# [[hooks.PostToolUse]]
-# matcher = "^apply_patch$"
-# [[hooks.PostToolUse.hooks]]
-# type = "command"
-# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/session-track-edits.sh"'
-# statusMessage = "Tracking session edits"
-
-# [[hooks.PreToolUse]]
-# matcher = "^apply_patch$"
-# [[hooks.PreToolUse.hooks]]
-# type = "command"
-# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/memory-index-gate.sh"'
-# statusMessage = "Checking project-memory index"
-
-# [[hooks.PostToolUse]]
-# matcher = "^apply_patch$"
-# [[hooks.PostToolUse.hooks]]
-# type = "command"
-# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/memory-frontmatter-validate.sh"'
-# statusMessage = "Validating project-memory frontmatter"
-# [[hooks.PostToolUse.hooks]]
-# type = "command"
-# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/memory-events-journal.sh"'
-# statusMessage = "Projecting project-memory index"
-
-# Governance safety floor (spec 107). PreToolUse(Bash) blocks common-obvious
-# destructive ops (rm -r+-f, git push --force, reset --hard, clean -fdx,
-# whole-tree checkout/restore), hook bypass (--no-verify), and blanket staging.
-# Identical block semantics on Codex (reads only tool_input.command). Override:
-# `# OVERRIDE: <reason ≥10 chars>`. Speed-bump, not a sandbox.
-# [[hooks.PreToolUse]]
-# matcher = "^Bash$"
-# [[hooks.PreToolUse.hooks]]
-# type = "command"
-# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/governance-gate.sh"'
-# statusMessage = "Checking destructive-op safety floor"
-
-# Secrets preflight shape-gate (spec 108). PreToolUse(Bash) gates dangerous
-# git-commit shapes (compound `&& git commit`, `; git commit`, `git commit -a`,
-# `--no-verify`) and bridges the `# OVERRIDE: <reason ≥10 chars>` marker to the
-# native .githooks/pre-commit gitleaks scanner. It does NOT run gitleaks itself.
-# Block semantics are identical to Claude (exit 2, reads tool_input.command).
-# On override it emits `permissionDecision:"allow"` + `updatedInput` (Codex
-# requires both to honor the rewrite). NOTE the broad `^Bash$` matcher (Codex
-# has no command-string `if` layer) — the hook short-circuits silently on
-# non-commit Bash, so it does not flood .agent0/secrets-audit.jsonl.
-# [[hooks.PreToolUse]]
-# matcher = "^Bash$"
-# [[hooks.PreToolUse.hooks]]
-# type = "command"
-# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/secrets-preflight.sh"'
-# statusMessage = "Checking commit-shape + secrets-scan override"
-
-# Delegation observability (spec 106). SubagentStart audits the dispatch
-# (non-blocking — Codex cannot block a spawn); SubagentStop appends the close
-# row. Both write the single canonical .agent0/delegation-audit.jsonl. The
-# 5-field handoff discipline itself is convention-only on Codex (no hook
-# enforces it — see .claude/rules/delegation.md § Codex: convention-only).
-# [[hooks.SubagentStart]]
-# [[hooks.SubagentStart.hooks]]
-# type = "command"
-# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/delegation-start-audit.sh"'
-# statusMessage = "Auditing subagent dispatch"
-
-# Delegated-task verification (spec 111). SubagentStop runs the project
-# validator once at delegated-task close, keyed by agent_id. On failure it
-# blocks closure via decision:"block"/exit-2 (Codex continues the subagent for
-# one focused pass); a second failing stop (stop_hook_active) is accepted as a
-# partial result. Runs in PARALLEL with delegation-stop.sh (Codex runs all
-# matching SubagentStop hooks); they coordinate via the consecutive_failures
-# counter file, not ordering. Fail-open. Replaces the removed per-edit
-# post-edit-validate.sh. See .claude/rules/delegation.md § Post-edit validator loop.
-# [[hooks.SubagentStop]]
-# [[hooks.SubagentStop.hooks]]
-# type = "command"
-# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/delegation-verify.sh"'
-# statusMessage = "Verifying delegated task at close"
-
-# [[hooks.SubagentStop]]
-# [[hooks.SubagentStop.hooks]]
-# type = "command"
-# command = 'bash "$(git rev-parse --show-toplevel)/.agent0/hooks/delegation-stop.sh"'
-# statusMessage = "Closing delegation audit row"
+# Agent0 lifecycle hooks ship as tracked project config in .codex/hooks.json.
+# Codex will ask the user to review/trust project hooks on first launch after
+# this file changes. Keep .codex/config.toml for local preferences and MCP
+# recipes; do not duplicate Agent0 hooks inline here.
 
 [mcp_servers.playwright]
 enabled = false

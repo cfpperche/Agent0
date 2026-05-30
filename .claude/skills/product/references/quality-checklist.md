@@ -147,4 +147,4 @@ If the Playwright MCP is loaded this session, each `docs/screens/hifi/*.html` is
 - `templates/pipeline/<NN-step>/schema.md § Size floor` — the structural Layer 1 anchors + the `min_size` anti-stub floor
 - `delegation-briefs.md § quality-judge` — the judge sub-agent's 5-field brief
 - `state-machine.md` — `.state.json` `quality_verdicts`, the phase gates the routing feeds
-- `.claude/rules/artifact-budgets.md` — why size is no longer a criterion (the 200 KB catastrophe cap)
+- `.agent0/context/rules/artifact-budgets.md` — why size is no longer a criterion (the 200 KB catastrophe cap)

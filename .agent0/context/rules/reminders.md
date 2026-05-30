@@ -65,8 +65,8 @@ The helper validates required fields and enums at write-time. Schema does NOT li
 
 ## What NOT to put here
 
-- **Knowledge.** Facts ("the prod DB lives at host X"), conventions ("we use kebab-case for slugs"), decisions ("we picked PG over MySQL because…") belong in memory — `MEMORY.md` for personal, `.claude/rules/<topic>.md` for project-shared. See `.claude/rules/memory-placement.md`.
-- **In-flight work.** Active work that needs finishing next session belongs in `.agent0/HANDOFF.md`. See `.claude/rules/session-handoff.md`.
+- **Knowledge.** Facts ("the prod DB lives at host X"), conventions ("we use kebab-case for slugs"), decisions ("we picked PG over MySQL because…") belong in memory — `MEMORY.md` for personal, `.agent0/context/rules/<topic>.md` for project-shared. See `.agent0/context/rules/memory-placement.md`.
+- **In-flight work.** Active work that needs finishing next session belongs in `.agent0/HANDOFF.md`. See `.agent0/context/rules/session-handoff.md`.
 - **One-file fixes.** If the work fits in two lines, just do it now — don't queue a reminder.
 - **Tracked issues.** Reminders are a project-shared scratchpad with a single git-tracked source. Items that need collaborators or public discussion belong in the project's issue tracker, not here.
 
@@ -74,7 +74,7 @@ The helper validates required fields and enums at write-time. Schema does NOT li
 
 - **No auto-stage, no auto-commit.** `add` / `done` / `snooze` / `dismiss` leave the file dirty in the working tree. The founder reviews `git diff` before history is written.
 - **Soft-delete is the default.** `/remind done <id>` flips `status: done` and stamps `completed_ts`. The entry stays in `reminders.yaml` so the audit history is in-band (no need to `git log -- .agent0/reminders.yaml` to recover what was dismissed). Trade-off: monotonic file growth. A `/remind prune` subcommand is deferred until growth becomes real friction (rule-of-three demand test).
-- **`check_command` is never autonomous.** The readout hook surfaces `check_command` text inline but never runs it. Execution happens only via explicit `/remind check <id>`, which prints the command's stdout/stderr/exit-code to the agent and leaves the YAML untouched. The human-in-loop decides next action. This preserves the contract-not-promise discipline; see `.claude/rules/delegation.md` § Why DONE_WHEN exists.
+- **`check_command` is never autonomous.** The readout hook surfaces `check_command` text inline but never runs it. Execution happens only via explicit `/remind check <id>`, which prints the command's stdout/stderr/exit-code to the agent and leaves the YAML untouched. The human-in-loop decides next action. This preserves the contract-not-promise discipline; see `.agent0/context/rules/delegation.md` § Why DONE_WHEN exists.
 - **Positions are not stable IDs.** Pattern is "list, then act on the position you see right now". Stable IDs (`r-YYYY-MM-DD-<slug>`) are the canonical identifier in storage; positions are a UX convenience that resolves to IDs at command time. The skill body always logs the resolved ID in its report so the user can confirm.
 - **Insertion order is the diff contract.** The helper uses `yaml.safe_dump(..., sort_keys=False)` so adds append to the end and field order within a record is preserved. Hand-edits with other YAML tools (that re-sort alphabetically) will pollute git diffs — re-run through the helper to normalize.
 - **Override marker** — mirroring the project's other gates: a line `# OVERRIDE: <reason ≥10 chars>` in commit context is the audit trail for any direct YAML edit that bypasses the helper. Not enforced by a hook in v1 (no `PreToolUse(Edit)` gate on `.agent0/reminders.yaml`); it's a convention for review.
@@ -98,6 +98,6 @@ The helper validates required fields and enums at write-time. Schema does NOT li
 
 ## Cross-references
 
-- `.claude/rules/memory-placement.md` — 3-bucket model (this file is the canonical reminder spec sibling)
-- `.claude/rules/session-handoff.md` — `.agent0/HANDOFF.md` discipline
-- `.claude/rules/delegation.md` § Why DONE_WHEN exists — contract-not-promise (informs no-autonomous-check rule)
+- `.agent0/context/rules/memory-placement.md` — 3-bucket model (this file is the canonical reminder spec sibling)
+- `.agent0/context/rules/session-handoff.md` — `.agent0/HANDOFF.md` discipline
+- `.agent0/context/rules/delegation.md` § Why DONE_WHEN exists — contract-not-promise (informs no-autonomous-check rule)

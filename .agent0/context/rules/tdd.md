@@ -22,11 +22,11 @@ When the change spans both prod and test, write the test first even when the pro
 
 ## When to skip
 
-Same as `.claude/rules/spec-driven.md` § *When to skip*, plus comment-only edits and dependency bumps without behavior change. The SDD skip list is the source of truth — do not duplicate it here; if it grows, this rule inherits the change.
+Same as `.agent0/context/rules/spec-driven.md` § *When to skip*, plus comment-only edits and dependency bumps without behavior change. The SDD skip list is the source of truth — do not duplicate it here; if it grows, this rule inherits the change.
 
 ## From scenarios to tests
 
-BDD scenarios in `spec.md` (see `.claude/rules/spec-driven.md` § *Acceptance scenarios*) describe observable behavior in Given/When/Then prose. TDD test names mirror those scenarios verbatim, so the bridge from spec to executable test is mechanical. A scenario titled `**Scenario: foo when bar**` becomes:
+BDD scenarios in `spec.md` (see `.agent0/context/rules/spec-driven.md` § *Acceptance scenarios*) describe observable behavior in Given/When/Then prose. TDD test names mirror those scenarios verbatim, so the bridge from spec to executable test is mechanical. A scenario titled `**Scenario: foo when bar**` becomes:
 
 ```
 test('foo when bar', ...)        // JS / TS — jest, vitest, etc.
@@ -49,7 +49,7 @@ The advisory message names the prod files that triggered it (the `files` field o
 
 Same shape as the governance and delegation gates (see `.agent0/hooks/governance-gate.sh`): a line `# OVERRIDE: <reason ≥10 chars>` in the brief or commit context. By convention for TDD-exempt work, the reason text starts with `tdd-exempt:` so reviewers can grep the audit log for deliberate skips — for example `# OVERRIDE: tdd-exempt: rename only, no behavior change`. The prefix is a soft, human-readable convention; no script parses it.
 
-The validator may still emit the advisory because the heuristic is purely diff-shape — it does not read commit messages or briefs. That is fine. The override marker plus the recorded reason in the delegation audit log (`override` field on the dispatch entry, see `.claude/rules/delegation.md` § *Audit log*) is the documentation that the warning was deliberate. Reviewers correlate the two when auditing — match a `tdd-advisory:` in session output against the `tdd-exempt:` reason in the audit row, confirm the decision was made consciously, move on.
+The validator may still emit the advisory because the heuristic is purely diff-shape — it does not read commit messages or briefs. That is fine. The override marker plus the recorded reason in the delegation audit log (`override` field on the dispatch entry, see `.agent0/context/rules/delegation.md` § *Audit log*) is the documentation that the warning was deliberate. Reviewers correlate the two when auditing — match a `tdd-advisory:` in session output against the `tdd-exempt:` reason in the audit row, confirm the decision was made consciously, move on.
 
 ## Gotchas
 
@@ -57,4 +57,4 @@ The validator may still emit the advisory because the heuristic is purely diff-s
 - **`CLAUDE_TDD_TEST_PATTERNS` overrides the language defaults.** Set to a space-separated list of globs when the project's test naming does not match the built-in table (e.g., `Foo.tests.ts` next to source, or `spec/` instead of `tests/`). When set, the env var fully replaces the per-language defaults — include every pattern the project considers a test file, not just the additions, otherwise the default table is gone and ordinary `*.test.ts` files start being classified as prod.
 - **The validator is inert in this base repo.** No language stack is detected, so no warnings fire. The discipline ships dormant; it activates as soon as a real project plugs in a stack.
 - **No git repo, no warning.** If `git rev-parse --git-dir` fails, the validator skips the diff classification entirely. Acceptable for throwaway scratch dirs; do not rely on it as a way to silence the advisory in real projects.
-- **The advisory does not gate the loop-budget counter.** The post-edit validator's consecutive-failure counter (see `.claude/rules/delegation.md` § *Post-edit validator loop*) only increments on `ok=false`. A persistent `tdd-advisory:` stream will not trip the budget — it remains a soft signal even when repeated. Treat repeated advisories as a habit problem, not a tooling failure.
+- **The advisory does not gate the loop-budget counter.** The post-edit validator's consecutive-failure counter (see `.agent0/context/rules/delegation.md` § *Post-edit validator loop*) only increments on `ok=false`. A persistent `tdd-advisory:` stream will not trip the budget — it remains a soft signal even when repeated. Treat repeated advisories as a habit problem, not a tooling failure.

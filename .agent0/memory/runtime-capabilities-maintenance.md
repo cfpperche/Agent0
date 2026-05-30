@@ -9,11 +9,11 @@ metadata:
 ---
 # Runtime capabilities maintenance
 
-Maintainer-binding companion to `.claude/rules/runtime-capabilities.md`. The companion rule carries the status vocabulary + the capability matrix consumers consult; this memory carries the discipline the upstream maintainer applies when changing runtime support for a capability or when wiring the drift check.
+Maintainer-binding companion to `.agent0/context/rules/runtime-capabilities.md`. The companion rule carries the status vocabulary + the capability matrix consumers consult; this memory carries the discipline the upstream maintainer applies when changing runtime support for a capability or when wiring the drift check.
 
 ## Update rule
 
-Every future spec that changes runtime support for a capability must update `.claude/rules/runtime-capabilities.md` in the same change. New capability rows may be added without expanding the drift check's minimum-required-labels set; that set grows only when a follow-up spec explicitly promotes a row to the minimum.
+Every future spec that changes runtime support for a capability must update `.agent0/context/rules/runtime-capabilities.md` in the same change. New capability rows may be added without expanding the drift check's minimum-required-labels set; that set grows only when a follow-up spec explicitly promotes a row to the minimum.
 
 ## Drift enforcement
 
@@ -33,7 +33,7 @@ Extra rows are permitted. Duplicate minimum-set rows are drift.
 
 ## Cross-references
 
-- `.claude/rules/runtime-capabilities.md` — consumer-facing companion (status vocabulary + matrix + future-runtimes placeholders)
+- `.agent0/context/rules/runtime-capabilities.md` — consumer-facing companion (status vocabulary + matrix + future-runtimes placeholders)
 - `.agent0/tools/check-instruction-drift.sh` — the drift enforcement implementation
 - `docs/specs/093-runtime-capability-registry/spec.md` § *Scenario: users can inspect one canonical capability matrix* — the source of truth for the minimum-set list embedded in the drift checker
 - `.claude/skills/skill/references/portability-tiers.md` — the separate skill-portability axis

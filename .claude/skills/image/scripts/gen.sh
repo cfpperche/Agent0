@@ -13,7 +13,7 @@
 # "do everything" invocation. The SKILL.md body coordinates the agent.
 #
 # Reference:
-#   .claude/rules/image-gen.md                       — capacity rule
+#   .agent0/context/rules/image-gen.md                       — capacity rule
 #   .claude/skills/image/SKILL.md                    — invocation surface
 #   .claude/skills/image/references/tier-pricing.md  — static cost table
 
@@ -78,7 +78,7 @@ Activation steps:
   3. cp .mcp.json.example .mcp.json (if not done) and uncomment the fal-ai block
   4. Restart the Claude Code session (MCPs load at session start)
 
-See .claude/rules/image-gen.md § Activation for the full workflow.
+See .agent0/context/rules/image-gen.md § Activation for the full workflow.
 EOF
   exit 2
 }
@@ -470,7 +470,7 @@ Subcommands:
     values forwarded.
 
 See .claude/skills/image/SKILL.md for the full invocation flow and
-.claude/rules/image-gen.md for the capacity rule.
+.agent0/context/rules/image-gen.md for the capacity rule.
 EOF
     [ -z "${1:-}" ] && exit 2 || exit 0
     ;;

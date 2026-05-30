@@ -8,13 +8,13 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 
 ## Current State
 
-**Spec 126 — site-refactor: debate converged + SDD progressed through tasks; ready to implement.** The
-Claude×Codex debate reached `Resolution: converged` and **reversed the original premise** — the user resolved
-the identity gate to **OSS-project landing for developers** (not a consultancy/outcomes pivot), so "the harness
-for AI coding agents" is an honest category, not a defect. Synthesis applied to `spec.md` (new § Resolved
-decisions + rewritten Intent/Acceptance/Non-goals); `plan.md` + `tasks.md` drafted (5 phases, content/positioning
-is the gate). Spec `Status: in-progress`. Implementation has NOT started — Phase 0 (baseline + inventory audit)
-is task 1.
+**Spec 126 — site-refactor: shipped (19/19 tasks, all 5 phases).** The Claude×Codex debate reversed the original
+premise → resolved to an **OSS-project landing for developers** (harness framing is honest, no consultancy pivot).
+Implemented in `site/`: capacities.ts rewritten to the real 23-capacity set (count now derives from
+`CAPACITIES.length`), multi-runtime truth (Claude + Codex), stale refs fixed (SESSION.md→HANDOFF.md, removed-cap
+mentions), og:image PNG generated + wired, instant root redirect (was 2s). Build green, 3 locales lockstep, zero
+stale strings. Spec `Status: shipped`. **Only OQ5 stays open** (bolder visual/brand direction — user-owned,
+non-blocking); the design system criterion is met by the existing token architecture + a hero brand-accent.
 
 **Spec 125 — hook-context-visual-polish remains shipped.** `▸` is the accepted flatten-safe marker in
 `startup-brief.sh` and `context-inject.sh`; context-injection tests were green 13/13. Spec 124 stays shipped
@@ -28,13 +28,11 @@ _No active parallel-work claims. Spec 126 is planned and awaiting implementation
 
 ## Next Actions
 
-1. **Implement spec 126, Phase 0 first** (`docs/specs/126-site-refactor/tasks.md` tasks 1–3): verify a runnable
-   Lighthouse/audit command, capture the baseline artifact for `/en/`,`/pt/`,`/es/`, and audit the real
-   capacity/MCP inventory (copy says "Eighteen", `capacities.ts` has ~14, repo ships 20+). Phase 1
-   (content/positioning) is the gate — its copy must be approved before Phase 2 visual work.
-2. **Open visual/brand OQ** (spec 126 § Open questions) at Phase 2: align to a `/product` or `/image` brand
-   artifact, or run visual discovery. Non-blocking for Phase 0/1.
-3. Optional older cleanup: rebuild `site/dist/` if desired (gitignored; deploy is GitHub Pages).
+1. **Spec 126 OQ5 (optional, user-owned):** decide bolder visual/brand direction — align to a `/product` or
+   `/image` brand artifact, or run visual discovery — then iterate `site/` visuals. Non-blocking; current site
+   is coherent and shipped.
+2. **Deploy:** the GitHub Pages action publishes `site/` (`cfpperche.github.io/Agent0/`); confirm the next
+   push/CI run picks up the 126 changes. Capture live Lighthouse numbers there (Chrome wouldn't connect in WSL).
 
 ## Decisions & Gotchas
 

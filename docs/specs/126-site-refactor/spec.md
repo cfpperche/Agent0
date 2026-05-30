@@ -2,7 +2,7 @@
 
 _Created 2026-05-30._
 
-**Status:** in-progress
+**Status:** shipped
 
 ## Resolved decisions (debate 126 gate — 2026-05-30)
 
@@ -21,48 +21,48 @@ Complete, **in-place** refactor of the Agent0 marketing site (`site/` — Astro 
 
 _Observable outcomes, written to the resolved OSS-landing-for-developers branch. The model-visible / build contract must not regress._
 
-- [ ] **Scenario: Root canonicalizes to a locale correctly**
+- [x] **Scenario: Root canonicalizes to a locale correctly**
   - **Given** a visitor hits the site root (`/Agent0/`)
   - **When** the page loads
   - **Then** it redirects/canonicalizes to a locale entry (`/en/`) without rendering a broken or blank intermediate
 
-- [ ] **Scenario: Each locale hero states developer value accurately**
+- [x] **Scenario: Each locale hero states developer value accurately**
   - **Given** any locale page (`/en/`, `/pt/`, `/es/`)
   - **When** a developer reads the hero
   - **Then** it clearly states what Agent0 does *for them* (the governance/discipline value of the harness), with no stale or unverifiable claim — "harness" framing is allowed and expected
 
-- [ ] **Scenario: The capacity / MCP inventory is current**
+- [x] **Scenario: The capacity / MCP inventory is current**
   - **Given** the refactored page
   - **When** the capacity/MCP sections render
   - **Then** the counts and contents match the repo's real, multi-runtime-accurate state — the dead "Eighteen capacities" magic number is gone
 
-- [ ] **Scenario: Claim classes are enforced**
+- [x] **Scenario: Claim classes are enforced**
   - **Given** all shipped copy
   - **When** reviewed
   - **Then** capability claims cite a real basis (repo specs / dogfood / hooks / tests) and **no business-result metric claim** (delivery time, incident rate, revenue) ships — unsubstantiated copy is cut on contract
 
-- [ ] **Scenario: All locales refactored in lockstep**
+- [x] **Scenario: All locales refactored in lockstep**
   - **Given** the three content surfaces (`/en/`, `/pt/`, `/es/`) + root redirect
   - **When** the new copy/structure ships
   - **Then** every locale carries it with no untranslated fallback across the three `strings.ts` entries; no locale-specific regression
 
-- [ ] **Scenario: Build + stack preserved**
+- [x] **Scenario: Build + stack preserved**
   - **Given** the in-place constraint
   - **When** `bun run build` runs in `site/`
   - **Then** it succeeds on the existing Astro 5 + Tailwind 4 toolchain with no stack swap
 
-- [ ] **Scenario: Non-functional quality does not regress against a named baseline**
+- [x] **Scenario: Non-functional quality does not regress against a named baseline**
   - **Given** a pre-refactor baseline artifact captured before work starts (recorded in `notes.md` or a small audit file: exact URLs `/en/`,`/pt/`,`/es/`, tool/command, viewport, pass/fail thresholds)
   - **When** the refactor ships
   - **Then** performance, SEO meta/OG (including resolving the current missing `og:image`, with `twitter:card` already `summary_large_image`), and a11y (contrast, semantics) are equal-or-better against that baseline
 
-- [ ] **Scenario: Phase boundary is observed**
+- [x] **Scenario: Phase boundary is observed**
   - **Given** the four-axis scope in one phased spec
   - **When** work proceeds
   - **Then** content/positioning (copy architecture for the dev audience) is approved before visual/code refactor starts; perf/SEO/a11y is checked as a guardrail throughout
 
-- [ ] Visual redesign is expressed as a coherent, reusable design system (tokens/components), not ad-hoc per-section styling; IA/component restructure **is in scope** for this "complete" refactor
-- [ ] `dist/` is gitignored local-verification output (not a tracked deliverable); the deploy target is GitHub Pages (`cfpperche.github.io/Agent0/`)
+- [x] Visual redesign is expressed as a coherent, reusable design system (tokens/components), not ad-hoc per-section styling; IA/component restructure **is in scope** for this "complete" refactor
+- [x] `dist/` is gitignored local-verification output (not a tracked deliverable); the deploy target is GitHub Pages (`cfpperche.github.io/Agent0/`)
 
 ## Non-goals
 

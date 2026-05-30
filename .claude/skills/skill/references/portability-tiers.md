@@ -121,3 +121,19 @@ Evidence (2026-05-17, Phase C task #11, via claude-code-guide agent):
 Since the agentskills.io spec does not explicitly forbid unknown top-level keys (the 6 documented fields are the *defined* set, not an *exhaustive* set), keeping `argument-hint:` at top-level is dual-correct: CC renders it; other runtimes that strictly validate the 6 spec fields ignore it harmlessly; validators that whitelist-reject unknown keys would be over-strict per common YAML-frontmatter convention and are not represented in the current 40+ agentskills.io runtimes surveyed.
 
 The port operation in `scripts/port-frontmatter.sh` therefore leaves `argument-hint:` untouched at top-level when it encounters it.
+
+## Per-skill multi-runtime migration runbook (spec 121)
+
+To make a skill consumable by both Claude Code and Codex CLI, relocate its body to the canonical
+`.agent0/skills/<slug>/` home and register a discovery symlink per runtime. Checklist:
+
+1. **Classify the tier.** `cc-native` (uses `AskUserQuestion`, `${CLAUDE_SKILL_DIR}`, or the `Skill`-tool invocation model with no Codex analogue) → **does not migrate**; stays physically in `.claude/skills/<slug>/`. `agentskills-portable` / `runtime-agnostic` → proceed.
+2. **Neutralize CC-only primitives.** Route deterministic work through `.agent0/tools/*` (Codex shells out the same way); resolve bundled resources **relative to the SKILL.md path**, never via `${CLAUDE_SKILL_DIR}` (removed in Codex). If an `AskUserQuestion` gate is essential and can't degrade to plain-prose questions, the skill is `cc-native` — stop.
+3. **Move the source:** `git mv .claude/skills/<slug>/SKILL.md .agent0/skills/<slug>/SKILL.md` (+ any `scripts/`/`references/`/`assets/`); remove the now-empty `.claude/skills/<slug>/`.
+4. **Create relative discovery symlinks:** `.claude/skills/<slug>` → `../../.agent0/skills/<slug>` and `.agents/skills/<slug>` → `../../.agent0/skills/<slug>`.
+5. **Optional `agents/openai.yaml`:** add only when Codex UI metadata, MCP dependencies, or `policy.allow_implicit_invocation` control is needed — broad skills set `allow_implicit_invocation: false` (default is true) so they fire only on explicit `/skills` / `$<slug>`.
+6. **Verify both runtimes:** Claude discovers via `.claude/skills/` + `Skill` tool; Codex via `codex debug prompt-input` listing `.agents/skills/<slug>` + explicit `$<slug>` (implicit invocation tested separately). Confirm both resolve to the one canonical `SKILL.md`.
+
+sync-harness propagation of the model (manifest entries, the `sync_skill_discovery_links` pass, the
+symlink-hostile copy fallback) is documented in `.claude/rules/harness-sync.md` § *Skill discovery-link
+propagation*. `vuln-audit` is the reference migration (spec 121).

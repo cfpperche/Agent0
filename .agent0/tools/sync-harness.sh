@@ -172,6 +172,7 @@ MANIFEST_TSV="$(mktemp -t sync-manifest-XXXXXX)"
 # Recursive globs (find -type f under base dir) — encoded as "base/**"
 COPY_CHECK_RECURSIVE=(
   ".claude/skills"
+  ".agent0/skills"
   ".agent0/tests"
   ".claude/agents"
 )
@@ -195,6 +196,8 @@ COPY_CHECK_FILES=(
   ".githooks/pre-commit"
   ".agent0/tools/lib/managed-block.sh"
   ".agent0/memory/.gitkeep"
+  ".agent0/skills/.gitkeep"
+  ".agents/skills/.gitkeep"
   ".agent0/memory.config.json"
   ".agent0/.browser-state/.gitkeep"
   ".agent0/routines/.gitkeep"
@@ -1333,10 +1336,71 @@ merge_gitignore() {
 # ---------------------------------------------------------------------------
 
 load_baseline
+# ---------------------------------------------------------------------------
+# skill discovery-link pass (spec 121 — multi-runtime skills)
+# ---------------------------------------------------------------------------
+# The canonical skill source is .agent0/skills/<slug>/ (propagated as plain files
+# by walk_copy_check). Each runtime discovers via a relative symlink into it:
+#   .claude/skills/<slug> -> ../../.agent0/skills/<slug>   (Claude)
+#   .agents/skills/<slug> -> ../../.agent0/skills/<slug>   (Codex)
+# Runs only on a real --apply. Probes symlink capability once; on a symlink-hostile
+# checkout (Windows without core.symlinks) it materializes copies + emits a
+# skills-advisory: instead of leaving a broken text-file stub. Idempotent: an
+# already-correct symlink is left untouched.
+sync_skill_discovery_links() {
+  [ "$MODE" = "apply" ] && [ "$DRY_RUN" -eq 0 ] || return 0
+  local src_skills="$AGENT0_ROOT/.agent0/skills"
+  [ -d "$src_skills" ] || return 0
+
+  # Probe: can this consumer checkout create a real symlink?
+  local symlinks_ok=1 probe="$CONSUMER_ROOT/.agent0/skills/.symlink-probe-$$"
+  mkdir -p "$CONSUMER_ROOT/.agent0/skills" 2>/dev/null || true
+  if ln -s .probe-target "$probe" 2>/dev/null && [ -L "$probe" ]; then
+    symlinks_ok=1
+  else
+    symlinks_ok=0
+  fi
+  rm -f "$probe" 2>/dev/null || true
+
+  local slug src linkrel dst rt
+  for src in "$src_skills"/*/; do
+    [ -d "$src" ] || continue
+    slug="$(basename "$src")"
+    case "$slug" in .*) continue ;; esac   # skip dotfiles / .gitkeep dir-likes
+    for rt in ".claude/skills" ".agents/skills"; do
+      dst="$CONSUMER_ROOT/$rt/$slug"
+      linkrel="../../.agent0/skills/$slug"
+      mkdir -p "$CONSUMER_ROOT/$rt" 2>/dev/null || true
+      if [ "$symlinks_ok" -eq 1 ]; then
+        # idempotent: correct symlink already present?
+        if [ -L "$dst" ] && [ "$(readlink "$dst" 2>/dev/null)" = "$linkrel" ]; then
+          continue
+        fi
+        rm -rf "$dst" 2>/dev/null || true
+        if ln -s "$linkrel" "$dst" 2>/dev/null; then
+          printf '~ skill-link %s/%s -> %s\n' "$rt" "$slug" "$linkrel" >&2
+        else
+          printf 'skills-advisory: failed to link %s/%s; skill may be undiscoverable in that runtime\n' "$rt" "$slug" >&2
+        fi
+      else
+        # symlink-hostile fallback: materialize a copy from the canonical source
+        rm -rf "$dst" 2>/dev/null || true
+        mkdir -p "$dst" 2>/dev/null || true
+        if cp -R "$src". "$dst"/ 2>/dev/null; then
+          printf 'skills-advisory: symlinks unavailable on this checkout — materialized copy at %s/%s; edit .agent0/skills/%s and re-sync (copy is regenerated each --apply)\n' "$rt" "$slug" "$slug" >&2
+        else
+          printf 'skills-advisory: symlinks unavailable AND copy failed for %s/%s\n' "$rt" "$slug" >&2
+        fi
+      fi
+    done
+  done
+}
+
 _self_rebootstrap
 walk_copy_check
 record_managed_block_manifest
 reconcile_deletions
+sync_skill_discovery_links
 merge_settings_json
 merge_claude_md
 merge_gitignore

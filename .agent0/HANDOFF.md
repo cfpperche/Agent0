@@ -8,49 +8,52 @@ See `.claude/rules/session-handoff.md` for the protocol, 4 KB size discipline, f
 
 ## Current State
 
-**Spec 120 vuln-audit fully implemented this session (NOT yet committed — tree dirty, user-gated).**
-The capacity replaces the removed supply-chain gate (spec 112). Built via the full SDD flow including a
-2-round cross-model debate (Claude ↔ Codex, `docs/specs/120-vuln-audit/debate.md`, converged):
-- **Engine:** osv-scanner-only (Trivy rejected — Mar-2026 supply-chain compromise; no second-source
-  matrix). Stack-aware via a **three-bucket coverage report** (found/covered/skipped) so partial
-  coverage is never reported as clean. Source-completeness caveat documented (OSV corpus ≠ all-known).
-- **Trigger:** on-demand only (`/vuln-audit` skill + runtime-neutral `.agent0/tools/vuln-audit.sh`).
-  NO install/commit gate (zero `settings.json` registration). Result status
-  `clean|findings|unavailable|failed` decoupled from exit code (default 0; opt-in `--exit-code` for
-  consumer CI). Reports + proposes upgrades, never auto-fixes.
-- **Tests:** `.agent0/tests/vuln-audit/` — 10 scenarios / 48 asserts, ALL PASS, offline via a fake-osv
-  stub. Skill validates (exit 0). Docs: CLAUDE.md + AGENTS.md managed blocks + runtime-capabilities row.
+**Spec 121 multi-runtime-skills shipped this session (committing now).** Skills are now multi-runner via a
+**canonical-source + per-runtime discovery-symlink** model (decided in a converged Claude↔Codex debate where
+Codex empirically probed both live runtimes):
+- Canonical body at `.agent0/skills/<slug>/SKILL.md`; discovery symlinks `.claude/skills/<slug>` (Claude) +
+  `.agents/skills/<slug>` (Codex) → `../../.agent0/skills/<slug>`. One source, both runtimes follow the link.
+- **Pilot migrated:** `vuln-audit` moved `.claude/skills/` → `.agent0/skills/vuln-audit/` + both symlinks
+  (git mode 120000). Tool path unchanged (`.agent0/tools/vuln-audit.sh`).
+- **sync-harness** propagates it: `.agent0/skills` in `COPY_CHECK_RECURSIVE` + `sync_skill_discovery_links`
+  pass recreates the 2 symlinks, with copy-materialization fallback + `skills-advisory:` on symlink-hostile
+  checkouts (Windows/`core.symlinks=false`) — the founder's elevated caveat.
+- Docs: runtime-capabilities skills row, harness-sync § Skill discovery-link propagation, portability-tiers
+  runbook, harness-home disposition. **Tests green:** multi-runtime-skills (8) + harness-sync (no regression)
+  + vuln-audit (unbroken). `cc-native` skills (`AskUserQuestion`-bound) stay in `.claude/skills/`.
 
-Prior context: consolidation arc 117→118→119 shipped+pushed at `4ffabb7`; all hooks in `.agent0/hooks/`.
+Prior: spec 120 vuln-audit shipped at `40bccdb`. Rules-first (`121-multi-runtime-rules`) was abandoned
+(AGENTS.md has no `@import` + 32 KiB cap); skills was the cleaner path.
+
 Pre-existing untracked `docs/specs/091-sdd-debate-runner/` is unrelated (out of scope).
 
 ## Active Work
 
-- _None in flight._ (Spec 120 complete in the working tree, awaiting user commit.)
+- _None in flight._ (Spec 121 shipped; committing now.)
 
 ## Next Actions
 
-1. **Commit spec 120** — review the diff and commit (user-gated). New: `.agent0/tools/vuln-audit.sh`,
-   `.agent0/tests/vuln-audit/`, `.claude/rules/vuln-audit.md`, `.claude/skills/vuln-audit/`,
-   `docs/specs/120-vuln-audit/`. Modified: `CLAUDE.md`, `AGENTS.md`,
-   `.claude/rules/runtime-capabilities.md`. Suggested: `feat(120): vuln-audit capacity`.
-2. **Post-merge smoke test** (reminder `r-2026-05-30-run-vuln-audit-once-against`) — run the tool with
-   the REAL osv-scanner binary against a real project (e.g. `site/` has `bun.lock`) to confirm the JSON
-   parse matches live V2 output (severity / fixed_version / source.path extraction). CI uses an offline stub.
-3. **Optional: rebuild `site/dist/`** — spec 118 changed `site/src/i18n/strings.ts`; only source changed.
+1. **Live-Codex confirm spec 121** (reminder `r-2026-05-30-live-codex-confirm-spec-121`) — in a real Codex
+   session, `codex debug prompt-input` should list `vuln-audit` from `.agents/skills`; `$vuln-audit` runs the
+   tool. Offline tests prove the symlink/discovery structure; this confirms a live pickup.
+2. **Next skills to migrate (one-by-one)** — only `agentskills-portable` ones. `/product` + `/sdd refine`
+   are `cc-native` (`AskUserQuestion`) → stay in `.claude/skills/`. Candidates: skills that already delegate
+   to `.agent0/tools/` or need only a `${CLAUDE_SKILL_DIR}` neutralization. Follow the runbook in
+   `portability-tiers.md` § Per-skill multi-runtime migration runbook.
+3. **vuln-audit post-merge smoke test** (reminder `r-2026-05-30-run-vuln-audit-once-against`) — real
+   osv-scanner against `site/bun.lock`, confirm live V2 JSON parse. Still open from spec 120.
+4. **Optional: rebuild `site/dist/`** — spec 118 changed `site/src/i18n/strings.ts`; only source changed.
 
 ## Decisions & Gotchas
 
-- **vuln-audit JSON parse is pinned to osv-scanner V2 fields, verified only against crafted fixtures.**
-  Severity = `database_specific.severity` (word) else bucketed from `groups[].maxSeverity` (CVSS num);
-  fixed = first `affected[].ranges[].events[].fixed`; covered = basenames of `results[].source.path`.
-  If live V2 output differs, the defensive parse degrades (severity→`unknown`, no-fix→"no fix published")
-  rather than crashing — but the smoke-test reminder exists to confirm against the real binary.
-- **`direct|transitive` is a cheap npm-only enrichment** (membership in package.json dep keys); other
-  ecosystems report `unknown` + "no direct remediation path known". osv-scanner base JSON has no
-  reliable dependency-path, so this is honest-by-design, not a gap to close.
-- **bun coverage:** osv-scanner parses text `bun.lock` (Bun ≥1.2) but NOT binary `bun.lockb` → latter
-  lands in `skipped` with a migrate hint. Repo's own `site/bun.lock` is the live dogfood target.
+- **Skill symlinks are relative + git-tracked (mode 120000).** `.claude/skills/<slug>` + `.agents/skills/<slug>`
+  → `../../.agent0/skills/<slug>`. `find -type f` does NOT descend into them, so a migrated skill ships once
+  (via `.agent0/skills`), never double via the `.claude/skills` symlink. Edit the canonical source only.
+- **sync-harness symlink pass is apply-only + idempotent**, runs after `reconcile_deletions`; probes symlink
+  capability and copy-materializes + `skills-advisory:` when unavailable. Relocated-skill orphan is deleted
+  then re-linked in one `--apply`.
+- **vuln-audit (spec 120, committed `40bccdb`):** osv-scanner V2 parse pinned to crafted fixtures; bun.lock
+  covered, bun.lockb → skipped+migrate; live-binary smoke test still pending (reminder).
 - **Pre-existing UNRELATED failure:** `typecheck-advisory/08-globs-nested-workspace.sh` (Node-24
   compile-cache). Fix = `NODE_DISABLE_COMPILE_CACHE=1` or gitignore.
 - **Env:** gitleaks pre-commit active; governance gate blocks `rm -rf` + blanket `git add`;

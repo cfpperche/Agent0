@@ -225,6 +225,30 @@ The walk only reads from Agent0 manifest paths. Out-of-scope consumer project co
 
 **Deletion propagation.** The walk also accumulates Agent0's *current* manifest into a sha-set; the deletion pass compares that set against the recorded baseline's file list. A path present in the baseline but absent from the current set is an upstream removal, propagated per § Customization detection § *Upstream deletions*. Out-of-scope consumer project content stays invisible to this pass too — it only ever considers paths that were *previously* in the manifest (and therefore recorded in the baseline), never arbitrary consumer project files. A consumer project with no baseline skips the deletion pass entirely.
 
+## Skill discovery-link propagation (spec 121 — multi-runtime skills)
+
+Portable skills use a **canonical source + per-runtime discovery symlink** model: the body lives once at
+`.agent0/skills/<slug>/SKILL.md`, and each runtime discovers it through a relative symlink —
+`.claude/skills/<slug>` → `../../.agent0/skills/<slug>` (Claude) and `.agents/skills/<slug>` →
+`../../.agent0/skills/<slug>` (Codex). Both runtimes follow the symlink to the one source; there is no
+duplicated `SKILL.md`. `cc-native` skills that can't shed Claude-only primitives stay physically in
+`.claude/skills/<slug>` and are NOT mirrored into `.agents/skills/`.
+
+Propagation: `.agent0/skills` is in `COPY_CHECK_RECURSIVE` (canonical bodies ship as plain files);
+`.agent0/skills/.gitkeep` + `.agents/skills/.gitkeep` are in `COPY_CHECK_FILES` (the dirs exist in a
+fresh consumer). After `reconcile_deletions`, a dedicated **`sync_skill_discovery_links`** pass
+(apply-only) walks Agent0's `.agent0/skills/*/` and, for each slug, (re)creates the two discovery
+symlinks in the consumer. It probes symlink capability once; on a **symlink-hostile checkout** (Windows
+without `core.symlinks`, or `core.symlinks=false`) it falls back to **materializing a copy** of the
+canonical dir into each discovery path and emits a `skills-advisory:` (the copy is regenerated each
+`--apply`, so the canonical source stays the single edit point). The pass is idempotent — an
+already-correct symlink is left untouched.
+
+`find -type f` does not descend into a symlinked dir, so a migrated skill ships once (via `.agent0/skills`),
+never double-counted through the `.claude/skills` symlink. When a skill is relocated upstream
+(`.claude/skills/<slug>` → `.agent0/skills/<slug>`), the deletion pass removes the old consumer file
+(orphan) before the link pass recreates the discovery symlink — they converge in one `--apply`.
+
 ## Path relocations (capacity-only)
 
 When a capacity's canonical home moves within Agent0 — the consolidation tracked by umbrella spec 102, which relocated reminders + routines (103), session/runtime/browser state (104), and shared shell tools (105) from `.claude/` to `.agent0/`, per the § Classification principle (`.agent0/memory/harness-home.md`) — propagation is **capacity-only**. The manifest carries the *capacity* (hooks, skills, rules, tools, and the empty `.gitkeep` scaffold of the new location), never the *content*. The posture is uniform across every relocation row, not specific to any one capacity:

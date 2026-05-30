@@ -22,7 +22,8 @@ User invokes as `/skill <subcommand> [args]`. The raw argument string is `$ARGUM
 Raw invocation: `$ARGUMENTS`
 
 State paths used throughout:
-- Skill root: `.claude/skills/<slug>/` (resolved relative to `$CLAUDE_PROJECT_DIR` or repo root)
+- Skill home depends on tier (spec 121 canonical-source model): `cc-native` skills are physical at `.claude/skills/<slug>/`; `agentskills-portable` / `runtime-agnostic` skills are canonical at `.agent0/skills/<slug>/` with relative discovery symlinks `.claude/skills/<slug>` + `.agents/skills/<slug>` → `../../.agent0/skills/<slug>`.
+- **Resolve `<slug>` to its canonical dir** (for `audit` / `port` / `validate` / `list`): use `.agent0/skills/<slug>/` if it exists, else `.claude/skills/<slug>/`. For a portable skill both paths reach the same SKILL.md (the `.claude/` one is a symlink), but `.agent0/` is canonical. When iterating all skills, walk BOTH `.claude/skills/*` and `.agent0/skills/*` and dedup by slug so a portable skill is audited once.
 - Toolkit root: `.agent0/skills/skill` (when invoked as `/skill`, this resolves to `.agent0/skills/skill/`)
 - Validator: `.agent0/skills/skill/scripts/validate.sh`
 - Porter: `.agent0/skills/skill/scripts/port-frontmatter.sh`
@@ -30,36 +31,49 @@ State paths used throughout:
 
 ## Subcommand: `new <slug> [--tier <tier>]` — 🔒 Low freedom: scaffold + validate sequence
 
-Scaffold a new Agent0 skill with a spec-compliant SKILL.md. Parse `$ARGUMENTS`: first token must be `new`; second token is the slug; optional `--tier <tier>` selects the template variant (default `cc-native`).
+Scaffold a new Agent0 skill with a spec-compliant SKILL.md. Parse `$ARGUMENTS`: first token must be `new`; second token is the slug; optional `--tier <tier>` selects the template variant AND the skill's home (default `cc-native`).
+
+**The tier decides WHERE the skill lives** (spec 121 canonical-source model):
+- `cc-native` → physical at `.claude/skills/<slug>/` (Claude-only; the body uses `AskUserQuestion`, `${CLAUDE_SKILL_DIR}`, or CC-only tools).
+- `agentskills-portable` / `runtime-agnostic` → canonical body at `.agent0/skills/<slug>/`, discovered by both runtimes via relative symlinks `.claude/skills/<slug>` and `.agents/skills/<slug>` → `../../.agent0/skills/<slug>`.
 
 1. **Validate the slug**:
    - Reject if missing, empty, or non-kebab-case (`^[a-z][a-z0-9]*(-[a-z0-9]+)*$`).
-   - Reject if `.claude/skills/<slug>/` already exists.
+   - Reject if EITHER `.claude/skills/<slug>/` OR `.agent0/skills/<slug>/` already exists.
 
-2. **Select the template**:
+2. **Select the template** (and resolve the tier):
    - `--tier cc-native` (default) → `templates/cc-native.tmpl`
    - `--tier agentskills-portable` → `templates/portable.tmpl`
    - `--tier runtime-agnostic` → `templates/portable.tmpl` (no separate template in v1; switch the `metadata.agent0-portability-tier` value to `runtime-agnostic` post-substitution and remind the user to verify OS-agnostic patterns in the body)
    - Any other value → refuse with the canonical list.
 
-3. **Scaffold the directory and copy the template**:
-   ```bash
-   mkdir -p .claude/skills/<slug>
-   cp .agent0/skills/skill/templates/<selected>.tmpl .claude/skills/<slug>/SKILL.md
-   ```
+3. **Scaffold at the tier's home + register discovery**:
+   - **cc-native:**
+     ```bash
+     mkdir -p .claude/skills/<slug>
+     cp .agent0/skills/skill/templates/<selected>.tmpl .claude/skills/<slug>/SKILL.md
+     ```
+   - **agentskills-portable / runtime-agnostic:** canonical source + relative discovery symlinks:
+     ```bash
+     mkdir -p .agent0/skills/<slug>
+     cp .agent0/skills/skill/templates/<selected>.tmpl .agent0/skills/<slug>/SKILL.md
+     ln -s ../../.agent0/skills/<slug> .claude/skills/<slug>
+     ln -s ../../.agent0/skills/<slug> .agents/skills/<slug>
+     ```
+     (Symlinks ARE the registration; sync-harness re-materializes them on consumers, with a copy fallback on symlink-hostile checkouts — see `.agent0/context/rules/harness-sync.md` § Skill discovery-link propagation. Keep portable bodies free of `${CLAUDE_SKILL_DIR}`: reference bundled scripts/templates by the repo-relative `.agent0/skills/<slug>/...` path.)
 
-4. **Substitute placeholders** in the new SKILL.md (literal replace):
+4. **Substitute placeholders** in the new SKILL.md at its canonical location (literal replace):
    - `{{SLUG}}` → `<slug>`
    - `{{DATE}}` → current date in `YYYY-MM-DD` (UTC)
    - Other `{{...}}` placeholders (description, title, opening, subcommands) are left for the user to fill — the meta-skill provides structure, not content.
 
-5. **Run validate immediately**:
+5. **Run validate immediately** against the canonical path (`.agent0/skills/<slug>` for portable, `.claude/skills/<slug>` for cc-native):
    ```bash
-   bash .agent0/skills/skill/scripts/validate.sh .claude/skills/<slug>
+   bash .agent0/skills/skill/scripts/validate.sh <canonical-path>
    ```
    If non-zero exit, surface stderr and stop with a hint: "scaffolder placeholder values may have been edited; fill `{{DESCRIPTION_PLACEHOLDER}}` and re-run validate".
 
-6. **Report**: output the new SKILL.md path and tell the user to fill the `{{...}}` placeholders (description first — that's the discovery surface) and re-validate when done.
+6. **Report**: output the canonical SKILL.md path (and, for portable skills, the two discovery symlinks created) and tell the user to fill the `{{...}}` placeholders (description first — that's the discovery surface) and re-validate when done.
 
 ## Subcommand: `audit [<slug>|--all]` — 🔓 Medium freedom: per-skill reporting adapts to compliance state
 

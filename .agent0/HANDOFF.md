@@ -13,9 +13,8 @@ It replaces the five model-visible `SessionStart` readouts with one `.agent0/hoo
 registration in `.claude/settings.json` + `.codex/hooks.json`, keeps `UserPromptSubmit` on
 `.agent0/hooks/context-inject.sh`, and changes prompt context from full rule bodies to bounded capsules.
 
-Founder screenshots confirmed live runtime behavior: `STARTUP_BRIEF=yes`, `STARTUP_MODE=summary`,
-`PROMPT_MODE=prompt-capsules`, `FULL_RULE_BODY_VISIBLE=no`, `SELECTED=spec-driven artifact-budgets`.
-The second screenshot showed one startup brief + one capsule block, not full rule bodies.
+Founder screenshots confirmed live behavior (`STARTUP_BRIEF=yes`, `PROMPT_MODE=prompt-capsules`,
+`FULL_RULE_BODY_VISIBLE=no`): one startup brief + one capsule block, not full rule bodies.
 
 Validation passed: context-injection, readout-parse, session-handoff, harness-sync, runtime-capabilities
 suites + `jq empty` on hook configs + synthetic probes. Specs 121/122/123/124 shipped.
@@ -27,13 +26,15 @@ Pre-existing untracked `docs/specs/091-sdd-debate-runner/` remains unrelated/out
 
 ## Next Actions
 
-1. **Optional spec 125 candidate: hook-context visual polish.** Spec 124 fixed content volume, but the live UI
-   still displays `hook context` flattened into long lines. Investigate whether either runtime can preserve
-   readable newlines or hide the block while keeping model-visible context; otherwise reduce startup text further.
+1. **Optional spec 125: hook-context visual polish.** Spec 124 fixed volume; the live UI still flattens `hook
+   context` into long lines. Investigate preserving newlines / hiding the block while keeping model-visible
+   context, or reduce startup text further.
 2. **cc-only skill multi-runner arc — essentially complete.** `image` (6th) + `brainstorm` (7th) migrated under
    spec 121; 7 portable skills total. `brainstorm`'s error-prone `done` HTML render was extracted to
    `scripts/render.py` (deterministic pure `state.json→HTML`; first test surface at `.agent0/tests/brainstorm/`).
-   Only `product` stays **cc-native** by design (`AskUserQuestion` ×7) — not a gap. Arc done unless a new candidate appears.
+   Only `product` stays **cc-native** — the binding blocker is its CC `Agent`-tool multi-agent orchestration
+   (one-message parallel dispatch + blocking `delegation-gate`, no Codex pre-dispatch equiv per spec 106); the 3
+   AskUserQuestion gates + Playwright-MCP tool-names are secondary/degradable, not the reason. Not a gap; arc done.
 3. **Live-Codex confirm spec 121** (reminder `r-2026-05-30-live-codex-confirm-spec-121`) — fresh Codex:
    `codex debug prompt-input` lists a migrated skill from `.agents/skills`; `$<slug>` runs it.
 4. **vuln-audit smoke test** (reminder `r-2026-05-30-run-vuln-audit-once-against`) — real osv-scanner vs

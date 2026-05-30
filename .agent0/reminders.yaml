@@ -147,11 +147,12 @@ reminders:
     uses an offline fake-osv stub. Verify severity extraction (database_specific.severity
     + groups.maxSeverity), fixed_version (affected.ranges.events.fixed), and source.path
     basenames.
-  status: pending
+  status: done
   check_command: command -v osv-scanner && bash .agent0/tools/vuln-audit.sh site
   links:
   - docs/specs/120-vuln-audit/
   - .agent0/tools/vuln-audit.sh
+  completed_ts: '2026-05-30T20:28:51Z'
 - id: r-2026-05-30-live-codex-confirm-spec-121
   created: '2026-05-30'
   context: 'Live-Codex confirm spec 121 pilot: in a real Codex CLI session at repo

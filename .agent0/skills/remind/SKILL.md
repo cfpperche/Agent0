@@ -5,7 +5,7 @@ argument-hint: <add "<text>" [--due <DATE>] [--check '<cmd>'] [--links <a,b,c>] 
 license: MIT
 compatibility: Designed for Claude Code. Body references `.claude/` conventional paths and CC-specific tools; portable to any runtime that maps a `.claude/`-analog directory and surfaces the referenced tools. Requires python3 + PyYAML for state mutation; readout hook degrades to yq or raw-YAML when PyYAML is absent.
 metadata:
-  agent0-portability-tier: cc-native
+  agent0-portability-tier: agentskills-portable
   version: "0.2"
 ---
 
@@ -17,7 +17,7 @@ Capture, list, snooze, complete, and probe action-shaped future items that aren'
 
 See `.claude/rules/reminders.md` for what belongs here vs `MEMORY.md` vs `HANDOFF.md`, and the discipline (no auto-commit, no autonomous check execution, soft-delete via `status: done + completed_ts`).
 
-All state mutation routes through `.claude/skills/remind/scripts/reminders-helper.py`. The helper uses `yaml.safe_dump(..., sort_keys=False)` so git diffs stay clean (insertion-order preserved, no alphabetic re-sort).
+All state mutation routes through `.agent0/skills/remind/scripts/reminders-helper.py`. The helper uses `yaml.safe_dump(..., sort_keys=False)` so git diffs stay clean (insertion-order preserved, no alphabetic re-sort).
 
 ## Argument parsing
 
@@ -27,7 +27,7 @@ Raw invocation: `$ARGUMENTS`
 
 State file: `.agent0/reminders.yaml` (resolve relative to `$CLAUDE_PROJECT_DIR`).
 
-Helper script: `.claude/skills/remind/scripts/reminders-helper.py`. Invoke as `python3 .claude/skills/remind/scripts/reminders-helper.py <subcommand> [args...]`, with `CLAUDE_PROJECT_DIR` set in env. The helper is the canonical mutator — never edit `.agent0/reminders.yaml` by hand from this skill body.
+Helper script: `.agent0/skills/remind/scripts/reminders-helper.py`. Invoke as `python3 .agent0/skills/remind/scripts/reminders-helper.py <subcommand> [args...]`, with `CLAUDE_PROJECT_DIR` set in env. The helper is the canonical mutator — never edit `.agent0/reminders.yaml` by hand from this skill body.
 
 ## Subcommand: `add`
 
@@ -41,13 +41,13 @@ Append a new reminder. Parse `$ARGUMENTS`: first token must be `add`; the remain
    - `--links <a,b,c>` is a comma-separated list of free-form strings (typically file paths or external URLs). Whitespace stripped per item.
 2. **Invoke helper**:
    ```
-   CLAUDE_PROJECT_DIR="$CLAUDE_PROJECT_DIR" python3 .claude/skills/remind/scripts/reminders-helper.py add "<text>" [--due <date>] [--check '<cmd>'] [--links <a,b,c>]
+   CLAUDE_PROJECT_DIR="$CLAUDE_PROJECT_DIR" python3 .agent0/skills/remind/scripts/reminders-helper.py add "<text>" [--due <date>] [--check '<cmd>'] [--links <a,b,c>]
    ```
    Forward stdout/stderr verbatim. Expected stdout: `added: <id>: <text>`.
 
 ## Subcommand: `list`
 
-Print the current reminders. Invoke `python3 .claude/skills/remind/scripts/reminders-helper.py list` and forward output verbatim. Default filter: `status: pending` plus `status: snoozed` with `snoozed_until <= today` (same as the readout hook). Add `--all` flag to also include done + future-snoozed entries.
+Print the current reminders. Invoke `python3 .agent0/skills/remind/scripts/reminders-helper.py list` and forward output verbatim. Default filter: `status: pending` plus `status: snoozed` with `snoozed_until <= today` (same as the readout hook). Add `--all` flag to also include done + future-snoozed entries.
 
 Output shape (per the helper):
 
@@ -69,7 +69,7 @@ Soft-delete the named entry. Parse `$ARGUMENTS`: first token must be `done`; sec
 1. **Validate**: `<N>` must be a positive integer OR `<id>` must match `^r-\d{4}-\d{2}-\d{2}-[a-z0-9-]+$`. The helper enforces both.
 2. **Invoke**:
    ```
-   CLAUDE_PROJECT_DIR="$CLAUDE_PROJECT_DIR" python3 .claude/skills/remind/scripts/reminders-helper.py done <N|id>
+   CLAUDE_PROJECT_DIR="$CLAUDE_PROJECT_DIR" python3 .agent0/skills/remind/scripts/reminders-helper.py done <N|id>
    ```
    The helper flips `status: done` and stamps `completed_ts: <UTC-ISO>`. The entry stays in `reminders.yaml` (soft-delete; audit history in-band).
 3. **Report**: forward `done: <id>: <context>` from helper stdout.
@@ -79,7 +79,7 @@ Soft-delete the named entry. Parse `$ARGUMENTS`: first token must be `done`; sec
 Silent alias for `done` (backward-compat with the pre-084 muscle memory). Same semantics, same arguments. The helper's `done` subcommand handles both invocation paths. No deprecation warning.
 
 ```
-CLAUDE_PROJECT_DIR="$CLAUDE_PROJECT_DIR" python3 .claude/skills/remind/scripts/reminders-helper.py done <N|id>
+CLAUDE_PROJECT_DIR="$CLAUDE_PROJECT_DIR" python3 .agent0/skills/remind/scripts/reminders-helper.py done <N|id>
 ```
 
 Forward the report; surface as `dismissed: <id>: <context>` to keep the verbal echo aligned with the user's invocation.
@@ -91,7 +91,7 @@ Push an entry out of the readout window. Parse `$ARGUMENTS`: first token must be
 1. **Validate**: duration must match `^[0-9]+(d|w|m)$` (days/weeks/months — `m` is a 30-day approximation, not calendar months) OR `^[0-9]{4}-[0-9]{2}-[0-9]{2}$` (explicit ISO date). The helper computes `snoozed_until` and refuses on shape error.
 2. **Invoke**:
    ```
-   CLAUDE_PROJECT_DIR="$CLAUDE_PROJECT_DIR" python3 .claude/skills/remind/scripts/reminders-helper.py snooze <N|id> <duration>
+   CLAUDE_PROJECT_DIR="$CLAUDE_PROJECT_DIR" python3 .agent0/skills/remind/scripts/reminders-helper.py snooze <N|id> <duration>
    ```
 3. **Report**: forward `snoozed: <id> until <YYYY-MM-DD>`. The readout hook will skip the entry until that date is reached.
 
@@ -101,12 +101,12 @@ Run an entry's `check_command` and surface output. Parse `$ARGUMENTS`: first tok
 
 1. **Resolve the entry's check_command**:
    ```
-   CMD="$(CLAUDE_PROJECT_DIR="$CLAUDE_PROJECT_DIR" python3 .claude/skills/remind/scripts/reminders-helper.py get-check <N|id>)"
+   CMD="$(CLAUDE_PROJECT_DIR="$CLAUDE_PROJECT_DIR" python3 .agent0/skills/remind/scripts/reminders-helper.py get-check <N|id>)"
    ```
    The helper's `get-check` subcommand prints the raw `check_command` string (no shell escaping). If the entry has no `check_command`, the helper exits 2 with `check: entry <id> has no check_command` on stderr — forward that and stop.
 2. **Resolve the entry's ID for the report** (positions can change between calls):
    ```
-   ID="$(CLAUDE_PROJECT_DIR="$CLAUDE_PROJECT_DIR" python3 .claude/skills/remind/scripts/reminders-helper.py resolve <N|id>)"
+   ID="$(CLAUDE_PROJECT_DIR="$CLAUDE_PROJECT_DIR" python3 .agent0/skills/remind/scripts/reminders-helper.py resolve <N|id>)"
    ```
 3. **Execute the command**: run `$CMD` via `bash -c "$CMD"` from the repo root. Capture stdout, stderr, and exit code separately.
 4. **Report** to the agent verbatim:

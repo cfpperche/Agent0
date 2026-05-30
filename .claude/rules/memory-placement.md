@@ -171,7 +171,7 @@ Three scale-handling surfaces let the bucket operate at 100-500 entries without 
 
 ### 2. `memory-query.sh`
 
-Search + filter helper for entry bodies and frontmatter. Four subcommands, all routed through `.agent0/tools/memory-query-helper.py` (Python + PyYAML; mirrors the `.claude/skills/remind/scripts/reminders-helper.py` pattern — bash dispatcher delegates to a Python helper for YAML mutation):
+Search + filter helper for entry bodies and frontmatter. Four subcommands, all routed through `.agent0/tools/memory-query-helper.py` (Python + PyYAML; mirrors the `.agent0/skills/remind/scripts/reminders-helper.py` pattern — bash dispatcher delegates to a Python helper for YAML mutation):
 
 - **`search <pattern>`** — case-insensitive grep across all `.agent0/memory/*.md` (body + frontmatter). One line per hit: `<path>: <first matching line>`.
 - **`list [--type=T] [--stale=Nd|Nw|Nm]`** — filter the index. `--type` matches `metadata.type` exactly; `--stale` accepts the same duration grammar as `/remind snooze` and lists entries whose `last_accessed` is older than `today − duration`.

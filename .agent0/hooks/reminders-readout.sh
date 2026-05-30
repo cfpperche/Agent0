@@ -26,7 +26,7 @@ fi
 
 PROJECT_DIR="$(memory_project_dir "$INPUT")"
 YAML_FILE="$PROJECT_DIR/.agent0/reminders.yaml"
-HELPER="$PROJECT_DIR/.claude/skills/remind/scripts/reminders-helper.py"
+HELPER="$PROJECT_DIR/.agent0/skills/remind/scripts/reminders-helper.py"
 TODAY="$(date -u +%Y-%m-%d)"
 
 emit_frame_open() { printf '=== REMINDERS ===\n'; }

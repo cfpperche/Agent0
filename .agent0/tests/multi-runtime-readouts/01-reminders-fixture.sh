@@ -8,9 +8,9 @@ HOOK="$AGENT0_ROOT/.agent0/hooks/reminders-readout.sh"
 TMPDIR="$(mktemp -d -t multi-readouts-reminders-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
-mkdir -p "$TMPDIR/.claude/skills/remind/scripts"
-cp "$AGENT0_ROOT/.claude/skills/remind/scripts/reminders-helper.py" "$TMPDIR/.claude/skills/remind/scripts/reminders-helper.py"
-chmod +x "$TMPDIR/.claude/skills/remind/scripts/reminders-helper.py"
+mkdir -p "$TMPDIR/.agent0/skills/remind/scripts"
+cp "$AGENT0_ROOT/.agent0/skills/remind/scripts/reminders-helper.py" "$TMPDIR/.agent0/skills/remind/scripts/reminders-helper.py"
+chmod +x "$TMPDIR/.agent0/skills/remind/scripts/reminders-helper.py"
 
 mkdir -p "$TMPDIR/.agent0"
 cat > "$TMPDIR/.agent0/reminders.yaml" <<'YAML'

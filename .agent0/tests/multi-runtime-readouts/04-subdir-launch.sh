@@ -10,12 +10,12 @@ trap 'rm -rf "$TMPDIR"' EXIT
 git init -q "$TMPDIR"
 mkdir -p \
   "$TMPDIR/apps/web" \
-  "$TMPDIR/.claude/skills/remind/scripts" \
+  "$TMPDIR/.agent0/skills/remind/scripts" \
   "$TMPDIR/.agent0/routines" \
   "$TMPDIR/.agent0/.routines-state/weekly/queue"
 
-cp "$AGENT0_ROOT/.claude/skills/remind/scripts/reminders-helper.py" "$TMPDIR/.claude/skills/remind/scripts/reminders-helper.py"
-chmod +x "$TMPDIR/.claude/skills/remind/scripts/reminders-helper.py"
+cp "$AGENT0_ROOT/.agent0/skills/remind/scripts/reminders-helper.py" "$TMPDIR/.agent0/skills/remind/scripts/reminders-helper.py"
+chmod +x "$TMPDIR/.agent0/skills/remind/scripts/reminders-helper.py"
 
 cat > "$TMPDIR/.agent0/reminders.yaml" <<'YAML'
 reminders:

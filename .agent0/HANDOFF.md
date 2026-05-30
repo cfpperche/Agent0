@@ -8,92 +8,61 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 
 ## Current State
 
-**Spec 122 context-injection-rules-cutover shipped and committed (`2060f61`).** Founder decision:
-remove Claude Code native `.claude/rules/` as an Agent0 harness surface and use one Agent0-owned context
-hydrator in both runtimes.
-- Former `.claude/rules/*.md` bodies moved to `.agent0/context/rules/*.md`; `.claude/rules/` now has no
-  harness markdown files for Claude to auto-load.
-- New `.agent0/hooks/context-inject.sh`: `SessionStart` emits a bounded fragment index; `UserPromptSubmit`
-  emits trusted prompt-selected fragments with `AGENT0_CONTEXT_INJECTION` provenance labels.
-- `.claude/settings.json` registers the hydrator for `SessionStart` + `UserPromptSubmit`; Codex uses
-  tracked `.codex/hooks.json` instead of TOML hook snippets.
-- **Claude live confirmed:** fresh Claude session saw `AGENT0_CONTEXT_INJECTION` at `SessionStart`
-  (index mode) and `UserPromptSubmit` (prompt-selected mode), both sourced from `.agent0/context/rules`;
-  `.claude/rules/` is absent and the context-injection suite passed 8/8.
-- **Codex live confirmed in TUI:** after adding the local opt-in blocks to `.codex/config.toml`, a fresh
-  Codex TUI session saw `AGENT0_CONTEXT_INJECTION` at `SessionStart` (index mode) and
-  `UserPromptSubmit` (prompt-selected mode), both sourced from `.agent0/context/rules`. Dogfood reply:
-  `PASS; injected block present yes; event value(s): SessionStart, UserPromptSubmit; mode value(s):
-  index, prompt-selected; source_dir value(s): .agent0/context/rules; selected: language
-  user-prompt-framing spec-driven session-handoff runtime-capabilities harness-sync memory-placement`.
-  A follow-up normal TUI launch prompted hook review, accepted `Trust all and continue`, and replied
-  `TRUSTED_CONTEXT_SEEN`.
-- `sync-harness` ships `.agent0/context/` and no longer manifests `.claude/rules|*.md`; existing consumers'
-  old rules become normal baseline-governed upstream-removed orphans.
-- Docs/tests updated: entrypoints point to `.agent0/context/rules`, runtime-capabilities has a context
-  injection row, memory-placement/harness-sync/harness-home reflect the cutover, README/site strings repointed.
-- **Codex hooks.json migration shipped:** official Codex docs confirm `.codex/hooks.json` is a native hook
-  source with the same event schema as inline `[hooks]`/`[[hooks.*]]` in `.codex/config.toml`; no capability
-  loss is expected after removing inline hook blocks to avoid duplicate execution.
-- **Spec 123 codex-hooks-json shipped and committed (`2038c4f`):** `.codex/hooks.json` is a
-  tracked, consumer-safe project hook file; `.codex/config.toml.example` and local `.codex/config.toml` no
-  longer carry inline Agent0 hook blocks; `sync-harness` includes `.codex/hooks.json`; docs/tests point at
-  the tracked hooks surface. Local validation passed, and founder-opened fresh Codex TUI dogfood returned:
-  `PASS; injected block present: yes; event value(s): SessionStart, UserPromptSubmit; mode value(s):
-  index, prompt-selected; source_dir value(s): .agent0/context/rules; selected: language
-  user-prompt-framing spec-driven session-handoff runtime-capabilities harness-sync memory-placement`.
-- **Codex config wording follow-up accepted:** `.codex/config.toml.example` now explicitly says it is
-  "Codex MCP recipes only", not a local config default. Spec 123 notes/spec match that contract.
+Clean tree (only the unrelated untracked `docs/specs/091-sdd-debate-runner/`). The multi-runtime arc is
+landed: **rules** ship via a context hydrator, **portable skills** via a canonical source + discovery
+symlinks. Recent shipped+committed work (detail lives in the specs + commit messages, not here):
 
-Spec 121 multi-runtime-skills shipped + **5 skills now migrated** (each its own commit): `vuln-audit`
-(`1be1389`), `remind` (`38c1ef5`), `routine` (`215ad75`), `sdd` (`3a5688a`), `skill` (`4f53c5c`) →
-`.agent0/skills/<slug>/` + `.claude/skills/<slug>` + `.agents/skills/<slug>` relative discovery symlinks,
-tier `agentskills-portable`. `${CLAUDE_SKILL_DIR}` neutralized to canonical `.agent0/skills/<slug>` in
-sdd/skill (skill: SKILL.md only — the token stays as a detection signal in port-frontmatter.sh +
-portability-tiers.md). `cc-native` skills (`brainstorm`, `image`, `product`) stay physical in `.claude/skills/`.
-
-Pre-existing untracked `docs/specs/091-sdd-debate-runner/` is unrelated (out of scope).
+- **Spec 122 — context-injection rules cutover (`2060f61`).** Rule bodies moved `.claude/rules/` →
+  `.agent0/context/rules/`; new `.agent0/hooks/context-inject.sh` hydrates them (`SessionStart` = bounded
+  index, `UserPromptSubmit` = prompt-selected fragments with `AGENT0_CONTEXT_INJECTION` provenance).
+  `.claude/rules/` now empty. Live-confirmed in Claude + Codex TUI.
+- **Spec 123 — Codex hooks.json (`2038c4f`, `5eafd5a`).** `.codex/hooks.json` is the tracked,
+  consumer-safe Codex hook source; inline TOML hook blocks removed; `.codex/config.toml.example` is now
+  "MCP recipes only".
+- **Spec 121 — multi-runtime skills.** 5 portable skills migrated to `.agent0/skills/<slug>/` + dual
+  discovery symlinks (`.claude/skills/<slug>` + `.agents/skills/<slug>`), tier `agentskills-portable`:
+  `vuln-audit` `1be1389`, `remind` `38c1ef5`, `routine` `215ad75`, `sdd` `3a5688a`, `skill` `4f53c5c`.
+  `/skill new` now scaffolds portable skills at the canonical home + symlinks (`33769e9`).
 
 ## Active Work
 
-- _None in flight._ Specs 122/123 and the Codex MCP wording follow-up are complete locally.
+- _None in flight._
 
 ## Next Actions
 
-1. **Live-Codex confirm spec 121** (reminder `r-2026-05-30-live-codex-confirm-spec-121`) — in a real Codex
-   session, `codex debug prompt-input` should list `vuln-audit` from `.agents/skills`; `$vuln-audit` runs the
-   tool. Offline tests prove the symlink/discovery structure; this confirms a live pickup.
-2. **Remaining skills are cc-native or need assessment** — `product` genuinely cc-native
-   (`AskUserQuestion` ×7) → stays; `image` MCP-bound (fal.ai); `brainstorm` renders HTML+state → assess if
-   ever worth porting. The 5 portable skills are done, AND `/skill new` now scaffolds portable skills at
-   `.agent0/skills/<slug>` + discovery symlinks per the spec-121 model (`33769e9`).
-3. **vuln-audit post-merge smoke test** (reminder `r-2026-05-30-run-vuln-audit-once-against`) — real
-   osv-scanner against `site/bun.lock`, confirm live V2 JSON parse. Still open from spec 120.
-4. **Optional: rebuild `site/dist/`** — source strings changed; dist not rebuilt.
+1. **Refactor the cc-only skills toward multi-runner** (the planned next arc). Candidates: `image`
+   (real blocker = fal.ai MCP — needs the Codex-MCP-parity question answered first, not just relocation)
+   and `brainstorm` (HTML render + `.agent0/.brainstorm-state/`; assess whether porting earns its keep —
+   it has no `AskUserQuestion` block, so it's not hard-blocked). `product` stays **cc-native** by design
+   (`AskUserQuestion` ×7 — no Codex equivalent). Follow `portability-tiers.md` § Per-skill migration
+   runbook; create new portable skills via the now-fixed `/skill new --tier agentskills-portable`.
+2. **Live-Codex confirm spec 121** (reminder `r-2026-05-30-live-codex-confirm-spec-121`) — fresh Codex
+   session: `codex debug prompt-input` lists a migrated skill from `.agents/skills`; `$<slug>` runs it.
+3. **vuln-audit smoke test** (reminder `r-2026-05-30-run-vuln-audit-once-against`) — real osv-scanner vs
+   `site/bun.lock`, confirm live V2 JSON parse. Open from spec 120.
+4. **Optional:** rebuild `site/dist/` (source strings changed by 122/123; dist not rebuilt).
 
 ## Decisions & Gotchas
 
-- **Skill symlinks are relative + git-tracked (mode 120000).** `.claude/skills/<slug>` + `.agents/skills/<slug>`
+- **Skill symlinks are relative + git-tracked (mode 120000):** `.claude/skills/<slug>` + `.agents/skills/<slug>`
   → `../../.agent0/skills/<slug>`. `find -type f` does NOT descend into them, so a migrated skill ships once
-  (via `.agent0/skills`), never double via the `.claude/skills` symlink. Edit the canonical source only.
-- **Rules are now context fragments, not Claude-native rules.** Do not reintroduce `.claude/rules/*.md` for
-  Agent0 harness docs; add/update `.agent0/context/rules/*.md` and let `context-inject.sh` hydrate it.
-- **New hook blocks are session-loaded.** Existing Claude/Codex sessions may not see changed hooks until
-  restarted; Codex requires project/hook trust on first TUI launch after `.codex/hooks.json` changes.
-- **Codex `exec` is not equivalent to TUI for this live proof.** In this run, `codex exec` did not expose
-  `SessionStart`/`UserPromptSubmit` hook context to the model even with `--dangerously-bypass-hook-trust`;
-  the positive runtime proof came from a fresh interactive Codex TUI session.
-- **Codex `.codex/hooks.json` migration gotchas:** if both `.codex/hooks.json` and inline TOML hooks exist,
-  Codex merges them and matching hooks can run twice; the local TOML has been cleaned. Moving source path
-  resets hook trust hashes, so a fresh TUI must review/trust the changed hooks again. `propagation-advise.sh`
-  stays absent from tracked `.codex/hooks.json` because that hook script is excluded from consumer sync.
-- **sync-harness symlink pass is apply-only + idempotent**, runs after `reconcile_deletions`; probes symlink
-  capability and copy-materializes + `skills-advisory:` when unavailable. Relocated-skill orphan is deleted
-  then re-linked in one `--apply`.
-- **vuln-audit (spec 120, committed `40bccdb`):** osv-scanner V2 parse pinned to crafted fixtures; bun.lock
-  covered, bun.lockb → skipped+migrate; live-binary smoke test still pending (reminder).
+  (via `.agent0/skills`). **Edit the canonical `.agent0/skills/<slug>/` source only.**
+- **Rules are now context fragments.** Do not reintroduce `.claude/rules/*.md`; add/update
+  `.agent0/context/rules/*.md` and let `context-inject.sh` hydrate. Keep portable skill bodies free of
+  `${CLAUDE_SKILL_DIR}`; reference bundled resources by repo-relative `.agent0/skills/<slug>/...`.
+- **`${CLAUDE_SKILL_DIR}` is also a detection token** in `skill/scripts/port-frontmatter.sh` +
+  `references/portability-tiers.md` — do NOT neutralize it there (it flags cc-native skills).
+- **Codex `.codex/hooks.json`:** if both it and inline TOML hooks exist, Codex runs matching hooks twice;
+  moving the source resets trust hashes (fresh TUI must re-trust). `codex exec` did NOT expose hook
+  context in testing — interactive TUI is the live-proof path.
+- **sync-harness skill symlink pass** is apply-only + idempotent (after `reconcile_deletions`); probes
+  symlink capability and copy-materializes + `skills-advisory:` on symlink-hostile checkouts (Windows).
+- **cc-only skill reasons:** `product` genuine (`AskUserQuestion` ×7); `image` MCP-bound; `brainstorm`
+  HTML+state. Only `product` is blocked by a CC-exclusive primitive; the other two are just unported.
+- **vuln-audit (spec 120, `40bccdb`):** osv-scanner V2 parse pinned to crafted fixtures; live-binary smoke
+  test still pending (reminder).
 - **Pre-existing UNRELATED failure:** `typecheck-advisory/08-globs-nested-workspace.sh` (Node-24
   compile-cache). Fix = `NODE_DISABLE_COMPILE_CACHE=1` or gitignore.
 - **Env:** gitleaks pre-commit active; governance gate blocks `rm -rf` + blanket `git add`;
-  secrets-preflight blocks compound `git add && git commit` (commit standalone); `sleep`-chained Bash is
+  secrets-preflight blocks compound `git add && git commit` (commit standalone); `sleep`-chained Bash
   blocked (use Monitor). Commits are user-gated.

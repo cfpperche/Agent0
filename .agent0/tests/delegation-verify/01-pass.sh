@@ -30,7 +30,7 @@ printf '%s' "$PAYLOAD" | CLAUDE_PROJECT_DIR="$TMP" CLAUDE_DELEGATION_VALIDATOR="
 
 [ "$hook_exit" -eq 0 ] || { printf 'FAIL: exit=%d want 0\n' "$hook_exit"; exit 1; }
 grep -q 'tdd-advisory: prod changed without test' "$err" || { printf 'FAIL: tdd-advisory not surfaced\n'; cat "$err"; exit 1; }
-ctr="$(cat "$TMP/.claude/.delegation-state/agents/$AGENT_ID/consecutive_failures" 2>/dev/null || echo MISSING)"
+ctr="$(cat "$TMP/.agent0/.delegation-state/agents/$AGENT_ID/consecutive_failures" 2>/dev/null || echo MISSING)"
 [ "$ctr" = "0" ] || { printf 'FAIL: counter=%s want 0\n' "$ctr"; exit 1; }
 ROW="$(grep '"event":"subagent-verify"' "$AUDIT" | tail -1 || true)"
 [ -n "$ROW" ] || { printf 'FAIL: no subagent-verify row\n'; exit 1; }

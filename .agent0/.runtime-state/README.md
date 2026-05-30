@@ -9,7 +9,7 @@ Lives at `.agent0/.runtime-state/README.md` rather than a top-level `STATE-LAYOU
 | Path | Owner rule | Purpose |
 | --- | --- | --- |
 | `.agent0/.browser-state/` | [`browser-auth`](../rules/browser-auth.md) | Playwright MCP session state (`<host>.json` cookie/localStorage snapshots) reused for headless reads after an interactive login. Empty `.gitkeep` sentinel travels via git so the dir exists in fresh forks; actual `*.json` files are project-local. |
-| `.claude/.delegation-state/` | [`delegation`](../rules/delegation.md) § Post-edit validator loop | Per-`agent_id` consecutive-failure counters for the post-edit validator loop budget (default cap 5). Reset on a passing validation; consulted at SubagentStop to mark `exit: loop-budget-exceeded` in the audit log. |
+| `.agent0/.delegation-state/` | [`delegation`](../rules/delegation.md) § Post-edit validator loop | Per-`agent_id` consecutive-failure counters for the post-edit validator loop budget (default cap 5). Reset on a passing validation; consulted at SubagentStop to mark `exit: loop-budget-exceeded` in the audit log. |
 | `.agent0/.routines-state/` | [`routines`](../rules/routines.md) | Per-`<slug>` recurring-routine state — `queue/<unix-ts>.md` (pending renders awaiting dispatch), `completed/<unix-ts>.md` (FIFO cap 50), `last-completed.json`, `last-queue.json`, plus shared `cron.log`. Populated by `.agent0/tools/run-routine.sh` at cron-fire time. |
 
 ## Discipline

@@ -9,11 +9,12 @@
 set -euo pipefail
 
 AGENT0_ROOT="${AGENT0_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-# Three delegation hooks after spec 106: gate stays in .claude/ (Claude-only,
-# blocking); stop + start-audit moved to .agent0/ (shared multi-runtime).
+# Three delegation hooks: all live in .agent0/hooks/ after spec 119 moved the
+# gate there too (gate is Claude-only-registered/blocking, but its file is
+# runtime-neutral; stop + start-audit were moved earlier by spec 106).
 STOP_HOOK="$AGENT0_ROOT/.agent0/hooks/delegation-stop.sh"
 START_HOOK="$AGENT0_ROOT/.agent0/hooks/delegation-start-audit.sh"
-GATE_HOOK="$AGENT0_ROOT/.claude/hooks/delegation-gate.sh"
+GATE_HOOK="$AGENT0_ROOT/.agent0/hooks/delegation-gate.sh"
 
 for h in "$STOP_HOOK" "$START_HOOK" "$GATE_HOOK"; do
   [ -f "$h" ] || { printf 'FAIL: hook not found: %s\n' "$h"; exit 1; }

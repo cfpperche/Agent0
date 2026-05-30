@@ -2,7 +2,7 @@
 
 Sub-agent dispatches via the `Agent` tool are gated. Two cooperating hooks enforce the discipline so under-specified briefs and unverified "done" claims surface immediately instead of after the fact:
 
-- **`PreToolUse(Agent)`** → `.claude/hooks/delegation-gate.sh` validates a 5-field handoff, honours an `# OVERRIDE:` marker, appends an audit line, and may attach a complexity advisory.
+- **`PreToolUse(Agent)`** → `.agent0/hooks/delegation-gate.sh` validates a 5-field handoff, honours an `# OVERRIDE:` marker, appends an audit line, and may attach a complexity advisory.
 - **`SubagentStop`** → `.agent0/hooks/delegation-verify.sh` runs the project validator once when a *delegated* sub-agent closes, keyed by `agent_id`. Parent (main-thread) stops are exempt by design. Runtime-neutral (Claude + Codex). Replaced the per-edit `post-edit-validate.sh` in spec 111.
 
 ## The 5-field handoff
@@ -63,7 +63,7 @@ Decision (exit codes):
 - **Fail, first stop** (`ok=false`, `stop_hook_active` false) → exit 2: closure is blocked and the sub-agent gets **one focused continuation** to fix the failing checks; the validator tail is surfaced.
 - **Fail, after a continuation** (`ok=false`, `stop_hook_active` true) → exit 0: the closure is accepted as a **partial result** rather than blocking again. `stop_hook_active` is the loop guard (Claude's native stop-loop-prevention signal, present on `SubagentStop`), so the escalation is robust even if `agent_id` does not persist across the continuation.
 
-Counters live at `.claude/.delegation-state/agents/<agent_id>/consecutive_failures`. `delegation-verify.sh` is the **writer**; `.agent0/hooks/delegation-stop.sh` **reads** the same counter for the close row's `exit` field (`>= CLAUDE_DELEGATION_LOOP_BUDGET`, default 5 → `loop-budget-exceeded`). The two hooks run **in parallel** (Claude runs all matching `SubagentStop` hooks concurrently — no ordering, no short-circuit), so they coordinate through the counter file, never a sentinel. `delegation-stop.sh` is unchanged: it always appends its `subagent-stop` close row; `delegation-verify.sh` writes its own `subagent-verify` rows (`decision: pass | blocked | exhausted`) adjacent, correlated by `agent_id`.
+Counters live at `.agent0/.delegation-state/agents/<agent_id>/consecutive_failures`. `delegation-verify.sh` is the **writer**; `.agent0/hooks/delegation-stop.sh` **reads** the same counter for the close row's `exit` field (`>= CLAUDE_DELEGATION_LOOP_BUDGET`, default 5 → `loop-budget-exceeded`). The two hooks run **in parallel** (Claude runs all matching `SubagentStop` hooks concurrently — no ordering, no short-circuit), so they coordinate through the counter file, never a sentinel. `delegation-stop.sh` is unchanged: it always appends its `subagent-stop` close row; `delegation-verify.sh` writes its own `subagent-verify` rows (`decision: pass | blocked | exhausted`) adjacent, correlated by `agent_id`.
 
 Parent agents do NOT trigger verification (`agent_id` is the delegated-actor gate; it is absent on a main-thread `Stop`). The parent is expected to run tests directly.
 
@@ -94,7 +94,7 @@ The hook branches on `runtime`. The fields split into three tiers:
 
 - **runtime-neutral** (both): `ts`, `runtime`, `session_id`, `agent_id`, `agent_type`, `event`.
 - **correlation** (runtime-specific): `correlation` — `"tool_use_id"` (Claude, bridge resolved via the sidecar `.meta.json.toolUseId` lookup), `"heuristic-session-type"` (Claude fallback under missing sidecar), `"agent_id-direct"` (**Codex** — the close row pairs to its `subagent-start` row by matching `agent_id`), `"unmatched"` (no prior dispatch/start row found — applies to both runtimes; on Codex, an `agent_id` with no matching start row stays `unmatched`, surfacing hook-disabled starts / crashes / partial rollouts).
-- **best-effort / null** (Claude-rich, Codex-null): `exit` — `"ok"` / `"loop-budget-exceeded"` (the `consecutive_failures` state lives at `.claude/.delegation-state/`, a Claude-only loop-budget counter; **`null` on Codex** — loop-budget enforcement is deferred there); `edit_count` — counted from the Claude per-sub-agent transcript `tool_use` blocks (`.name ∈ {Edit, Write, MultiEdit}`), **`null` on Codex** (no equivalent transcript edit attribution); `duration_ms` — client-computed (close_ts − start/dispatch_ts), `null` when no prior row is located; `agent_transcript_path` — Claude transcript pointer, may be empty on Codex.
+- **best-effort / null** (Claude-rich, Codex-null): `exit` — `"ok"` / `"loop-budget-exceeded"` (the `consecutive_failures` state lives at `.agent0/.delegation-state/`, a Claude-only loop-budget counter; **`null` on Codex** — loop-budget enforcement is deferred there); `edit_count` — counted from the Claude per-sub-agent transcript `tool_use` blocks (`.name ∈ {Edit, Write, MultiEdit}`), **`null` on Codex** (no equivalent transcript edit attribution); `duration_ms` — client-computed (close_ts − start/dispatch_ts), `null` when no prior row is located; `agent_transcript_path` — Claude transcript pointer, may be empty on Codex.
 
 ### Bridge mechanism (dispatch ↔ stop)
 

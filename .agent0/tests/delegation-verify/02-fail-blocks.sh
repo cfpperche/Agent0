@@ -31,7 +31,7 @@ printf '%s' "$PAYLOAD" | CLAUDE_PROJECT_DIR="$TMP" CLAUDE_DELEGATION_VALIDATOR="
 [ "$hook_exit" -eq 2 ] || { printf 'FAIL: exit=%d want 2\n' "$hook_exit"; cat "$err"; exit 1; }
 grep -q 'lint-advisory: example lint note' "$err" || { printf 'FAIL: validator own stderr not surfaced\n'; exit 1; }
 grep -q 'delegation-verify: delegated task verification FAILED' "$err" || { printf 'FAIL: block message missing\n'; exit 1; }
-ctr="$(cat "$TMP/.claude/.delegation-state/agents/$AGENT_ID/consecutive_failures" 2>/dev/null || echo MISSING)"
+ctr="$(cat "$TMP/.agent0/.delegation-state/agents/$AGENT_ID/consecutive_failures" 2>/dev/null || echo MISSING)"
 [ "$ctr" = "1" ] || { printf 'FAIL: counter=%s want 1\n' "$ctr"; exit 1; }
 ROW="$(grep '"event":"subagent-verify"' "$AUDIT" | tail -1 || true)"
 [ "$(printf '%s' "$ROW" | jq -r '.decision')" = "blocked" ] || { printf 'FAIL: decision != blocked: %s\n' "$ROW"; exit 1; }

@@ -2,7 +2,7 @@
 # .agent0/tests/061-delegation-stop/03-loop-budget.sh
 # Scenario: sub-agent stopped due to loop-budget exhaustion.
 #
-# Given .claude/.delegation-state/agents/<agent_id>/consecutive_failures holds
+# Given .agent0/.delegation-state/agents/<agent_id>/consecutive_failures holds
 # a count >= CLAUDE_DELEGATION_LOOP_BUDGET (default 5), When SubagentStop
 # fires, Then the close row records exit=loop-budget-exceeded instead of ok.
 set -euo pipefail
@@ -22,7 +22,7 @@ SESSION="sess-061-03"
 ATYPE="general-purpose"
 
 # Pre-seed the loop-budget state file at the default cap.
-STATE="$TMP/.claude/.delegation-state/agents/$AGENT_ID"
+STATE="$TMP/.agent0/.delegation-state/agents/$AGENT_ID"
 mkdir -p "$STATE"
 printf '5\n' >"$STATE/consecutive_failures"
 

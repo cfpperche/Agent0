@@ -75,7 +75,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/delegation-gate.sh"
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.agent0/hooks/delegation-gate.sh"
           }
         ]
       },

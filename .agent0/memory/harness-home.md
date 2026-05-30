@@ -13,9 +13,16 @@ The durable encoding of umbrella spec 102's § Classification principle. It bind
 
 ## The principle
 
-A harness surface belongs under **`.agent0/`** if **both** runtimes (or a future runtime) would read/write it through the harness. It stays under **`.claude/`** / **`.codex/`** only if it is **genuinely exclusive** to that runtime's mechanism — e.g. Claude's `settings.json` hook-config format, the Claude-only `Agent` delegation tool and its audit log, Codex's `config.toml`.
+A harness surface's **file** belongs under **`.agent0/`** if it is not *intrinsically* tied to one runtime's on-disk format. Only the **registration** (the pointer that tells a runtime to invoke the file) is runtime-specific. The two axes are orthogonal:
 
-`.claude/` is Claude Code's *conventional* home, not a runtime-neutral one. Keeping shared harness state there forces every multi-runtime port to re-decide "is this Claude-owned or shared?" path-by-path. Routing by this principle makes the multi-runtime story mechanical: a new runtime registers the `.agent0/` capacities through its own native surface, and the only runtime-specific files are the registration manifests.
+- **Location** (where the file lives) → `.agent0/` by default; `.claude/`/`.codex/` only for files that ARE a runtime's native format (Claude's `settings.json`, Codex's `config.toml`, CC's `.claude/worktrees/`).
+- **Registration** (what makes a runtime run it) → stays runtime-specific. A hook is registered in Claude's `settings.json` and/or Codex's `config.toml`; the *script it points at* lives in `.agent0/hooks/`.
+
+`delegation-verify.sh` is the canonical proof: registered in BOTH `settings.json` (Claude) and `.codex/config.toml.example` (Codex), yet the file lives in `.agent0/hooks/`. `delegation-gate.sh` (spec 119) generalizes it the other direction — registered ONLY by Claude (its `Agent` tool has no Codex analog), but its file still lives in `.agent0/hooks/` because the *script* carries no Claude-native format. A Claude-only *registration* does not pin the *file* to `.claude/`.
+
+`.claude/` is Claude Code's *conventional* home, not a runtime-neutral one. Keeping shared harness files there forces every multi-runtime port to re-decide "is this Claude-owned or shared?" path-by-path. Routing by this principle makes the multi-runtime story mechanical: a new runtime registers the `.agent0/` capacities through its own native surface, and the only runtime-specific files are the registration manifests themselves.
+
+**Refinement history:** the original principle keyed location off "do both runtimes read/write it" — which mis-classified Claude-only-*registered* files (like `delegation-gate.sh`) as `stays`. Specs 117/118/119 sharpened it to the location-vs-registration split above. The earlier "shared test" below still holds as a *sufficient* condition for `.agent0/` (if both runtimes use it, it's definitely shared) but is no longer *necessary* (a Claude-only-registered script whose body is runtime-neutral also goes to `.agent0/`).
 
 ## The "shared" test
 
@@ -26,13 +33,13 @@ A harness surface belongs under **`.agent0/`** if **both** runtimes (or a future
 
 ## Co-location with the producer
 
-A corollary surfaced by spec 104 and reaffirmed by row 14 (brainstorm-state): **state moves *with* its producer, never ahead of it.** Runtime-state followed `probe.sh`; session-state followed its `.agent0/hooks/`. A state dir whose sole producer/consumer is still a runtime-exclusive surface (e.g. `.claude/.brainstorm-state/`, produced only by the Claude-invoked `/brainstorm` skill) must NOT relocate before that producer does — moving it alone re-creates the exact state/producer split the consolidation kills. Relocate both in the same diff.
+A corollary surfaced by spec 104: **state moves *with* its producer, never ahead of it.** Runtime-state followed `probe.sh`; session-state followed its `.agent0/hooks/`. The rule is about avoiding a producer/state *split* — not about the producer's *file* having to move first. Spec 119 clarified this with `.brainstorm-state`: its producer (`/brainstorm` SKILL.md) stays in `.claude/skills/` (skills still `deferred`), yet the state dir relocated to `.agent0/.brainstorm-state/` because the skill's read/write path was **repointed in the same diff**. No split is created — the producer points at the new location. So the rule is satisfied by co-relocating *the producer's path reference*, which does not require relocating the producer's file. Do both in the same diff.
 
-## Worked dispositions (umbrella 102 gap matrix, all terminal as of 2026-05-28)
+## Worked dispositions (umbrella 102 gap matrix; updated through spec 119, 2026-05-29)
 
-- **`move` (shipped):** reminders, routines, session-state, runtime-state, browser-state, shared shell tools — written/read by both runtimes through the harness.
-- **`stays`:** `settings.json` (Claude hook-config format), delegation state + audit (`Agent` tool is Claude-exclusive), Claude-only hooks (registered only via `settings.json`).
-- **`deferred`:** rules, skills, validators, brainstorm-state — runtime-neutral in principle but their relocation waits on the "Codex actually consumes rules/skills" trigger; decide shared-`.agent0/` vs per-runtime then.
+- **`move` (shipped):** reminders, routines, session-state, runtime-state, browser-state, shared shell tools (103/104/105); validators + tests (118); **`delegation-gate.sh` + `.delegation-state/` + `.brainstorm-state/` (119)**. The hooks and state files are runtime-neutral *files*; only their registration is runtime-specific.
+- **`stays`:** `settings.json` (Claude hook-config format) + `.codex/config.toml` (Codex format) — the registration manifests themselves; the `Agent`-tool delegation *audit log* path is `.agent0/delegation-audit.jsonl` already, but the tool's *semantics* are Claude-only; `.claude/worktrees/` (CC-native `EnterWorktree`). What stays is format-bound or tool-semantic, never "a script with a Claude-only registration".
+- **`deferred`:** rules, skills, agents — runtime-neutral in principle but their relocation waits on the "Codex actually consumes rules/skills" trigger; decide shared-`.agent0/` vs per-runtime then. (Note: a skill staying `deferred` does NOT pin its *state output* to `.claude/` — see § Co-location, spec 119's `.brainstorm-state`.)
 
 ## Cross-references
 

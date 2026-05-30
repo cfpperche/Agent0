@@ -1,6 +1,6 @@
 ---
 name: brainstorm
-description: Conduct a divergent ideation session and render the captured material as a self-contained local HTML for human review. Use when the user wants to explore a vague idea (product, strategy, "what if…") that is not yet a spec candidate — sits before /sdd refine in the ideation→spec pipeline. Subcommands - start "<topic>", list, resume <slug-or-filename>, done. State and rendered HTML live under .claude/.brainstorm-state/ (gitignored). See .claude/skills/brainstorm/references/techniques.md for the lens library.
+description: Conduct a divergent ideation session and render the captured material as a self-contained local HTML for human review. Use when the user wants to explore a vague idea (product, strategy, "what if…") that is not yet a spec candidate — sits before /sdd refine in the ideation→spec pipeline. Subcommands - start "<topic>", list, resume <slug-or-filename>, done. State and rendered HTML live under .agent0/.brainstorm-state/ (gitignored). See .claude/skills/brainstorm/references/techniques.md for the lens library.
 argument-hint: <start "<topic>" | list | resume <slug-or-filename> | done>
 license: MIT
 compatibility: Designed for Claude Code. Body references `.claude/` conventional paths and CC-specific tools; portable to any runtime that maps a `.claude/`-analog directory and surfaces the referenced tools.
@@ -13,7 +13,7 @@ metadata:
 
 <!-- SKILL-RUBRIC-EXEMPT: divergent-ideation steps follow situational technique choice rather than per-step affordance; eval scenarios marginal — examples in references/techniques.md serve same role; see docs/specs/087-skill-rubric-freedom-evals/notes.md design-decision 2026-05-25 -->
 
-Conducts a structured-but-flexible brainstorm session and renders the captured material as a single self-contained HTML file for human review. Distinct from `/sdd refine` — that skill **converges** on a spec, this one **diverges** to surface more ideas, perspectives, and open questions. Output is ephemeral by design (lives under `.claude/.brainstorm-state/`, gitignored); the user decides afterwards what to promote into a spec via `/sdd new <slug>`.
+Conducts a structured-but-flexible brainstorm session and renders the captured material as a single self-contained HTML file for human review. Distinct from `/sdd refine` — that skill **converges** on a spec, this one **diverges** to surface more ideas, perspectives, and open questions. Output is ephemeral by design (lives under `.agent0/.brainstorm-state/`, gitignored); the user decides afterwards what to promote into a spec via `/sdd new <slug>`.
 
 ## Argument parsing
 
@@ -48,7 +48,7 @@ Soft budget: every 5–7 substantive turns, emit a checkpoint (see § *Capture l
 
 3. **Timestamp** — ISO-8601 UTC to the second, with `:` replaced by `-` for filename safety. Example: `2026-05-16T16-42-07Z`.
 
-4. **Create state file** — write `.claude/.brainstorm-state/<slug>-<ts>.json` via `Write` with the initial structure:
+4. **Create state file** — write `.agent0/.brainstorm-state/<slug>-<ts>.json` via `Write` with the initial structure:
 
 ```json
 {
@@ -66,7 +66,7 @@ Soft budget: every 5–7 substantive turns, emit a checkpoint (see § *Capture l
 }
 ```
 
-If the directory `.claude/.brainstorm-state/` does not exist yet, create it first via `Bash mkdir -p`.
+If the directory `.agent0/.brainstorm-state/` does not exist yet, create it first via `Bash mkdir -p`.
 
 5. **Open the session** — print a one-line confirmation (`session started — <filename>`) then ask exactly **one** grounding question. Examples (pick the one that fits the topic, do not list all):
 
@@ -198,18 +198,18 @@ When fired:
      Truncate each summary to 60 chars.
    - `{{STATE_JSON}}` → the full state JSON object, embedded as a JS literal (must be valid JSON that JavaScript can parse — use `JSON.stringify` mental model, escape `</` inside strings as `<\/` to avoid script-tag breakout).
 
-3. **Write the HTML file** — `Write` the substituted content to `.claude/.brainstorm-state/<slug>-<ts>.html`.
+3. **Write the HTML file** — `Write` the substituted content to `.agent0/.brainstorm-state/<slug>-<ts>.html`.
 
 4. **Print the local-serve instructions**:
 
 ```
 ✓ brainstorm session done
 
-  state:  .claude/.brainstorm-state/<slug>-<ts>.json
-  render: .claude/.brainstorm-state/<slug>-<ts>.html
+  state:  .agent0/.brainstorm-state/<slug>-<ts>.json
+  render: .agent0/.brainstorm-state/<slug>-<ts>.html
 
   open in browser:
-    python3 -m http.server 8765 -d .claude/.brainstorm-state
+    python3 -m http.server 8765 -d .agent0/.brainstorm-state
     → http://localhost:8765/<slug>-<ts>.html
 
   (file:// also works but the Copy-as-markdown button may be blocked by the clipboard API
@@ -218,7 +218,7 @@ When fired:
 
 ## Subcommand: `resume <slug-or-filename>`
 
-1. **Resolve target** — search `.claude/.brainstorm-state/` for `*.json`. Match against the arg:
+1. **Resolve target** — search `.agent0/.brainstorm-state/` for `*.json`. Match against the arg:
    - If exact filename match → use it
    - Else if a single file's name *starts with* the arg → use it
    - Else if a single file's name *contains* the arg → use it
@@ -232,7 +232,7 @@ When fired:
 
 ## Subcommand: `list`
 
-1. **Glob** — read `.claude/.brainstorm-state/*.json`. If none, print `no brainstorm sessions yet — try /brainstorm start "<topic>"`.
+1. **Glob** — read `.agent0/.brainstorm-state/*.json`. If none, print `no brainstorm sessions yet — try /brainstorm start "<topic>"`.
 
 2. **Emit one line per session**, sorted by `started_at` descending:
 
@@ -257,4 +257,4 @@ _Consumer-extension surface — append consumer-local bullets to this section. S
 - This skill **does not write to `docs/specs/`**. Promotion into a spec is the user's decision — they call `/sdd new <slug>` separately after reviewing the HTML.
 - The rendered HTML has a `Copy as markdown for /sdd new` button in the footer that yields a structured markdown block — paste that into the new spec's `spec.md` as starting material.
 - Lens library lives in `references/techniques.md`. Adding a lens later is mechanical: append a new section there with the 3 sub-sections (Description, When to apply, Protocol) and the skill picks it up next invocation.
-- Never persist to git from this skill. `.claude/.brainstorm-state/` is gitignored by design.
+- Never persist to git from this skill. `.agent0/.brainstorm-state/` is gitignored by design.

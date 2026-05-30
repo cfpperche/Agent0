@@ -18,7 +18,7 @@
 #
 # stop_hook_active is the primary loop guard (Claude's native stop-loop-prevention
 # signal, present on SubagentStop — see delegation-stop.sh which already reads it);
-# the agent_id-keyed counter at .claude/.delegation-state/agents/<id>/consecutive_failures
+# the agent_id-keyed counter at .agent0/.delegation-state/agents/<id>/consecutive_failures
 # is forensic and is the value delegation-stop.sh reads for the close row's `exit`
 # field. delegation-verify.sh is the WRITER of that counter (took over from
 # post-edit-validate.sh); delegation-stop.sh is the reader. The two hooks run in
@@ -66,7 +66,7 @@ STOP_HOOK_ACTIVE="$(printf '%s' "$INPUT" | jq -r '.stop_hook_active // false' 2>
 SUBAGENT_CWD="$(printf '%s' "$INPUT" | jq -r '.cwd // ""' 2>/dev/null || true)"
 
 AUDIT_LOG="$PROJECT_DIR/.agent0/delegation-audit.jsonl"
-STATE_DIR="$PROJECT_DIR/.claude/.delegation-state/agents/$AGENT_ID"
+STATE_DIR="$PROJECT_DIR/.agent0/.delegation-state/agents/$AGENT_ID"
 FAILS_FILE="$STATE_DIR/consecutive_failures"
 SCHEMA_VERSION=1
 

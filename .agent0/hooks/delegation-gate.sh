@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# .claude/hooks/delegation-gate.sh
+# .agent0/hooks/delegation-gate.sh
 # PreToolUse(Agent) hook enforcing structured delegation handoffs.
 #
 # Phases (fixed order):

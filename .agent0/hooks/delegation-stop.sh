@@ -7,7 +7,7 @@
 # runtime:
 #   - Claude: tool_use_id bridge via the per-sub-agent transcript sidecar
 #     .meta.json; edit_count from transcript tool_use blocks; exit state from
-#     the .claude/.delegation-state/ loop-budget counter (Claude-only).
+#     the .agent0/.delegation-state/ loop-budget counter (Claude-only).
 #   - Codex:  no sidecar — correlates to the prior subagent-start row by
 #     matching agent_id (correlation="agent_id-direct"); edit_count=null,
 #     exit=null (loop-budget enforcement deferred for Codex per spec 106).
@@ -34,7 +34,7 @@ PROJECT_DIR="$(memory_project_dir "$INPUT")"
 AUDIT_LOG="$PROJECT_DIR/.agent0/delegation-audit.jsonl"
 # Loop-budget counter is a Claude-only producer (deferred for Codex) → stays
 # in .claude/ per the co-location corollary (harness-home.md).
-STATE_DIR="$PROJECT_DIR/.claude/.delegation-state/agents"
+STATE_DIR="$PROJECT_DIR/.agent0/.delegation-state/agents"
 BUDGET="${CLAUDE_DELEGATION_LOOP_BUDGET:-5}"
 SCHEMA_VERSION=1
 

@@ -10,7 +10,7 @@ CLAUDE.local.md
 .agent0/.runtime-state/*
 !.agent0/.runtime-state/README.md
 .agent0/.session-state/
-.claude/.delegation-state/
+.agent0/.delegation-state/
 .agent0/delegation-audit.jsonl
 .agent0/delegation-audit.jsonl.lock
 .agent0/secrets-audit.jsonl
@@ -21,7 +21,7 @@ CLAUDE.local.md
 .claude/.memory-events.jsonl
 .claude/.memory-events.jsonl.lock
 .agent0/.browser-state/*.json
-.claude/.brainstorm-state/
+.agent0/.brainstorm-state/
 .agent0/.routines-state/
 
 # sync-harness CLAUDE.md migration artifacts (ephemeral; ratified via mv,

@@ -119,7 +119,7 @@ Report the score and point the user at the next step: `/sdd plan`.
 
 Cross-model review of `spec.md` between two tool-calling CLI agents in separate sessions, each running its own port of this skill. **The agent that invokes `/sdd debate` first becomes the `initiating agent`; the other runtime, when invoked against the same file, becomes the `reviewing agent`.** Both read and write `debate.md` directly via native file tools; the human alternates which runtime is active and decides when the debate ends. Goal: productive disagreement before `plan.md` is locked — catching spec ambiguities, hidden assumptions, and weak acceptance criteria that a single model misses. Opt-in step between `refine`/`new` and `plan`. Zero infra in this session: no API key, no MCP, no broker script — both agents have native file read/write. The artifact `debate.md` IS the audit trail (git-tracked alongside the spec).
 
-**This port's runtime identity:** `Claude Code`. The skill writes this literal string into `**Initiating agent:**` at scaffold time, and compares against this string on re-invocation to determine its role. A peer port (e.g. in Codex CLI, Cursor, Aider) defines its own identity string and operates identically; the example labels used throughout this section are illustrative, not behavioural rules.
+**This port's runtime identity:** the name of the runtime you are actually executing in — `Claude Code`, `Codex CLI`, `Cursor`, `Aider`, etc. **Determine it from your own execution context; do NOT read it as a fixed literal from this skill file.** Skills are symlink-shared across runtimes (see `.agent0/context/rules/runtime-capabilities.md`), so this file is byte-identical for every port — any hardcoded name here would be wrong for all but one runtime. The skill writes *your* identity into `**Initiating agent:**` at scaffold time, and on re-invocation compares the `**Initiating agent:**` value against your own identity to determine your role: **names you → you are the initiating agent; names a different runtime → you are the reviewing agent.** The runtime labels used as examples throughout this section (`Claude Code`, `Codex CLI`, …) are illustrative, not behavioural rules.
 
 **Entry shape:** `/sdd debate` — no positional argument. Same target-selection rule as `plan` / `tasks`: latest `docs/specs/NNN-*/` dir unless the user has named a specific one in conversation. **Re-invocable on an in-flight debate** — each invocation determines this runtime's role (initiating vs reviewing) from file metadata and writes the next empty slot belonging to that role.
 
@@ -139,8 +139,8 @@ If `debate.md` does NOT exist → this runtime is the **initiating agent**; proc
    - **Complete** — `Resolution:` value is one of `converged` / `cap-reached` / `abandoned` (set when synthesis was written). Warn but allow — the user is explicitly starting a second debate; rename the existing file to the next free `debate-N.md` (1, 2, 3, …) and treat as scaffold (this runtime becomes the initiator of the new debate). Continue to Step 3.
 
 2. Read the `**Initiating agent:**` line at the top of `debate.md`:
-   - Value equals this port's identity (`Claude Code`) → this runtime is the **initiating agent**. Jump to Step 6 (write the next empty initiating-agent slot — counter or, if user-requested, synthesis).
-   - Value is anything else → this runtime is the **reviewing agent**. Jump to Step 6 (write the next empty reviewing-agent critique slot).
+   - Value equals **your own runtime identity** (the runtime you are executing in — see "This port's runtime identity" above) → this runtime is the **initiating agent**. Jump to Step 6 (write the next empty initiating-agent slot — counter or, if user-requested, synthesis).
+   - Value is anything else (names a different runtime) → this runtime is the **reviewing agent**. Jump to Step 6 (write the next empty reviewing-agent critique slot).
    - **Line is absent (legacy file pre-dating runtime-neutral metadata)** → do NOT default to "local runtime is initiator"; that lets two ports both think they own the debate. Instead, infer from legacy round headers:
      - Grep the file for `## Round 1 — Claude (position)` → infer Initiating agent = `Claude Code`. Emit advisory `debate-advisory: <path> has no '**Initiating agent:**' metadata; inferred Claude Code from legacy 'Round 1 — Claude (position)' header — add the metadata block manually for forward compatibility` and proceed with role determination using the inferred value (so a Claude Code port resuming a legacy Claude-scaffolded file correctly takes the initiator role).
      - Grep for `## Round 1 — Codex CLI (position)` / `## Round 1 — Cursor (position)` / `## Round 1 — Aider (position)` (or any other known peer-port literal) → infer that runtime as the initiator. Same advisory shape with the inferred name. This runtime then takes the reviewer role per the standard non-match branch.
@@ -152,9 +152,9 @@ The Resolution-line check distinguishes in-flight vs complete; the Initiating-ag
 
 Copy `.agent0/skills/sdd/templates/debate.md.tmpl` to `docs/specs/NNN-<slug>/debate.md`. Substitute the standard placeholders (`{{NNN}}`, `{{SLUG}}`, `{{DATE}}` — same as `new`) AND the metadata block at the top:
 
-- `{{initiating agent name}}` → this port's identity literal: `Claude Code`
+- `{{initiating agent name}}` → **your own runtime identity** (e.g. `Claude Code` if you are Claude Code, `Codex CLI` if you are Codex, etc.)
 - `{{reviewing agent name}}` → leave as the literal placeholder string `{{reviewing agent name}}` (the reviewing runtime fills it on its first write)
-- `{{runtime or session label}}` → a short label naming this runtime + session date, e.g. `Claude Code session YYYY-MM-DD` (use today's date)
+- `{{runtime or session label}}` → a short label naming your runtime + session date, e.g. `Claude Code session YYYY-MM-DD` or `Codex CLI session YYYY-MM-DD` (use today's date)
 
 ### Step 4: Pre-populate Round 1 — 🔓 Medium freedom
 
@@ -210,7 +210,7 @@ Each `/sdd debate` invocation on an in-flight debate (Step 2 has already classif
      - All initiating-agent slots filled AND user has not asked for synthesis → report `All initiating-agent rounds written; waiting on the reviewing agent for next critique, OR ask me to synthesize when ready` and exit.
    - **Reviewing agent role.** Look for the first reviewing-agent critique slot still unfilled (Round 1 critique, Round 2 critique, Round 3 critique). For a critique at Round N, the prerequisite is that the same-round initiator slot is filled (position when N=1, counter when N≥2).
      - Next slot is a critique at Round N AND the same-round initiator slot is empty → report `Waiting on initiating agent for Round N position` (when N=1) or `Waiting on initiating agent for Round N counter` (when N≥2), followed by `; no reviewing-agent critique is ready.` Exit. Do NOT write.
-     - Next slot is a critique at Round N AND the same-round initiator slot is filled → write the critique (Step 3, critique branch). **On first reviewing-agent write only**, if `**Reviewing agent:**` is still the literal placeholder `{{reviewing agent name}}`, replace it with this port's identity literal (`Claude Code` for this port).
+     - Next slot is a critique at Round N AND the same-round initiator slot is filled → write the critique (Step 3, critique branch). **On first reviewing-agent write only**, if `**Reviewing agent:**` is still the literal placeholder `{{reviewing agent name}}`, replace it with **your own runtime identity** (e.g. `Codex CLI` if you are Codex, `Claude Code` if you are Claude Code).
      - All reviewing-agent critique slots filled → report `All reviewing-agent critiques written; waiting on the initiating agent for next counter, OR ask the initiating agent to synthesize` and exit.
 3. **Write the slot:**
    - **Counter** (initiating role): for each critique point in the most recent reviewing-agent critique, classify as **accept** (will propose spec change in synthesis), **reject** (with one-line reasoning), or **defer** (open question; flag for synthesis). Fill the placeholder.

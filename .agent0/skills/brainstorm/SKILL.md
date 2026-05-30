@@ -1,12 +1,12 @@
 ---
 name: brainstorm
-description: Conduct a divergent ideation session and render the captured material as a self-contained local HTML for human review. Use when the user wants to explore a vague idea (product, strategy, "what if…") that is not yet a spec candidate — sits before /sdd refine in the ideation→spec pipeline. Subcommands - start "<topic>", list, resume <slug-or-filename>, done. State and rendered HTML live under .agent0/.brainstorm-state/ (gitignored). See .claude/skills/brainstorm/references/techniques.md for the lens library.
+description: Conduct a divergent ideation session and render the captured material as a self-contained local HTML for human review. Use when the user wants to explore a vague idea (product, strategy, "what if…") that is not yet a spec candidate — sits before /sdd refine in the ideation→spec pipeline. Subcommands - start "<topic>", list, resume <slug-or-filename>, done. State and rendered HTML live under .agent0/.brainstorm-state/ (gitignored). See .agent0/skills/brainstorm/references/techniques.md for the lens library.
 argument-hint: <start "<topic>" | list | resume <slug-or-filename> | done>
 license: MIT
-compatibility: Designed for Claude Code. Body references `.claude/` conventional paths and CC-specific tools; portable to any runtime that maps a `.claude/`-analog directory and surfaces the referenced tools.
+compatibility: Compatible with any agentskills.io-compatible runtime (Claude Code, OpenAI Codex, and ~35 others). Conversational ideation drives plain file IO (read/write a JSON state file); the `done` render is a deterministic python3 script (state.json → self-contained HTML). State lives under `.agent0/.brainstorm-state/` (gitignored). Requires python3; markmap/mermaid load from CDN at view time (browser, runtime-agnostic).
 metadata:
-  agent0-portability-tier: cc-native
-  version: "0.1"
+  agent0-portability-tier: agentskills-portable
+  version: "0.2"
 ---
 
 # /brainstorm — divergent ideation skill
@@ -152,7 +152,7 @@ When fired:
 
 1. **Match the lens** — case-insensitive against the lens names in `references/techniques.md`. If a single-hat phrase is matched (e.g. "Black Hat"), record that the lens is **Six Thinking Hats** with `hats_applied: ["black"]` only.
 
-2. **Read the lens spec** — `Read` `.claude/skills/brainstorm/references/techniques.md`, scroll to the matching section. Follow its **Protocol** sub-section verbatim. Do not invent variants.
+2. **Read the lens spec** — read `.agent0/skills/brainstorm/references/techniques.md`, scroll to the matching section. Follow its **Protocol** sub-section verbatim. Do not invent variants.
 
 3. **Walk the existing material** — apply the protocol to the ideas already in `ideas[]` (cap at 5 ideas per pass for SCAMPER to avoid context explosion; whole-set is fine for Six Hats and Reverse since their output per idea is small).
 
@@ -177,30 +177,17 @@ When fired:
 
 1. **Finalise state** — `Edit` the JSON: set `ended_at = <ISO now>` and `state = "done"`.
 
-2. **Pre-render the dynamic placeholders** — read the template at `.claude/skills/brainstorm/templates/render.html.tmpl`. Substitute these placeholders against the state:
+2. **Render the HTML** — run the deterministic renderer. It is a pure function of the finalised state JSON: it reads the bundled template and substitutes every dynamic placeholder, then writes the HTML next to the state file. Do **not** hand-substitute placeholders — that step was error-prone (a hand-render once shipped an empty mindmap) and is now the script's job.
 
-   - `{{TOPIC}}` → the verbatim topic string
-   - `{{TIMESTAMP}}` → `<started_at> → <ended_at>` (human-readable; trim seconds if too long)
-   - `{{IDEAS_COUNT}}` → `len(ideas)`
-   - `{{QUESTIONS_COUNT}}` → `len(questions_open)`
-   - `{{LENSES_COUNT}}` → `len(lenses_applied)`
-   - `{{MINDMAP_MARKDOWN}}` → a markdown outline for markmap: top heading is the topic; first-level children are the tag buckets (`easy`, `risky`, `wild`, `unknown`); second-level children are the idea texts (truncated to 80 chars for readability); third-level children, where applicable, are derived-from links rendered as `↳ via <lens>`. Skip empty buckets.
-   - `{{LENS_TABS_HTML}}` → one `<button data-tab="lens-<slug>">LensName</button>` per entry in `lenses_applied[]`. Use the lens name's lowercase-kebab as `<slug>` (e.g. `SCAMPER` → `scamper`, `Six Thinking Hats` → `six-thinking-hats`). The tab label is **just the name** — no inline badge. The colour-coded badge lives inside the panel header instead, so the tab bar stays terse.
-   - `{{LENS_PANELS_HTML}}` → one `<div class="panel" data-panel="lens-<slug>">` per lens, each containing a `<section><h2>LensName <span class="lens-badge <css-slug>">{name}</span> — derived ideas</h2><div class="kanban" id="kanban-<slug>"></div></section>` plus any lens-specific structured blocks (e.g. for Six Thinking Hats, render one sub-section per applied hat listing its captures from `lenses_applied[].six_hats.<hat>` if present). The `<css-slug>` aliases the kebab slug to the CSS class set in the template: `scamper` / `six-hats` (alias for `six-thinking-hats`) / `reverse` / `crazy-8s`.
-   - `{{TIMELINE_MERMAID}}` → a mermaid `timeline` block populated from `turns[]`. Shape:
-     ```
-     timeline
-       title brainstorm session
-       turn 1 : <summary>
-       turn 2 : <summary>
-       ...
-     ```
-     Truncate each summary to 60 chars.
-   - `{{STATE_JSON}}` → the full state JSON object, embedded as a JS literal (must be valid JSON that JavaScript can parse — use `JSON.stringify` mental model, escape `</` inside strings as `<\/` to avoid script-tag breakout).
+   ```bash
+   python3 .agent0/skills/brainstorm/scripts/render.py .agent0/.brainstorm-state/<slug>-<ts>.json
+   ```
 
-3. **Write the HTML file** — `Write` the substituted content to `.agent0/.brainstorm-state/<slug>-<ts>.html`.
+   The script writes `.agent0/.brainstorm-state/<slug>-<ts>.html` (same basename, `.html`) and prints that path on stdout. Exit 0 = success; exit 1 = a placeholder was left unsubstituted (a render bug — surface it, don't ship the HTML); exit 2 = bad/missing state or template. Override defaults with `--template <path>` / `--out <path>` only if needed.
 
-4. **Print the local-serve instructions**:
+   The renderer owns all eight placeholders so you don't have to: `{{TOPIC}}`, `{{TIMESTAMP}}`, the three counts, `{{LENS_TABS_HTML}}`, `{{LENS_PANELS_HTML}}` (one panel + `kanban-<slug>` host per lens, with Six-Hats sub-sections when `lenses_applied[].six_hats` is present), `{{MINDMAP_MARKDOWN}}` (topic → tag buckets → idea texts truncated to 80, derived ideas linked `↳ via <lens>`), `{{TIMELINE_MERMAID}}` (from `turns[]`, summaries truncated to 60 and colons replaced since mermaid uses `:` as a field delimiter), and `{{STATE_JSON}}` (embedded, `</` escaped). The template's own JS fills the kanban / questions / quotes / copy-as-markdown views client-side from the embedded state — the script produces only what must exist before the browser loads.
+
+3. **Print the local-serve instructions**:
 
 ```
 ✓ brainstorm session done

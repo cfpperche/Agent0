@@ -21,6 +21,26 @@ The HANDOFF flagged `image` as blocked: _"fal.ai MCP — answer Codex-MCP-parity
 
 Net: `image` is `agentskills-portable`, not `cc-native`. The only genuinely new neutralization vs the prior five was the `mcp__fal-ai__*` tool-name spellings (now de-prefixed) — there was no `${CLAUDE_SKILL_DIR}` in the body, so no collision with the `port-frontmatter.sh` detection token.
 
+### 2026-05-30 — parent — brainstorm migrated (7th) + render-script refinement
+
+`brainstorm` had no hard blocker — no `${CLAUDE_SKILL_DIR}`, no `AskUserQuestion`, state already
+under `.agent0/.brainstorm-state/` (neutral), HTML rendered browser-side. The `$ARGUMENTS` + `Write`/`Edit`/`Read`
+tool-name references stay, consistent with the precedent set by the already-shipped portable skills
+(`remind`/`routine`/`sdd` all keep them); this repo's `agentskills-portable` bar targets `.claude/` paths,
+`${CLAUDE_SKILL_DIR}`, and `AskUserQuestion`, none of which brainstorm had.
+
+**Refinement (port = refinement, not transcription):** the `done` step used to hand-substitute eight HTML
+placeholders in prose — the single most error-prone step on *any* runtime. Inspection of the template showed
+every placeholder is a deterministic function of the finalised state JSON (all judgment — tagging, lens
+application — happens during the session, not at render). So the whole render was extracted into
+`scripts/render.py` (pure `state.json → HTML`). This (a) makes `done` deterministic, (b) gives brainstorm its
+first testable surface (`.agent0/tests/brainstorm/`, previously SKILL-RUBRIC-EXEMPT with zero tests), and (c)
+fixes two real hand-render bugs found in the shipped smoke artifact: an **empty `{{MINDMAP_MARKDOWN}}`** (the
+agent skipped it) and the mermaid **`:` field-delimiter collision** (mermaid `timeline` parses `:` as a field
+separator, so colons in summaries must be replaced — the script does it, a hand-render forgot once). python3
+(already a dependency precedent via image's `gen.sh`); template resolved relative to the script path, no
+`${CLAUDE_SKILL_DIR}`. The product skill stays the only intentionally `cc-native` skill (`AskUserQuestion` ×7).
+
 ### 2026-05-30 — parent — image estreia `agents/openai.yaml` (first skill with one)
 
 `image` is the first migrated skill with both (a) a real MCP dependency and (b) a hard reason not to auto-fire (paid, side-effecting generation). Per the runbook step 5, that's exactly when `agents/openai.yaml` is warranted, so `image` ships the first one: `policy.allow_implicit_invocation: false` (explicit `$image` / `/skills` only) + a `dependencies.tools` entry declaring the optional fal-ai MCP. It is written to read as the reference template for future skills-with-MCP. Schema taken from developers.openai.com/codex/skills (`interface` / `policy` / `dependencies.tools[].{type,value,description,transport,url}`).

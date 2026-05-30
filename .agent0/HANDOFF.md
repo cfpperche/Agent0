@@ -30,10 +30,10 @@ Pre-existing untracked `docs/specs/091-sdd-debate-runner/` remains unrelated/out
 1. **Optional spec 125 candidate: hook-context visual polish.** Spec 124 fixed content volume, but the live UI
    still displays `hook context` flattened into long lines. Investigate whether either runtime can preserve
    readable newlines or hide the block while keeping model-visible context; otherwise reduce startup text further.
-2. **Refactor the cc-only skills toward multi-runner** (next arc). `image` migrated (6th under spec 121 —
-   blocker dissolved: gen is curl-REST since 088, Codex MCP parity confirmed; estreia `agents/openai.yaml`).
-   Next: `brainstorm` = HTML + `.agent0/.brainstorm-state/` (assess if porting earns its keep; not hard-blocked).
-   `product` stays **cc-native** (`AskUserQuestion` ×7). Use `portability-tiers.md` § migration runbook.
+2. **cc-only skill multi-runner arc — essentially complete.** `image` (6th) + `brainstorm` (7th) migrated under
+   spec 121; 7 portable skills total. `brainstorm`'s error-prone `done` HTML render was extracted to
+   `scripts/render.py` (deterministic pure `state.json→HTML`; first test surface at `.agent0/tests/brainstorm/`).
+   Only `product` stays **cc-native** by design (`AskUserQuestion` ×7) — not a gap. Arc done unless a new candidate appears.
 3. **Live-Codex confirm spec 121** (reminder `r-2026-05-30-live-codex-confirm-spec-121`) — fresh Codex:
    `codex debug prompt-input` lists a migrated skill from `.agents/skills`; `$<slug>` runs it.
 4. **vuln-audit smoke test** (reminder `r-2026-05-30-run-vuln-audit-once-against`) — real osv-scanner vs

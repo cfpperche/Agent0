@@ -21,12 +21,9 @@ now shared: added a synchronous `run` subcommand; `/image gen.sh exec` delegates
 "opt-in MCP recipe" wording in `/image SKILL.md` + `image-gen.md` (generation is REST-only since spec 088; MCP is
 optional discovery). image-gen + video suites green; exec delegation proven via a real 401 routed through the lib.
 
-**Spec 091 — sdd-debate-runner: DEFERRED + committed** (`31a6930`). Was authored 2026-05-26 but never tracked;
-now parked indefinitely (manual `debate.md` works — see 132's debate; automated runner not pursued). `Status:
-draft — deferred` inline note; canonical pause already in runtime-capabilities.md "debate" row.
-
-**All commits pushed to `origin/main`** (`…→31a6930`); working tree clean, branch in sync. **Prior shipped:**
-131 project-core (`606fcf0`); 130 baseline relocate; 129 claude-exec; 128 codex-exec.
+**Spec 091 — sdd-debate-runner: DEFERRED + committed** (`31a6930`). Parked indefinitely (manual `debate.md`
+works; automated runner not pursued); `Status: draft — deferred` inline note. **All commits pushed to
+`origin/main`**; tree clean, in sync. **Prior shipped:** 131 project-core (`606fcf0`); 130/129/128.
 
 ## Active Work
 

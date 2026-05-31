@@ -8,46 +8,46 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 
 ## Current State
 
-**Spec 132 — video-skill: implemented + validated, UNCOMMITTED.** New `/video` skill, sibling of `/image`,
-required `--mode=code|generative`. **code** = HyperFrames npm engine renders HTML→MP4 locally, $0 inference, source
-tracked / MP4 gitignored / render fingerprint in manifest. **generative** = fal.ai queue REST, fire-and-forget
-ledger (submit→poll), hard `--confirm-cost-usd` gate. Built via full SDD (spec→cross-model debate w/ Codex→plan→
-tasks→build). Files: `.agent0/skills/video/`, `.agent0/tools/fal-rest.sh` (shared REST lib), `.agent0/context/
-rules/video-gen.md`, symlinks, `.agent0/tests/video/` (5 tests green), CLAUDE.md/AGENTS.md/runtime-capabilities/
-.gitignore touched. **Code mode validated with a REAL render** (1920×1080 h264 MP4 + manifest). Generative dry-
-validated only (gate/tier/envelope/ledger); live paid submit/poll NOT exercised (needs real FAL_KEY + spend).
+**Spec 132 — video-skill: SHIPPED** (`288f17e` skill + `42d0891` sync-manifest gitkeeps). New `/video`,
+sibling of `/image`, required `--mode=code|generative`. **code** = pinned HyperFrames npm engine renders
+HTML→MP4 locally ($0 inference; source tracked, MP4 gitignored, render fingerprint in manifest; owned authoring
+layer). **generative** = fal.ai queue REST, fire-and-forget ledger (submit/poll), hard `--confirm-cost-usd` gate;
+tiers in refreshable `video-tiers.yaml` (no model IDs in body). Built via full SDD + Claude↔Codex debate. Code
+mode validated with a REAL render; generative dry-validated only (no paid call). 5-test sweep green.
 
-**Prior shipped (in git log):** 130 baseline relocate (`.claude/`→`.agent0/harness-sync-baseline.json`; note: that
-file is mid-relocation/absent now per 130/131). 129 claude-exec, 128 codex-exec (subprocess bridges, siblings not
-clones). 126/127 site. mei-saas consumer fully synced. Untracked `docs/specs/091-sdd-debate-runner/` out of scope.
+**Spec 133 — image-fal-rest-migration: SHIPPED** (`69cdf2c`). Extracted `.agent0/tools/fal-rest.sh` (spec 132) is
+now shared: added a synchronous `run` subcommand; `/image gen.sh exec` delegates its POST+download to the lib
+(image-specific body/`.images[0].url`/dim-reconciliation stay local). Fixed the stale "delegates to the MCP" /
+"opt-in MCP recipe" wording in `/image SKILL.md` + `image-gen.md` (generation is REST-only since spec 088; MCP is
+optional discovery). image-gen + video suites green; exec delegation proven via a real 401 routed through the lib.
+
+**Prior shipped (git log):** 131 project-core mirror (`606fcf0`); 130 baseline relocate; 129 claude-exec; 128
+codex-exec. Untracked `docs/specs/091-sdd-debate-runner/` is pre-existing, out of scope (never staged this session).
 
 ## Active Work
 
-_None — spec 132 complete, awaiting commit decision._
+_None — 132 + 133 shipped and committed._
 
 ## Next Actions
 
-1. **Commit spec 132 (user-gated).** Suggested split: `feat(132): /video skill — code+generative modes` + a
-   separate commit for the SDD artifacts, or all-in-one. Nothing committed this session.
-2. **Register 132's new managed files in `harness-sync-baseline.json`** once specs 130/131 settle its location
-   (the baseline file is mid-relocation — absent from the tree right now, so no registration target exists yet).
-3. **Decoupled follow-up spec:** migrate `/image` onto `.agent0/tools/fal-rest.sh` + fix `/image`'s stale
-   "delegates to MCP" frontmatter wording (real contract is REST; Codex debate catch).
-4. **Spec 126 OQ5 (optional)** bolder visual/brand; **deploy site** (GitHub Pages `cfpperche.github.io/Agent0/`).
+1. **Optional paid validations** (need a real `FAL_KEY` + spend, user-authorized): a real `/video --mode=generative`
+   clip (submit→poll→download), and a real `/image --tier=draft` to confirm the migrated `exec` success path.
+2. **Decoupled follow-up is DONE** (was 133) — `/image` is on `fal-rest.sh`; no remaining fal-REST duplication.
+3. **Spec 126 OQ5 (optional)** bolder visual/brand; **deploy site** (GitHub Pages `cfpperche.github.io/Agent0/`).
 
 ## Decisions & Gotchas
 
-- **`/video` design (spec 132 debate, converged w/ Codex):** own the authoring layer (do NOT install upstream
-  `heygen-com/hyperframes` agent-skill — depend on the pinned npm *engine* only); ledger async not blocking; cost
-  gate binds to cost/model/duration; NO drift-checker in v1 (speculative-observability discipline); tiers live in
-  refreshable `references/video-tiers.yaml` (zero model IDs in skill body).
-- **HyperFrames lint is LINE-BASED (pre-1.0 gotcha).** A comment immediately before `<div id="root">`, or `#root`
-  `data-*` attrs wrapped across lines → false `root_missing_composition_id`/`dimensions`. Render still succeeds; the
-  shipped template lints 0/0. Documented in template + `authoring.md` + `video-gen.md`.
-- **Skill homes:** edit canonical `.agent0/skills/<slug>/` only (`.claude/skills`+`.agents/skills` are discovery
-  symlinks). Invalid `SKILL.md` fixtures under `.agent0/tests/.../fixtures/`, never below `.agent0/skills/*`.
-- **Relocations sweep docs too:** a `.claude/→.agent0/` move must grep `CLAUDE.md`/`AGENTS.md`/rules for stale refs.
-- **Bridges (`codex-exec`/`claude-exec`):** subprocess, siblings not clones. codex-exec default sandbox read-only;
-  claude-exec `--permission-mode` required + `--allow-writes` gate. Both audit to gitignored `.agent0/.runtime-state/`.
-- **Env gotchas:** gitleaks pre-commit active; governance blocks `rm -rf` + blanket `git add`; secrets-preflight
-  blocks compound `git add && git commit`; commits are user-gated.
+- **`harness-sync-baseline.json` is CONSUMER-side + auto-maintained by `sync-harness.sh --apply` — never edited in
+  Agent0** (it isn't even present in the Agent0 tree). The registration surface for new shipped files is the
+  **manifest** (`COPY_CHECK_*` arrays in `sync-harness.sh`). `/video` skill/rule/tests/fal-rest.sh were already in
+  scope (recursive/glob); only the `assets/video/*` gitkeeps needed adding (`42d0891`).
+- **`fal-rest.sh` = the one fal REST impl:** sync `run` (fal.run) + async `submit`/`status`/`result`/`download`
+  (queue.fal.run); model-agnostic. `/image` (sync) + `/video` generative (async) both consume it. Post-133, `/image`'s
+  failure receipt reports `http_code:0` with the real fal error on stderr (minor, documented).
+- **`/video` design (132 debate):** own the authoring layer (no upstream agent-skill install); ledger async not
+  blocking; cost gate binds to cost/model/duration; NO drift-checker v1; tiers refreshable.
+- **HyperFrames lint is LINE-BASED (pre-1.0):** no comment immediately before `<div id="root">`, keep `#root`
+  `data-*` on one line, else false `root_missing_*`. Shipped template lints 0/0.
+- **Skill homes:** edit canonical `.agent0/skills/<slug>/` only (`.claude/skills`+`.agents/skills` are symlinks).
+- **Env gotchas:** gitleaks pre-commit active; governance blocks `rm -rf` (combined `-r`+`-f`) + blanket `git add`;
+  secrets-preflight blocks compound `git add && git commit` (stage + commit as separate calls); commits user-gated.

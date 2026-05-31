@@ -74,7 +74,7 @@ Opt-in capacity for AI image generation via fal.ai MCP — the `/image` skill pr
 
 ## Harness sync
 
-`.agent0/tools/sync-harness.sh` brings a consumer project's harness up to date with Agent0 via 3-way baseline reconciliation against `.claude/harness-sync-baseline.json` — stale files auto-update, consumer-customized files refuse without `--force`, never touches product code. See `.agent0/context/rules/harness-sync.md`.
+`.agent0/tools/sync-harness.sh` brings a consumer project's harness up to date with Agent0 via 3-way baseline reconciliation against `.agent0/harness-sync-baseline.json` — stale files auto-update, consumer-customized files refuse without `--force`, never touches product code. See `.agent0/context/rules/harness-sync.md`.
 
 ## Lint validator
 
@@ -87,7 +87,7 @@ The validator runs a typecheck step only when the consumer project declares the 
 ## Memory
 
 Factual project knowledge lives in `.agent0/memory/<topic>.md`; the trigger-read index is `.agent0/memory/MEMORY.md`. Content is git-tracked for this project, but not shipped to consumers.
-Read the index when work touches project architecture, first-party capacities, `.agent0/context/rules/`, `.claude/hooks/`, `.claude/skills/`, `.agent0/tools/sync-harness.sh`, `.agent0/context/rules/runtime-capabilities.md`, or `.agent0/memory/`.
+Read the index when work touches project architecture, first-party capacities, `.agent0/context/rules/`, `.agent0/hooks/`, `.claude/skills/`, `.agent0/tools/sync-harness.sh`, `.agent0/context/rules/runtime-capabilities.md`, or `.agent0/memory/`.
 Follow only relevant entries; ordinary reads do not mutate memory.
 Claude uses `.claude/settings.json` hooks. Codex uses tracked `.codex/hooks.json` hooks after the project and changed hook definitions are trusted.
 Do not raw-edit `.agent0/memory/MEMORY.md`; edit entries and let projection regenerate it.

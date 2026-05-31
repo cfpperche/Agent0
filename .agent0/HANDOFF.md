@@ -8,25 +8,26 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 
 ## Current State
 
-**Spec 129 — claude-exec: shipped.** The symmetric sibling of `codex-exec` — lets a non-Claude runtime
-(primarily Codex) invoke the local Claude Code CLI via `claude -p`. Canonical source `.agent0/skills/claude-exec/`,
-discovery symlinks in `.claude/skills/` + `.agents/skills/`, `scripts/claude-exec.sh`, Codex metadata with
-`allow_implicit_invocation: true`, tests under `.agent0/tests/claude-exec-skill/` (50 assertions green).
-**Not a clone** — native `--permission-mode` pass-through (required, fail-closed), `jq` last-message extraction
-(Claude has no `--output-last-message`), `session_id` capture for `--resume`, prompt via stdin (variadic flags
-would swallow positional). Validation: suite + `validate.sh` + `check-rubric.sh` + live smoke + Codex
-bidirectional dogfood. Dogfood found the read-only "floor" was caller discipline not a bridge invariant →
-fixed with the `--allow-writes` gate (write-capable modes refused without it; default/plan are the floor).
+**Spec 130 — harness-baseline-relocate: shipped (`67fec69`) + follow-up (`464976a`).** Baseline moved
+`.claude/`→`.agent0/harness-sync-baseline.json` (last umbrella-102 holdout). `sync-harness.sh` reads the legacy
+path as fallback, removes it on the migrating `--apply` (write-before-delete). Follow-up repointed two stale doc
+refs in `CLAUDE.md`+`AGENTS.md` (baseline path + spec-119 `.claude/hooks/`); gotcha added to `harness-home.md`.
+
+**mei-saas consumer: fully synced to Agent0, clean** (3 commits: `eb490c7` spec-129 migration+bridges, `5b801d8`
+baseline relocate, `ffc3b35` doc-path fix). `.claude/` holds only legitimate files; ~1100 gitignored residue files
+swept; sync `--check` exit 0. Leftover (out of scope): consumer preamble `CLAUDE.md:15` still says `.claude/rules/`
+(sync never touches the preamble).
+
+**Spec 129 — claude-exec: shipped.** Symmetric sibling of `codex-exec` — a non-Claude runtime (primarily Codex)
+invokes `claude -p` as a bounded subprocess. Canonical `.agent0/skills/claude-exec/` + discovery symlinks; 50-test
+suite green. **Not a clone** — required fail-closed `--permission-mode` pass-through, `jq` last-message extraction,
+`session_id` for `--resume`, prompt via stdin. Codex bidirectional dogfood found the read-only "floor" was caller
+discipline → fixed with the `--allow-writes` gate (write-capable modes refused; default/plan are the floor).
 
 **Spec 128 — codex-exec: shipped.** Portable bridge; `--output` escape fixed (state-dir-contained, fail-closed).
-
-**Specs 126 and 127 remain shipped.** Spec 126 OQ5 (bolder visual/brand direction) is still optional/user-owned.
-
-**Skill fixture loader warning fixed.** Invalid validator fixtures moved out of discoverable skill trees:
-`.agent0/skills/skill/tests/fixtures/` → `.agent0/tests/skill/fixtures/`; validation harness repointed and
-multi-runtime regression added so `tests/*/SKILL.md` cannot leak through `.agent0/skills` discovery again.
-
-Existing untracked `docs/specs/091-sdd-debate-runner/` remains out of scope.
+**Specs 126/127 shipped.** Spec 126 OQ5 (bolder visual/brand) still optional. Fixture-loader fix: invalid
+validator fixtures moved to `.agent0/tests/skill/fixtures/` (out of `.agent0/skills` discovery). Untracked
+`docs/specs/091-sdd-debate-runner/` out of scope.
 
 ## Active Work
 
@@ -40,13 +41,13 @@ _No active parallel-work claims._
 
 ## Decisions & Gotchas
 
-- **Spec 126 premise reversal.** Site is an **OSS-project developer landing**; consultancy/outcomes pivot is a non-goal.
-- **`/sdd debate` identity fix shipped (`ca20476`).** Runtime identity is detected, not hardcoded.
-- **Flatten-safe markers (spec 125).** `▸` (U+25B8) shipped + confirmed crisp; tofu fallback is ASCII `>>`.
-- **Skill symlinks:** edit canonical `.agent0/skills/<slug>/` only; `.claude/skills` + `.agents/skills` are
-  relative discovery symlinks. `${CLAUDE_SKILL_DIR}` remains a detection token in the skill meta-tool.
-- **Skill validator fixtures:** deliberately-invalid `SKILL.md` fixtures belong under `.agent0/tests/skill/fixtures/`,
-  not below `.agent0/skills/*`, because recursive skill loaders treat nested `SKILL.md` files as discoverable skills.
+- **History:** site = OSS-project developer landing (126); `/sdd debate` identity detected not hardcoded (`ca20476`);
+  flatten-safe `▸` markers (125, tofu fallback `>>`).
+- **Skill homes:** edit canonical `.agent0/skills/<slug>/` only (`.claude/skills`+`.agents/skills` are discovery
+  symlinks). Invalid `SKILL.md` fixtures go under `.agent0/tests/skill/fixtures/`, never below `.agent0/skills/*`
+  (recursive loaders treat nested `SKILL.md` as discoverable skills).
+- **Relocations sweep docs too (`harness-home.md` gotcha).** A `.claude/→.agent0/` move must grep `CLAUDE.md`/
+  `AGENTS.md`/rules for stale path refs, not just fix code — else sync ships stale docs to consumers.
 - **`codex-exec` / `claude-exec` bridges:** subprocess bridges, not native shared-memory delegation, and
   deliberately *siblings not clones*. codex-exec: default sandbox `read-only`, `--output` state-dir-contained.
   claude-exec: `--permission-mode` required (no default), `--allow-writes` gates write-capable modes (floor

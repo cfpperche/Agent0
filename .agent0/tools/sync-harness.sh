@@ -216,6 +216,9 @@ COPY_CHECK_FILES=(
   "assets/brand/.gitkeep"
   "assets/generated/.gitkeep"
   "assets/generated/mockups/.gitkeep"
+  "assets/video/.gitkeep"
+  "assets/video/compositions/.gitkeep"
+  "assets/generated/videos/.gitkeep"
 )
 
 # Path patterns excluded from propagation. Bash `case` globs anchored against

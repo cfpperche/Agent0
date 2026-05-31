@@ -7,7 +7,7 @@ TMPDIR="$(mktemp -d -t context-injection-08-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 CONSUMER="$TMPDIR/consumer"
-mkdir -p "$CONSUMER/.claude/rules"
+mkdir -p "$CONSUMER/.claude/rules" "$CONSUMER/.agent0"
 printf '# old rule\n' > "$CONSUMER/.claude/rules/old.md"
 old_sha="$(sha256sum "$CONSUMER/.claude/rules/old.md" | awk '{print $1}')"
 

@@ -194,6 +194,7 @@ COPY_CHECK_GLOBS=(
   ".agent0/hooks|*.sh"
   ".agent0/tools|*.sh"
   ".agent0/tools|memory-*"
+  ".agent0/tools|context-retrieve-*"
 )
 
 # Literal files

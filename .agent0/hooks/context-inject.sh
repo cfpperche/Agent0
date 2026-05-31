@@ -16,6 +16,7 @@ PROJECT_DIR="$(memory_project_dir "$INPUT")"
 CONTEXT_DIR="$PROJECT_DIR/.agent0/context/rules"
 MAX_BYTES="${AGENT0_CONTEXT_MAX_BYTES:-6000}"
 MAX_FRAGMENTS="${AGENT0_CONTEXT_MAX_FRAGMENTS:-5}"
+RETRIEVAL="${AGENT0_CONTEXT_RETRIEVAL:-1}"
 
 hook_event() {
   if command -v jq >/dev/null 2>&1 && [ -n "$INPUT" ]; then
@@ -130,6 +131,9 @@ select_by_keyword() {
     *runtime*|*codex*|*claude*|*rules*|*context*|*hydrator*|*injection*) add_slug runtime-capabilities; add_slug harness-sync; add_slug memory-placement ;;
   esac
   case "$prompt_lc" in
+    *retriev*|*rag*|*semantic*|*semantica*|*semântica*|*hydration*|*hidrat*|*context-layer*) add_slug context-retrieval ;;
+  esac
+  case "$prompt_lc" in
     *php*|*laravel*|*composer*|*artisan*|*pest*) add_slug php-laravel-support ;;
   esac
   case "$prompt_lc" in
@@ -230,8 +234,49 @@ append_capsule() {
   printf '%s' "$block"
 }
 
+selected_sources_args() {
+  local slug
+  for slug in $SELECTED; do
+    printf '%s\n' "--exclude-source"
+    printf '%s\n' ".agent0/context/rules/$slug.md"
+  done
+}
+
+build_retrieval_capsules() {
+  local prompt="$1" remaining retrieve_tool args=()
+  [ "$RETRIEVAL" != "0" ] || return 0
+  remaining=$(( MAX_FRAGMENTS - $(selected_count) ))
+  [ "$remaining" -gt 0 ] || return 0
+  retrieve_tool="$PROJECT_DIR/.agent0/tools/context-retrieve.sh"
+  [ -x "$retrieve_tool" ] || return 0
+
+  args=(search --query "$prompt" --format capsules --limit "$remaining")
+  while IFS= read -r arg; do
+    [ -n "$arg" ] || continue
+    args+=("$arg")
+  done <<EOF
+$(selected_sources_args)
+EOF
+
+  AGENT0_PROJECT_DIR="$PROJECT_DIR" bash "$retrieve_tool" "${args[@]}" 2>/dev/null || true
+}
+
+append_retrieval_capsules() {
+  local block="$1" capsules="$2" next
+  [ -n "$capsules" ] || { printf '%s' "$block"; return 0; }
+  next=$'\n'"$capsules"
+  if [ $(( ${#block} + ${#next} )) -gt "$MAX_BYTES" ]; then
+    block+=$'\n▸ ---\n'
+    block+="omitted: retrieval candidates omitted; context byte cap reached"$'\n'
+    printf '%s' "$block"
+    return 0
+  fi
+  block+="$next"
+  printf '%s' "$block"
+}
+
 build_prompt_block() {
-  local prompt prompt_lc block slug
+  local prompt prompt_lc block slug retrieval_caps floor_count
   prompt="$(prompt_text | sanitize_prompt)"
   prompt_lc="$(printf '%s' "$prompt" | lower)"
   SELECTED=""
@@ -239,7 +284,10 @@ build_prompt_block() {
   select_by_keyword "$prompt_lc"
   select_by_paths_frontmatter "$prompt_lc"
 
-  [ -n "$SELECTED" ] || return 0
+  floor_count="$(selected_count)"
+  retrieval_caps="$(build_retrieval_capsules "$prompt")"
+
+  [ -n "$SELECTED" ] || [ -n "$retrieval_caps" ] || return 0
 
   block=$'AGENT0_CONTEXT_INJECTION\n'
   block+="event: $(hook_event)"$'\n'
@@ -247,11 +295,17 @@ build_prompt_block() {
   block+=$'source_dir: .agent0/context/rules\n'
   block+="selected: ${SELECTED:-none}"$'\n'
   block+="limits: max_fragments=$MAX_FRAGMENTS max_bytes=$MAX_BYTES"$'\n'
+  if [ "$RETRIEVAL" = "0" ]; then
+    block+="retrieval: disabled floor_fragments=$floor_count"$'\n'
+  else
+    block+="retrieval: enabled floor_fragments=$floor_count"$'\n'
+  fi
   block+=$'\nInstruction: These trusted repo-controlled capsules are routing hints. Read the named file before relying on omitted details; do not infer the full contract from this block.\n'
 
   for slug in $SELECTED; do
     block="$(append_capsule "$block" "$slug")"
   done
+  block="$(append_retrieval_capsules "$block" "$retrieval_caps")"
   block+=$'\nEND_AGENT0_CONTEXT_INJECTION\n'
   printf '%s' "$block"
 }

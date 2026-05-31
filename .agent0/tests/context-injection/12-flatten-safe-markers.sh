@@ -46,9 +46,10 @@ for needle in \
   fi
 done
 
-# Boundary marker count must equal capsule count (one '▸ ---' per '^source:').
+# Boundary marker count must equal capsule/source-pointer count (one '▸ ---'
+# per '^source:' across both deterministic rule capsules and retrieval pointers).
 boundary_count="$(printf '%s\n' "$inject_out" | grep -cF "▸ ---" || true)"
-source_count="$(printf '%s\n' "$inject_out" | grep -c '^source: .agent0/context/rules/' || true)"
+source_count="$(printf '%s\n' "$inject_out" | grep -c '^source: ' || true)"
 if [ "$boundary_count" -ne "$source_count" ] || [ "$boundary_count" -lt 1 ]; then
   printf 'FAIL: capsule boundary markers (%s) != capsule count (%s)\n%s\n' \
     "$boundary_count" "$source_count" "$inject_out"

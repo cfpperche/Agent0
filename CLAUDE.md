@@ -99,6 +99,10 @@ Hook-disabled memory edits must end with `bash .agent0/tools/memory-maintain.sh 
 Without hooks, stale-memory readout is `bash .agent0/tools/memory-query.sh decay --readout`.
 See `.agent0/context/rules/memory-placement.md` § Multi-runtime usage.
 
+## Context retrieval
+
+`.agent0/tools/context-retrieve.sh search --query "<text>"` performs deterministic local retrieval across Agent0 context rules, project memory projection/metadata, specs, and handoff. `context-inject.sh` uses it as a bounded retrieval lane after deterministic rule selection: existing rule matches form a must-include floor, retrieval fills only remaining prompt budget, and snippets are pointers rather than source of truth. No embeddings/vector DB in v1. See `.agent0/context/rules/context-retrieval.md`.
+
 ## Browser auth
 
 On an auth-gated URL with no saved state the agent emits `BROWSER_AUTH_REQUIRED: <host>`; the human logs in via a headed Playwright MCP session and the state (`.agent0/.browser-state/<host>.json`) is reused for headless reads. See `.agent0/context/rules/browser-auth.md`.

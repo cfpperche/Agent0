@@ -8,47 +8,40 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 
 ## Current State
 
-**Spec 132 — video-skill: SHIPPED** (`288f17e` skill + `42d0891` sync-manifest gitkeeps). New `/video`,
-sibling of `/image`, required `--mode=code|generative`. **code** = pinned HyperFrames npm engine renders
-HTML→MP4 locally ($0 inference; source tracked, MP4 gitignored, render fingerprint in manifest; owned authoring
-layer). **generative** = fal.ai queue REST, fire-and-forget ledger (submit/poll), hard `--confirm-cost-usd` gate;
-tiers in refreshable `video-tiers.yaml` (no model IDs in body). Built via full SDD + Claude↔Codex debate. Code
-mode validated with a REAL render; generative dry-validated only (no paid call). 5-test sweep green.
+Specs 132 and 133 are shipped and pushed (`288f17e`/`42d0891` video skill; `69cdf2c` image fal REST migration).
+Spec 091 debate runner is deferred and pushed (`31a6930`). Prior clean state is now superseded by new draft work.
 
-**Spec 133 — image-fal-rest-migration: SHIPPED** (`69cdf2c`). Extracted `.agent0/tools/fal-rest.sh` (spec 132) is
-now shared: added a synchronous `run` subcommand; `/image gen.sh exec` delegates its POST+download to the lib
-(image-specific body/`.images[0].url`/dim-reconciliation stay local). Fixed the stale "delegates to the MCP" /
-"opt-in MCP recipe" wording in `/image SKILL.md` + `image-gen.md` (generation is REST-only since spec 088; MCP is
-optional discovery). image-gen + video suites green; exec delegation proven via a real 401 routed through the lib.
-
-**Spec 091 — sdd-debate-runner: DEFERRED + committed** (`31a6930`). Parked indefinitely (manual `debate.md`
-works; automated runner not pursued); `Status: draft — deferred` inline note. **All commits pushed to
-`origin/main`**; tree clean, in sync. **Prior shipped:** 131 project-core (`606fcf0`); 130/129/128.
+**Spec 134 — context-layer-rag-hydration: SHIPPED.** Added deterministic local context retrieval
+(`.agent0/tools/context-retrieve.sh` + helper) over context rules, memory projection/metadata, specs, and handoff.
+`context-inject.sh` now preserves deterministic rule capsules as a floor, then fills remaining prompt budget with
+retrieval pointers. V1 is lexical/source-pointer based only: no embeddings/vector DB, product-code indexing, daemon,
+or cross-project retrieval. Claude/Codex debate captured in `debate.md`; acceptance marked shipped after validation.
 
 ## Active Work
 
-_None — 132 + 133 shipped, 091 deferred; all committed + pushed to `origin/main`._
+No active implementation work. Spec 134 is implemented and validated. Working tree still contains uncommitted spec 134
+changes; commit/push not requested yet.
 
 ## Next Actions
 
-1. **Optional paid validations** (need a real `FAL_KEY` + spend, user-authorized): a real `/video --mode=generative`
-   clip (submit→poll→download), and a real `/image --tier=draft` to confirm the migrated `exec` success path.
-2. **Decoupled follow-up is DONE** (was 133) — `/image` is on `fal-rest.sh`; no remaining fal-REST duplication.
-3. **Spec 126 OQ5 (optional)** bolder visual/brand; **deploy site** (GitHub Pages `cfpperche.github.io/Agent0/`).
+1. Optional: commit spec 134 changes if the user asks.
+2. Optional paid validations from prior work remain: real `/video --mode=generative` and real `/image --tier=draft`
+   need `FAL_KEY` + user-authorized spend.
 
 ## Decisions & Gotchas
 
-- **`harness-sync-baseline.json` is CONSUMER-side + auto-maintained by `sync-harness.sh --apply` — never edited in
-  Agent0** (it isn't even present in the Agent0 tree). The registration surface for new shipped files is the
-  **manifest** (`COPY_CHECK_*` arrays in `sync-harness.sh`). `/video` skill/rule/tests/fal-rest.sh were already in
-  scope (recursive/glob); only the `assets/video/*` gitkeeps needed adding (`42d0891`).
-- **`fal-rest.sh` = the one fal REST impl:** sync `run` (fal.run) + async `submit`/`status`/`result`/`download`
-  (queue.fal.run); model-agnostic. `/image` (sync) + `/video` generative (async) both consume it. Post-133, `/image`'s
-  failure receipt reports `http_code:0` with the real fal error on stderr (minor, documented).
-- **`/video` design (132 debate):** own the authoring layer (no upstream agent-skill install); ledger async not
-  blocking; cost gate binds to cost/model/duration; NO drift-checker v1; tiers refreshable.
-- **HyperFrames lint is LINE-BASED (pre-1.0):** no comment immediately before `<div id="root">`, keep `#root`
-  `data-*` on one line, else false `root_missing_*`. Shipped template lints 0/0.
+- **Spec 134 emerging stance:** RAG vocabulary is secondary; the feature should consolidate the context layer. Hydrated
+  snippets are evidence/pointers, not source of truth; source files remain canonical.
+- **Budget stance:** retrieval should be substitutive inside existing `AGENT0_CONTEXT_INJECTION` budgets, not an added
+  model-visible dump. Diagnostics should reuse `AGENT0_CONTEXT_DIAGNOSTIC=1` or an explicit debug command.
+- **Memory stance:** do not create a second canonical memory index. Either adapt existing `MEMORY.md`/`memory-query.sh`
+  or keep memory out of v1 until the non-memory corpus path is proven.
+- **Generated context index:** likely gitignored under `.agent0/.context-index/`; shipped mechanisms/config stay under
+  `.agent0/` and sync-harness baseline-managed.
+- **Validation evidence for 134:** context-retrieval, context-injection, memory-multi-runtime, runtime-capabilities,
+  harness-sync, session-handoff-multi-runtime, project-memory, instruction-drift, and `git diff --check` passed.
+  Live dogfood also passed in a real Claude Code session: `retrieval: enabled floor_fragments=3` left two retrieval
+  slots, which hydrated spec evidence-pointers with `source_class`/`authority`/`reason`/`freshness`/`anchor`.
 - **Skill homes:** edit canonical `.agent0/skills/<slug>/` only (`.claude/skills`+`.agents/skills` are symlinks).
 - **Env gotchas:** gitleaks pre-commit active; governance blocks `rm -rf` (combined `-r`+`-f`) + blanket `git add`;
   secrets-preflight blocks compound `git add && git commit` (stage + commit as separate calls); commits user-gated.

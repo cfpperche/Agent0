@@ -77,7 +77,7 @@ Whitespace-only diffs are still customization. A consumer project that ran `shfm
 
 ## Sync baseline
 
-`<consumer-path>/.claude/harness-sync-baseline.json` records Agent0's managed-file sha-set as of the consumer project's last `--apply`. It is the third reference point that powers the 3-way reconciliation above. Shape:
+`<consumer-path>/.agent0/harness-sync-baseline.json` records Agent0's managed-file sha-set as of the consumer project's last `--apply`. It is the third reference point that powers the 3-way reconciliation above. (Spec 130 relocated it from `.claude/` to `.agent0/` — the harness-home for runtime-neutral artifacts, since the baseline is read/written by the runtime-neutral `sync-harness.sh`. The pre-130 `.claude/harness-sync-baseline.json` is read as a fallback and removed on the migrating `--apply`.) Shape:
 
 ```json
 {
@@ -89,7 +89,8 @@ Whitespace-only diffs are still customization. A consumer project that ran `shfm
 ```
 
 - **Per-file sha manifest, not a git ref.** Agent0's harness is verbatim-copied (no template variables), so a stored per-file sha answers "what did this file look like at last sync" *directly* — no `git show <ref>:<path>`, no dependency on Agent0's history being present or reachable (works from a tarball or shallow clone). This deliberately diverges from copier/cruft, whose git-ref model exists to re-render Jinja templates at the old ref. `agent0_commit` is recorded as a human-readable audit breadcrumb only; reconciliation never depends on it (`null` when the Agent0 source is not a git repo).
-- **Git-tracked in the consumer project.** The non-dotted filename dodges the `.claude/.*` gitignore globs by design — a fresh `git clone` of the consumer project must know its baseline (same posture copier/cruft take toward `.copier-answers.yml` / `.cruft.json`). It appears in the consumer project's post-sync `git diff`; that diff *is* the "harness baseline bumped" record.
+- **Git-tracked in the consumer project.** The non-dotted filename keeps it clear of the dotted runtime-state globs (`.agent0/.runtime-state/`, etc.) — a fresh `git clone` of the consumer project must know its baseline (same posture copier/cruft take toward `.copier-answers.yml` / `.cruft.json`). It appears in the consumer project's post-sync `git diff`; that diff *is* the "harness baseline bumped" record.
+- **Pre-130 legacy path (`.claude/harness-sync-baseline.json`).** `load_baseline` falls back to it when the new `.agent0/` path is absent (so a pre-130 consumer reconciles cleanly, no `!! customized` storm); `write_baseline` writes the new path and removes the legacy file after the new one is confirmed written — never before, so a failed write can't lose the baseline. The legacy removal shows as a deletion in the consumer's `git diff`. Once migrated, the fallback is inert.
 - **Written on every `--apply`** (not `--check`, not `--dry-run`), after all passes, atomically (`mktemp` + `mv`). Skipped when the resulting files-map is byte-identical to the existing baseline's — a no-op re-sync must leave the file untouched (idempotency), so `synced_at` is not churned.
 - **Never shipped by Agent0.** It is a consumer-side runtime artifact; not in any `COPY_CHECK_*` array, so the sync walk never visits it and it never appears as drift in another consumer project.
 
@@ -293,7 +294,7 @@ There is no `CLAUDE_SKIP_HARNESS_SYNC` env var — the tool is developer-invoked
 
 ## Audit
 
-The recorded baseline (`<consumer-path>/.claude/harness-sync-baseline.json`) is the sync audit record. It is git-tracked in the consumer project, so `git log -- .claude/harness-sync-baseline.json` shows every sync the consumer project ever applied, each commit's diff shows which managed files changed sha, and `agent0_commit` names the Agent0 revision synced against (when the source was a git repo). Combined with the post-sync `git diff` of the rest of the tree, this is the full audit trail — no separate log, no auto-commit. The consumer project developer reviews the diff and commits manually. Same posture as every other harness primitive that mutates consumer project state.
+The recorded baseline (`<consumer-path>/.agent0/harness-sync-baseline.json`) is the sync audit record. It is git-tracked in the consumer project, so `git log -- .agent0/harness-sync-baseline.json` shows every sync the consumer project ever applied, each commit's diff shows which managed files changed sha, and `agent0_commit` names the Agent0 revision synced against (when the source was a git repo). Combined with the post-sync `git diff` of the rest of the tree, this is the full audit trail — no separate log, no auto-commit. The consumer project developer reviews the diff and commits manually. Same posture as every other harness primitive that mutates consumer project state.
 
 The sync baseline file subsumes the need for a separate audit log — it is both the reconciliation input and the audit record, so a separate log is not built.
 

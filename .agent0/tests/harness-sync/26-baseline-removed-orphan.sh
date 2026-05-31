@@ -34,7 +34,8 @@ chmod +x "$CONSUMER/.claude/hooks/hookA.sh"
 hookA_sha="$(sha256sum "$CONSUMER/.claude/hooks/hookA.sh" | awk '{print $1}')"
 orphan_sha="$(sha256sum "$CONSUMER/.claude/skills/legacy/SKILL.md" | awk '{print $1}')"
 # Baseline records both — the orphan's consumer project copy still matches its baseline sha.
-cat > "$CONSUMER/.claude/harness-sync-baseline.json" <<EOF
+mkdir -p "$CONSUMER/.agent0"
+cat > "$CONSUMER/.agent0/harness-sync-baseline.json" <<EOF
 {
   "agent0_commit": null,
   "synced_at": "2026-05-01T00:00:00Z",

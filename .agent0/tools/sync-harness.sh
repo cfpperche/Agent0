@@ -132,13 +132,17 @@ fi
 # ---------------------------------------------------------------------------
 
 # The recorded sync baseline lives in the consumer project at
-# .claude/harness-sync-baseline.json and captures Agent0's managed-file sha-set
+# .agent0/harness-sync-baseline.json and captures Agent0's managed-file sha-set
 # as of the consumer project's last --apply. It is the third reference point that lets the
 # plain-file path tell *stale* (auto-update) apart from *customized* (refuse),
 # and lets the deletion pass propagate upstream removals safely. Git-tracked in
 # the consumer project (travels on clone); never shipped by Agent0 itself.
+# Spec 130 relocated it from .claude/ to .agent0/ (the harness-home for runtime-neutral
+# artifacts); LEGACY_BASELINE_FILE is the pre-130 path, read as a fallback and removed
+# on the migrating --apply.
 BASELINE_TOOL_VERSION=1
-BASELINE_FILE="$CONSUMER_ROOT/.claude/harness-sync-baseline.json"
+BASELINE_FILE="$CONSUMER_ROOT/.agent0/harness-sync-baseline.json"
+LEGACY_BASELINE_FILE="$CONSUMER_ROOT/.claude/harness-sync-baseline.json"
 BASELINE_PRESENT=0
 BASELINE_TSV=""          # temp: sorted "relpath<TAB>sha" of the recorded baseline
 MANIFEST_RAW=""          # temp: unsorted "relpath<TAB>sha" of Agent0's current set
@@ -288,12 +292,19 @@ matches_exclude() {
 # lookup is then a Bash-3.2-safe awk scan (no declare -A). A malformed or
 # unreadable baseline fails open — treated as no baseline.
 load_baseline() {
-  if [ ! -f "$BASELINE_FILE" ]; then
+  # Read the new location; fall back to the pre-130 legacy path when the new
+  # one is absent (read-side migration — the next --apply rewrites at the new
+  # path and removes the legacy file).
+  local src="$BASELINE_FILE"
+  if [ ! -f "$src" ] && [ -f "$LEGACY_BASELINE_FILE" ]; then
+    src="$LEGACY_BASELINE_FILE"
+  fi
+  if [ ! -f "$src" ]; then
     BASELINE_PRESENT=0
     return
   fi
   BASELINE_TSV="$(mktemp -t sync-baseline-XXXXXX)"
-  if jq -r '.files // {} | to_entries[] | "\(.key)\t\(.value)"' "$BASELINE_FILE" 2>/dev/null \
+  if jq -r '.files // {} | to_entries[] | "\(.key)\t\(.value)"' "$src" 2>/dev/null \
        | sort > "$BASELINE_TSV"; then
     BASELINE_PRESENT=1
   else
@@ -604,6 +615,17 @@ reconcile_deletions() {
 # baseline write
 # ---------------------------------------------------------------------------
 
+# Remove the pre-130 legacy baseline (.claude/) once the new (.agent0/) one is
+# written or confirmed current. Apply-only (callers are already past the
+# check/dry-run guard); safe no-op when the legacy file is already gone. The
+# removal surfaces in the consumer's git diff as the migration record.
+_remove_legacy_baseline() {
+  if [ -f "$LEGACY_BASELINE_FILE" ]; then
+    rm -f "$LEGACY_BASELINE_FILE"
+    printf -- '- baseline migrated (removed legacy .claude/harness-sync-baseline.json)\n' >&2
+  fi
+}
+
 # Record Agent0's current managed-file sha-set as the consumer project's new sync baseline.
 # Runs only on --apply (not --check, not --dry-run). Skipped when the resulting
 # files-map is byte-identical to the existing baseline's — a no-op re-sync must
@@ -629,7 +651,8 @@ write_baseline() {
     old_files="$(jq -S -c '.files // {}' "$BASELINE_FILE" 2>/dev/null || echo '')"
     new_files="$(printf '%s' "$files_obj" | jq -S -c '.' 2>/dev/null || echo '')"
     if [ -n "$old_files" ] && [ "$old_files" = "$new_files" ]; then
-      printf '= baseline up-to-date .claude/harness-sync-baseline.json\n' >&2
+      printf '= baseline up-to-date .agent0/harness-sync-baseline.json\n' >&2
+      _remove_legacy_baseline
       return
     fi
   fi
@@ -652,10 +675,11 @@ write_baseline() {
         }' > "$tmp" 2>/dev/null; then
     mkdir -p "$(dirname "$BASELINE_FILE")"
     mv "$tmp" "$BASELINE_FILE"
-    printf '~ baseline recorded .claude/harness-sync-baseline.json\n' >&2
+    printf '~ baseline recorded .agent0/harness-sync-baseline.json\n' >&2
+    _remove_legacy_baseline
   else
     rm -f "$tmp"
-    printf '!! failed to write .claude/harness-sync-baseline.json (jq error)\n' >&2
+    printf '!! failed to write .agent0/harness-sync-baseline.json (jq error)\n' >&2
   fi
 }
 

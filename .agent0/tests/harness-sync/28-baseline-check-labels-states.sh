@@ -35,7 +35,8 @@ printf '# CLAUDE consumer project\n\n## Compact Instructions\n' > "$CONSUMER/CLA
 chmod +x "$CONSUMER"/.claude/hooks/*.sh
 
 sha() { sha256sum "$1" | awk '{print $1}'; }
-cat > "$CONSUMER/.claude/harness-sync-baseline.json" <<EOF
+mkdir -p "$CONSUMER/.agent0"
+cat > "$CONSUMER/.agent0/harness-sync-baseline.json" <<EOF
 {
   "agent0_commit": null,
   "synced_at": "2026-05-01T00:00:00Z",

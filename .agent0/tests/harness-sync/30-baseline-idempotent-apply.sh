@@ -22,7 +22,7 @@ chmod +x "$SRC/.claude/hooks/hookA.sh"
 printf '{"hooks":{}}\n' > "$CONSUMER/.claude/settings.json"
 printf '# CLAUDE consumer project\n\n## Compact Instructions\n' > "$CONSUMER/CLAUDE.md"
 
-BASELINE="$CONSUMER/.claude/harness-sync-baseline.json"
+BASELINE="$CONSUMER/.agent0/harness-sync-baseline.json"
 
 # First --apply: copies hookA, writes the baseline.
 bash "$TOOL" --apply --agent0-path="$SRC" "$CONSUMER" >/dev/null 2>&1 || true

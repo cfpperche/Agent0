@@ -31,7 +31,8 @@ chmod +x "$CONSUMER/.claude/hooks/hookA.sh"
 
 # Baseline records v1's sha — consumer project copy matches baseline exactly.
 v1_sha="$(sha256sum "$CONSUMER/.claude/hooks/hookA.sh" | awk '{print $1}')"
-cat > "$CONSUMER/.claude/harness-sync-baseline.json" <<EOF
+mkdir -p "$CONSUMER/.agent0"
+cat > "$CONSUMER/.agent0/harness-sync-baseline.json" <<EOF
 {
   "agent0_commit": null,
   "synced_at": "2026-05-01T00:00:00Z",

@@ -28,7 +28,8 @@ printf '# CLAUDE consumer project\n\n## Compact Instructions\n' > "$CONSUMER/CLA
 chmod +x "$CONSUMER/.claude/hooks/hookA.sh"
 
 # Baseline records a THIRD distinct value — consumer project differs from baseline AND Agent0.
-cat > "$CONSUMER/.claude/harness-sync-baseline.json" <<'EOF'
+mkdir -p "$CONSUMER/.agent0"
+cat > "$CONSUMER/.agent0/harness-sync-baseline.json" <<'EOF'
 {
   "agent0_commit": null,
   "synced_at": "2026-05-01T00:00:00Z",

@@ -11,7 +11,7 @@ mkdir -p "$CONSUMER/.claude/rules"
 printf '# old rule\n' > "$CONSUMER/.claude/rules/old.md"
 old_sha="$(sha256sum "$CONSUMER/.claude/rules/old.md" | awk '{print $1}')"
 
-cat > "$CONSUMER/.claude/harness-sync-baseline.json" <<JSON
+cat > "$CONSUMER/.agent0/harness-sync-baseline.json" <<JSON
 {
   "agent0_commit": null,
   "synced_at": "2026-05-30T00:00:00Z",

@@ -45,7 +45,7 @@ printf '# CLAUDE consumer project\n\n## Compact Instructions\n' > "$CONSUMER/CLA
 # Baseline records the consumer project's padded-copy sha → classifies `stale`, not
 # `customized` → the run auto-updates (overwrites) it without --force.
 consumer_sha="$(sha256sum "$CONSUMER/.agent0/tools/sync-harness.sh" | awk '{print $1}')"
-cat > "$CONSUMER/.claude/harness-sync-baseline.json" <<EOF
+cat > "$CONSUMER/.agent0/harness-sync-baseline.json" <<EOF
 {
   "agent0_commit": null,
   "synced_at": "2026-05-01T00:00:00Z",

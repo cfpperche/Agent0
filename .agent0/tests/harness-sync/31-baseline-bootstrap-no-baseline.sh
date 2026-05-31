@@ -27,7 +27,7 @@ printf '{"hooks":{}}\n' > "$CONSUMER/.claude/settings.json"
 printf '# CLAUDE consumer project\n\n## Compact Instructions\n' > "$CONSUMER/CLAUDE.md"
 chmod +x "$CONSUMER/.claude/hooks/hookA.sh"
 
-BASELINE="$CONSUMER/.claude/harness-sync-baseline.json"
+BASELINE="$CONSUMER/.agent0/harness-sync-baseline.json"
 if [ -f "$BASELINE" ]; then
   printf 'FAIL: precondition — baseline must not exist\n'
   exit 1

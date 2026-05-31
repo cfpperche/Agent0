@@ -50,7 +50,7 @@ stale consumer project body of A.
 <!-- AGENT0:END -->
 EOF
 
-# Deliberately NO .claude/harness-sync-baseline.json — consumer project never synced under
+# Deliberately NO .agent0/harness-sync-baseline.json — consumer project never synced under
 # the baseline mechanism.
 
 # Phase 1: --apply (no --force) → refuse, customized (no baseline).

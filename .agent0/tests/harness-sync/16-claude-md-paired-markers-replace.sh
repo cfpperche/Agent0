@@ -68,7 +68,7 @@ if [ "$e" -ne 0 ]; then
   printf 'FAIL(1): seed --apply expected exit 0, got %d\n' "$e"
   exit 1
 fi
-if [ ! -f "$CONSUMER/.claude/harness-sync-baseline.json" ]; then
+if [ ! -f "$CONSUMER/.agent0/harness-sync-baseline.json" ]; then
   printf 'FAIL(1): baseline not recorded by seed --apply\n'
   exit 1
 fi

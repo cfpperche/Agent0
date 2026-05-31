@@ -1,17 +1,17 @@
 ---
 name: image
-description: AI image generation via fal.ai (opt-in MCP recipe). Use when the user wants to produce a mockup, brand asset, or hero image for the project. Three tiers cover the cost/quality spectrum - draft (FLUX schnell, ~$0.003/img, jpg, throwaway), brand-text (gpt-image-2, $0.04-0.20/img, png, crisp typography), brand-photo (Imagen 4 Ultra, ~$0.06/img, png, photo-real). Tier flag is REQUIRED - omitted tier errors with the three options. Optional --aspect=square|landscape|portrait (default square) sets image_size. Output paths are mechanical (draft → gitignored assets/generated/mockups/, brand-* → tracked assets/brand/), extension matches tier's default content-type. Every call prints estimated cost BEFORE invoking the MCP. Activation - copy fal-ai block from .mcp.json.example, set FAL_KEY env var, restart session. See .agent0/context/rules/image-gen.md.
+description: AI image generation via the fal.ai REST API (opt-in). Use when the user wants to produce a mockup, brand asset, or hero image for the project. Three tiers cover the cost/quality spectrum - draft (FLUX schnell, ~$0.003/img, jpg, throwaway), brand-text (gpt-image-2, $0.04-0.20/img, png, crisp typography), brand-photo (Imagen 4 Ultra, ~$0.06/img, png, photo-real). Tier flag is REQUIRED - omitted tier errors with the three options. Optional --aspect=square|landscape|portrait (default square) sets image_size. Output paths are mechanical (draft → gitignored assets/generated/mockups/, brand-* → tracked assets/brand/), extension matches tier's default content-type. Every call prints estimated cost BEFORE generation fires. Activation - set FAL_KEY in env (generation needs only the key; the fal-ai MCP recipe is optional, discovery-only). See .agent0/context/rules/image-gen.md.
 argument-hint: <--tier=draft|brand-text|brand-photo> [--aspect=square|landscape|portrait] [--name=<slug>] "<prompt>"
 license: MIT
 compatibility: Compatible with any agentskills.io-compatible runtime (Claude Code, OpenAI Codex, and ~35 others). Generation is runtime-neutral (bash + curl + jq against the fal.run REST API); requires the FAL_KEY env var + network. The fal-ai MCP (hosted at mcp.fal.ai/mcp) is optional — it surfaces model-discovery tools under each runtime's own namespace. No Python; ffmpeg optional for dimension reconciliation.
 metadata:
   agent0-portability-tier: agentskills-portable
-  version: "0.2"
+  version: "0.3"
 ---
 
 # /image — AI image generation
 
-Generate images via fal.ai's hosted MCP. Opt-in capacity — consumer projects that don't activate the `fal-ai` recipe in `.mcp.json` pay zero cost. The skill is a thin wrapper: it parses the tier flag, derives the output path, prints the estimated cost, then delegates to the MCP. Cost discipline: every call prints `estimated: $X.XXX for <model> at <resolution>` BEFORE the MCP fires, so a parent agent or human can ctrl-c if the estimate is wrong-shape.
+Generate images via the fal.ai REST API. Opt-in capacity — consumer projects that never set `FAL_KEY` pay zero cost. The skill is a thin wrapper: it parses the tier flag, derives the output path, prints the estimated cost, then delegates to `gen.sh` (which POSTs to the fal.run REST endpoint via the shared `.agent0/tools/fal-rest.sh` — NOT the MCP; see spec 088 for why). Cost discipline: every call prints `estimated: $X.XXX for <model> at <resolution>` BEFORE generation fires, so a parent agent or human can ctrl-c if the estimate is wrong-shape.
 
 See `.agent0/context/rules/image-gen.md` for the full capacity rule (activation, tier semantics, storage policy, manifest shape, override marker, trust posture, community fallbacks). This SKILL.md documents the invocation surface only.
 

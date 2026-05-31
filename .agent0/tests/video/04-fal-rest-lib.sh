@@ -31,7 +31,17 @@ export FAL_KEY="fake:key"
 bash "$LIB" submit --body='{}' >/dev/null 2>&1 && fail c "submit accepted without --model"
 
 # (d) model-agnostic: no image_size / video duration / aspect baked in the lib
-grep -qE 'image_size|aspect|duration|\.images\[0\]|\.video' "$LIB" \
+grep -qE 'image_size|aspect|duration|\.images\[0\]|\.video\b' "$LIB" \
   && fail d "fal-rest.sh leaked image/video-specific fields (must be model-agnostic)"
+
+# (f) run (spec 133): synchronous — hits fal.run, NOT queue.fal.run; needs key + model
+grep -q 'SYNC_BASE="https://fal.run"' "$LIB" || fail f "run must use the sync fal.run base"
+grep -q 'sub_run()' "$LIB" || fail f "run subcommand missing"
+( unset FAL_KEY; bash "$LIB" run --model=fal-ai/x --body='{}' ) >/dev/null 2>&1 \
+  && fail f "run succeeded without FAL_KEY"
+bash "$LIB" run --body='{}' >/dev/null 2>&1 && fail f "run accepted without --model (FAL_KEY=$FAL_KEY set)"
+
+# (g) run is advertised in --help
+bash "$LIB" --help 2>&1 | grep -qE '^\s*run\s' || fail g "--help does not list run"
 
 echo "PASS 04-fal-rest-lib"

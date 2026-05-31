@@ -24,6 +24,8 @@ set -uo pipefail
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 MANIFEST_PATH="$PROJECT_DIR/assets/generated/.manifest.jsonl"
+# Shared fal REST primitives (spec 133 — one HTTP impl across /image + /video).
+FAL_REST="$PROJECT_DIR/.agent0/tools/fal-rest.sh"
 
 # ---------------------------------------------------------------------------
 # Tier table — keep in sync with .agent0/skills/image/references/tier-pricing.md
@@ -302,30 +304,20 @@ sub_exec() {
       ;;
   esac
 
-  # POST to fal.run synchronous REST endpoint.
-  # REST uses 'Authorization: Key', NOT 'Bearer' — see image-gen.md § Gotchas.
-  # --max-time 300 is a hard 5-min ceiling; longer than any v1 sync tier needs.
-  local resp_file http_code
-  resp_file="$(mktemp)"
-  http_code="$(curl -sS -o "$resp_file" -w '%{http_code}' \
-    -X POST "https://fal.run/$model" \
-    -H "Authorization: Key $FAL_KEY" \
-    -H "Content-Type: application/json" \
-    --data-raw "$body" \
-    --max-time 300 || printf '000')"
-
-  if [ "$http_code" != "200" ]; then
-    cat "$resp_file" >&2
-    printf '\n' >&2
-    printf '{"status":"failure","http_code":%s,"output_path":"%s"}\n' \
-      "${http_code:-0}" "$(json_escape "$output_path")"
-    rm -f "$resp_file"
+  # POST via the shared fal REST lib (synchronous fal.run endpoint; spec 133).
+  # The lib owns auth ('Key', not 'Bearer'), the --max-time ceiling, and HTTP-error
+  # handling — it dies non-zero with the fal error body on stderr. Image-specific
+  # response parsing (.images[0].url) stays here. http_code is 0 on a lib failure
+  # (the precise upstream code + body are on stderr).
+  local resp
+  if ! resp="$(bash "$FAL_REST" run --model="$model" --body="$body")"; then
+    printf '{"status":"failure","http_code":0,"output_path":"%s"}\n' \
+      "$(json_escape "$output_path")"
     exit 1
   fi
 
   local image_url
-  image_url="$(jq -r '.images[0].url // ""' "$resp_file")"
-  rm -f "$resp_file"
+  image_url="$(printf '%s' "$resp" | jq -r '.images[0].url // ""')"
   if [ -z "$image_url" ]; then
     printf 'unexpected response shape (no .images[0].url)\n' >&2
     printf '{"status":"failure","http_code":200,"output_path":"%s"}\n' \
@@ -334,14 +326,8 @@ sub_exec() {
   fi
 
   # Two-hop download — fal.run returns a fal.media CDN URL, not the bytes.
-  if ! curl -sS -o "$abs_output" --max-time 120 "$image_url"; then
-    printf 'download failed from %s\n' "$image_url" >&2
-    printf '{"status":"failure","http_code":200,"output_path":"%s"}\n' \
-      "$(json_escape "$output_path")"
-    exit 1
-  fi
-  if [ ! -s "$abs_output" ]; then
-    printf 'downloaded file is empty at %s\n' "$abs_output" >&2
+  # The shared lib handles fetch errors + empty-file detection (dies non-zero).
+  if ! bash "$FAL_REST" download --url="$image_url" --output="$abs_output" >/dev/null; then
     printf '{"status":"failure","http_code":200,"output_path":"%s"}\n' \
       "$(json_escape "$output_path")"
     exit 1

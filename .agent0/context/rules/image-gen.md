@@ -8,7 +8,7 @@ paths:
 
 # Image generation
 
-Opt-in capacity for AI image generation via fal.ai. The `/image` skill produces both **throwaway UI mockups** (FLUX schnell, ~$0.003/img) and **durable brand assets** (gpt-image-2 or Imagen 4 Ultra, $0.04-0.20/img) via a single provider — fal.ai aggregates FLUX, OpenAI gpt-image, Google Imagen, and ~1000 other models under one HTTP MCP endpoint. The skill is intentionally thin: tier flag selects the model, output path is mechanical, cost is printed before every call. Activation is a 3-line edit to `.mcp.json` + setting `FAL_KEY` in env. Consumer projects that never activate pay zero cost.
+Opt-in capacity for AI image generation via fal.ai. The `/image` skill produces both **throwaway UI mockups** (FLUX schnell, ~$0.003/img) and **durable brand assets** (gpt-image-2 or Imagen 4 Ultra, $0.04-0.20/img) via a single provider — fal.ai aggregates FLUX, OpenAI gpt-image, Google Imagen, and ~1000 other models under one HTTP API. The skill is intentionally thin: tier flag selects the model, output path is mechanical, cost is printed before every call. Activation is setting `FAL_KEY` in env — generation POSTs to the fal.run REST API (the `.mcp.json` fal-ai recipe is optional, discovery-only; see § Activation). Consumer projects that never set the key pay zero cost.
 
 The default provider is the **official fal.ai hosted MCP** (`https://mcp.fal.ai/mcp`), maintained by the fal.ai team. Community-maintained alternatives are documented for consumer projects that prefer fully-local/stdio MCPs or need a fallback if the hosted endpoint is unreachable.
 

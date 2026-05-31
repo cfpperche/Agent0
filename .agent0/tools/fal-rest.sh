@@ -10,6 +10,9 @@
 # it. See docs/specs/132-video-skill/ and debate.md § R4.
 #
 # Subcommands (all require FAL_KEY; REST auth is 'Key', NOT 'Bearer'):
+#   run      --model=<id> (--body=<json> | --body-file=<path> | stdin)
+#            POST https://fal.run/<model> → model output JSON (SYNCHRONOUS; no
+#            request_id, no polling). Used by /image (spec 133).
 #   submit   --model=<id> (--body=<json> | --body-file=<path> | stdin)
 #            POST https://queue.fal.run/<model> → {request_id,status_url,response_url,...}
 #   status   --model=<id> --request-id=<id>
@@ -27,6 +30,7 @@
 set -uo pipefail
 
 QUEUE_BASE="https://queue.fal.run"
+SYNC_BASE="https://fal.run"
 
 die() { printf 'fal-rest: %s\n' "$1" >&2; exit "${2:-2}"; }
 
@@ -70,6 +74,40 @@ sub_submit() {
   if [ "$http_code" != "200" ]; then
     cat "$resp_file" >&2; printf '\n' >&2; rm -f "$resp_file"
     die "submit: HTTP $http_code" 1
+  fi
+  cat "$resp_file"; printf '\n'; rm -f "$resp_file"
+}
+
+sub_run() {
+  # Synchronous fal endpoint (fal.run/<model>) — returns the model output
+  # directly (no request_id, no polling). Used by /image (sync, ~1 min). Model-
+  # agnostic: caller owns the request body and the response shape.
+  local model="" body="" body_file=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --model=*)     model="${1#--model=}"; shift ;;
+      --body=*)      body="${1#--body=}"; shift ;;
+      --body-file=*) body_file="${1#--body-file=}"; shift ;;
+      --model)       model="${2:-}"; shift 2 ;;
+      --body)        body="${2:-}"; shift 2 ;;
+      --body-file)   body_file="${2:-}"; shift 2 ;;
+      *) die "run: unknown arg: $1" ;;
+    esac
+  done
+  require_key
+  [ -n "$model" ] || die "run: --model=<id> required"
+  local payload resp_file http_code
+  payload="$(read_body "$body" "$body_file")"
+  resp_file="$(mktemp)"
+  http_code="$(curl -sS -o "$resp_file" -w '%{http_code}' \
+    -X POST "$SYNC_BASE/$model" \
+    -H "Authorization: Key $FAL_KEY" \
+    -H "Content-Type: application/json" \
+    --data-raw "$payload" \
+    --max-time 300 || printf '000')"
+  if [ "$http_code" != "200" ]; then
+    cat "$resp_file" >&2; printf '\n' >&2; rm -f "$resp_file"
+    die "run: HTTP $http_code" 1
   fi
   cat "$resp_file"; printf '\n'; rm -f "$resp_file"
 }
@@ -148,21 +186,24 @@ sub_download() {
 }
 
 case "${1:-}" in
+  run)      shift; sub_run      "$@" ;;
   submit)   shift; sub_submit "$@" ;;
   status)   shift; sub_status "$@" ;;
   result)   shift; sub_result "$@" ;;
   download) shift; sub_download "$@" ;;
   ""|-h|--help)
     cat <<'EOF'
-fal-rest.sh — shared fal.ai queue REST primitives (runtime-neutral, curl+jq)
+fal-rest.sh — shared fal.ai REST primitives (runtime-neutral, curl+jq)
 
-  submit   --model=<id> [--body=<json> | --body-file=<path> | stdin]
+  run      --model=<id> [--body=<json> | --body-file=<path> | stdin]   (sync fal.run)
+  submit   --model=<id> [--body=<json> | --body-file=<path> | stdin]   (async queue.fal.run)
   status   --model=<id> --request-id=<id>
   result   --model=<id> --request-id=<id>
   download --url=<url> --output=<abs-path>
 
 Requires FAL_KEY. Auth header is 'Authorization: Key $FAL_KEY' (REST, not Bearer).
-No polling loop — callers drive cadence. See header for full contract.
+`run` is synchronous (returns model output directly); `submit`/`status`/`result`
+drive the async queue. No polling loop — callers drive cadence.
 EOF
     [ -z "${1:-}" ] && exit 0 || exit 0 ;;
   *) die "unknown subcommand: $1 (try --help)" ;;

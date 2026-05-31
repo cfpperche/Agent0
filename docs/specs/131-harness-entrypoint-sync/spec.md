@@ -2,7 +2,7 @@
 
 _Created 2026-05-31._
 
-**Status:** draft
+**Status:** in-progress
 
 ## Intent
 
@@ -10,34 +10,34 @@ Claude Code reads `CLAUDE.md`; Codex (and the ~20 other AGENTS.md-standard tools
 
 ## Acceptance criteria
 
-- [ ] **Scenario: project core reaches both runtimes (sentinel test)**
+- [x] **Scenario: project core reaches both runtimes (sentinel test)**
   - **Given** a single sentinel sentence authored only in the neutral, consumer-owned project-core source
   - **When** `sync-harness.sh --apply` runs
   - **Then** the sentence appears verbatim inside an always-on `PROJECT` region of BOTH `CLAUDE.md` and `AGENTS.md`, and a simulated Claude and Codex startup read both see it *before* any on-demand context-injection hook fires
 
-- [ ] **Scenario: shared index is single-sourced (Gap A)**
-  - **Given** the harness capacity index has one canonical source
-  - **When** `sync-harness.sh --apply` renders the entrypoints
-  - **Then** the index region in `CLAUDE.md` and `AGENTS.md` is byte-derived from that one source, so the two copies cannot drift
+- [x] **Scenario: shared index cannot drift (Gap A)**
+  - **Given** Agent0's `CLAUDE.md` and `AGENTS.md` both carry the `AGENT0:BEGIN…END` index block
+  - **When** `check-instruction-drift.sh` runs
+  - **Then** it asserts the two blocks are byte-identical and fails on any drift — single-source-of-truth is *enforced* (physical single-sourcing into one file is a non-goal; consumers inherit both blocks from Agent0 via sync, so they cannot independently drift)
 
-- [ ] **Scenario: consumer edit to a derived region is refused (consumer-source mirror merge)**
+- [x] **Scenario: consumer edit to a derived region is refused (consumer-source mirror merge)**
   - **Given** a consumer hand-edits the rendered `PROJECT` region inside `AGENTS.md` (a derived mirror), diverging from both the neutral source and the last recorded rendered hash
   - **When** `sync-harness.sh --apply` runs without `--force`
   - **Then** sync refuses that region (reports it), leaves it untouched, and never overwrites the neutral source; `--force` discards the derived edit and re-renders from source
 
-- [ ] **Scenario: stale derived region auto-updates**
+- [x] **Scenario: stale derived region auto-updates**
   - **Given** the neutral source changed and the consumer never touched the rendered region (region sha == last recorded rendered hash)
   - **When** `sync-harness.sh --apply` runs
   - **Then** the region is re-rendered from source with no `--force`, counted as a stale update
 
-- [ ] **Scenario: Codex local override still wins**
+- [x] **Scenario: Codex local override still wins**
   - **Given** an `AGENTS.override.md` or nested `AGENTS.md` whose guidance conflicts with the mirrored project core
   - **When** Codex loads its instruction chain
   - **Then** the override wins on conflict (native layering preserved); the mirrored core only guarantees the baseline is always present
 
-- [ ] The neutral, consumer-owned project-core source lives OUTSIDE the `COPY_CHECK_*` manifest scope, so `sync-harness.sh` never treats it as Agent0-owned and never overwrites it
-- [ ] The per-region rendered hash is recorded in `.agent0/harness-sync-baseline.json` under synthetic keys (e.g. `CLAUDE.md#PROJECT`, `AGENTS.md#PROJECT`), reusing the existing `CLAUDE.md#managed-block` baseline pattern
-- [ ] Long-tail reference (full brand book, detailed conventions) is NOT mirrored into entrypoints; it stays in `docs/` and is delivered on demand by the existing context-injection hook
+- [x] The neutral, consumer-owned project-core source lives OUTSIDE the `COPY_CHECK_*` manifest scope, so `sync-harness.sh` never treats it as Agent0-owned and never overwrites it
+- [x] The per-region rendered hash is recorded in `.agent0/harness-sync-baseline.json` under synthetic keys (e.g. `CLAUDE.md#PROJECT`, `AGENTS.md#PROJECT`), reusing the existing `CLAUDE.md#managed-block` baseline pattern
+- [x] Long-tail reference (full brand book, detailed conventions) is NOT mirrored into entrypoints; it stays in `docs/` and is delivered on demand by the existing context-injection hook
 
 ## Non-goals
 
@@ -46,6 +46,7 @@ Claude Code reads `CLAUDE.md`; Codex (and the ~20 other AGENTS.md-standard tools
 - Making `AGENTS.md` a derived artifact of `CLAUDE.md` (Design 2, rejected: neither entrypoint is privileged; both derive from the neutral source).
 - Changing how `AGENTS.override.md` / nested `AGENTS.md` layer — their precedence is preserved; override wins on conflict.
 - Auto-migrating existing consumers' `CLAUDE.md`-only narrative into the new neutral source — hard-cutover posture (consumer does a one-time manual move), same as specs 101/102-105/130.
+- Physically rendering the harness index from one source file into both entrypoints (Gap A) — the index is kept byte-identical by `check-instruction-drift.sh` instead; a render pipeline is unjustified (no build step, no current drift).
 
 ## Open questions
 

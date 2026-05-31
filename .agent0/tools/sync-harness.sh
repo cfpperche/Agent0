@@ -144,6 +144,11 @@ BASELINE_TOOL_VERSION=1
 BASELINE_FILE="$CONSUMER_ROOT/.agent0/harness-sync-baseline.json"
 LEGACY_BASELINE_FILE="$CONSUMER_ROOT/.claude/harness-sync-baseline.json"
 BASELINE_PRESENT=0
+# spec 131 — consumer-owned project core, mirrored into both entrypoints.
+# Deliberately NOT in any COPY_CHECK_* array: the source is consumer-owned and
+# outside the sync manifest, so Agent0 never ships or overwrites it.
+PROJECT_SOURCE_REL=".agent0/project-core.md"
+PROJECT_MARKER="AGENT0:PROJECT"
 BASELINE_TSV=""          # temp: sorted "relpath<TAB>sha" of the recorded baseline
 MANIFEST_RAW=""          # temp: unsorted "relpath<TAB>sha" of Agent0's current set
 MANIFEST_TSV=""          # temp: sorted+uniq MANIFEST_RAW
@@ -379,6 +384,32 @@ _self_rebootstrap() {
   exec bash "$tmp" "${ORIGINAL_ARGS[@]}"
 }
 
+# Entrypoints that may carry the consumer-owned AGENT0:PROJECT mirror region.
+# (CLAUDE.md is handled by merge_claude_md, never process_file; AGENTS.md is the
+# only plain-tracked entrypoint, but the set is kept general/future-proof.)
+_is_project_target() {
+  case "$1" in
+    CLAUDE.md|AGENTS.md) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# Emit a file's content with the AGENT0:PROJECT region (markers inclusive) and
+# the single blank line immediately after END removed — the exact inverse of the
+# insert in _mirror_project_region. Lets process_file compare AGENTS.md without
+# counting the consumer-owned project-core region as Agent0-divergence. A file
+# with no PROJECT region passes through byte-for-byte.
+_strip_project_region() {
+  local file="$1"
+  awk '
+    $0 == "<!-- AGENT0:PROJECT:BEGIN -->" { in_p=1; next }
+    $0 == "<!-- AGENT0:PROJECT:END -->"   { in_p=0; skip_blank=1; next }
+    in_p { next }
+    skip_blank == 1 { skip_blank=0; if ($0 == "") next }
+    { print }
+  ' "$file"
+}
+
 process_file() {
   local rel="$1"
   local src="$AGENT0_ROOT/$rel"
@@ -407,8 +438,18 @@ process_file() {
   fi
 
   local src_sha dst_sha
-  src_sha="$(sha_of "$src")"
-  dst_sha="$(sha_of "$dst")"
+  if _is_project_target "$rel"; then
+    # AGENTS.md may carry the consumer-owned AGENT0:PROJECT region (injected by
+    # sync_project_core later in this same apply). Strip it before comparing so
+    # the consumer-owned region never reads as Agent0-divergence. The write
+    # paths below are unchanged: if a stale/force cp lands the region-less src,
+    # sync_project_core re-injects the region afterward in the same run.
+    src_sha="$(_strip_project_region "$src" | sha256sum | awk '{print $1}')"
+    dst_sha="$(_strip_project_region "$dst" | sha256sum | awk '{print $1}')"
+  else
+    src_sha="$(sha_of "$src")"
+    dst_sha="$(sha_of "$dst")"
+  fi
 
   if [ "$src_sha" = "$dst_sha" ]; then
     printf '= up to date %s\n' "$rel"
@@ -1421,6 +1462,152 @@ sync_skill_discovery_links() {
   done
 }
 
+# ---------------------------------------------------------------------------
+# project-core mirror (spec 131 — consumer-source mirror)
+# ---------------------------------------------------------------------------
+# The consumer authors .agent0/project-core.md ONCE (consumer-owned, outside the
+# sync manifest so Agent0 never overwrites it). On --apply its content renders
+# verbatim into an always-on AGENT0:PROJECT region of BOTH entrypoints
+# (CLAUDE.md + AGENTS.md) so Claude and Codex see the same project core. This is
+# a NEW merge direction — consumer-source -> the consumer's own two entrypoints,
+# not Agent0 -> consumer. Per-region rendered sha is recorded under synthetic
+# keys "<rel>#PROJECT" (mirroring CLAUDE.md#managed-block). No-op when the source
+# is absent: the feature is opt-in and backward-compatible.
+
+# Mirror the rendered project core into one entrypoint's AGENT0:PROJECT region.
+# Args: rel (CLAUDE.md|AGENTS.md), rendered (source content), rendered_sha.
+_mirror_project_region() {
+  local rel="$1" rendered="$2" rendered_sha="$3"
+  local dst="$CONSUMER_ROOT/$rel"
+  local synth="$rel#PROJECT"
+  local state cur_region cur_sha base_sha is_stale tmp begin_line end_line nobaseline
+
+  [ -f "$dst" ] || return 0
+
+  state="$(detect_marker_state "$dst" "$PROJECT_MARKER")"
+  if [ "$state" = "mismatched" ] || [ "$state" = "nested-invalid" ]; then
+    if [ "$MODE" = "check" ]; then
+      printf '!! project-core %s (markers %s)\n' "$rel" "$state"
+      DRIFT=1
+    else
+      printf '!! project-core: %s has %s AGENT0:PROJECT markers — refused (fix manually)\n' "$rel" "$state" >&2
+      CUSTOMIZED_REFUSED=$((CUSTOMIZED_REFUSED + 1))
+    fi
+    return
+  fi
+
+  # Record the rendered (source) sha under the synthetic key on every non-error
+  # path so write_baseline persists it and stale-detection works next run.
+  printf '%s\t%s\n' "$synth" "$rendered_sha" >> "$MANIFEST_RAW"
+  sort -u "$MANIFEST_RAW" > "$MANIFEST_TSV"
+
+  if [ "$state" = "absent" ]; then
+    if [ "$MODE" = "check" ]; then
+      printf '~ project-core %s (region would be created)\n' "$rel"
+      DRIFT=1
+      return
+    fi
+    tmp="$(mktemp -t sync-project-core-XXXXXX)"
+    begin_line="$(grep -Fxn '<!-- AGENT0:BEGIN -->' "$dst" | head -1 | cut -d: -f1 || true)"
+    if [ -n "$begin_line" ]; then
+      head -n "$((begin_line - 1))" "$dst" > "$tmp"
+      printf '<!-- AGENT0:PROJECT:BEGIN -->\n%s\n<!-- AGENT0:PROJECT:END -->\n\n' "$rendered" >> "$tmp"
+      tail -n +"$begin_line" "$dst" >> "$tmp"
+    else
+      printf 'project-core: %s has no AGENT0:BEGIN anchor — appending PROJECT region at EOF\n' "$rel" >&2
+      cat "$dst" > "$tmp"
+      printf '\n<!-- AGENT0:PROJECT:BEGIN -->\n%s\n<!-- AGENT0:PROJECT:END -->\n' "$rendered" >> "$tmp"
+    fi
+    if [ "$DRY_RUN" -eq 1 ]; then
+      rm -f "$tmp"
+      printf '~ project-core %s (region created, dry-run)\n' "$rel"
+    else
+      mv "$tmp" "$dst"
+      printf '~ project-core %s (region created)\n' "$rel"
+    fi
+    STALE_UPDATED=$((STALE_UPDATED + 1))
+    return
+  fi
+
+  # state == paired
+  cur_region="$(_extract_region "$dst" "$PROJECT_MARKER")"
+  cur_sha="$(_region_sha "$cur_region")"
+  if [ "$cur_sha" = "$rendered_sha" ]; then
+    printf '= up to date %s (project-core)\n' "$rel"
+    UP_TO_DATE=$((UP_TO_DATE + 1))
+    return
+  fi
+
+  base_sha="$(baseline_sha_for "$synth")"
+  is_stale=0
+  if [ -n "$base_sha" ] && [ "$base_sha" = "$cur_sha" ]; then
+    is_stale=1
+  fi
+
+  if [ "$is_stale" -ne 1 ] && { [ "$FORCE" -ne 1 ] || matches_force_except "$rel"; }; then
+    nobaseline=""
+    if [ -z "$base_sha" ]; then nobaseline=" (no baseline)"; fi
+    if [ "$MODE" = "check" ]; then
+      printf '!! customized %s (project-core region%s)\n' "$rel" "$nobaseline"
+      DRIFT=1
+      return
+    fi
+    printf '!! project-core: %s region edited away from source%s — refused; edit the source .agent0/project-core.md, or --force to re-render\n' "$rel" "$nobaseline" >&2
+    CUSTOMIZED_REFUSED=$((CUSTOMIZED_REFUSED + 1))
+    return
+  fi
+
+  if [ "$MODE" = "check" ]; then
+    if [ "$is_stale" -eq 1 ]; then
+      printf '~ stale %s (project-core — would re-render)\n' "$rel"
+    else
+      printf '~ would re-render %s (project-core, --force)\n' "$rel"
+    fi
+    DRIFT=1
+    return
+  fi
+
+  tmp="$(mktemp -t sync-project-core-XXXXXX)"
+  begin_line="$(grep -Fxn '<!-- AGENT0:PROJECT:BEGIN -->' "$dst" | head -1 | cut -d: -f1)"
+  end_line="$(grep -Fxn '<!-- AGENT0:PROJECT:END -->' "$dst" | head -1 | cut -d: -f1)"
+  head -n "$((begin_line - 1))" "$dst" > "$tmp"
+  printf '<!-- AGENT0:PROJECT:BEGIN -->\n%s\n<!-- AGENT0:PROJECT:END -->\n' "$rendered" >> "$tmp"
+  tail -n +"$((end_line + 1))" "$dst" >> "$tmp"
+
+  if [ "$DRY_RUN" -eq 1 ]; then
+    rm -f "$tmp"
+    if [ "$is_stale" -eq 1 ]; then
+      printf '~ stale %s (project-core re-rendered, dry-run)\n' "$rel"
+      STALE_UPDATED=$((STALE_UPDATED + 1))
+    else
+      printf '! overwritten %s (project-core re-rendered under --force, dry-run)\n' "$rel" >&2
+      OVERWRITTEN=$((OVERWRITTEN + 1))
+    fi
+    return
+  fi
+
+  mv "$tmp" "$dst"
+  if [ "$is_stale" -eq 1 ]; then
+    printf '~ stale %s (project-core re-rendered)\n' "$rel"
+    STALE_UPDATED=$((STALE_UPDATED + 1))
+  else
+    printf '! overwritten %s (project-core re-rendered under --force)\n' "$rel" >&2
+    OVERWRITTEN=$((OVERWRITTEN + 1))
+  fi
+}
+
+# Read the consumer's project-core source (if any) and mirror it into both
+# entrypoints. No-op when the source is absent.
+sync_project_core() {
+  local core_src rendered rendered_sha
+  core_src="$CONSUMER_ROOT/$PROJECT_SOURCE_REL"
+  [ -f "$core_src" ] || return 0
+  rendered="$(cat "$core_src")"
+  rendered_sha="$(_region_sha "$rendered")"
+  _mirror_project_region "CLAUDE.md" "$rendered" "$rendered_sha"
+  _mirror_project_region "AGENTS.md" "$rendered" "$rendered_sha"
+}
+
 _self_rebootstrap
 walk_copy_check
 record_managed_block_manifest
@@ -1429,6 +1616,7 @@ sync_skill_discovery_links
 merge_settings_json
 merge_claude_md
 merge_gitignore
+sync_project_core
 write_baseline
 
 # Summary on stderr so stdout stays parseable per-file decisions.

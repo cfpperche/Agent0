@@ -275,6 +275,36 @@ When a capacity's canonical home moves within Agent0 — the consolidation track
 
 **No upstream auto-migration of consumer content** — same hard-cutover posture as the `.claude/SESSION.md` removal (spec 101). Deliberate: auto-moving consumer content would cross the manifest's "never touch consumer/product files" floor. The cost is a documented one-time manual step per consumer project; the benefit is sync never mutates data it does not own.
 
+## Project core (consumer-source mirror)
+
+Spec 131. The two runtime entrypoints diverge in what each model sees: Claude Code reads `CLAUDE.md`, Codex (and every AGENTS.md-standard tool) reads `AGENTS.md` and never `CLAUDE.md`. Consumer project narrative authored in one entrypoint is invisible to the other runtime. The **project core** mechanism closes that gap for the small, always-needed core (project identity, voice, key conventions) by mirroring a single consumer-owned source into both entrypoints.
+
+**The source.** `<consumer>/.agent0/project-core.md` — consumer-authored, consumer-owned, and **deliberately outside the sync manifest** (not in any `COPY_CHECK_*` array). Agent0 never ships it and never overwrites it; the manifest's explicit-allowlist design (§ Manifest scope) makes any unlisted path invisible to the sync walk. It is git-tracked in the consumer (project knowledge, like specs), not gitignored.
+
+**The mirror.** On `--apply`, `sync_project_core` renders the source verbatim into an always-on region delimited by `<!-- AGENT0:PROJECT:BEGIN -->` / `<!-- AGENT0:PROJECT:END -->` in **both** `CLAUDE.md` and `AGENTS.md` (created just above the `AGENT0:BEGIN` index block on first sync; EOF-appended if no `AGENT0:BEGIN` anchor exists). When the source is absent the whole pass is a **no-op** — the feature is opt-in and backward-compatible; existing consumers are untouched until they author a `project-core.md`.
+
+**Consumer-source mirror — a new merge direction.** Unlike every other primitive here (Agent0 → consumer), this mirrors a *consumer's own* source into the *consumer's own* two entrypoints. It reuses the 3-way machinery: the per-region rendered sha is recorded in `harness-sync-baseline.json` under synthetic keys `CLAUDE.md#PROJECT` and `AGENTS.md#PROJECT` (the same `#`-key trick as `CLAUDE.md#managed-block`). Per region:
+
+| Region state vs source / baseline | Verdict | Behavior |
+| --- | --- | --- |
+| markers absent | **create** | render source into a new region; `~ project-core … (region created)` |
+| region == source | up to date | no-op |
+| region == recorded rendered hash, source changed | **stale** | re-render from source, **no `--force`** |
+| region != source AND != recorded hash | **customized** | refuse (consumer edited a *derived* region); `--force` discards the edit and re-renders |
+| markers mismatched / nested | refuse | fix manually |
+
+**The source is never written by sync** — only the entrypoint regions are. Editing the core means editing `.agent0/project-core.md`, not the rendered regions.
+
+**AGENTS.md is region-aware in `process_file`.** `AGENTS.md` is a plain baseline-tracked manifest file (full-file hash), so an injected PROJECT region would otherwise read as permanent Agent0-divergence (`!! customized`) and `--force` would wipe it. `process_file` therefore strips the `AGENT0:PROJECT` region (via `_strip_project_region`, the exact inverse of the insert) before computing the comparison sha for the entrypoint targets (`_is_project_target`). The write paths are unchanged: `sync_project_core` runs *after* `walk_copy_check` in the same `--apply`, so if a stale/force `cp` lands the region-less upstream `AGENTS.md`, the region is re-injected immediately afterward. `CLAUDE.md` needs no such handling — its managed-block merge only compares the `AGENT0:BEGIN/END` region and preserves everything above it (including the PROJECT region) verbatim.
+
+**Authority order (Codex).** The neutral `project-core.md` is canonical; the entrypoint PROJECT regions are derived mirrors. Codex loads the mirrored core from root `AGENTS.md`, then `AGENTS.override.md` and nested `AGENTS.md` layer after it and **win on conflict** by Codex's native instruction chain — the mirror guarantees the core is always present, it does not override local Codex customization. This is why root `AGENTS.md` stays plain baseline-tracked rather than gaining a second Agent0-owned managed block.
+
+**Gap A (index drift) is guarded separately.** Agent0's `CLAUDE.md` and `AGENTS.md` `AGENT0:BEGIN…END` index blocks are kept byte-identical by `check-instruction-drift.sh` (it fails on any drift); consumers inherit both blocks from Agent0, so they cannot independently drift. Physical single-sourcing (one file rendered into both) is a non-goal — no build step, no current drift.
+
+**Migration for existing consumers.** Hard-cutover, same posture as the `.claude`→`.agent0` relocations (§ Path relocations): a consumer that already keeps project narrative in `CLAUDE.md` only authors `.agent0/project-core.md` once, runs `--apply`, and the mirror seeds both entrypoints. The old `CLAUDE.md`-only narrative is consumer content sync never touches; the consumer prunes/relocates it manually.
+
+`check-instruction-drift.sh` enforces the mirror invariant when a `project-core.md` exists: both entrypoints' PROJECT regions must equal the source.
+
 ## Self-rebootstrap
 
 `sync-harness.sh` is itself in the propagation manifest (`COPY_CHECK_GLOBS` → `.agent0/tools/*.sh`) — the tool syncs *itself*. That is a hazard: when a consumer project's copy is stale, an `--apply` invoked as `bash <consumer-path>/.agent0/tools/sync-harness.sh …` overwrites the very file bash is executing. Bash reads scripts incrementally, tracking a byte offset into the file; an in-place whole-file overwrite mid-run leaves that offset pointing into misaligned bytes, and the run crashes (`unbound variable`, a syntax error) or — worse — silently executes the wrong code.

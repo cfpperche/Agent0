@@ -3,17 +3,25 @@
 #
 # Sourced by sync-harness.sh and check-instruction-drift.sh so both tools use
 # identical marker detection, region extraction, and region hashing semantics.
+#
+# All three region helpers take an optional marker NAME (default "AGENT0"), so
+# the same machinery serves both the harness-index block (`AGENT0:BEGIN/END`)
+# and the consumer project-core mirror (`AGENT0:PROJECT:BEGIN/END`). Existing
+# callers that pass no name are byte-unaffected.
 
 # Detect marker state in a file. Outputs: absent | paired | mismatched | nested-invalid
 detect_marker_state() {
   local file="$1"
+  local name="${2:-AGENT0}"
+  local begin="<!-- ${name}:BEGIN -->"
+  local end="<!-- ${name}:END -->"
   local begin_count end_count begin_line end_line
   if [ ! -f "$file" ]; then
     echo "absent"
     return
   fi
-  begin_count="$(grep -cE '^<!-- AGENT0:BEGIN -->$' "$file" 2>/dev/null || true)"
-  end_count="$(grep -cE '^<!-- AGENT0:END -->$' "$file" 2>/dev/null || true)"
+  begin_count="$(grep -Fxc "$begin" "$file" 2>/dev/null || true)"
+  end_count="$(grep -Fxc "$end" "$file" 2>/dev/null || true)"
   [ -z "$begin_count" ] && begin_count=0
   [ -z "$end_count" ] && end_count=0
 
@@ -32,8 +40,8 @@ detect_marker_state() {
     return
   fi
 
-  begin_line="$(grep -nE '^<!-- AGENT0:BEGIN -->$' "$file" | head -1 | cut -d: -f1)"
-  end_line="$(grep -nE '^<!-- AGENT0:END -->$' "$file" | head -1 | cut -d: -f1)"
+  begin_line="$(grep -Fxn "$begin" "$file" | head -1 | cut -d: -f1)"
+  end_line="$(grep -Fxn "$end" "$file" | head -1 | cut -d: -f1)"
   if [ "$begin_line" -ge "$end_line" ]; then
     echo "nested-invalid"
     return
@@ -41,13 +49,14 @@ detect_marker_state() {
   echo "paired"
 }
 
-# Extract content between AGENT0:BEGIN and AGENT0:END markers (exclusive).
+# Extract content between the BEGIN and END markers (exclusive).
 _extract_region() {
   local file="$1"
-  awk '
-    /^<!-- AGENT0:END -->$/ { in_region=0 }
+  local name="${2:-AGENT0}"
+  awk -v b="<!-- ${name}:BEGIN -->" -v e="<!-- ${name}:END -->" '
+    $0 == e { in_region=0 }
     in_region { print }
-    /^<!-- AGENT0:BEGIN -->$/ { in_region=1 }
+    $0 == b { in_region=1 }
   ' "$file"
 }
 

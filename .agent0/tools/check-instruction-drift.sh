@@ -105,6 +105,26 @@ if [ -f "$claude" ] && [ -f "$agents" ] &&
   fi
 fi
 
+# spec 131 — when a consumer-owned project core exists, both entrypoints must
+# carry an AGENT0:PROJECT region that matches it (the always-on mirror). No-op
+# in Agent0 itself (no project-core.md) — the feature is opt-in per consumer.
+project_core="$ROOT/.agent0/project-core.md"
+if [ -f "$project_core" ]; then
+  core_sha="$(_region_sha "$(cat "$project_core")")"
+  for entry in "$claude" "$agents"; do
+    ename="$(basename "$entry")"
+    if [ -f "$entry" ] && [ "$(detect_marker_state "$entry" AGENT0:PROJECT)" = "paired" ]; then
+      if [ "$(_region_sha "$(_extract_region "$entry" AGENT0:PROJECT)")" = "$core_sha" ]; then
+        ok "$ename: PROJECT region matches .agent0/project-core.md"
+      else
+        fail "$ename: PROJECT region drifted from .agent0/project-core.md (run sync-harness --apply)"
+      fi
+    else
+      fail "$ename: .agent0/project-core.md exists but its PROJECT region is missing/invalid (run sync-harness --apply)"
+    fi
+  done
+fi
+
 if [ "$SKIP_SYNC_CHECK" -eq 1 ]; then
   ok "sync-harness AGENTS.md baseline check skipped by flag"
 else

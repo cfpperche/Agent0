@@ -8,51 +8,46 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 
 ## Current State
 
-**Spec 130 — harness-baseline-relocate: shipped (`67fec69`) + follow-up (`464976a`).** Baseline moved
-`.claude/`→`.agent0/harness-sync-baseline.json` (last umbrella-102 holdout). `sync-harness.sh` reads the legacy
-path as fallback, removes it on the migrating `--apply` (write-before-delete). Follow-up repointed two stale doc
-refs in `CLAUDE.md`+`AGENTS.md` (baseline path + spec-119 `.claude/hooks/`); gotcha added to `harness-home.md`.
+**Spec 132 — video-skill: implemented + validated, UNCOMMITTED.** New `/video` skill, sibling of `/image`,
+required `--mode=code|generative`. **code** = HyperFrames npm engine renders HTML→MP4 locally, $0 inference, source
+tracked / MP4 gitignored / render fingerprint in manifest. **generative** = fal.ai queue REST, fire-and-forget
+ledger (submit→poll), hard `--confirm-cost-usd` gate. Built via full SDD (spec→cross-model debate w/ Codex→plan→
+tasks→build). Files: `.agent0/skills/video/`, `.agent0/tools/fal-rest.sh` (shared REST lib), `.agent0/context/
+rules/video-gen.md`, symlinks, `.agent0/tests/video/` (5 tests green), CLAUDE.md/AGENTS.md/runtime-capabilities/
+.gitignore touched. **Code mode validated with a REAL render** (1920×1080 h264 MP4 + manifest). Generative dry-
+validated only (gate/tier/envelope/ledger); live paid submit/poll NOT exercised (needs real FAL_KEY + spend).
 
-**mei-saas consumer: fully synced to Agent0, clean** (3 commits: `eb490c7` spec-129 migration+bridges, `5b801d8`
-baseline relocate, `ffc3b35` doc-path fix). `.claude/` holds only legitimate files; ~1100 gitignored residue files
-swept; sync `--check` exit 0. Leftover (out of scope): consumer preamble `CLAUDE.md:15` still says `.claude/rules/`
-(sync never touches the preamble).
-
-**Spec 129 — claude-exec: shipped.** Symmetric sibling of `codex-exec` — a non-Claude runtime (primarily Codex)
-invokes `claude -p` as a bounded subprocess. Canonical `.agent0/skills/claude-exec/` + discovery symlinks; 50-test
-suite green. **Not a clone** — required fail-closed `--permission-mode` pass-through, `jq` last-message extraction,
-`session_id` for `--resume`, prompt via stdin. Codex bidirectional dogfood found the read-only "floor" was caller
-discipline → fixed with the `--allow-writes` gate (write-capable modes refused; default/plan are the floor).
-
-**Spec 128 — codex-exec: shipped.** Portable bridge; `--output` escape fixed (state-dir-contained, fail-closed).
-**Specs 126/127 shipped.** Spec 126 OQ5 (bolder visual/brand) still optional. Fixture-loader fix: invalid
-validator fixtures moved to `.agent0/tests/skill/fixtures/` (out of `.agent0/skills` discovery). Untracked
-`docs/specs/091-sdd-debate-runner/` out of scope.
+**Prior shipped (in git log):** 130 baseline relocate (`.claude/`→`.agent0/harness-sync-baseline.json`; note: that
+file is mid-relocation/absent now per 130/131). 129 claude-exec, 128 codex-exec (subprocess bridges, siblings not
+clones). 126/127 site. mei-saas consumer fully synced. Untracked `docs/specs/091-sdd-debate-runner/` out of scope.
 
 ## Active Work
 
-_No active parallel-work claims._
+_None — spec 132 complete, awaiting commit decision._
 
 ## Next Actions
 
-1. **Spec 126 OQ5 (optional):** bolder visual/brand direction if desired — current site is coherent and shipped.
-2. **Deploy site when ready:** GitHub Pages publishes `site/` (`cfpperche.github.io/Agent0/`); confirm CI picks up
-   the shipped site work and capture live Lighthouse numbers there.
+1. **Commit spec 132 (user-gated).** Suggested split: `feat(132): /video skill — code+generative modes` + a
+   separate commit for the SDD artifacts, or all-in-one. Nothing committed this session.
+2. **Register 132's new managed files in `harness-sync-baseline.json`** once specs 130/131 settle its location
+   (the baseline file is mid-relocation — absent from the tree right now, so no registration target exists yet).
+3. **Decoupled follow-up spec:** migrate `/image` onto `.agent0/tools/fal-rest.sh` + fix `/image`'s stale
+   "delegates to MCP" frontmatter wording (real contract is REST; Codex debate catch).
+4. **Spec 126 OQ5 (optional)** bolder visual/brand; **deploy site** (GitHub Pages `cfpperche.github.io/Agent0/`).
 
 ## Decisions & Gotchas
 
-- **History:** site = OSS-project developer landing (126); `/sdd debate` identity detected not hardcoded (`ca20476`);
-  flatten-safe `▸` markers (125, tofu fallback `>>`).
+- **`/video` design (spec 132 debate, converged w/ Codex):** own the authoring layer (do NOT install upstream
+  `heygen-com/hyperframes` agent-skill — depend on the pinned npm *engine* only); ledger async not blocking; cost
+  gate binds to cost/model/duration; NO drift-checker in v1 (speculative-observability discipline); tiers live in
+  refreshable `references/video-tiers.yaml` (zero model IDs in skill body).
+- **HyperFrames lint is LINE-BASED (pre-1.0 gotcha).** A comment immediately before `<div id="root">`, or `#root`
+  `data-*` attrs wrapped across lines → false `root_missing_composition_id`/`dimensions`. Render still succeeds; the
+  shipped template lints 0/0. Documented in template + `authoring.md` + `video-gen.md`.
 - **Skill homes:** edit canonical `.agent0/skills/<slug>/` only (`.claude/skills`+`.agents/skills` are discovery
-  symlinks). Invalid `SKILL.md` fixtures go under `.agent0/tests/skill/fixtures/`, never below `.agent0/skills/*`
-  (recursive loaders treat nested `SKILL.md` as discoverable skills).
-- **Relocations sweep docs too (`harness-home.md` gotcha).** A `.claude/→.agent0/` move must grep `CLAUDE.md`/
-  `AGENTS.md`/rules for stale path refs, not just fix code — else sync ships stale docs to consumers.
-- **`codex-exec` / `claude-exec` bridges:** subprocess bridges, not native shared-memory delegation, and
-  deliberately *siblings not clones*. codex-exec: default sandbox `read-only`, `--output` state-dir-contained.
-  claude-exec: `--permission-mode` required (no default), `--allow-writes` gates write-capable modes (floor
-  invariant), `jq` is a hard dependency, prompt always via stdin. Both audit to gitignored `.agent0/.runtime-state/`.
-- **Codex hooks:** `.codex/hooks.json` + inline TOML hooks run twice; trust may need reset after source moves.
-  `codex exec` is not a faithful `SessionStart` proof; use TUI for live confirmation.
-- **Known env gotchas:** gitleaks pre-commit active; governance blocks `rm -rf` and blanket `git add`;
-  secrets-preflight blocks compound `git add && git commit`; commits are user-gated.
+  symlinks). Invalid `SKILL.md` fixtures under `.agent0/tests/.../fixtures/`, never below `.agent0/skills/*`.
+- **Relocations sweep docs too:** a `.claude/→.agent0/` move must grep `CLAUDE.md`/`AGENTS.md`/rules for stale refs.
+- **Bridges (`codex-exec`/`claude-exec`):** subprocess, siblings not clones. codex-exec default sandbox read-only;
+  claude-exec `--permission-mode` required + `--allow-writes` gate. Both audit to gitignored `.agent0/.runtime-state/`.
+- **Env gotchas:** gitleaks pre-commit active; governance blocks `rm -rf` + blanket `git add`; secrets-preflight
+  blocks compound `git add && git commit`; commits are user-gated.

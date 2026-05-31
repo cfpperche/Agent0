@@ -68,3 +68,8 @@ prototypes/
 # Image-gen mockups — throwaway draft tier (spec 085). Brand assets at assets/brand/* stay tracked.
 assets/generated/mockups/*
 !assets/generated/mockups/.gitkeep
+
+# Video-gen renders — regenerable MP4s (spec 132). Composition source at
+# assets/video/compositions/* stays tracked; the .video-manifest.jsonl stays tracked.
+assets/generated/videos/*
+!assets/generated/videos/.gitkeep

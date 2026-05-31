@@ -43,6 +43,10 @@ A corollary surfaced by spec 104: **state moves *with* its producer, never ahead
 - **`move` (shipped, spec 122):** **context rules** — behavioral rule bodies live at `.agent0/context/rules/<slug>.md`; `.agent0/hooks/context-inject.sh` hydrates selected fragments into both runtimes. `.claude/rules/` is no longer a harness-owned source or discovery surface; Claude receives the same Agent0-owned context channel as Codex, with only the registration living in `.claude/settings.json`.
 - **`deferred`:** agents and **`cc-native` skills** — `cc-native` skills (those bound to `AskUserQuestion` / `${CLAUDE_SKILL_DIR}` with no Codex analogue) stay physically in `.claude/skills/` and are NOT symlinked into `.agents/skills/`. (Note: a skill staying `deferred` does NOT pin its *state output* to `.claude/` — see § Co-location, spec 119's `.brainstorm-state`.)
 
+## Gotchas
+
+- **A relocation must sweep the doc surfaces, not just the code.** Moving a surface `.claude/`→`.agent0/` (or removing a capacity) leaves stale path references in the prose entrypoints — `CLAUDE.md` (managed block) and `AGENTS.md` (baseline-tracked) — which the sync then propagates verbatim to every consumer. Two such refs survived multiple migrations and were only caught auditing the spec-129/130 mei-saas resync: the memory-index trigger still listed `.claude/hooks/` after spec 119 moved hooks to `.agent0/hooks/`, and the harness-sync description still named `.claude/harness-sync-baseline.json` after spec 130 moved it (fixed in `464976a`). **Checklist for any future relocation:** `grep -rn '\.claude/<old-path>' CLAUDE.md AGENTS.md .agent0/context/rules/ .agent0/memory/` and repoint every hit — excluding the genuinely-Claude-native survivors (`.claude/settings.json`, `.claude/skills/<cc-native>`, discovery symlinks). The code-only fix passes tests but ships stale docs.
+
 ## Cross-references
 
 - `docs/specs/102-harness-consolidate-agent0/spec.md` § *Classification principle* + § *Gap matrix* — the source umbrella

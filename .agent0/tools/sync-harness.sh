@@ -741,22 +741,27 @@ merge_settings_json() {
     return
   fi
 
-  if [ ! -f "$dst" ]; then
-    process_file "$rel"
-    return
-  fi
-
-  local src_sha dst_sha
-  src_sha="$(sha_of "$src")"
-  dst_sha="$(sha_of "$dst")"
-  if [ "$src_sha" = "$dst_sha" ]; then
-    printf '= up to date %s\n' "$rel"
-    UP_TO_DATE=$((UP_TO_DATE + 1))
-    return
+  # The dev-only propagation-advise.sh registration must never reach a consumer.
+  # strip_excluded (in the jq below) drops it — but the strip lives INSIDE the
+  # merge, so EVERY path to settings.json must flow through that jq, including a
+  # first sync where the consumer has no file yet. Two earlier short-circuits
+  # bypassed it: a missing consumer file fell back to a verbatim process_file
+  # copy, and a sha-identical file returned "up to date" before the jq ran. Both
+  # leaked (then permanently persisted) the registration. Now the consumer side
+  # is always normalized through jq — an absent file becomes an empty base ({}) —
+  # and the only up-to-date test is merged-vs-consumer, so a previously leaked
+  # registration self-heals on the next resync.
+  local first_sync=0 consumer_base
+  consumer_base="$(mktemp -t sync-settings-base-XXXXXX)"
+  if [ -f "$dst" ]; then
+    cp "$dst" "$consumer_base"
+  else
+    first_sync=1
+    printf '{}' > "$consumer_base"
   fi
 
   # Compute merged JSON.
-  # Consumer project (dst) is the BASE — preserves permissions/env/model/statusLine/consumer-only top-level keys.
+  # Consumer project (consumer_base) is the BASE — preserves permissions/env/model/statusLine/consumer-only top-level keys.
   # Agent0-owned top-level keys ($schema) overwrite when Agent0 has them.
   # hooks: union per-event, dedup by (matcher, ordered list of inner commands).
   # Excluded hook commands (matched as substring on any inner .command) are dropped
@@ -791,16 +796,19 @@ merge_settings_json() {
           })
         | add // {}
       )
-  ' "$dst" "$src" > "$tmp" 2>/dev/null; then
+  ' "$consumer_base" "$src" > "$tmp" 2>/dev/null; then
     printf '!! settings.json merge failed (jq error)\n' >&2
-    rm -f "$tmp"
+    rm -f "$tmp" "$consumer_base"
     DRIFT=1
     return
   fi
+  rm -f "$consumer_base"
 
-  # Compare merged result with current consumer project content
-  local merged_sha
+  # Up-to-date test: merged result vs current consumer content. dst_sha is empty
+  # when the consumer has no settings.json (first sync) — never equals merged.
+  local merged_sha dst_sha
   merged_sha="$(sha_of "$tmp")"
+  dst_sha="$(sha_of "$dst")"
   if [ "$merged_sha" = "$dst_sha" ]; then
     printf '= up to date %s\n' "$rel"
     UP_TO_DATE=$((UP_TO_DATE + 1))
@@ -809,20 +817,37 @@ merge_settings_json() {
   fi
 
   if [ "$MODE" = "check" ]; then
-    printf '~ would merge %s\n' "$rel"
+    if [ "$first_sync" -eq 1 ]; then
+      printf '+ would copy %s\n' "$rel"
+    else
+      printf '~ would merge %s\n' "$rel"
+    fi
     DRIFT=1
     rm -f "$tmp"
     return
   fi
 
   if [ "$DRY_RUN" -eq 1 ]; then
-    printf '~ merged %s (dry-run)\n' "$rel"
+    if [ "$first_sync" -eq 1 ]; then
+      printf '+ copied %s (dry-run)\n' "$rel"
+    else
+      printf '~ merged %s (dry-run)\n' "$rel"
+    fi
     rm -f "$tmp"
   else
+    mkdir -p "$(dirname "$dst")"
     mv "$tmp" "$dst"
-    printf '~ merged %s\n' "$rel"
+    if [ "$first_sync" -eq 1 ]; then
+      printf '+ copied %s\n' "$rel"
+    else
+      printf '~ merged %s\n' "$rel"
+    fi
   fi
-  MERGED=$((MERGED + 1))
+  if [ "$first_sync" -eq 1 ]; then
+    COPIED=$((COPIED + 1))
+  else
+    MERGED=$((MERGED + 1))
+  fi
 }
 
 # ---------------------------------------------------------------------------

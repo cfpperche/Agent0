@@ -10,6 +10,7 @@ Options:
   --task-file <path>        Read prompt text from a file.
   --model <model>           Codex model override.
   --profile <profile>       Codex config profile.
+  --reasoning-effort <lvl>  minimal|low|medium|high|xhigh (maps to -c model_reasoning_effort).
   --sandbox <mode>          read-only | workspace-write | danger-full-access (default: read-only).
   --cwd <dir>               Codex working root; must resolve under the repo root.
   --resume <session-id>     Run codex exec resume <session-id> -.
@@ -80,6 +81,7 @@ task=""
 task_file=""
 model=""
 profile=""
+reasoning_effort=""
 sandbox="read-only"
 cwd="$ROOT"
 resume_id=""
@@ -129,6 +131,15 @@ while [ "$#" -gt 0 ]; do
     --profile=*)
       profile=${1#--profile=}
       require_value "--profile" "$profile"
+      ;;
+    --reasoning-effort|-e)
+      shift
+      require_value "--reasoning-effort" "${1-}"
+      reasoning_effort=$1
+      ;;
+    --reasoning-effort=*)
+      reasoning_effort=${1#--reasoning-effort=}
+      require_value "--reasoning-effort" "$reasoning_effort"
       ;;
     --sandbox|-s)
       shift
@@ -199,6 +210,11 @@ done
 case "$sandbox" in
   read-only|workspace-write|danger-full-access) ;;
   *) die "invalid --sandbox '$sandbox' (expected read-only, workspace-write, or danger-full-access)" ;;
+esac
+
+case "$reasoning_effort" in
+  ""|minimal|low|medium|high|xhigh) ;;
+  *) die "invalid --reasoning-effort '$reasoning_effort' (expected minimal, low, medium, high, or xhigh)" ;;
 esac
 
 if [ -n "$task_file" ]; then
@@ -293,6 +309,9 @@ fi
 if [ -n "$profile" ]; then
   top_args+=(--profile "$profile")
 fi
+if [ -n "$reasoning_effort" ]; then
+  top_args+=(-c "model_reasoning_effort=$reasoning_effort")
+fi
 if [ "$CWD_REAL" != "$ROOT_REAL" ]; then
   top_args+=(--cd "$CWD_REAL")
 fi
@@ -327,6 +346,7 @@ fi
   printf '  "sandbox": %s,\n' "$(json_string "$sandbox")"
   printf '  "model": %s,\n' "$(json_string "$model")"
   printf '  "profile": %s,\n' "$(json_string "$profile")"
+  printf '  "reasoning_effort": %s,\n' "$(json_string "$reasoning_effort")"
   printf '  "cwd": %s,\n' "$(json_string "$CWD_REAL")"
   printf '  "resume_id": %s,\n' "$(json_string "$resume_id")"
   printf '  "json": %s,\n' "$([ "$json" -eq 1 ] && printf true || printf false)"
@@ -345,6 +365,7 @@ fi
   printf '"sandbox":%s,' "$(json_string "$sandbox")"
   printf '"model":%s,' "$(json_string "$model")"
   printf '"profile":%s,' "$(json_string "$profile")"
+  printf '"reasoning_effort":%s,' "$(json_string "$reasoning_effort")"
   printf '"cwd":%s,' "$(json_string "$CWD_REAL")"
   printf '"resume_id":%s,' "$(json_string "$resume_id")"
   printf '"json":%s,' "$([ "$json" -eq 1 ] && printf true || printf false)"

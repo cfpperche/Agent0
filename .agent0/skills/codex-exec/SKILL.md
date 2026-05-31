@@ -40,6 +40,7 @@ Supported parameters:
 - stdin — if no task is passed and stdin is piped, stdin becomes the prompt.
 - `--model <model>` — maps to Codex `--model`.
 - `--profile <profile>` — maps to Codex `--profile`.
+- `--reasoning-effort <minimal|low|medium|high|xhigh>` — maps to Codex `-c model_reasoning_effort=<level>`. Validated against the allowed set; recorded in `metadata.json` / `runs.jsonl`.
 - `--sandbox read-only|workspace-write|danger-full-access` — default is `read-only`.
 - `--cwd <dir>` — working root for Codex; must resolve under the repo root.
 - `--resume <session-id>` — calls `codex exec resume <session-id> -`.

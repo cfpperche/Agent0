@@ -1,7 +1,7 @@
 ---
 name: claude-exec
 description: Launch the local Claude Code CLI as a bounded non-interactive subprocess and capture its output. Use when Codex CLI or another non-Claude runtime needs a second-model probe, review, or continuation through `claude -p` with explicit parameters such as permission mode, model, tool allowlists, add-dir, resume id, JSON capture, or output path. The permission mode is required with no default; the helper refuses to run without it. Not for proving interactive Claude TUI hook behavior.
-argument-hint: "--permission-mode <default|plan|acceptEdits|bypassPermissions|dontAsk|auto> [--allow-writes] [--model <model>] [--allowedTools <list>] [--disallowedTools <list>] [--add-dir <repo-relative-dir>] [--bare] [--resume <session-id>] [--json] [--output <path>] [--slug <slug>] (--task <prompt> | --task-file <path> | prompt via stdin)"
+argument-hint: "--permission-mode <default|plan|acceptEdits|bypassPermissions|dontAsk|auto> [--allow-writes] [--model <model>] [--reasoning-effort <low|medium|high|xhigh|max>] [--allowedTools <list>] [--disallowedTools <list>] [--add-dir <repo-relative-dir>] [--bare] [--resume <session-id>] [--json] [--output <path>] [--slug <slug>] (--task <prompt> | --task-file <path> | prompt via stdin)"
 license: MIT
 compatibility: Compatible with agentskills.io-compatible runtimes that can run bash and have the Claude Code CLI (`claude`) plus `jq` installed and authenticated. The helper invokes `claude` directly and writes artifacts under `.agent0/.runtime-state/claude-exec/` by default.
 metadata:
@@ -43,6 +43,7 @@ Supported parameters:
 - stdin — if no task is passed and stdin is piped, stdin becomes the prompt.
 - `--allowedTools <list>` / `--disallowedTools <list>` — space/comma-separated tool names. Compose read-only review with `--permission-mode default --allowedTools "Read Grep Glob"`.
 - `--model <model>` — maps to Claude `--model`.
+- `--reasoning-effort <low|medium|high|xhigh|max>` — maps to Claude `--effort` (alias: `--effort`). Validated against the allowed set; recorded in `metadata.json` / `runs.jsonl`.
 - `--add-dir <dir>` — extra directory Claude may access; must resolve under the repo root.
 - `--bare` — opt-in: skip hooks/CLAUDE.md/auto-memory for a cheap isolated probe. Note: forces auth to strictly `ANTHROPIC_API_KEY` (breaks OAuth/subscription); off by default so reviews keep project context.
 - `--resume <session-id>` — continue an existing Claude session via `claude -p --resume <id>`.

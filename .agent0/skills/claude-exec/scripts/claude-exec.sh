@@ -24,6 +24,7 @@ Options:
   --allowedTools <list>     Space/comma-separated tools to allow (e.g. "Read Grep Glob").
   --disallowedTools <list>  Space/comma-separated tools to deny.
   --model <model>           Claude model alias or full name.
+  --reasoning-effort <lvl>  low|medium|high|xhigh|max (maps to claude --effort). Alias: --effort.
   --add-dir <dir>           Extra dir Claude may access; must resolve under the repo root.
   --bare                    Opt-in: skip hooks/CLAUDE.md/auto-memory (cheap isolated probe).
                             Note: forces auth to ANTHROPIC_API_KEY (breaks OAuth/subscription).
@@ -96,6 +97,7 @@ permission_mode=""
 allowed_tools=""
 disallowed_tools=""
 model=""
+reasoning_effort=""
 add_dir=""
 bare=0
 allow_writes=0
@@ -135,6 +137,10 @@ while [ "$#" -gt 0 ]; do
       shift; require_value "--model" "${1-}"; model=$1 ;;
     --model=*)
       model=${1#--model=}; require_value "--model" "$model" ;;
+    --reasoning-effort|--effort)
+      shift; require_value "--reasoning-effort" "${1-}"; reasoning_effort=$1 ;;
+    --reasoning-effort=*|--effort=*)
+      reasoning_effort=${1#*=}; require_value "--reasoning-effort" "$reasoning_effort" ;;
     --add-dir)
       shift; require_value "--add-dir" "${1-}"; add_dir=$1 ;;
     --add-dir=*)
@@ -187,6 +193,12 @@ case "$permission_mode" in
       die "permission mode '$permission_mode' is write-capable; pass --allow-writes to confirm intent (default/plan are the read-only floor)"
     fi
     ;;
+esac
+
+# Reasoning effort, when given, must be a level claude --effort accepts.
+case "$reasoning_effort" in
+  ""|low|medium|high|xhigh|max) ;;
+  *) die "invalid --reasoning-effort '$reasoning_effort' (expected low, medium, high, xhigh, or max)" ;;
 esac
 
 # Resolve the prompt from exactly one source.
@@ -292,6 +304,9 @@ fi
 if [ -n "$model" ]; then
   cmd+=(--model "$model")
 fi
+if [ -n "$reasoning_effort" ]; then
+  cmd+=(--effort "$reasoning_effort")
+fi
 if [ -n "$allowed_tools" ]; then
   cmd+=(--allowedTools "$allowed_tools")
 fi
@@ -336,6 +351,7 @@ fi
   printf '  "allowed_tools": %s,\n' "$(json_string "$allowed_tools")"
   printf '  "disallowed_tools": %s,\n' "$(json_string "$disallowed_tools")"
   printf '  "model": %s,\n' "$(json_string "$model")"
+  printf '  "reasoning_effort": %s,\n' "$(json_string "$reasoning_effort")"
   printf '  "add_dir": %s,\n' "$(json_string "$add_dir_real")"
   printf '  "bare": %s,\n' "$([ "$bare" -eq 1 ] && printf true || printf false)"
   printf '  "allow_writes": %s,\n' "$([ "$allow_writes" -eq 1 ] && printf true || printf false)"
@@ -356,6 +372,7 @@ fi
   printf '"slug":%s,' "$(json_string "$slug")"
   printf '"permission_mode":%s,' "$(json_string "$permission_mode")"
   printf '"model":%s,' "$(json_string "$model")"
+  printf '"reasoning_effort":%s,' "$(json_string "$reasoning_effort")"
   printf '"bare":%s,' "$([ "$bare" -eq 1 ] && printf true || printf false)"
   printf '"json":%s,' "$([ "$json" -eq 1 ] && printf true || printf false)"
   printf '"resume_id":%s,' "$(json_string "$resume_id")"

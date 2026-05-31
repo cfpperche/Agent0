@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
 # validate.test.sh — fixture harness for ../scripts/validate.sh
 #
-# Iterates every fixture directory under tests/fixtures/, runs the validator,
+# Iterates every fixture directory under .agent0/tests/skill/fixtures/, runs the validator,
 # compares actual exit code against the fixture's EXPECTED file. Exits 0 iff
 # every fixture's actual outcome matches expectation.
 
 set -u
 
-# Resolve script dir → skill dir → fixtures dir + validator path
+# Resolve script dir → skill dir → repo root + validator path.
+# Fixtures live outside .agent0/skills so recursive skill discovery does not
+# load deliberately-invalid SKILL.md files as real skills.
 here="$(cd "$(dirname "$0")" && pwd)"
 skill_root="$(dirname "$here")"
-fixtures_dir="$here/fixtures"
+agent0_root="$(cd "$skill_root/../../.." && pwd)"
+fixtures_dir="$agent0_root/.agent0/tests/skill/fixtures"
 validator="$skill_root/scripts/validate.sh"
 
 if [ ! -d "$fixtures_dir" ]; then

@@ -18,10 +18,13 @@ would swallow positional). Validation: suite + `validate.sh` + `check-rubric.sh`
 bidirectional dogfood. Dogfood found the read-only "floor" was caller discipline not a bridge invariant →
 fixed with the `--allow-writes` gate (write-capable modes refused without it; default/plan are the floor).
 
-**Spec 128 — codex-exec: shipped and committed (`f4938a7`/`9473419`).** Portable `codex-exec` bridge; the
-`--output` escape found in dogfood was fixed (state-dir-contained, fail-closed).
+**Spec 128 — codex-exec: shipped.** Portable bridge; `--output` escape fixed (state-dir-contained, fail-closed).
 
 **Specs 126 and 127 remain shipped.** Spec 126 OQ5 (bolder visual/brand direction) is still optional/user-owned.
+
+**Skill fixture loader warning fixed.** Invalid validator fixtures moved out of discoverable skill trees:
+`.agent0/skills/skill/tests/fixtures/` → `.agent0/tests/skill/fixtures/`; validation harness repointed and
+multi-runtime regression added so `tests/*/SKILL.md` cannot leak through `.agent0/skills` discovery again.
 
 Existing untracked `docs/specs/091-sdd-debate-runner/` remains out of scope.
 
@@ -37,14 +40,13 @@ _No active parallel-work claims._
 
 ## Decisions & Gotchas
 
-- **Spec 126 premise reversal.** Debate + user gate resolved the site to an **OSS-project developer landing**;
-  "harness" is the honest category, consultancy/outcomes pivot is an explicit non-goal.
-- **`/sdd debate` identity fix shipped (`ca20476`).** Debate identity now derives from the real runtime, not a
-  hardcoded `Claude Code` literal — validated live (Codex correctly self-ID'd as `Codex CLI`). Cross-runtime
-  debates via symlink-shared skills now work with plain `$sdd debate`.
+- **Spec 126 premise reversal.** Site is an **OSS-project developer landing**; consultancy/outcomes pivot is a non-goal.
+- **`/sdd debate` identity fix shipped (`ca20476`).** Runtime identity is detected, not hardcoded.
 - **Flatten-safe markers (spec 125).** `▸` (U+25B8) shipped + confirmed crisp; tofu fallback is ASCII `>>`.
 - **Skill symlinks:** edit canonical `.agent0/skills/<slug>/` only; `.claude/skills` + `.agents/skills` are
   relative discovery symlinks. `${CLAUDE_SKILL_DIR}` remains a detection token in the skill meta-tool.
+- **Skill validator fixtures:** deliberately-invalid `SKILL.md` fixtures belong under `.agent0/tests/skill/fixtures/`,
+  not below `.agent0/skills/*`, because recursive skill loaders treat nested `SKILL.md` files as discoverable skills.
 - **`codex-exec` / `claude-exec` bridges:** subprocess bridges, not native shared-memory delegation, and
   deliberately *siblings not clones*. codex-exec: default sandbox `read-only`, `--output` state-dir-contained.
   claude-exec: `--permission-mode` required (no default), `--allow-writes` gates write-capable modes (floor

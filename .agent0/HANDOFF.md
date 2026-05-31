@@ -9,7 +9,7 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 ## Current State
 
 Specs 132 and 133 are shipped and pushed (`288f17e`/`42d0891` video skill; `69cdf2c` image fal REST migration).
-Spec 091 debate runner is deferred and pushed (`31a6930`). Prior clean state is now superseded by new draft work.
+Spec 091 debate runner is deferred and pushed (`31a6930`).
 
 **Spec 134 — context-layer-rag-hydration: SHIPPED.** Added deterministic local context retrieval
 (`.agent0/tools/context-retrieve.sh` + helper) over context rules, memory projection/metadata, specs, and handoff.
@@ -19,13 +19,11 @@ or cross-project retrieval. Claude/Codex debate captured in `debate.md`; accepta
 
 ## Active Work
 
-No active implementation work. Spec 134 is implemented and validated. Working tree still contains uncommitted spec 134
-changes; commit/push not requested yet.
+No active implementation work. Spec 134 is implemented, validated, committed, and pushed (`05a481a`).
 
 ## Next Actions
 
-1. Optional: commit spec 134 changes if the user asks.
-2. Optional paid validations from prior work remain: real `/video --mode=generative` and real `/image --tier=draft`
+1. Optional paid validations from prior work remain: real `/video --mode=generative` and real `/image --tier=draft`
    need `FAL_KEY` + user-authorized spend.
 
 ## Decisions & Gotchas

@@ -1,0 +1,18 @@
+# 091 — sdd-debate-runner — tasks
+
+_Generated from `plan.md` on 2026-05-26. Work top-to-bottom. Check boxes as tasks complete. If a task reveals the plan is wrong, update `plan.md` before continuing._
+
+## Implementation
+
+- [ ] 1. {{task 1 — small, unambiguous, ordered}}
+- [ ] 2. {{task 2}}
+- [ ] 3. {{task 3}}
+
+## Verification
+
+- [ ] {{verify criterion 1}}
+- [ ] {{verify criterion 2}}
+
+## Notes
+
+_Anything that came up during execution that doesn't belong in plan.md but is useful for the PR description or future readers._

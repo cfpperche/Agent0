@@ -2,7 +2,27 @@
 
 _Created 2026-05-18._
 
-**Status:** draft
+**Status:** superseded — see Closure
+
+## Closure (2026-05-31)
+
+Closed without completion. Every premise of this refactor dissolved as the product
+lifecycle settled after 2026-05-18:
+
+- **`/prototype` no longer exists** — it evolved into `/product`: `034` (v1) → `036`
+  (partial: Pass C/D template fixes, commit `27654e9`) → `045` (`/prototype` v3, 15-step,
+  industry-aligned) → `048` (rename `/prototype` → `/product`, production-shaped layout).
+- **`packages/mcp-product-pipeline/` was discontinued** (commit `8cf6c5a` — "/product skill
+  is canonical delivery"). This spec's core mechanism — copying 13 templates verbatim from
+  that package into a skill bundle — has no source anymore.
+- The "agile frontend to the 13-step pipeline" niche is occupied by `/product` (spec 048,
+  shipped): planning artifacts + visual contract, handing off to `/sdd` for the build.
+
+The legitimate remaining kernel — generating a runnable full-stack app, not just planning
+artifacts — is **not** a `/prototype` revival. It is tracked as **Caminho C** of reminder
+`r-2026-05-19` (a separate future `/promote`-style skill, ~spec 064+ when prioritized);
+Caminho B (extending `/product` into a monorepo generator) was rejected as a
+single-responsibility violation.
 
 ## Intent
 

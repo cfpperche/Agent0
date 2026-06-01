@@ -2,7 +2,7 @@
 
 _Created 2026-05-19._
 
-**Status:** draft
+**Status:** shipped _(2026-05-31: every §A/§B row dispositioned — the tracker's defined acceptance. §A all `→ NNN`/`closed`; §B all `→ NNN`/`closed`/`deferred`. A4→131, A5/A7 closed this date. Next competitive audit is a fresh spec, scheduled 2026-08-19.)_
 **Type:** umbrella
 
 ## Intent
@@ -65,9 +65,9 @@ The audit ran 2026-05-19; sources cited in `plan.md` § Research. The frame is t
 | A2 | Worktree-isolated sub-agents (6th handoff field `ISOLATION: worktree`) | Claude Code native | Alta | M | **→ 063** — shipped 2026-05-21 |
 | A3 | `SubagentStop` hook closing delegation audit row | Claude Code 2026 (27+ events) | Alta | S | **→ 061** — shipped 2026-05-21 |
 | A4 | `AGENTS.md` cross-tool standard (CLAUDE.md ↔ AGENTS.md sync) | Linux Foundation Agentic AI | Média | S | **→ 131** (shipped 2026-05-31): `harness-entrypoint-sync` closes both Gap A (shared index byte-identity enforced by `check-instruction-drift.sh`) and Gap B (always-on `AGENT0:PROJECT` mirror into both entrypoints via `sync-harness.sh`). Earlier groundwork in specs 095/123/128/129. |
-| A5 | `PermissionRequest` hook (dynamic GREEN/YELLOW/RED policy) | Claude Code 2.0.45+ | Média | S | pending — keep (re-eval 2026-05-21); Média/S, no urgency — 07-19 review batch |
+| A5 | `PermissionRequest` hook (dynamic GREEN/YELLOW/RED policy) | Claude Code 2.0.45+ | Média | S | **closed** (2026-05-31): deferred until demand. No concrete pain in ~3 months — the existing `governance-gate` / `secrets-preflight` / `delegation-gate` PreToolUse floor covers the real cases, and rule-of-three (`feedback_speculative_observability.md`) is unmet for a dynamic-policy layer on top. Reopen via a fresh spec if a workflow surfaces a need the static gates can't express. |
 | A6 | Cost/token observability per-delegação in audit JSONL | Hermes Agent; Claude Code `/cost` v2.1.92+ | Média | S | **closed** (2026-05-21): `SubagentStop` payload carries no cost/token field (spec 061 notes § payload matrix), so this is not the "S" effort estimated; CC `/cost` covers the user-facing need; rule-of-three unmet. Reopen via a fresh spec if real demand surfaces |
-| A7 | Eval/golden-test harness for `/product`/`/sdd` regression | DeepEval, Promptfoo, Braintrust | Média | M | pending — keep (re-eval 2026-05-21); ROI rising as `/product` is actively dogfooded — strongest §A candidate |
+| A7 | Eval/golden-test harness for `/product`/`/sdd` regression | DeepEval, Promptfoo, Braintrust | Média | M | **closed** (2026-05-31): covered by work shipped after the 2026-05-21 re-eval — **075** (rubric-based per-step quality judge for `/product`, scope-aware right-sizing, `fail` → BLOCKED/iterate teeth) + **087** (`## Eval Scenarios` happy/minimal/adversarial as a DONE_WHEN rubric, re-read before declaring done, across `/sdd` `/product` `/skill`). The eval-discipline gap A7 named is filled in-run; a separate golden-output regression harness is unjustified for ephemeral-fork dogfood. Reopen if in-run judging proves insufficient. |
 | A8 | Delta-spec tracking convention (ADDED/MODIFIED/REMOVED in `spec.md`) | OpenSpec | Baixa | S | **closed** (2026-05-21): delta-spec tracking already covered by the OpenSpec escalation path in `spec-driven.md` § Escalation path |
 
 ### §B — Emerging, worth watching (9 rows)

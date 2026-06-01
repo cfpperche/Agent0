@@ -17,20 +17,23 @@ early-out both bypassed the jq `strip_excluded`); `merge_settings_json` now alwa
 **Bookkeeping pass (this session): three done-but-unclosed specs verified + flipped to shipped** — 131
 (harness-entrypoint-sync; suites harness-sync/instruction-drift/multi-runtime-skills green, 5 open-questions resolved
 inline), 099 (memory-multi-runtime; memory-multi-runtime/project-memory/agents-memory-block-budget green), 035
-(user-prompt-framing; rule + CLAUDE.md section present, rule-only). Spec 060 row A4 now links → 131.
+(user-prompt-framing; rule + CLAUDE.md section present, rule-only).
+
+**Open-spec review pass (this session): backlog drained.** 036 → **superseded** (premises gone: `/prototype` became
+`/product` via 045→048; `mcp-product-pipeline` discontinued `8cf6c5a`). 060 → **shipped**: A4→131, A5 closed
+(defer-until-demand), A7 closed (covered by 075 quality-judge + 087 eval-scenarios); every §A/§B row dispositioned.
 
 ## Active Work
 
-No active implementation work. Doc-status edits from the bookkeeping pass are uncommitted (4 spec.md files + HANDOFF).
+No active implementation work. No open specs justify a build right now. Doc-status edits from this session's two
+passes are uncommitted (036/060 spec.md + 060 tasks.md + HANDOFF; the bookkeeping-pass files were committed `b4f6cc5`).
 
 ## Next Actions
 
-1. **Roadmap = spec 060's open §A rows** (each is a next-build decision): **A7 — eval/golden-test harness for
-   `/product`+`/sdd`** (flagged strongest §A candidate, ROI rising as `/product` is dogfooded; effort M) and **A5 —
-   `PermissionRequest` dynamic-policy hook** (Média/S). §B open rows (B2/B3/B8) stay deferred on their conditions.
-2. Strategic, parked: full-stack `/product` expansion (reminder `r-2026-05-19`, 3 paths) — entangled with spec 036
-   (`/prototype` refactor, draft, skill was rejected). Discuss before coding.
-3. Optional paid validations: real `/video --mode=generative` + `/image --tier=draft` need `FAL_KEY` + authorized spend.
+1. Next real work is strategic + parked: **`/product` full-stack expansion** (reminder `r-2026-05-19`, Caminho C —
+   a separate `/promote`-style skill, ~spec 064+) when the user prioritizes. Caminho B (extend `/product` into a
+   monorepo generator) was rejected; Caminho A (`/sdd new` post-`/product`) is the existing workaround.
+2. Optional paid validations: real `/video --mode=generative` + `/image --tier=draft` need `FAL_KEY` + authorized spend.
 
 ## Decisions & Gotchas
 

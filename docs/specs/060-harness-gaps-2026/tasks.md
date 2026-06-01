@@ -14,8 +14,8 @@ _Generated from `plan.md` on 2026-05-19. Work top-to-bottom. Check boxes as task
 
 ## Verification
 
-- [ ] Every row in §A of `spec.md` has either a `→ NNN` link OR an inline `closed: <reason>` marker
-- [ ] Every row in §B has either `→ NNN`, `closed: <reason>`, or `deferred: <re-evaluate condition>`
+- [x] Every row in §A of `spec.md` has either a `→ NNN` link OR an inline `closed: <reason>` marker
+- [x] Every row in §B has either `→ NNN`, `closed: <reason>`, or `deferred: <re-evaluate condition>`
 - [x] `.claude/rules/spec-driven.md` mentions the `**Type:**` field with values listed
 - [x] Specs 061/062/063 exist with valid spec.md/plan.md/tasks.md/notes.md (scaffolded at draft; 061 + 063 since shipped, 062 superseded)
 

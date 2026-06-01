@@ -36,7 +36,8 @@ reminders:
     as ammunition; positions Agent0 governance layer as the missing audit trail for
     Hermes users. Window closes when Hermes hype rolls off or a competitor lands the
     same framing first. See conversation 2026-05-17 Hermes deep-research synthesis.
-  status: pending
+  status: done
+  completed_ts: '2026-06-01T21:41:47Z'
 - id: r-2026-05-17-curate-agent0-atlas
   created: '2026-05-17'
   due: '2026-09-30'
@@ -63,14 +64,16 @@ reminders:
     dispatched (sandbox scope cap); mechanism is mechanical repetition. Run a fresh-session
     full /prototype invocation when first real user needs it — establishes the upper-bound
     time + token cost for a real 23-route end-to-end build.
-  status: pending
+  status: done
+  completed_ts: '2026-06-01T21:14:32Z'
 - id: r-2026-05-17-revisar-spec-035-dogfood
   created: '2026-05-17'
   due: '2026-06-07'
   context: 'Revisar spec 035 dogfood window: contar missed-clarifications na janela
     2026-05-17 → 2026-06-07; se ≥3 missed, scope spec 036 com UserPromptSubmit hook;
     senão bump spec 035 status para shipped'
-  status: pending
+  status: done
+  completed_ts: '2026-06-01T21:14:32Z'
 - id: r-2026-05-19-discutir-expansao-full
   created: '2026-05-19'
   context: 'Discutir expansão full-stack do /product (3 caminhos: A. /sdd new faz
@@ -92,9 +95,10 @@ reminders:
     `notes.md` is non-empty AND cited in ≥3 PRs by gate date, promote to mandatory
     + consider delegation-gate advisory; if empty in all, revert template + rule edits.
     See `docs/specs/046-sdd-in-flight-notes/spec.md` Open Q2.
-  status: pending
+  status: done
   links:
   - docs/specs/046-sdd-in-flight-notes/spec.md
+  completed_ts: '2026-06-01T21:41:48Z'
 - id: r-2026-05-19-revisar-medium-priority
   created: '2026-05-19'
   due: '2026-07-19'
@@ -102,9 +106,10 @@ reminders:
     rows não foram scaffolded como follow-up specs até a data, decidir bulk-close
     ou re-priorizar batch seguinte; ver `docs/specs/060-harness-gaps-2026/spec.md`
     § Gap matrix.
-  status: pending
+  status: done
   links:
   - docs/specs/060-harness-gaps-2026/spec.md
+  completed_ts: '2026-06-01T21:14:32Z'
 - id: r-2026-05-19-re-rodar-auditoria
   created: '2026-05-19'
   due: '2026-08-19'
@@ -113,9 +118,10 @@ reminders:
     — atualizar `docs/specs/060-harness-gaps-2026/spec.md` § Gap matrix com gaps emergentes
     + scaffold novos follow-up specs; cadência trimestral; última auditoria 2026-05-19
     (research delegado via general-purpose opus).
-  status: pending
+  status: done
   links:
   - docs/specs/060-harness-gaps-2026/spec.md
+  completed_ts: '2026-06-01T21:14:32Z'
 - id: r-2026-05-25-re-evaluate-fork-extension-con
   created: '2026-05-25'
   context: 'Re-evaluate fork-extension convention promotion to smart-merge machinery
@@ -193,3 +199,17 @@ reminders:
   - docs/specs/079-product-stack-aware-handoff/spec.md
   - .claude/skills/product/references/sdd-handoff.md
   - .agent0/memory/feedback_no_shipped_stack_opinions.md
+- id: r-2026-06-01-re-rodar-auditoria-competitiva
+  created: '2026-06-01'
+  context: 'Re-rodar auditoria competitiva de harnesses (vs Codex CLI / Claude Code
+    / Hermes Agent / Goose / OpenCode / Spec-Kit / BMAD / OpenSpec / agentskills.io)
+    — cadencia trimestral; ultima 2026-05-19 (research delegado via general-purpose
+    opus). FRAMING: spec 060-harness-gaps-2026 esta SHIPPED/fechado (todas as rows
+    dispostas 2026-05-31) — NAO editar a matriz do 060; gerar um spec NOVO de gaps
+    (ex: 0NN-harness-gaps-2026-Q3) com a matriz fresca + scaffold dos follow-ups que
+    sobreviverem ao rule-of-three.'
+  status: done
+  due: '2026-08-19'
+  links:
+  - docs/specs/060-harness-gaps-2026/spec.md
+  completed_ts: '2026-06-01T21:41:48Z'

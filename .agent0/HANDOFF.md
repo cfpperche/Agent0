@@ -8,40 +8,36 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 
 ## Current State
 
-Specs 132/133/134 shipped + pushed. **sync-harness propagation-advise leak fixed** (`dc3a93c`): the dev-only
-`propagation-advise.sh` hook was leaking into consumer `.claude/settings.json` (first-sync verbatim copy + sha
-early-out both bypassed the jq `strip_excluded`); `merge_settings_json` now always routes through jq (absent file →
-`{}` base) and self-heals prior leaks. Regression test 38 added (suite 38/38). Consumers re-synced + pushed: mei-saas
-(`f91e714`), cognixse (`f69488e`, leak self-healed).
-
-**Bookkeeping pass (this session): three done-but-unclosed specs verified + flipped to shipped** — 131
-(harness-entrypoint-sync; suites harness-sync/instruction-drift/multi-runtime-skills green, 5 open-questions resolved
-inline), 099 (memory-multi-runtime; memory-multi-runtime/project-memory/agents-memory-block-budget green), 035
-(user-prompt-framing; rule + CLAUDE.md section present, rule-only).
-
-**Open-spec review pass (this session): backlog drained.** 036 → **superseded** (premises gone: `/prototype` became
-`/product` via 045→048; `mcp-product-pipeline` discontinued `8cf6c5a`). 060 → **shipped**: A4→131, A5 closed
-(defer-until-demand), A7 closed (covered by 075 quality-judge + 087 eval-scenarios); every §A/§B row dispositioned.
-
-**`/product` full-stack discussion (this session): closed — already resolved by spec 079.** The reminder
-`r-2026-05-19` (Caminho A/B/C) predated **079 product-stack-aware-handoff (shipped 2026-05-23)**, which 079 itself
-states "closes the carryover Caminho-A/B/C decision": B rejected, A absorbed into `/product` Phase 5 (stack-aware
-umbrella + infra children + research-driven foundation child), no stack code shipped. Caminho C as a code generator
-now conflicts with that no-shipped-stack-code principle. Reminder `r-2026-05-19` marked done; residual gap re-filed
-as `r-2026-05-31` (deferred).
+**Backlog drained** (session 2026-05-31/06-01, all committed + pushed). Highlights:
+- **sync-harness propagation-advise leak fixed** (`dc3a93c`): dev-only hook was leaking into consumer
+  `.claude/settings.json` (first-sync copy + sha early-out bypassed the jq strip); `merge_settings_json` now always
+  routes through jq (absent file → `{}` base) and self-heals priors. Regression 38 (suite 38/38). Consumers re-synced:
+  mei-saas `f91e714`, cognixse `f69488e` (self-healed).
+- **Specs closed:** 131 / 099 / 035 verified + shipped (`b4f6cc5`); 036 superseded + 060 shipped (`c215125`);
+  132/133/134 shipped earlier.
+- **`/product` full-stack (Caminho A/B/C) closed** — already resolved by spec **079** (stack-aware Phase-5 handoff:
+  umbrella + infra children + research-driven foundation child, no shipped stack code). Reminder `r-2026-05-19` done;
+  residual gap (umbrella-execution driver) re-filed deferred. C-as-code-generator conflicts with no-shipped-stack-code.
 
 ## Active Work
 
-No active implementation work. No open specs justify a build right now. Uncommitted: HANDOFF + `reminders.yaml`
-(036/060 doc-status edits were committed `c215125`).
+No active implementation work. No open specs justify a build right now. Roadmap triaged 2026-06-01 (reminders pruned
+12→6). Uncommitted: HANDOFF + `reminders.yaml`.
 
 ## Next Actions
 
-1. **Residual gap, deferred** (reminder `r-2026-05-31`, rule-of-three n=1): an **umbrella-execution driver** in `/sdd`
-   (e.g. `/sdd run <umbrella>`) — drive a `/product`-scaffolded umbrella's children in dependency order; stack-agnostic,
-   ships no stack code. Real gap mei-saas hit (002-foundation stuck draft; materializing ~10 children is manual).
-   Reopen as a `/sdd` spec when a 2nd founder stalls at umbrella execution. NOT a `/promote` code generator.
-2. Optional paid validations: real `/video --mode=generative` + `/image --tier=draft` need `FAL_KEY` + authorized spend.
+**Near-term queue (founder-chosen 2026-06-01):**
+1. **Fair OD re-match for spec 027** (reminder `r-2026-05-14`): the blind-judge 3.87-vs-4.73 is confounded (1 OD pass
+   vs 4 refined iterations) — iterate the OD run to 4 passes OR re-judge vs the first-pass baseline. See
+   `.agent0/memory/od-grounding-dogfood.md`.
+2. **Test first real OD `--bump`/`--apply`** (reminder `r-2026-05-18`): network write-paths still untested; `--check`
+   is verified. See `.claude/skills/product/scripts/sync-open-design.ts`.
+3. **Re-evaluate fork-extension → smart-merge** (reminder `r-2026-05-25`): re-assess promoting the doc-only §Notes
+   convention to marker-aware merge.
+
+**Deferred / gated:** umbrella-execution driver in `/sdd` (`r-2026-05-31`, until a 2nd founder stalls — NOT a code
+generator); agentskills.io re-snapshot (`r-2026-05-17`, due 08-17); agent0-atlas (≥10 forks). Optional paid
+validations: real `/video --mode=generative` + `/image --tier=draft` need `FAL_KEY` + authorized spend.
 
 ## Decisions & Gotchas
 

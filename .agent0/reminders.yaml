@@ -83,7 +83,8 @@ reminders:
     input); Caminho C é o spec de longo prazo (~064+ quando priorizar — 060 tomado
     pelo umbrella harness-gaps-2026); Caminho B rejeitado (single-responsibility violation
     — /product é design partner, não monorepo generator).'
-  status: pending
+  status: done
+  completed_ts: '2026-06-01T01:21:26Z'
 - id: r-2026-05-18-spec-046-dogfood-gate
   created: '2026-05-18'
   due: '2026-07-01'
@@ -175,3 +176,20 @@ reminders:
   - docs/specs/127-site-content-refactor/spec.md
   - site/scripts/check-currency.ts
   completed_ts: '2026-05-30T23:35:08Z'
+- id: r-2026-05-31-umbrella-execution-driver-for
+  created: '2026-05-31'
+  context: 'Umbrella-execution driver for /sdd (e.g. /sdd run <umbrella>): drive a
+    /product-scaffolded umbrella''s child specs in dependency order (plan->tasks->implement->verify),
+    stack-agnostic, ships no stack code. This is the residual gap after spec 079 closed
+    the Caminho A/B/C decision (079 made /product Phase 5 emit the full stack-aware
+    umbrella incl. infra children + research-driven foundation child). NOT a /promote
+    code generator — that would violate feedback_no_shipped_stack_opinions. Real gap
+    mei-saas hit: 002-foundation stuck at draft, /sdd plan pending, materializing
+    ~10 children is manual. DEFERRED until a 2nd founder stalls at umbrella execution
+    (rule-of-three, n=1 today). Reopen as a /sdd spec then.'
+  status: pending
+  due: '2026-08-19'
+  links:
+  - docs/specs/079-product-stack-aware-handoff/spec.md
+  - .claude/skills/product/references/sdd-handoff.md
+  - .agent0/memory/feedback_no_shipped_stack_opinions.md

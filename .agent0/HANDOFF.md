@@ -23,32 +23,32 @@ inline), 099 (memory-multi-runtime; memory-multi-runtime/project-memory/agents-m
 `/product` via 045→048; `mcp-product-pipeline` discontinued `8cf6c5a`). 060 → **shipped**: A4→131, A5 closed
 (defer-until-demand), A7 closed (covered by 075 quality-judge + 087 eval-scenarios); every §A/§B row dispositioned.
 
+**`/product` full-stack discussion (this session): closed — already resolved by spec 079.** The reminder
+`r-2026-05-19` (Caminho A/B/C) predated **079 product-stack-aware-handoff (shipped 2026-05-23)**, which 079 itself
+states "closes the carryover Caminho-A/B/C decision": B rejected, A absorbed into `/product` Phase 5 (stack-aware
+umbrella + infra children + research-driven foundation child), no stack code shipped. Caminho C as a code generator
+now conflicts with that no-shipped-stack-code principle. Reminder `r-2026-05-19` marked done; residual gap re-filed
+as `r-2026-05-31` (deferred).
+
 ## Active Work
 
-No active implementation work. No open specs justify a build right now. Doc-status edits from this session's two
-passes are uncommitted (036/060 spec.md + 060 tasks.md + HANDOFF; the bookkeeping-pass files were committed `b4f6cc5`).
+No active implementation work. No open specs justify a build right now. Uncommitted: HANDOFF + `reminders.yaml`
+(036/060 doc-status edits were committed `c215125`).
 
 ## Next Actions
 
-1. Next real work is strategic + parked: **`/product` full-stack expansion** (reminder `r-2026-05-19`, Caminho C —
-   a separate `/promote`-style skill, ~spec 064+) when the user prioritizes. Caminho B (extend `/product` into a
-   monorepo generator) was rejected; Caminho A (`/sdd new` post-`/product`) is the existing workaround.
+1. **Residual gap, deferred** (reminder `r-2026-05-31`, rule-of-three n=1): an **umbrella-execution driver** in `/sdd`
+   (e.g. `/sdd run <umbrella>`) — drive a `/product`-scaffolded umbrella's children in dependency order; stack-agnostic,
+   ships no stack code. Real gap mei-saas hit (002-foundation stuck draft; materializing ~10 children is manual).
+   Reopen as a `/sdd` spec when a 2nd founder stalls at umbrella execution. NOT a `/promote` code generator.
 2. Optional paid validations: real `/video --mode=generative` + `/image --tier=draft` need `FAL_KEY` + authorized spend.
 
 ## Decisions & Gotchas
 
-- **Spec 134 emerging stance:** RAG vocabulary is secondary; the feature should consolidate the context layer. Hydrated
-  snippets are evidence/pointers, not source of truth; source files remain canonical.
-- **Budget stance:** retrieval should be substitutive inside existing `AGENT0_CONTEXT_INJECTION` budgets, not an added
-  model-visible dump. Diagnostics should reuse `AGENT0_CONTEXT_DIAGNOSTIC=1` or an explicit debug command.
-- **Memory stance:** do not create a second canonical memory index. Either adapt existing `MEMORY.md`/`memory-query.sh`
-  or keep memory out of v1 until the non-memory corpus path is proven.
-- **Generated context index:** likely gitignored under `.agent0/.context-index/`; shipped mechanisms/config stay under
-  `.agent0/` and sync-harness baseline-managed.
-- **Validation evidence for 134:** context-retrieval, context-injection, memory-multi-runtime, runtime-capabilities,
-  harness-sync, session-handoff-multi-runtime, project-memory, instruction-drift, and `git diff --check` passed.
-  Live dogfood also passed in a real Claude Code session: `retrieval: enabled floor_fragments=3` left two retrieval
-  slots, which hydrated spec evidence-pointers with `source_class`/`authority`/`reason`/`freshness`/`anchor`.
+- **Context layer (spec 134, shipped):** retrieval is substitutive inside `AGENT0_CONTEXT_INJECTION` budgets, hydrated
+  snippets are evidence/pointers (source files canonical), no second memory index; diagnostics via `AGENT0_CONTEXT_DIAGNOSTIC=1`.
+- **`/product` stance:** Agent0 ships mechanisms, not stack code (spec 079); the foundation child's `/sdd plan` researches
+  the declared stack. A future `/sdd` build-driver must stay stack-agnostic — never a code generator.
 - **Skill homes:** edit canonical `.agent0/skills/<slug>/` only (`.claude/skills`+`.agents/skills` are symlinks).
 - **Env gotchas:** gitleaks pre-commit active; governance blocks `rm -rf` (combined `-r`+`-f`) + blanket `git add`;
   secrets-preflight blocks compound `git add && git commit` (stage + commit as separate calls); commits user-gated.

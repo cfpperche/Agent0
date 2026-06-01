@@ -2,7 +2,7 @@
 
 _Created 2026-05-17._
 
-**Status:** in-progress
+**Status:** shipped
 
 ## Intent
 

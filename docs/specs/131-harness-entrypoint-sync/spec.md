@@ -2,7 +2,7 @@
 
 _Created 2026-05-31._
 
-**Status:** in-progress
+**Status:** shipped
 
 ## Intent
 
@@ -50,11 +50,13 @@ Claude Code reads `CLAUDE.md`; Codex (and the ~20 other AGENTS.md-standard tools
 
 ## Open questions
 
-- [ ] **Index single-sourcing mechanism** — render the index region from one canonical source into both files, vs keep `CLAUDE.md`'s existing `AGENT0:BEGIN/END` managed block as the source and mirror it into `AGENTS.md`. (Owner: maintainer at `/sdd plan`.)
-- [ ] **Neutral source name/location** — `.agent0/project-core.md` is the candidate (must be outside `COPY_CHECK_*`; note `.agent0/context/` IS in `COPY_CHECK_RECURSIVE`, so the source must not live under `context/`). Confirm filename + whether Agent0 ships a template stub for fresh consumers.
-- [ ] **Region marker naming + coexistence** — `AGENT0:PROJECT:BEGIN/END` vs another scheme, and how it sits alongside the existing `AGENT0:BEGIN/END` managed block in the same file (two ownership models, one file).
-- [ ] **Migration path for existing consumers** — e.g. `cognixse` already has `Brand & voice` only in `CLAUDE.md`. Define the documented one-time move into the neutral source + first `--apply` that seeds the mirror.
-- [ ] **Core/tail boundary** — what belongs in the always-on mirrored core vs the on-demand hook tail (size discipline; the core must stay small enough to justify always-on).
+_All resolved at `/sdd plan` + implementation (2026-05-31); answers reflected in `sync-harness.sh` (`PROJECT_SOURCE_REL`/`PROJECT_MARKER` + `#PROJECT` synthetic baseline keys), `check-instruction-drift.sh`, and the `37-project-core-mirror.sh` / `instruction-drift` suites._
+
+- [x] **Index single-sourcing mechanism** — resolved: keep `CLAUDE.md`'s `AGENT0:BEGIN/END` managed block as source, mirror into `AGENTS.md`, and enforce byte-identity via `check-instruction-drift.sh` (a render pipeline was rejected as a non-goal — no build step, no current drift).
+- [x] **Neutral source name/location** — resolved: `.agent0/project-core.md` (`PROJECT_SOURCE_REL`), deliberately outside `COPY_CHECK_*` so sync never owns/overwrites it; consumer-authored, no Agent0 template stub.
+- [x] **Region marker naming + coexistence** — resolved: `AGENT0:PROJECT` region (`PROJECT_MARKER`), coexisting with the existing `AGENT0:BEGIN/END` managed block in the same file under two distinct ownership models.
+- [x] **Migration path for existing consumers** — resolved: one-time manual move into the neutral source + first `--apply` seeds the mirror (hard-cutover, matching specs 101/102-105/130; no upstream auto-migration).
+- [x] **Core/tail boundary** — resolved: only the small always-on project core is mirrored into entrypoints; long-tail reference (full brand book, detailed conventions) stays in `docs/` and is delivered on demand by the context-injection hook.
 
 ## Context / references
 

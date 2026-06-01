@@ -8,23 +8,29 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 
 ## Current State
 
-Specs 132 and 133 are shipped and pushed (`288f17e`/`42d0891` video skill; `69cdf2c` image fal REST migration).
-Spec 091 debate runner is deferred and pushed (`31a6930`).
+Specs 132/133/134 shipped + pushed. **sync-harness propagation-advise leak fixed** (`dc3a93c`): the dev-only
+`propagation-advise.sh` hook was leaking into consumer `.claude/settings.json` (first-sync verbatim copy + sha
+early-out both bypassed the jq `strip_excluded`); `merge_settings_json` now always routes through jq (absent file →
+`{}` base) and self-heals prior leaks. Regression test 38 added (suite 38/38). Consumers re-synced + pushed: mei-saas
+(`f91e714`), cognixse (`f69488e`, leak self-healed).
 
-**Spec 134 — context-layer-rag-hydration: SHIPPED.** Added deterministic local context retrieval
-(`.agent0/tools/context-retrieve.sh` + helper) over context rules, memory projection/metadata, specs, and handoff.
-`context-inject.sh` now preserves deterministic rule capsules as a floor, then fills remaining prompt budget with
-retrieval pointers. V1 is lexical/source-pointer based only: no embeddings/vector DB, product-code indexing, daemon,
-or cross-project retrieval. Claude/Codex debate captured in `debate.md`; acceptance marked shipped after validation.
+**Bookkeeping pass (this session): three done-but-unclosed specs verified + flipped to shipped** — 131
+(harness-entrypoint-sync; suites harness-sync/instruction-drift/multi-runtime-skills green, 5 open-questions resolved
+inline), 099 (memory-multi-runtime; memory-multi-runtime/project-memory/agents-memory-block-budget green), 035
+(user-prompt-framing; rule + CLAUDE.md section present, rule-only). Spec 060 row A4 now links → 131.
 
 ## Active Work
 
-No active implementation work. Spec 134 is implemented, validated, committed, and pushed (`05a481a`).
+No active implementation work. Doc-status edits from the bookkeeping pass are uncommitted (4 spec.md files + HANDOFF).
 
 ## Next Actions
 
-1. Optional paid validations from prior work remain: real `/video --mode=generative` and real `/image --tier=draft`
-   need `FAL_KEY` + user-authorized spend.
+1. **Roadmap = spec 060's open §A rows** (each is a next-build decision): **A7 — eval/golden-test harness for
+   `/product`+`/sdd`** (flagged strongest §A candidate, ROI rising as `/product` is dogfooded; effort M) and **A5 —
+   `PermissionRequest` dynamic-policy hook** (Média/S). §B open rows (B2/B3/B8) stay deferred on their conditions.
+2. Strategic, parked: full-stack `/product` expansion (reminder `r-2026-05-19`, 3 paths) — entangled with spec 036
+   (`/prototype` refactor, draft, skill was rejected). Discuss before coding.
+3. Optional paid validations: real `/video --mode=generative` + `/image --tier=draft` need `FAL_KEY` + authorized spend.
 
 ## Decisions & Gotchas
 

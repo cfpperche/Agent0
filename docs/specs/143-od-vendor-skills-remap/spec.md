@@ -2,7 +2,7 @@
 
 _Created 2026-06-02._
 
-**Status:** draft
+**Status:** in-progress (implemented + validated 2026-06-02; predecessor done, hands off to spec 142)
 
 ## Intent
 
@@ -10,24 +10,24 @@ The OD pin advance to `c128ffd5` (shipped in `5233ab3`, already pushed to Agent0
 
 ## Acceptance criteria
 
-- [ ] **Scenario: the skills vendored-path is re-pointed to the upstream `design-templates/` tree**
+- [x] **Scenario: the skills vendored-path is re-pointed to the upstream `design-templates/` tree**
   - **Given** the `MANIFEST.json` vendored-path `{ src: "skills/", dst: "vendor/open-design/skills/", kind: "skill-bundle-tree", recursive: true }`
   - **When** spec 143 lands
   - **Then** its `src` is `"design-templates/"` (dst unchanged), and `--apply` stages the `design-templates/` tree into `vendor/open-design/skills/`, recomputing the path's tree checksum for the new content
 
-- [ ] **Scenario: every pipeline-referenced bundle resolves from the new source**
+- [x] **Scenario: every pipeline-referenced bundle resolves from the new source**
   - **Given** the pipeline references `vendor/open-design/skills/{web-prototype,saas-landing,…}` (31 bundles named across `02-prototype/{prompt.md,references/{od-bridge.md,pipeline.md}}`)
   - **When** `--apply` completes with the new mapping
   - **Then** all 31 resolve on disk (e.g. `vendor/open-design/skills/web-prototype/assets/template.html` exists and carries the `c128ffd5` provenance header)
 
-- [ ] **Scenario: zero pipeline-template edits required**
+- [x] **Scenario: zero pipeline-template edits required**
   - **Given** the dst root stays `vendor/open-design/skills/`
   - **When** the remap lands
   - **Then** no `templates/pipeline/**` file needs a path edit — the rename is invisible to consumers of the vendored paths (the `src` change is internal to the manifest)
 
-- [ ] **Confirmation (static): `design-templates/` is the correct upstream home.** Verified 2026-06-02 against the extracted `c128ffd5` tarball: 31/31 pipeline bundles present under `design-templates/`, identical file structure; `skills/` at `c128ffd5` is a disjoint creative set. Spec 027's "mirror upstream exactly" contract → mirror the tree that actually holds the pipeline's bundles.
+- [x] **Confirmation (static): `design-templates/` is the correct upstream home.** Verified 2026-06-02 against the extracted `c128ffd5` tarball: 31/31 pipeline bundles present under `design-templates/`, identical file structure; `skills/` at `c128ffd5` is a disjoint creative set. Spec 027's "mirror upstream exactly" contract → mirror the tree that actually holds the pipeline's bundles.
 
-- [ ] **Hand-off to 142 (cross-ref, not this spec's job):** after the remap + apply, the now-orphaned upstream creative `skills/` bundles remain on disk and `--verify` stays red until spec 142 prunes them. 143 makes the pipeline correctly *sourced*; 142 makes `--verify` *green*.
+- [x] **Hand-off to 142 (cross-ref, not this spec's job):** after the remap + apply, the now-orphaned upstream creative `skills/` bundles remain on disk and `--verify` stays red until spec 142 prunes them. 143 makes the pipeline correctly *sourced*; 142 makes `--verify` *green*. _(confirmed: `--verify` fails only on `skills/`, passes on the other 6 paths)_
 
 ## Non-goals
 
@@ -39,10 +39,12 @@ The OD pin advance to `c128ffd5` (shipped in `5233ab3`, already pushed to Agent0
 
 ## Open questions
 
-- [ ] **Vendor the whole `design-templates/` tree (111 bundles) or only the 31 the pipeline names?** Lean: whole tree (mirror-the-tree matches the existing recursive-whole-tree model; the extra bundles — `web-prototype-taste-*`, `waitlist-page`, etc. — are harmless availability). Resolve at `/sdd plan`.
-- [ ] **Keep `dst: "vendor/open-design/skills/"` (stable, zero edits) or rename to `vendor/open-design/design-templates/` (truthful, but edits every pipeline reference + consumer churn)?** Strong lean: keep stable — the dst name is an internal vendor convention, and minimizing blast radius across 4 repos matters more than the name. Resolve at `/sdd plan`.
-- [ ] **Does the manifest `kind: "skill-bundle-tree"` label or any schema need updating** to reflect that the source is now `design-templates/`? Likely cosmetic. Plan-time.
-- [ ] **Provenance header** currently reads `open-design@<sha>:skills/<bundle>/...`; after remap it would read `:design-templates/<bundle>/...`. Confirm that's correct/desired (it is — provenance should name the real upstream path). Plan-time.
+_All 4 resolved at `/sdd plan` — see `plan.md` § OQ resolutions._
+
+- [x] **Whole tree vs only 31** → whole `design-templates/` tree (per spec 027 no-partial-vendor).
+- [x] **Keep dst vs rename** → keep `dst: "vendor/open-design/skills/"` (zero pipeline edits, min blast radius).
+- [x] **`kind` label** → keep `"skill-bundle-tree"` (verified: not functionally used; display-only).
+- [x] **Provenance path** → accept natural change to `:design-templates/<bundle>/…` (names the real upstream path; confirmed in V1).
 
 ## Context / references
 

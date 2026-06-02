@@ -8,14 +8,12 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 
 ## Current State
 
-**Session 2026-06-02 — `/meeting` skill SHIPPED + dogfooded, all committed + pushed (HEAD `0d9c2ee`).** New multi-party, multi-model deliberation skill.
-- **Spec 136 (`22dde79`):** `/meeting` — human + Claude + Codex take turns on a free topic; state/content split (`meeting.sh` owns a machine-readable header; the active runtime is single-writer); peer turns via `codex-exec`/`claude-exec`. 59 tests.
-- **Runtime-neutral fix (`b416f4b`):** the synthesis human gate degraded `AskUserQuestion`→plain prose; retiered cc-native → **agentskills-portable** (any runtime can orchestrate).
-- **Dogfood + graduation (`47e5cbb`):** first real `/meeting` (Claude⇄Codex) on "should v2 add an LLM-orchestrator mode" → graduated to **spec 138 (meeting-bounded-autopilot)**; its `/sdd debate` (Codex) **shelved** the build behind a rule-of-three demand test.
-- **Near-term measurement (`6ccfddf`):** `meeting.sh friction` + `state` lines record max consecutive model-turns-without-human; the only piece of 138 that shipped.
-- **Housekeeping (`0d9c2ee`):** gitignore `.claude/*.lock` (CC `/schedule` per-process lock).
+**Session 2026-06-02 (status/doctor) — specs 137 + 139 SHIPPED, dogfooded cross-runtime, synced to 3 consumers; all committed + pushed.**
+- **Spec 137 `agent0-status` (`8bad634`):** on-demand text-first cockpit — `status.sh` (work state, reuses the startup-brief composition via extracted `_brief-compose.sh`) + `doctor.sh` (harness health, tri-state) + portable `/status` skill. The transferable kernel of `opus-domini/sentinel`, NOT a dashboard (anti-drift; see `.agent0/context/rules/agent0-status.md`).
+- **Spec 139 `status-doctor-reconciliation` (`37e67ad`):** the judgment layer a 137 dogfood asked for — `status` flags handoff↔git contradictions (RESUME WARNING) + infers in-flight spec from dirty paths; `doctor` jq-validates the SessionStart→startup-brief contract (present-but-unwired → `broken`). 34/34 tests; brief byte-identical.
+- **Consumer harness sync:** mei-saas (`8060afc`), cognixse (`a5bca6c`), tese (`f83a97e`) — clean 3-way (all `~ stale`, zero customizations touched), pushed.
 
-_Prior session (OD vendor-sync, shipped+pushed): spec 135 OD `--check`/`--apply` bug fixes (GitHub 300-file compare cap → over-report; `DESIGN.md` validator became a substance gate); canvas-contrast rule; reminder triage 5→2. Specs 137 `agent0-status` / 139 are a separate concurrent session's — shipped, leave them._
+_Concurrent /meeting session (committed, leave it): spec 136 `/meeting` shipped; spec 138 autopilot shelved (rule-of-three) — only the `friction` measurement shipped. Prior: spec 135 OD `--check`/`--apply` fixes._
 
 ## Active Work
 
@@ -23,7 +21,9 @@ None. Working tree clean; everything committed + pushed to `origin/main`.
 
 ## Next Actions
 
-**Meeting (this session):**
+**status/doctor (specs 137/139) — nothing pending.** Shipped + validated + dogfooded. The 5 LOW dogfood residuals (substring-in-SessionStart, slug truncation, SIGPIPE, JSON-misattribution, first-bullet idle) are recorded as accepted known-limitations in `docs/specs/139-*/notes.md` — deferred by rule-of-three, do NOT build without demand.
+
+**Meeting (spec 138 — shelved):**
 - **Spec 138 reopens on evidence, not now.** The autopilot build is shelved behind a demand test: 3 meetings where `meeting.sh friction` shows **≥4 consecutive model turns** + an explicit human "continue unattended" note. Until then only the measurement exists. Don't build it speculatively.
 
 **Founder-gated (prior session, still pending):**
@@ -36,7 +36,7 @@ None. Working tree clean; everything committed + pushed to `origin/main`.
 
 ## Decisions & Gotchas
 
-- **Meeting homes/portability:** skill is `agentskills-portable` — keep the core loop free of Claude-only primitives (the human gate degrades `AskUserQuestion`→prose). Transcripts are git-tracked but **project-local** under `.agent0/meetings/` (excluded from the sync-harness manifest like `memory`/`routines`; only `.gitkeep` ships).
-- **Skill homes:** edit canonical `.agent0/skills/<slug>/` only (`.claude/skills`+`.agents/skills` are symlinks).
-- **OD gotchas (spec 135, if you touch OD):** GitHub `gh api .../compare` truncates `.files[]` at 300 (no real pagination) → drift detectors must over-report, never conclude "no changes". `DESIGN.md` validator is a substance gate (≥2 hex + ≥3 H2), NOT heading names. Full write-path dogfood needs perturbing a vendored file (idempotence guard short-circuits otherwise).
-- **Env:** gitleaks pre-commit active; governance blocks `rm -rf`/`git clean -fd`/blanket `git add`; secrets-preflight blocks compound `git add && git commit` (separate calls); commits user-gated.
+- **Skill/capacity homes:** edit canonical `.agent0/skills/<slug>/` only (`.claude/skills`+`.agents/skills` are symlinks). status/doctor composition lives once in `.agent0/hooks/_brief-compose.sh` (emit-neutral) — brief truncates+emits, `status.sh` prints full; any edit there → re-verify the brief is byte-identical. Both tools honor `AGENT0_PROJECT_DIR`, locate the lib relative to their own path.
+- **Meeting portability:** skill is `agentskills-portable` — core loop free of Claude-only primitives (human gate degrades `AskUserQuestion`→prose). Transcripts git-tracked but project-local under `.agent0/meetings/` (out of sync manifest; only `.gitkeep` ships).
+- **Harness sync:** all 3 consumers reconciled clean 3-way (`~ stale` auto-update, zero `!! customized`). Baseline bump = the audit record.
+- **Env:** gitleaks pre-commit active; governance blocks `rm -rf`/`git clean -fd`/blanket `git add`; secrets-preflight wants separate `git add` then `git commit -F <file>` (not `-F -`); commits user-gated.

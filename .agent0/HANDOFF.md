@@ -22,14 +22,16 @@ _Prior (committed): spec 140 `/meeting` `Next:` marker (`88343fd`); OD pin advan
 
 **Spec 141 — DONE, MERGED, PUSHED** (`1bc7223` on `origin/main`; 3 consumers at 150 systems + fixed engine, pushed).
 
-**Spec 143 `od-vendor-skills-remap` — DONE, MERGED, PUSHED.** `c9ed1f8` (+ `4bcf148` debate-outcome, `d1d1597` handoff) fast-forwarded onto `origin/main`; branch deleted. Re-pointed the skill-bundle vendored-path `src: "skills/"` → `"design-templates/"` (dst unchanged → zero pipeline edits) + `--apply` re-sourced the 31 pipeline bundles at the current pin (`@c128ffd5:design-templates/…`, was frozen at `@454e8373:skills/…`). All 4 acceptance criteria validated (31/31 resolve, no template edits, design-systems untouched, `--verify` red only on skills/). ~729 design-templates files vendored (737-file commit).
+**Spec 143 `od-vendor-skills-remap` — DONE, MERGED, PUSHED** (`c9ed1f8` on `origin/main`). Re-pointed skill-bundle src `skills/` → `design-templates/` (dst unchanged); 31 pipeline bundles re-sourced at the current pin.
 
-**Root cause this chain fixes** (found via the Claude Code ↔ Codex CLI debate, `142/debate.md`): the c128ffd5 advance silently reorganized upstream — pipeline bundles moved `skills/` → `design-templates/`; the manifest mis-mapped; the pipeline survived only on 142's un-pruned orphans.
+**Spec 142 `od-sync-orphan-prune` — IMPLEMENTED + VALIDATED, COMMITTED (branch, not merged/pushed).** `4b82998` on `spec-142-od-sync-orphan-prune`. `--apply` now prunes orphan dst files (upstream-removed) inside recursive trees: 4 pure cores (computeOrphans/topLevelBundles/findReferencedOrphans/assertDisjointRoots, suite 36→46), automatic prune, referenced-bundle hard-block before mutation, nested-root guard, move-to-`runtime/od-sync/pruned-<sha>/` journal rm'd on success (gitignored). Live: pruned 284 orphan files (the c128 creative `skills/` set), **`--verify` green on ALL 7 paths**; the 31 pipeline bundles + design-systems/frames/prompts intact.
+
+**OD-engine chain COMPLETE:** 141 (idempotence/regen/advisory) + 143 (remap) + 142 (prune). Root cause (found via the Claude Code ↔ Codex CLI debate): c128ffd5 silently moved pipeline bundles `skills/` → `design-templates/`; manifest mis-mapped; pipeline survived only on un-pruned orphans.
 
 ## Next Actions
 
-1. **Spec 142 `od-sync-orphan-prune`** (successor, DRAFTED — spec.md + debate.md done, plan/tasks/notes still templates) — `/sdd plan` → implement. OQs already resolved in `debate.md` § Synthesis: automatic prune (no flag) + block-when-referenced/auto-prune-unreferenced + reuse Phase-A staged set as `dstRoot→Set<relpath>` + move-to-`runtime/` trash journal + nested-root guard. Prunes the now-orphaned creative `skills/` set → `--verify` green.
-2. **Then re-sync the 3 consumers** — they're still pre-remap (old `@454e8373` orphans + c128 creative skills). After 142 lands on main, re-sync propagates the 143 remap + 142 prune.
+1. **Spec 142 branch fate** — merge `spec-142-od-sync-orphan-prune` → main (+ push?). Branch has `4b82998` (+ handoff commit). (user-gated)
+2. **Then re-sync the 3 consumers** (mei-saas/cognixse/tese) — still pre-remap (`@454e8373` orphans + c128 creative skills). After 142 on main, ONE re-sync propagates the whole chain (143 remap + 142 prune); confirm `--verify` green in each consumer afterward.
 - **OD-vendor extraction** (`r-2026-06-01`, snoozed → 07-01) — distinct from 141/142/143.
 
 **Spec 138 (shelved):** autopilot reopens only on demand test — 3 meetings with `friction` ≥4 consecutive model turns + explicit "continue unattended". Measurement only until then.

@@ -20,18 +20,18 @@ _Prior (committed): spec 140 `/meeting` `Next:` marker (`88343fd`); OD pin advan
 
 ## Active Work
 
-**Spec 141 — DONE, MERGED, PUSHED.** `1bc7223` on `main`, pushed to `origin` (`0580b39→c2041ad`). Branch deleted. All 3 consumers synced, committed, AND pushed: mei-saas `4fc690d`, cognixse `5d51ebd`, tese `b3c6cea` (all at 150 systems + fixed engine, GitHub `cfpperche/*`).
+**Spec 141 — DONE, MERGED, PUSHED** (`1bc7223` on `origin/main`; 3 consumers at 150 systems + fixed engine, pushed).
 
-**OD-engine chain reframed by a cross-model debate (Claude Code ↔ Codex CLI, `142/debate.md`).** The debate resolved spec 142's 4 OQs AND uncovered a latent regression in the shipped advance: **c128ffd5 reorganized upstream `skills/` → the pipeline's 31 bundles (`web-prototype`/`saas-landing`/+29) moved to `design-templates/`; upstream `skills/` is now a 154-bundle creative set.** The manifest still maps `src: "skills/"`, so it vendors the wrong tree — the pipeline only works because 142's not-yet-fixed orphan bug kept the old bundles on disk. Spec 142 (orphan-prune) reframed + drafted; **new spec 143 `od-vendor-skills-remap` drafted as its HARD PREDECESSOR.**
+**Spec 143 `od-vendor-skills-remap` — IMPLEMENTED + VALIDATED, COMMITTED (branch, not merged/pushed).** `c9ed1f8` on branch `spec-143-od-vendor-skills-remap` (+ `4bcf148` debate-outcome). Re-pointed the skill-bundle vendored-path `src: "skills/"` → `"design-templates/"` (dst unchanged → zero pipeline edits) + `--apply` re-sourced the 31 pipeline bundles at the current pin (`@c128ffd5:design-templates/…`, was frozen at `@454e8373:skills/…`). All 4 acceptance criteria validated (31/31 resolve, no template edits, design-systems untouched, `--verify` red only on skills/). ~729 design-templates files vendored (737-file commit).
+
+**Root cause this chain fixes** (found via the Claude Code ↔ Codex CLI debate, `142/debate.md`): the c128ffd5 advance silently reorganized upstream — pipeline bundles moved `skills/` → `design-templates/`; the manifest mis-mapped; the pipeline survived only on 142's un-pruned orphans.
 
 ## Next Actions
 
-**OD-engine chain — sequence is 143 → 142 (both DRAFTED, awaiting review → `/sdd plan`):**
-1. **Spec 143 `od-vendor-skills-remap`** (root fix) — re-point manifest skills `src: "skills/"` → `"design-templates/"` (dst unchanged → zero pipeline edits), re-apply, confirm the 31 bundles resolve. Verified: 31/31 in `design-templates/`, structure parity. 4 OQs (vendor-whole-tree vs 31; keep dst name; kind label; provenance path) for plan-time.
-2. **Spec 142 `od-sync-orphan-prune`** (successor) — OQs resolved in `debate.md` § Synthesis: automatic prune (no flag) + block-when-referenced/auto-prune-unreferenced + reuse Phase-A staged set as `dstRoot→Set<relpath>` + move-to-`runtime/` trash journal + nested-root guard. After 143 remaps, prunes the now-orphaned creative `skills/` → `--verify` green.
-3. **Then** re-apply in Agent0 + re-sync the 3 consumers to clear inherited drift.
+1. **Spec 143 branch fate** — merge `spec-143-od-vendor-skills-remap` → main (+ push?). Branch has `4bcf148` + `c9ed1f8`. (user-gated)
+2. **Spec 142 `od-sync-orphan-prune`** (successor, DRAFTED — spec.md + debate.md done, plan/tasks/notes still templates) — `/sdd plan` → implement. OQs already resolved in `debate.md` § Synthesis: automatic prune (no flag) + block-when-referenced/auto-prune-unreferenced + reuse Phase-A staged set as `dstRoot→Set<relpath>` + move-to-`runtime/` trash journal + nested-root guard. Prunes the now-orphaned creative `skills/` set → `--verify` green.
+3. **Then re-sync the 3 consumers** — they're still pre-remap (old `@454e8373` orphans + c128 creative skills). After 143+142 land on main, re-sync propagates the remap + prune.
 - **OD-vendor extraction** (`r-2026-06-01`, snoozed → 07-01) — distinct from 141/142/143.
-- Uncommitted now: `docs/specs/142-*/{spec,debate}.md` (reframed), `docs/specs/143-*/` (new draft), `HANDOFF.md`. Spec 142 plan/tasks/notes still templates.
 
 **Spec 138 (shelved):** autopilot reopens only on demand test — 3 meetings with `friction` ≥4 consecutive model turns + explicit "continue unattended". Measurement only until then.
 

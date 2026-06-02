@@ -8,53 +8,35 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 
 ## Current State
 
-**Session 2026-06-01/02 — all SHIPPED, committed + pushed (`609b2b8..444b963`).** OD vendor-sync hardened + reminder
-queue triaged.
-- **Spec 135 (shipped, `884724c`/`2fc0415`):** OD `--check`/`--apply` dogfood found + fixed two bugs. **Bug A** — `--check`
-  false "no changes": `cmdCheck` trusted the `gh api compare` list, hard-capped at 300 by GitHub (no real pagination).
-  Fixed via pure `resolveChangedVendoredScope()` (truncation/gh-unavailable → over-report). **Bug B** — real `--apply`
-  hard-blocked by `validateDesignMd`'s exact-phrase `REQUIRED_H2_SUBSTRINGS`; a consumer audit proved nothing reads H2
-  text (`generateDsIndex`=mood+hex, step 02=prose), so it became a **substance gate** (`MIN_PALETTE_HEX=2` + `MIN_H2_SECTIONS=3`).
-  Full `/sdd` cycle incl. Codex debate (converged). Validated: real `--apply` of HEAD passed 731 files, reached Phase B;
-  content reverted (pin stays `d25a7aaf`). 20 tests.
-- **Canvas-contrast rule (`2bbb53a`):** step-2 prototype now requires ≥2 distinct canvas tones across the 3 directions
-  (durable residual of the 2026-05-14 OD dogfood, finding #2).
-- **Reminder queue triaged 5→2:** closed `r-2026-05-14` (fair OD re-match — apparatus gone, overtaken-by-events),
-  cancelled `r-2026-05-17` agent0-atlas + `r-2026-05-25` fork-extension (both forks-presupposing → over-engineering per
-  `[[forks-ephemeral-dogfood]]`); snoozed `r-2026-06-01` OD-extraction → 07-01.
+**Session 2026-06-02 — `/meeting` skill SHIPPED + dogfooded, all committed + pushed (HEAD `0d9c2ee`).** New multi-party, multi-model deliberation skill.
+- **Spec 136 (`22dde79`):** `/meeting` — human + Claude + Codex take turns on a free topic; state/content split (`meeting.sh` owns a machine-readable header; the active runtime is single-writer); peer turns via `codex-exec`/`claude-exec`. 59 tests.
+- **Runtime-neutral fix (`b416f4b`):** the synthesis human gate degraded `AskUserQuestion`→plain prose; retiered cc-native → **agentskills-portable** (any runtime can orchestrate).
+- **Dogfood + graduation (`47e5cbb`):** first real `/meeting` (Claude⇄Codex) on "should v2 add an LLM-orchestrator mode" → graduated to **spec 138 (meeting-bounded-autopilot)**; its `/sdd debate` (Codex) **shelved** the build behind a rule-of-three demand test.
+- **Near-term measurement (`6ccfddf`):** `meeting.sh friction` + `state` lines record max consecutive model-turns-without-human; the only piece of 138 that shipped.
+- **Housekeeping (`0d9c2ee`):** gitignore `.claude/*.lock` (CC `/schedule` per-process lock).
 
-_Prior (committed): sync-harness leak fix `dc3a93c`; specs 131/099/035/060 shipped, 036 superseded; `/product` by 079._
+_Prior session (OD vendor-sync, shipped+pushed): spec 135 OD `--check`/`--apply` bug fixes (GitHub 300-file compare cap → over-report; `DESIGN.md` validator became a substance gate); canvas-contrast rule; reminder triage 5→2. Specs 137 `agent0-status` / 139 are a separate concurrent session's — shipped, leave them._
 
 ## Active Work
 
-None. Working tree clean (the untracked `docs/specs/136-meeting/` is from a **separate session** — not this one's, leave it).
-All session work committed + pushed.
+None. Working tree clean; everything committed + pushed to `origin/main`.
 
 ## Next Actions
 
-**Nothing actionable in the queue** — the 2 remaining reminders are correctly dormant (real triggers, not cancel-worthy):
-1. `r-2026-05-17` **re-snapshot agentskills.io** — quarterly maintenance, due 08-17 (snapshot frozen 05-17). Date-gated.
-2. `r-2026-05-31` **umbrella-execution driver for `/sdd`** — deferred by rule-of-three (n=1, only mei-saas hit it); reopen
-   as a `/sdd` spec when a 2nd founder stalls. NOT a code generator.
+**Meeting (this session):**
+- **Spec 138 reopens on evidence, not now.** The autopilot build is shelved behind a demand test: 3 meetings where `meeting.sh friction` shows **≥4 consecutive model turns** + an explicit human "continue unattended" note. Until then only the measurement exists. Don't build it speculatively.
 
-**Founder-gated, not queued:**
-- **OD pin advance** — whether to ingest+commit upstream HEAD's wholesale content (648 new systems / 83 updated). Validator
-  no longer blocks it; deliberate `/product` visual-output change, out of spec 135 scope.
-- **OD-vendor extraction** (`r-2026-06-01`, snoozed → 07-01) — debate w/ Codex moving OD out of `/product` so it's usable
-  outside it. Specs 027/049/135 context.
+**Founder-gated (prior session, still pending):**
+- **OD pin advance** — whether to ingest+commit upstream HEAD content (648 new / 83 updated systems). Validator no longer blocks; deliberate `/product` visual change, out of spec 135 scope.
+- **OD-vendor extraction** (`r-2026-06-01`, snoozed → 07-01) — debate w/ Codex on moving OD out of `/product`.
+
+**Dormant reminders (real triggers, not cancel-worthy):**
+- `r-2026-05-17` re-snapshot agentskills.io — quarterly, due 08-17.
+- `r-2026-05-31` umbrella-execution driver for `/sdd` — deferred by rule-of-three (n=1); reopen as a spec when a 2nd founder stalls.
 
 ## Decisions & Gotchas
 
+- **Meeting homes/portability:** skill is `agentskills-portable` — keep the core loop free of Claude-only primitives (the human gate degrades `AskUserQuestion`→prose). Transcripts are git-tracked but **project-local** under `.agent0/meetings/` (excluded from the sync-harness manifest like `memory`/`routines`; only `.gitkeep` ships).
 - **Skill homes:** edit canonical `.agent0/skills/<slug>/` only (`.claude/skills`+`.agents/skills` are symlinks).
-- **GitHub compare 300-file cap:** `gh api .../compare/A...B` truncates `.files[]` at 300 with no working pagination
-  (`--paginate` only expands the commit list). Any drift detector reading that endpoint must over-report on a capped
-  list, never conclude "no changes" (the Bug A false-negative). Codified in `resolveChangedVendoredScope`.
-- **OD `--apply` reaches Phase-A only on real drift:** idempotence guard short-circuits to `no-op` (no tarball fetch)
-  when live checksums match the manifest. To dogfood the full write-path, perturb one vendored non-recursive file so
-  idempotence fails — apply re-fetches and overwrites it (reversible). Real apply ingests ~409M / 731 files (upstream
-  catalogue grew 73→150 systems); revert via `git checkout <vendored dirs>` + `git clean -fd` (governance-gated, needs OVERRIDE).
-- **OD `DESIGN.md` validator = substance gate (spec 135):** validates consumable substance (≥2 unique `#RRGGBB` hex +
-  ≥3 H2 sections), NOT heading names — no consumer reads H2 text (`generateDsIndex`=mood+hex, step 02=prose). Don't
-  re-introduce a heading-substring list. Hex-only detection deliberately mirrors `generateDsIndex.palette_summary`.
-- **Env gotchas:** gitleaks pre-commit active; governance blocks `rm -rf`, `git clean -fd`, blanket `git add`;
-  secrets-preflight blocks compound `git add && git commit` (separate calls); commits user-gated.
+- **OD gotchas (spec 135, if you touch OD):** GitHub `gh api .../compare` truncates `.files[]` at 300 (no real pagination) → drift detectors must over-report, never conclude "no changes". `DESIGN.md` validator is a substance gate (≥2 hex + ≥3 H2), NOT heading names. Full write-path dogfood needs perturbing a vendored file (idempotence guard short-circuits otherwise).
+- **Env:** gitleaks pre-commit active; governance blocks `rm -rf`/`git clean -fd`/blanket `git add`; secrets-preflight blocks compound `git add && git commit` (separate calls); commits user-gated.

@@ -20,13 +20,18 @@ _Prior (committed): spec 140 `/meeting` `Next:` marker (`88343fd`); OD pin advan
 
 ## Active Work
 
-**Spec 141 — COMMITTED, MERGED TO MAIN (local), NOT PUSHED.** `1bc7223` (engine fix) + `d1fd679`/this handoff fast-forwarded onto `main`. Branch `spec-141-od-sync-apply-completeness` fully merged (deletable). `origin/main` NOT yet updated — push is the open user-gated action. All 3 consumers re-synced AND committed: mei-saas `4fc690d`, cognixse `5d51ebd`, tese `b3c6cea` (each `git add .agent0 .claude` → harness + /product 150-system advance + fixed engine; mei-saas's unrelated `assets/brand/tino-wordmark.png` left untracked on purpose). Consumer commits are local; not pushed.
+**Spec 141 — DONE, MERGED, PUSHED.** `1bc7223` on `main`, pushed to `origin` (`0580b39→c2041ad`). Branch deleted. All 3 consumers synced, committed, AND pushed: mei-saas `4fc690d`, cognixse `5d51ebd`, tese `b3c6cea` (all at 150 systems + fixed engine, GitHub `cfpperche/*`).
+
+**OD-engine chain reframed by a cross-model debate (Claude Code ↔ Codex CLI, `142/debate.md`).** The debate resolved spec 142's 4 OQs AND uncovered a latent regression in the shipped advance: **c128ffd5 reorganized upstream `skills/` → the pipeline's 31 bundles (`web-prototype`/`saas-landing`/+29) moved to `design-templates/`; upstream `skills/` is now a 154-bundle creative set.** The manifest still maps `src: "skills/"`, so it vendors the wrong tree — the pipeline only works because 142's not-yet-fixed orphan bug kept the old bundles on disk. Spec 142 (orphan-prune) reframed + drafted; **new spec 143 `od-vendor-skills-remap` drafted as its HARD PREDECESSOR.**
 
 ## Next Actions
 
-1. **Push?** — `main` is ahead of `origin/main` by the 141 commits; the 3 consumer commits are also local. Push is outward-facing → user-gated, not yet done.
-2. **Spec 142 `od-sync-orphan-prune` — DRAFTED (spec.md filled), awaiting review → `/sdd plan`.** Decision made: separate spec, immediate priority. The 3rd engine gap: `--apply` never prunes orphan dst files → 91 orphan skill bundles in `vendor/open-design/skills/` (375 on disk vs 284 in the c128ffd5 tarball) → `--verify` fails on Agent0 + all 3 consumers. Fix is destructive (delete-on-apply) → needs the spec's safety design (two-phase, scoped to recursive vp roots, referenced-bundle guard) before implementing. 4 OQs for plan-time. After 142 lands: re-sync consumers to clear their inherited `skills/` orphans too.
-- **OD-vendor extraction** (`r-2026-06-01`, snoozed → 07-01) — distinct from 141/142.
+**OD-engine chain — sequence is 143 → 142 (both DRAFTED, awaiting review → `/sdd plan`):**
+1. **Spec 143 `od-vendor-skills-remap`** (root fix) — re-point manifest skills `src: "skills/"` → `"design-templates/"` (dst unchanged → zero pipeline edits), re-apply, confirm the 31 bundles resolve. Verified: 31/31 in `design-templates/`, structure parity. 4 OQs (vendor-whole-tree vs 31; keep dst name; kind label; provenance path) for plan-time.
+2. **Spec 142 `od-sync-orphan-prune`** (successor) — OQs resolved in `debate.md` § Synthesis: automatic prune (no flag) + block-when-referenced/auto-prune-unreferenced + reuse Phase-A staged set as `dstRoot→Set<relpath>` + move-to-`runtime/` trash journal + nested-root guard. After 143 remaps, prunes the now-orphaned creative `skills/` → `--verify` green.
+3. **Then** re-apply in Agent0 + re-sync the 3 consumers to clear inherited drift.
+- **OD-vendor extraction** (`r-2026-06-01`, snoozed → 07-01) — distinct from 141/142/143.
+- Uncommitted now: `docs/specs/142-*/{spec,debate}.md` (reframed), `docs/specs/143-*/` (new draft), `HANDOFF.md`. Spec 142 plan/tasks/notes still templates.
 
 **Spec 138 (shelved):** autopilot reopens only on demand test — 3 meetings with `friction` ≥4 consecutive model turns + explicit "continue unattended". Measurement only until then.
 

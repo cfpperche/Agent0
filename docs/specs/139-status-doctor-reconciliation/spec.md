@@ -2,7 +2,7 @@
 
 _Created 2026-06-02._
 
-**Status:** draft
+**Status:** shipped
 
 ## Intent
 
@@ -10,33 +10,33 @@ Close the two high-severity findings a cross-runtime dogfood of spec 137 surface
 
 ## Acceptance criteria
 
-- [ ] **Scenario: `status` flags a handoff/git contradiction**
+- [x] **Scenario: `status` flags a handoff/git contradiction**
   - **Given** `.agent0/HANDOFF.md` whose Active Work says "None" / "working tree clean" (or is older than the newest tracked change) while `git status` is non-empty
   - **When** `bash .agent0/tools/status.sh` runs
   - **Then** it emits a prominent reconciliation banner near the top (e.g. `⚠ RESUME WARNING: handoff says clean/idle but the working tree has N uncommitted change(s) — handoff may be stale`), and still exits 0
 
-- [ ] **Scenario: no false alarm when handoff and tree agree**
+- [x] **Scenario: no false alarm when handoff and tree agree**
   - **Given** a clean working tree, or a handoff whose Active Work already describes uncommitted work
   - **When** `status.sh` runs
   - **Then** no reconciliation warning is emitted (the banner is contradiction-only, not always-on)
 
-- [ ] **Scenario: `status` infers probable in-flight work from the tree**
+- [x] **Scenario: `status` infers probable in-flight work from the tree**
   - **Given** untracked or modified paths under `docs/specs/NNN-<slug>/` (and/or matching tool/skill files)
   - **When** `status.sh` runs
   - **Then** it surfaces a one-line "probable active work: NNN-<slug>" hint derived from the dirty paths, so in-flight work has a narrative beyond raw `git status` porcelain
 
-- [ ] **Scenario: `doctor` validates the hook contract, not a substring**
+- [x] **Scenario: `doctor` validates the hook contract, not a substring**
   - **Given** `.claude/settings.json` / `.codex/hooks.json`
   - **When** `doctor.sh` runs its hook-wiring check
   - **Then** it parses the JSON (jq) and asserts a `SessionStart` (or runtime-equivalent) hook whose command path references an existing, executable `.agent0/hooks/startup-brief.sh` — a present-but-malformed/unbound config does NOT report `ok`
 
-- [ ] **Scenario: `doctor` can fail on an unwired harness**
+- [x] **Scenario: `doctor` can fail on an unwired harness**
   - **Given** a runtime config that exists but binds no startup hook (the headline "is it wired?" failure mode)
   - **When** `doctor.sh` runs
   - **Then** that is reported `broken` (exit non-zero) for the target runtime — not merely `advisory`. A `--runtime claude|codex|both` selector (or sensible auto-detect) governs which runtime's wiring is gate-failing vs informational
 
-- [ ] Reconciliation and validation stay text-first and stateless — no new persisted state, daemon, or browser surface (inherits spec 137 § Non-goals)
-- [ ] All new behavior covered by tests under `.agent0/tests/agent0-status/`; the spec-137 suite stays green
+- [x] Reconciliation and validation stay text-first and stateless — no new persisted state, daemon, or browser surface (inherits spec 137 § Non-goals)
+- [x] All new behavior covered by tests under `.agent0/tests/agent0-status/`; the spec-137 suite stays green
 
 ## Non-goals
 
@@ -48,9 +48,9 @@ Close the two high-severity findings a cross-runtime dogfood of spec 137 surface
 
 ## Open questions
 
-- [ ] Reconciliation trigger: pure "handoff claims clean/None + git dirty" string-match, or a freshness signal (handoff mtime vs newest dirty-file mtime), or both? Resolve at `/sdd plan`.
-- [ ] `doctor` runtime selector: explicit `--runtime` flag, auto-detect from which config files exist, or gate-fail only when BOTH runtimes are unwired (most conservative)? Plan-time decision.
-- [ ] Does the in-flight-spec inference belong in `status.sh` or in a small shared helper (could the brief want it too)? Plan-time.
+- [x] Reconciliation trigger → string-contradiction (not mtime).  pure "handoff claims clean/None + git dirty" string-match, or a freshness signal (handoff mtime vs newest dirty-file mtime), or both? Resolve at `/sdd plan`.
+- [x] doctor runtime selector → auto-detect by file presence, no --runtime flag in v1.  explicit `--runtime` flag, auto-detect from which config files exist, or gate-fail only when BOTH runtimes are unwired (most conservative)? Plan-time decision.
+- [x] In-flight inference → local to status.sh (not the bounded brief).  belong in `status.sh` or in a small shared helper (could the brief want it too)? Plan-time.
 
 ## Context / references
 

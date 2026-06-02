@@ -22,15 +22,14 @@ _Prior (committed): spec 140 `/meeting` `Next:` marker (`88343fd`); OD pin advan
 
 **Spec 141 — DONE, MERGED, PUSHED** (`1bc7223` on `origin/main`; 3 consumers at 150 systems + fixed engine, pushed).
 
-**Spec 143 `od-vendor-skills-remap` — IMPLEMENTED + VALIDATED, COMMITTED (branch, not merged/pushed).** `c9ed1f8` on branch `spec-143-od-vendor-skills-remap` (+ `4bcf148` debate-outcome). Re-pointed the skill-bundle vendored-path `src: "skills/"` → `"design-templates/"` (dst unchanged → zero pipeline edits) + `--apply` re-sourced the 31 pipeline bundles at the current pin (`@c128ffd5:design-templates/…`, was frozen at `@454e8373:skills/…`). All 4 acceptance criteria validated (31/31 resolve, no template edits, design-systems untouched, `--verify` red only on skills/). ~729 design-templates files vendored (737-file commit).
+**Spec 143 `od-vendor-skills-remap` — DONE, MERGED, PUSHED.** `c9ed1f8` (+ `4bcf148` debate-outcome, `d1d1597` handoff) fast-forwarded onto `origin/main`; branch deleted. Re-pointed the skill-bundle vendored-path `src: "skills/"` → `"design-templates/"` (dst unchanged → zero pipeline edits) + `--apply` re-sourced the 31 pipeline bundles at the current pin (`@c128ffd5:design-templates/…`, was frozen at `@454e8373:skills/…`). All 4 acceptance criteria validated (31/31 resolve, no template edits, design-systems untouched, `--verify` red only on skills/). ~729 design-templates files vendored (737-file commit).
 
 **Root cause this chain fixes** (found via the Claude Code ↔ Codex CLI debate, `142/debate.md`): the c128ffd5 advance silently reorganized upstream — pipeline bundles moved `skills/` → `design-templates/`; the manifest mis-mapped; the pipeline survived only on 142's un-pruned orphans.
 
 ## Next Actions
 
-1. **Spec 143 branch fate** — merge `spec-143-od-vendor-skills-remap` → main (+ push?). Branch has `4bcf148` + `c9ed1f8`. (user-gated)
-2. **Spec 142 `od-sync-orphan-prune`** (successor, DRAFTED — spec.md + debate.md done, plan/tasks/notes still templates) — `/sdd plan` → implement. OQs already resolved in `debate.md` § Synthesis: automatic prune (no flag) + block-when-referenced/auto-prune-unreferenced + reuse Phase-A staged set as `dstRoot→Set<relpath>` + move-to-`runtime/` trash journal + nested-root guard. Prunes the now-orphaned creative `skills/` set → `--verify` green.
-3. **Then re-sync the 3 consumers** — they're still pre-remap (old `@454e8373` orphans + c128 creative skills). After 143+142 land on main, re-sync propagates the remap + prune.
+1. **Spec 142 `od-sync-orphan-prune`** (successor, DRAFTED — spec.md + debate.md done, plan/tasks/notes still templates) — `/sdd plan` → implement. OQs already resolved in `debate.md` § Synthesis: automatic prune (no flag) + block-when-referenced/auto-prune-unreferenced + reuse Phase-A staged set as `dstRoot→Set<relpath>` + move-to-`runtime/` trash journal + nested-root guard. Prunes the now-orphaned creative `skills/` set → `--verify` green.
+2. **Then re-sync the 3 consumers** — they're still pre-remap (old `@454e8373` orphans + c128 creative skills). After 142 lands on main, re-sync propagates the 143 remap + 142 prune.
 - **OD-vendor extraction** (`r-2026-06-01`, snoozed → 07-01) — distinct from 141/142/143.
 
 **Spec 138 (shelved):** autopilot reopens only on demand test — 3 meetings with `friction` ≥4 consecutive model turns + explicit "continue unattended". Measurement only until then.

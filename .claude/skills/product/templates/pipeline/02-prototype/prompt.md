@@ -84,6 +84,8 @@ The 5 schools (editorial-monocle / modern-minimal / warm-soft / tech-utility / b
 
 **Hard rule:** the 3 directions must come from genuinely different angles — different palette family, different typographic personality, different layout posture. NOT three takes on the same green. If two directions land in the same school, drop one and pick a contrasting school.
 
+**Canvas contrast (load-bearing):** school-distinct is NOT enough. Two directions can map to different schools yet still read as visually similar by sharing one canvas tone — the 2026-05-14 OD dogfood clustered two directions on dark canvases (`linear-app`+`vercel`, `voltagent`+`warp`) despite being school-distinct, collapsing the visible range. Treat background canvas as an explicit diversity axis: across the 3 directions use **at least 2 distinct canvas tones** (light/paper, dark/ink, tinted/colored). Do not ship 3 dark-canvas directions because dark reads as "premium" — a 3-up exists to show range, and 3 dark canvases throw that away. When the brief or a chosen DS pulls toward dark, make at least one direction earn its contrast with a light or tinted canvas.
+
 Per direction, pin in chat BEFORE writing HTML:
 - **Codename** (e.g., "Operador Silencioso", "Calma Estratégica") — visual DNA reference, not marketing label
 - **Palette** — 6 tokens (background / foreground / primary / accent / border / muted) with exact `hsl()` / `oklch()` values, taken from the consulted `DESIGN.md` files (verbatim, not improvised)

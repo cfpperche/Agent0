@@ -1,6 +1,6 @@
 ---
 name: Claude Code platform hooks
-description: Canonical surface of 29 Claude Code hook events and the exit-zero PostToolUse
+description: Canonical surface of 30 Claude Code hook events and the exit-zero PostToolUse
   gotcha; consult before designing any hook-based capacity
 metadata:
   type: reference
@@ -9,9 +9,9 @@ metadata:
   confirmed_count: 0
 ---
 
-The Claude Code hook system exposes **29 event names**, not the ~9 commonly cited. This memory captures the canonical surface, the event semantics (success vs failure), and the meta-lesson behind why this file exists.
+The Claude Code hook system exposes **30 event names**, not the ~9 commonly cited. This memory captures the canonical surface, the event semantics (success vs failure), and the meta-lesson behind why this file exists.
 
-Canonical source: <https://code.claude.com/docs/en/hooks> (verified 2026-05-25 via cc-platform-audit routine — upstream lifecycle table enumerates exactly 29 events; the "32" narrative carried over from the 2026-05-19 audit was a count drift against an unchanged 29-row table, now reconciled. `PermissionDenied`, `TaskCreated`, `TaskCompleted` remain present and documented as in the 2026-05-19 snapshot).
+Canonical source: <https://code.claude.com/docs/en/hooks> (re-verified 2026-06-02 via cc-platform-audit routine — upstream lifecycle table now enumerates **30 events**: the prior 29 plus a NEW **`MessageDisplay`** event that fires while assistant message text streams. Earlier history: 2026-05-25 audit reconciled a "32" count-drift narrative against a then-29-row table; `PermissionDenied`, `TaskCreated`, `TaskCompleted` remain present as in the 2026-05-19 snapshot).
 
 ## Meta-lesson — why this memory exists
 
@@ -21,9 +21,9 @@ The deeper lesson: before designing a new capacity that uses hooks, **read the c
 
 Second-order lesson from spec 020 itself: even with the right event registered, **payload shape across related events is NOT guaranteed to be identical**. Spec 020's plan-phase assumption ("`PostToolUseFailure` shape parity with `PostToolUse` — no documented reason to invent a different schema") was wrong. The dump-probe in Phase 3 was the cheap way to surface the divergence; the alternative (assume parity, ship, wait for downstream dogfood to break) would have wasted a fork-sync cycle. **When integrating with an unfamiliar event, write a dump-probe first.** Cost: ~5 min. Value: removes a class of "test passes locally, breaks in production" surprises.
 
-## The 29 events
+## The 30 events
 
-Quoted from the docs Hook lifecycle table (last audited 2026-05-25 via the cc-platform-audit routine):
+Quoted from the docs Hook lifecycle table (last audited 2026-06-02 via the cc-platform-audit routine):
 
 | Event | Fires when |
 | --- | --- |
@@ -38,6 +38,7 @@ Quoted from the docs Hook lifecycle table (last audited 2026-05-25 via the cc-pl
 | `PostToolUseFailure` | **After a tool call fails** |
 | `PostToolBatch` | After a batch of tool calls completes |
 | `Notification` | A notification is being shown |
+| `MessageDisplay` | While assistant message text streams — `displayContent` replaces the **on-screen display only** (transcript unchanged); short 10s default timeout; non-zero exit ignored (original text shown). NEW as of 2026-06-02 audit |
 | `SubagentStart` | A sub-agent starts |
 | `SubagentStop` | A sub-agent stops |
 | `TaskCreated` | A managed-task is created (task management surface; can block via exit 2) |
@@ -57,7 +58,7 @@ Quoted from the docs Hook lifecycle table (last audited 2026-05-25 via the cc-pl
 | `ElicitationResult` | An elicitation completes (same form-driven shape) |
 | `SessionEnd` | The session ends |
 
-Agent0 currently uses **5 of these 29** (counted from `.claude/settings.json`):
+Agent0 currently uses **5 of these 30** (counted from `.claude/settings.json`):
 
 - `PreToolUse` (4 matchers: governance-gate, secrets-preflight, delegation-gate, memory-index-gate) — runtime-pre-mark removed in spec 116 (runtime-introspect removal)
 - `PostToolUse` (4 matchers: session-track-edits, memory-frontmatter-validate, memory-events-journal, propagation-advise) — post-edit-validate removed in spec 111 (verification moved to SubagentStop); secrets-advise + supply-chain-advise removed in spec 112; runtime-capture removed in spec 116
@@ -65,7 +66,7 @@ Agent0 currently uses **5 of these 29** (counted from `.claude/settings.json`):
 - `Stop` (session-stop)
 - `SubagentStop` (2 hooks: delegation-verify [spec 111], delegation-stop [spec 061])
 
-`PostToolUseFailure` was used by runtime-capture (spec 020) until spec 116 removed runtime-introspect; no hook registers on it now. The remaining 24 are unused capacity surfaces. Notable underexplored ones: `WorktreeCreate`/`WorktreeRemove` (spec 063 territory), `TaskCreated`/`TaskCompleted` (potential hook surface for /goal + task tracking integrations), `Elicitation`/`ElicitationResult` (MCP form workflows), `FileChanged` (file-watcher capacity not yet built).
+`PostToolUseFailure` was used by runtime-capture (spec 020) until spec 116 removed runtime-introspect; no hook registers on it now. The remaining 25 are unused capacity surfaces. Notable underexplored ones: `WorktreeCreate`/`WorktreeRemove` (spec 063 territory), `TaskCreated`/`TaskCompleted` (potential hook surface for /goal + task tracking integrations), `Elicitation`/`ElicitationResult` (MCP form workflows), `FileChanged` (file-watcher capacity not yet built), `MessageDisplay` (on-screen output rewriting — transcript-safe display filter; new 2026-06-02).
 
 ## Exit-code semantics for PostToolUse / PostToolUseFailure
 

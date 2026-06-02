@@ -20,14 +20,13 @@ _Prior (committed): spec 140 `/meeting` `Next:` marker (`88343fd`); OD pin advan
 
 ## Active Work
 
-**Spec 141 — COMMITTED + CONSUMERS SYNCED.** Committed `1bc7223` on branch `spec-141-od-sync-apply-completeness` (not merged to main, not pushed). All 3 consumers re-synced via `sync-harness.sh --apply`: each **5837 copied + 103 stale-updated, 0 customized-refused, 0 overwritten, exit 0**; verified at 150 systems + fixed engine; post-sync `--check` clean (0 drift). **Consumers now carry ~6000 uncommitted changed files each** (harness surface + /product 150-system advance + fixed engine) — committing inside each consumer repo is a separate, user-gated follow-up.
+**Spec 141 — COMMITTED, MERGED TO MAIN (local), NOT PUSHED.** `1bc7223` (engine fix) + `d1fd679`/this handoff fast-forwarded onto `main`. Branch `spec-141-od-sync-apply-completeness` fully merged (deletable). `origin/main` NOT yet updated — push is the open user-gated action. All 3 consumers re-synced AND committed: mei-saas `4fc690d`, cognixse `5d51ebd`, tese `b3c6cea` (each `git add .agent0 .claude` → harness + /product 150-system advance + fixed engine; mei-saas's unrelated `assets/brand/tino-wordmark.png` left untracked on purpose). Consumer commits are local; not pushed.
 
 ## Next Actions
 
-1. **Decide spec-141 branch fate** — merge `spec-141-od-sync-apply-completeness` → main (+ push?), or keep as branch. (Commits/pushes user-gated.)
-2. **Commit the synced changes inside each consumer** (mei-saas/cognixse/tese) if desired — each has ~6000 staged-able files from the re-sync.
-3. **DISCUSS / decide spec 142 (orphan-cleanup)** — the discovered 3rd engine gap (`--apply` never prunes orphan dst files → `vendor/open-design/skills/` permanently fails `--verify`). Founder call: separate spec vs 141 amendment. _(in discussion this session)_
-- **OD-vendor extraction** (`r-2026-06-01`, snoozed → 07-01) — distinct from 141.
+1. **Push?** — `main` is ahead of `origin/main` by the 141 commits; the 3 consumer commits are also local. Push is outward-facing → user-gated, not yet done.
+2. **Spec 142 `od-sync-orphan-prune` — DRAFTED (spec.md filled), awaiting review → `/sdd plan`.** Decision made: separate spec, immediate priority. The 3rd engine gap: `--apply` never prunes orphan dst files → 91 orphan skill bundles in `vendor/open-design/skills/` (375 on disk vs 284 in the c128ffd5 tarball) → `--verify` fails on Agent0 + all 3 consumers. Fix is destructive (delete-on-apply) → needs the spec's safety design (two-phase, scoped to recursive vp roots, referenced-bundle guard) before implementing. 4 OQs for plan-time. After 142 lands: re-sync consumers to clear their inherited `skills/` orphans too.
+- **OD-vendor extraction** (`r-2026-06-01`, snoozed → 07-01) — distinct from 141/142.
 
 **Spec 138 (shelved):** autopilot reopens only on demand test — 3 meetings with `friction` ≥4 consecutive model turns + explicit "continue unattended". Measurement only until then.
 

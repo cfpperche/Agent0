@@ -60,6 +60,7 @@ Participants are distinct **model runtimes**, not theatrical role-play identitie
 - **Symmetric identity.** The skill determines its own runtime from execution context (Claude Code → `claude`, Codex CLI → `codex`) to decide per turn whether the next speaker is itself or a peer. A port must not hardcode a runtime literal.
 - **One turn per invocation.** `/meeting turn` writes exactly one turn and stops; it must not chain turns autonomously (that is the deferred orchestrator mode).
 - **Header is the source of truth.** Never hand-edit `turn_counter` / `next_speaker` / `synthesis`; route through `meeting.sh` so legality stays consistent.
+- **Runtime-neutral, not Claude-locked.** The skill is `agentskills-portable`: any runtime can be the active orchestrator. The human gate degrades from `AskUserQuestion` (Claude Code) to a plain-prose question elsewhere — do not bind the core loop to a Claude-only primitive. Adding a third model runtime needs its id in `roster`/`rotation` plus a sibling exec bridge for it.
 
 ## Notes
 

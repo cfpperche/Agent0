@@ -3,9 +3,9 @@ name: meeting
 description: Convene a multi-party, multi-model deliberation — a turn-based conversation between a human (intermittently present), Claude Code, and Codex CLI — to think through a project topic or a vague idea. The collaborative sibling of /brainstorm (one agent diverging) and /sdd debate (two agents reviewing a locked spec). Any participant may take a research-backed turn that cites sources; the human is optional and can simply react to the synthesis. Human-orchestrated - one turn at a time. Subcommands - start "<topic>" [--with <ids>], turn [--speaker <id>] [--web], synthesize, state, list. Git-tracked transcripts live under .agent0/meetings/<slug>-<ts>/meeting.md.
 argument-hint: <start "<topic>" [--with <ids>] | turn [--speaker <id>] [--web] | synthesize | state | list>
 license: MIT
-compatibility: Designed for Claude Code. Body references `.claude/`-analog conventional paths and CC-specific tools; portable to any runtime that maps a `.claude/`-analog directory and surfaces the referenced tools. Peer turns are driven through the codex-exec / claude-exec subprocess bridges.
+compatibility: Compatible with any agentskills.io-compatible runtime (Claude Code, Codex CLI, and others). Uses only universal primitives — file IO and shell (the meeting.sh state machine + the codex-exec/claude-exec subprocess bridges). The human gate uses AskUserQuestion in Claude Code and degrades to a plain-prose question in runtimes without it, so any runtime can be the active orchestrator.
 metadata:
-  agent0-portability-tier: cc-native
+  agent0-portability-tier: agentskills-portable
   version: "0.1"
 ---
 
@@ -87,7 +87,7 @@ Triggered when the user asks to wrap up ("synthesize", "wrap the meeting"). Eith
 1. **Read** the full transcript.
 2. **Write the `## Synthesis` section** — replace the `_(not yet synthesized)_` placeholder with: the synthesizing runtime; the convergence (what the participants agreed on); recorded disagreements (each: who held what, why unresolved); and a **recommended next step** — either *graduate to a spec* (the deliberation is a spec candidate) or *no-op* (informational only). Edit the file directly for this prose section (the body is yours to author; the header is the script's).
 3. **Mark status:** `bash .agent0/skills/meeting/scripts/meeting.sh advance <meeting.md> --synthesis written`.
-4. **Human gate** — ask the human (via `AskUserQuestion`): **accept** / **redirect** (more turns) / **end**. 
+4. **Human gate (runtime-neutral)** — ask the human: **accept** / **redirect** (more turns) / **end**. Use `AskUserQuestion` when the runtime is Claude Code; in any runtime without it (Codex CLI, etc.), ask the same three options as a plain-prose question and read the human's reply. Do NOT make this step depend on a Claude-only tool — the active orchestrator can be any runtime.
    - **accept** + recommendation was "graduate" → set `--synthesis accepted`, then offer to hand the synthesis to `/sdd refine` **as seed context for its interview** (it does not bypass the interview nor create a finished spec); link this `meeting.md` from the resulting spec's `## Context / references`.
    - **accept** + "no-op" → set `--synthesis accepted`; done.
    - **redirect** → leave status `written`; the user runs more `/meeting turn`s, then re-synthesizes.
@@ -139,9 +139,9 @@ If the first token is missing or not one of `start` / `turn` / `synthesize` / `s
 
 **Input:** User says "synthesize the meeting" after several turns where the human was silent.
 
-**Expected:** `## Synthesis` filled (synthesizing runtime, convergence, disagreements, recommended next step); status set to `written`; the human is offered accept / redirect / end via `AskUserQuestion`. On accept+graduate, the synthesis is offered to `/sdd refine` as seed context and the meeting is linked from the new spec's references; status `accepted`. On end, status `rejected`.
+**Expected:** `## Synthesis` filled (synthesizing runtime, convergence, disagreements, recommended next step); status set to `written`; the human is offered accept / redirect / end through the runtime-neutral gate (`AskUserQuestion` in Claude Code, plain-prose question elsewhere). On accept+graduate, the synthesis is offered to `/sdd refine` as seed context and the meeting is linked from the new spec's references; status `accepted`. On end, status `rejected`.
 
-**Failure indicators:** Auto-applied a graduation without the human gate. Bypassed `/sdd refine`'s interview by writing a finished spec. Left synthesis status `pending`.
+**Failure indicators:** Auto-applied a graduation without the human gate. Bypassed `/sdd refine`'s interview by writing a finished spec. Left synthesis status `pending`. **Made the gate depend on `AskUserQuestion` so a non-Claude orchestrator can't run it** (the lock-in this skill avoids).
 
 ## Notes
 
@@ -150,3 +150,5 @@ _Consumer-extension surface — append consumer-local bullets here. Sync flags t
 - v1 is **human-orchestrated only**. Autonomous LLM-as-orchestrator (one model selecting speakers and driving N turns) is a deliberately deferred, cost-gated future mode — do not auto-loop turns.
 - The script owns **state** (the header); the active runtime owns **content** (turn bodies + the synthesis prose). Keep that split — it is what makes turn legality and single-writer-per-turn mechanical.
 - Peers are distinct **model runtimes**, not theatrical personas. An explicit *contribution brief* in a turn ("take a security-review lens this turn") is fine; assigning a participant a standing role-play identity is not.
+- **Runtime-neutral by design (`agentskills-portable`).** Any runtime can be the active orchestrator — the body uses only file IO + shell (`meeting.sh`, the exec bridges), and the human gate degrades from `AskUserQuestion` to a plain-prose question. Do not reintroduce a Claude-only primitive in the core loop.
+- **Adding a third model runtime** (beyond Claude Code / Codex CLI) needs two things: (1) its participant id in the meeting's `roster`/`rotation`, and (2) an exec bridge for it (sibling to `codex-exec`/`claude-exec`) so the active runtime can fetch its turn. The transcript format and state machine already accommodate N participants.

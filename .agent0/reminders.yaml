@@ -46,7 +46,8 @@ reminders:
   context: 'Curate `agent0-atlas.md` (analog to hermesatlas.com — 114 repos / 12 categories
     curated by ksimback) when ≥10 public Agent0 forks exist. Manual curation viable
     at that scale; generates distribution. Until threshold: skip.'
-  status: pending
+  status: done
+  completed_ts: '2026-06-02T14:20:56Z'
 - id: r-2026-05-17-re-snapshot-agentskills
   created: '2026-05-17'
   due: '2026-08-17'
@@ -133,11 +134,12 @@ reminders:
     IF: ≥3 forks have ≥1 customization-refused entry OR ≥5 distinct customizations
     surfaced across ≥2 forks. Until threshold: convention is sufficient — manual merge
     is mechanical because conflict region is always § Notes.'
-  status: pending
+  status: done
   due: '2026-08-25'
   links:
   - .agent0/context/rules/harness-sync.md
   - .agent0/skills/image/SKILL.md
+  completed_ts: '2026-06-02T14:30:28Z'
 - id: r-2026-05-29-spec-the-vuln-audit-capacity
   created: '2026-05-29'
   context: 'Spec the vuln-audit capacity (replaces removed supply-chain block, spec

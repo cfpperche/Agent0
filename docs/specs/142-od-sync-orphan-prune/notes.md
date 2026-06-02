@@ -10,11 +10,27 @@ _In-flight design memory for this spec — decisions, deviations, tradeoffs, and
 
 ## Design decisions
 
-_Choices made where the spec/plan was ambiguous. The decision itself + why this option over others considered in the moment._
+### 2026-06-02 — parent — Implementation followed the debate-resolved design exactly
 
-### {{YYYY-MM-DD}} — {{author}} — {{one-line title}}
+All 4 OQs were pre-resolved in `debate.md` § Synthesis, so the build was mechanical: 4 pure exported cores (`computeOrphans`, `topLevelBundles`, `findReferencedOrphans`, `assertDisjointRoots`) TDD'd red→green (suite 36→46), plus FS wiring in `cmdApply` — compute-orphans + the two guards BEFORE Phase B (block before any mutation), move-to-`runtime/od-sync/pruned-<sha>/` trash after Phase B, `rm` the journal on full success.
 
-{{free-prose body — what was ambiguous, what was decided, why}}
+### 2026-06-02 — parent — Empty-dir sweep via `find -mindepth 1 -type d -empty -delete`
+
+Moving orphan FILES leaves empty bundle DIRs. Rather than track-and-rmdir each, swept each affected dst root with `find -mindepth 1 -type d -empty -delete` (bottom-up, never the root itself — staged files keep the root non-empty). `.gitkeep` keeps a legitimately-empty vendored dir non-empty, so it's preserved. Simpler than per-dir bookkeeping and idempotent.
+
+## Deviations
+
+_None — implementation matched plan.md._
+
+## Tradeoffs
+
+### 2026-06-02 — parent — Trash journal rm'd on success (not kept as a persistent record)
+
+Per Codex's OQ-reversibility point, the journal exists to make a mid-write crash a local restore. On full success (manifest + indices + report written) the journal is `rm`'d — it's a crash-recovery aid, not an audit trail (the apply report's `## Pruned orphans` section is the durable record). Gitignored (`runtime/od-sync/pruned-*/`) as belt-and-suspenders for the crash case.
+
+## Open questions
+
+_None open. Live validation: `--apply` pruned 284 orphan files (the upstream creative `skills/` set the c128 advance wrote); `--verify` now passes all 7 paths; the 31 pipeline bundles (sourced from `design-templates/` by spec 143) survived; design-systems/frames/prompts untouched._
 
 ## Deviations
 

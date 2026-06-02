@@ -119,6 +119,12 @@
       "sha": "c128ffd53bba3f3080b2d0b7d656d1634016e10a",
       "at": "2026-06-02T23:14:44.712Z",
       "reason": "auto-apply"
+    },
+    {
+      "event": "apply",
+      "sha": "c128ffd53bba3f3080b2d0b7d656d1634016e10a",
+      "at": "2026-06-02T23:30:00.182Z",
+      "reason": "auto-apply"
     }
   ]
 }

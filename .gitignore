@@ -10,6 +10,8 @@ CLAUDE.local.md
 .agent0/.runtime-state/*
 !.agent0/.runtime-state/README.md
 .agent0/.session-state/
+# OD orphan-prune trash journal (spec 142) — crash-recovery aid, rm'd on success
+.claude/skills/product/runtime/od-sync/pruned-*/
 .agent0/.delegation-state/
 .agent0/delegation-audit.jsonl
 .agent0/delegation-audit.jsonl.lock

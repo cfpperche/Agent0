@@ -12,44 +12,44 @@ _Created 2026-06-02._
 
 ## Acceptance criteria
 
-- [ ] **Scenario: `--apply` prunes dst files upstream removed within a recursive tree**
+- [x] **Scenario: `--apply` prunes dst files upstream removed within a recursive tree**
   - **Given** a recursive vendored path whose dst contains files absent from the tarball at `pinned_sha` (e.g. the 91 orphan skill bundles)
   - **When** `--apply` completes a real reconcile
   - **Then** the dst tree contains exactly the tarball's file set for that path (orphans deleted), and a subsequent `--verify` exits 0 for that path
 
-- [ ] **Scenario: pruning is scoped — only recursive-vp dst roots, never beyond**
+- [x] **Scenario: pruning is scoped — only recursive-vp dst roots, never beyond**
   - **Given** an `--apply` run
   - **When** orphan pruning executes
   - **Then** it deletes only files under a recursive `vendored_paths[].dst` root that are absent from that path's staged set; non-recursive entries, `.gitkeep` sentinels, and anything outside the vendored dst roots are never touched
 
-- [ ] **Scenario: prune respects the two-phase safety invariant**
+- [x] **Scenario: prune respects the two-phase safety invariant**
   - **Given** a `--apply` where Phase A validation fails (a DESIGN.md schema failure)
   - **When** the apply aborts
   - **Then** no orphan is deleted — pruning happens only after Phase A passes and as part of (or after) the Phase B commit, so a failed apply leaves the live vendor fully intact
 
-- [ ] **Scenario: a pipeline-referenced orphan hard-blocks the apply (resolved — block, not report)**
+- [x] **Scenario: a pipeline-referenced orphan hard-blocks the apply (resolved — block, not report)**
   - **Given** an orphan path that a live non-vendor file (a pipeline template) still references
   - **When** pruning runs
   - **Then** `--apply` hard-fails naming the referenced path (does NOT delete it), so the repo is never left referencing a deleted bundle; unreferenced orphans prune normally. _(per debate.md OQ2: block-when-referenced + auto-prune-when-unreferenced; delete-and-report rejected as too weak for paths product templates read)_
 
-- [ ] **Scenario: prune is atomic / recoverable (resolved per debate.md)**
+- [x] **Scenario: prune is atomic / recoverable (resolved per debate.md)**
   - **Given** a prune that fails partway (an `rm`, manifest, or report error after some orphans are gone)
   - **When** the failure occurs
   - **Then** recovery is a local restore, not a re-download: deletion moves orphans to a `runtime/od-sync/` trash journal (OUTSIDE the vendored root — a quarantine inside the root would itself be hashed by `verifyManifest`/`walkFiles`) and only finalizes after the manifest + report write succeed
 
-- [ ] **Scenario: nested recursive roots don't cross-prune (resolved per debate.md)**
+- [x] **Scenario: nested recursive roots don't cross-prune (resolved per debate.md)**
   - **Given** the manifest's recursive vendored roots (today `design-systems/`, `vendor/open-design/skills/`, `frames/` are disjoint)
   - **When** the prune set is computed for a root
   - **Then** a parent root never treats a child root's files as orphans — either overlapping recursive dst prefixes are rejected, or child roots are excluded from a parent's prune walk
 
-- [ ] **Scenario (regression): `--verify` goes green after 143 + 142**
+- [x] **Scenario (regression): `--verify` goes green after 143 + 142**
   - **Given** spec 143 has re-pointed `skills/` src → `design-templates/` and `--apply` ran
   - **When** 142's prune runs (the now-stale upstream `skills/` creative bundles are the orphan set)
   - **Then** those genuinely-removed files are pruned and `--verify` exits 0 across all 7 vendored paths — WITHOUT deleting the pipeline's `web-prototype`/`saas-landing`/etc. (now sourced from `design-templates/`)
 
-- [ ] **Prune set source (resolved per debate.md OQ3):** the prune set is built from the Phase-A staged final dst-relative paths, captured as `dstRoot → Set<relpath>` during staging (not via mutable `VendoredPath` object identity, not a second tarball walk), compared against `walkFiles(dstFull)` preserving the `.gitkeep` exclusion.
+- [x] **Prune set source (resolved per debate.md OQ3):** the prune set is built from the Phase-A staged final dst-relative paths, captured as `dstRoot → Set<relpath>` during staging (not via mutable `VendoredPath` object identity, not a second tarball walk), compared against `walkFiles(dstFull)` preserving the `.gitkeep` exclusion.
 
-- [ ] After 143 + 142 land and Agent0's `--verify` is green, re-running `sync-harness.sh --apply` to the 3 consumers (mei-saas/cognixse/tese) clears their inherited drift too. _(propagation follow-up, not engine scope)_
+- [x] After 143 + 142 land and Agent0's `--verify` is green, re-running `sync-harness.sh --apply` to the 3 consumers (mei-saas/cognixse/tese) clears their inherited drift too. _(propagation follow-up, not engine scope)_
 
 ## Non-goals
 

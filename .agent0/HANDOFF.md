@@ -8,40 +8,40 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 
 ## Current State
 
-**OD `--bump`/`--apply` dogfood run (2026-06-01) — UNCOMMITTED, founder to review/commit.** Exercised the OD vendor-sync
-write-paths end-to-end against upstream HEAD `bfcac4e0` (was pinned `d25a7aaf`). Two real bugs found + fixed:
-- **Bug A (FIXED):** `--check` false "no changes" — `cmdCheck` trusted the `gh api compare` list, hard-capped at 300 by
-  GitHub (no real pagination). Fix: pure `resolveChangedVendoredScope()` detects truncation (≥ `COMPARE_FILE_CAP=300`) /
-  gh-unavailable and over-reports all vendored paths instead of concluding "in sync". TDD, +5 tests.
-- **Bug B (FIXED + VALIDATED, spec 135):** real `--apply` was hard-blocked by `validateDesignMd`'s exact-phrase
-  `REQUIRED_H2_SUBSTRINGS` gate. Consumer audit (notes.md) proved **nothing reads the H2 text** — `generateDsIndex` reads
-  mood+hex, step 02-prototype reads prose. Replaced with a **substance gate** (`MIN_PALETTE_HEX=2` unique `#RRGGBB` +
-  `MIN_H2_SECTIONS=3`, source-of-truth constants commented to the consumers). Cross-model debate w/ Codex (debate.md,
-  converged) sharpened the spec. Validated: real `--apply` of HEAD passed all 731 files, reached Phase B; content reverted
-  (founder-gated), pin stays `d25a7aaf`. **20 tests pass.** Spec 135 = `/sdd` full cycle (refine→debate→plan→tasks→impl→validate).
-- **Positive:** `--bump` write-path verified; `--apply` two-phase atomicity held under Phase-A failure (confirmed twice).
+**Session 2026-06-01/02 — all SHIPPED, committed + pushed (`609b2b8..444b963`).** OD vendor-sync hardened + reminder
+queue triaged.
+- **Spec 135 (shipped, `884724c`/`2fc0415`):** OD `--check`/`--apply` dogfood found + fixed two bugs. **Bug A** — `--check`
+  false "no changes": `cmdCheck` trusted the `gh api compare` list, hard-capped at 300 by GitHub (no real pagination).
+  Fixed via pure `resolveChangedVendoredScope()` (truncation/gh-unavailable → over-report). **Bug B** — real `--apply`
+  hard-blocked by `validateDesignMd`'s exact-phrase `REQUIRED_H2_SUBSTRINGS`; a consumer audit proved nothing reads H2
+  text (`generateDsIndex`=mood+hex, step 02=prose), so it became a **substance gate** (`MIN_PALETTE_HEX=2` + `MIN_H2_SECTIONS=3`).
+  Full `/sdd` cycle incl. Codex debate (converged). Validated: real `--apply` of HEAD passed 731 files, reached Phase B;
+  content reverted (pin stays `d25a7aaf`). 20 tests.
+- **Canvas-contrast rule (`2bbb53a`):** step-2 prototype now requires ≥2 distinct canvas tones across the 3 directions
+  (durable residual of the 2026-05-14 OD dogfood, finding #2).
+- **Reminder queue triaged 5→2:** closed `r-2026-05-14` (fair OD re-match — apparatus gone, overtaken-by-events),
+  cancelled `r-2026-05-17` agent0-atlas + `r-2026-05-25` fork-extension (both forks-presupposing → over-engineering per
+  `[[forks-ephemeral-dogfood]]`); snoozed `r-2026-06-01` OD-extraction → 07-01.
 
 _Prior (committed): sync-harness leak fix `dc3a93c`; specs 131/099/035/060 shipped, 036 superseded; `/product` by 079._
 
 ## Active Work
 
-**Uncommitted, founder-gated** (one session, 2026-06-01):
-- `sync-open-design.ts` + `.test.ts` — **Bug A** (compare-truncation false-negative) + **Bug B** (substance-gate validator). 20 tests.
-- `docs/specs/135-od-design-md-validator-drift/` — full spec tree incl. `debate.md` (Claude↔Codex, converged) + `notes.md` (consumer audit, calibration).
-- `reminders.yaml` — r-2026-05-18 closed; **r-2026-06-01** added (extract OD vendor out of /product — discuss w/ Codex). `HANDOFF.md`.
-- Suggested commits: `fix(od-sync)` (Bug A + Bug B together, same file) + `docs(specs)` (135 tree).
+None. Working tree clean (the untracked `docs/specs/136-meeting/` is from a **separate session** — not this one's, leave it).
+All session work committed + pushed.
 
 ## Next Actions
 
-**Near-term queue:**
-1. **Commit this session** — review `git diff`, then `fix(od-sync)` + `docs(specs)`. Set spec 135 Status draft→shipped on commit.
-2. **(founder, optional) Pin advance** — whether to actually ingest+commit upstream HEAD's wholesale content (648 new systems / 83 updated). Validator no longer blocks it; this is a deliberate `/product` visual-output change, out of spec 135's scope.
-3. **Extract OD vendor out of /product** (reminder `r-2026-06-01`) — debate w/ Codex the target home + consumer-contract boundary so OD is usable outside /product. Specs 027/049/135 context.
-4. **Fair OD re-match for spec 027** (`r-2026-05-14`) — blind-judge 3.87-vs-4.73 confounded; iterate OD to 4 passes OR re-judge vs first-pass baseline.
-5. **Re-evaluate fork-extension → smart-merge** (`r-2026-05-25`).
+**Nothing actionable in the queue** — the 2 remaining reminders are correctly dormant (real triggers, not cancel-worthy):
+1. `r-2026-05-17` **re-snapshot agentskills.io** — quarterly maintenance, due 08-17 (snapshot frozen 05-17). Date-gated.
+2. `r-2026-05-31` **umbrella-execution driver for `/sdd`** — deferred by rule-of-three (n=1, only mei-saas hit it); reopen
+   as a `/sdd` spec when a 2nd founder stalls. NOT a code generator.
 
-**Deferred / gated:** umbrella-execution driver in `/sdd` (`r-2026-05-31`, NOT a code generator); agentskills.io
-re-snapshot (`r-2026-05-17`, due 08-17); agent0-atlas (≥10 forks); paid `/video`+`/image` validations need `FAL_KEY`.
+**Founder-gated, not queued:**
+- **OD pin advance** — whether to ingest+commit upstream HEAD's wholesale content (648 new systems / 83 updated). Validator
+  no longer blocks it; deliberate `/product` visual-output change, out of spec 135 scope.
+- **OD-vendor extraction** (`r-2026-06-01`, snoozed → 07-01) — debate w/ Codex moving OD out of `/product` so it's usable
+  outside it. Specs 027/049/135 context.
 
 ## Decisions & Gotchas
 

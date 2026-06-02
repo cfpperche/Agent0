@@ -2,7 +2,7 @@
 
 _Created 2026-06-02._
 
-**Status:** draft — **shelved pending a demand test** (see § Demand test). This is a captured, sharpened design record, not a near-term build. Only the v1 *measurement* in § Acceptance / Near-term ships now.
+**Status:** draft — **shelved pending a demand test** (see § Demand test). This is a captured, sharpened design record, not a near-term build. The v1 *measurement* in § Acceptance / Near-term **shipped 2026-06-02** (`meeting.sh friction` + `state` friction lines + rule docs); the autopilot build itself stays deferred until three qualifying meetings.
 
 ## Intent
 
@@ -26,11 +26,11 @@ No `plan.md` and no implementation until the demand is shown. A **qualifying mee
 
 ### Near-term (ships now — the measurement only)
 
-- [ ] **Scenario: v1 records autopilot-friction signal**
+- [x] **Scenario: v1 records autopilot-friction signal**
   - **Given** a v1 human-orchestrated meeting
   - **When** the human dispatches several model turns in a row without intervening
-  - **Then** `meeting.sh state` surfaces a **"N consecutive model turns without human intervention"** signal computed from the transcript, so a qualifying meeting (§ Demand test) can be identified from the artifact rather than memory
-- [ ] The § Demand test definition is documented in `.agent0/context/rules/meeting.md` so contributors know what evidence reopens this spec
+  - **Then** `meeting.sh state` surfaces a **"N consecutive model turns without human intervention"** signal computed from the transcript, so a qualifying meeting (§ Demand test) can be identified from the artifact rather than memory _(shipped: `meeting.sh friction` + `model_turns`/`max_consecutive_model_turns`/`current_model_streak` in `state`; tests in `.agent0/tests/meeting/07-friction.sh`)_
+- [x] The § Demand test definition is documented in `.agent0/context/rules/meeting.md` so contributors know what evidence reopens this spec _(§ Autopilot demand test)_
 
 ### Deferred (the build — only after the demand test passes; sharpened here so it's ready)
 

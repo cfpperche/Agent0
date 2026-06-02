@@ -197,12 +197,13 @@ reminders:
     mei-saas hit: 002-foundation stuck at draft, /sdd plan pending, materializing
     ~10 children is manual. DEFERRED until a 2nd founder stalls at umbrella execution
     (rule-of-three, n=1 today). Reopen as a /sdd spec then.'
-  status: pending
+  status: done
   due: '2026-08-19'
   links:
   - docs/specs/079-product-stack-aware-handoff/spec.md
   - .claude/skills/product/references/sdd-handoff.md
   - .agent0/memory/feedback_no_shipped_stack_opinions.md
+  completed_ts: '2026-06-02T19:26:25Z'
 - id: r-2026-06-01-re-rodar-auditoria-competitiva
   created: '2026-06-01'
   context: 'Re-rodar auditoria competitiva de harnesses (vs Codex CLI / Claude Code

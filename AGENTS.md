@@ -95,6 +95,10 @@ Every first-party `.claude/skills/*/SKILL.md` must pass the agentskills.io front
 
 `/product` is the foundation generator + design partner for the product lifecycle (idea → v1 → vN) — a multi-step industry-aligned pipeline producing the planning artifacts + a visual contract that hands off to SDD. See `.claude/skills/product/`.
 
+## Meeting
+
+`/meeting` convenes a multi-party, multi-model deliberation — a human (intermittent), Claude Code, and Codex CLI take turns on a free topic or vague idea. Human-orchestrated v1 (one turn at a time, no autonomous looping); peer turns run through the `codex-exec`/`claude-exec` bridges; turn legality lives in a machine-readable header managed by `scripts/meeting.sh`. The collaborative sibling of `/brainstorm` (solo divergence) and `/sdd debate` (two-role spec review). Git-tracked, project-local transcripts under `.agent0/meetings/` (not propagated to consumers). Discovered via `.agents/skills/meeting`. See `.agent0/context/rules/meeting.md`.
+
 ## Routines
 
 `.agent0/routines/<slug>.md` git-tracks recurring project work; an opt-in leader machine's cron enqueues each run for the next interactive session to dispatch via `/routine run <slug>`. See `.agent0/context/rules/routines.md`.

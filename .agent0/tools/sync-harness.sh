@@ -177,6 +177,10 @@ MANIFEST_TSV="$(mktemp -t sync-manifest-XXXXXX)"
 # .agent0/routines/         project-scoped routine definitions; content is
 #                           project-local. Only .gitkeep travels via git so a fresh
 #                           consumer project has the empty directory ready for /routine new.
+# .agent0/meetings/         project-scoped /meeting transcripts; content is
+#                           project-local (a meeting is a durable deliberation record,
+#                           not harness machinery). Only .gitkeep travels via git so a
+#                           fresh consumer project has the empty directory ready.
 
 # Recursive globs (find -type f under base dir) — encoded as "base/**"
 COPY_CHECK_RECURSIVE=(
@@ -212,6 +216,7 @@ COPY_CHECK_FILES=(
   ".agent0/memory.config.json"
   ".agent0/.browser-state/.gitkeep"
   ".agent0/routines/.gitkeep"
+  ".agent0/meetings/.gitkeep"
   ".agent0/.runtime-state/README.md"
   "assets/.gitkeep"
   "assets/brand/.gitkeep"

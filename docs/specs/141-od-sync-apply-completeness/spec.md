@@ -2,7 +2,7 @@
 
 _Created 2026-06-02._
 
-**Status:** draft
+**Status:** in-progress (implemented + validated 2026-06-02; uncommitted — pending founder commit)
 
 ## Intent
 
@@ -10,27 +10,27 @@ The 2026-06-02 OD pin advance (`d25a7aaf → c128ffd5`, 73 → 150 systems, ship
 
 ## Acceptance criteria
 
-- [ ] **Scenario: a `--bump` followed by `--apply` reconciles content without a workaround**
+- [x] **Scenario: a `--bump` followed by `--apply` reconciles content without a workaround**
   - **Given** the vendored content on disk matches the OLD pin, and `--bump <new-sha>` has updated `pinned_sha` (but not the vendored-path checksums)
   - **When** `--apply` runs
   - **Then** it detects that on-disk content differs from the NEW pin's tarball and performs the full reconcile — without needing a perturbed vendored file to defeat the idempotence gate
 
-- [ ] **Scenario: idempotence compares on-disk against the pinned tarball, not the stale manifest**
+- [x] **Scenario: idempotence compares on-disk against the pinned tarball, not the stale manifest**
   - **Given** any pin state
   - **When** the idempotence check runs
   - **Then** "already in sync" means on-disk content == the content at `pinned_sha` (computed from the tarball, including recursive trees via tree-checksum), NOT on-disk == the manifest's last-recorded checksums. A genuine no-op (on-disk already == pinned content) still short-circuits before re-staging
 
-- [ ] **Scenario: recursive vendored trees are content-compared in the idempotence check**
+- [x] **Scenario: recursive vendored trees are content-compared in the idempotence check**
   - **Given** a recursive vendored path (`design-systems/`, `skills/`, `frames/`) whose on-disk tree differs from the pinned tarball's
   - **When** the idempotence check runs
   - **Then** it computes the on-disk tree-checksum (`computeTreeChecksum` over per-file hashes) and detects the difference — the current `if (vp.recursive) continue` blind-skip is removed
 
-- [ ] **Scenario: `--apply` regenerates the pipeline-facing catalogue**
+- [x] **Scenario: `--apply` regenerates the pipeline-facing catalogue**
   - **Given** an `--apply` that adds/updates/removes systems
   - **When** it completes
   - **Then** `references/od-catalog-index.json` (the index steps 02-prototype and 14-design-system actually `Read`) is regenerated to match the new system set — preserving existing curated entries (category / mood / palette_primary) verbatim and adding new entries mechanically (`category` from each `DESIGN.md` `> Category:` line, `mood` + first palette hex from the DESIGN.md / ds-index). Today `--apply` only writes `vendor/open-design/.cache/ds-index.json`, leaving the pipeline-facing catalogue stale → new systems invisible to `/product`
 
-- [ ] **Scenario: hardcoded system counts don't silently rot**
+- [x] **Scenario: hardcoded system counts don't silently rot**
   - **Given** the catalogue size changes
   - **When** `--apply` completes
   - **Then** EITHER the doc references stop hard-coding a count (preferred — "the vendored systems catalogued at …") OR the apply report flags the stale-count doc lines. (The 73→150 advance left ~6 doc strings to hand-fix.)

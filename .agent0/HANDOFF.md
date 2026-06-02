@@ -20,13 +20,13 @@ _Prior (committed): spec 140 `/meeting` `Next:` marker (`88343fd`); OD pin advan
 
 ## Active Work
 
-**Spec 141 — IMPLEMENTED + VALIDATED, UNCOMMITTED.** Dirty: `scripts/sync-open-design.ts` (+`.test.ts`), `02-prototype/prompt.md`, `docs/specs/141-*/{plan,tasks,notes,spec}.md`, `HANDOFF.md`. Vendored content + manifest restored clean (test `--apply` left zero byte diff). Awaiting founder commit.
+**Spec 141 — COMMITTED + CONSUMERS SYNCED.** Committed `1bc7223` on branch `spec-141-od-sync-apply-completeness` (not merged to main, not pushed). All 3 consumers re-synced via `sync-harness.sh --apply`: each **5837 copied + 103 stale-updated, 0 customized-refused, 0 overwritten, exit 0**; verified at 150 systems + fixed engine; post-sync `--check` clean (0 drift). **Consumers now carry ~6000 uncommitted changed files each** (harness surface + /product 150-system advance + fixed engine) — committing inside each consumer repo is a separate, user-gated follow-up.
 
 ## Next Actions
 
-1. **Commit spec 141** when user asks (branch + commit; commits are user-gated).
-2. **THEN re-sync the 3 consumers** (mei-saas/cognixse/tese) — behind on `/product` after the OD advance (+~115k lines / 150 systems each). Fixed engine ships with the content.
-3. **Consider spec 142 (orphan-cleanup)** — the discovered 3rd gap; founder decides separate-spec vs 141 amendment.
+1. **Decide spec-141 branch fate** — merge `spec-141-od-sync-apply-completeness` → main (+ push?), or keep as branch. (Commits/pushes user-gated.)
+2. **Commit the synced changes inside each consumer** (mei-saas/cognixse/tese) if desired — each has ~6000 staged-able files from the re-sync.
+3. **DISCUSS / decide spec 142 (orphan-cleanup)** — the discovered 3rd engine gap (`--apply` never prunes orphan dst files → `vendor/open-design/skills/` permanently fails `--verify`). Founder call: separate spec vs 141 amendment. _(in discussion this session)_
 - **OD-vendor extraction** (`r-2026-06-01`, snoozed → 07-01) — distinct from 141.
 
 **Spec 138 (shelved):** autopilot reopens only on demand test — 3 meetings with `friction` ≥4 consecutive model turns + explicit "continue unattended". Measurement only until then.

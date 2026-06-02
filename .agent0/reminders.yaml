@@ -14,10 +14,11 @@ reminders:
     write-paths still untested. --check is empirically verified at the new skill location
     (2026-05-18 ran cleanly; upstream HEAD 34f66113 ≠ pin d25a7aaf — drift report
     works). See .claude/skills/product/scripts/sync-open-design.ts + docs/specs/049-od-vendor-port-to-skill/.
-  status: pending
+  status: done
   links:
   - .claude/skills/product/scripts/sync-open-design.ts
   - docs/specs/049-od-vendor-port-to-skill/
+  completed_ts: '2026-06-01T23:35:26Z'
 - id: r-2026-05-16-spec-029-sdd-list
   created: '2026-05-16'
   due: '2026-05-30'
@@ -213,3 +214,18 @@ reminders:
   links:
   - docs/specs/060-harness-gaps-2026/spec.md
   completed_ts: '2026-06-01T21:41:48Z'
+- id: r-2026-06-01-discuss-with-codex-extracting
+  created: '2026-06-01'
+  context: 'Discuss with Codex extracting the Open Design vendor OUT of the /product
+    skill into a shared/standalone location, so OD features + references (design-systems
+    catalogue, sync-open-design engine, prompts, frames) are usable OUTSIDE /product
+    (which keeps consuming it). Currently OD lives inside .claude/skills/product/
+    (spec 049 moved it there; spec 027 was the MCP-package port). Goal: decouple so
+    other skills/tools can reference OD without depending on /product. Debate the
+    target home + the consumer-contract boundary with Codex before building.'
+  status: pending
+  links:
+  - .claude/skills/product/scripts/sync-open-design.ts
+  - docs/specs/049-od-vendor-port-to-skill/
+  - docs/specs/027-od-vendor-port/
+  - docs/specs/135-od-design-md-validator-drift/

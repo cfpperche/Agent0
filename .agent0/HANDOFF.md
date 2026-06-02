@@ -14,12 +14,11 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 
 **Concurrent OD thread (this session, COMMITTED):** `/product` OD vendor pin advanced `d25a7aaf`→`c128ffd5` (`5233ab3`) — 73→**150** design systems, validated, `od-catalog-index.json` regenerated so the pipeline sees them. Two OD-sync engine bugs found → **spec 141 drafted** (`51e92ae`).
 
-_Prior session (committed, leave it): specs 137+139 status/doctor SHIPPED + synced to 3 consumers; spec 136 `/meeting` shipped; spec 138 shelved._
+_Prior (committed): specs 137+139 status/doctor shipped+synced; 136 `/meeting`; 138 shelved._
 
 ## Active Work
 
-**Spec 140 done, UNCOMMITTED** (tree dirty — see git below). Open offer: commit (on a branch).
-- **AG-Antecipa transcript:** removed deliberately by a **parallel session at the user's request** (NOT codex-exec — my earlier causal guess was wrong). This session wrongly "restored" it, then re-removed it on user confirmation. Now absent, as intended. `.agent0/meetings/` holds only `v2-meeting-llm-orchestrator-mode-*`.
+**Spec 140 done, UNCOMMITTED** (tree dirty). Open offer: commit (on a branch). _(AG-Antecipa transcript: resolved — removed at user's request by a parallel session; now absent as intended.)_
 
 ## Next Actions
 
@@ -37,10 +36,9 @@ _Prior session (committed, leave it): specs 137+139 status/doctor SHIPPED + sync
 
 ## Decisions & Gotchas
 
-- **Skill/capacity homes:** edit canonical `.agent0/skills/<slug>/` only (`.claude/skills`+`.agents/skills` are symlinks). status/doctor composition lives once in `.agent0/hooks/_brief-compose.sh` (emit-neutral) — brief truncates+emits, `status.sh` prints full; any edit there → re-verify the brief is byte-identical. Both tools honor `AGENT0_PROJECT_DIR`, locate the lib relative to their own path.
+- **Skill/capacity homes:** edit canonical `.agent0/skills/<slug>/` only (`.claude/skills`+`.agents/skills` are symlinks). status/doctor share `.agent0/hooks/_brief-compose.sh` (emit-neutral) — re-verify the brief byte-identical after any lib edit.
 - **Meeting portability:** skill is `agentskills-portable` — core loop free of Claude-only primitives (human gate degrades `AskUserQuestion`→prose). Transcripts git-tracked but project-local under `.agent0/meetings/` (out of sync manifest; only `.gitkeep` ships).
 - **Meeting speaker selection (spec 140):** context-driven via `Next: <id>` exact-shape marker (last non-empty line; never NLP). `meeting.sh check` is roster-membership-only now; `resolve-speaker` owns the precedence; `advance --next <id>` sets `next_speaker` (no more `csv_successor`). 140↔138 boundary: deterministic transcript directive = in scope; semantic speaker inference / auto-chain = still gated behind 138's demand test.
-- **`codex-exec` sandbox:** `--sandbox workspace-write` grants repo-wide write — still worth scoping tightly, but NOTE: the AG-Antecipa transcript loss this session was NOT caused by codex-exec (a parallel session removed it at the user's request). Don't carry that as a codex-exec lesson.
-- **OD pin advance (specs 135/141):** the engine has 2 bugs (spec 141) — `--bump`+`--apply` no-ops (perturb a non-recursive vendored file to force the reconcile), and `--apply` regenerates only the engine cache, not the pipeline catalogue (`od-catalog-index.json`; regen via `/tmp/gen-catalog.py` logic: preserve curated entries, mechanical for new). Fix 141 before the next advance.
+- **OD pin advance (spec 141):** the engine has 2 bugs — `--bump`+`--apply` no-ops (perturb a non-recursive vendored file to force reconcile); `--apply` regenerates only the engine cache, not the pipeline catalogue `od-catalog-index.json` (regen logic in `/tmp/gen-catalog.py`). Fix 141 before the next advance.
 - **Harness sync:** all 3 consumers reconciled clean 3-way (`~ stale` auto-update, zero `!! customized`). Baseline bump = the audit record. NOTE: consumers now behind on `/product` (OD 150 systems) — resync after 141.
 - **Env:** gitleaks pre-commit active; governance blocks `rm -rf`/`git clean -fd`/blanket `git add`; secrets-preflight wants separate `git add` then `git commit -F <file>` (not `-F -`); commits user-gated.

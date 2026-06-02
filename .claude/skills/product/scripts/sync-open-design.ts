@@ -175,22 +175,94 @@ function provenanceHeader(sha: string, srcPath: string, ext: string): string | n
  * Original section keywords were too narrow and matched 0/72 files — relaxed to
  * match the real section names emitted by open-design@454e8373.
  */
-const REQUIRED_H2_SUBSTRINGS = [
-  'color palette',
-  'typography',
-  'component',
-  'layout',
-  'visual theme',
-];
+// The vendored design-systems/<name>/DESIGN.md catalogue is consumed two ways, and
+// NEITHER depends on specific H2 heading text (consumer audit — spec 135 notes.md):
+//   - machine: `generateDsIndex` reads `mood` (a blockquote/title) + `palette_summary`
+//     (the first #RRGGBB hex codes). The palette is the one hard structured dependency.
+//   - LLM: step 02-prototype `Read`s the whole file as prose and is robust to heading
+//     renames (`## 2. Color` reads the same as `## 2. Color Palette & Roles`).
+// So the gate validates *consumable substance*, not heading names: a usable palette
+// plus a corruption tripwire (enough H2 sections that the file isn't a truncated stub).
+// The earlier hand-maintained REQUIRED_H2_SUBSTRINGS list enforced a contract no
+// consumer read and false-rejected legitimate systems (`wechat`, abbreviated-heading
+// systems) — see spec 135.
+//
+// Hex detection is `#RRGGBB`-only, deliberately matching `generateDsIndex`'s
+// `palette_summary` exactly — if a future upstream system expressed colors only as
+// oklch()/hsl(), BOTH this gate and the index would need updating together, and this
+// gate failing is the correct early signal.
+//
+// MIN_PALETTE_HEX = 2: a monochrome system (black + white) is a legitimate, common
+// pattern (`spacex` #000000 + #f0f0fa; `figma` #000000 + #ffffff). The floor catches a
+// palette-less/truncated file (0-1 hex) without false-rejecting mono systems. Section
+// floor sits below every observed real system (claude/flat 9, wechat 8). Both surfaced
+// during spec 135 validation, where 3 would have wrongly rejected spacex + figma.
+export const MIN_PALETTE_HEX = 2;
+export const MIN_H2_SECTIONS = 3;
 
-/** Validate DESIGN.md has the required H2 headings. Returns list of missing sections. */
+/**
+ * Validate a vendored DESIGN.md carries consumable substance. Returns a list of
+ * human-readable problems (empty array = OK). Signature is intentionally unchanged
+ * so `cmdApply` Phase A and its `report.schemaFailures` wiring keep working.
+ */
 export function validateDesignMd(content: string): string[] {
-  const lower = content.toLowerCase();
-  return REQUIRED_H2_SUBSTRINGS.filter((section) => {
-    return !lower.split('\n').some(
-      (line) => line.startsWith('## ') && line.toLowerCase().includes(section),
-    );
-  });
+  const problems: string[] = [];
+
+  const uniqueHex = new Set(
+    (content.match(/#[0-9a-fA-F]{6}\b/g) ?? []).map((h) => h.toLowerCase()),
+  ).size;
+  if (uniqueHex < MIN_PALETTE_HEX) {
+    problems.push(`palette: ${uniqueHex} unique hex color(s), need >=${MIN_PALETTE_HEX}`);
+  }
+
+  const h2Count = content.split('\n').filter((line) => line.startsWith('## ')).length;
+  if (h2Count < MIN_H2_SECTIONS) {
+    problems.push(`structure: ${h2Count} H2 section(s), need >=${MIN_H2_SECTIONS}`);
+  }
+
+  return problems;
+}
+
+/**
+ * GitHub's `compare` REST endpoint caps the returned `.files[]` array at 300
+ * entries and offers no working pagination for it (`--paginate` only expands the
+ * commit list). A diff at or above this cap may be silently truncated.
+ */
+export const COMPARE_FILE_CAP = 300;
+
+export interface ChangedVendoredScope {
+  /** Lines to render under "Files changed in vendored scope". */
+  display: string[];
+  /** true when the result is an over-report (we could not enumerate precisely). */
+  imprecise: boolean;
+  reason: 'precise' | 'truncated' | 'unavailable';
+}
+
+/**
+ * Decide which vendored paths to flag as changed from a `gh compare` file list.
+ *
+ * A drift detector must never emit a false "no changes". Two cases force an
+ * over-report of ALL vendored srcs (imprecise) instead of trusting the list:
+ *   - gh unavailable / empty output  → we have no list at all.
+ *   - list length ≥ COMPARE_FILE_CAP → GitHub likely truncated it, so a precise
+ *     filter could miss vendored-scope changes that fell past the cap (Bug A:
+ *     1738-commit diff returned 300 unrelated files, zero design-systems/ → a
+ *     false "no changes in vendored paths").
+ * Only a reliably-complete list is filtered precisely.
+ */
+export function resolveChangedVendoredScope(
+  changedFiles: string[],
+  vendoredSrcs: string[],
+  ghAvailable: boolean,
+): ChangedVendoredScope {
+  if (!ghAvailable || changedFiles.length === 0) {
+    return { display: vendoredSrcs, imprecise: true, reason: 'unavailable' };
+  }
+  if (changedFiles.length >= COMPARE_FILE_CAP) {
+    return { display: vendoredSrcs, imprecise: true, reason: 'truncated' };
+  }
+  const display = changedFiles.filter((f) => vendoredSrcs.some((src) => f.startsWith(src)));
+  return { display, imprecise: false, reason: 'precise' };
 }
 
 /** Recursively list all files under `dir`, excluding `.gitkeep` scaffold markers
@@ -246,25 +318,29 @@ async function cmdCheck(): Promise<void> {
       { encoding: 'utf-8', timeout: 20_000 },
     );
 
-    if (ghResult.status === 0 && ghResult.stdout.trim()) {
+    const ghAvailable = ghResult.status === 0 && Boolean(ghResult.stdout.trim());
+    if (ghAvailable) {
       changedFiles = ghResult.stdout.trim().split('\n').filter(Boolean);
-    } else {
-      reportLines.push(
-        '> `gh` compare unavailable or rate-limited — listing all vendored paths as potentially changed.',
-      );
     }
 
     const vendoredSrcs = manifest.vendored_paths.map((vp) => vp.src);
-    const relevant =
-      changedFiles.length > 0
-        ? changedFiles.filter((f) => vendoredSrcs.some((src) => f.startsWith(src)))
-        : vendoredSrcs;
+    const scope = resolveChangedVendoredScope(changedFiles, vendoredSrcs, ghAvailable);
+
+    if (scope.imprecise) {
+      const why =
+        scope.reason === 'truncated'
+          ? `diff exceeds GitHub's ${COMPARE_FILE_CAP}-file compare cap (truncated)`
+          : '`gh` compare unavailable or rate-limited';
+      reportLines.push(
+        `> ${why} — cannot enumerate precisely; listing all vendored paths as **potentially changed**. Run \`--apply\` to reconcile.`,
+      );
+    }
 
     reportLines.push('## Files changed in vendored scope');
-    if (relevant.length === 0) {
+    if (scope.display.length === 0) {
       reportLines.push('_(no changes in vendored paths)_');
     } else {
-      relevant.forEach((f) => reportLines.push(`- \`${f}\``));
+      scope.display.forEach((f) => reportLines.push(`- \`${f}\``));
     }
   }
 
@@ -572,9 +648,9 @@ async function stageFile({
 
   if (isDesignMd) {
     const content = rawBytes.toString('utf-8');
-    const missing = validateDesignMd(content);
-    if (missing.length > 0) {
-      report.schemaFailures.push(`${srcPath} (missing H2: ${missing.join(', ')})`);
+    const problems = validateDesignMd(content);
+    if (problems.length > 0) {
+      report.schemaFailures.push(`${srcPath} (${problems.join('; ')})`);
       return null;
     }
   }

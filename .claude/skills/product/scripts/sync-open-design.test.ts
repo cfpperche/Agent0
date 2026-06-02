@@ -17,6 +17,8 @@ import {
   validateManifestShape,
   validateDesignMd,
   verifyManifest,
+  resolveChangedVendoredScope,
+  COMPARE_FILE_CAP,
 } from "./sync-open-design.js";
 
 let tmpRoot: string;
@@ -70,32 +72,106 @@ describe("validateManifestShape", () => {
   });
 });
 
-describe("validateDesignMd", () => {
-  const good = [
-    "## 1. Visual Theme & Atmosphere",
-    "## 2. Color Palette & Roles",
-    "## 3. Typography Rules",
-    "## 4. Component Stylings",
-    "## 5. Layout Principles",
-  ].join("\n");
+describe("validateDesignMd — substance gate", () => {
+  // A vendored DESIGN.md is validated for *consumable substance*, not heading text
+  // (spec 135: no consumer reads specific H2 names — generateDsIndex reads mood+hex,
+  // step 02-prototype reads prose). Required surface = a usable palette + enough
+  // structure that the file isn't a truncated stub.
+  const palette = "tokens: bg `#0a0a0a` / fg `#fafafa` / primary `#3b82f6` / accent `#f59e0b`";
+  function ds(headings: string[], body = palette): string {
+    return headings.map((h) => `## ${h}`).join("\n") + "\n\n" + body + "\n";
+  }
 
-  test("returns an empty array when all required H2 substrings are present", () => {
-    expect(validateDesignMd(good)).toEqual([]);
+  test("accepts abbreviated upstream headings (## 2. Color, no literal 'palette')", () => {
+    const md = ds([
+      "1. Visual Theme & Atmosphere",
+      "2. Color",
+      "3. Typography",
+      "4. Components",
+      "5. Layout & Composition",
+    ]);
+    expect(validateDesignMd(md)).toEqual([]);
   });
 
-  test("reports the missing sections", () => {
-    const bad = "## Visual Theme\n## Typography Rules";
-    const missing = validateDesignMd(bad);
-    expect(missing).toContain("color palette");
-    expect(missing).toContain("component");
-    expect(missing).toContain("layout");
-    expect(missing).not.toContain("typography");
+  test("accepts wechat-style vocabulary (no literal 'layout' / 'visual theme')", () => {
+    const md = ds([
+      "Brand Identity",
+      "Color Palette",
+      "Typography",
+      "Spacing System",
+      "Components",
+      "Dark Mode",
+    ]);
+    expect(validateDesignMd(md)).toEqual([]);
   });
 
-  test("matches case-insensitively and only on ## headings", () => {
-    // 'color palette' appears in body prose but not as an H2 — still missing.
-    const bodyOnly = good.replace("## 2. Color Palette & Roles", "Some color palette prose.");
-    expect(validateDesignMd(bodyOnly)).toContain("color palette");
+  test("accepts a monochrome system (black + white, 2 hex) — spacex/figma case", () => {
+    const md = ds(
+      ["Brand Identity", "Color Palette", "Typography", "Components"],
+      "pure black `#000000` on spectral white `#f0f0fa`, no other color",
+    );
+    expect(validateDesignMd(md)).toEqual([]);
+  });
+
+  test("rejects a degenerate file with no palette", () => {
+    const md = ds(["Overview", "Notes", "More"], "just prose, no hex colors at all");
+    const problems = validateDesignMd(md);
+    expect(problems.some((p) => p.includes("palette"))).toBe(true);
+  });
+
+  test("rejects a truncated file with too few H2 sections", () => {
+    const md = "## Only One Heading\n\n" + palette;
+    const problems = validateDesignMd(md);
+    expect(problems.some((p) => p.includes("structure"))).toBe(true);
+  });
+
+  test("counts unique hex only — matches generateDsIndex palette_summary semantics", () => {
+    const md = ds(["A", "B", "C"], "#111111 #111111 #111111"); // 1 unique hex
+    expect(validateDesignMd(md).some((p) => p.includes("palette"))).toBe(true);
+  });
+});
+
+describe("resolveChangedVendoredScope — --check truncation guard", () => {
+  const vendoredSrcs = ["design-systems/", "skills/", "packages/contracts/src/prompts/system.ts"];
+
+  test("precise: filters the changed-file list to vendored scope", () => {
+    const changed = ["README.md", "design-systems/flat/DESIGN.md", "packages/contracts/src/prompts/system.ts", "src/app.ts"];
+    const r = resolveChangedVendoredScope(changed, vendoredSrcs, true);
+    expect(r.imprecise).toBe(false);
+    expect(r.reason).toBe("precise");
+    expect(r.display).toEqual(["design-systems/flat/DESIGN.md", "packages/contracts/src/prompts/system.ts"]);
+  });
+
+  test("precise: genuine no-change yields an empty display", () => {
+    const changed = ["README.md", "src/app.ts", "docs/guide.md"];
+    const r = resolveChangedVendoredScope(changed, vendoredSrcs, true);
+    expect(r.imprecise).toBe(false);
+    expect(r.display).toEqual([]);
+  });
+
+  // Bug A regression: a diff that hits GitHub's 300-file compare cap is likely
+  // truncated — a precise filter could falsely report "no changes in vendored
+  // paths". Over-report ALL vendored srcs instead of trusting the partial list.
+  test("truncated: a capped file list over-reports all vendored paths", () => {
+    const changed = Array.from({ length: COMPARE_FILE_CAP }, (_, i) => `unrelated/file-${i}.ts`);
+    const r = resolveChangedVendoredScope(changed, vendoredSrcs, true);
+    expect(r.imprecise).toBe(true);
+    expect(r.reason).toBe("truncated");
+    expect(r.display).toEqual(vendoredSrcs);
+  });
+
+  test("unavailable: no gh result over-reports all vendored paths", () => {
+    const r = resolveChangedVendoredScope([], vendoredSrcs, false);
+    expect(r.imprecise).toBe(true);
+    expect(r.reason).toBe("unavailable");
+    expect(r.display).toEqual(vendoredSrcs);
+  });
+
+  test("an empty changed-file list with gh available is treated as unavailable, not 'no changes'", () => {
+    // gh returned zero filenames — indistinguishable from an error; never conclude "in sync".
+    const r = resolveChangedVendoredScope([], vendoredSrcs, true);
+    expect(r.imprecise).toBe(true);
+    expect(r.display).toEqual(vendoredSrcs);
   });
 });
 

@@ -5,9 +5,10 @@ reminders:
     is confounded (1 OD pass vs 4 refined iterations). To measure 027 honestly: either
     iterate the OD run to 4 passes, or re-judge it against the first-pass baseline.
     See .agent0/memory/od-grounding-dogfood.md § Pointers.'
-  status: pending
+  status: done
   links:
   - .agent0/memory/od-grounding-dogfood.md
+  completed_ts: '2026-06-02T14:12:24Z'
 - id: r-2026-05-18-test-first-real-od-bump
   created: '2026-05-18'
   context: Test the first real OD --bump/--apply against upstream — network-bound
@@ -223,9 +224,10 @@ reminders:
     (spec 049 moved it there; spec 027 was the MCP-package port). Goal: decouple so
     other skills/tools can reference OD without depending on /product. Debate the
     target home + the consumer-contract boundary with Codex before building.'
-  status: pending
+  status: snoozed
   links:
   - .claude/skills/product/scripts/sync-open-design.ts
   - docs/specs/049-od-vendor-port-to-skill/
   - docs/specs/027-od-vendor-port/
   - docs/specs/135-od-design-md-validator-drift/
+  snoozed_until: '2026-07-01'

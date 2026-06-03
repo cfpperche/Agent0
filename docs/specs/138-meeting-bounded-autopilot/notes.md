@@ -36,6 +36,10 @@ _Alternatives weighed during implementation (not at plan time). The chosen path 
 
 _Questions surfaced during build that the implementer couldn't resolve alone. Owner (who decides) or path to resolution if known. Promote answered questions to `spec.md` § Open questions or as retroactive acceptance scenarios when the spec is updated._
 
-### {{YYYY-MM-DD}} — {{author}} — {{one-line title}}
+### 2026-06-03 — parent — friction counter is blind to un-recorded human direction (measurement gap)
 
-{{free-prose body — the question, why it surfaced, what's blocked on it, who can decide}}
+The OD-overengineering meeting (`.agent0/meetings/open-design-overengineering-for-agent0-2026-06-03T16-24-35Z/`) registered `max_consecutive_model_turns: 4` — `meeting.sh friction` reports the **mechanical half MET**. But it surfaced a real measurement gap: the human (founder) actively directed **every round** ("more turns on craft", "what do you suggest", "synthesize") — they were never absent. That direction just didn't produce a *recorded transcript turn* (the human steers via conversation + `--speaker`, not `append-turn`), so the friction counter — which counts recorded turns — can't see it and reports 4 consecutive model turns as if unattended.
+
+Implication for the demand test: this is **NOT a qualifying meeting**. The gate needs BOTH halves, and the intent half ("explicit human *continue unattended*") was firmly absent — the opposite, the human was hands-on throughout. So **0 qualifying meetings still** (this does not count toward the rule-of-three).
+
+The genuine finding worth keeping: the mechanical signal **over-reports** when a human orchestrates without recording turns. Before the autopilot is ever built, the friction measure should either (a) require the intent half as the real gate (mechanical alone is too loose), or (b) record a lightweight "human directed (no turn)" marker so the counter isn't fooled. Owner: founder, at reopen time. Not acting now — the spec stays shelved; this is the honest data point so a future evaluation isn't misled by a "4" that wasn't really unattended.

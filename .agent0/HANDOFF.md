@@ -40,13 +40,9 @@ _Prior (committed): spec 140 `/meeting` `Next:` marker (`88343fd`); OD pin advan
 
 ## Next Actions
 
-**Spec 146 `product-craft-floor` — SHIPPED + PUSHED** (`origin/main` @ `a422a93`; ff-merge, branch deleted). **Propagated to 3 consumers** (cognixse `3e9f817`, mei-saas `7e0ff46`, tese `3498e62`) — all 7 product files were clean stale/copy (no customized), craft-floor 9/9 + OD `--verify` 6 paths green in each. (ag-antecipa not done this round per user.) Full SDD ran: OQs resolved via `codex-exec` convergence (rule triage 5 deterministic / 2 judge-only; judge-units 02+15b not 15a; brand-exception; JSON shape). Built `scripts/craft-floor-check.ts` (Agent0-authored P0 rules, brand-token-exempt) + `craft-floor-check.test.ts` (9/9; slop=5 active, purple-brand suppresses, noisy=0); `references/craft-floor.md`; wired `craft-floor` criterion into `quality-checklist.md` (02 + 15b only) + orchestration in `SKILL.md`/`quality-judge.md` (run check pre-judge, judge grades `fail` iff `active_p0>0`); pointer added to the 02 producer brief. 46/46 OD-engine tests still green. **Next: merge branch + push; mark in handoff.** (The 1 failing test under `runtime/od-sync/extracted-*` is OD upstream's own gitignored cache test, not ours.)
+**Session 2026-06-03 CLOSED — nothing urgent in flight.** This session shipped + pushed + propagated to all consumers, in order: **144** git-aware harness walk, **145** drop pipeline-unread `vendor/open-design/skills/` (729), **146** `/product` craft-floor anti-slop. Agent0 + 4 consumers (cognixse/mei-saas/tese/ag-antecipa) consistent; harness suite 40/40, craft-floor 9/9, OD `--verify` 6 paths everywhere. A Claude↔Codex `/meeting` (synthesis accepted) established OD has no proprietary tech and graduated 146.
 
-
-**▶ NEXT — drive spec 145 `od-vendor-skills-bundles-fate`** (investigation opened this session). Start with `/sdd refine 145` or research: confirm the `vendor/open-design/skills/` (729) "not-read-by-pipeline" verdict (incl. `templates/pipeline/**` + prose ad-hoc `Read`s), establish original intent from 027/049/143 + the anthill ADR, quantify carry cost (729 × N consumers), then surface KEEP-vs-DROP for the founder. DROP = remove the `skills/ ← design-templates/` `vendored_paths[]` entry (work out the `--verify` consequence). No removal without confirmation; Apache attribution + `design-systems/` untouched.
-
-**Optional (not urgent) — propagate 144 to the 4 consumers.** 144 changes `sync-harness.sh` (in its own manifest → self-rebootstrap re-exec on next sync), so a re-sync picks up the fixed tool + stops over-propagating cache; consumers' own on-disk OD cache is gitignored/out-of-scope, untouched. All 5 repos currently correct, so this only matters before the next vendored-tree change.
-
+Genuine backlog (not urgent):
 - **OD-vendor extraction** (`r-2026-06-01`, snoozed → 07-01) — distinct from the 141/142/143 chain.
 
 **Spec 138 (shelved):** autopilot reopens only on demand test — 3 meetings with `friction` ≥4 consecutive model turns + explicit "continue unattended". Measurement only until then.

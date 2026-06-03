@@ -2,7 +2,7 @@
 
 _Created 2026-06-03._
 
-**Status:** draft
+**Status:** shipped (2026-06-03 — implemented + validated, 9/9 craft-floor tests + 46/46 OD-engine; OQs resolved with Codex)
 
 ## Intent
 
@@ -10,32 +10,33 @@ Give `/product` a **brand-agnostic quality floor** that mechanically catches the
 
 ## Acceptance criteria
 
-- [ ] **Scenario: deterministic anti-slop advisory over `/product` visual artifacts**
-  - **Given** a `/product` run that emitted visual artifacts (`docs/direction-a.html`, `docs/screens/**`, `docs/screens/hifi/**`)
-  - **When** the craft-floor check runs
-  - **Then** it flags the P0 anti-slop tells with file + snippet: default Tailwind indigo accent (`#6366f1` / `#4f46e5` / `#4338ca` / `#3730a3`), a two-stop "trust" hero gradient (purple→blue / blue→cyan), emoji used as feature/section icons (`✨🚀🎯…`) in headings/buttons, the rounded-card-with-colored-left-border "AI dashboard tile", invented metrics ("10× faster", "99.9% uptime") with no source, and lorem / "feature one|two|three" filler — emitting an **advisory by default** (does not hard-block artifact persistence)
+- [x] **Scenario: deterministic anti-slop advisory over `/product` visual artifacts**
+  - **Given** a `/product` run that emitted visual artifacts (`docs/direction-{a,b,c}.html`, `docs/screens/hifi/**`)
+  - **When** the craft-floor check (`scripts/craft-floor-check.ts`) runs
+  - **Then** it flags the **5 deterministically-safe** P0 tells (resolved with Codex) with file + snippet — `default-indigo-accent` (exact Tailwind defaults `#6366f1`/`#4f46e5`/`#4338ca`/`#3730a3`, brand-token-exempt), `trust-gradient` (literal two-stop purple→blue / blue→cyan `linear-gradient(...)`, brand-token-exempt), `emoji-feature-icon` (emoji in heading/button/feature-icon positions), `filler-copy` (`lorem ipsum`, `feature one|two|three`, placeholder text), `sans-display-when-serif-bound` (default sans on `h1-h3`/hero when the DESIGN.md binds a serif display font) — emitting JSON, **advisory by default** (does not hard-block artifact persistence)
+  - **And** the two **noisy** tells (`rounded-card-colored-left-border`, `invented-metrics`) are NOT auto-checked — they are downgraded to judge-only guidance prose (too false-positive-prone for regex)
 
-- [ ] **Scenario: a legitimate brand exception is not a false positive**
+- [x] **Scenario: a legitimate brand exception is not a false positive**
   - **Given** the bound `design-systems/` `DESIGN.md` legitimately specifies a purple/indigo accent (e.g. a brand whose `--accent` is in that range)
   - **When** the check runs
   - **Then** that brand's accent does not fire the indigo-default rule (the rule targets the *un-bound Tailwind default*, not a brand-declared token) — i.e. the check reads the bound design system's tokens before flagging
 
-- [ ] **Scenario: `craft-floor` judge dimension on visual steps only**
-  - **Given** the `/product` quality-judge runs on Step 02 (lo-fi mood) and Step 15b (hi-fi mood)
+- [x] **Scenario: `craft-floor` judge criterion on the two authored-visual judge-units only**
+  - **Given** the `/product` quality-judge runs on judge-units `02-prototype` (lo-fi mood) and `15b-hifi-mood`
   - **When** it grades
-  - **Then** it scores a `craft-floor` dimension against the deterministic findings (it consumes them, does not re-discover them) + any legitimate brand exception; the dimension is **absent** from non-visual steps (PRD, roadmap, system-design, the general right-sizing criterion)
+  - **Then** it scores a `craft-floor` criterion (in `quality-checklist.md`) against the deterministic findings (consumes the JSON, does not re-discover them: `fail` if `active_p0 > 0`) plus the two judge-only guidance tells; the criterion is **absent** from `15a-screen-atlas` (a contract/inventory artifact, not authored aesthetics — resolved with Codex) and from all non-visual judge-units (01-14, 15c)
 
-- [ ] **Scenario: P0 may fail Step 15b, never hard-blocks persistence**
+- [x] **Scenario: P0 may fail Step 15b, never hard-blocks persistence**
   - **Given** Step 15b hi-fi output with an unexempted P0 violation
   - **When** the judge grades
   - **Then** it MAY return a quality `fail` for that step (absent a brand/design-system exemption), but the artifact is still written to disk — the floor gates *quality verdict*, not *persistence*
 
-- [ ] **Scenario: short anti-slop reminder injected only into visual briefs**
+- [x] **Scenario: short anti-slop reminder injected only into visual briefs**
   - **Given** the Step 02 and Step 15b briefs
   - **When** they are composed
   - **Then** they carry a short anti-slop reminder; non-visual step briefs are unchanged
 
-- [ ] The P0 rule list is **authored under Agent0 ownership** (rewritten, not vendored from OD's `craft/`), with attribution if any wording is copied; it lives inside the `/product` package (per `[[feedback_mcp_package_self_contained]]`), not under Agent0's shared `.claude/hooks|rules|tools/`.
+- [x] The P0 rule list is **authored under Agent0 ownership** (rewritten, not vendored from OD's `craft/`), with attribution if any wording is copied; it lives inside the `/product` package (per `[[feedback_mcp_package_self_contained]]`), not under Agent0's shared `.claude/hooks|rules|tools/`.
 
 ## Non-goals
 
@@ -47,9 +48,13 @@ Give `/product` a **brand-agnostic quality floor** that mechanically catches the
 
 ## Open questions
 
-- [ ] **Implementation surface:** a `/product`-internal script (e.g. `scripts/craft-floor-check.*`) invoked at the visual steps, vs. folding the checks into the existing quality-judge invocation. Lean: a small standalone deterministic check whose findings the judge consumes (clean separation: mechanical detection vs. graded verdict).
-- [ ] **Exact P0 rule set + thresholds** — which of OD's ~7 P0 rules port verbatim-in-spirit, and concrete match patterns (hex lists, gradient detection, emoji ranges, metric regex). To be fixed at `/sdd plan`.
-- [ ] **Brand-exception mechanism** — how the check reads the bound `DESIGN.md` tokens to suppress legitimate-brand false positives (parse `--accent` / palette section).
+_All resolved with Codex (2026-06-03, `codex-exec` convergence — recorded in `notes.md`)._
+
+- [x] **Implementation surface → standalone `scripts/craft-floor-check.ts`** (bun/TS, sibling to `sync-open-design.ts`), JSON findings the judge consumes. Preserves the Layer-1-vs-judge boundary; mechanical detection is testable in isolation.
+- [x] **Rule triage → ship 5 deterministic, downgrade 2 to judge-only.** Deterministic: `default-indigo-accent`, `trust-gradient`, `emoji-feature-icon`, `filler-copy`, `sans-display-when-serif-bound`. Judge-only guidance (too noisy for regex): `rounded-card-colored-left-border`, `invented-metrics`.
+- [x] **Judge-units → `02-prototype` + `15b-hifi-mood` only** (not `15a-screen-atlas` — contract/inventory artifact, not authored aesthetics).
+- [x] **Brand exception → parse the bound `DESIGN.md` for exact hex + CSS custom-props** (`--accent`/`--primary`/`--secondary`/`--brand-*`) and the heading/display font; suppress a color finding when the flagged literal exactly matches a declared token or the artifact uses a declared `var(...)`; run `sans-display-when-serif-bound` only when a serif display font is bound. The check takes the `DESIGN.md` path as input.
+- [x] **Output → JSON** `{version, unit, files, design_system:{declared_colors, serif_display_bound}, summary:{active_p0, suppressed}, findings:[{id, severity, file, line, snippet}], suppressed:[{id, file, reason}]}`. Orchestrator runs it before the judge for the two units, stores the report in run state, includes it in the judge brief; judge sets `craft-floor` = `fail` iff `active_p0 > 0`.
 
 ## Context / references
 

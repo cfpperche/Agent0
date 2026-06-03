@@ -8,7 +8,9 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 
 ## Current State
 
-**Session 2026-06-02 — OD-engine correctness chain (specs 141 → 143 → 142) SHIPPED + propagated to all 4 consumers.** `--verify` is green (7/7 paths) on Agent0 and every consumer; skill bundles are 111 design-templates each.
+**Session 2026-06-03 — spec 144 `sync-harness-gitignore-aware-walk` COMMITTED on branch `144-sync-harness-gitignore-aware-walk` (`2f90538`); not yet pushed/merged.** Fixed the harness layer of the same bug-class as 141/142: `sync-harness.sh`'s `find`-based walk did not respect `.gitignore`, so it over-propagated the OD-engine's gitignored `runtime/od-sync/extracted-<sha>/` cache (measured: 6470 walked under `.claude/skills/product`, 5158 of them cache). Now the two `find` expansions (`COPY_CHECK_RECURSIVE`+`COPY_CHECK_GLOBS`) filter to `git ls-files` ("managed = tracked"); non-git sources fall back to a guarded `find` (static `*/runtime/od-sync/extracted-*` exclude + advisory, never blind); dirty-source advisory; cache-orphan deletions summarized. Full SDD ran incl. a Claude↔Codex `/sdd debate` (2 rounds, converged) that resolved A-vs-B → **Model A ownership-clarified**. **40/40 harness-sync tests pass** (added 39, 40); live `--check` against `tese`: 0 cache lines, 747 vendor still travel, 6470→1311. Files: `.agent0/tools/sync-harness.sh`, `.agent0/tests/harness-sync/{39,40}*`+`run-all.sh`, `.agent0/context/rules/harness-sync.md` § Manifest scope, `docs/specs/144-*`.
+
+_Prior — **Session 2026-06-02 — OD-engine chain (141 → 143 → 142) SHIPPED + propagated to all 4 consumers.** `--verify` green (7/7) on Agent0 + every consumer; bundles 111 design-templates each._
 - **141 `od-sync-apply-completeness`** — content-true idempotence (fast-path `pinnedContentAlreadyApplied` + post-stage slow-path; deleted the stale-manifest compare + recursive blind-skip), catalogue regen (`generateCatalogIndex` + `--gen-catalog`), stale-count advisory (`scanStaleCounts`). On `origin/main` (`1bc7223`).
 - **143 `od-vendor-skills-remap`** — re-pointed the skill-bundle vendored-path `src: skills/ → design-templates/` (dst unchanged → zero pipeline edits) after the c128ffd5 upstream reorg moved the pipeline bundles. On `origin/main` (`c9ed1f8`).
 - **142 `od-sync-orphan-prune`** — `--apply` now prunes upstream-removed orphans in recursive trees (4 pure cores, referenced-bundle hard-block, nested-root guard, runtime trash journal). On `origin/main` (`4b82998`).
@@ -17,6 +19,8 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 _Prior (committed): spec 140 `/meeting` `Next:` marker (`88343fd`); OD pin advance 73→150 (`5233ab3`); 137+139 status/doctor; 136/138._
 
 ## Active Work
+
+**Spec 144 `sync-harness-gitignore-aware-walk` — COMMITTED on branch (`2f90538`), NOT pushed/merged.** All 16 tasks + 14 acceptance scenarios done; `notes.md` records the build-time `set -e` errexit bug (an `|| return` in `advise_dirty_once` aborted the walk in the non-git path — masked because the git path dodged it) and the tese-baseline insight (consumers' on-disk OD cache is the OD-engine's, never harness-recorded, so out of scope). **Status: in-progress** (→ shipped once on `origin/main`). Next: push + merge to `main`, then optionally re-sync the 4 consumers (self-rebootstrap picks up the fixed tool).
 
 **Spec 141 — DONE, MERGED, PUSHED** (`1bc7223` on `origin/main`; 3 consumers at 150 systems + fixed engine, pushed).
 
@@ -28,17 +32,14 @@ _Prior (committed): spec 140 `/meeting` `Next:` marker (`88343fd`); OD pin advan
 
 **Root cause (found via the Claude Code ↔ Codex CLI debate, `142/debate.md`):** c128ffd5 silently moved pipeline bundles `skills/` → `design-templates/`; manifest mis-mapped; pipeline survived only on un-pruned orphans.
 
-**KNOWN HARNESS GAP (not yet specced — user chose fix-forward over a spec):** `sync-harness.sh reconcile_deletions` is **baseline-gated** — it only deletes consumer files enumerated in the recorded baseline, so it does NOT mirror recursive vendored roots (copies new files but leaves superseded ones as orphans when the baseline is stale). This is why a plain re-sync couldn't propagate the 143 remap + 142 prune; the fix-forward used the consumer-side OD engine (142) to self-prune instead. The durable fix would be a sync-harness spec: mirror recursive `COPY_CHECK_RECURSIVE` roots exactly (delete consumer files absent from Agent0's current manifest, baseline-independent). Same bug-class as 142 but in the harness layer. Candidate future spec.
+**HARNESS GAP — REFRAMED + FIXED by spec 144.** The prior "reconcile_deletions doesn't mirror recursive roots" framing was the symptom; the real root cause was the walk not respecting `.gitignore` (over-propagating untracked cache, poisoning the baseline). 144's git-aware walk fixes it: `reconcile_deletions` stays baseline-gated (correct) and now operates over a clean, tracked-only manifest. No separate mirror-recursive-roots spec needed.
 
 ## Next Actions
 
-**▶ NEXT SESSION — pick this up: spec the sync-harness mirror-recursive-roots fix.**
-The known gap (see Current State): `sync-harness.sh reconcile_deletions` is baseline-gated and does NOT mirror recursive `COPY_CHECK_RECURSIVE` roots, so a vendored-tree remap/prune can't propagate by sync alone (this session needed a manual consumer-side `--apply` fix-forward). Same bug-class as spec 142, in the harness layer.
-- Start: `/sdd new sync-harness-mirror-recursive-roots` (or similar slug) → draft spec.
-- Core intent: for recursive roots, the consumer tree should EXACTLY match Agent0's current manifest — delete consumer files absent from Agent0 (baseline-independent), not just the baseline-recorded ones.
-- Evidence/where: `.agent0/tools/sync-harness.sh` § `reconcile_deletions` (~line 599, iterates `BASELINE_TSV`); the gap let the c128 creative `skills/` orphans survive on already-synced consumers (only "1 removed" when Agent0 pruned 284). Repro is in this session's transcript.
-- Care: deletion is destructive → reuse 142's discipline (dry-run/`--check` already exists; consider a guard against deleting consumer-customized files — the existing `!! customized (upstream-removed)` branch already does this for baseline entries; extend it to non-baseline recursive-root files).
-- Not urgent: all 5 repos (Agent0 + 4 consumers) are currently correct + `--verify` green; this only bites the NEXT vendored-tree change.
+**▶ NEXT — push branch `144-sync-harness-gitignore-aware-walk` + merge to `main` (user-gated), then optional propagation.**
+- Feature committed at `2f90538`; handoff committed separately. Push + open PR or fast-forward `main` per the user's call.
+- Propagation: 144 changes `sync-harness.sh` itself (in its own manifest → self-rebootstrap re-exec on next consumer sync). A re-sync of the 4 consumers picks up the fixed tool + stops over-propagating cache; their *own* on-disk OD cache is gitignored/out-of-scope and untouched. Not urgent — all 5 repos currently correct.
+- Mark spec 144 `**Status:** shipped` once on `origin/main`.
 
 - **OD-vendor extraction** (`r-2026-06-01`, snoozed → 07-01) — distinct from the 141/142/143 chain.
 

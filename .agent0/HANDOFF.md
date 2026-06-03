@@ -32,7 +32,14 @@ _Prior (committed): spec 140 `/meeting` `Next:` marker (`88343fd`); OD pin advan
 
 ## Next Actions
 
-- **(optional) Spec the sync-harness mirror-recursive-roots fix** — the known gap above; only matters next time a vendored tree is remapped/pruned. Not urgent (all consumers currently correct).
+**▶ NEXT SESSION — pick this up: spec the sync-harness mirror-recursive-roots fix.**
+The known gap (see Current State): `sync-harness.sh reconcile_deletions` is baseline-gated and does NOT mirror recursive `COPY_CHECK_RECURSIVE` roots, so a vendored-tree remap/prune can't propagate by sync alone (this session needed a manual consumer-side `--apply` fix-forward). Same bug-class as spec 142, in the harness layer.
+- Start: `/sdd new sync-harness-mirror-recursive-roots` (or similar slug) → draft spec.
+- Core intent: for recursive roots, the consumer tree should EXACTLY match Agent0's current manifest — delete consumer files absent from Agent0 (baseline-independent), not just the baseline-recorded ones.
+- Evidence/where: `.agent0/tools/sync-harness.sh` § `reconcile_deletions` (~line 599, iterates `BASELINE_TSV`); the gap let the c128 creative `skills/` orphans survive on already-synced consumers (only "1 removed" when Agent0 pruned 284). Repro is in this session's transcript.
+- Care: deletion is destructive → reuse 142's discipline (dry-run/`--check` already exists; consider a guard against deleting consumer-customized files — the existing `!! customized (upstream-removed)` branch already does this for baseline entries; extend it to non-baseline recursive-root files).
+- Not urgent: all 5 repos (Agent0 + 4 consumers) are currently correct + `--verify` green; this only bites the NEXT vendored-tree change.
+
 - **OD-vendor extraction** (`r-2026-06-01`, snoozed → 07-01) — distinct from the 141/142/143 chain.
 
 **Spec 138 (shelved):** autopilot reopens only on demand test — 3 meetings with `friction` ≥4 consecutive model turns + explicit "continue unattended". Measurement only until then.

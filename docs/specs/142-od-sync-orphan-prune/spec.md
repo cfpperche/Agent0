@@ -2,7 +2,7 @@
 
 _Created 2026-06-02._
 
-**Status:** draft
+**Status:** shipped (2026-06-02 — on origin/main, propagated to 4 consumers)
 
 ## Intent
 

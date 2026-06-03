@@ -2,7 +2,7 @@
 
 _Created 2026-06-03._
 
-**Status:** in-progress
+**Status:** shipped (2026-06-03 — on origin/main, 528c475)
 
 ## Intent
 

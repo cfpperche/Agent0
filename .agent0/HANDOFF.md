@@ -8,7 +8,7 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 
 ## Current State
 
-**Session 2026-06-03 — spec 144 `sync-harness-gitignore-aware-walk` COMMITTED on branch `144-sync-harness-gitignore-aware-walk` (`2f90538`); not yet pushed/merged.** Fixed the harness layer of the same bug-class as 141/142: `sync-harness.sh`'s `find`-based walk did not respect `.gitignore`, so it over-propagated the OD-engine's gitignored `runtime/od-sync/extracted-<sha>/` cache (measured: 6470 walked under `.claude/skills/product`, 5158 of them cache). Now the two `find` expansions (`COPY_CHECK_RECURSIVE`+`COPY_CHECK_GLOBS`) filter to `git ls-files` ("managed = tracked"); non-git sources fall back to a guarded `find` (static `*/runtime/od-sync/extracted-*` exclude + advisory, never blind); dirty-source advisory; cache-orphan deletions summarized. Full SDD ran incl. a Claude↔Codex `/sdd debate` (2 rounds, converged) that resolved A-vs-B → **Model A ownership-clarified**. **40/40 harness-sync tests pass** (added 39, 40); live `--check` against `tese`: 0 cache lines, 747 vendor still travel, 6470→1311. Files: `.agent0/tools/sync-harness.sh`, `.agent0/tests/harness-sync/{39,40}*`+`run-all.sh`, `.agent0/context/rules/harness-sync.md` § Manifest scope, `docs/specs/144-*`.
+**Session 2026-06-03 — spec 144 `sync-harness-gitignore-aware-walk` SHIPPED (`2f90538`+`528c475` on `origin/main`, ff-merge, branch deleted); spec 145 `od-vendor-bundles-usage-audit` OPENED (draft).** Fixed the harness layer of the same bug-class as 141/142: `sync-harness.sh`'s `find`-based walk did not respect `.gitignore`, so it over-propagated the OD-engine's gitignored `runtime/od-sync/extracted-<sha>/` cache (measured: 6470 walked under `.claude/skills/product`, 5158 of them cache). Now the two `find` expansions (`COPY_CHECK_RECURSIVE`+`COPY_CHECK_GLOBS`) filter to `git ls-files` ("managed = tracked"); non-git sources fall back to a guarded `find` (static `*/runtime/od-sync/extracted-*` exclude + advisory, never blind); dirty-source advisory; cache-orphan deletions summarized. Full SDD ran incl. a Claude↔Codex `/sdd debate` (2 rounds, converged) that resolved A-vs-B → **Model A ownership-clarified**. **40/40 harness-sync tests pass** (added 39, 40); live `--check` against `tese`: 0 cache lines, 747 vendor still travel, 6470→1311. Files: `.agent0/tools/sync-harness.sh`, `.agent0/tests/harness-sync/{39,40}*`+`run-all.sh`, `.agent0/context/rules/harness-sync.md` § Manifest scope, `docs/specs/144-*`.
 
 _Prior — **Session 2026-06-02 — OD-engine chain (141 → 143 → 142) SHIPPED + propagated to all 4 consumers.** `--verify` green (7/7) on Agent0 + every consumer; bundles 111 design-templates each._
 - **141 `od-sync-apply-completeness`** — content-true idempotence (fast-path `pinnedContentAlreadyApplied` + post-stage slow-path; deleted the stale-manifest compare + recursive blind-skip), catalogue regen (`generateCatalogIndex` + `--gen-catalog`), stale-count advisory (`scanStaleCounts`). On `origin/main` (`1bc7223`).
@@ -20,7 +20,9 @@ _Prior (committed): spec 140 `/meeting` `Next:` marker (`88343fd`); OD pin advan
 
 ## Active Work
 
-**Spec 144 `sync-harness-gitignore-aware-walk` — COMMITTED on branch (`2f90538`), NOT pushed/merged.** All 16 tasks + 14 acceptance scenarios done; `notes.md` records the build-time `set -e` errexit bug (an `|| return` in `advise_dirty_once` aborted the walk in the non-git path — masked because the git path dodged it) and the tese-baseline insight (consumers' on-disk OD cache is the OD-engine's, never harness-recorded, so out of scope). **Status: in-progress** (→ shipped once on `origin/main`). Next: push + merge to `main`, then optionally re-sync the 4 consumers (self-rebootstrap picks up the fixed tool).
+**Spec 144 `sync-harness-gitignore-aware-walk` — SHIPPED + PUSHED** (`origin/main` @ `528c475`; ff-merge, branch deleted, 40/40 tests green post-merge). Status: shipped. `notes.md` records the build-time `set -e` errexit bug (`|| return` in `advise_dirty_once`) and the tese-baseline insight.
+
+**Spec 145 `od-vendor-bundles-usage-audit` — OPENED (draft, investigate-then-decide).** Surfaced during 144 review: the `/product` pipeline reads OD only from the sibling `design-systems/` tree (via `od-catalog-index.json`); the 747-file `vendor/open-design/` tree is referenced **only** by the sync engine, yet is tracked → propagated to every consumer. Spec seeded with the static-usage evidence AND the KEEP counter-hypothesis (049's "vendor = Apache-attributed upstream" framing). Decision (KEEP-and-document vs DROP-from-`vendored_paths`) is founder-gated; preserve Apache attribution under all outcomes.
 
 **Spec 141 — DONE, MERGED, PUSHED** (`1bc7223` on `origin/main`; 3 consumers at 150 systems + fixed engine, pushed).
 
@@ -36,10 +38,9 @@ _Prior (committed): spec 140 `/meeting` `Next:` marker (`88343fd`); OD pin advan
 
 ## Next Actions
 
-**▶ NEXT — push branch `144-sync-harness-gitignore-aware-walk` + merge to `main` (user-gated), then optional propagation.**
-- Feature committed at `2f90538`; handoff committed separately. Push + open PR or fast-forward `main` per the user's call.
-- Propagation: 144 changes `sync-harness.sh` itself (in its own manifest → self-rebootstrap re-exec on next consumer sync). A re-sync of the 4 consumers picks up the fixed tool + stops over-propagating cache; their *own* on-disk OD cache is gitignored/out-of-scope and untouched. Not urgent — all 5 repos currently correct.
-- Mark spec 144 `**Status:** shipped` once on `origin/main`.
+**▶ NEXT — drive spec 145 `od-vendor-bundles-usage-audit`** (the investigation opened this session). Start with `/sdd refine 145` or research: confirm the static "not-read-by-pipeline" verdict (incl. SKILL.md prose for ad-hoc `Read`s), establish original intent from 027/049/143 + the anthill ADR, quantify propagation cost (729 × N consumers), then surface KEEP-vs-DROP for the founder. No removal without that confirmation; Apache attribution preserved either way.
+
+**Optional (not urgent) — propagate 144 to the 4 consumers.** 144 changes `sync-harness.sh` (in its own manifest → self-rebootstrap re-exec on next sync), so a re-sync picks up the fixed tool + stops over-propagating cache; consumers' own on-disk OD cache is gitignored/out-of-scope, untouched. All 5 repos currently correct, so this only matters before the next vendored-tree change.
 
 - **OD-vendor extraction** (`r-2026-06-01`, snoozed → 07-01) — distinct from the 141/142/143 chain.
 

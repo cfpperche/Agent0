@@ -40,6 +40,9 @@ _Prior (committed): spec 140 `/meeting` `Next:` marker (`88343fd`); OD pin advan
 
 ## Next Actions
 
+**▶ NEXT — drive spec 146 `product-craft-floor`** (graduated from the 2026-06-03 Claude↔Codex `/meeting` on OD overengineering). Verdict: OD has no proprietary tech (curated content + OSS runtime, all replicable); the one high-value, non-prompt-replaceable idea is `craft/`'s **deterministic anti-slop floor**. Spec 146 scopes it tightly: ~7 P0 anti-slop checks as a `/product`-internal advisory over visual artifacts + a `craft-floor` judge dimension on Steps 02/15b only. Red lines (Non-goals): no vendoring the 12 craft files, no harness-wide validator, no `od.craft.requires` clone, Agent0-authored rule list. Start `/sdd plan 146`. Meeting transcript: `.agent0/meetings/open-design-overengineering-for-agent0-*/meeting.md` (synthesis accepted).
+
+
 **▶ NEXT — drive spec 145 `od-vendor-skills-bundles-fate`** (investigation opened this session). Start with `/sdd refine 145` or research: confirm the `vendor/open-design/skills/` (729) "not-read-by-pipeline" verdict (incl. `templates/pipeline/**` + prose ad-hoc `Read`s), establish original intent from 027/049/143 + the anthill ADR, quantify carry cost (729 × N consumers), then surface KEEP-vs-DROP for the founder. DROP = remove the `skills/ ← design-templates/` `vendored_paths[]` entry (work out the `--verify` consequence). No removal without confirmation; Apache attribution + `design-systems/` untouched.
 
 **Optional (not urgent) — propagate 144 to the 4 consumers.** 144 changes `sync-harness.sh` (in its own manifest → self-rebootstrap re-exec on next sync), so a re-sync picks up the fixed tool + stops over-propagating cache; consumers' own on-disk OD cache is gitignored/out-of-scope, untouched. All 5 repos currently correct, so this only matters before the next vendored-tree change.

@@ -24,15 +24,18 @@ _Prior (committed): spec 140 `/meeting` `Next:` marker (`88343fd`); OD pin advan
 
 **Spec 143 `od-vendor-skills-remap` — DONE, MERGED, PUSHED** (`c9ed1f8` on `origin/main`). Re-pointed skill-bundle src `skills/` → `design-templates/` (dst unchanged); 31 pipeline bundles re-sourced at the current pin.
 
-**Spec 142 `od-sync-orphan-prune` — IMPLEMENTED + VALIDATED, COMMITTED (branch, not merged/pushed).** `4b82998` on `spec-142-od-sync-orphan-prune`. `--apply` now prunes orphan dst files (upstream-removed) inside recursive trees: 4 pure cores (computeOrphans/topLevelBundles/findReferencedOrphans/assertDisjointRoots, suite 36→46), automatic prune, referenced-bundle hard-block before mutation, nested-root guard, move-to-`runtime/od-sync/pruned-<sha>/` journal rm'd on success (gitignored). Live: pruned 284 orphan files (the c128 creative `skills/` set), **`--verify` green on ALL 7 paths**; the 31 pipeline bundles + design-systems/frames/prompts intact.
+**Spec 142 `od-sync-orphan-prune` — DONE, MERGED, PUSHED** (`4b82998` on `origin/main`). `--apply` prunes upstream-removed orphan files in recursive trees: 4 pure cores (suite 36→46), automatic prune, referenced-bundle hard-block, nested-root guard, runtime trash journal rm'd-on-success (gitignored). Pruned 284 orphans in Agent0; `--verify` green on all 7 paths.
 
-**OD-engine chain COMPLETE:** 141 (idempotence/regen/advisory) + 143 (remap) + 142 (prune). Root cause (found via the Claude Code ↔ Codex CLI debate): c128ffd5 silently moved pipeline bundles `skills/` → `design-templates/`; manifest mis-mapped; pipeline survived only on un-pruned orphans.
+**OD-engine chain COMPLETE + PROPAGATED:** 141 (idempotence/regen/advisory) + 143 (remap) + 142 (prune), all on `origin/main`. **All 4 consumers re-synced + pushed, `--verify` green, 111 design-templates bundles each:** ag-antecipa `d6e7e26` (clean fresh sync), mei-saas `4bc542a` / tese `235bae6` / cognixse `4746bd0` (fix-forward: `--force` + consumer-side `bun --apply` self-prune, 283 pruned each). Agent0 + 4 consumers all consistent.
+
+**Root cause (found via the Claude Code ↔ Codex CLI debate, `142/debate.md`):** c128ffd5 silently moved pipeline bundles `skills/` → `design-templates/`; manifest mis-mapped; pipeline survived only on un-pruned orphans.
+
+**KNOWN HARNESS GAP (not yet specced — user chose fix-forward over a spec):** `sync-harness.sh reconcile_deletions` is **baseline-gated** — it only deletes consumer files enumerated in the recorded baseline, so it does NOT mirror recursive vendored roots (copies new files but leaves superseded ones as orphans when the baseline is stale). This is why a plain re-sync couldn't propagate the 143 remap + 142 prune; the fix-forward used the consumer-side OD engine (142) to self-prune instead. The durable fix would be a sync-harness spec: mirror recursive `COPY_CHECK_RECURSIVE` roots exactly (delete consumer files absent from Agent0's current manifest, baseline-independent). Same bug-class as 142 but in the harness layer. Candidate future spec.
 
 ## Next Actions
 
-1. **Spec 142 branch fate** — merge `spec-142-od-sync-orphan-prune` → main (+ push?). Branch has `4b82998` (+ handoff commit). (user-gated)
-2. **Then re-sync the 3 consumers** (mei-saas/cognixse/tese) — still pre-remap (`@454e8373` orphans + c128 creative skills). After 142 on main, ONE re-sync propagates the whole chain (143 remap + 142 prune); confirm `--verify` green in each consumer afterward.
-- **OD-vendor extraction** (`r-2026-06-01`, snoozed → 07-01) — distinct from 141/142/143.
+- **(optional) Spec the sync-harness mirror-recursive-roots fix** — the known gap above; only matters next time a vendored tree is remapped/pruned. Not urgent (all consumers currently correct).
+- **OD-vendor extraction** (`r-2026-06-01`, snoozed → 07-01) — distinct from the 141/142/143 chain.
 
 **Spec 138 (shelved):** autopilot reopens only on demand test — 3 meetings with `friction` ≥4 consecutive model turns + explicit "continue unattended". Measurement only until then.
 

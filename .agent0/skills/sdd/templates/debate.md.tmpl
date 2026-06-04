@@ -1,6 +1,20 @@
+---
+meeting: {{SLUG}}
+roster: claude,codex,human
+rotation: claude,codex
+tier: decision-grade
+blind_phase: none
+turn_counter: 0
+next_speaker: claude
+synthesis: pending
+---
+
 # {{NNN}} — {{SLUG}} — debate
 
 _Created {{DATE}}._
+
+<!-- The YAML front-matter above is meeting.sh machine-state (spec 149): it lets
+`/sdd debate` run the de-biased mechanics — `meeting.sh commit|reveal|ab-map|ledger-add|ledger-check|check-anchors <debate.md>` — directly on this file. The `**Initiating agent:**` block below is the debate skill's human-readable role protocol; the two layers coexist. -->
 
 **Initiating agent:** {{initiating agent name}}
 **Reviewing agent:** {{reviewing agent name}}

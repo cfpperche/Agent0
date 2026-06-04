@@ -20,6 +20,10 @@ The debate proposed `reveal --text-file --nonce` (agent re-supplies its opening 
 
 Plan named `.agent0/.deliberation-state/`; used `.agent0/.runtime-state/deliberation/<key>/` instead — `.runtime-state/` is already gitignored, so no new `.gitignore` entry, and it's the established home for ephemeral per-session state. `<key>` = first 16 hex of `sha256(abs transcript path)`. Repo root resolved via `git -C <dir> rev-parse --show-toplevel`, falling back to `$CLAUDE_PROJECT_DIR` (tests set the latter to an isolated tmp).
 
+### 2026-06-04 — parent — 149.1: two fast-follows surfaced + fixed by the spec-150 dogfood
+
+The first real use of the protocol (the `/squad` design debate) surfaced two gaps, both now fixed + tested: (a) `/sdd debate`'s `debate.md` had no YAML front-matter, so `meeting.sh commit/reveal/ledger` couldn't run on it — added a `meeting.sh`-compatible front-matter block (`roster: claude,codex,human`, `tier: decision-grade`, `blind_phase`, …) to `debate.md.tmpl`, coexisting with the `**Initiating agent:**` human-readable block (tests: deliberation-bias/10). (b) A ledger claim containing a literal `|` corrupted the markdown-table column parse in `ledger-check`/`check-anchors` — `ledger-add` now sanitizes `|` → `/` (tests: deliberation-bias/11). The dogfood paid for itself: a tool tested in isolation (9/9) still had an integration gap that only real use exposed.
+
 ### 2026-06-04 — parent — mechanics in meeting.sh; debate reuses (no second engine)
 
 Per the ratified plan: commit/reveal/ab-map/ledger/check-anchors/tier are `meeting.sh` subcommands; `/sdd debate` documents calling them rather than re-implementing in prose. `debate.md` sections (`## Blind submissions`, `## Claim/evidence ledger`) are CREATED by the subcommands on first use, so the debate template only carries a pointer + the minority-report slot. The blind Round 1 is the *preferred* path with the legacy position-first Round 1 retained as a documented fallback (so a runtime that can't run the script still works).

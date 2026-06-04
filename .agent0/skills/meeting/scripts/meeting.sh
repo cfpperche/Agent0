@@ -542,6 +542,10 @@ cmd_ledger_add() {
     *) die "ledger-add: --tag must be supported|contradicted|unresolved|assertion-only";;
   esac
   [ -n "$anchor" ] || anchor="(none)"
+  # Sanitize: a literal '|' in claim/anchor would corrupt the markdown table's
+  # column split (read back by ledger-check / check-anchors). Replace with '/'.
+  claim="${claim//|//}"
+  anchor="${anchor//|//}"
   if ! grep -q '^## Claim/evidence ledger' "$file"; then
     local hdr; hdr="$(mktemp)"
     printf '## Claim/evidence ledger\n\n_Convergence GATE: a point with only `assertion-only` claims is NOT resolved, regardless of agreement (spec 149)._\n\n| claim | tag | anchor |\n| --- | --- | --- |\n' > "$hdr"

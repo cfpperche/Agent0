@@ -38,7 +38,7 @@ Non-trivial work is spec-first — intent before code under `docs/specs/NNN-<slu
 
 ## Runtime capabilities
 
-`.agent0/context/rules/runtime-capabilities.md` is the canonical provider-neutral matrix for Agent0 capability support across Claude Code, Codex CLI, and future runtimes. Consult it before assuming a `.claude/*` capability is native in a runtime.
+`.agent0/context/rules/runtime-capabilities.md` is the canonical provider-neutral matrix for Agent0 capability support across Claude Code, Codex CLI, and future runtimes. Consult it before assuming a `.claude/*` capability is native in a runtime. **Never assert that a built-in command (e.g. a slash command like `/goal`) does not exist just because it is absent from your skills list — the injected inventory is not exhaustive; hedge and verify instead (see the rule's § Before claiming a capability or command does NOT exist).**
 
 ## Session handoff
 

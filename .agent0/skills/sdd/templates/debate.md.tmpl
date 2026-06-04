@@ -16,6 +16,8 @@ Cross-model review of `spec.md` between two tool-calling CLI agents in separate 
 
 **Audit trail:** this file IS the audit trail. Git-tracked alongside the spec. No separate state file.
 
+**Anti-confirmation-bias (spec 149, decision-grade).** Round 1 SHOULD use the **blind commit/reveal** flow so the reviewer is not anchored on the initiator's position: each agent commits `sha256` of its independent opening via `meeting.sh commit`, and `meeting.sh reveal` publishes both only after both have committed (it refuses otherwise). Convergence is gated by the **claim/evidence ledger** (`meeting.sh ledger-add` / `ledger-check`): a point with only `assertion-only` claims is NOT resolved, regardless of agreement. The Synthesis records a **minority report** (any residual objection), never smoothed away. See `.agent0/context/rules/spec-driven.md` § debate and `meeting.md` § De-biased deliberation. _(Legacy position-first Round 1 below is the fallback when the blind flow isn't run.)_
+
 ---
 
 ## Round 1 — initiating agent (position)
@@ -74,6 +76,12 @@ _Written when the human explicitly asks an agent to synthesize ("synthesize the 
 **Unresolved disagreements:** (only if cap-reached or abandoned)
 
 - {{disagreement 1 — initiating agent's view + reviewing agent's view + why no resolution}}
+
+**Minority report:** (preserved verbatim — a residual objection from either agent is an auditable "fragile-convergence" signal, NOT smoothed into consensus; "none" if there is none)
+
+- {{minority objection, or "none"}}
+
+**Convergence evidence (ledger gate):** each "converged" point above is backed by an external anchor (citation / passing test / repro / file-read / explicit premise), not bare agreement — run `meeting.sh ledger-check` if a ledger was kept. Points resting on agreement alone are recorded UNRESOLVED.
 
 ---
 

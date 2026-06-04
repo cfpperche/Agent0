@@ -12,9 +12,17 @@ _In-flight design memory for this spec — decisions, deviations, tradeoffs, and
 
 _Choices made where the spec/plan was ambiguous. The decision itself + why this option over others considered in the moment._
 
-### {{YYYY-MM-DD}} — {{author}} — {{one-line title}}
+### 2026-06-04 — parent — commit stores the opening (orchestrator-sealed), not agent-resupply
 
-{{free-prose body — what was ambiguous, what was decided, why}}
+The debate proposed `reveal --text-file --nonce` (agent re-supplies its opening + nonce at reveal, so even the orchestrator can't forge it). Implemented a simpler equivalent: `commit --text-file` **seals the opening** into a gitignored scratch + records its `sha256`; `reveal` reads the sealed copy, re-verifies the hash, publishes. Rationale: in Agent0's model the active runtime IS the trusted single-writer of the transcript, so orchestrator-sealing is adequate and removes a moving part (no nonce hand-off between commit and reveal). Blindness is therefore **procedural + tamper-evident**, not cryptographic against an adversarial peer — an honest scope statement (the goal is reducing bias between *cooperating* models, not defending against a malicious agent). Documented in `rules/meeting.md`.
+
+### 2026-06-04 — parent — sealed state reuses `.agent0/.runtime-state/` (already gitignored)
+
+Plan named `.agent0/.deliberation-state/`; used `.agent0/.runtime-state/deliberation/<key>/` instead — `.runtime-state/` is already gitignored, so no new `.gitignore` entry, and it's the established home for ephemeral per-session state. `<key>` = first 16 hex of `sha256(abs transcript path)`. Repo root resolved via `git -C <dir> rev-parse --show-toplevel`, falling back to `$CLAUDE_PROJECT_DIR` (tests set the latter to an isolated tmp).
+
+### 2026-06-04 — parent — mechanics in meeting.sh; debate reuses (no second engine)
+
+Per the ratified plan: commit/reveal/ab-map/ledger/check-anchors/tier are `meeting.sh` subcommands; `/sdd debate` documents calling them rather than re-implementing in prose. `debate.md` sections (`## Blind submissions`, `## Claim/evidence ledger`) are CREATED by the subcommands on first use, so the debate template only carries a pointer + the minority-report slot. The blind Round 1 is the *preferred* path with the legacy position-first Round 1 retained as a documented fallback (so a runtime that can't run the script still works).
 
 ## Deviations
 

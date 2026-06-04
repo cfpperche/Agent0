@@ -2,7 +2,7 @@
 
 _Created 2026-06-04._
 
-**Status:** draft
+**Status:** shipped (2026-06-04 — implemented + validated; deliberation-bias 9/9, meeting 15/15, multi-runtime-skills pass)
 
 ## Intent
 
@@ -25,37 +25,37 @@ Required & tiered: **heterogeneous models** (Claude↔Codex; single-model delibe
 
 ## Acceptance criteria
 
-- [ ] **Scenario: commit/reveal blind opening de-anchors round 1**
+- [x] **Scenario: commit/reveal blind opening de-anchors round 1**
   - **Given** a de-biased `/sdd debate` (or decision-grade `/meeting`) opens
   - **When** round 1 runs
   - **Then** each agent records a `sha256(opening+nonce)` commitment *before* any opening text is revealed; critique is blocked until both commitments exist and both openings are revealed and hash-verified; neither agent's opening was authored with the other's opening visible
 
-- [ ] **Scenario: convergence is gated on external evidence, not agreement**
+- [x] **Scenario: convergence is gated on external evidence, not agreement**
   - **Given** the agents agree on a point
   - **When** the convergence gate evaluates it
   - **Then** the point is decomposed into claims, each tagged `supported | contradicted | unresolved | assertion-only` against an external anchor; a point with only `assertion-only` claims is recorded **unresolved** regardless of agreement; where an anchor is mechanically checkable (a named test, a file path) the check is run rather than trusted
 
-- [ ] **Scenario: judgment-surface anonymization, audit preserved**
+- [x] **Scenario: judgment-surface anonymization, audit preserved**
   - **Given** the critique/synthesis stage
   - **When** an agent judges the peer's contribution
   - **Then** it sees randomized `Proposal A/B` labels (no "Claude said"/"Codex said"), while the durable transcript still attributes every turn to its runtime
 
-- [ ] **Scenario: minority report is preserved, not smoothed**
+- [x] **Scenario: minority report is preserved, not smoothed**
   - **Given** synthesis with a residual objection from one agent
   - **When** the synthesis is written
   - **Then** it scores proposals against the claim/evidence ledger and records the minority objection verbatim as an auditable "fragile-convergence" signal (not dropped into a consensus narrative)
 
-- [ ] **Scenario: turn schema enforces counterfactual coverage + confidence-as-routing**
+- [x] **Scenario: turn schema enforces counterfactual coverage + confidence-as-routing**
   - **Given** any substantive turn
   - **Then** it carries the counterfactual-candidate-coverage fields and a confidence marker; low-confidence or unsupported agreement triggers an additional adversarial pass; high confidence is never counted as evidence
 
-- [ ] **Scenario: tiered application**
+- [x] **Scenario: tiered application**
   - **Given** an exploratory `/meeting` vs a `/sdd debate` (or decision-grade `/meeting`)
   - **Then** the full protocol (commit/reveal + gate + minority report) applies to the latter; the former takes the light subset; the tier is explicit, not implicit
 
-- [ ] **Scenario: structural, not persona-based** — none of the mechanisms is a standing role-play identity ("be the skeptic"); all are protocol / turn-schema / anonymization / evidence-gate mechanisms, consistent with `[[feedback_no_persona_role_prompting]]`.
+- [x] **Scenario: structural, not persona-based** — none of the mechanisms is a standing role-play identity ("be the skeptic"); all are protocol / turn-schema / anonymization / evidence-gate mechanisms, consistent with `[[feedback_no_persona_role_prompting]]`.
 
-- [ ] The protocol was resolved via a web-backed cross-model `/sdd debate` (recorded in `debate.md`), structured to avoid the bias it studies (independent blind take first); both agents brought sources.
+- [x] The protocol was resolved via a web-backed cross-model `/sdd debate` (recorded in `debate.md`), structured to avoid the bias it studies (independent blind take first); both agents brought sources.
 
 ## Non-goals
 
@@ -73,9 +73,9 @@ _Core design resolved in the Codex debate (`debate.md` § Synthesis); these rema
 - [x] **Which mitigations + order** → resolved: the 4-stage bundle + turn-schema requirements above.
 - [x] **Blind-first mechanism** → resolved: commit/reveal (`sha256(opening+nonce)`), not separate files.
 - [x] **Anonymization vs audit** → resolved: judgment-surface relabel + order-randomization only; durable record stays attributed.
-- [ ] **Exact deterministic-anchor-check scope** — which anchors are mechanically verified (test-ran, path-exists) vs trusted-as-cited. For `/sdd plan`.
-- [ ] **`meeting.sh` / `debate.md.tmpl` schema changes** — how the commit/reveal phase, the A/B relabeling, and the claim ledger are represented in the files + driven by `meeting.sh`. For `/sdd plan`.
-- [ ] **How the commit/reveal phase is human-orchestrated** in the file-mediated, one-writer-at-a-time model (who holds the nonce until both commit). For `/sdd plan`.
+- [x] **Deterministic-anchor-check scope** → resolved in implementation: `check-anchors` verifies `path:<p>` exists + `test:<id>` present in the test tree; re-running tests is v2 (sandbox/blast-radius).
+- [x] **`meeting.sh` / `debate.md.tmpl` schema changes** → resolved: `meeting.sh` subcommands create the `## Blind submissions` + `## Claim/evidence ledger` sections on first use; templates carry the pointer + minority-report slot.
+- [x] **commit/reveal human-orchestration** → resolved: orchestrator-sealed (no nonce hand-off); `reveal` mechanically refuses until all model speakers committed (the blindness guard); documented in `meeting/SKILL.md` § De-biased decision-grade flow.
 
 ## Context / references
 

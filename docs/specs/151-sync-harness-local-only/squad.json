@@ -1,0 +1,27 @@
+{
+  "spec": "151-sync-harness-local-only",
+  "roster": ["claude", "codex"],
+
+  "max_rounds": 12,
+  "max_repair_attempts": 3,
+
+  "gate": [
+    "test -f .agent0/tests/harness-sync/42-local-only.sh",
+    "bash .agent0/tests/harness-sync/run-all.sh",
+    "bash -n .agent0/tools/sync-harness.sh",
+    "grep -q 'local-only' .agent0/context/rules/harness-sync.md"
+  ],
+
+  "forbidden_paths": [
+    "^\\.git/",
+    "\\.claude/",
+    "\\.codex/",
+    "\\.agent0/hooks/",
+    "\\.agent0/skills/",
+    "\\.agent0/validators/",
+    "\\.gitleaks\\.toml$",
+    "\\.githooks/"
+  ],
+
+  "human_gated_paths": []
+}

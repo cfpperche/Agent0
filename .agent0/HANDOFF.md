@@ -18,11 +18,11 @@ Validation passed: `bash -n .agent0/skills/skill/scripts/validate.sh`; `/skill` 
 
 ## Active Work
 
-Spec 147 local closeout is complete in Agent0. Consumer sync was applied to `/home/goat/cognixse`, `/home/goat/mei-saas`, `/home/goat/tese`, and `/home/goat/ag-antecipa`, and the 147-relevant files were committed separately in each consumer. Existing consumer-local untracked brand assets, `uv.lock`, debate files, and unrelated debate work were left out. The `.agent0/tests/delegation-gate/` resync suite was later committed separately in all four consumers per founder direction.
+No active Agent0 work is claimed. Spec 147, the `/video` YAML warning fix, and the meeting transcript were committed and pushed. Consumer sync was applied and pushed to `/home/goat/cognixse`, `/home/goat/mei-saas`, `/home/goat/tese`, and `/home/goat/ag-antecipa`. Existing consumer-local untracked brand assets, `uv.lock`, and unrelated feature work were left intact.
 
 ## Next Actions
 
-Push Agent0 and the four consumer commits when the founder asks. No further local work is needed for spec 147 or the `/video` YAML warning fix.
+No next action is pending for spec 147, the `/video` YAML warning fix, or the delegation-gate consumer propagation.
 
 ## Decisions & Gotchas
 

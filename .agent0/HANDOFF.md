@@ -8,9 +8,9 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 
 ## Current State
 
-**Session 2026-06-04 — spec 147 `image-manifest-gitignore` shipped locally.** Founder decided `assets/generated/.manifest.jsonl` should be gitignored in Agent0 and consumers. Agent0 now ignores it, `assets/generated/.manifest.jsonl` was removed from the git index only (local file preserved), and live `/image` docs now describe it as gitignored local audit state. Brand assets under `assets/brand/*` stay tracked by default.
+**Session 2026-06-04 — spec 148 `publish-boundary-closeout-check` closed.** The handoff-discipline meeting converged on a hook-backed fix for the recurring "section done but HANDOFF stale" failure. `SessionStart` now records `start-head`; `SessionStop` now has a clean publish-boundary branch: when session commits are pushed and the latest session commit does not touch `.agent0/HANDOFF.md`, it nags once to force a final handoff re-read/update.
 
-Validation passed: image-gen tests 4/4, multi-runtime-skills 9/9, harness-sync 40/40, `bash -n` clean for `.agent0/skills/image/scripts/gen.sh` and `.agent0/tools/sync-harness.sh`. `git check-ignore -v assets/generated/.manifest.jsonl` matches in Agent0 and all four consumers; `assets/brand/example.png` does not match Agent0 ignore rules.
+Validation passed: `bash .agent0/tests/session-handoff/run-all.sh` (11/11), `bash .agent0/tests/session-handoff-multi-runtime/run-all.sh` (6/6), `bash .agent0/tests/harness-sync/run-all.sh` (40/40), `bash -n .agent0/hooks/session-start.sh .agent0/hooks/session-stop.sh .agent0/tests/session-handoff/11-publish-boundary-closeout.sh`, and `git diff --check`.
 
 **Session 2026-06-04 — Codex `/video` skill-loader warning fixed locally.** Meeting investigation traced the startup warning to `.agent0/skills/video/SKILL.md` frontmatter: unquoted `argument-hint` contained `code: scaffold`, which strict YAML parses as invalid at column 46. The value is now quoted, and `/skill` validation rejects invalid YAML frontmatter before field extraction.
 
@@ -18,11 +18,11 @@ Validation passed: `bash -n .agent0/skills/skill/scripts/validate.sh`; `/skill` 
 
 ## Active Work
 
-No active Agent0 work is claimed. Spec 147, the `/video` YAML warning fix, and the meeting transcript were committed and pushed. Consumer sync was applied and pushed to `/home/goat/cognixse`, `/home/goat/mei-saas`, `/home/goat/tese`, and `/home/goat/ag-antecipa`. Existing consumer-local untracked brand assets, `uv.lock`, and unrelated feature work were left intact.
+- No active Agent0 work is claimed. Spec 148 is complete and is being closed in the final publish-boundary handoff commit.
 
 ## Next Actions
 
-No next action is pending for spec 147, the `/video` YAML warning fix, or the delegation-gate consumer propagation.
+Push the final spec 148 closeout commit. No implementation or validation step is currently pending.
 
 ## Decisions & Gotchas
 
@@ -30,4 +30,5 @@ No next action is pending for spec 147, the `/video` YAML warning fix, or the de
 - Do not add the manifest to `sync-harness.sh` copy lists; that would risk copying Agent0 prompt/cost history into consumers.
 - `/video` policy is unchanged: `.video-manifest.jsonl` remains governed by `.agent0/context/rules/video-gen.md`.
 - `argument-hint:` is still a top-level skill frontmatter field; values containing `: ` must be quoted or block-styled.
+- Spec 148 intentionally does not parse handoff prose; the mechanical proof is that the latest pushed session commit touches `.agent0/HANDOFF.md`.
 - Root `AGENTS.md` and `CLAUDE.md` are Agent0-managed entrypoints; consumer-local Codex guidance still belongs in `AGENTS.override.md` or nested `AGENTS.md`.

@@ -15,5 +15,6 @@
 - [Propagation hygiene](propagation-hygiene.md) — Maintainer discipline — shipped files (CLAUDE.md, .agent0/context/rules/, sync manifest) must carry no Agent0-internal pointers. Read before editing CLAUDE.md or a rule.
 - [runtime-capabilities-maintenance](runtime-capabilities-maintenance.md) — Maintainer discipline for the runtime-capabilities matrix — Update rule + drift enforcement + skill-portability relationship.
 - [Skill-eval pattern (observed externally)](skill-eval-pattern.md) — 5 industry posts converged on the same skill-eval recipe in early 2026; not adopted in Agent0 yet — wait for rule-of-three regression demand before building
+- [tmux-sentinel is sync-apply-only (never commit harness)](tmux-sentinel-sync-no-commit.md) — PUBLIC consumer; gitignores the whole .agent0/ harness on purpose. Keep sync --apply for local dev, but NEVER commit/push harness there.
 - [User-global hooks shadow project hooks](user-global-hooks-shadow.md) — User-global hooks under ~/.claude/hooks/ fire BEFORE project hooks; can shadow Agent0 capacities. If dogfood gives unexpected interception, check there first.
 - [Visibility capacity intent](visibility-intent.md) — User's stated goal for the next visibility/introspection capacity in Agent0 — agent self-debugging, not human dashboards

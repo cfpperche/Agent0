@@ -26,7 +26,11 @@ Validation passed: `bash -n .agent0/skills/skill/scripts/validate.sh`; `/skill` 
 
 ## Active Work
 
-- **Spec 150 `/squad` (Etapa 2) — OPENED; intent + v1 cut RESOLVED, on `origin/main` (`db3a3d3`); implementation NOT started.** The v1 cut was resolved in a decision-grade `/meeting` that **dogfooded spec 149's blind/ledger flow** (first real use): Claude & Codex committed openings BLIND (hashes verified) and **converged independently** on the spine; ledger 8 claims / 0 assertion-only → green. Resolved v1: full autonomous pump on one pre-planned spec; new `squad.sh` + run-dir; pump-enforced terminal states (agreement only "proposes done"); turn-locked single-writer + per-turn diff snapshot/rollback (worktree=v2); done-gate = `docs/specs/NNN/squad.yaml` executable contract; supersedes 138's autonomous-loop concern; hard round/token/spend ceilings. Transcript: `.agent0/meetings/squad-v1-design-2026-06-04T17-48-21Z/`.
+- **Spec 150 `/squad` (Etapa 2) — IMPLEMENTED + VALIDATED + SHIPPED** (`origin/main` @ `36b8537`). Deterministic state machine `.agent0/skills/squad/scripts/squad.sh` (init/turn-start/turn-end/propose-done/gate/guard/rollback/status/abort) + `/squad` SKILL (pump loop, symmetric, `--mode assisted`) + `squad.json` gate contract + rule `squad.md` + CLAUDE.md index. **Tests squad 8/8** incl. the load-bearing **agreement≠done** invariant (gate red + both proposed → stays `running`); no regression (meeting 15/15, deliberation-bias 11/11, harness-sync 40/40). Spec 138's autonomous-loop concern marked superseded. **NOT yet done: the live 2-agent pump dogfood** (real code-writing run — separate cost-gated step) + consumer propagation.
+- **Spec 149.1 — SHIPPED** (`94ebf47`): debate.md gained meeting.sh-compatible front-matter (the 149 mechanics now run on `/sdd debate`, not only `/meeting`); ledger sanitizes `|`. Tests deliberation-bias 11/11.
+- **Spec 149 (Etapa 1) — shipped** (`3db5138`).
+
+- **(superseded entry below) Spec 150 design/plan — now implemented above.** The v1 cut was resolved in a decision-grade `/meeting` that **dogfooded spec 149's blind/ledger flow** (first real use): Claude & Codex committed openings BLIND (hashes verified) and **converged independently** on the spine; ledger 8 claims / 0 assertion-only → green. Resolved v1: full autonomous pump on one pre-planned spec; new `squad.sh` + run-dir; pump-enforced terminal states (agreement only "proposes done"); turn-locked single-writer + per-turn diff snapshot/rollback (worktree=v2); done-gate = `docs/specs/NNN/squad.yaml` executable contract; supersedes 138's autonomous-loop concern; hard round/token/spend ceilings. Transcript: `.agent0/meetings/squad-v1-design-2026-06-04T17-48-21Z/`.
 - **Spec 149 (Etapa 1) — implemented + validated + shipped** (`3db5138`).
 - **Spec 149.1 fast-follows (from the 150 dogfood, not blockers):** (a) `/sdd debate`'s `debate.md` has no YAML front-matter, so `meeting.sh commit/reveal/ledger` can't run on it literally — needs a front-matter shim or sidecar transcript for `/sdd debate` to invoke the 149 mechanics (the dogfood used a `/meeting` transcript, which is meeting.sh-native); (b) a ledger claim containing a literal `|` corrupts `check-anchors`' markdown-table parse (gate still passed).
 
@@ -34,11 +38,9 @@ Validation passed: `bash -n .agent0/skills/skill/scripts/validate.sh`; `/skill` 
 
 **Optional — propagate spec 149 to the 4 consumers** (cognixse, mei-saas, tese, ag-antecipa). Changed files are all tracked under `.agent0/` (meeting.sh, templates, turn-prompt, SKILLs, rules) + the new test suite → a `sync-harness.sh --apply` carries them cleanly (the `/sdd debate` + `/meeting` skills are harness-managed). Not urgent; can ride the next routine consumer sync.
 
-**▶ `/sdd plan 150`** — the `/squad` v1 cut is resolved (see Active Work); next is the implementation plan for `squad.sh` + the run-dir state machine + `squad.yaml` gate contract + the pump loop + terminal states + per-turn diff snapshot/rollback. Big M/L; v1 scope discipline (no worktree, no 3rd runtime, no autonomous-to-prod).
+**▶ Live `/squad` dogfood (the real validation)** — run `/squad` autonomously on a tiny, low-risk, already-`/sdd plan`-ned spec (write its `docs/specs/NNN/squad.json` gate first) and observe: does the pump converge to green gates? cost? where does it drift? This is the demand-driven data that tells whether the autonomous build loop holds (the deterministic core is proven; the *live* loop is not). Start small; the human triggers any deploy.
 
-**Optional fast-follow — spec 149.1 polish** (the two dogfood findings above): give `/sdd debate`'s `debate.md` a meeting.sh-compatible front-matter shim (so the 149 mechanics literally run on it, not just on `/meeting`), and harden `check-anchors`/`ledger` against a literal `|` in a claim. Small; do before relying on `/sdd debate` (vs `/meeting`) for the de-biased flow.
-
-**Optional — propagate 149 (and later 150) to the 4 consumers** — tracked `.agent0/` files; rides the next routine sync.
+**Optional — propagate 149 + 149.1 + 150 to the 4 consumers** — all tracked `.agent0/` files (meeting.sh, squad skill, rules, tests) → a `sync-harness.sh --apply` carries them; rides the next routine sync.
 
 ## Decisions & Gotchas
 

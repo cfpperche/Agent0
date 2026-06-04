@@ -2,7 +2,7 @@
 
 _Created 2026-06-04._
 
-**Status:** draft
+**Status:** shipped (2026-06-04 — squad.sh state machine + skill + contract + rule; squad tests 8/8; meeting 15/15, deliberation-bias 11/11, harness-sync 40/40 no-regression. Live 2-agent pump = separate cost-gated dogfood.)
 
 ## Intent
 
@@ -28,6 +28,45 @@ The honest framing the founder and Claude converged on (across this session): th
 - [x] **Done-gate definition surface:** where the external gate set is declared (the spec's acceptance criteria as executable tests? a `squad.yaml`? the project validator?) and how "staging smoke" is represented without coupling to a stack.
 - [x] **Relationship to spec 138** (bounded-autopilot, demand-gated) and 091 (debate-runner, parked): does `/squad` supersede/absorb them, or sit beside them?
 - [x] **Cost governance:** budget-ceiling shape + how a runaway is circuit-broken (mirror the 200 KB artifact cap / `budget.remaining()` patterns).
+
+## Acceptance criteria
+
+- [x] **Scenario: turn-lock enforces single-writer**
+  - **Given** a squad run whose `turn_holder` is `claude`
+  - **When** `squad.sh turn-start --speaker codex` is invoked
+  - **Then** it refuses (exit 3) — only the current turn-holder may take a turn
+
+- [x] **Scenario: agreement alone never closes the run (the 149-dependent invariant)**
+  - **Given** both agents have `propose-done` but the gate command is red
+  - **When** `squad.sh gate` / `status` runs
+  - **Then** `status` is NOT `ready_for_human_prod` — `ready_for_human_prod` requires the external gate green, not agent agreement
+
+- [x] **Scenario: gate green → ready_for_human_prod**
+  - **Given** both agents proposed done and the `squad.yaml` gate commands all pass
+  - **When** `squad.sh gate` runs
+  - **Then** `status` becomes `ready_for_human_prod` (the human approves + triggers prod from there; the squad never deploys to production)
+
+- [x] **Scenario: bounded — budget exhaustion aborts**
+  - **Given** the run reaches its `max_rounds` (or token/spend ceiling)
+  - **When** the next `turn-end` runs
+  - **Then** `status` becomes `aborted_budget` (never infinite); the loop stops with a report
+
+- [x] **Scenario: repair ceiling aborts**
+  - **Given** the gate has failed `max_repair_attempts` times for the run
+  - **When** the next `gate` fails
+  - **Then** `status` becomes `aborted_repairs` (no silent infinite repair)
+
+- [x] **Scenario: out-of-turn / forbidden writes are caught**
+  - **Given** changes appear outside the current turn-holder's turn, or a `forbidden`/`human-gated` path is touched
+  - **When** `squad.sh guard` runs
+  - **Then** `status` becomes `aborted_conflict` (out-of-turn) or `aborted_policy` (forbidden path) — never silently accepted
+
+- [x] **Scenario: symmetric initiation**
+  - **Given** a human in a Codex session (or a Claude session)
+  - **When** they start `/squad`
+  - **Then** the initiating runtime owns the loop and drives the peer via the exec bridge (`claude-exec` from Codex; `codex-exec` from Claude) — no runtime is privileged
+
+- [x] The deterministic core (`squad.sh`: state, turn-lock, budget, gate, terminal states, guard, rollback) is shell-unit-tested in `.agent0/tests/squad/`; the live multi-agent pump is exercised by a dry-run (stub peer + stub gate), with a real 2-agent dogfood as a separate cost-gated step.
 
 ## Non-goals
 

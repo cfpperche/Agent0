@@ -2,7 +2,7 @@
 
 _Created 2026-06-02._
 
-**Status:** draft — **shelved pending a demand test** (see § Demand test). This is a captured, sharpened design record, not a near-term build. The v1 *measurement* in § Acceptance / Near-term **shipped 2026-06-02** (`meeting.sh friction` + `state` friction lines + rule docs); the autopilot build itself stays deferred until three qualifying meetings.
+**Status:** draft — **shelved**; autonomous-loop concern **superseded by spec 150 `/squad`** (2026-06-04). The friction *measurement* (`meeting.sh friction` + `state` lines, shipped 2026-06-02) stays as a useful signal. The autonomous build-loop demand this spec was gated on is realized in `/squad` (bounded, gate-driven, external-done-condition, human-at-gates) — so the meeting-autopilot build itself is not separately pursued. This remains a captured design record.
 
 ## Intent
 

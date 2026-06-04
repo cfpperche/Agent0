@@ -50,9 +50,9 @@ Validation passed: `bash -n .agent0/skills/skill/scripts/validate.sh`; `/skill` 
 
 **Optional — propagate spec 149 to the 4 consumers** (cognixse, mei-saas, tese, ag-antecipa). Changed files are all tracked under `.agent0/` (meeting.sh, templates, turn-prompt, SKILLs, rules) + the new test suite → a `sync-harness.sh --apply` carries them cleanly (the `/sdd debate` + `/meeting` skills are harness-managed). Not urgent; can ride the next routine consumer sync.
 
-**▶ Push the Agent0 commits** (150.1 `bcea0a1` + the sync-harness baseline fix; `origin/main` not yet updated).
+**✓ DONE — Agent0 commits pushed** (150.1 `bcea0a1` + sync-harness baseline fix `bd707e7`).
 
-**▶ Commit the propagated harness files in each consumer** — the 5 consumers now hold the synced `.agent0/` (squad skill+tests, meeting/deliberation, rules, fixed sync-harness.sh) + CLAUDE.md block UNCOMMITTED, mixed with their own in-flight work. Per the consumer-local-work rule, this session did NOT auto-commit them. Commit per-consumer staging ONLY the harness paths (the sync diff), leaving product/spec work untouched. The OD-vendor `customized-refused` files are intentionally not synced (consumer-local caches).
+**✓ DONE — propagated harness committed + pushed in all 5 consumers** (allowlist-staged harness paths only; anti-leak assert kept product/spec work out): ag-antecipa `bdc2cfd`, cognixse `7add64d`, mei-saas `037ded0`, tese `da5f56e`, tmux-sentinel `611b159` — each pushed to its `origin/main`. Consumer-own uncommitted work left untouched (ag-antecipa/mei-saas brand PNGs, tese `uv.lock`). OD-vendor `customized-refused` caches intentionally not synced.
 
 **Optional next — a real-spec `/squad` dogfood** — now that the 2 🔴 are fixed, run `/squad` on a small REAL already-`/sdd plan`-ned spec (inside Agent0 or a synced consumer, per precondition #5) to test convergence/cost/drift on non-toy work. The toy dogfood proved mechanics; this would be the first real-work run.
 

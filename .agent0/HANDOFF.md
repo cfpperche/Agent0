@@ -40,7 +40,7 @@ _Prior (committed): spec 140 `/meeting` `Next:` marker (`88343fd`); OD pin advan
 
 ## Next Actions
 
-**Session 2026-06-03 CLOSED — nothing urgent in flight.** This session shipped + pushed + propagated to all consumers, in order: **144** git-aware harness walk, **145** drop pipeline-unread `vendor/open-design/skills/` (729), **146** `/product` craft-floor anti-slop. Agent0 + 4 consumers (cognixse/mei-saas/tese/ag-antecipa) consistent; harness suite 40/40, craft-floor 9/9, OD `--verify` 6 paths everywhere. A Claude↔Codex `/meeting` (synthesis accepted) established OD has no proprietary tech and graduated 146.
+**Session 2026-06-03 CLOSED — nothing urgent in flight.** This session shipped + pushed + propagated to all consumers, in order: **144** git-aware harness walk, **145** drop pipeline-unread `vendor/open-design/skills/` (729), **146** `/product` craft-floor anti-slop, and a **capability-honesty rule** (Agent0 `f30cd3b`; consumers cognixse `7dd5b33` / mei-saas `2327d66` / tese `5d9f04f` / ag-antecipa `02c9311`) — `runtime-capabilities.md` § *Before claiming a capability or command does NOT exist* + a `CLAUDE.md` index line: never assert a built-in command (e.g. `/goal`) is absent from an incomplete inventory; hedge + verify. (Motivator: a consumer-session agent wrongly told a user "`/goal` doesn't exist".) Agent0 + 4 consumers (cognixse/mei-saas/tese/ag-antecipa) consistent; harness suite 40/40, craft-floor 9/9, OD `--verify` 6 paths everywhere. A Claude↔Codex `/meeting` (synthesis accepted) established OD has no proprietary tech and graduated 146.
 
 Genuine backlog (not urgent):
 - **OD-vendor extraction** (`r-2026-06-01`, snoozed → 07-01) — distinct from the 141/142/143 chain.

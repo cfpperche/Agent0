@@ -24,6 +24,22 @@ The debate said "squad.yaml or squad.json". Chose **JSON** for v1: `jq` is alrea
 
 git can't attribute a working-tree change to a specific agent, so v1 "out-of-turn" = changes present in the working-tree fingerprint (`git status --porcelain`) when **no turn is open** (`turn_open=false`), compared against the boundary snapshot taken at the last `turn-end`. `guard` → `aborted_conflict`. Forbidden/human-gated path patterns are matched against the changed paths → `aborted_policy` / `human_checkpoint_required`. Run-dir lives under `.agent0/.runtime-state/squads/` (inherits the existing gitignore; zero new entry); the durable record is the spec + the git history of the turns.
 
+## Live dogfood — 2026-06-04 (the real validation)
+
+First live `/squad` runs on a tiny throwaway target (`slugify` — gate `node test.js`). Two passes:
+
+- **Pass 1 (state-machine integration, `/tmp` repo, orchestrator drove both turns):** init → R0 partial (gate RED, repair 1/2) → R1 complete → gate GREEN + both proposed → `ready_for_human_prod`. The load-bearing **agreement≠done** invariant held LIVE: both agents `propose-done` while the gate was RED kept status `running` (repair), never closed. Proves the subcommands *compose* in sequence on a real repo (unit tests cover them in isolation).
+- **Pass 2 (real exec-bridge handoff, inside Agent0, spec `199-squad-dogfood`):** Claude opened with a failing stub → **real Codex** via `codex-exec --sandbox workspace-write` (34s wall-clock, exit 0) implemented the fix touching only the sandbox file → gate GREEN → `ready_for_human_prod`. The external gate was the closer; the bridge handoff works end-to-end.
+
+### Findings (→ a 150.1 hardening pass)
+
+1. **🔴 Bridge anchors to the Agent0 root.** `codex-exec`/`claude-exec` set `ROOT="$SCRIPT_DIR/../../../.."` and hard-refuse `--cwd` outside it. So `/squad` can only drive the peer against a repo that **contains the harness** (Agent0 itself, or a consumer with it synced) — never an external/`/tmp` repo. **Action:** make this an explicit SKILL/rule precondition (currently unstated); it shaped the whole dogfood (Pass 1 had to fake Codex's turn).
+2. **🔴 `forbidden_paths`/conflict only catch OUT-OF-TURN changes.** The documented pump order is `turn-end` → `guard`, but `turn-end` sets `boundary=cur` (folding in the turn's own changes), so `guard` sees empty `newlines` → an **in-turn** touch of a forbidden path escapes. (Test 07 only passes because it creates the forbidden file *after* `turn-end`.) **Action:** `guard` (or `turn-end`) should evaluate `forbidden_paths`/`human_gated_paths` against the turn's OWN diff (`changed_paths`), not only changes-since-boundary. Mitigated in the dogfood by an orchestrator-side `git status --porcelain` scope check before accepting Codex's turn.
+3. **🟡 Fingerprint is path-level, not content-level.** Rewriting an already-listed (untracked) file keeps the same `?? path` porcelain line, so `guard`'s set-difference sees no change. A peer can fully rewrite an already-touched file invisibly. **Action:** for boundary/diff integrity, hash content (or stage to compare blobs), not just the porcelain path list.
+4. **🟡 Target must gitignore `.agent0/.runtime-state/`** or the run-dir itself shows up in `changed_paths` (seen in Pass 1's `/tmp` repo, which had no `.gitignore`). Agent0 + consumers already ignore it, so this is a robustness precondition, not a field bug.
+
+Net: the deterministic core + the live loop both hold; #1 and #2 are the load-bearing hardening for 150.1 before recommending `/squad` for real specs.
+
 ## Deviations
 
 _Places where implementation intentionally departed from `plan.md`. The departure + the reason it was necessary or better._

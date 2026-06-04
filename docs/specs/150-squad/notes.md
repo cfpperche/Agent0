@@ -40,6 +40,15 @@ First live `/squad` runs on a tiny throwaway target (`slugify` — gate `node te
 
 Net: the deterministic core + the live loop both hold; #1 and #2 are the load-bearing hardening for 150.1 before recommending `/squad` for real specs.
 
+### 150.1 — resolution (2026-06-04)
+
+Fast-follow (no new spec dir, per the 149.1 convention). Both 🔴 fixed; both 🟡 deferred with rationale.
+
+- **#1 (bridge anchors to harness root) — FIXED (doc + guardrail).** Explicit precondition #5 in `SKILL.md` ("the target repo contains the Agent0 harness"), a matching bullet in `rules/squad.md`, and a **non-fatal `init` warning** when `.agent0/skills/codex-exec/scripts/codex-exec.sh` is absent under the target repo (assisted/single-runtime can still run; the autonomous pump cannot drive a peer there).
+- **#2 (forbidden_paths only caught out-of-turn) — FIXED (semantics).** `turn-start` now snapshots a pre-turn fingerprint (`turn_start_fp`); `turn-end` computes `changed_paths` as **this turn's own delta** (vs `turn_start_fp`), while `boundary` stays the full fingerprint for out-of-turn conflict detection; `guard` policy-checks `forbidden_paths`/`human_gated_paths` against `changed_paths ∪ newlines`. New regression test `09-guard-policy-in-turn.sh` (TDD: red before, green after) covers the in-turn touch test 07 misses. Squad suite 9/9.
+- **#3 (path-level, not content-level fingerprint) — DEFERRED (🟡).** Rewriting an already-`?? `-listed untracked file is still invisible to the porcelain set-diff. Out of 150.1 scope: needs content hashing / blob staging. Risk is bounded (a peer can only hide a rewrite of a path it already legitimately touched this turn). Tracked here for a future pass.
+- **#4 (target must gitignore `.agent0/.runtime-state/`) — DEFERRED (🟡).** Agent0 + all consumers already gitignore it; only an issue for an ad-hoc repo without the harness's `.gitignore` — which precondition #5 now rules out anyway.
+
 ## Deviations
 
 _Places where implementation intentionally departed from `plan.md`. The departure + the reason it was necessary or better._

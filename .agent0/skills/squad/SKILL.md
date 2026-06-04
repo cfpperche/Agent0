@@ -30,6 +30,7 @@ Convenes two heterogeneous runtimes to implement one **already-`/sdd plan`-ned**
 2. `docs/specs/<NNN-slug>/squad.json` exists and is valid (the executable gate contract — see `references/squad-contract.md`; scaffold from `references/squad.json.example`). Refuse with a pointer if absent.
 3. The working tree is clean (the loop snapshots/guards against out-of-turn changes).
 4. The human has approved starting the loop (this is an autonomous, cost-bearing run).
+5. **The target repo contains the Agent0 harness** (it *is* Agent0, or a consumer with the harness synced). The exec bridges (`codex-exec`/`claude-exec`) anchor `ROOT` to the harness root and **refuse a `--cwd` outside it** — so `/squad` cannot drive the peer against an external/throwaway repo (e.g. one under `/tmp`). `init` warns if the bridge scripts are absent under the target repo. (Dogfood finding 150.1.)
 
 ## Subcommand: `init <NNN-slug>` — 🔒 Low freedom
 

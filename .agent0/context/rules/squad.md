@@ -11,6 +11,7 @@
 - **State machine:** `.agent0/skills/squad/scripts/squad.sh` owns the mechanical, safety-critical state (run dir under `.agent0/.runtime-state/squads/`, turn-lock, budget, gate runner, terminal states, write-guard, rollback). The **runtime owns the loop** (the pump in `SKILL.md`) — same split as `meeting.sh` (state) ↔ runtime (content).
 - **Gate contract:** `docs/specs/<NNN-slug>/squad.json` (see the skill's `references/squad-contract.md`).
 - **Symmetric initiation:** whoever runs `/squad` owns the loop and drives the peer via `codex-exec` / `claude-exec` (workspace-write). No runtime is privileged.
+- **Target must contain the harness:** the exec bridges anchor `ROOT` to the harness root and refuse a `--cwd` outside it, so `/squad`'s peer-driving only works inside a repo that has the Agent0 harness (Agent0 itself, or a consumer with it synced) — never an external/`/tmp` repo. (Surfaced by the 150.1 live dogfood; `init` warns when the bridge scripts are absent.)
 
 ## The three flaws the design rejects (the bounded/gate-driven posture)
 

@@ -67,6 +67,11 @@ cmd_init() {
   [ -n "$contract" ] || contract="$repo/docs/specs/$spec/squad.json"
   [ -f "$contract" ] || die "init: contract not found: $contract"
   jq -e . "$contract" >/dev/null 2>&1 || die "init: contract is not valid JSON: $contract"
+  # the autonomous pump drives the peer via the exec bridges, which anchor ROOT to
+  # the harness root and refuse a cwd outside it → the target repo must CONTAIN the
+  # harness. Non-fatal (assisted / single-runtime can still run). (150.1 finding.)
+  [ -f "$repo/.agent0/skills/codex-exec/scripts/codex-exec.sh" ] || \
+    errln "init: WARNING — '$repo' has no Agent0 exec bridge (.agent0/skills/codex-exec); the autonomous pump cannot drive a peer here (bridge anchors to the harness root). Assisted/single-runtime only."
 
   local roster maxr maxrep
   roster="$(jq -r '(.roster // ["claude","codex"]) | join(",")' "$contract")"
@@ -86,7 +91,7 @@ cmd_init() {
     '{schema_version:1, spec:$spec, repo:$repo, contract:$contract,
       roster:($roster|split(",")), status:"running", turn_holder:$holder,
       round:0, max_rounds:$maxr, repair_attempts:0, max_repair_attempts:$maxrep,
-      proposed_done:[], start_head:$head, boundary:[], changed_paths:[],
+      proposed_done:[], start_head:$head, boundary:[], changed_paths:[], turn_start_fp:[],
       turn_open:false, created:$created}' > "$run/state.json"
   echo "$run"
 }
@@ -105,7 +110,11 @@ cmd_turn_start() {
   _is_terminal "$status" && { errln "turn-start: run is terminal ($status)"; return 1; }
   holder="$(sget "$run" .turn_holder)"
   [ "$holder" = "$speaker" ] || { errln "turn-start: not '$speaker' turn (holder=$holder) — single-writer lock"; return 3; }
-  sset "$run" '.turn_open=true'
+  # snapshot the pre-turn fingerprint so turn-end can compute THIS turn's own delta
+  # (the delta is what policy/forbidden checks must run against — see guard).
+  local repo sfp; repo="$(sget "$run" .repo)"; sfp="$(_fingerprint "$repo")"
+  sset "$run" --argjson sfp "$(printf '%s' "$sfp" | jq -R . | jq -s 'map(select(length>0))')" \
+    '.turn_start_fp=$sfp | .turn_open=true'
   echo "turn-start: $speaker (round $(sget "$run" .round))"
 }
 
@@ -117,9 +126,19 @@ cmd_turn_end() {
   _load_run "$run"
   local holder repo; holder="$(sget "$run" .turn_holder)"; repo="$(sget "$run" .repo)"
   [ "$holder" = "$speaker" ] || { errln "turn-end: not '$speaker' turn (holder=$holder)"; return 3; }
-  # snapshot the working-tree fingerprint as the new clean boundary + changed paths
+  # boundary = full working-tree fingerprint (for out-of-turn conflict detection);
+  # changed_paths = THIS turn's own delta vs the turn-start fingerprint (what policy
+  # checks must run against — an in-turn forbidden touch lives here, not in the
+  # changes-since-boundary set, which turn-end zeroes by definition).
   local fp; fp="$(_fingerprint "$repo")"
-  sset "$run" --argjson fp "$(printf '%s' "$fp" | jq -R . | jq -s .)" '.boundary=$fp | .changed_paths=$fp'
+  local sfp delta
+  sfp="$(sget "$run" '.turn_start_fp[]?' 2>/dev/null)"
+  delta="$(comm -23 <(printf '%s\n' "$fp"  | sed '/^$/d' | LC_ALL=C sort -u) \
+                    <(printf '%s\n' "$sfp" | sed '/^$/d' | LC_ALL=C sort -u))"
+  sset "$run" \
+    --argjson b "$(printf '%s' "$fp"    | jq -R . | jq -s 'map(select(length>0))')" \
+    --argjson d "$(printf '%s' "$delta" | jq -R . | jq -s 'map(select(length>0))')" \
+    '.boundary=$b | .changed_paths=$d'
   # flip holder + advance round; close the turn
   local peer; peer="$(sget "$run" '[.roster[] | select(. != "human" and . != "'"$holder"'")][0]')"
   sset "$run" --arg peer "$peer" '.turn_holder=$peer | .round=(.round+1) | .turn_open=false'
@@ -198,9 +217,13 @@ cmd_guard() {
   local newlines; newlines="$(comm -23 <(printf '%s\n' "$cur" | LC_ALL=C sort -u) <(printf '%s\n' "$boundary" | LC_ALL=C sort -u))"
   newlines="$(printf '%s' "$newlines" | sed '/^$/d')"
 
-  # policy: forbidden / human-gated path patterns from the contract
+  # policy: forbidden / human-gated path patterns from the contract.
+  # Checked against the union of THIS turn's own delta (changed_paths) and any
+  # out-of-turn changes (newlines) — so an in-turn forbidden touch is caught even
+  # though turn-end zeroed the changes-since-boundary set. Conflict stays on newlines.
   local contract; contract="$(sget "$run" .contract)"
-  local paths; paths="$(printf '%s\n' "$newlines" | sed -E 's/^.{2,3}//' )"
+  local changed; changed="$(sget "$run" '.changed_paths[]?' 2>/dev/null)"
+  local paths; paths="$(printf '%s\n%s\n' "$changed" "$newlines" | sed '/^$/d' | LC_ALL=C sort -u | sed -E 's/^.{2,3}//')"
   local pat hit_forbidden=0 hit_human=0
   while IFS= read -r pat; do
     [ -n "$pat" ] || continue

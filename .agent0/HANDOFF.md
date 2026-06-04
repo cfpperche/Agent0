@@ -8,6 +8,10 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 
 ## Current State
 
+**Session 2026-06-04 (squad) — spec 150.1 `/squad` hardening SHIPPED-LOCAL (pending push).** Fast-follow from the live dogfood (149.1 convention: no new spec dir; recorded in `docs/specs/150-squad/notes.md` § 150.1 resolution). Both 🔴 findings fixed: **(2)** `forbidden_paths`/`human_gated_paths` now policy-checked against the turn's OWN delta — `turn-start` snapshots a pre-turn fingerprint, `turn-end` derives `changed_paths` = delta vs it (`boundary` stays the full fingerprint for out-of-turn conflict), `guard` checks `changed_paths ∪ newlines`; in-turn forbidden touch now caught (was escaping). New TDD regression `09-guard-policy-in-turn.sh` (red→green); **squad suite 9/9**. **(1)** `/squad` target-must-contain-the-harness is now an explicit SKILL precondition #5 + rule bullet + a non-fatal `init` warning when the exec bridge is absent. 🟡 #3 (path-level fingerprint) + #4 (runtime-state gitignore) deferred with rationale in notes. No regression: multi-runtime-skills, harness-sync 40/40, `/skill validate squad` clean.
+
+_Prior this session — live `/squad` dogfood done (committed `92e1d1a`); see below._
+
 **Session 2026-06-04 (squad) — LIVE `/squad` dogfood DONE (the real validation).** Two passes on a tiny throwaway target (`slugify`, gate `node test.js`): **Pass 1** (state-machine integration on a `/tmp` repo, orchestrator drove both turns) converged RED→repair→GREEN→`ready_for_human_prod` and the **agreement≠done invariant held LIVE** (both `propose-done` with a RED gate stayed `running`). **Pass 2** (real exec-bridge handoff, inside Agent0, throwaway spec `199-squad-dogfood` since removed): Claude opened a failing stub → **real Codex via `codex-exec --sandbox workspace-write` (34s, exit 0)** completed it touching only the sandbox file → gate GREEN → `ready_for_human_prod`. The deterministic core + the live loop both hold. **4 findings recorded in `docs/specs/150-squad/notes.md` § Live dogfood** → a **150.1 hardening pass** (2 are 🔴 load-bearing; see Next Actions + Decisions). Only uncommitted change this session: `docs/specs/150-squad/notes.md` (the dogfood evidence) — not yet committed.
 
 _Prior this session — spec 149 shipped; see below._
@@ -42,9 +46,15 @@ Validation passed: `bash -n .agent0/skills/skill/scripts/validate.sh`; `/skill` 
 
 **Optional — propagate spec 149 to the 4 consumers** (cognixse, mei-saas, tese, ag-antecipa). Changed files are all tracked under `.agent0/` (meeting.sh, templates, turn-prompt, SKILLs, rules) + the new test suite → a `sync-harness.sh --apply` carries them cleanly (the `/sdd debate` + `/meeting` skills are harness-managed). Not urgent; can ride the next routine consumer sync.
 
-**▶ Spec 150.1 — `/squad` hardening (fast-follow from the live dogfood)** — fix the 2 🔴 findings before recommending `/squad` for real specs: **(1)** make "target repo must contain the harness (bridge anchors to Agent0 root)" an explicit SKILL/rule precondition; **(2)** `guard`/`turn-end` must evaluate `forbidden_paths`/`human_gated_paths` against the turn's OWN diff (`changed_paths`), not only changes-since-boundary — an in-turn forbidden touch currently escapes (test 07 only passes because it touches the forbidden file *after* `turn-end`). Add a squad test that exercises the in-turn forbidden touch (the gap test 07 misses). The 🟡 findings (#3 path-level fingerprint, #4 gitignore precondition) can ride along or wait. **First step: `git add docs/specs/150-squad/notes.md && git commit` the dogfood evidence**, then `/sdd new` 150.1.
+**▶ Push the 150.1 commit** (shipped-local this session; `origin/main` not yet updated).
 
-_Live `/squad` dogfood (the prior Next Action) is DONE — see Current State._
+**Optional next — a real-spec `/squad` dogfood** — now that the 2 🔴 are fixed, run `/squad` on a small REAL already-`/sdd plan`-ned spec (inside Agent0 or a synced consumer, per precondition #5) to test convergence/cost/drift on non-toy work. The toy dogfood proved mechanics; this would be the first real-work run.
+
+**Optional — 🟡 deferred 150.x:** #3 content-level fingerprint (hash blobs, not just porcelain paths) so a rewrite of an already-listed file isn't invisible to `guard`. Low urgency (bounded risk).
+
+**Optional — propagate 149 + 149.1 + 150 + 150.1 to the 4 consumers** — all tracked `.agent0/` files → a `sync-harness.sh --apply` carries them; rides the next routine sync.
+
+_Live `/squad` dogfood + 150.1 hardening (the prior Next Actions) are DONE — see Current State._
 
 **Optional — propagate 149 + 149.1 + 150 to the 4 consumers** — all tracked `.agent0/` files (meeting.sh, squad skill, rules, tests) → a `sync-harness.sh --apply` carries them; rides the next routine sync.
 

@@ -2,7 +2,7 @@
 
 _Created 2026-06-04._
 
-**Status:** draft
+**Status:** shipped
 
 ## Intent
 
@@ -10,33 +10,33 @@ Some consumer projects want the Agent0 harness present **locally for development
 
 ## Acceptance criteria
 
-- [ ] **Scenario: local-only is auto-detected from the consumer's .gitignore**
+- [x] **Scenario: local-only is auto-detected from the consumer's .gitignore**
   - **Given** a consumer whose `.gitignore` ignores the whole `.agent0/` harness tree (verified via `git check-ignore` on representative harness paths)
   - **When** `sync-harness.sh --check` or `--apply` runs against it
   - **Then** local-only mode activates automatically with no flag or marker required.
 
-- [ ] **Scenario: local-only apply refreshes harness but touches no tracked file**
+- [x] **Scenario: local-only apply refreshes harness but touches no tracked file**
   - **Given** a local-only (auto-detected) consumer whose working tree is clean
   - **When** `sync-harness.sh --apply` runs against it
   - **Then** gitignored harness content (the `.agent0/` tree the consumer ignores) is written/updated as usual, AND no tracked file is created or modified (`git status --porcelain` reports nothing for tracked paths) — specifically the `.gitignore` merge, the `CLAUDE.md`/`AGENTS.md` managed-block writes, `.gitleaks.toml`, `.githooks/*`, and `.claude/settings.json` merge are all skipped.
 
-- [ ] **Scenario: local-only mode is reported, not silent**
+- [x] **Scenario: local-only mode is reported, not silent**
   - **Given** a local-only consumer
   - **When** `--apply` (or `--check`) runs
   - **Then** the tool prints a clear one-line notice that local-only mode is active and how many tracked-file writes were skipped (no silent truncation of behavior).
 
-- [ ] **Scenario: a normal (non-local-only) consumer is unchanged**
+- [x] **Scenario: a normal (non-local-only) consumer is unchanged**
   - **Given** a consumer not flagged local-only
   - **When** `--apply` runs
   - **Then** behavior is byte-identical to today (tracked files merged/written as before) — local-only is strictly opt-in, zero regression.
 
-- [ ] **Scenario: the baseline still records under local-only**
+- [x] **Scenario: the baseline still records under local-only**
   - **Given** a local-only consumer
   - **When** `--apply` runs
   - **Then** `.agent0/harness-sync-baseline.json` is still written (it lives under the gitignored `.agent0/`, so it is local state, not tracked drift) — re-syncs stay idempotent.
 
-- [ ] A regression test exercises local-only mode (tracked files untouched + reported) alongside the existing harness-sync suite; suite stays green.
-- [ ] `.agent0/context/rules/harness-sync.md` documents local-only mode and when to use it.
+- [x] A regression test exercises local-only mode (tracked files untouched + reported) alongside the existing harness-sync suite; suite stays green.
+- [x] `.agent0/context/rules/harness-sync.md` documents local-only mode and when to use it.
 
 ## Non-goals
 

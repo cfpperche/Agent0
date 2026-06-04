@@ -8,6 +8,10 @@ See `.agent0/context/rules/session-handoff.md` for the protocol, 4 KB size disci
 
 ## Current State
 
+**Session 2026-06-04 (squad) — 149/149.1/150/150.1 PROPAGATED to all 5 consumers + a sync-harness bug fixed.** Ran `sync-harness.sh --apply` to ag-antecipa, cognixse, mei-saas, tese, **tmux-sentinel** (the 5 harness-bearing consumers): squad skill + 9 squad tests + 12 deliberation-bias tests + meeting.sh/SKILL/turn-prompt/templates + debate template + rules (squad/meeting/spec-driven) + CLAUDE.md managed block all landed; **baselines recorded; squad suite 9/9 green inside tese (propagated copy)**. The only `customized-refused` are OD-vendor `/product` caches (cognixse 4, mei-saas 3, tese 3) — unrelated to this propagation, correctly left alone. **Surfaced + fixed a real harness bug:** `write_baseline` passed the whole files-map to `jq` via a single `--argjson` command-line arg, which exceeds Linux `MAX_ARG_STRLEN` (~128 KB/arg) for any ~1000+ -file consumer → `execve` E2BIG → silent "failed to write baseline (jq error)" + stale baseline. (All 5 real consumers hit it; synthetic test SRCs were too small to.) Fix: `--slurpfile` from a temp file (no argv limit). New TDD regression `harness-sync/41-baseline-write-large-consumer.sh` (1600-file SRC; red→green). **harness-sync suite now 41/41.** Consumer working trees now hold the propagated harness files UNCOMMITTED (not committed per the consumer-local-work rule — see Next Actions). Agent0-side fix committed; pending push.
+
+_Prior this session — 150.1 hardening shipped (`bcea0a1`); see below._
+
 **Session 2026-06-04 (squad) — spec 150.1 `/squad` hardening SHIPPED-LOCAL (pending push).** Fast-follow from the live dogfood (149.1 convention: no new spec dir; recorded in `docs/specs/150-squad/notes.md` § 150.1 resolution). Both 🔴 findings fixed: **(2)** `forbidden_paths`/`human_gated_paths` now policy-checked against the turn's OWN delta — `turn-start` snapshots a pre-turn fingerprint, `turn-end` derives `changed_paths` = delta vs it (`boundary` stays the full fingerprint for out-of-turn conflict), `guard` checks `changed_paths ∪ newlines`; in-turn forbidden touch now caught (was escaping). New TDD regression `09-guard-policy-in-turn.sh` (red→green); **squad suite 9/9**. **(1)** `/squad` target-must-contain-the-harness is now an explicit SKILL precondition #5 + rule bullet + a non-fatal `init` warning when the exec bridge is absent. 🟡 #3 (path-level fingerprint) + #4 (runtime-state gitignore) deferred with rationale in notes. No regression: multi-runtime-skills, harness-sync 40/40, `/skill validate squad` clean.
 
 _Prior this session — live `/squad` dogfood done (committed `92e1d1a`); see below._
@@ -46,7 +50,9 @@ Validation passed: `bash -n .agent0/skills/skill/scripts/validate.sh`; `/skill` 
 
 **Optional — propagate spec 149 to the 4 consumers** (cognixse, mei-saas, tese, ag-antecipa). Changed files are all tracked under `.agent0/` (meeting.sh, templates, turn-prompt, SKILLs, rules) + the new test suite → a `sync-harness.sh --apply` carries them cleanly (the `/sdd debate` + `/meeting` skills are harness-managed). Not urgent; can ride the next routine consumer sync.
 
-**▶ Push the 150.1 commit** (shipped-local this session; `origin/main` not yet updated).
+**▶ Push the Agent0 commits** (150.1 `bcea0a1` + the sync-harness baseline fix; `origin/main` not yet updated).
+
+**▶ Commit the propagated harness files in each consumer** — the 5 consumers now hold the synced `.agent0/` (squad skill+tests, meeting/deliberation, rules, fixed sync-harness.sh) + CLAUDE.md block UNCOMMITTED, mixed with their own in-flight work. Per the consumer-local-work rule, this session did NOT auto-commit them. Commit per-consumer staging ONLY the harness paths (the sync diff), leaving product/spec work untouched. The OD-vendor `customized-refused` files are intentionally not synced (consumer-local caches).
 
 **Optional next — a real-spec `/squad` dogfood** — now that the 2 🔴 are fixed, run `/squad` on a small REAL already-`/sdd plan`-ned spec (inside Agent0 or a synced consumer, per precondition #5) to test convergence/cost/drift on non-toy work. The toy dogfood proved mechanics; this would be the first real-work run.
 

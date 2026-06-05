@@ -29,8 +29,8 @@ _Prior — 149/149.1/150.x + 151 + 152.x shipped (harness arc + browser primitiv
 
 ## Next Actions
 
-1. **Push `main` when ready** (human-triggered). Pushing fires the GH Pages deploy (`28a1e4b` touches `site/**`) → the site goes live **in maintenance mode**. To restore the full site later: flip `UNDER_CONSTRUCTION` `true`→`false` in `site/src/config.ts` and push (source is fully intact in the `else` branches).
-2. **`/meeting` (deferred follow-up #2 to spec 152):** incorporate visual contracts into SDD + the delegation gate, where pertinent — treat a `verify-contract`/`audit` pass as a UI-task acceptance artifact. Scope the "UI-producing" trigger so it doesn't over-gate non-UI work. (No demand pressure; pick up when a UI-producing spec is next.)
+1. ✅ **DONE — `main` pushed** (`ef6b815..9840537`, 2026-06-05); GH Pages deploy fired → site live in maintenance mode. Merged branches deleted. To restore the full site later: flip `UNDER_CONSTRUCTION` `true`→`false` in `site/src/config.ts` and push.
+2. **DEFERRED CANDIDATE (no demand yet) — `/meeting`: incorporate visual contracts into SDD + the delegation gate.** Founder-named follow-up #2 to spec 152: when a spec/task produces UI, SDD should treat an `agent-browser.sh verify-contract`/`audit` pass as an acceptance artifact, and the delegation gate (`delegation.md` 5-field DONE_WHEN/DELIVERABLE) should require visual-contract verification for UI-producing sub-agent tasks. The hard part is scoping the "UI-producing" trigger so it gates real UI work without over-gating non-UI work. **Parked deliberately — pick up when the next UI-producing spec actually needs it (rule-of-three demand discipline); no dedicated spec exists yet.**
 - `/squad` worktree-per-agent (v2) remains noted in `rules/squad.md`, unbuilt — no demand yet.
 
 ## Decisions & Gotchas

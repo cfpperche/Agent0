@@ -236,6 +236,20 @@ The walk only reads from Agent0 manifest paths. Out-of-scope consumer project co
 
 **Deletion propagation.** The walk also accumulates Agent0's *current* manifest into a sha-set; the deletion pass compares that set against the recorded baseline's file list. A path present in the baseline but absent from the current set is an upstream removal, propagated per § Customization detection § *Upstream deletions*. Out-of-scope consumer project content stays invisible to this pass too — it only ever considers paths that were *previously* in the manifest (and therefore recorded in the baseline), never arbitrary consumer project files. A consumer project with no baseline skips the deletion pass entirely.
 
+## Seed files (ship-once, never-reconcile)
+
+A fourth disposition, distinct from copy/merge/exclude: `COPY_CHECK_SEED` (spec 156). A **seed** is a file that is git-tracked in Agent0 yet **regenerated locally** by the consumer's own tooling — so under the normal 3-way path it would read `!! customized` forever on every consumer that has run that tooling. The canonical case is the `/product` OD-engine (`sync-open-design.ts`), which rewrites three files with fresh timestamps/history on every `--apply`:
+
+- `.claude/skills/product/references/od-catalog-index.json` (pipeline-facing catalogue, **read at `/product` runtime**),
+- `.claude/skills/product/vendor/open-design/.cache/ds-index.json` (engine cache),
+- `.claude/skills/product/vendor/open-design/MANIFEST.json` (vendor pin + append-only `history[]`).
+
+**Semantics.** A seed is **copied only when absent** in the consumer (so a cold consumer still gets it — the catalogue is needed at runtime), and once present is **left untouched**: never compared, never flagged `!! customized`, never overwritten (even under `--force`), never deleted. Seeds are **not recorded in the manifest**, so they get no baseline entry and the deletion pass skips them (`is_seed && continue`). Output is `+ seeded <rel>` (absent) or `= seed <rel> (consumer-owned, not reconciled)` (present); the summary carries `N seeded, N seed-kept`.
+
+**Self-heal.** Because `write_baseline` serialises only the manifest, a consumer whose *old* baseline still lists a seed (a pre-156 entry) drops it on the next `--apply` — the new baseline simply omits it, the consumer's regenerated copy is preserved, and there is no `!! customized (upstream-removed)` refusal. One apply, no `--force`, no manual step.
+
+**Why not `COPY_CHECK_EXCLUDE`.** Exclude drops a file from the walk *entirely* — correct for a never-needed cache (the spec-144 `*/runtime/od-sync/extracted-*` backstop), but it would break cold-start for a runtime-read file like `od-catalog-index.json`. Seed = "copy if absent, never reconcile" is the right disposition for *regenerated-but-needed* files; exclude is for *regenerated-and-never-needed* ones. OD content updates reach a consumer through the OD-engine (`sync-open-design.ts --bump/--apply`), not through harness-sync — so "never reconcile" does not strand the consumer.
+
 ## Context injection propagation
 
 Behavioral context ships from `.agent0/context/rules/`, not from Claude Code's native `.claude/rules/`

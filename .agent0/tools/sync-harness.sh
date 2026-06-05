@@ -244,6 +244,25 @@ COPY_CHECK_EXCLUDE=(
   "*/runtime/od-sync/extracted-*"
 )
 
+# Seed files: ship-once, never-reconcile (spec 156). These are git-tracked in
+# Agent0 yet REGENERATED locally by the consumer's own tooling — the `/product`
+# OD-engine (`sync-open-design.ts`) rewrites them with fresh timestamps/history
+# on every `--apply`. Under the normal 3-way path they would read `!! customized`
+# forever on every consumer that has ever run `/product`. A seed is COPIED only
+# when absent (so a cold consumer still gets it — `od-catalog-index.json` is read
+# at `/product` runtime), and once present is LEFT UNTOUCHED: never compared,
+# never flagged customized, never overwritten (even under --force), never deleted.
+# Seeds are NOT recorded in the manifest, so they get no baseline entry and the
+# deletion pass ignores them — an already-drifted consumer self-heals in a single
+# `--apply` (the new baseline simply omits them). This differs from
+# COPY_CHECK_EXCLUDE, which drops a file ENTIRELY (would break cold-start for a
+# runtime-read file). See spec 156 (sync-exclude-od-regenerated-state).
+COPY_CHECK_SEED=(
+  ".claude/skills/product/references/od-catalog-index.json"
+  ".claude/skills/product/vendor/open-design/.cache/ds-index.json"
+  ".claude/skills/product/vendor/open-design/MANIFEST.json"
+)
+
 # Structured merge handled by dedicated functions below
 # - .claude/settings.json
 # - CLAUDE.md
@@ -262,6 +281,8 @@ DRIFT=0
 STALE_UPDATED=0   # stale plain files auto-updated (consumer project == baseline, upstream moved)
 REMOVED=0         # upstream-removed files deleted from the consumer project
 CACHE_ORPHANS=0   # runtime-cache orphans removed (summarized, not listed per-file — spec 144)
+SEEDED=0          # seed files copied into a consumer that lacked them (spec 156)
+SEED_KEPT=0       # seed files already present — left untouched, not reconciled (spec 156)
 LOCAL_ONLY=0      # consumer gitignores the .agent0/ harness tree; skip tracked-file writes
 SKIPPED_TRACKED=0 # tracked write sites skipped under local-only mode
 
@@ -302,6 +323,18 @@ matches_force_except() {
 matches_exclude() {
   local rel="$1" pat
   for pat in "${COPY_CHECK_EXCLUDE[@]}"; do
+    case "$rel" in
+      $pat) return 0 ;;
+    esac
+  done
+  return 1
+}
+
+# Returns 0 if `rel` matches any pattern in COPY_CHECK_SEED, else 1. Seed files
+# are ship-once-never-reconcile (spec 156) — see process_seed.
+is_seed() {
+  local rel="$1" pat
+  for pat in "${COPY_CHECK_SEED[@]}"; do
     case "$rel" in
       $pat) return 0 ;;
     esac
@@ -562,6 +595,44 @@ process_file() {
   fi
 }
 
+# Seed files (spec 156): ship-once, never-reconcile. Copy ONLY when absent in the
+# consumer (cold-start — e.g. od-catalog-index.json is read at /product runtime);
+# once present, leave the consumer's (regenerated) copy untouched — no compare,
+# no `!! customized`, no overwrite (even under --force). Never recorded in the
+# manifest (caller skips record_manifest), so seeds get no baseline entry and the
+# deletion pass ignores them. See COPY_CHECK_SEED.
+process_seed() {
+  local rel="$1"
+  local src="$AGENT0_ROOT/$rel"
+  local dst="$CONSUMER_ROOT/$rel"
+
+  [ -f "$src" ] || return
+  if _skip_tracked_local_only "$rel"; then
+    return
+  fi
+
+  if [ ! -f "$dst" ]; then
+    # Absent in the consumer: seed it (same copy-if-absent intent as a new file).
+    if [ "$MODE" = "check" ]; then
+      printf '+ would seed %s\n' "$rel"
+      DRIFT=1
+    elif [ "$DRY_RUN" -eq 1 ]; then
+      printf '+ seeded %s (dry-run)\n' "$rel"
+      SEEDED=$((SEEDED + 1))
+    else
+      mkdir -p "$(dirname "$dst")"
+      cp -p "$src" "$dst"
+      printf '+ seeded %s\n' "$rel"
+      SEEDED=$((SEEDED + 1))
+    fi
+    return
+  fi
+
+  # Present: leave it exactly as-is. Regenerated consumer state is not drift.
+  printf '= seed %s (consumer-owned, not reconciled)\n' "$rel"
+  SEED_KEPT=$((SEED_KEPT + 1))
+}
+
 # Append a managed file + its current Agent0 sha to the running manifest
 #. The accumulated MANIFEST_TSV is consumed by the deletion pass
 # (orphan detection) and the baseline write.
@@ -660,6 +731,7 @@ walk_copy_check() {
       while IFS= read -r -d '' relfile; do
         [ -n "$relfile" ] || continue
         matches_exclude "$relfile" && continue
+        if is_seed "$relfile"; then process_seed "$relfile"; continue; fi
         record_manifest "$relfile"
         process_file "$relfile"
       done < <(emit_recursive_files "$base")
@@ -673,6 +745,7 @@ walk_copy_check() {
       while IFS= read -r -d '' relfile; do
         [ -n "$relfile" ] || continue
         matches_exclude "$relfile" && continue
+        if is_seed "$relfile"; then process_seed "$relfile"; continue; fi
         record_manifest "$relfile"
         process_file "$relfile"
       done < <(emit_glob_files "$dir" "$pattern")
@@ -683,6 +756,7 @@ walk_copy_check() {
     if matches_exclude "$relfile"; then
       continue
     fi
+    if is_seed "$relfile"; then process_seed "$relfile"; continue; fi
     record_manifest "$relfile"
     process_file "$relfile"
   done
@@ -728,6 +802,11 @@ reconcile_deletions() {
     if [ -z "$rel" ]; then
       continue
     fi
+    # Seed files (spec 156) are never managed-for-deletion: a lingering baseline
+    # entry from before the seed migration must NOT be treated as a deletable or
+    # refusable orphan. The seed's own pass (process_seed) left the consumer copy
+    # untouched; write_baseline drops the stale entry by omission.
+    is_seed "$rel" && continue
     # Still in Agent0's current manifest — not an orphan, handled by the walk.
     if grep -Fxq "$rel" "$manifest_paths"; then
       continue
@@ -1834,8 +1913,8 @@ write_baseline
 # Summary on stderr so stdout stays parseable per-file decisions.
 {
   printf '\n'
-  SUMMARY="$(printf 'synced: %d copied, %d stale-updated, %d removed, %d merged, %d up-to-date, %d customized-refused, %d overwritten' \
-    "$COPIED" "$STALE_UPDATED" "$REMOVED" "$MERGED" "$UP_TO_DATE" "$CUSTOMIZED_REFUSED" "$OVERWRITTEN"
+  SUMMARY="$(printf 'synced: %d copied, %d stale-updated, %d removed, %d merged, %d up-to-date, %d customized-refused, %d overwritten, %d seeded, %d seed-kept' \
+    "$COPIED" "$STALE_UPDATED" "$REMOVED" "$MERGED" "$UP_TO_DATE" "$CUSTOMIZED_REFUSED" "$OVERWRITTEN" "$SEEDED" "$SEED_KEPT"
   )"
   if [ "$LOCAL_ONLY" -eq 1 ]; then
     SUMMARY="$SUMMARY, $SKIPPED_TRACKED tracked-skipped (local-only)"

@@ -17,14 +17,12 @@ _Prior — 149/149.1/150.x + 151 + 152.x shipped (harness arc + browser primitiv
 
 ## Active Work
 
-- **Spec 153 is on branch `153-decouple-harness-from-playwright`, UNCOMMITTED working tree** (squad `ready_for_human_prod`). The squad PREPARED; the **human triggers production** (commit the implementation + merge to `main`). Planning baseline already committed (`cd670d0`); the 27-file implementation is staged-ready in the working tree.
-- **One HUMAN-GATED residue item:** the OLD Playwright credential files `.agent0/.browser-state/{linkedin.com,x.com}.json` (May 12, superseded by the validated new-mechanism `state/{github,x,linkedin}.json`) — kept gitignored, NOT auto-deleted. Awaiting founder go to delete the dir. (Squad `forbidden_paths` blocked any agent from touching them.)
+- **Spec 153 SHIPPED + MERGED to `main`** (founder-approved 2026-06-05): commits `cd670d0` (scope/plan) · `ac2a35e` (impl) · `d7210e7` (shipped) · `7175a34` (gitignore cleanup). Working tree clean. Spec `Status: shipped`. The old Playwright credential dir `.agent0/.browser-state/` was **deleted** (founder go) — fully superseded by the validated new-mechanism `state/{github,x,linkedin}.json`; re-login is one `browser-login.sh` command. Zero `.browser-state`/MCP-coupling residue outside spec history.
+- **Nothing in flight.** The harness now depends on agent-browser exclusively; the `08-no-mcp-coupling.sh` grep-guard + squad-gate inline grep prevent regression.
 
 ## Next Actions
 
-1. **Human: commit + merge spec 153** (the squad's prepared change set on branch `153-decouple-harness-from-playwright`) → `main`, then set spec `Status: shipped`.
-2. **Human decision: delete the stale `.agent0/.browser-state/` credential dir?** (recommended — superseded + re-login is one `browser-login.sh` command).
-3. **`/meeting` (deferred follow-up #2 to 152):** incorporate visual contracts into SDD + the delegation gate, where pertinent — treat a `verify-contract`/`audit` pass as a UI-task acceptance artifact. Scope the "UI-producing" trigger so it doesn't over-gate.
+1. **`/meeting` (deferred follow-up #2 to spec 152):** incorporate visual contracts into SDD + the delegation gate, where pertinent — treat a `verify-contract`/`audit` pass as a UI-task acceptance artifact. Scope the "UI-producing" trigger so it doesn't over-gate non-UI work. (No demand pressure; pick up when a UI-producing spec is next.)
 - `/squad` worktree-per-agent (v2) remains noted in `rules/squad.md`, unbuilt — no demand yet.
 
 ## Decisions & Gotchas

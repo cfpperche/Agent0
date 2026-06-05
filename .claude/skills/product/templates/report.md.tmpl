@@ -74,9 +74,9 @@ Every US-NN from `prd/v1.md` is mapped in the atlas § PRD Coverage Matrix (cove
 | 15b — Hi-fi killer-flow mood | `docs/screens/hifi/` × {{hifi_screen_count}} | {{hifi_status}} |
 | 15c — Fixture spec | `docs/fixture-spec.md` | {{fixture_status}} |
 
-## Visual check (best-effort Playwright)
+## Visual check (best-effort agent-browser)
 
-_If the Playwright MCP was loaded this session, each hi-fi mood screen was screenshotted at 375 px + 1280 px and probed for horizontal overflow (`scrollWidth > clientWidth`). If not loaded, this section records `visual-gate-skipped` — `<out>/.mcp.json` is seeded for the next session._
+_If `agent-browser` was available (`route` = `primary`), each hi-fi mood screen was swept with `agent-browser.sh audit … --structure optional` over `file://` — screenshotted at 375 px + 1280 px and probed for horizontal overflow (`scrollWidth > clientWidth`). If unavailable, this section records `visual-gate-skipped: agent-browser unavailable` (no MCP fallback, spec 153)._
 
 {{visual_check_section}}
 

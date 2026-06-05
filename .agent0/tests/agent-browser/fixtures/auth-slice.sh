@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # spec-152 auth-gated dogfood slice — self-contained, deterministic, no human,
 # no real credentials. Proves agent-browser's native state save/load reuse path
-# (the agent-browser-native equivalent of browser-auth.md's headed-login →
-# storage-state → reuse), driven THROUGH the Agent0 wrapper (audited), with a
+# (the agent-browser-native equivalent of browser-auth.md's login →
+# state save/load reuse), driven THROUGH the Agent0 wrapper (audited), with a
 # negative control proving the saved state is load-bearing.
 #
 # Design: ONE daemon, THREE isolated `--session`s (auth / fresh / reuse) — no

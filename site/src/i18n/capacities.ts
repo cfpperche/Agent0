@@ -408,9 +408,9 @@ export const CAPACITIES: Capacity[] = [
       codex: "native-opt-in",
     },
     desc: {
-      en: "Agent emits `BROWSER_AUTH_REQUIRED: <host>` on an auth-gated URL; the human logs in via a headed Playwright MCP session and the saved state (.agent0/.browser-state/<host>.json) is reused for headless reads.",
-      pt: "Agente emite `BROWSER_AUTH_REQUIRED: <host>` em URL com auth; o humano loga via sessão Playwright MCP headed e o estado salvo (.agent0/.browser-state/<host>.json) é reusado para leituras headless.",
-      es: "El agente emite `BROWSER_AUTH_REQUIRED: <host>` en una URL con auth; el humano inicia sesión vía sesión Playwright MCP headed y el estado guardado (.agent0/.browser-state/<host>.json) se reusa para lecturas headless.",
+      en: "Agent emits `BROWSER_LOGIN_REQUIRED: <host>` on an auth-gated URL; the human runs browser-login.sh and logs in, the agent attaches over CDP (adopt) and saves state to .agent0/.runtime-state/agent-browser/state/<host>.json for headless reads. No MCP.",
+      pt: "Agente emite `BROWSER_LOGIN_REQUIRED: <host>` em URL com auth; o humano roda browser-login.sh e faz login, o agente anexa via CDP (adopt) e salva o estado em .agent0/.runtime-state/agent-browser/state/<host>.json para leituras headless. Sem MCP.",
+      es: "El agente emite `BROWSER_LOGIN_REQUIRED: <host>` en una URL con auth; el humano ejecuta browser-login.sh e inicia sesión, el agente se conecta vía CDP (adopt) y guarda el estado en .agent0/.runtime-state/agent-browser/state/<host>.json para lecturas headless. Sin MCP.",
     },
   },
   {

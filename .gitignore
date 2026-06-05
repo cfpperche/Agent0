@@ -10,6 +10,9 @@ CLAUDE.local.md
 .agent0/.runtime-state/*
 !.agent0/.runtime-state/README.md
 .agent0/.session-state/
+# Retired Playwright browser-state dir (spec 153) — scaffold removed; any residual
+# credential-class *.json kept ignored until the human deletes the dir. NOT a harness dep.
+.agent0/.browser-state/
 # OD orphan-prune trash journal (spec 142) — crash-recovery aid, rm'd on success
 .claude/skills/product/runtime/od-sync/pruned-*/
 .agent0/.delegation-state/
@@ -25,7 +28,6 @@ CLAUDE.local.md
 .claude/.memory-events.jsonl.lock
 .claude/*.lock
 .claude/scheduled_tasks.lock
-.agent0/.browser-state/*.json
 .agent0/.brainstorm-state/
 .agent0/.routines-state/
 .agent0/browser-policy.json

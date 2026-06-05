@@ -170,8 +170,6 @@ MANIFEST_TSV="$(mktemp -t sync-manifest-XXXXXX)"
 # ---------------------------------------------------------------------------
 
 # Project-local paths — MUST NOT be added to any COPY_CHECK array below.
-# .agent0/.browser-state/  session credentials (cookies/localStorage); project-specific,
-#                           gitignored *.json, only .gitkeep sentinel travels via git.
 # .agent0/memory/           project knowledge; content is project-local.
 #                           The empty .gitkeep IS in COPY_CHECK_FILES — content is not.
 # .agent0/routines/         project-scoped routine definitions; content is
@@ -215,7 +213,6 @@ COPY_CHECK_FILES=(
   ".agent0/skills/.gitkeep"
   ".agents/skills/.gitkeep"
   ".agent0/memory.config.json"
-  ".agent0/.browser-state/.gitkeep"
   ".agent0/routines/.gitkeep"
   ".agent0/meetings/.gitkeep"
   ".agent0/.runtime-state/README.md"

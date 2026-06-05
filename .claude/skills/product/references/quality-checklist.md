@@ -130,7 +130,7 @@ Mechanical checks the orchestrator runs directly — pass/fail by `grep`, parse,
 `bash .claude/skills/skill/scripts/validate.sh .claude/skills/product` exits 0 — the skill-compliance gate. NOT optional. The skill prints the result in the Phase 5 handoff.
 
 ### Best-effort visual check (Step 15b)
-If the Playwright MCP is loaded this session, each `docs/screens/hifi/*.html` is screenshotted at 375 px + 1280 px and probed for horizontal overflow (`scrollWidth > clientWidth`). Results land in `REPORT.md § Visual check`. If the MCP is not loaded, a `visual-gate-skipped` advisory is recorded. **Best-effort — never blocks the run.**
+If `agent-browser.sh route` is `primary`, the hi-fi screens are swept with `agent-browser.sh audit … --structure optional` over `file://`: each `docs/screens/hifi/*.html` is screenshotted at 375 px + 1280 px and probed for horizontal overflow (`scrollWidth > clientWidth`). Results land in `REPORT.md § Visual check`. If agent-browser is unavailable, a `visual-gate-skipped: agent-browser unavailable` advisory is recorded (no MCP fallback, spec 153). **Best-effort — never blocks the run.**
 
 ## REPORT.md section mapping
 

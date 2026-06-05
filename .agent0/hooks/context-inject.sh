@@ -119,7 +119,7 @@ select_by_keyword() {
     *test*|*tdd*|*bug*|*regression*) add_slug tdd ;;
   esac
   case "$prompt_lc" in
-    *browser*|*playwright*|*auth*|*login*) add_slug browser-auth ;;
+    *browser*|*auth*|*login*) add_slug browser-auth ;;
   esac
   case "$prompt_lc" in
     *image*|*fal.ai*|*mockup*|*asset*) add_slug image-gen ;;

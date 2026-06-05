@@ -2,12 +2,13 @@
 # Agent0 `agent-browser` — harness wrapper / operational envelope around the
 # vercel-labs `agent-browser` CLI (spec 152, browser-primitive-consolidation).
 #
-# Turns the raw CLI into Agent0's PRIMARY, runtime-neutral agent browser
-# primitive (eyes + hands + observe) with: binary/Chrome detection, deterministic
-# primary-vs-MCP-fallback routing, a policy-as-file guard, per-command audit
-# logging, and a fail-readable JSON contract. Playwright / Chrome DevTools MCP
-# remain a PERMANENT, explicitly-routed fallback (never deleted) — and the
-# graceful-degradation path when this binary is absent. See
+# Turns the raw CLI into Agent0's SOLE, runtime-neutral agent browser
+# primitive (eyes + hands + observe) with: binary/Chrome detection, fail-closed
+# routing, a policy-as-file guard, per-command audit logging, and a fail-readable
+# JSON contract. There is NO MCP fallback — when agent-browser is unavailable the
+# wrapper FAILS CLOSED (rc 4) rather than degrading to Playwright / Chrome DevTools
+# MCP (spec 153). Those MCPs survive ONLY as opt-in .mcp.json.example /
+# .codex/config.toml.example templates a consumer may wire up by hand. See
 # .agent0/context/rules/browser-primitive.md.
 #
 # Runtime-neutral: Claude Code and Codex CLI both invoke it through plain shell,
@@ -16,16 +17,16 @@
 #
 # Subcommands:
 #   caps [--json]                       detect binary+chrome+version (tri-state)
-#   route [task]                        print: primary | fallback:<reason>
+#   route [task]                        print: primary | unavailable:<reason>
 #   policy-eval <action> <target> [--confirm]   decision: allow|deny|confirm ; reason
 #   run [--confirm] -- <agent-browser args...>   policy-gated, audited passthrough
 #   verify-contract <url> <fixture.json> <outdir>   bounded visual-contract verify
-#   audit <base-url> (--paths a,b,c|--paths-file f) [--out d] [--max-console N]   multi-page structural+console+vitals sweep
+#   audit <base-url> (--paths a,b,c|--paths-file f) [--out d] [--max-console N] [--structure strict|optional]   multi-page structural+console+vitals+overflow sweep
 #   adopt <host> [--port 9222] [--domain d] [--timeout S] [--state f] [--detect-only]   attach to a human-logged-in CDP Chrome, save state (152.2)
 #   audit-tail [N]                      show recent audit lines
 #   help
 #
-# Exit: 0 ok; 2 policy-denied; 3 usage; 4 fallback-required (no binary).
+# Exit: 0 ok; 2 policy-denied; 3 usage / unsupported override; 4 agent-browser unavailable (fail-closed).
 
 set -uo pipefail
 
@@ -143,23 +144,40 @@ audit_line() { # audit_line <cmd> <action> <target> <class> <decision> <guard>
         >> "$f" 2>/dev/null || true
 }
 
-# --- routing ----------------------------------------------------------------
-# Default = primary (agent-browser). MCP fallback fires on EXACTLY three
-# conditions: binary/Chrome absent · named capability gap · explicit override.
+# --- routing (fail-closed; NO MCP fallback — spec 153) ----------------------
+# agent-browser is the SOLE primitive. `route` prints `primary` when usable, else
+# `unavailable:<reason>`. There is no MCP lane: when unavailable the command layer
+# fails closed (rc 4) instead of degrading to Playwright/Chrome DevTools MCP. The
+# legacy `AGENT0_BROWSER=mcp` override is now an explicit unsupported error
+# (`unavailable:mcp-removed`) — those MCPs live only as opt-in .example templates.
 CAPABILITY_GAPS=" "   # v1: none — agent-browser is a superset. Reserved slot.
 route() {
   local task="${1:-}"
-  if [ "${AGENT0_BROWSER:-}" = "mcp" ]; then echo "fallback:override"; return 0; fi
-  if ! have_binary; then echo "fallback:no-binary"; return 0; fi
+  if [ "${AGENT0_BROWSER:-}" = "mcp" ]; then echo "unavailable:mcp-removed"; return 0; fi
+  if ! have_binary; then echo "unavailable:no-binary"; return 0; fi
   # agent-browser self-provides Chrome-for-Testing, so a missing SYSTEM Chrome is
-  # NOT itself a fallback reason — only an explicit "no usable browser" signal is
-  # (AGENT0_BROWSER_NO_CHROME=1), surfaced by doctor when even the bundled browser
-  # is unavailable.
-  if [ "${AGENT0_BROWSER_NO_CHROME:-}" = "1" ]; then echo "fallback:no-chrome"; return 0; fi
+  # NOT itself an unavailability reason — only an explicit "no usable browser"
+  # signal is (AGENT0_BROWSER_NO_CHROME=1), surfaced by doctor when even the
+  # bundled browser is unavailable.
+  if [ "${AGENT0_BROWSER_NO_CHROME:-}" = "1" ]; then echo "unavailable:no-chrome"; return 0; fi
   if [ -n "$task" ]; then
-    case "$CAPABILITY_GAPS" in *" $task "*) echo "fallback:capability-gap:$task"; return 0;; esac
+    case "$CAPABILITY_GAPS" in *" $task "*) echo "unavailable:capability-gap:$task"; return 0;; esac
   fi
   echo "primary"
+}
+
+# Resolve the route for an explicit browser command; on non-primary, print the
+# fail-closed message and return the right rc (3 for the removed-mcp override,
+# 4 for genuine unavailability). Callers: `require_primary <label> || return $?`.
+require_primary() {
+  local label="${1:-command}" r; r="$(route)"
+  [ "$r" = "primary" ] && return 0
+  if [ "$r" = "unavailable:mcp-removed" ]; then
+    echo "unsupported: AGENT0_BROWSER=mcp — MCP routing removed in spec 153; Playwright/Chrome DevTools MCP survive only as an opt-in .mcp.json.example template, not a harness fallback." >&2
+    return 3
+  fi
+  echo "agent-browser unavailable ($r) for $label — fail-closed (NO MCP fallback, spec 153). Install agent-browser + a Chrome, then verify: bash .agent0/tools/agent-browser.sh caps · bash .agent0/tools/doctor.sh" >&2
+  return 4
 }
 
 # --- daemon lifecycle -------------------------------------------------------
@@ -210,11 +228,7 @@ run() {
   if [ "${1:-}" = "--" ]; then shift; fi
   [ "$#" -ge 1 ] || { echo "usage: agent-browser.sh run [--confirm] -- <agent-browser args...>" >&2; return 3; }
 
-  local r; r="$(route)"
-  if [ "$r" != "primary" ]; then
-    echo "ROUTE=$r — agent-browser unavailable; use the MCP fallback (see browser-primitive.md § Routing)." >&2
-    return 4
-  fi
+  require_primary run || return $?
 
   # Find the real action + target by scanning past leading global flags
   # (--profile <v>, --session-name <v>, --engine <v>, etc. precede the subcommand).
@@ -254,8 +268,7 @@ verify_contract() {
     echo "usage: agent-browser.sh verify-contract <url> <fixture.json> <outdir>" >&2; return 3; }
   mkdir -p "$outdir"
 
-  local r; r="$(route)"
-  [ "$r" = "primary" ] || { echo "ROUTE=$r — cannot verify on the MCP fallback path here." >&2; return 4; }
+  require_primary verify-contract || return $?
 
   local chrome; chrome="$(resolve_chrome 2>/dev/null || true)"
   [ -n "$chrome" ] && export AGENT_BROWSER_EXECUTABLE_PATH="$chrome"
@@ -334,6 +347,8 @@ adopt_session() {
   esac
   [ -n "$statefile" ] || statefile="$AUDIT_DIR/state/$host.json"
 
+  require_primary adopt || return $?
+
   curl -s -m3 "http://localhost:$port/json/version" >/dev/null 2>&1 || {
     echo "adopt: no Chrome on CDP :$port — run  bash .agent0/tools/browser-login.sh $host  first." >&2; return 4; }
 
@@ -379,13 +394,22 @@ parse_structure() {
   echo "h1=${h1:-0} h2=${h2:-0} main=${main} nav=${nav}"
 }
 
-# --- audit: multi-page structural + console + vitals sweep (spec 152.1) ------
-# audit <base-url> (--paths a,b,c | --paths-file f) [--out dir] [--max-console N]
+# --- audit: multi-page structural + console + vitals + overflow sweep --------
+# audit <base-url> (--paths a,b,c | --paths-file f) [--out dir] [--max-console N] [--structure strict|optional]
 # Owns the daemon lifecycle + report aggregation so callers don't hand-roll it
-# (and don't re-make the grep bug above). Structural gate: exactly one h1 + a
-# main landmark + console errors ≤ max. nav/vitals are advisory.
+# (and don't re-make the grep bug above). Two structure modes (spec 153):
+#   strict   (default) — gate = exactly one h1 + a main landmark + console ≤ max.
+#                        Unchanged from 152.1; site-audit semantics.
+#   optional           — h1/main are ADVISORY (recorded + flagged, never gating);
+#                        gate = console ≤ max only. For landmark-less fragments
+#                        like /product hi-fi mood screens that legitimately have
+#                        no single h1 / main landmark.
+# Responsive overflow (both modes, advisory): each page is screenshotted at 375px
+# and 1280px and probed for horizontal overflow (scrollWidth > clientWidth) via a
+# FIXED internal `eval` expression (no user input) — the documented OQ2 mechanism.
+# nav/vitals stay advisory.
 audit_pages() {
-  local base="" paths="" out="$PROJECT_DIR/.agent0/.runtime-state/agent-browser/audit" maxc=0
+  local base="" paths="" out="$PROJECT_DIR/.agent0/.runtime-state/agent-browser/audit" maxc=0 structure="strict"
   base="${1:-}"; shift || true
   while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -393,12 +417,14 @@ audit_pages() {
       --paths-file) paths="$(tr '\n' ',' < "$2")"; shift 2 ;;
       --out) out="$2"; shift 2 ;;
       --max-console) maxc="$2"; shift 2 ;;
+      --structure) structure="$2"; shift 2 ;;
       *) shift ;;
     esac
   done
-  [ -n "$base" ] || { echo "usage: agent-browser.sh audit <base-url> (--paths a,b,c | --paths-file f) [--out dir] [--max-console N]" >&2; return 3; }
+  [ -n "$base" ] || { echo "usage: agent-browser.sh audit <base-url> (--paths a,b,c | --paths-file f) [--out dir] [--max-console N] [--structure strict|optional]" >&2; return 3; }
+  case "$structure" in strict|optional) ;; *) echo "audit: --structure must be 'strict' or 'optional' (got '$structure')" >&2; return 3 ;; esac
   [ -n "$paths" ] || paths="/"
-  local r; r="$(route)"; [ "$r" = "primary" ] || { echo "ROUTE=$r — cannot audit on the MCP fallback path here." >&2; return 4; }
+  require_primary audit || return $?
 
   mkdir -p "$out/shots"
   local chrome; chrome="$(resolve_chrome 2>/dev/null || true)"; [ -n "$chrome" ] && export AGENT_BROWSER_EXECUTABLE_PATH="$chrome"
@@ -419,34 +445,61 @@ audit_pages() {
     console="$(timeout 15 "$bin" console --json 2>/dev/null)"
     vitals="$(timeout 20 "$bin" vitals --json 2>/dev/null)"
     "$bin" screenshot "$out/shots/$label.png" >/dev/null 2>&1
+    # responsive overflow probe (advisory): screenshot + scrollWidth>clientWidth at
+    # 375px and 1280px. The eval expression is FIXED/internal (no user input) — the
+    # documented OQ2 mechanism; it never flows through the policy-gated `run` path.
+    local ov_expr='document.documentElement.scrollWidth > document.documentElement.clientWidth'
+    local ov375 ov1280
+    "$bin" set viewport 375 812 >/dev/null 2>&1
+    "$bin" screenshot "$out/shots/$label-375.png" >/dev/null 2>&1
+    ov375="$("$bin" eval "$ov_expr" --json 2>/dev/null | jq -r '.data.result // false' 2>/dev/null || echo false)"
+    "$bin" set viewport 1280 800 >/dev/null 2>&1
+    "$bin" screenshot "$out/shots/$label-1280.png" >/dev/null 2>&1
+    ov1280="$("$bin" eval "$ov_expr" --json 2>/dev/null | jq -r '.data.result // false' 2>/dev/null || echo false)"
+    case "$ov375" in true|false) ;; *) ov375=false ;; esac
+    case "$ov1280" in true|false) ;; *) ov1280=false ;; esac
     tree="$(printf '%s' "$snap" | jq -r '.data.snapshot // ""' 2>/dev/null)"
-    eval "$(parse_structure "$tree")"   # sets h1 h2 main nav
+    eval "$(parse_structure "$tree")"   # sets h1 h2 main nav (shell eval, not browser eval)
     local cerr lcp cls flags=""
     cerr="$(printf '%s' "$console" | jq '[.data.messages[]? | select(.type=="error")] | length' 2>/dev/null || echo 0)"
     lcp="$(printf '%s' "$vitals" | jq -r '(.data.lcp.startTime // 0) | floor' 2>/dev/null || echo 0)"
     cls="$(printf '%s' "$vitals" | jq -r '.data.cls.score // 0' 2>/dev/null || echo 0)"
-    [ "${h1:-0}" != "1" ] && flags="${flags}h1=${h1} "
-    [ "${main:-0}" = "0" ] && flags="${flags}no-main "
+    # advisory flags (recorded in both modes; gating differs by --structure below)
+    [ "${h1:-0}" != "1" ] && flags="${flags}h1=${h1}$([ "$structure" = optional ] && echo '(adv)') "
+    [ "${main:-0}" = "0" ] && flags="${flags}no-main$([ "$structure" = optional ] && echo '(adv)') "
     [ "${nav:-0}" = "0" ] && flags="${flags}no-nav "
     [ "${cerr:-0}" -gt "${maxc:-0}" ] 2>/dev/null && flags="${flags}console=${cerr} "
-    local ok=true; { [ "${h1:-0}" = "1" ] && [ "${main:-0}" = "1" ] && [ "${cerr:-0}" -le "${maxc:-0}" ]; } || { ok=false; flagged=$((flagged+1)); }
+    [ "$ov375" = "true" ] && flags="${flags}overflow@375 "
+    [ "$ov1280" = "true" ] && flags="${flags}overflow@1280 "
+    # gate: strict = h1+main+console (152.1, unchanged); optional = console only
+    # (h1/main advisory). Overflow is advisory in BOTH modes.
+    local ok=true
+    if [ "$structure" = "strict" ]; then
+      { [ "${h1:-0}" = "1" ] && [ "${main:-0}" = "1" ] && [ "${cerr:-0}" -le "${maxc:-0}" ]; } || ok=false
+    else
+      { [ "${cerr:-0}" -le "${maxc:-0}" ]; } || ok=false
+    fi
+    [ "$ok" = true ] || flagged=$((flagged+1))
     total=$((total+1))
     results="$(jq -c --arg l "$label" --arg u "$url" --argjson h1 "${h1:-0}" --argjson main "${main:-0}" \
       --argjson nav "${nav:-0}" --argjson cerr "${cerr:-0}" --argjson lcp "${lcp:-0}" --arg cls "${cls:-0}" \
+      --argjson ov375 "$ov375" --argjson ov1280 "$ov1280" --arg mode "$structure" \
       --argjson ok "$ok" --arg flags "${flags:-—}" \
-      '. + [{label:$l,url:$u,h1:$h1,main:$main,nav:$nav,console_errors:$cerr,lcp_ms:$lcp,cls:($cls|tonumber? // 0),ok:$ok,flags:$flags}]' <<<"$results")"
-    echo "  $([ "$ok" = true ] && echo ✓ || echo ✗) $label (h1=${h1} main=${main} nav=${nav} console=${cerr} lcp=${lcp}ms) ${flags}"
+      '. + [{label:$l,url:$u,h1:$h1,main:$main,nav:$nav,console_errors:$cerr,lcp_ms:$lcp,cls:($cls|tonumber? // 0),overflow_375:$ov375,overflow_1280:$ov1280,structure_mode:$mode,ok:$ok,flags:$flags}]' <<<"$results")"
+    echo "  $([ "$ok" = true ] && echo ✓ || echo ✗) $label (h1=${h1} main=${main} nav=${nav} console=${cerr} lcp=${lcp}ms overflow:375=${ov375}/1280=${ov1280}) ${flags}"
   done
   reset_daemon
 
   jq -cn --argjson results "$results" --argjson total "$total" --argjson flagged "$flagged" \
     '{total:$total,flagged:$flagged,pages:$results}' > "$out/report.json"
   {
-    echo "| page | h1 | main | nav | console-err | LCP ms | CLS | flags |"
-    echo "|---|---|---|---|---|---|---|---|"
-    jq -r '.pages[] | "| \(.label) | \(.h1) | \(if .main==1 then "Y" else "N" end) | \(if .nav==1 then "Y" else "N" end) | \(.console_errors) | \(.lcp_ms) | \(.cls) | \(.flags) |"' "$out/report.json"
+    echo "_structure mode: \`$structure\` — $([ "$structure" = strict ] && echo 'gate = h1==1 & main & console≤max' || echo 'gate = console≤max; h1/main advisory'). Overflow + vitals advisory._"
+    echo
+    echo "| page | h1 | main | nav | console-err | overflow 375 | overflow 1280 | LCP ms | CLS | flags |"
+    echo "|---|---|---|---|---|---|---|---|---|---|"
+    jq -r '.pages[] | "| \(.label) | \(.h1) | \(if .main==1 then "Y" else "N" end) | \(if .nav==1 then "Y" else "N" end) | \(.console_errors) | \(if .overflow_375 then "⚠Y" else "N" end) | \(if .overflow_1280 then "⚠Y" else "N" end) | \(.lcp_ms) | \(.cls) | \(.flags) |"' "$out/report.json"
   } > "$out/report.md"
-  echo "AUDIT: $total pages, $flagged flagged → $out/report.md (vitals are advisory; meaningful only vs a deployed/throttled target)"
+  echo "AUDIT[$structure]: $total pages, $flagged flagged → $out/report.md (overflow + vitals advisory; vitals meaningful only vs a deployed/throttled target)"
   [ "$flagged" -eq 0 ]
 }
 

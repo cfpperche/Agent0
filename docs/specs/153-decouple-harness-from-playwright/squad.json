@@ -18,7 +18,8 @@
 
   "forbidden_paths": [
     "\\.env",
-    "secrets",
+    "(^|/)secrets?/",
+    "\\.secrets?(\\.[^/]+)?$",
     "\\.agent0/.*-audit\\.jsonl",
     "\\.agent0/HANDOFF\\.md",
     "\\.agent0/\\.browser-state/.*\\.json",

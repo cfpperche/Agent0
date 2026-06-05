@@ -19,4 +19,18 @@ assert_eq "$(jq -r '.pages[] | select(.label=="screen.html") | "\(.h1)/\(.main)/
 assert_eq "$(jq -r '.pages[] | select(.label=="bad-page.html") | "\(.h1)/\(.main)/\(.ok)"' "$OUT/report.json")" "2/0/false" "bad page: h1=2 (listitems not overcounted), no main, flagged"
 [ -s "$OUT/shots/screen.html.png" ] && { PASS=$((PASS+1)); echo "  ✓ per-page screenshot captured"; } || { FAIL=$((FAIL+1)); echo "  ✗ screenshot missing"; }
 
+# optional structure mode: fragment-like pages are allowed, overflow is recorded
+bash "$TOOL" reset >/dev/null 2>&1
+FRAG_OUT="$WORK/audit-fragments"
+RES="$(bash "$TOOL" audit "file://$FIXTURES" --paths "frag-clean.html,frag-overflow.html" --out "$FRAG_OUT" --max-console 0 --structure optional 2>&1)"; RC=$?
+echo "$RES" | sed 's/^/    /'
+
+assert_rc "$RC" 0 "optional fragments audit rc 0"
+assert_eq "$(jq -r '[.pages[].ok] | all' "$FRAG_OUT/report.json")" "true" "optional mode lets both fragments pass"
+assert_eq "$(jq -r '.pages[] | select(.label=="frag-overflow.html") | .overflow_375' "$FRAG_OUT/report.json")" "true" "wide fragment records overflow_375"
+assert_eq "$(jq -r '[.pages[].structure_mode] | unique | join(",")' "$FRAG_OUT/report.json")" "optional" "report records optional structure mode"
+[ -s "$FRAG_OUT/shots/frag-clean.html-375.png" ] && [ -s "$FRAG_OUT/shots/frag-overflow.html-1280.png" ] \
+  && { PASS=$((PASS+1)); echo "  ✓ responsive screenshots captured"; } \
+  || { FAIL=$((FAIL+1)); echo "  ✗ responsive screenshots missing"; }
+
 finish

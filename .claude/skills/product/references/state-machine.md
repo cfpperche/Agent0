@@ -110,7 +110,7 @@ Phase 4 (visual-contract) → step 15 (two waves)
     — hi-fi Mood-screen-writer reads fixture-spec.md (15c's deliverable),
       so 15b CANNOT share a message with 15c
   NO per-route fan-out, NO app/ tree, NO build verification
-  + best-effort Playwright visual check + author REPORT.md
+  + best-effort agent-browser visual check + author REPORT.md
   ↓
 Phase 5 (sdd-handoff)
   scaffold docs/specs/001-<slug>/ (umbrella) + docs/specs/002-foundation/ (child #1)

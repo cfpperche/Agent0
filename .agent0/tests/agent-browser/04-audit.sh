@@ -23,9 +23,23 @@ assert_contains "$AUDIT" '"action":"eval"' "eval attempt audited"
 assert_contains "$AUDIT" '"decision":"deny"' "deny decision recorded"
 assert_eq "$(grep -c eval "$AB_CALLS_LOG" 2>/dev/null)" "0" "denied action NOT passed to the binary"
 
-# fallback route ⇒ run refuses with rc 4 (points at MCP)
+# unavailable route ⇒ explicit browser commands fail closed
 OUT="$(AGENT0_BROWSER_BIN=/nonexistent/agent-browser bash "$TOOL" run -- snapshot 2>&1)"; RC=$?
-assert_rc "$RC" 4 "no-binary run rc 4 (fallback)"
-assert_contains "$OUT" "fallback" "refusal names the fallback path"
+assert_rc "$RC" 4 "no-binary run rc 4 (fail-closed)"
+assert_contains "$OUT" "fail-closed" "refusal names fail-closed policy"
+
+# removed MCP override ⇒ unsupported, not an alternate route
+OUT="$(AGENT0_BROWSER=mcp AGENT0_BROWSER_BIN="$FAKE" bash "$TOOL" run -- snapshot 2>&1)"; RC=$?
+assert_rc "$RC" 3 "MCP override run rc 3 (unsupported)"
+assert_contains "$OUT" "unsupported" "MCP override refusal is explicit"
+
+# adopt is also an explicit browser command and must fail before any CDP path
+OUT="$(AGENT0_BROWSER_BIN=/nonexistent/agent-browser bash "$TOOL" adopt example.com 2>&1)"; RC=$?
+assert_rc "$RC" 4 "no-binary adopt rc 4 (fail-closed)"
+assert_contains "$OUT" "fail-closed" "adopt no-binary refusal names fail-closed policy"
+
+OUT="$(AGENT0_BROWSER=mcp AGENT0_BROWSER_BIN="$FAKE" bash "$TOOL" adopt example.com 2>&1)"; RC=$?
+assert_rc "$RC" 3 "MCP override adopt rc 3 (unsupported)"
+assert_contains "$OUT" "unsupported" "adopt MCP override refusal is explicit"
 
 finish

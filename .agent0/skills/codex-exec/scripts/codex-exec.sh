@@ -330,6 +330,12 @@ fi
 printf '%q ' "${cmd[@]}" > "$command_file"
 printf '\n' >> "$command_file"
 
+# A bridge sub-invocation is a bounded subprocess, never the handoff-owning
+# session — suppress the session-handoff Stop-hook nag so the child (e.g. a
+# /squad peer turn) is not blocked into rewriting the orchestrator-owned
+# .agent0/HANDOFF.md. (spec 154)
+export CLAUDE_SKIP_SESSION_HOOKS=1
+
 set +e
 "${cmd[@]}" < "$prompt_file" > "$stdout_file" 2> "$stderr_file"
 exit_code=$?

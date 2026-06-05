@@ -303,10 +303,41 @@ cmd_abort() {
   echo "abort: $reason"
 }
 
+# resume — NON-DESTRUCTIVE recovery from a false-positive / reconciled abort.
+# Unlike `rollback` (which `git checkout -- . && git clean -fdq`, discarding all
+# uncommitted work), `resume` re-baselines the boundary to the CURRENT working
+# tree and returns status to `running` — keeping every change. It is a trusted-
+# orchestrator primitive (parity with rollback): the operator has reconciled the
+# abort cause (corrected the contract, reverted an out-of-band edit, etc.).
+# Guard against laundering a GENUINE policy violation: refuse (unless --force) if
+# the current tree still touches a forbidden_paths pattern. (spec 154)
+cmd_resume() {
+  local run="" force=0
+  while [ $# -gt 0 ]; do case "$1" in --run) run=$2; shift 2;; --force) force=1; shift;; *) die "resume: unknown arg: $1";; esac; done
+  [ -n "$run" ] || die "resume: --run required"
+  _load_run "$run"
+  local repo contract; repo="$(sget "$run" .repo)"; contract="$(sget "$run" .contract)"
+  local fp; fp="$(_fingerprint "$repo")"
+  # forbidden re-check on the current tree (same path-stripping shape as guard)
+  local paths; paths="$(printf '%s\n' "$fp" | sed '/^$/d' | sed -E 's/\t[^\t]*$//; s/^.{2,3}//' | LC_ALL=C sort -u)"
+  if [ "$force" -ne 1 ]; then
+    local pat hit=""
+    while IFS= read -r pat; do
+      [ -n "$pat" ] || continue
+      hit="$(printf '%s\n' "$paths" | grep -E "$pat" | head -n1)"
+      [ -n "$hit" ] && { errln "resume: current tree still touches a forbidden path ('$hit' matches /$pat/) — reconcile it or pass --force"; return 1; }
+    done < <(jq -r '.forbidden_paths[]? // empty' "$contract")
+  fi
+  sset "$run" \
+    --argjson b "$(printf '%s' "$fp" | jq -R . | jq -s 'map(select(length>0))')" \
+    '.boundary=$b | .changed_paths=[] | .turn_open=false | .status="running"'
+  echo "resume: re-baselined to current tree → status running (holder $(sget "$run" .turn_holder), round $(sget "$run" .round))"
+}
+
 # ── dispatch ─────────────────────────────────────────────────────────────────
 main() {
   local sub=${1:-}
-  [ -n "$sub" ] || die "usage: squad.sh <init|turn-start|turn-end|propose-done|gate|guard|rollback|status|abort> ..."
+  [ -n "$sub" ] || die "usage: squad.sh <init|turn-start|turn-end|propose-done|gate|guard|rollback|resume|status|abort> ..."
   shift
   case "$sub" in
     init)         cmd_init "$@";;
@@ -316,6 +347,7 @@ main() {
     gate)         cmd_gate "$@";;
     guard)        cmd_guard "$@";;
     rollback)     cmd_rollback "$@";;
+    resume)       cmd_resume "$@";;
     status)       cmd_status "$@";;
     abort)        cmd_abort "$@";;
     *) die "unknown subcommand: $sub";;

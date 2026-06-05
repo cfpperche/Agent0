@@ -12,6 +12,7 @@
 - **Gate contract:** `docs/specs/<NNN-slug>/squad.json` (see the skill's `references/squad-contract.md`).
 - **Symmetric initiation:** whoever runs `/squad` owns the loop and drives the peer via `codex-exec` / `claude-exec` (workspace-write). No runtime is privileged.
 - **Target must contain the harness:** the exec bridges anchor `ROOT` to the harness root and refuse a `--cwd` outside it, so `/squad`'s peer-driving only works inside a repo that has the Agent0 harness (Agent0 itself, or a consumer with it synced) — never an external/`/tmp` repo. (Surfaced by the 150.1 live dogfood; `init` warns when the bridge scripts are absent.)
+- **Peer-turn hygiene (spec 154):** a bridge sub-invocation (`codex-exec`/`claude-exec`) is a bounded subprocess, not a handoff-owning session — both bridges set `CLAUDE_SKIP_SESSION_HOOKS=1` so the session-handoff Stop-hook nag does NOT fire mid-turn (otherwise the peer gets blocked into rewriting the orchestrator-owned, `forbidden_paths` `HANDOFF.md`). Recover from a false-positive/reconciled abort with **`squad.sh resume`** (non-destructive re-baseline; refuses a genuine forbidden touch without `--force`) rather than `rollback` (which discards uncommitted work). Author `forbidden_paths` with anchored patterns — a bare substring like `secrets` false-matches `secrets-scan.md`.
 
 ## The three flaws the design rejects (the bounded/gate-driven posture)
 

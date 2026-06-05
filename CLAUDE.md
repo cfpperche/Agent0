@@ -115,6 +115,10 @@ Two on-demand, text-first shell tools over live harness state (the transferable 
 
 On an auth-gated URL with no saved state the agent emits `BROWSER_LOGIN_REQUIRED: <host>`; the human runs `bash .agent0/tools/browser-login.sh <host>` and logs in, then the agent attaches over CDP via `agent-browser.sh adopt <host>` and saves state to `.agent0/.runtime-state/agent-browser/state/<host>.json` for headless reuse. **agent-browser-native; no MCP path (spec 153).** See `.agent0/context/rules/browser-auth.md`.
 
+## Visual contract acceptance
+
+When a spec/task produces UI, "done" is proven by **driving the UI**, not static review. A `**UI impact:** none|render|interaction|flow` declaration triggers a **visual contract** — an interaction-trace acceptance artifact (render → interaction → flow tiers, semantic DOM/a11y/route/state assertions, not pixel-diff) run via the existing `agent-browser.sh verify-contract` and proven in the delegation gate's `DONE_WHEN` (no 6th field). `.agent0/tools/ui-impact-detect.sh` + the validator emit a non-blocking `visual-contract-advisory:` when a UI surface changes without a declaration or when a declared UI change lacks a passing `report.json`; v1 is advisory (tdd/lint/typecheck precedent), `agent-browser` unavailable ≠ pass. Reconciles with `/product`'s design-time contract as its implementation-evidence counterpart. See `.agent0/context/rules/visual-contract.md` (spec 155).
+
 ## Skill compliance
 
 Every first-party `.claude/skills/*/SKILL.md` must pass the agentskills.io frontmatter spec; the `/skill` meta-skill scaffolds, audits, ports, and validates them, with three declared portability tiers. See `.claude/skills/skill/`.

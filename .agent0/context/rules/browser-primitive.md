@@ -68,7 +68,7 @@ agent-browser's native `state save <file>` / `--state <file> open` (or `state lo
 
 ## Visual-contract verification
 
-`verify-contract <url> <fixture.json> <outdir>` is the bounded loop for verifying a `/product`→`/sdd` visual contract: it opens the URL, captures a11y snapshot + annotated screenshot + console + vitals, and asserts a fixture-spec (`{ "required": [{role,name}...], "max_console_errors": N }`) → a `PASS/FAIL` `report.json` + artifacts. The model reasons only over the residual, not over whether the page loaded.
+`verify-contract <url> <fixture.json> <outdir>` is the bounded loop for verifying a `/product`→`/sdd` visual contract: it opens the URL, captures a11y snapshot + annotated screenshot + console + vitals, and asserts a fixture-spec (`{ "required": [{role,name}...], "max_console_errors": N }`) → a `PASS/FAIL` `report.json` + artifacts. The model reasons only over the residual, not over whether the page loaded. The fixture-spec extends past the `render` floor with optional `interactions` and `flow` arrays (named-control exercise + ordered route traversal with per-step assertions), so a contract covers navigation/interaction/flow, not just static render — the depth tiers and the `UI impact` acceptance gate they feed live in `.agent0/context/rules/visual-contract.md` (spec 155).
 
 ## Structural audit (spec 152.1 — demand-validated by the real site-audit dogfood)
 

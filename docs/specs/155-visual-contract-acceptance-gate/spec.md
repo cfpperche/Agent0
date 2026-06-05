@@ -2,7 +2,7 @@
 
 _Created 2026-06-05._
 
-**Status:** in-progress
+**Status:** shipped
 
 **UI impact:** none
 

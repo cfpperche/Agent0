@@ -140,6 +140,27 @@ bin_check python3  required "— memory/context helpers need it"
 bin_check gitleaks optional "— secrets pre-commit scan"
 bin_check osv-scanner optional "— vuln-audit engine"
 
+# --- agent-browser primitive (spec 152): tri-state via the wrapper's caps -----
+# Absent binary is ADVISORY, not broken — the MCP fallback applies (browser-primitive.md).
+printf '\n=== browser primitive ===\n'
+if [ -x "$PROJECT_DIR/.agent0/tools/agent-browser.sh" ]; then
+  ab_caps="$(AGENT0_PROJECT_DIR="$PROJECT_DIR" bash "$PROJECT_DIR/.agent0/tools/agent-browser.sh" caps --json 2>/dev/null || echo '{}')"
+  ab_bin="$(printf '%s' "$ab_caps" | jq -r '.binary // "no"' 2>/dev/null)"
+  ab_vstate="$(printf '%s' "$ab_caps" | jq -r '.version_state // "unknown"' 2>/dev/null)"
+  ab_chrome="$(printf '%s' "$ab_caps" | jq -r '.chrome // ""' 2>/dev/null)"
+  if [ "$ab_bin" != "yes" ]; then
+    check advisory "agent-browser" "binary absent — primitive falls back to Playwright/DevTools MCP"
+  elif [ "$ab_vstate" = "drift" ]; then
+    check advisory "agent-browser" "present but version differs from pinned (browser-primitive.md § version pin)"
+  elif [ -z "$ab_chrome" ]; then
+    check advisory "agent-browser" "present; no system Chrome — relies on bundled Chrome-for-Testing"
+  else
+    check ok "agent-browser" "present (pinned); chrome ${ab_chrome}"
+  fi
+else
+  check advisory "agent-browser" "wrapper .agent0/tools/agent-browser.sh missing"
+fi
+
 # --- rollup ------------------------------------------------------------------
 printf '\n=== rollup ===\n'
 if [ "$BROKEN" -gt 0 ]; then

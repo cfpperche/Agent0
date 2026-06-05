@@ -28,6 +28,8 @@ CLAUDE.local.md
 .agent0/.browser-state/*.json
 .agent0/.brainstorm-state/
 .agent0/.routines-state/
+.agent0/browser-policy.json
+.agent0/browser-auth/
 
 # sync-harness CLAUDE.md migration artifacts (ephemeral; ratified via mv,
 # divergence reports re-generated each sync until resolved)

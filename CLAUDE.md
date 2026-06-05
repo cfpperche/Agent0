@@ -107,9 +107,13 @@ See `.agent0/context/rules/memory-placement.md` § Multi-runtime usage.
 
 Two on-demand, text-first shell tools over live harness state (the transferable kernel of `opus-domini/sentinel`, ported to a repo harness). `status` (`/status`, or `bash .agent0/tools/status.sh`) is the untruncated mid-session sibling of the SessionStart brief — handoff, reminders, routines, decay, git state, suggested next commands; read-only, always exit 0. `doctor` (`bash .agent0/tools/doctor.sh`) reports harness health (files/hooks/binaries/`core.hooksPath`) with a tri-state per check, exit non-zero only on `broken`; reports, never fixes. Both reuse `.agent0/hooks/_brief-compose.sh`. NOT a browser/daemon/metrics surface — the anti-drift scope is load-bearing. See `.agent0/context/rules/agent0-status.md`.
 
+## Browser primitive
+
+`agent-browser` (vercel-labs native-Rust CLI) is the **primary, runtime-neutral agent browser primitive** — eyes + hands + observe driven through plain shell (no per-runtime MCP wiring). First-party work goes through `.agent0/tools/agent-browser.sh`, which adds the operational envelope: binary/Chrome detection (`caps`), deterministic primary-vs-MCP-fallback routing (`route` → `primary` unless `fallback:{no-binary,no-chrome,override}`), a policy-as-file guard + per-command audit (`run`), a bounded visual-contract verifier (`verify-contract`), and daemon-lifecycle ownership (`reset`). Playwright + Chrome DevTools MCP (`browser-auth.md`) are retained as a **permanent, explicitly-routed fallback** (never deleted; also the graceful-degradation path when the binary is absent). Opt-in install; `doctor.sh` reports availability; profiles/saved state are credential-class. See `.agent0/context/rules/browser-primitive.md`. (spec 152)
+
 ## Browser auth
 
-On an auth-gated URL with no saved state the agent emits `BROWSER_AUTH_REQUIRED: <host>`; the human logs in via a headed Playwright MCP session and the state (`.agent0/.browser-state/<host>.json`) is reused for headless reads. See `.agent0/context/rules/browser-auth.md`.
+On an auth-gated URL with no saved state the agent emits `BROWSER_AUTH_REQUIRED: <host>`; the human logs in via a headed Playwright MCP session and the state (`.agent0/.browser-state/<host>.json`) is reused for headless reads. **Permanent fallback to the Browser primitive above (spec 152).** See `.agent0/context/rules/browser-auth.md`.
 
 ## Skill compliance
 

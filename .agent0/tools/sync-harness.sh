@@ -205,6 +205,7 @@ COPY_CHECK_GLOBS=(
 COPY_CHECK_FILES=(
   "AGENTS.md"
   ".mcp.json.example"
+  ".agent0/browser-policy.json.example"
   ".codex/hooks.json"
   ".codex/config.toml.example"
   ".gitleaks.toml"

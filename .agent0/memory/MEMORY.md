@@ -1,3 +1,4 @@
+- [agent-browser-primitive](agent-browser-primitive.md) — spec 152 made agent-browser the primary browser primitive (wrapper .agent0/tools/agent-browser.sh); MCP is permanent fallback; daemon/port gotchas that cost real debug time
 - [Agent0 core thesis](agent0-core-thesis.md) — Agent0 intentionally avoids becoming an agent/skill catalog; durable value is prompt engineering, context engineering, and governance.
 - [Agent0 base repo purpose](agent0-purpose.md) — /home/goat/Agent0 is the user's base/template repository for all new software projects
 - [Anthill archived](anthill-archived.md) — anthill (the skill/agent harness Agent0 ports content from) is archived as of 2026-05-13; no longer evolves; quality reference, not a moving target

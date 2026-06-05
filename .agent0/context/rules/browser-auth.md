@@ -8,6 +8,8 @@ paths:
 
 # Browser auth
 
+> **Status (spec 152): permanent fallback.** Agent0's **primary** agent browser primitive is now `agent-browser` (a runtime-neutral CLI) — see `.agent0/context/rules/browser-primitive.md`. The Playwright MCP + Chrome DevTools MCP path documented below is **retained permanently as the explicitly-routed fallback** (never deleted): it is used when `agent-browser.sh route` returns a `fallback:*` reason (binary/Chrome absent, or `AGENT0_BROWSER=mcp` override), and it remains the documented lane for the headed-login auth flow. agent-browser has a native equivalent (`state save`/`--state`); prefer it when the binary is available.
+
 Authenticated-content reads happen through Playwright MCP in a headed-login → save → headless-reuse pattern. This rule documents the signaling convention that bridges the human login step (`BROWSER_AUTH_REQUIRED: <host>`), the per-host state directory (`.agent0/.browser-state/<host>.json`), and the X/Twitter shortcut that avoids the full auth path for a common case.
 
 Playwright MCP is the prerequisite — its server block lives in `.mcp.json.example` (Claude) and `.codex/config.toml.example` (Codex); consumer projects opt in by copying the template and removing the `//` markers / flipping `enabled = true`.

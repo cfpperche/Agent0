@@ -1,0 +1,34 @@
+{
+  "spec": "153-decouple-harness-from-playwright",
+  "roster": ["claude", "codex"],
+
+  "max_rounds": 24,
+  "max_repair_attempts": 4,
+
+  "gate": [
+    "bash .agent0/validators/run.sh",
+    "test -f .agent0/tests/agent-browser/08-no-mcp-coupling.sh",
+    "grep -q '\\[0-9\\]\\[0-9\\]-\\*\\.sh' .agent0/tests/agent-browser/run-all.sh",
+    "bash .agent0/tests/agent-browser/run-all.sh",
+    "bash .agent0/tests/harness-sync/run-all.sh",
+    "bash .agent0/tools/doctor.sh",
+    "! grep -rIn 'mcp__playwright__\\|mcp__chrome-devtools__\\|fallback:no-binary\\|fallback:no-chrome\\|fallback:override\\|serve-hifi' .agent0/tools .agent0/hooks .agent0/context/rules .claude/skills --include=*.sh --include=*.md",
+    "! test -f .claude/skills/product/scripts/serve-hifi.sh"
+  ],
+
+  "forbidden_paths": [
+    "\\.env",
+    "secrets",
+    "\\.agent0/.*-audit\\.jsonl",
+    "\\.agent0/HANDOFF\\.md",
+    "\\.agent0/\\.browser-state/.*\\.json",
+    "\\.agent0/\\.runtime-state/agent-browser/state/.*\\.json",
+    "\\.mcp\\.json\\.example",
+    "\\.codex/config\\.toml\\.example"
+  ],
+
+  "human_gated_paths": [
+    "\\.github/workflows/",
+    "site/dist/"
+  ]
+}

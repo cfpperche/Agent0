@@ -1,0 +1,37 @@
+{
+  "spec": "155-visual-contract-acceptance-gate",
+  "roster": ["claude", "codex"],
+
+  "max_rounds": 30,
+  "max_repair_attempts": 4,
+
+  "gate": [
+    "echo '{}' | bash .agent0/validators/run.sh >/dev/null",
+    "test -x .agent0/tools/ui-impact-detect.sh",
+    "test -f .agent0/tests/visual-contract/run-all.sh && test -f .agent0/tests/visual-contract/01-detect.sh && test -f .agent0/tests/visual-contract/02-advisory.sh && test -f .agent0/tests/visual-contract/03-contract-tiers.sh && test -f .agent0/tests/visual-contract/04-delegation.sh",
+    "bash .agent0/tests/visual-contract/run-all.sh",
+    "grep -q 'visual-contract-advisory' .agent0/validators/run.sh",
+    "grep -q 'visual-contract-advisory' .agent0/hooks/delegation-verify.sh",
+    "grep -q 'interactions' .agent0/tools/agent-browser.sh",
+    "test -f .agent0/context/rules/visual-contract.md && grep -qiE 'interaction' .agent0/context/rules/visual-contract.md && grep -qiE 'flow' .agent0/context/rules/visual-contract.md && grep -qi 'UI impact' .agent0/context/rules/visual-contract.md",
+    "grep -qi 'UI impact' .agent0/context/rules/delegation.md",
+    "grep -qi 'UI impact' .agent0/skills/sdd/templates/spec.md.tmpl",
+    "grep -q 'Visual contract' CLAUDE.md",
+    "bash -n .agent0/tools/ui-impact-detect.sh && bash -n .agent0/tools/agent-browser.sh && bash -n .agent0/validators/run.sh && bash -n .agent0/hooks/delegation-verify.sh"
+  ],
+
+  "forbidden_paths": [
+    "\\.env",
+    "(^|/)secrets?/",
+    "\\.secrets?(\\.[^/]+)?$",
+    "\\.agent0/.*-audit\\.jsonl",
+    "\\.agent0/HANDOFF\\.md",
+    "(^|/)\\.agent0/meetings/"
+  ],
+
+  "human_gated_paths": [
+    "\\.github/workflows/",
+    "migrations/",
+    "infra/"
+  ]
+}

@@ -25,7 +25,7 @@ _Prior — 149/149.1/150.x + 151 + 152.x shipped (harness arc + browser primitiv
 
 ## Active Work
 
-- **Nothing uncommitted in flight** — working tree clean (except the untracked `btc-intraday-timing-strategy` meeting, unrelated). `main` carries, all committed: spec **153** (`cd670d0`/`ac2a35e`/`d7210e7`/`7175a34`, harness Playwright-free), spec **154** (`2392590`, squad-hardening), and the **site maintenance mode** (`28a1e4b`). The old Playwright credential dir `.agent0/.browser-state/` was deleted (founder go). **`main` is 6 commits ahead of `origin/main`, UNPUSHED.**
+- **Nothing in flight — clean slate.** Working tree clean (except the untracked `btc-intraday-timing-strategy` meeting, unrelated); **`main` pushed + in sync with `origin/main`** (0 unpushed); merged branches deleted. `main` carries, all committed + pushed: spec **153** (`cd670d0`/`ac2a35e`/`d7210e7`/`7175a34`, harness Playwright-free), spec **154** (`2392590`, squad-hardening), and the **site maintenance mode** (`28a1e4b`, deploy fired → site live in maintenance). The old Playwright credential dir `.agent0/.browser-state/` was deleted (founder go).
 
 ## Next Actions
 

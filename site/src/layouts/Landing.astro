@@ -11,6 +11,8 @@ import Faq from "../components/Faq.astro";
 import Footer from "../components/Footer.astro";
 import { STRINGS } from "../i18n/strings";
 import { LOCALES, type Locale } from "../i18n/locales";
+import Maintenance from "../components/Maintenance.astro";
+import { UNDER_CONSTRUCTION } from "../config";
 
 interface Props {
   locale: Locale;
@@ -23,6 +25,7 @@ const siteUrl = "https://cfpperche.github.io";
 ---
 
 <!doctype html>
+{UNDER_CONSTRUCTION ? <Maintenance locale={locale} /> : (
 <html lang={locale}>
   <head>
     <meta charset="utf-8" />
@@ -67,3 +70,4 @@ const siteUrl = "https://cfpperche.github.io";
     <Footer locale={locale} />
   </body>
 </html>
+)}

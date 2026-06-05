@@ -1,0 +1,116 @@
+---
+import "../styles/global.css";
+import { type Locale, REPO_URL } from "../i18n/locales";
+
+interface Props {
+  locale?: Locale;
+}
+
+const { locale = "en" } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+const COPY: Record<
+  Locale,
+  { title: string; heading: string; lead: string; note: string; cta: string }
+> = {
+  en: {
+    title: "Agent0 — under construction",
+    heading: "Under construction",
+    lead: "The Agent0 harness is changing fast right now.",
+    note: "We've paused the site while the content catches up with the latest capabilities. The repository is the live source of truth in the meantime.",
+    cta: "Browse the repository",
+  },
+  pt: {
+    title: "Agent0 — em construção",
+    heading: "Em construção",
+    lead: "O harness do Agent0 está mudando muito neste momento.",
+    note: "Pausamos o site enquanto o conteúdo acompanha as capacidades mais recentes. Enquanto isso, o repositório é a fonte da verdade.",
+    cta: "Ver o repositório",
+  },
+  es: {
+    title: "Agent0 — en construcción",
+    heading: "En construcción",
+    lead: "El harness de Agent0 está cambiando rápidamente en este momento.",
+    note: "Pausamos el sitio mientras el contenido se pone al día con las últimas capacidades. Mientras tanto, el repositorio es la fuente de verdad.",
+    cta: "Ver el repositorio",
+  },
+};
+
+const t = COPY[locale];
+---
+
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>{t.title}</title>
+    <meta name="description" content={t.lead} />
+    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
+  </head>
+  <body
+    class="flex min-h-screen items-center justify-center bg-[var(--color-bg)] px-6 py-16 text-[var(--color-ink)]"
+  >
+    <main class="w-full max-w-xl text-center">
+      <p
+        class="mb-10 font-mono text-sm font-medium tracking-tight text-[var(--color-ink-muted)]"
+      >
+        Agent0
+      </p>
+
+      <div
+        class="mb-8 inline-flex h-14 w-14 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--color-accent-soft)] text-[var(--color-accent-ink)]"
+        aria-hidden="true"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="26"
+          height="26"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path
+            d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
+          ></path>
+        </svg>
+      </div>
+
+      <h1
+        class="text-3xl font-semibold tracking-tight sm:text-4xl"
+      >
+        {t.heading}
+      </h1>
+      <p class="mt-4 text-lg text-[var(--color-ink-soft)]">{t.lead}</p>
+      <p class="mx-auto mt-3 max-w-md text-sm leading-relaxed text-[var(--color-ink-muted)]">
+        {t.note}
+      </p>
+
+      <a
+        href={REPO_URL}
+        target="_blank"
+        rel="noopener"
+        class="mt-9 inline-flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-5 py-2.5 text-sm font-medium text-[var(--color-ink)] transition-colors hover:border-[var(--color-accent)] hover:text-[var(--color-accent-ink)]"
+      >
+        {t.cta}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M7 17 17 7M7 7h10v10"></path>
+        </svg>
+      </a>
+    </main>
+  </body>
+</html>

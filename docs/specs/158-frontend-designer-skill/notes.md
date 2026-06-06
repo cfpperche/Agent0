@@ -26,9 +26,10 @@ Chose to write `reference-research.md` + `design-direction.md` into the target p
 
 ## Dogfood outcome (2026-06-05)
 
-Three `/tmp` demos, all proven (summary: `/tmp/FD-DOGFOOD-SUMMARY.md`):
+Four `/tmp` demos, all proven (summary: `/tmp/FD-DOGFOOD-SUMMARY.md`). A/B/C cover the required capability matrix; D is a founder-added creativity demo:
 - **A** `fd-demo-a` — create, web, **reused** existing design system → green `verify-contract` 6/6. Output visibly uses the project's `tokens.json` (zero new colors).
 - **B** `fd-demo-b` — refine, web → before **FAIL** 3 / after **PASS** 7/7 (interaction tier); bounded diff (only `checkout.html`, all field ids + submit behavior preserved). The drive-and-see loop caught a real accessible-name bug (trailing space from an `aria-hidden` asterisk span) on iteration 1, fixed iteration 2 — concrete evidence the see-and-critique loop works.
-- **C** `fd-demo-c` — create, **native** Expo/RN, no DS → proposed tokens; **native-honesty path**: `node --test` 7/7 over pure logic + token invariants (44pt tap target, 8px spacing), **no visual-contract claimed**, no new native tooling added.
+- **C** `fd-demo-c` — create, **native** Expo/RN, no DS → proposed tokens; **native-honesty path**: `node --test` 7/7 over pure logic + token invariants (44pt tap target, 8px spacing), **no visual-contract claimed**, no new native tooling added. (A web preview from the same tokens, `fd-demo-c/.evidence/preview.png`, was later produced on request — explicitly NOT the native runtime.)
+- **D** `fd-demo-d` — create, web, no DS → **proposed a full brand system** for "Patudo" (fictional largest Brazilian pet-shop chain): coral/teal/sun palette, Poppins+Nunito, complete conversion landing (hero/stats/services/Clube/testimonials/app/footer). Green `verify-contract` 6/6. Proves the skill handles **brand/marketing craft**, not just app/dashboard UI. Founder-requested ("use a criatividade").
 
-All acceptance scenarios in `spec.md` satisfied; `/skill validate` exit 0; doctor 18 ok.
+All acceptance scenarios in `spec.md` satisfied; `/skill validate` exit 0; doctor 18 ok. The dogfood demos live in `/tmp` (not versioned) — proof artifacts, not shipped code.

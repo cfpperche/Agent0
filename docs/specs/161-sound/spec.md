@@ -2,7 +2,7 @@
 
 _Created 2026-06-06._
 
-**Status:** draft
+**Status:** shipped
 
 <!-- Non-UI capacity (a CLI/skill utility). No visual-contract gate. -->
 **UI impact:** none
@@ -58,11 +58,13 @@ Add `/sound` — generation of **creative audio (music + sound effects)**, paid-
 
 ## Open questions
 
-- [ ] **Exact fal body shapes per model** — music (CassetteAI / ElevenLabs Music) vs sfx (ElevenLabs SFX v2) differ in params (duration field name, prompt key); verify at `/sdd plan` / first real call (kept yaml/flag-overridable so a wrong guess never blocks).
-- [ ] **sfx tier provider** — ElevenLabs SFX v2 vs CassetteAI SFX ($0.01/gen); confirm the default at plan time.
-- [ ] **Default duration per kind** — sfx (~a few sec) vs music (~30s?); and whether the model takes duration or infers from prompt.
-- [ ] **Return content-type** — fal sound models likely return mp3; confirm + the wav path.
-- [ ] **Confirm-threshold env var name** + exact FS paths (`assets/generated/sound/`, `assets/sound/`, manifest, `sound-tiers.yaml` location under `.agent0/skills/sound/references/`).
+_All resolved at build/dogfood (2026-06-06). See `notes.md` for the live-call evidence._
+
+- [x] **Exact fal body shapes per model** — PROVEN LIVE: sfx = `{text, duration_seconds}` → `.audio.url`; CassetteAI music = `{prompt, duration}` → `.audio_file.url`. Both extracted correctly by the data-driven oracle (the headline decision, validated). ElevenLabs Music **premium** body (`{prompt, music_length_ms}` guess) remains live-unverified — gated behind `--confirm-cost-usd` and the oracle's single edit point.
+- [x] **sfx tier provider** — ElevenLabs Sound Effects v2 (`fal-ai/elevenlabs/sound-effects/v2`, ~$0.002/sec); a real 3s call returned a valid mp3.
+- [x] **Default duration per kind** — oracle `default_duration`: sfx 5s, music 30s; the model takes an explicit `--duration` (passed via the per-tier `duration_field`).
+- [x] **Return content-type** — mp3 confirmed live (ID3 MPEG layer III from both ElevenLabs SFX and CassetteAI); `--format wav` passthrough covered offline.
+- [x] **Confirm-threshold env var name** + FS paths — `AGENT0_SOUND_CONFIRM_THRESHOLD` (default $0.25 from the oracle); paths: draft `assets/generated/sound/`, tracked `assets/sound/`, manifest `assets/generated/.sound-manifest.jsonl`, oracle `.agent0/skills/sound/references/sound-tiers.yaml`.
 
 ## Context / references
 

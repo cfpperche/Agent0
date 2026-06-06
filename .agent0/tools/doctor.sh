@@ -199,6 +199,21 @@ else
   check advisory "audio" "wrapper .agent0/tools/audio.sh missing"
 fi
 
+# --- sound (spec 161; opt-in paid-only creative audio: music + SFX) -----------
+printf '\n=== sound ===\n'
+if [ -x "$PROJECT_DIR/.agent0/tools/sound.sh" ]; then
+  so_caps="$(bash "$PROJECT_DIR/.agent0/tools/sound.sh" caps 2>/dev/null || echo '{}')"
+  so_tiers="$(printf '%s' "$so_caps" | jq -r '.tiers_present // false' 2>/dev/null)"
+  so_key="$(printf '%s' "$so_caps" | jq -r '.paid_fal_key // false' 2>/dev/null)"
+  if [ "$so_tiers" = "true" ]; then
+    check ok "sound" "paid-only (FAL_KEY $([ "$so_key" = true ] && echo set || echo unset, opt-in); tiers oracle present)"
+  else
+    check advisory "sound" "tiers oracle missing (.agent0/skills/sound/references/sound-tiers.yaml) — /sound cannot resolve a model"
+  fi
+else
+  check advisory "sound" "wrapper .agent0/tools/sound.sh missing"
+fi
+
 # --- rollup ------------------------------------------------------------------
 printf '\n=== rollup ===\n'
 if [ "$BROKEN" -gt 0 ]; then

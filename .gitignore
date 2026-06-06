@@ -96,3 +96,10 @@ assets/generated/audio/*
 !assets/generated/audio/.gitkeep
 assets/generated/.audio-manifest.jsonl
 .agent0/.runtime-state/audio/
+
+# Sound — paid creative-audio generation (music + SFX, spec 161). Draft previews
+# + per-machine manifest are local; the tracked asset dir assets/sound/ is NOT
+# ignored (kept creative assets are committable, mirroring /image's brand split).
+assets/generated/sound/*
+!assets/generated/sound/.gitkeep
+assets/generated/.sound-manifest.jsonl

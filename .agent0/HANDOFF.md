@@ -29,7 +29,8 @@ _Prior — 149/149.1/150.x + 151 + 152.x shipped (harness arc + browser primitiv
 
 ## Active Work
 
-- **Nothing in flight — clean slate.** Working tree clean (except the untracked `btc-intraday-timing-strategy` meeting, unrelated); **`main` pushed + in sync with `origin/main`** (0 unpushed); merged branches deleted. `main` carries, all committed + pushed: spec **153** (`cd670d0`/`ac2a35e`/`d7210e7`/`7175a34`, harness Playwright-free), spec **154** (`2392590`, squad-hardening), and the **site maintenance mode** (`28a1e4b`, deploy fired → site live in maintenance). The old Playwright credential dir `.agent0/.browser-state/` was deleted (founder go).
+- **Nothing in flight — clean slate.** Working tree clean; **`main` pushed + in sync with `origin/main`** (0 unpushed; HEAD `4c77a6e`); merged feature branches deleted. `main` carries, all committed + pushed: specs **153** (harness Playwright-free), **154** (squad-hardening), **155** (`03a9a54`, visual-contract-acceptance-gate), **156** (`a89048d`, sync-exclude-od-regenerated-state seed mechanism), and the **site maintenance mode** (`28a1e4b`, live). All `Status: shipped`.
+- **Consumers synced this session (2026-06-05):** `cognixse` (`74b52fc`) and `mei-saas` (`9dedd0c`) both adopted specs 152–156 + committed/pushed. Both clean (`0 customized-refused`); the spec-156 seed mechanism eliminated the OD-file `!! customized` drift in both (`3 seed-kept` each). `cognixse`'s `.codex/hooks.json` whitespace false-positive was re-adopted from Agent0; its 3 stale OD baseline entries self-heal on its next `--apply`.
 
 ## Next Actions
 

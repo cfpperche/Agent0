@@ -19,6 +19,11 @@ _(none — built as planned.)_
 ### 2026-06-05 — parent — design docs into the target repo (git-tracked)
 Chose to write `reference-research.md` + `design-direction.md` into the target project (SDD spec dir or `docs/design/<surface>/`), git-tracked, over a gitignored scratch area. They are decision records, not throwaway. Screenshots/reports stay gitignored evidence. Codex's pressure-test confirmed this for refine mode too (value is grounded judgment, not just CSS edits).
 
+## Follow-on capacities
+
+### 2026-06-06 — parent — `/image` integration (opt-in imagery)
+Founder asked whether `/image` is integrated. It wasn't (only a negative boundary). Dogfooded demand first (`/tmp/fd-demo-d`: regenerated the Patudo hero with a `/image --tier=draft` illustration vs the emoji — clearly better, `verify-contract` still PASS 6/6). Then ran a **decision-grade `/meeting`** (Claude+Codex, anchored ledger 6 claims) → **integrate as narrow opt-in guidance, no new machinery**: `references/imagery.md` + a craft-loop step + SKILL.md/rule reconciliation (the old "never integrated" mentions softened to "opt-in enhancement"). Limits (load-bearing): `create`/`refine` only (never `explore`); draft-tier auto only (brand assets = `/product`); **tracked-neutral default** is what the surface ships with (never `import` a gitignored draft); graceful degradation on key-absent/no-credits/402/network → `image-fallback:<reason>`, build+contract still pass; verify the neutral path with the draft disabled; redact stderr before recording; one attempt per surface, outside the critique loop; never a hard dep. Meeting: `.agent0/meetings/frontend-designer-image-integration-2026-06-06T16-04-56Z/`. No SDD spec (meeting is the record); promote to a light spec only if a shell helper invoking `/image` from `frontend-designer.sh` ever lands.
+
 ## Open questions
 
 ### 2026-06-05 → RESOLVED 2026-06-06 — parent — does `explore` mode earn its place?

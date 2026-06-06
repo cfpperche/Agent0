@@ -9,6 +9,16 @@ ground → resolve stack → research references → set direction
                             (until stop criteria OR max iterations)
 ```
 
+## Imagery decision (during "set direction" / "implement")
+
+If the surface needs imagery (hero, empty-state, decorative avatar, og-image), make an explicit **imagery decision** — authored tracked neutral by default, with an optional generated draft as a *progressive override*:
+
+- Author the **tracked neutral** layer first (CSS/SVG/solid) so the surface ships and the contract passes with zero key/credits.
+- Only if the user opted in for this surface AND there's no suitable existing asset: attempt **exactly one** `/image --tier=draft` call (outside the critique loop). On any failure (no key / no credits / 402 / network / timeout) → `image-fallback:<reason>` → keep the neutral. Never `import` the gitignored draft as a build dependency.
+- `brand-text`/`brand-photo` and brand assets (logo/wordmark) are out of scope — that's `/product`.
+
+Full rules + the degradation ladder + the safe CSS/`<img>` patterns: **references/imagery.md**.
+
 ## Why "drive and see" is non-negotiable
 
 An agent can convince itself a screen looks good without ever rendering it. The loop forces the opposite: after each implement pass, actually run the surface and **look at the rendered output** (via `agent-browser.sh run -- open/screenshot/snapshot`), then compare it to the references and the direction. The gap between "what I wrote" and "what renders" is where craft happens.

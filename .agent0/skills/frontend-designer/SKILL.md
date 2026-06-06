@@ -24,7 +24,7 @@ Design or refine a **real, runnable frontend** with taste. This skill is the bui
 
 User invokes as `/frontend-designer <subcommand> <surface> [flags]`. The raw argument string is `$ARGUMENTS` — parse it yourself (positional substitution differs across runtimes). First token = mode (`create` / `refine` / `explore`); second = a kebab `<surface>` name (e.g. `dashboard`, `checkout`, `settings-screen`). Flags: `--platform <web|expo|react-native|tauri|electron|...>` (a hint, not an override of the ladder), `--spec NNN` (write design docs into that SDD spec dir), `--from <path>` (target project root; default `.`). Unknown mode → refuse with the argument-hint line.
 
-The deterministic mechanics live in `scripts/frontend-designer.sh` (`caps | detect | artifacts-dir | scaffold-docs | verify`). The *craft* — taste, design judgment, code — is yours. The references carry the depth: `references/{craft-loop,stack-ladder,reference-research,done-proof}.md`. **Read the relevant reference before the step that needs it.**
+The deterministic mechanics live in `scripts/frontend-designer.sh` (`caps | detect | artifacts-dir | scaffold-docs | verify`). The *craft* — taste, design judgment, code — is yours. The references carry the depth: `references/{craft-loop,stack-ladder,reference-research,done-proof,imagery}.md`. **Read the relevant reference before the step that needs it.**
 
 ## The craft loop (all modes share it; see references/craft-loop.md)
 
@@ -32,7 +32,7 @@ The deterministic mechanics live in `scripts/frontend-designer.sh` (`caps | dete
 2. **Resolve the stack** via the ladder (references/stack-ladder.md) — never a frozen default. Record which rung decided it.
 3. **Research references (mandatory).** Web-search domain patterns, platform conventions, and accessibility norms; use `agent-browser.sh run -- ...` to visit and screenshot real exemplars; `rg` the repo for existing tokens/components. Write `reference-research.md` (every row: source · domain relevance · pattern borrowed · pattern **rejected** · implementation consequence). See references/reference-research.md.
 4. **Set direction.** Write `design-direction.md` — domain-grounded tokens (reuse the existing design system; only *propose* when none exists), the feel, the surfaces. Scaffold both docs with `scripts/frontend-designer.sh scaffold-docs <project> --surface <s> [--spec NNN]`.
-5. **Implement** the UI in the resolved stack, reusing detected DS primitives.
+5. **Implement** the UI in the resolved stack, reusing detected DS primitives. If the surface needs imagery, author a tracked **neutral** default first; an on-brand `/image --tier=draft` is an opt-in *override* with graceful degradation (references/imagery.md) — never brand assets, never a hard dep.
 6. **Drive and see.** Run the surface; capture it with `agent-browser.sh` and look at the actual rendered result against your references.
 7. **Critique → refine.** Compare to the references and the direction; fix the gaps. Loop steps 5–7 until the **explicit stop criteria** are met or the **max-iteration bound** (default 4) is hit (references/craft-loop.md). Stopping is a declared decision, not exhaustion.
 8. **Prove done** (references/done-proof.md) — see § Done-proof.
@@ -68,7 +68,7 @@ Never consume a bundled skeleton or a hardcoded default (repo rule: no shipped s
 
 ## Dependencies
 
-Hard deps (tiny, all free, local+remote): shell, `rg`, `jq`, the project's package manager, and `agent-browser.sh` (machine-opt-in; check `scripts/frontend-designer.sh caps`). Everything else is detect-don't-impose. Paid services (e.g. `/image` fal mood-boards) are never a hard dep — an optional upgrade at most.
+Hard deps (tiny, all free, local+remote): shell, `rg`, `jq`, the project's package manager, and `agent-browser.sh` (machine-opt-in; check `scripts/frontend-designer.sh caps`). Everything else is detect-don't-impose. **`/image` (fal, paid+remote-only) is never a hard dep** — but it's an opt-in *enhancement* for on-brand draft imagery on a built surface, behind a tracked-neutral default and graceful degradation (see references/imagery.md). The skill works fully at zero key/credits/cost via the neutral path.
 
 ## Artifacts & locations
 

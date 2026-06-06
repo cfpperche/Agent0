@@ -28,4 +28,4 @@ Add a tool **only** when the resolved stack or the researched plan justifies it 
 | Preview / render harness | the project's dev server, Vite, Storybook/Ladle, Expo web, web-preview |
 | Reference capture & drive | `agent-browser.sh` (in-repo), web search/fetch |
 
-Paid services (e.g. `/image` fal mood-boards) are never a hard dependency — an optional upgrade at most.
+Paid services are never a hard dependency. `/image` (fal) is the one sanctioned opt-in *enhancement* — draft-tier on-brand placeholder imagery for a built surface, behind a tracked-neutral default + graceful degradation (see references/imagery.md); never brand assets (that's `/product`), never required.

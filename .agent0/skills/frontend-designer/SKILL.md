@@ -64,6 +64,7 @@ Never consume a bundled skeleton or a hardcoded default (repo rule: no shipped s
 
 - **Browser-renderable output:** declare `**UI impact:** render|interaction|flow` in `design-direction.md`, write a `fixture-spec.json` (template in `templates/`), and run `scripts/frontend-designer.sh verify <url> fixture-spec.json <outdir>` → a green `report.json`. **`agent-browser` unavailable is a BLOCKER (rc 4), never a pass.**
 - **Native-only surfaces** (no Expo-web/Storybook/web-preview harness): use a project-provided browser-renderable harness if one exists; otherwise ship code + native build/test evidence **explicitly labeled "not visual-contract proof."** Do **not** add new native visual tooling — that is deferred behind the rule-of-three demand test.
+- **Animated / WebGL / 3D surfaces:** the gate proves the semantic+interaction surface, **not motion fidelity**. A painting WebGL canvas isn't in the a11y tree → mark it decorative (`aria-hidden`), meaning in real text; prove "renders & animates" programmatically (`eval` of a frame counter), labeled build/runtime evidence. Honor `prefers-reduced-motion` with an explicit Play/Pause opt-in. See references/done-proof.md § Animated.
 
 ## Dependencies
 

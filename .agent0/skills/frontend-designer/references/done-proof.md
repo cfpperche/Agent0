@@ -29,3 +29,15 @@ For native mobile/desktop surfaces with no browser-renderable harness:
 3. **Do not add new native visual tooling** (simulator screenshot pipelines, native pixel-diff harnesses). That is deferred behind the repo's rule-of-three demand test — it needs 3+ real demands before it's built, not a speculative dependency here.
 
 The honest-evidence path proves *the code is real and builds*; it does **not** claim the visual contract was met. Say which one you have.
+
+## Animated / WebGL / 3D surfaces (motion has a proof boundary)
+
+Motion libraries (Three.js, GSAP, Framer Motion, Lottie, Lenis, …) are fine to use — free, local+remote, **detect-don't-impose** (add one only when the researched direction calls for motion). But the spec-155 gate is an interaction trace, **not** a pixel/frame diff, so motion has a boundary you must declare honestly:
+
+1. **What the gate PROVES:** the surrounding **semantic + interaction surface** — heading/controls present and named, click/type post-state, console within budget. Assert *that*, not the animation.
+2. **A live WebGL `<canvas>` is NOT in the a11y tree while painting** (correct browser behavior — its fallback subtree is hidden once it has a context). So don't assert the canvas as a `role:img`; mark it **decorative (`aria-hidden="true"`)** and carry the meaning in real text (the `<h1>`, a caption). The contract verifies the text/controls.
+3. **Prove "it renders and animates" programmatically, separately from the contract:** drive the page and `eval` real signals — e.g. `!!canvas.getContext('webgl')`, a `window.__sceneReady` flag, and a frame counter / object rotation sampled at two times (frames must advance). Record this in `design-direction.md` § Acceptance as **build/runtime evidence — NOT visual-contract proof of motion fidelity.**
+4. **Motion *fidelity* (easing, smoothness, fps quality) is out of scope** — a dedicated "motion gate" is deferred behind the rule-of-three demand test. Screenshots are one frame = review artifacts, never motion proof.
+5. **Accessible motion is part of the craft:** honor `prefers-reduced-motion` as the default, and give an explicit **opt-in control** (Play/Pause with `aria-pressed`) so motion is available to everyone without forcing it on users who asked for less. Also handle the no-WebGL fallback.
+
+Same honesty posture as the native-only path: build it, show evidence, and label what is vs isn't contract-verified.

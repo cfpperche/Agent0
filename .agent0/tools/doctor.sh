@@ -182,6 +182,23 @@ else
   check advisory "transcribe" "wrapper .agent0/tools/transcribe.sh missing"
 fi
 
+# --- audio (spec 160; opt-in local-first TTS) --------------------------------
+printf '\n=== audio ===\n'
+if [ -x "$PROJECT_DIR/.agent0/tools/audio.sh" ]; then
+  au_caps="$(bash "$PROJECT_DIR/.agent0/tools/audio.sh" caps 2>/dev/null || echo '{}')"
+  au_kok="$(printf '%s' "$au_caps" | jq -r '.kokoro // empty' 2>/dev/null)"
+  au_pip="$(printf '%s' "$au_caps" | jq -r '.piper // empty' 2>/dev/null)"
+  au_esp="$(printf '%s' "$au_caps" | jq -r '.espeak_ng // "no"' 2>/dev/null)"
+  if [ -n "$au_pip" ] || [ -n "$au_kok" ]; then
+    eng="$([ -n "$au_kok" ] && echo "kokoro" )$([ -n "$au_kok" ] && [ -n "$au_pip" ] && echo "+")$([ -n "$au_pip" ] && echo "piper")"
+    check ok "audio" "engine(s): $eng; espeak-ng: $au_esp"
+  else
+    check advisory "audio" "no TTS engine present/acquirable — install uv (auto-acquires Piper); Kokoro also needs espeak-ng"
+  fi
+else
+  check advisory "audio" "wrapper .agent0/tools/audio.sh missing"
+fi
+
 # --- rollup ------------------------------------------------------------------
 printf '\n=== rollup ===\n'
 if [ "$BROKEN" -gt 0 ]; then

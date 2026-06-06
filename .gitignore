@@ -88,3 +88,11 @@ assets/transcripts/*
 !assets/transcripts/.gitkeep
 assets/generated/.transcribe-manifest.jsonl
 .agent0/.runtime-state/transcribe/
+
+# Audio — local TTS synthesis (spec 160). Draft previews + engine/voice cache +
+# manifest are per-machine; the tracked voiceover dir assets/audio/ is NOT ignored
+# (kept assets are committable, mirroring /image's brand vs mockups split).
+assets/generated/audio/*
+!assets/generated/audio/.gitkeep
+assets/generated/.audio-manifest.jsonl
+.agent0/.runtime-state/audio/

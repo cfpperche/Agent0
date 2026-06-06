@@ -42,6 +42,26 @@ The raw `agent-browser` CLI is fine for read-only ad-hoc inspection; route mutat
 
 On any `unavailable:*`, explicit commands (`run`/`verify-contract`/`audit`/`adopt`) **fail closed** — rc 4 with an install/`doctor`/`caps` message (rc 3 for the `mcp-removed` override) — they never degrade to Playwright/Chrome DevTools MCP. A reserved `capability-gap` slot exists but the v1 gap list is empty (agent-browser is a superset of the old MCP surface). This single rule keeps "agent-browser is the only path" unambiguous.
 
+## Attempt-before-handoff — try the primitive, don't punt to the human by reflex
+
+**The failure this prevents (real, cognixse spec 020):** an agent that *had* `agent-browser` available and *knew* it existed still told the human _"abra essa URL e confira — não dá pra automatizar daqui"_ for a form smoke test — an assertion of incapability with **zero evidence**, emitted **before** running `route`/`caps` or driving anything. It only tried after the human pushed back. This is the same anti-pattern `runtime-capabilities.md` already forbids in another domain (*never assert a capability does not exist without verifying — hedge and verify*), here in the browser domain. The fix extends that discipline; it is not a new capability.
+
+**The discipline.** Before telling a human to do browser work themselves — _"abra essa URL"_, _"confira no browser/backoffice"_, _"envie um teste no form"_, _"não dá pra automatizar daqui"_ — you MUST first either **drive it via agent-browser** or **prove a real, observed unavailability/blocker**. A handoff to the human is legitimate only when it carries that evidence and is scoped to the **smallest sub-step that is genuinely human-only**.
+
+**"Really tried" — the cheap, bounded stop criterion** (not "fight a CAPTCHA for 10 turns"):
+
+1. Run `bash .agent0/tools/agent-browser.sh route "<task>"` (or `caps --json`).
+2. If `unavailable:*` → that IS the evidence; hand off (or ask to install) naming the reason. Done.
+3. If `primary` → load the URL and attempt the relevant action **up to the first concrete blocker**. Respect the policy: mutating/sensitive flows go through `policy-eval` / `run --confirm` (don't treat a `confirm` decision as a dead end — confirm and proceed when the human asked for the outcome).
+4. **Auth wall** → emit the existing bounded signal `BROWSER_LOGIN_REQUIRED: <host>` → `browser-login.sh` / `adopt` (§ Human-in-the-loop auth). That is the sanctioned human handoff — a specific host login, **not** "do the whole task for me".
+5. **Turnstile / CAPTCHA / 2FA / payment / irreversible action** → this is a legitimate human-only step, but only once you have **observed the blocker in the browser** — never inferred it from the theoretical presence of the widget. Then hand off only the blocked sub-step.
+
+**Anti-overcorrection — this is NOT "never delegate to the human".** Some handoffs are correct (the cognixse Turnstile *managed* challenge genuinely blocks automation). The bug was reaching that conclusion *speculatively, first*. The corrective shape of a legitimate handoff carries the attempt + the evidence + the minimal ask, e.g.:
+
+> _"Carreguei o form com `agent-browser`, preenchi e tentei submeter; o Turnstile managed bloqueou a submissão automatizada (observado). Preciso só do **submit humano** — eu confirmo o lead via `supabase db query --linked` / backoffice depois."_
+
+**Why rule-only (no hook).** The punt is plain assistant **text output** — there is no tool-call to intercept, so `PreToolUse` never fires (unlike an `Agent` dispatch). This is the exact precedent of `user-prompt-framing.md`: when the actor to discipline is the one composing the next message and there is no reliable pre-submit blocker, Agent0 uses **rule-only self-discipline** and does not fake enforcement. A natural-language output-linter is deferred behind a rule-of-three reopen-trigger: if ≥3 *new* speculative punts with a similar textual pattern recur after this rule, and last-message+audit can be exposed stably with low false-positives, reconsider a `Stop`/output-lint hook. (Graduated from the decision-grade meeting `.agent0/meetings/browser-attempt-before-handoff-2026-06-06T17-40-20Z/`.)
+
 ## Security — auditable hands
 
 The bar for granting an agent "hands" is not *can it click* but **can a later human reconstruct WHY it clicked and WHICH guard allowed it**. The wrapper enforces a policy-as-file with safe built-in defaults (no file required); override via `.agent0/browser-policy.json` (template: `.agent0/browser-policy.json.example`):

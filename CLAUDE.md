@@ -76,6 +76,10 @@ Opt-in capacity for AI image generation via fal.ai MCP — the `/image` skill pr
 
 Opt-in capacity for video, sibling to `/image`. The `/video` skill has two disjoint modes behind a required `--mode` flag: `code` (deterministic — HyperFrames renders an HTML/CSS/JS composition to MP4 locally, zero inference cost, source git-tracked) and `generative` (paid, async — fal.ai video models via the queue REST API, fire-and-forget ledger, hard `--confirm-cost-usd` gate). Activation is per-mode: code needs Node 22+/ffmpeg/headless-Chrome; generative needs `FAL_KEY`. Ships mechanisms, not model IDs — generative tiers resolve from a refreshable `video-tiers.yaml`. See `.agent0/context/rules/video-gen.md`.
 
+## Transcribe
+
+Opt-in local-first speech-to-text — the `/transcribe` skill (+ runtime-neutral `.agent0/tools/transcribe.sh`) turns an audio OR video file into a transcript via whisper.cpp (MIT), **locally**: the audio/video content never leaves the machine, only model weights are fetched once. Deliberately NOT paid media (no cost/tiers/key) — a local utility in the `vuln-audit` class (on-demand, single-engine, result-status decoupled from exit code, reports-never-blocks), with a **provenance** manifest not a cost ledger. Auto-acquires engine + `base` model as invisibly as possible (uvx ladder), degrading to a one-line hint. All native transcript formats are selectable (txt default; thin passthrough contract); diarization is the named paid-STT reopen-trigger. Recognition sibling of the synthesis-side `/audio`; split by output ontology. See `.agent0/context/rules/transcribe.md`. (spec 159)
+
 ## Harness sync
 
 `.agent0/tools/sync-harness.sh` brings a consumer project's harness up to date with Agent0 via 3-way baseline reconciliation against `.agent0/harness-sync-baseline.json` — stale files auto-update, consumer-customized files refuse without `--force`, never touches product code. See `.agent0/context/rules/harness-sync.md`.

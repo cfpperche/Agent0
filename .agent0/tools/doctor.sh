@@ -162,6 +162,26 @@ else
   check advisory "agent-browser" "wrapper .agent0/tools/agent-browser.sh missing"
 fi
 
+# --- transcribe (spec 159; opt-in local STT) ---------------------------------
+# Absent/auto-acquirable engine is ADVISORY, never broken — the skill is opt-in
+# and auto-acquires on first use. Reports, never fails the harness.
+printf '\n=== transcribe ===\n'
+if [ -x "$PROJECT_DIR/.agent0/tools/transcribe.sh" ]; then
+  tr_caps="$(bash "$PROJECT_DIR/.agent0/tools/transcribe.sh" caps 2>/dev/null || echo '{}')"
+  tr_engine="$(printf '%s' "$tr_caps" | jq -r '.engine // empty' 2>/dev/null)"
+  tr_ffmpeg="$(printf '%s' "$tr_caps" | jq -r '.ffmpeg // empty' 2>/dev/null)"
+  tr_chan="$(printf '%s' "$tr_caps" | jq -r '(.acquisition_channels // []) | join(" ")' 2>/dev/null)"
+  if [ -n "$tr_engine" ]; then
+    check ok "transcribe" "engine: $tr_engine; ffmpeg: ${tr_ffmpeg:-absent}"
+  elif [ -n "$tr_chan" ]; then
+    check advisory "transcribe" "engine absent but auto-acquirable via:${tr_chan:+ $tr_chan} (first run fetches it)"
+  else
+    check advisory "transcribe" "engine absent, no acquisition channel — install uv or 'brew install whisper-cpp' to enable"
+  fi
+else
+  check advisory "transcribe" "wrapper .agent0/tools/transcribe.sh missing"
+fi
+
 # --- rollup ------------------------------------------------------------------
 printf '\n=== rollup ===\n'
 if [ "$BROKEN" -gt 0 ]; then

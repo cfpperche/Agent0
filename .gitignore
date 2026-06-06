@@ -80,3 +80,11 @@ assets/generated/mockups/*
 # assets/video/compositions/* stays tracked; the .video-manifest.jsonl stays tracked.
 assets/generated/videos/*
 !assets/generated/videos/.gitkeep
+
+# Transcribe — local STT (spec 159). User content + engine/model cache stay local.
+# Transcripts are the user's content (never auto-committed); the provenance
+# manifest + the whisper engine/model cache are per-machine.
+assets/transcripts/*
+!assets/transcripts/.gitkeep
+assets/generated/.transcribe-manifest.jsonl
+.agent0/.runtime-state/transcribe/

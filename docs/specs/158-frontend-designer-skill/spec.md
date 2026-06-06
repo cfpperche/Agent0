@@ -2,7 +2,7 @@
 
 _Created 2026-06-05._
 
-**Status:** draft
+**Status:** in-progress
 **UI impact:** none
 
 <!-- This spec ships a skill; the skill itself produces UI in consumer projects, but the skill artifacts (SKILL.md/scripts/templates) are not themselves a UI surface, so this spec is `none`. The skill's *dogfood* demos each carry their own UI-impact declaration. -->

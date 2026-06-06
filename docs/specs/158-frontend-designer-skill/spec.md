@@ -2,7 +2,7 @@
 
 _Created 2026-06-05._
 
-**Status:** in-progress
+**Status:** shipped
 **UI impact:** none
 
 <!-- This spec ships a skill; the skill itself produces UI in consumer projects, but the skill artifacts (SKILL.md/scripts/templates) are not themselves a UI surface, so this spec is `none`. The skill's *dogfood* demos each carry their own UI-impact declaration. -->
@@ -17,52 +17,52 @@ This spec graduates the decision-grade `/meeting` synthesis at `.agent0/meetings
 
 ## Acceptance criteria
 
-- [ ] **Scenario: Skill scaffolds and validates as a compliant Agent0 skill**
+- [x] **Scenario: Skill scaffolds and validates as a compliant Agent0 skill**
   - **Given** the skill is implemented under `.agent0/skills/frontend-designer/` with the standard `.claude/skills/frontend-designer` + `.agents/skills/frontend-designer` symlinks
   - **When** `bash .claude/skills/skill/scripts/*validate*` (`/skill validate frontend-designer`) runs
   - **Then** the SKILL.md passes the agentskills.io frontmatter spec with a declared `agent0-portability-tier: agentskills-portable`
 
-- [ ] **Scenario: Three modes with explicit per-mode contracts**
+- [x] **Scenario: Three modes with explicit per-mode contracts**
   - **Given** the SKILL.md
   - **When** a reader looks for the operating modes
   - **Then** `create`, `refine`, and `explore` are each documented with required inputs, produced outputs/artifacts, and per-mode acceptance criteria; `create`/`refine` emit runnable code, `explore` emits design artifacts only (no code)
 
-- [ ] **Scenario: Stack ladder is project-derived, never a frozen default**
+- [x] **Scenario: Stack ladder is project-derived, never a frozen default**
   - **Given** a target project
   - **When** the skill must pick a framework/platform
   - **Then** it resolves in order: existing project stack+design-system → `/product` system-design stack → explicit user hint → **research canonical options and record an open decision / ask** before writing code; it NEVER consumes a bundled skeleton or hardcoded default
 
-- [ ] **Scenario: Reference research is mandatory and artifacted**
+- [x] **Scenario: Reference research is mandatory and artifacted**
   - **Given** any `create`/`refine`/`explore` pass
   - **When** the skill establishes a design direction
   - **Then** it writes a git-tracked `reference-research.md` (each entry: source URL/path · domain relevance · pattern borrowed · pattern rejected · implementation consequence) and a `design-direction.md` (domain-grounded tokens + chosen references + rationale), one compact pair per surface, in the active SDD spec dir if SDD-driven else `docs/design/<surface>/`
 
-- [ ] **Scenario: Existing design system is reused, not reinvented**
+- [x] **Scenario: Existing design system is reused, not reinvented**
   - **Given** a project with a detectable design system (Tailwind config / token files / shadcn|Radix / `/product` design-system doc / open-design vendor)
   - **When** the skill designs
   - **Then** it reads and reuses those tokens/components; it only *proposes* new tokens when none exist (and records the proposal in `design-direction.md`)
 
-- [ ] **Scenario: Browser-renderable output is proven via the spec-155 gate**
+- [x] **Scenario: Browser-renderable output is proven via the spec-155 gate**
   - **Given** a `create`/`refine` pass on a browser-renderable surface
   - **When** the skill declares done
   - **Then** it emits a `UI impact: render|interaction|flow` declaration and a green `agent-browser.sh verify-contract` `report.json`; **`agent-browser` unavailable is a BLOCKER, never a pass**
 
-- [ ] **Scenario: Native-only surfaces are labeled honestly**
+- [x] **Scenario: Native-only surfaces are labeled honestly**
   - **Given** a non-browser-renderable surface (native mobile/desktop with no Expo-web/Storybook/web-preview harness)
   - **When** the skill declares done
   - **Then** it uses a project-provided browser-renderable harness if one exists; otherwise it ships code + native build/test evidence **explicitly labeled** as "not visual-contract proof", and it adds no new native visual tooling (rule-of-three demand test)
 
-- [ ] **Scenario: The refine/craft loop has explicit stop criteria and a bound**
+- [x] **Scenario: The refine/craft loop has explicit stop criteria and a bound**
   - **Given** the iterative research→implement→drive→critique→refine loop
   - **When** the skill iterates
   - **Then** the SKILL.md declares explicit "good-enough" stop criteria and a max-iteration bound; the loop stops on either
 
-- [ ] **Scenario: Dependency footprint is minimal and free**
+- [x] **Scenario: Dependency footprint is minimal and free**
   - **Given** the skill's declared dependencies
   - **When** audited
   - **Then** hard deps are only shell + `rg` + `jq` + the project's package manager + `agent-browser.sh`; everything else is detect-don't-impose; every dependency is free and runs both locally and remotely
 
-- [ ] **Scenario: Dogfood proves capability across three edges**
+- [x] **Scenario: Dogfood proves capability across three edges**
   - **Given** the implemented skill
   - **When** it is dogfooded into 3 demo projects in `/tmp`
   - **Then** (a) greenfield + real design-system web demo produces a green `verify-contract` report whose output visibly reuses the fixture's tokens/components; (b) refine-existing demo shows before/after evidence, a bounded diff, preserved behavior, and a critique loop stopping on explicit criteria; (c) a no-design-system demo on a non-web platform proves token-proposal + native-honesty (render evidence via Expo-web/Storybook/web-preview if achievable, else honestly labeled)

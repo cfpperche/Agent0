@@ -21,10 +21,10 @@ _Work top-to-bottom. Check off as you go. If a task reveals the plan is wrong, u
 ## Validate
 - [x] 9. `bash .agent0/skills/skill/scripts/validate.sh .agent0/skills/frontend-designer` passes; run the shell test green; run `doctor.sh` to confirm no harness breakage.
 - [x] 10. Regenerate (n/a in source repo — `.agent0/skills` + `.agent0/context` are auto-managed via COPY_CHECK_RECURSIVE; consumer baselines self-update) the harness-sync baseline so the new tracked files are registered.
-- [ ] 11. Commit the skill + spec (spec `Status: in-progress`).
+- [x] 11. Commit the skill + spec (spec `Status: in-progress`).
 
 ## Dogfood (separate task phase — see task list #4)
-- [ ] 12. Demo A — greenfield + real design-system (web): green `verify-contract` report, output reuses fixture tokens.
-- [ ] 13. Demo B — refine-existing: before/after evidence, bounded diff, preserved behavior, critique loop stops on criteria.
-- [ ] 14. Demo C — no-design-system fallback on a non-web platform: token-proposal + native-honesty (render evidence if achievable, else labeled).
-- [ ] 15. Mark spec `Status: shipped`; update HANDOFF.
+- [x] 12. Demo A — greenfield + real design-system (web): green `verify-contract` report, output reuses fixture tokens.
+- [x] 13. Demo B — refine-existing: before/after evidence, bounded diff, preserved behavior, critique loop stops on criteria.
+- [x] 14. Demo C — no-design-system fallback on a non-web platform: token-proposal + native-honesty (render evidence if achievable, else labeled).
+- [x] 15. Mark spec `Status: shipped`; update HANDOFF.

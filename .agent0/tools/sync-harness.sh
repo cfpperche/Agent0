@@ -225,6 +225,7 @@ COPY_CHECK_FILES=(
   "assets/generated/audio/.gitkeep"
   "assets/sound/.gitkeep"
   "assets/generated/sound/.gitkeep"
+  "assets/diagrams/.gitkeep"
   "assets/video/.gitkeep"
   "assets/video/compositions/.gitkeep"
   "assets/generated/videos/.gitkeep"

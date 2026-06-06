@@ -1,0 +1,15 @@
+erDiagram
+  SPEC ||--|| PLAN : has
+  SPEC ||--|| TASKS : has
+  SPEC ||--|| NOTES : has
+  SPEC ||--o| DEBATE : may-have
+  MEETING ||--o| SPEC : graduates-to
+  SPEC {
+    string nnn
+    string slug
+    string status
+  }
+  MEETING {
+    string tier
+    string synthesis
+  }

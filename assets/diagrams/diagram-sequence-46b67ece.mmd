@@ -1,0 +1,17 @@
+sequenceDiagram
+  participant U as User
+  participant S as /diagram skill
+  participant T as diagram.sh
+  participant M as npx mmdc
+  participant C as system Chrome
+  U->>S: /diagram "flowchart..."
+  S->>T: invoke
+  T->>T: structural validate (.mmd)
+  alt Chrome present
+    T->>M: render via puppeteer cfg
+    M->>C: headless render
+    C-->>T: SVG
+    T-->>U: status=ok (tracked asset + source)
+  else Chrome absent
+    T-->>U: status=unavailable (source kept, hint)
+  end

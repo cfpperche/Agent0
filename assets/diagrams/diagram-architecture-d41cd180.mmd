@@ -1,0 +1,20 @@
+flowchart TB
+  subgraph gen[Generation]
+    img["/image — raster, paid"]
+    vid["/video — motion"]
+    aud["/audio — TTS local-first"]
+    snd["/sound — music/SFX, paid"]
+  end
+  subgraph perc[Perception]
+    tr["/transcribe — STT local"]
+  end
+  subgraph det[Deterministic visual]
+    dg["/diagram — Mermaid local/free"]
+  end
+  fal[("fal-rest.sh + tiers oracle")]
+  npx["npx mmdc + system Chrome"]
+  img --> fal
+  vid --> fal
+  snd --> fal
+  aud -. remote .-> fal
+  dg --> npx

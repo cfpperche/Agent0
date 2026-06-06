@@ -214,6 +214,23 @@ else
   check advisory "sound" "wrapper .agent0/tools/sound.sh missing"
 fi
 
+# --- diagram (spec 162; opt-in local/free deterministic technical visuals) ----
+printf '\n=== diagram ===\n'
+if [ -x "$PROJECT_DIR/.agent0/tools/diagram.sh" ]; then
+  dg_caps="$(bash "$PROJECT_DIR/.agent0/tools/diagram.sh" caps 2>/dev/null || echo '{}')"
+  dg_mmdc="$(printf '%s' "$dg_caps" | jq -r '.mmdc // empty' 2>/dev/null)"
+  dg_chrome="$(printf '%s' "$dg_caps" | jq -r '.chrome // empty' 2>/dev/null)"
+  if [ -n "$dg_mmdc" ] && [ -n "$dg_chrome" ]; then
+    check ok "diagram" "mermaid render ready (mmdc: $dg_mmdc; chrome present)"
+  elif [ -n "$dg_mmdc" ]; then
+    check advisory "diagram" "no usable Chrome — render degrades to validation-only (install google-chrome/chromium)"
+  else
+    check advisory "diagram" "no Node/npx to acquire mmdc — install Node (render needs @mermaid-js/mermaid-cli)"
+  fi
+else
+  check advisory "diagram" "wrapper .agent0/tools/diagram.sh missing"
+fi
+
 # --- rollup ------------------------------------------------------------------
 printf '\n=== rollup ===\n'
 if [ "$BROKEN" -gt 0 ]; then

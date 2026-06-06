@@ -103,3 +103,8 @@ assets/generated/.audio-manifest.jsonl
 assets/generated/sound/*
 !assets/generated/sound/.gitkeep
 assets/generated/.sound-manifest.jsonl
+
+# Diagram — deterministic technical visuals (spec 162). Diagrams are KEEPERS:
+# the tracked dir assets/diagrams/ (and the .mmd source) are NOT ignored — only
+# the per-machine provenance manifest is local.
+assets/generated/.diagram-manifest.jsonl

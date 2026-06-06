@@ -21,15 +21,16 @@ Chose to write `reference-research.md` + `design-direction.md` into the target p
 
 ## Open questions
 
-### 2026-06-05 — parent — does `explore` mode earn its place?
-`explore` (research + direction, no code) was spec'd narrow and **not** exercised in the dogfood (the matrix covered create ×2 + refine ×1). Re-evaluate after its first real use; risk is it collapses into create's research phase or drifts toward `/product`-lite. Tracked as the one remaining spec open question.
+### 2026-06-05 → RESOLVED 2026-06-06 — parent — does `explore` mode earn its place?
+`explore` (research + direction, no code) was spec'd narrow and not exercised in the first dogfood. **Resolved by dogfood E** (`/tmp/fd-demo-e`, a personal-finance home with an undecided audience): **KEEP, narrowed.** Findings: explore produced 2–3 distinct directions (Calm Trust / Warm Progress / Pro Cockpit) + tradeoffs + a recommendation + an explicit decision gate, with **zero code** — a deliverable genuinely different from `create` (which researches *one* direction then codes). It earns its place *only* when (a) multiple directions are viable AND (b) a human must choose before code; otherwise it collapses into `create`'s research phase (the predicted risk is real, so the narrow scope is load-bearing). Refinement applied: SKILL.md + `frontend-designer.md` now state explore's defining shape is the **multi-direction decision gate**, not a code-less `create`, with an explicit "if direction is already implicit, use `create`" guard.
 
 ## Dogfood outcome (2026-06-05)
 
-Four `/tmp` demos, all proven (summary: `/tmp/FD-DOGFOOD-SUMMARY.md`). A/B/C cover the required capability matrix; D is a founder-added creativity demo:
+Five `/tmp` demos, all proven (summary: `/tmp/FD-DOGFOOD-SUMMARY.md`). A/B/C cover the required capability matrix; D is a founder-added creativity demo; E exercises the `explore` mode:
 - **A** `fd-demo-a` — create, web, **reused** existing design system → green `verify-contract` 6/6. Output visibly uses the project's `tokens.json` (zero new colors).
 - **B** `fd-demo-b` — refine, web → before **FAIL** 3 / after **PASS** 7/7 (interaction tier); bounded diff (only `checkout.html`, all field ids + submit behavior preserved). The drive-and-see loop caught a real accessible-name bug (trailing space from an `aria-hidden` asterisk span) on iteration 1, fixed iteration 2 — concrete evidence the see-and-critique loop works.
 - **C** `fd-demo-c` — create, **native** Expo/RN, no DS → proposed tokens; **native-honesty path**: `node --test` 7/7 over pure logic + token invariants (44pt tap target, 8px spacing), **no visual-contract claimed**, no new native tooling added. (A web preview from the same tokens, `fd-demo-c/.evidence/preview.png`, was later produced on request — explicitly NOT the native runtime.)
 - **D** `fd-demo-d` — create, web, no DS → **proposed a full brand system** for "Patudo" (fictional largest Brazilian pet-shop chain): coral/teal/sun palette, Poppins+Nunito, complete conversion landing (hero/stats/services/Clube/testimonials/app/footer). Green `verify-contract` 6/6. Proves the skill handles **brand/marketing craft**, not just app/dashboard UI. Founder-requested ("use a criatividade").
+- **E** `fd-demo-e` — **explore**, personal-finance home, undecided audience → 3 distinct directions (Calm Trust / Warm Progress / Pro Cockpit) + tradeoffs + recommendation + decision gate, **zero code** (verified: no html/tsx/css produced). Resolved the spec's open question (KEEP explore, narrowed). Founder-requested, to test whether explore earns its place.
 
 All acceptance scenarios in `spec.md` satisfied; `/skill validate` exit 0; doctor 18 ok. The dogfood demos live in `/tmp` (not versioned) — proof artifacts, not shipped code.

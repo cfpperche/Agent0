@@ -85,7 +85,7 @@ This spec graduates the decision-grade `/meeting` synthesis at `.agent0/meetings
 - [x] Reference-research mechanism? → **web + agent-browser + rg, artifacted** (meeting D4).
 - [x] Done-proof? → **reuse spec 155; unavailable = blocker** (meeting D6).
 - [x] Where do design docs live? → **git-tracked, SDD spec dir or `docs/design/<surface>/`** (meeting delta).
-- [ ] Does `explore` mode survive its first real use, or collapse into create's research phase? Resolve after dogfood — keep narrow for v1.
+- [x] Does `explore` mode survive its first real use, or collapse into create's research phase? → **KEEP, narrowed** (dogfood E, 2026-06-06). It earns its place only when 2–3 directions are viable AND a human must choose before code; its distinct deliverable is the *multi-direction + decision-gate* shape (not a code-less `create`). SKILL.md + rule sharpened accordingly.
 
 ## Context / references
 

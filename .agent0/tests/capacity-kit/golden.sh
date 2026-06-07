@@ -37,7 +37,9 @@ norm() { sed -e "s#$ROOT#<ROOT>#g" -e 's#/tmp/[A-Za-z0-9._-]*#<TMP>#g'; }
 run_one() {  # $1=tool $2=args... (already split) -> captures stdout+stderr+exit, normalized
   local tool="$1"; shift
   local out rc
-  out="$(cd "$ROOT" && bash ".agent0/tools/$tool.sh" "$@" 2>&1)"; rc=$?
+  # FAL_KEY is pinned UNSET so the paid tools' caps/doctor are hermetic regardless of
+  # the runner's ambient key (spec 164 — the set state is pinned by paid-golden.sh).
+  out="$(cd "$ROOT" && env -u FAL_KEY bash ".agent0/tools/$tool.sh" "$@" 2>&1)"; rc=$?
   printf '%s\n--exit:%s\n' "$out" "$rc" | norm
 }
 

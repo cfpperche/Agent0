@@ -37,9 +37,16 @@ The discipline that keeps the kit honest (and behavior-preserving):
 - The tool's `append_manifest` keeps its own **fields** (schema differs per tool) and routes the append through `cap_manifest_append`.
 - Tool-specific acquisition ladders stay in the tool (see below).
 
-## Paid-media sub-kit (`lib/paid-media.sh`) — deferred follow-up
+## Paid-media sub-kit (`lib/paid-media.sh`) — shipped (spec 164)
 
-The paid lane (`fal-rest` wrapper, the `tiers.yaml` block-scan reader `yget`/`ytop`, `cost-print`, `--confirm-cost-usd` gate) is shared by `image`/`video`/`audio --remote`/`sound`. It is a **separable second extraction** (smaller, only ~2 first-class tools today) and was **deferred** from the v1 kernel pass to keep the refactor's blast radius bounded. The placeholder is referenced in the spec; build it when the next paid tool lands or when the duplication bites again.
+The paid-domain plumbing that was duplicated across the paid tools, extracted into a sibling sourced lib `.agent0/tools/lib/paid-media.sh` — a **separate** file (not folded into `capacity.sh`) on cohesion grounds: `capacity.sh`'s identity is local/free; `FAL_KEY` + a `*-tiers.yaml` oracle are paid-domain. Contents are **four PURE helpers** (never emit, never exit — the calling tool keeps its own failure contract, which is what lets one lib serve `sound`'s compact `cap_fail` and `audio`'s pretty local `fail`):
+
+- `pm_yaml_top <file> <key>` / `pm_yaml_tier_field <file> <tier> <field>` — the fixed 2-/4-space `*-tiers.yaml` block-scan scalar oracle (quote + inline-comment stripping), the former `yget`/`ytop`.
+- `pm_has_fal_key` (predicate → 0/1) / `pm_fal_key_state` (→ `set|unset`) — leak-safe FAL_KEY state; never echoes the value.
+
+Consumers: `sound` + `audio --remote` (the two `.agent0/tools/` paid tools that source the kernel).
+
+**Honest scope (kill-gate measurement, decided in a decision-grade `/meeting`):** the cost FORMULA, the `--confirm-cost-usd` GATE (`sound` hybrid-threshold vs `video` hard-confirm vs none — conflicting *policy*), and fal invocation (sync `run` vs async `submit`; per-model body — already at `fal-rest.sh`) are **genuine per-tool variants and stay LOCAL** — extracting them would change behavior. A FAL_KEY *require* helper was also rejected (it would have to fail internally, violating the pure contract). **`image` is out** (pipe-table, not YAML; different prepare/exec/record contract). **`video` is the named reopen-trigger** — migrating its YAML reader means a *skill-dir* tool sourcing `tools/lib/`, a new cross-dir portability/sync concern needing its own source/sync smoke test, NOT a deferred slice of this pass.
 
 ## Local acquisition stays a TEMPLATE, not a library
 
@@ -59,4 +66,4 @@ The local acquire ladders are **policy-heavy and not byte-identical** — `uvx -
 
 ## Behavior-preservation gate
 
-This was a **pure, test-protected refactor** — zero behavior change. The gate: every tool's offline suite green **+** `.agent0/tests/capacity-kit/golden.sh verify` clean (captures each tool's `caps`/`doctor`/`--help`/usage/bad-flag stdout+stderr+exit, before vs after) **+** the sync-propagation test **+** `bash -n` **+** `doctor`. Run `golden.sh capture` BEFORE any future kit change, `verify` after.
+This was a **pure, test-protected refactor** — zero behavior change. The gate: every tool's offline suite green **+** `.agent0/tests/capacity-kit/golden.sh verify` clean (captures each tool's `caps`/`doctor`/`--help`/usage/bad-flag stdout+stderr+exit, before vs after; `FAL_KEY` pinned UNSET so it is hermetic) **+** `paid-golden.sh verify` (spec 164 — pins `sound`/`audio` caps/doctor under FAL_KEY **set AND unset** + a key-value leak guard) **+** the sync-propagation test (covers `paid-media.sh`) **+** `missing-kit-guard.sh` (capacity + paid-media absence both exit 70) **+** `bash -n` **+** `doctor`. Run `golden.sh capture` BEFORE any future kit change, `verify` after.

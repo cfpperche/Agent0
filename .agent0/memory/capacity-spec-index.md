@@ -77,6 +77,18 @@ _Supply chain (`008`/`009`/`109`) was removed by `112-prune-supply-chain-and-sec
 |---|---|---|
 | PHP / Laravel (`php-laravel-support.md`) | `047-php-laravel-support` | — |
 
+## Capacity media family & kit
+
+| Capacity / rule | Origin spec | Extending specs |
+|---|---|---|
+| Transcribe (`transcribe.md`) — local STT | `159-transcribe` | — |
+| Audio (`audio.md`) — local-first TTS | `160-audio` | — |
+| Sound (`sound.md`) — paid music/SFX | `161-sound` | — |
+| Diagram (`diagram.md`) — deterministic Mermaid | `162-diagram` | — |
+| Capacity kit (`capacity-kit.md`) — shared kernel `lib/capacity.sh` | `163-capacity-kit` | `164-paid-media-kit` (paid sub-kit `lib/paid-media.sh`) |
+
+_The paid sub-kit (`164`) extracted 4 pure helpers (`pm_yaml_*`, `pm_has_fal_key`/`pm_fal_key_state`) for `sound` + `audio --remote`; honest scope kept cost-gate/formula/async local, `image` out, `video` the named reopen-trigger (skill-dir cross-dir sourcing). `image`/`video` paid tools predate this numbered cluster._
+
 ## Other specs (no fork-propagated rule)
 
 | Spec | Note |

@@ -32,7 +32,7 @@ no(){ FAIL=$((FAIL+1)); echo "  ✗ $1"; }
 out="$(bash "$TOOL" --apply --agent0-path="$SRC" "$CONSUMER" 2>&1)" || true
 
 [ -f "$CONSUMER/.agent0/tools/lib/capacity.sh" ] && ok "lib/capacity.sh propagated to consumer" || { no "lib/capacity.sh NOT propagated"; printf '%s\n' "$out" | tail -5; }
-[ -f "$CONSUMER/.agent0/tools/lib/paid-media.sh" ] && ok "lib/paid-media.sh (future sub-kit) propagated" || no "lib/paid-media.sh NOT propagated"
+[ -f "$CONSUMER/.agent0/tools/lib/paid-media.sh" ] && ok "lib/paid-media.sh (paid sub-kit, spec 164) propagated" || no "lib/paid-media.sh NOT propagated"
 [ -x "$CONSUMER/.agent0/tools/lib/capacity.sh" ] && ok "executable mode preserved on the lib" || no "lib not executable after sync"
 # guard: the glob is actually registered in sync-harness
 grep -q '\.agent0/tools/lib|\*\.sh' "$TOOL" && ok "tools/lib glob registered in sync-harness" || no "tools/lib glob MISSING from sync-harness"

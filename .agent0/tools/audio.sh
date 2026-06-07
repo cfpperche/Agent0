@@ -67,6 +67,8 @@ done
 # shared capacity kernel (spec 163) — cap_have/sha/cap_emit_exit/manifest mechanic.
 # Sourced here (below the --help line range) so cap_* is defined before first use.
 . "$HERE/lib/capacity.sh" 2>/dev/null || { echo "audio: missing kit library lib/capacity.sh" >&2; exit 70; }
+# paid-media sub-kit (spec 164) — pm_yaml_*/pm_has_fal_key/pm_fal_key_state (pure helpers)
+. "$HERE/lib/paid-media.sh" 2>/dev/null || { echo "audio: missing kit library lib/paid-media.sh" >&2; exit 70; }
 CAP_TOOL="audio"
 
 espeak_ok() {
@@ -106,9 +108,9 @@ if [ "$SUBCMD" = "caps" ]; then
   resolve_kokoro && K="${KOKORO_CMD[*]}" || K=""
   esp=$(espeak_ok && echo yes || echo no)
   if cap_have jq; then
-    jq -n --arg p "$P" --arg k "$K" --arg esp "$esp" --arg ch "$(channels)" --arg key "${FAL_KEY:+set}" \
+    jq -n --arg p "$P" --arg k "$K" --arg esp "$esp" --arg ch "$(channels)" --argjson fk "$(pm_has_fal_key && echo true || echo false)" \
       '{kokoro:(if $k=="" then null else $k end), piper:(if $p=="" then null else $p end),
-        espeak_ng:$esp, paid_fal_key:(if $key=="" then false else true end),
+        espeak_ng:$esp, paid_fal_key:$fk,
         channels:($ch|split(" ")|map(select(.!="")))}'
   else
     echo "{\"kokoro\":\"$K\",\"piper\":\"$P\",\"espeak_ng\":\"$esp\"}"
@@ -122,7 +124,7 @@ if [ "$SUBCMD" = "doctor" ]; then
   else echo "  [warn] kokoro: needs espeak-ng (apt-get install espeak-ng / brew install espeak-ng)"; fi
   if resolve_piper; then echo "  [ ok ] piper: ${PIPER_CMD[*]}"; else echo "  [warn] piper: absent — install uv to auto-acquire"; fi
   resolve_ffmpeg && echo "  [ ok ] ffmpeg: $FFMPEG_BIN" || echo "  [warn] ffmpeg: absent (mp3 encode needs it; --format wav works without)"
-  key_state=$([ -n "${FAL_KEY:-}" ] && echo set || echo unset)
+  key_state=$(pm_fal_key_state)
   echo "  [info] paid lane: FAL_KEY $key_state; tiers: $TIERS"
   echo "  [info] draft dir: $DRAFT_DIR (gitignored) | asset dir: $ASSET_DIR (tracked) | manifest: $MANIFEST"
   exit 0
@@ -171,13 +173,13 @@ encode_or_place() {  # $1 = produced wav/file ; sets OUTPUT
 if [ "$REMOTE" = 1 ]; then
   # ---- paid lane (fal) ----
   LANE="paid"; STAYED=false
-  [ -n "${FAL_KEY:-}" ] || fail unavailable "--remote needs FAL_KEY (paid lane). Set it, or use the free local lane (drop --remote)."
+  pm_has_fal_key || fail unavailable "--remote needs FAL_KEY (paid lane). Set it, or use the free local lane (drop --remote)."
   [ -f "$TIERS" ] || fail error "tiers file not found: $TIERS"
   cap_have jq || fail error "jq required for the paid lane"
-  [ -n "$TIER" ] || TIER="$(awk -F': *' '/^default_tier:/{print $2; exit}' "$TIERS" | tr -d '"')"
-  # pull model + rate for the tier from the yaml (simple block scan)
-  PMODEL="$(awk -v t="  $TIER:" '$0==t{f=1;next} f&&/model:/{gsub(/.*model: *"?|"? *$/,"");print;exit} f&&/^  [a-z]/{exit}' "$TIERS")"
-  RATE="$(awk -v t="  $TIER:" '$0==t{f=1;next} f&&/price_per_1k_chars:/{gsub(/.*: */,"");print;exit} f&&/^  [a-z]/{exit}' "$TIERS")"
+  [ -n "$TIER" ] || TIER="$(pm_yaml_top "$TIERS" default_tier)"
+  # pull model + rate for the tier from the yaml oracle (lib/paid-media.sh, spec 164)
+  PMODEL="$(pm_yaml_tier_field "$TIERS" "$TIER" model)"
+  RATE="$(pm_yaml_tier_field "$TIERS" "$TIER" price_per_1k_chars)"
   [ -n "$PMODEL" ] || fail error "tier '$TIER' not found in $TIERS"
   PROVIDER="fal"
   COST="$(awk -v c="$CHARS" -v r="${RATE:-0}" 'BEGIN{u=int((c+999)/1000); if(u<1)u=1; printf "%.4f", u*r}')"

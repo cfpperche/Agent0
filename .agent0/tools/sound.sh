@@ -59,25 +59,14 @@ done
 
 # shared capacity kernel (spec 163) — cap_have/sha/cap_emit_exit/cap_fail/manifest mechanic
 . "$HERE/lib/capacity.sh" 2>/dev/null || { echo "sound: missing kit library lib/capacity.sh" >&2; exit 70; }
+# paid-media sub-kit (spec 164) — pm_yaml_*/pm_has_fal_key/pm_fal_key_state (pure helpers)
+. "$HERE/lib/paid-media.sh" 2>/dev/null || { echo "sound: missing kit library lib/paid-media.sh" >&2; exit 70; }
 CAP_TOOL="sound"
 # cap_have/cap_sha256_str come from lib/capacity.sh (cap_have / cap_sha256_str)
 
-# yaml helpers (simple block scan; no yq dependency, mirrors audio.sh) ----------
-yget() {  # $1 = tier name, $2 = field key -> value (quotes + trailing-comment stripped)
-  awk -v t="  $1:" -v f="$2:" '
-    $0==t {inb=1; next}
-    inb && /^  [^ ]/ {exit}
-    inb {
-      line=$0; sub(/^[ \t]+/,"",line)
-      if (index(line, f)==1) {
-        val=substr(line, length(f)+1)
-        sub(/^[ \t]+/,"",val); sub(/[ \t]+#.*$/,"",val)
-        gsub(/^"|"$/,"",val); sub(/[ \t]+$/,"",val)
-        print val; exit
-      }
-    }' "$TIERS"
-}
-ytop() { awk -v f="$1:" '$1==f{v=$2; gsub(/^"|"$/,"",v); print v; exit}' "$TIERS"; }
+# yaml oracle readers — bodies live in lib/paid-media.sh (spec 164); these bind $TIERS
+yget() { pm_yaml_tier_field "$TIERS" "$1" "$2"; }  # $1=tier $2=field
+ytop() { pm_yaml_top "$TIERS" "$1"; }              # $1=top-level key
 
 resolve_ffmpeg() { FFMPEG_BIN="${SOUND_FFMPEG_BIN:-}"; [ -n "$FFMPEG_BIN" ] && return 0; cap_have ffmpeg && { FFMPEG_BIN=ffmpeg; return 0; }; return 1; }
 
@@ -85,20 +74,20 @@ resolve_ffmpeg() { FFMPEG_BIN="${SOUND_FFMPEG_BIN:-}"; [ -n "$FFMPEG_BIN" ] && r
 if [ "$SUBCMD" = "caps" ]; then
   thr="$(ytop confirm_threshold_usd)"; thr="${AGENT0_SOUND_CONFIRM_THRESHOLD:-${thr:-0.25}}"
   if cap_have jq; then
-    jq -nc --arg key "${FAL_KEY:+set}" --arg tiers "$TIERS" \
+    jq -nc --argjson fk "$(pm_has_fal_key && echo true || echo false)" --arg tiers "$TIERS" \
       --argjson tf "$([ -f "$TIERS" ] && echo true || echo false)" \
       --arg thr "$thr" --arg ff "$(resolve_ffmpeg && echo "$FFMPEG_BIN" || echo "")" \
-      '{paid_only:true, paid_fal_key:(if $key=="" then false else true end),
+      '{paid_only:true, paid_fal_key:$fk,
         tiers_file:$tiers, tiers_present:$tf, confirm_threshold_usd:($thr|tonumber? // null),
         ffmpeg:(if $ff=="" then null else $ff end)}'
   else
-    echo "{\"paid_only\":true,\"paid_fal_key\":$([ -n "${FAL_KEY:-}" ] && echo true || echo false),\"tiers_present\":$([ -f "$TIERS" ] && echo true || echo false)}"
+    echo "{\"paid_only\":true,\"paid_fal_key\":$(pm_has_fal_key && echo true || echo false),\"tiers_present\":$([ -f "$TIERS" ] && echo true || echo false)}"
   fi
   exit 0
 fi
 if [ "$SUBCMD" = "doctor" ]; then
   echo "sound — capability check (paid-only creative audio)"
-  key_state=$([ -n "${FAL_KEY:-}" ] && echo set || echo unset)
+  key_state=$(pm_fal_key_state)
   echo "  [info] paid lane: FAL_KEY $key_state (no free local lane — paid by nature)"
   if [ -f "$TIERS" ]; then echo "  [ ok ] tiers: $TIERS"; else echo "  [warn] tiers file missing: $TIERS"; fi
   resolve_ffmpeg && echo "  [ ok ] ffmpeg: $FFMPEG_BIN" || echo "  [warn] ffmpeg: absent (mp3 encode needs it; --format wav works without)"
@@ -144,7 +133,7 @@ fi
 PROMPT_SHA="$(cap_sha256_str "$PROMPT")"
 
 # --- paid lane only ----------------------------------------------------------
-[ -n "${FAL_KEY:-}" ] || cap_fail unavailable "/sound is paid-only and needs FAL_KEY (no free local lane — music/SFX has no light local engine). Set FAL_KEY and retry."
+pm_has_fal_key || cap_fail unavailable "/sound is paid-only and needs FAL_KEY (no free local lane — music/SFX has no light local engine). Set FAL_KEY and retry."
 [ -f "$TIERS" ] || cap_fail error "tiers file not found: $TIERS"
 cap_have jq || cap_fail error "jq required (oracle parse + body build)"
 

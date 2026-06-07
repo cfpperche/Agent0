@@ -114,7 +114,7 @@ AGENT0_CONTEXT_INJECTION
 event: UserPromptSubmit
 mode: prompt-capsules
 source_dir: .agent0/context/rules
-selected: spec-driven 
+selected: spec-driven
 limits: max_fragments=5 max_bytes=6000
 
 Instruction: These trusted repo-controlled capsules are routing hints. Read the named file before relying on omitted details; do not infer the full contract from this block.

@@ -21,7 +21,7 @@ INFO REVIEW .agent0/memory/harness-home.md: 2 match(es) — NOT auto-edited:
   .agent0/memory/harness-home.md:34: - **`stays`:** `settings.json` (Claude hook-config format), delegation state + audit (`Agent` tool is Claude-exclusive),
 INFO REVIEW .agent0/.runtime-state/README.md: 2 match(es) — NOT auto-edited:
   .agent0/.runtime-state/README.md:3: Catalogue of the per-machine, per-project ephemeral-state directories the Agent0 harness writes. Each is owned by exactl
-  .agent0/.runtime-state/README.md:16: | `.claude/.compact-history/` | [`compaction-continuity`](../memory/compaction-continuity.md) | Per-compaction snapshot 
+  .agent0/.runtime-state/README.md:16: | `.claude/.compact-history/` | [`compaction-continuity`](../memory/compaction-continuity.md) | Per-compaction snapshot
 INFO REVIEW .agent0/memory/cc-platform-hooks.md: 3 match(es) — NOT auto-edited:
   .agent0/memory/cc-platform-hooks.md:54: | `PreCompact` | Before context compaction |
   .agent0/memory/cc-platform-hooks.md:68: - `PreCompact` (pre-compact)

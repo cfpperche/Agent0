@@ -32,7 +32,7 @@ _Generated from `plan.md` on 2026-05-26. Work top-to-bottom. Check boxes as task
   - (c) `$agents` does NOT contain the line `## Codex Capability Tiers` anywhere → `ok` / `fail "AGENTS.md: legacy '## Codex Capability Tiers' table still present"`.
   - (d) The registry file contains each of the six backtick-quoted vocabulary terms (`` `native` ``, `` `native-opt-in` ``, `` `convention` ``, `` `read-only` ``, `` `planned` ``, `` `unsupported` ``) at least once → `ok` per term / `fail "registry: vocabulary term \`<T>\` missing"`.
   - (e) For each label in a hard-coded `MINIMUM_SET` bash array (12 labels from spec Scenario 1: `instruction entrypoints`, `session handoff`, `SDD`, `debate`, `lifecycle hooks`, `runtime introspect`, `delegation/subagents`, `MCP recipes`, `image generation`, `memory`, `harness sync`, `customization/sync surfaces`), grep the registry for that label appearing at least once and at most once → `ok` per label / `fail "registry: required row '<L>' missing"` or `fail "registry: required row '<L>' duplicated"`. Extra rows beyond the minimum set are permitted and not asserted.
-  
+
   Call `check_runtime_capabilities_registry` from `main()` after `check_agents_md_baseline`. Use the existing `ok`/`fail` accumulator pattern — no new framework required.
 
 - [x] 8. Add a comment above the `MINIMUM_SET` array literal in `check-instruction-drift.sh` pointing at `docs/specs/093-runtime-capability-registry/spec.md § Scenario: users can inspect one canonical capability matrix` as the source of truth. The comment names the drift risk explicitly: this array must agree with the spec's minimum-set enumeration; a future spec promoting a 13th row updates both in the same commit.

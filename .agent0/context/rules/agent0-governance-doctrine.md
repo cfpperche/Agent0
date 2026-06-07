@@ -24,7 +24,7 @@ Do not classify Agent0 governance as a flat feature list. Use these layers:
 2. **Governance domains** - quality and security are first-class domains applied along the spine.
 3. **Governance substrate** - context and replication are the machinery that make the domains reliable across sessions and consumer projects.
 4. **Transversal constraints** - multi-runtime support, stack neutrality, sync safety, cost honesty, and evidence discipline apply to every domain; they are not side buckets.
-5. **Scope-admission meta-governance** - rule-of-three, reopen triggers, deferred rows, and explicit non-goals decide whether a proposed capacity belongs in Agent0 at all.
+5. **Scope-admission meta-governance** - rule-of-three, reopen triggers, deferred rows, and explicit non-goals decide whether a proposed capacity belongs in Agent0 at all. The detailed operating rule is `.agent0/context/rules/scope-admission-governance.md`.
 
 ## Own, instrument, ignore
 
@@ -63,6 +63,8 @@ Before adding a new Agent0 capacity or expanding an existing one, answer these q
 
 If these questions cannot be answered concretely, keep the idea in brainstorm, meeting, reminder, routine, or spec open questions instead of building it.
 
+For admitted capacity specs, use `.agent0/context/rules/scope-admission-governance.md` for the full admission outcomes, evidence ladder, hardening bar, and deferred-work recording discipline.
+
 ## Gate-algebra lens
 
 Existing Agent0 controls already resemble a common shape:
@@ -79,7 +81,6 @@ Use this as a design lens when comparing governance mechanisms. Do not refactor 
 
 The doctrine preserves these possible future specs without starting them:
 
-- `scope-admission-governance`
 - `gate-algebra`
 - `security-governance-lane`
 - `continuous-evolution-spine`

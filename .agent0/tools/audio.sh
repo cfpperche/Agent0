@@ -64,15 +64,17 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-have() { command -v "$1" >/dev/null 2>&1; }
-sha256_of_str() { printf '%s' "$1" | { sha256sum 2>/dev/null || shasum -a 256 2>/dev/null; } | awk '{print $1}'; }
+# shared capacity kernel (spec 163) — cap_have/sha/cap_emit_exit/manifest mechanic.
+# Sourced here (below the --help line range) so cap_* is defined before first use.
+. "$HERE/lib/capacity.sh" 2>/dev/null || { echo "audio: missing kit library lib/capacity.sh" >&2; exit 70; }
+CAP_TOOL="audio"
 
 espeak_ok() {
   case "${AUDIO_ESPEAK_OK:-}" in
     1) return 0 ;;   # forced present (test)
     0) return 1 ;;   # forced absent (test)
   esac
-  have espeak-ng || have espeak
+  cap_have espeak-ng || cap_have espeak
 }
 
 # --- capability resolution ---------------------------------------------------
@@ -81,29 +83,29 @@ declare -a PIPER_CMD=() KOKORO_CMD=()
 resolve_piper() {
   PIPER_CMD=()
   if [ -n "${AUDIO_PIPER_CMD:-}" ]; then read -r -a PIPER_CMD <<< "$AUDIO_PIPER_CMD"; return 0; fi
-  if have piper; then PIPER_CMD=(piper); return 0; fi
-  if [ "${AUDIO_NO_ACQUIRE:-0}" != "1" ] && have uvx; then PIPER_CMD=(uvx --from piper-tts piper); return 0; fi
+  if cap_have piper; then PIPER_CMD=(piper); return 0; fi
+  if [ "${AUDIO_NO_ACQUIRE:-0}" != "1" ] && cap_have uvx; then PIPER_CMD=(uvx --from piper-tts piper); return 0; fi
   return 1
 }
 resolve_kokoro() {
   KOKORO_CMD=()
   if [ -n "${AUDIO_KOKORO_CMD:-}" ]; then read -r -a KOKORO_CMD <<< "$AUDIO_KOKORO_CMD"; return 0; fi
   espeak_ok || return 2   # 2 = espeak-ng missing (distinct hint)
-  if [ "${AUDIO_NO_ACQUIRE:-0}" != "1" ] && have uvx; then
+  if [ "${AUDIO_NO_ACQUIRE:-0}" != "1" ] && cap_have uvx; then
     KOKORO_CMD=(uvx --with kokoro --with soundfile python "$HERE/audio-kokoro.py"); return 0
   fi
   return 1
 }
-resolve_ffmpeg() { FFMPEG_BIN="${AUDIO_FFMPEG_BIN:-}"; [ -n "$FFMPEG_BIN" ] && return 0; have ffmpeg && { FFMPEG_BIN=ffmpeg; return 0; }; return 1; }
+resolve_ffmpeg() { FFMPEG_BIN="${AUDIO_FFMPEG_BIN:-}"; [ -n "$FFMPEG_BIN" ] && return 0; cap_have ffmpeg && { FFMPEG_BIN=ffmpeg; return 0; }; return 1; }
 
-channels() { local c=""; have uvx && c="$c uvx"; have pip && c="$c pip"; have espeak-ng && c="$c espeak-ng"; have ffmpeg && c="$c ffmpeg"; echo "${c# }"; }
+channels() { local c=""; cap_have uvx && c="$c uvx"; cap_have pip && c="$c pip"; cap_have espeak-ng && c="$c espeak-ng"; cap_have ffmpeg && c="$c ffmpeg"; echo "${c# }"; }
 
 # --- caps / doctor -----------------------------------------------------------
 if [ "$SUBCMD" = "caps" ]; then
   resolve_piper && P="${PIPER_CMD[*]}" || P=""
   resolve_kokoro && K="${KOKORO_CMD[*]}" || K=""
   esp=$(espeak_ok && echo yes || echo no)
-  if have jq; then
+  if cap_have jq; then
     jq -n --arg p "$P" --arg k "$K" --arg esp "$esp" --arg ch "$(channels)" --arg key "${FAL_KEY:+set}" \
       '{kokoro:(if $k=="" then null else $k end), piper:(if $p=="" then null else $p end),
         espeak_ng:$esp, paid_fal_key:(if $key=="" then false else true end),
@@ -128,27 +130,29 @@ fi
 
 # --- manifest + exit ---------------------------------------------------------
 TEXT_SHA=""; CHARS=0; OUTPUT=""; LANE=""; PROVIDER=""; PMODEL=""; COST=""; RID=""; STAYED=true
-append_manifest() {
-  local status="$1"; mkdir -p "$(dirname "$MANIFEST")" 2>/dev/null || return 0
-  if have jq; then
-    jq -cn --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg st "$status" --arg sha "$TEXT_SHA" \
+append_manifest() {  # audio's manifest schema; mechanics from cap_manifest_append
+  local status="$1" line
+  cap_have jq || return 0
+  line="$(jq -cn --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg st "$status" --arg sha "$TEXT_SHA" \
       --argjson chars "${CHARS:-0}" --arg lane "$LANE" --arg engine "$ENGINE" --arg voice "$VOICE" \
       --arg lang "$LANG" --arg out "$OUTPUT" --arg fmt "$FORMAT" --arg cls "$([ "$ASSET" = 1 ] && echo asset || echo draft)" \
       --arg prov "$PROVIDER" --arg pm "$PMODEL" --arg cost "$COST" --arg rid "$RID" --argjson local "$STAYED" \
       '{ts:$ts,status:$st,text_sha256:$sha,chars:$chars,lane:$lane,output:$out,format:$fmt,class:$cls,stayed_local:$local}
        + (if $lane=="paid" then {provider:$prov,model:$pm,cost_estimate_usd:($cost|tonumber? // null),request_id:$rid}
-          else {engine:$engine,voice:$voice,language:$lang} end)' >> "$MANIFEST" 2>/dev/null
-  fi
+          else {engine:$engine,voice:$voice,language:$lang} end)')" || return 0
+  cap_manifest_append "$MANIFEST" "$line"
 }
-emit_exit() { [ "$USE_EXIT_CODE" -eq 1 ] && case "$1" in ok) exit 0;; unavailable) exit 2;; error) exit 3;; esac; exit 0; }
+# cap_emit_exit from lib/capacity.sh (cap_emit_exit). audio keeps a LOCAL fail() —
+# its --json error shape is pretty (jq -n), unlike the kernel's compact cap_fail
+# (a pre-existing inconsistency; normalizing it would be a behavior change → follow-up).
 fail() { local st="$1" msg="$2"; append_manifest "$st"
-  if [ "$OUT_JSON" -eq 1 ] && have jq; then jq -n --arg s "$st" --arg m "$msg" '{status:$s,message:$m}'
+  if [ "$OUT_JSON" -eq 1 ] && cap_have jq; then jq -n --arg s "$st" --arg m "$msg" '{status:$s,message:$m}'
   else echo "audio: status=$st"; echo "  $msg"; fi
-  emit_exit "$st"; }
+  cap_emit_exit "$st"; }
 
 # --- main flow ---------------------------------------------------------------
 [ -n "$TEXT" ] || { echo "audio: no text. usage: audio.sh \"<text>\" [flags]" >&2; exit 64; }
-TEXT_SHA="$(sha256_of_str "$TEXT")"; CHARS=${#TEXT}
+TEXT_SHA="$(cap_sha256_str "$TEXT")"; CHARS=${#TEXT}
 OUT_DIR="$DRAFT_DIR"; [ "$ASSET" = 1 ] && OUT_DIR="$ASSET_DIR"
 mkdir -p "$OUT_DIR" 2>/dev/null || fail error "cannot create output dir: $OUT_DIR"
 STEM="audio-${TEXT_SHA:0:8}"
@@ -169,7 +173,7 @@ if [ "$REMOTE" = 1 ]; then
   LANE="paid"; STAYED=false
   [ -n "${FAL_KEY:-}" ] || fail unavailable "--remote needs FAL_KEY (paid lane). Set it, or use the free local lane (drop --remote)."
   [ -f "$TIERS" ] || fail error "tiers file not found: $TIERS"
-  have jq || fail error "jq required for the paid lane"
+  cap_have jq || fail error "jq required for the paid lane"
   [ -n "$TIER" ] || TIER="$(awk -F': *' '/^default_tier:/{print $2; exit}' "$TIERS" | tr -d '"')"
   # pull model + rate for the tier from the yaml (simple block scan)
   PMODEL="$(awk -v t="  $TIER:" '$0==t{f=1;next} f&&/model:/{gsub(/.*model: *"?|"? *$/,"");print;exit} f&&/^  [a-z]/{exit}' "$TIERS")"
@@ -204,7 +208,7 @@ else
       # voice model (.onnx) from HF rhasspy/piper, cached
       mkdir -p "$VOICE_CACHE" 2>/dev/null
       onnx="$VOICE_CACHE/$VOICE.onnx"
-      if [ ! -f "$onnx" ] && [ "${AUDIO_NO_ACQUIRE:-0}" != "1" ] && have curl; then
+      if [ ! -f "$onnx" ] && [ "${AUDIO_NO_ACQUIRE:-0}" != "1" ] && cap_have curl; then
         # HF rhasspy/piper-voices layout is nested: <fam>/<locale>/<name>/<quality>/<voice>.onnx
         # VOICE = <locale>-<name>-<quality>, e.g. en_US-lessac-medium
         locale="${VOICE%%-*}"; rest="${VOICE#*-}"; vname="${rest%%-*}"; quality="${rest#*-}"; fam="${locale%%_*}"
@@ -224,11 +228,11 @@ else
 fi
 
 append_manifest ok
-if [ "$OUT_JSON" -eq 1 ] && have jq; then
+if [ "$OUT_JSON" -eq 1 ] && cap_have jq; then
   jq -n --arg out "$OUTPUT" --arg lane "$LANE" --argjson local "$STAYED" '{status:"ok",output:$out,lane:$lane,stayed_local:$local}'
 else
   echo "audio: status=ok"
   echo "  lane=$LANE${LANE:+ }$([ "$LANE" = local ] && echo "engine=$ENGINE voice=$VOICE lang=$LANG" || echo "tier=$TIER model=$PMODEL cost~\$$COST")"
   echo "  wrote: $OUTPUT  (class=$([ "$ASSET" = 1 ] && echo asset || echo draft), stayed_local=$STAYED)"
 fi
-emit_exit ok
+cap_emit_exit ok

@@ -2,7 +2,7 @@
 
 _Created 2026-06-06._
 
-**Status:** draft
+**Status:** shipped
 
 <!-- Pure refactor of shell tooling. No UI. -->
 **UI impact:** none
@@ -48,10 +48,12 @@ Extract the duplicated plumbing shared across Agent0's **6 capacity tools** (`im
 
 ## Open questions
 
-- [ ] **The `fail()` ↔ `append_manifest()` coupling** — `fail` is same-shape but calls the tool-specific manifest. Resolve: does the kernel `cap_fail` take a manifest *hook/callback*, or is the manifest envelope standardized enough (`{ts,status,...}` + caller-supplied fields object) that `cap_fail` owns it? This is the central design call.
-- [ ] **Sync-glob fix shape** — add a `.agent0/tools/lib|*.sh` glob to `COPY_CHECK_GLOBS`, or list each lib literal in `COPY_CHECK_FILES`? (Glob is future-proof; literal is explicit.) Plus the harness-sync test that proves it.
-- [ ] **Golden-gate harness location + mechanics** — where the fixtures live, how before/after parity is captured + diffed (normalizing ts/temp paths), and whether it lives under `.agent0/tests/` as a cross-tool suite.
-- [ ] **`emit_exit`/`resolve_ffmpeg` variants** — `transcribe`'s `emit_exit` (7-line) and `resolve_ffmpeg` (5-line) differ from the others; reconcile to the kernel form or leave transcribe on a compatible variant? (Behavior-parity gate decides.)
+_All resolved at build (2026-06-06). See `notes.md`._
+
+- [x] **The `fail()` ↔ `append_manifest()` coupling** — RESOLVED: **manifest hook**. `cap_fail` calls an optional `_cap_on_fail <status>` the tool defines (its own `append_manifest`), keeping the manifest *schema* in the tool and the *mechanics* (`cap_manifest_append`) in the kernel. A tool whose failure JSON is the compact `{status,message}` shape uses `cap_fail` (diagram, sound); a tool with a richer/pretty JSON keeps a **local `fail`** that still routes through `cap_emit_exit`+`cap_manifest_append` (transcribe rich, audio pretty).
+- [x] **Sync-glob fix shape** — RESOLVED: added `.agent0/tools/lib|*.sh` to `COPY_CHECK_GLOBS` (future-proof; auto-carries the deferred paid-media.sh) and **retired** the now-redundant `lib/managed-block.sh` literal. Proven by `.agent0/tests/capacity-kit/sync-propagation.sh` (real `--apply` to a temp consumer) + the full harness-sync suite stays green.
+- [x] **Golden-gate harness** — RESOLVED: `.agent0/tests/capacity-kit/golden.sh capture|verify`, scoped to the deterministic **plumbing surface** (caps/doctor/--help/usage/bad-flag — exactly what the kernel touches; deep engine paths stay covered by each tool's suite). Normalizes repo-abs-path + temp dirs. Gotcha found+fixed: tools that print `--help` via `sed -n 'A,Bp' "$0"` drift if the kernel `source` is inserted INSIDE that line range — insert below it.
+- [x] **`emit_exit`/`resolve_ffmpeg` variants** — RESOLVED: `emit_exit` is behavior-identical everywhere → all use `cap_emit_exit`. `resolve_ffmpeg` left local per tool (the env-override name differs; `cap_resolve_ffmpeg <env-name>` exists for future use). The golden gate confirms parity.
 
 ## Context / references
 

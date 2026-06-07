@@ -29,6 +29,9 @@
 set -uo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
+# shared capacity kernel (spec 163) — cap_have/sha/cap_emit_exit/cap_fail/manifest mechanics
+. "$HERE/lib/capacity.sh" 2>/dev/null || { echo "diagram: missing kit library lib/capacity.sh" >&2; exit 70; }
+CAP_TOOL="diagram"
 
 # --- defaults / args ---------------------------------------------------------
 SUBCMD=""; SOURCE=""
@@ -58,16 +61,15 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-have() { command -v "$1" >/dev/null 2>&1; }
-sha256_of_file() { { sha256sum "$1" 2>/dev/null || shasum -a 256 "$1" 2>/dev/null; } | awk '{print $1}'; }
+# cap_have/sha256 come from lib/capacity.sh (cap_have / cap_sha256_file)
 
 # mmdc command (array) — npx ephemeral acquisition by default
 declare -a MMDC_CMD=()
 resolve_mmdc() {
   MMDC_CMD=()
   if [ -n "${DIAGRAM_MMDC:-}" ]; then read -r -a MMDC_CMD <<< "$DIAGRAM_MMDC"; return 0; fi
-  if have mmdc; then MMDC_CMD=(mmdc); return 0; fi
-  if have npx; then MMDC_CMD=(npx -p @mermaid-js/mermaid-cli mmdc); return 0; fi
+  if cap_have mmdc; then MMDC_CMD=(mmdc); return 0; fi
+  if cap_have npx; then MMDC_CMD=(npx -p @mermaid-js/mermaid-cli mmdc); return 0; fi
   return 1
 }
 
@@ -80,7 +82,7 @@ resolve_chrome() {
   fi
   local b
   for b in google-chrome google-chrome-stable chromium chromium-browser; do
-    have "$b" && { CHROME_BIN="$(command -v "$b")"; return 0; }
+    cap_have "$b" && { CHROME_BIN="$(command -v "$b")"; return 0; }
   done
   return 1
 }
@@ -98,8 +100,8 @@ mermaid_structural_ok() {  # $1 = source file
 if [ "$SUBCMD" = "caps" ]; then
   resolve_mmdc && MM="${MMDC_CMD[*]}" || MM=""
   resolve_chrome && CH="$CHROME_BIN" || CH=""
-  if have jq; then
-    jq -nc --arg node "$(have node && node --version 2>/dev/null || echo "")" \
+  if cap_have jq; then
+    jq -nc --arg node "$(cap_have node && node --version 2>/dev/null || echo "")" \
       --arg mmdc "$MM" --arg chrome "$CH" \
       '{paid:false, local:true, node:(if $node=="" then null else $node end),
         mmdc:(if $mmdc=="" then null else $mmdc end),
@@ -112,7 +114,7 @@ if [ "$SUBCMD" = "caps" ]; then
 fi
 if [ "$SUBCMD" = "doctor" ]; then
   echo "diagram — capability check (local/free deterministic technical visuals)"
-  have node && echo "  [ ok ] node: $(node --version 2>/dev/null)" || echo "  [warn] node: absent (mmdc render needs Node)"
+  cap_have node && echo "  [ ok ] node: $(node --version 2>/dev/null)" || echo "  [warn] node: absent (mmdc render needs Node)"
   if resolve_mmdc; then echo "  [ ok ] mmdc: ${MMDC_CMD[*]}"; else echo "  [warn] mmdc: no npx to acquire @mermaid-js/mermaid-cli (install Node/npx)"; fi
   if resolve_chrome; then echo "  [ ok ] chrome: $CHROME_BIN"; else echo "  [warn] chrome: none found — render degrades to validation-only (install google-chrome/chromium)"; fi
   echo "  [info] source lang: mermaid (only, v1) | formats: svg(default)/png/pdf"
@@ -122,20 +124,17 @@ fi
 
 # --- manifest + exit ---------------------------------------------------------
 SOURCE_SHA=""; OUTPUT=""; SRC_TRACKED=""; ENGINE=""
-append_manifest() {
-  local status="$1"; mkdir -p "$(dirname "$MANIFEST")" 2>/dev/null || return 0
-  have jq || return 0
-  jq -cn --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg st "$status" \
+append_manifest() {  # diagram's manifest schema; mechanics from cap_manifest_append
+  local status="$1" line
+  cap_have jq || return 0
+  line="$(jq -cn --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg st "$status" \
     --arg sha "$SOURCE_SHA" --arg kind "$KIND" --arg fmt "$FORMAT" \
     --arg eng "$ENGINE" --arg out "$OUTPUT" --arg src "$SRC_TRACKED" \
     '{ts:$ts,status:$st,source_sha256:$sha,kind:$kind,format:$fmt,engine:$eng,
-      source:$src,output:$out,stayed_local:true}' >> "$MANIFEST" 2>/dev/null
+      source:$src,output:$out,stayed_local:true}')" || return 0
+  cap_manifest_append "$MANIFEST" "$line"
 }
-emit_exit() { [ "$USE_EXIT_CODE" -eq 1 ] && case "$1" in ok) exit 0;; unavailable) exit 2;; error) exit 3;; esac; exit 0; }
-fail() { local st="$1" msg="$2"; append_manifest "$st"
-  if [ "$OUT_JSON" -eq 1 ] && have jq; then jq -nc --arg s "$st" --arg m "$msg" '{status:$s,message:$m}'
-  else echo "diagram: status=$st"; echo "  $msg"; fi
-  emit_exit "$st"; }
+_cap_on_fail() { append_manifest "$1"; }   # cap_fail hook (kernel records via this)
 
 # --- validate inputs ---------------------------------------------------------
 [ -n "$SOURCE" ] || { echo "diagram: no source. usage: diagram.sh <source.mmd | \"<mermaid text>\"> [flags]" >&2; exit 64; }
@@ -144,7 +143,7 @@ case "$FORMAT" in svg|png|pdf) ;; *) echo "diagram: unknown --format '$FORMAT' (
 
 WORKDIR="$(mktemp -d -t diagram-XXXXXX)"; trap 'rm -rf "$WORKDIR"' EXIT
 OUT_DIR="${OUT_DIR:-$DEFAULT_OUT}"
-mkdir -p "$OUT_DIR" 2>/dev/null || fail error "cannot create output dir: $OUT_DIR"
+mkdir -p "$OUT_DIR" 2>/dev/null || cap_fail error "cannot create output dir: $OUT_DIR"
 
 # resolve source: existing file vs inline text
 if [ -f "$SOURCE" ]; then
@@ -158,19 +157,19 @@ else
   printf '%s\n' "$SOURCE" > "$SRC"
   SRC_TRACKED="$SRC"
 fi
-[ -n "$SOURCE_SHA" ] || SOURCE_SHA="$(sha256_of_file "$SRC")"
+[ -n "$SOURCE_SHA" ] || SOURCE_SHA="$(cap_sha256_file "$SRC")"
 
 # structural validation (Chrome-less, deterministic)
-mermaid_structural_ok "$SRC" || fail error "source does not look like a Mermaid diagram (first non-comment line must name a diagram type, e.g. flowchart/sequenceDiagram/erDiagram). Source kept at: $SRC_TRACKED"
+mermaid_structural_ok "$SRC" || cap_fail error "source does not look like a Mermaid diagram (first non-comment line must name a diagram type, e.g. flowchart/sequenceDiagram/erDiagram). Source kept at: $SRC_TRACKED"
 
 OUTPUT_PATH="$OUT_DIR/$STEM.$FORMAT"
 
 # --- render or degrade -------------------------------------------------------
 if ! resolve_chrome; then
   ENGINE="mermaid/validate"
-  fail unavailable "no usable Chrome/Chromium for rendering — source VALIDATED (structural) and kept at $SRC_TRACKED. Install google-chrome or chromium, then re-run to render. (Render needs headless Chrome via mmdc.)"
+  cap_fail unavailable "no usable Chrome/Chromium for rendering — source VALIDATED (structural) and kept at $SRC_TRACKED. Install google-chrome or chromium, then re-run to render. (Render needs headless Chrome via mmdc.)"
 fi
-resolve_mmdc || { ENGINE="mermaid/validate"; fail unavailable "Node/npx not available to acquire mmdc — source VALIDATED and kept at $SRC_TRACKED. Install Node, then re-run."; }
+resolve_mmdc || { ENGINE="mermaid/validate"; cap_fail unavailable "Node/npx not available to acquire mmdc — source VALIDATED and kept at $SRC_TRACKED. Install Node, then re-run."; }
 ENGINE="mermaid/mmdc"
 
 # puppeteer config reusing system chrome (no chromium download)
@@ -182,13 +181,13 @@ declare -a RENDER=("${MMDC_CMD[@]}" -i "$SRC" -o "$OUTPUT_PATH" --puppeteerConfi
 
 if ! PUPPETEER_SKIP_DOWNLOAD=1 "${RENDER[@]}" >"$WORKDIR/mmdc.log" 2>&1; then
   rm -f "$OUTPUT_PATH" 2>/dev/null
-  fail error "mmdc render failed (likely a Mermaid syntax error). Source kept at $SRC_TRACKED. Log: $(tail -3 "$WORKDIR/mmdc.log" 2>/dev/null | tr '\n' ' ')"
+  cap_fail error "mmdc render failed (likely a Mermaid syntax error). Source kept at $SRC_TRACKED. Log: $(tail -3 "$WORKDIR/mmdc.log" 2>/dev/null | tr '\n' ' ')"
 fi
-[ -s "$OUTPUT_PATH" ] || fail error "mmdc produced no output at $OUTPUT_PATH"
+[ -s "$OUTPUT_PATH" ] || cap_fail error "mmdc produced no output at $OUTPUT_PATH"
 OUTPUT="$OUTPUT_PATH"
 
 append_manifest ok
-if [ "$OUT_JSON" -eq 1 ] && have jq; then
+if [ "$OUT_JSON" -eq 1 ] && cap_have jq; then
   jq -nc --arg out "$OUTPUT" --arg src "$SRC_TRACKED" --arg kind "$KIND" --arg fmt "$FORMAT" --arg eng "$ENGINE" \
     '{status:"ok",output:$out,source:$src,kind:$kind,format:$fmt,engine:$eng,stayed_local:true}'
 else
@@ -196,4 +195,4 @@ else
   echo "  engine=$ENGINE kind=${KIND:-auto} format=$FORMAT"
   echo "  source: $SRC_TRACKED (tracked) | wrote: $OUTPUT (stayed_local=true)"
 fi
-emit_exit ok
+cap_emit_exit ok

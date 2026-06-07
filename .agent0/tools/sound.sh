@@ -57,8 +57,10 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-have() { command -v "$1" >/dev/null 2>&1; }
-sha256_of_str() { printf '%s' "$1" | { sha256sum 2>/dev/null || shasum -a 256 2>/dev/null; } | awk '{print $1}'; }
+# shared capacity kernel (spec 163) — cap_have/sha/cap_emit_exit/cap_fail/manifest mechanic
+. "$HERE/lib/capacity.sh" 2>/dev/null || { echo "sound: missing kit library lib/capacity.sh" >&2; exit 70; }
+CAP_TOOL="sound"
+# cap_have/cap_sha256_str come from lib/capacity.sh (cap_have / cap_sha256_str)
 
 # yaml helpers (simple block scan; no yq dependency, mirrors audio.sh) ----------
 yget() {  # $1 = tier name, $2 = field key -> value (quotes + trailing-comment stripped)
@@ -77,12 +79,12 @@ yget() {  # $1 = tier name, $2 = field key -> value (quotes + trailing-comment s
 }
 ytop() { awk -v f="$1:" '$1==f{v=$2; gsub(/^"|"$/,"",v); print v; exit}' "$TIERS"; }
 
-resolve_ffmpeg() { FFMPEG_BIN="${SOUND_FFMPEG_BIN:-}"; [ -n "$FFMPEG_BIN" ] && return 0; have ffmpeg && { FFMPEG_BIN=ffmpeg; return 0; }; return 1; }
+resolve_ffmpeg() { FFMPEG_BIN="${SOUND_FFMPEG_BIN:-}"; [ -n "$FFMPEG_BIN" ] && return 0; cap_have ffmpeg && { FFMPEG_BIN=ffmpeg; return 0; }; return 1; }
 
 # --- caps / doctor -----------------------------------------------------------
 if [ "$SUBCMD" = "caps" ]; then
   thr="$(ytop confirm_threshold_usd)"; thr="${AGENT0_SOUND_CONFIRM_THRESHOLD:-${thr:-0.25}}"
-  if have jq; then
+  if cap_have jq; then
     jq -nc --arg key "${FAL_KEY:+set}" --arg tiers "$TIERS" \
       --argjson tf "$([ -f "$TIERS" ] && echo true || echo false)" \
       --arg thr "$thr" --arg ff "$(resolve_ffmpeg && echo "$FFMPEG_BIN" || echo "")" \
@@ -107,10 +109,10 @@ fi
 
 # --- manifest + exit ---------------------------------------------------------
 PROMPT_SHA=""; OUTPUT=""; MODEL=""; COST=""; RID=""
-append_manifest() {
-  local status="$1"; mkdir -p "$(dirname "$MANIFEST")" 2>/dev/null || return 0
-  have jq || return 0
-  jq -cn --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg st "$status" \
+append_manifest() {  # sound's manifest schema; mechanics from cap_manifest_append
+  local status="$1" line
+  cap_have jq || return 0
+  line="$(jq -cn --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg st "$status" \
     --arg prompt "$PROMPT" --arg sha "$PROMPT_SHA" --arg kind "$KIND" --arg tier "$TIER" \
     --arg dur "$DURATION" --arg out "$OUTPUT" --arg fmt "$FORMAT" \
     --arg cls "$([ "$ASSET" = 1 ] && echo asset || echo draft)" \
@@ -118,13 +120,11 @@ append_manifest() {
     '{ts:$ts,status:$st,prompt:$prompt,prompt_sha256:$sha,kind:$kind,tier:$tier,
       duration_sec:($dur|tonumber? // null),output:$out,format:$fmt,class:$cls,
       provider:"fal",model:$model,cost_estimate_usd:($cost|tonumber? // null),
-      request_id:$rid,stayed_local:false}' >> "$MANIFEST" 2>/dev/null
+      request_id:$rid,stayed_local:false}')" || return 0
+  cap_manifest_append "$MANIFEST" "$line"
 }
-emit_exit() { [ "$USE_EXIT_CODE" -eq 1 ] && case "$1" in ok) exit 0;; unavailable) exit 2;; error) exit 3;; esac; exit 0; }
-fail() { local st="$1" msg="$2"; append_manifest "$st"
-  if [ "$OUT_JSON" -eq 1 ] && have jq; then jq -nc --arg s "$st" --arg m "$msg" '{status:$s,message:$m}'
-  else echo "sound: status=$st"; echo "  $msg"; fi
-  emit_exit "$st"; }
+_cap_on_fail() { append_manifest "$1"; }   # cap_fail hook (sound's cap_fail is the compact kernel shape)
+# cap_emit_exit + cap_fail come from lib/capacity.sh (cap_emit_exit / cap_fail; CAP_TOOL=sound)
 
 # --- validate inputs ---------------------------------------------------------
 [ -n "$PROMPT" ] || { echo "sound: no prompt. usage: sound.sh \"<prompt>\" --kind music|sfx [flags]" >&2; exit 64; }
@@ -141,12 +141,12 @@ else
   [ -n "$TIER" ] || TIER="$(ytop default_tier_music)"; TIER="${TIER:-standard}"
 fi
 
-PROMPT_SHA="$(sha256_of_str "$PROMPT")"
+PROMPT_SHA="$(cap_sha256_str "$PROMPT")"
 
 # --- paid lane only ----------------------------------------------------------
-[ -n "${FAL_KEY:-}" ] || fail unavailable "/sound is paid-only and needs FAL_KEY (no free local lane — music/SFX has no light local engine). Set FAL_KEY and retry."
-[ -f "$TIERS" ] || fail error "tiers file not found: $TIERS"
-have jq || fail error "jq required (oracle parse + body build)"
+[ -n "${FAL_KEY:-}" ] || cap_fail unavailable "/sound is paid-only and needs FAL_KEY (no free local lane — music/SFX has no light local engine). Set FAL_KEY and retry."
+[ -f "$TIERS" ] || cap_fail error "tiers file not found: $TIERS"
+cap_have jq || cap_fail error "jq required (oracle parse + body build)"
 
 MODEL="$(yget "$TIER" model)"
 PROMPT_FIELD="$(yget "$TIER" prompt_field)"
@@ -155,13 +155,13 @@ URL_PATH="$(yget "$TIER" output_url_path)"
 PRICE="$(yget "$TIER" price)"
 PRICE_UNIT="$(yget "$TIER" price_unit)"
 TIER_KIND="$(yget "$TIER" kind)"
-[ -n "$MODEL" ] || fail error "tier '$TIER' not found in $TIERS"
-[ "$TIER_KIND" = "$KIND" ] || fail error "tier '$TIER' is for kind '$TIER_KIND', not '$KIND' (--tier is music-only: standard|premium)"
+[ -n "$MODEL" ] || cap_fail error "tier '$TIER' not found in $TIERS"
+[ "$TIER_KIND" = "$KIND" ] || cap_fail error "tier '$TIER' is for kind '$TIER_KIND', not '$KIND' (--tier is music-only: standard|premium)"
 
 # duration default from oracle
 [ -n "$DURATION" ] || DURATION="$(yget "$TIER" default_duration)"
 DURATION="${DURATION:-5}"
-case "$DURATION" in (*[!0-9.]*|'') fail error "invalid --duration '$DURATION' (seconds, numeric)";; esac
+case "$DURATION" in (*[!0-9.]*|'') cap_fail error "invalid --duration '$DURATION' (seconds, numeric)";; esac
 
 # cost = price × duration-in-unit
 COST="$(awk -v p="${PRICE:-0}" -v d="$DURATION" -v u="$PRICE_UNIT" 'BEGIN{
@@ -175,13 +175,13 @@ ABOVE="$(awk -v c="$COST" -v t="$THRESHOLD" 'BEGIN{print (c>t)?1:0}')"
 if [ "$ABOVE" = "1" ]; then
   OK="$(awk -v cf="${CONFIRM:-}" -v c="$COST" 'BEGIN{ if(cf=="") {print 0; exit} print (cf+0>=c)?1:0 }')"
   if [ "$OK" != "1" ]; then
-    fail error "estimate \$$COST exceeds the \$$THRESHOLD confirm threshold — re-run with --confirm-cost-usd $COST (or any value ≥ the estimate) to proceed."
+    cap_fail error "estimate \$$COST exceeds the \$$THRESHOLD confirm threshold — re-run with --confirm-cost-usd $COST (or any value ≥ the estimate) to proceed."
   fi
 fi
 
 # --- generate ----------------------------------------------------------------
 OUT_DIR="$DRAFT_DIR"; [ "$ASSET" = 1 ] && OUT_DIR="$ASSET_DIR"
-mkdir -p "$OUT_DIR" 2>/dev/null || fail error "cannot create output dir: $OUT_DIR"
+mkdir -p "$OUT_DIR" 2>/dev/null || cap_fail error "cannot create output dir: $OUT_DIR"
 STEM="sound-$KIND-${PROMPT_SHA:0:8}"
 WORKDIR="$(mktemp -d -t sound-XXXXXX)"; trap 'rm -rf "$WORKDIR"' EXIT
 
@@ -189,13 +189,13 @@ WORKDIR="$(mktemp -d -t sound-XXXXXX)"; trap 'rm -rf "$WORKDIR"' EXIT
 body="$(jq -nc --arg pf "$PROMPT_FIELD" --arg pv "$PROMPT" --arg df "$DURATION_FIELD" --argjson dv "$DURATION" '
   ({} | .[$pf]=$pv) + (if ($df=="" or $df=="null") then {} else {($df): $dv} end)')"
 
-resp="$("$FAL_REST" run --model="$MODEL" --body="$body" 2>/dev/null)" || fail error "fal call failed (model $MODEL)"
+resp="$("$FAL_REST" run --model="$MODEL" --body="$body" 2>/dev/null)" || cap_fail error "fal call failed (model $MODEL)"
 url="$(printf '%s' "$resp" | jq -r "(${URL_PATH:-.audio.url}) // empty" 2>/dev/null)"
-[ -n "$url" ] || fail error "fal response carried no audio url at path '${URL_PATH:-.audio.url}' (verify output_url_path in the oracle for tier '$TIER')"
+[ -n "$url" ] || cap_fail error "fal response carried no audio url at path '${URL_PATH:-.audio.url}' (verify output_url_path in the oracle for tier '$TIER')"
 RID="$(printf '%s' "$resp" | jq -r '(.request_id // empty)' 2>/dev/null)"
 
 dl="$WORKDIR/gen.audio"
-"$FAL_REST" download --url="$url" --output="$dl" >/dev/null 2>&1 || fail error "failed to download fal audio asset"
+"$FAL_REST" download --url="$url" --output="$dl" >/dev/null 2>&1 || cap_fail error "failed to download fal audio asset"
 
 # place / encode
 final="$OUT_DIR/$STEM.$FORMAT"
@@ -207,7 +207,7 @@ fi
 OUTPUT="$final"
 
 append_manifest ok
-if [ "$OUT_JSON" -eq 1 ] && have jq; then
+if [ "$OUT_JSON" -eq 1 ] && cap_have jq; then
   jq -nc --arg out "$OUTPUT" --arg kind "$KIND" --arg tier "$TIER" --arg model "$MODEL" --arg cost "$COST" \
     '{status:"ok",output:$out,kind:$kind,tier:$tier,model:$model,cost_estimate_usd:($cost|tonumber? // null),stayed_local:false}'
 else
@@ -216,4 +216,4 @@ else
   echo "  wrote: $OUTPUT  (class=$([ "$ASSET" = 1 ] && echo asset || echo draft), stayed_local=false)"
   [ "$ASSET" = 1 ] || echo "  taste-judge: listen, then promote a keeper with --asset (or regenerate)."
 fi
-emit_exit ok
+cap_emit_exit ok

@@ -37,6 +37,11 @@
 
 set -uo pipefail
 
+# shared capacity kernel (spec 163) — cap_have / cap_emit_exit / manifest mechanic
+_HERE="$(cd "$(dirname "$0")" && pwd)"
+. "$_HERE/lib/capacity.sh" 2>/dev/null || { echo "transcribe: missing kit library lib/capacity.sh" >&2; exit 70; }
+CAP_TOOL="transcribe"
+
 # ---------------------------------------------------------------------------
 # Defaults / args
 # ---------------------------------------------------------------------------
@@ -79,11 +84,10 @@ done
 # ---------------------------------------------------------------------------
 # Small helpers
 # ---------------------------------------------------------------------------
-have() { command -v "$1" >/dev/null 2>&1; }
-
+# cap_have() comes from lib/capacity.sh (cap_have)
 sha256_of() {
-  if have sha256sum; then sha256sum "$1" 2>/dev/null | awk '{print $1}';
-  elif have shasum; then shasum -a 256 "$1" 2>/dev/null | awk '{print $1}';
+  if cap_have sha256sum; then sha256sum "$1" 2>/dev/null | awk '{print $1}';
+  elif cap_have shasum; then shasum -a 256 "$1" 2>/dev/null | awk '{print $1}';
   else echo ""; fi
 }
 
@@ -95,12 +99,12 @@ resolve_whisper() {
   if [ -n "${TRANSCRIBE_WHISPER_BIN:-}" ]; then WHISPER_CMD=("$TRANSCRIBE_WHISPER_BIN"); return 0; fi
   local b
   for b in whisper-cli whisper-cpp whisper main; do
-    if have "$b"; then WHISPER_CMD=("$b"); return 0; fi
+    if cap_have "$b"; then WHISPER_CMD=("$b"); return 0; fi
   done
   if [ -x "$MODEL_DIR/../bin/whisper-cli" ]; then WHISPER_CMD=("$MODEL_DIR/../bin/whisper-cli"); return 0; fi
   # Auto-acquire (ephemeral, safe): uvx runs the prebuilt CLI wheel without a
   # persistent install. Only path that is genuinely "invisible".
-  if [ "${TRANSCRIBE_NO_ACQUIRE:-0}" != "1" ] && have uvx; then
+  if [ "${TRANSCRIBE_NO_ACQUIRE:-0}" != "1" ] && cap_have uvx; then
     WHISPER_CMD=(uvx --from "$UVX_PKG" "$UVX_SCRIPT"); return 0
   fi
   return 1
@@ -109,7 +113,7 @@ resolve_whisper() {
 FFMPEG_BIN=""
 resolve_ffmpeg() {
   if [ -n "${TRANSCRIBE_FFMPEG_BIN:-}" ]; then FFMPEG_BIN="$TRANSCRIBE_FFMPEG_BIN"; return 0; fi
-  if have ffmpeg; then FFMPEG_BIN="ffmpeg"; return 0; fi
+  if cap_have ffmpeg; then FFMPEG_BIN="ffmpeg"; return 0; fi
   return 1
 }
 
@@ -118,7 +122,7 @@ resolve_model() {
   MODEL_FILE="$MODEL_DIR/ggml-${MODEL}.bin"
   [ -f "$MODEL_FILE" ] && return 0
   if [ "${TRANSCRIBE_NO_ACQUIRE:-0}" = "1" ]; then return 1; fi
-  have curl || return 1
+  cap_have curl || return 1
   mkdir -p "$MODEL_DIR" 2>/dev/null || return 1
   echo "transcribe: first-run setup — fetching whisper '$MODEL' model (one-time)…" >&2
   if curl -fsSL -o "$MODEL_FILE.partial" \
@@ -143,8 +147,8 @@ fmt_spec() {
 }
 
 acquisition_hint() {
-  if have brew; then echo "brew install whisper-cpp  (or: install uv — https://docs.astral.sh/uv/ — and re-run)";
-  elif have uv || have uvx; then echo "uv present but the wheel could not run; try: uvx --from whisper.cpp-cli whisper-cli --help";
+  if cap_have brew; then echo "brew install whisper-cpp  (or: install uv — https://docs.astral.sh/uv/ — and re-run)";
+  elif cap_have uv || cap_have uvx; then echo "uv present but the wheel could not run; try: uvx --from whisper.cpp-cli whisper-cli --help";
   else echo "install uv (one line: https://docs.astral.sh/uv/) then re-run, or 'brew install whisper-cpp' on macOS"; fi
 }
 
@@ -157,13 +161,13 @@ detect_report() {
   if resolve_whisper; then ws="${WHISPER_CMD[*]}"; else ws=""; fi
   if resolve_ffmpeg; then fs="$FFMPEG_BIN"; else fs=""; fi
   if [ -f "$MODEL_DIR/ggml-${MODEL}.bin" ]; then ms="cached"; else ms="not-cached"; fi
-  have uvx && ch="$ch uvx"; have pipx && ch="$ch pipx"; have pip && ch="$ch pip"; have brew && ch="$ch brew"
+  cap_have uvx && ch="$ch uvx"; cap_have pipx && ch="$ch pipx"; cap_have pip && ch="$ch pip"; cap_have brew && ch="$ch brew"
   printf '%s\t%s\t%s\t%s\n' "$ws" "$fs" "$ms" "${ch# }"
 }
 
 if [ "$SUBCMD" = "caps" ]; then
   IFS=$'\t' read -r ws fs ms ch < <(detect_report)
-  if have jq; then
+  if cap_have jq; then
     jq -n --arg w "$ws" --arg f "$fs" --arg m "$ms" --arg model "$MODEL" --arg ch "$ch" \
       '{engine:(if $w=="" then null else $w end), ffmpeg:(if $f=="" then null else $f end),
         model:$model, model_cache:$m, acquisition_channels:($ch|split(" ")|map(select(.!="")))}'
@@ -190,10 +194,9 @@ fi
 # ---------------------------------------------------------------------------
 append_manifest() {
   # $1 status ; uses globals INPUT INHASH DURATION MODEL LANG OUTPUTS_JSON
-  local status="$1"
-  mkdir -p "$(dirname "$MANIFEST")" 2>/dev/null || return 0
-  if have jq; then
-    jq -cn \
+  local status="$1" line
+  if cap_have jq; then
+    line="$(jq -cn \
       --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
       --arg status "$status" \
       --arg input "$INPUT" \
@@ -206,33 +209,27 @@ append_manifest() {
       '{ts:$ts,status:$status,input:$input,input_sha256:$hash,
         duration:(if $dur=="" then null else $dur end),
         engine:$engine,model:$model,language:$lang,
-        outputs:$outputs,stayed_local:true}' >> "$MANIFEST" 2>/dev/null
+        outputs:$outputs,stayed_local:true}')" || return 0
   else
-    printf '{"ts":"%s","status":"%s","input":"%s","model":"%s","stayed_local":true}\n' \
-      "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$status" "$INPUT" "$MODEL" >> "$MANIFEST" 2>/dev/null
+    line="$(printf '{"ts":"%s","status":"%s","input":"%s","model":"%s","stayed_local":true}' \
+      "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$status" "$INPUT" "$MODEL")"
   fi
+  cap_manifest_append "$MANIFEST" "$line"
 }
 
-emit_exit() {
-  local status="$1"
-  if [ "$USE_EXIT_CODE" -eq 1 ]; then
-    case "$status" in ok) exit 0 ;; unavailable) exit 2 ;; error) exit 3 ;; esac
-  fi
-  exit 0
-}
-
+# cap_emit_exit() comes from lib/capacity.sh (cap_emit_exit)
 fail() {
   # $1 status ; $2 message
   local status="$1" msg="$2"
   INHASH="${INHASH:-}"; OUTPUTS_JSON="${OUTPUTS_JSON:-[]}"
   append_manifest "$status"
-  if [ "$OUT_JSON" -eq 1 ] && have jq; then
+  if [ "$OUT_JSON" -eq 1 ] && cap_have jq; then
     jq -n --arg s "$status" --arg m "$msg" --arg in "$INPUT" '{status:$s,input:$in,message:$m,outputs:[]}'
   else
     echo "transcribe: status=$status"
     echo "  $msg"
   fi
-  emit_exit "$status"
+  cap_emit_exit "$status"
 }
 
 # ---------------------------------------------------------------------------
@@ -266,7 +263,7 @@ if resolve_ffmpeg; then
   if ! "$FFMPEG_BIN" -nostdin -y -i "$INPUT" -ar 16000 -ac 1 -c:a pcm_s16le "$WAV" >/dev/null 2>&1; then
     fail error "ffmpeg failed to extract/transcode audio from: $INPUT"
   fi
-  if have ffprobe; then
+  if cap_have ffprobe; then
     DURATION="$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$INPUT" 2>/dev/null)"
   fi
 else
@@ -308,7 +305,7 @@ for f in "${WANT_FMTS[@]}"; do
   outfile="$PREFIX.$ext"
   [ -f "$outfile" ] && PRODUCED+=("$outfile")
 done
-if have jq; then
+if cap_have jq; then
   OUTPUTS_JSON="$(printf '%s\n' "${PRODUCED[@]:-}" | jq -R . | jq -s 'map(select(.!=""))')"
 else
   OUTPUTS_JSON="[]"
@@ -319,7 +316,7 @@ append_manifest ok
 
 # Echo txt to stdout (unless --quiet) + report.
 TXT="$PREFIX.txt"
-if [ "$OUT_JSON" -eq 1 ] && have jq; then
+if [ "$OUT_JSON" -eq 1 ] && cap_have jq; then
   jq -n --arg in "$INPUT" --arg model "$MODEL" --argjson outputs "$OUTPUTS_JSON" \
     '{status:"ok",input:$in,model:$model,outputs:$outputs,stayed_local:true}'
 else
@@ -332,4 +329,4 @@ else
   fi
 fi
 
-emit_exit ok
+cap_emit_exit ok

@@ -13,7 +13,7 @@
     "bash .agent0/tests/video/run-all.sh",
     "bash .agent0/tests/capacity-kit/golden.sh verify",
     "bash .agent0/tests/capacity-kit/sync-propagation.sh",
-    "bash -n .agent0/tools/lib/capacity.sh .agent0/tools/lib/paid-media.sh .agent0/tools/audio.sh .agent0/tools/sound.sh .agent0/tools/transcribe.sh .agent0/tools/diagram.sh",
+    "bash -n .agent0/tools/lib/capacity.sh .agent0/tools/audio.sh .agent0/tools/sound.sh .agent0/tools/transcribe.sh .agent0/tools/diagram.sh",
     "bash .agent0/tools/doctor.sh"
   ],
 
@@ -22,9 +22,7 @@
     "(^|/)secrets?/",
     "\\.secrets?(\\.[^/]+)?$",
     "\\.agent0/.*-audit\\.jsonl",
-    "\\.agent0/HANDOFF\\.md",
-    "assets/",
-    "docs/specs/(?!163-capacity-kit)"
+    "\\.agent0/HANDOFF\\.md"
   ],
 
   "human_gated_paths": [

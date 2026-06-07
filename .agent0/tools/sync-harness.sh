@@ -195,6 +195,7 @@ COPY_CHECK_GLOBS=(
   ".agent0/validators|*.sh"
   ".agent0/hooks|*.sh"
   ".agent0/tools|*.sh"
+  ".agent0/tools/lib|*.sh"
   ".agent0/tools|memory-*"
   ".agent0/tools|context-retrieve-*"
 )
@@ -208,7 +209,7 @@ COPY_CHECK_FILES=(
   ".codex/config.toml.example"
   ".gitleaks.toml"
   ".githooks/pre-commit"
-  ".agent0/tools/lib/managed-block.sh"
+  # .agent0/tools/lib/managed-block.sh now covered by the .agent0/tools/lib|*.sh glob (spec 163)
   ".agent0/tools/audio-kokoro.py"
   ".agent0/memory/.gitkeep"
   ".agent0/skills/.gitkeep"

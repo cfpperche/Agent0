@@ -58,25 +58,22 @@ json_escape() {
   printf '%s' "$1" | python3 -c 'import json,sys; sys.stdout.write(json.dumps(sys.stdin.read())[1:-1])'
 }
 
-# resolve_tier_field <tier> <field> — read tiers.<tier>.<field> from the YAML.
-# Targeted line-parse for the fixed 2-space/4-space structure (no yq dependency).
-resolve_tier_field() {
-  local tier="$1" field="$2"
-  awk -v tier="$tier" -v field="$field" '
-    /^tiers:/        { intiers=1; next }
-    intiers && /^[A-Za-z]/ { intiers=0 }              # left the tiers: block
-    intiers && $0 ~ ("^  " tier ":")  { found=1; next }
-    found && /^  [A-Za-z]/ && $0 !~ /^    / { found=0 } # next sibling tier
-    found && $0 ~ ("^    " field ":") {
-      line=$0; sub("^    " field ": *","",line); gsub(/"/,"",line); print line; exit
-    }
-  ' "$TIERS_FILE"
+# Paid sub-kit loader (spec 165). SKILL-DIR tools cross into tools/lib via the
+# $PROJECT_DIR anchor they already use for fal-rest.sh. LAZY: called inside paid
+# subcommands only (prepare/submit/poll) so --help/noargs/record never need the
+# lib. Absent → exit 70 + the kernel message (missing-kit precedent).
+load_paid_media() {
+  [ -n "${_PM_LOADED:-}" ] && return 0
+  . "$PROJECT_DIR/.agent0/tools/lib/paid-media.sh" 2>/dev/null \
+    || { echo "video: missing kit library lib/paid-media.sh" >&2; exit 70; }
+  _PM_LOADED=1
 }
 
-yaml_top() {  # read a top-level scalar key
-  local key="$1"
-  awk -v key="$key" '$0 ~ ("^" key ":") { sub("^" key ": *",""); gsub(/"/,""); print; exit }' "$TIERS_FILE"
-}
+# tiers oracle readers — bodies live in lib/paid-media.sh (spec 165); these bind
+# $TIERS_FILE. Behavior byte-identical to the former local awk (proven over
+# video-tiers.yaml). Callers are paid subcommands that load_paid_media first.
+resolve_tier_field() { pm_yaml_tier_field "$TIERS_FILE" "$1" "$2"; }  # <tier> <field>
+yaml_top() { pm_yaml_top "$TIERS_FILE" "$1"; }                        # <top-level key>
 
 staleness_advisory() {
   local snap stale today snap_s today_s age
@@ -92,6 +89,7 @@ staleness_advisory() {
 }
 
 sub_prepare() {
+  load_paid_media   # spec 165 — paid path: tiers oracle + FAL_KEY helpers
   local tier="" duration="" image_url="" name="" confirm="" prompt=""
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -115,7 +113,7 @@ sub_prepare() {
 
   [ -z "$tier" ] || [ -z "$duration" ] && die_no_mode_args
   [ -z "$prompt" ] && die_no_mode_args
-  [ -z "${FAL_KEY:-}" ] && die_no_fal_key
+  pm_has_fal_key || die_no_fal_key
 
   staleness_advisory
 
@@ -160,6 +158,7 @@ sub_prepare() {
 }
 
 sub_submit() {
+  load_paid_media   # spec 165
   local envelope=""
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -169,7 +168,7 @@ sub_submit() {
     esac
   done
   [ -z "$envelope" ] && { [ -t 0 ] && die "submit: --envelope=<json> required"; envelope="$(cat)"; }
-  [ -z "${FAL_KEY:-}" ] && die_no_fal_key
+  pm_has_fal_key || die_no_fal_key
 
   local model body output_path estimate confirm prompt tier
   model="$(printf '%s' "$envelope" | jq -r '.model // ""')"
@@ -226,6 +225,7 @@ reap_one() {
 }
 
 sub_poll() {
+  load_paid_media   # spec 165
   local all=0 id=""
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -235,7 +235,7 @@ sub_poll() {
       *) die "poll: unknown arg: $1" ;;
     esac
   done
-  [ -z "${FAL_KEY:-}" ] && die_no_fal_key
+  pm_has_fal_key || die_no_fal_key
   [ -f "$LEDGER" ] || { printf 'poll: no jobs ledger yet (%s)\n' "$LEDGER"; return 0; }
 
   if [ -n "$id" ]; then reap_one "$id"; return $?; fi

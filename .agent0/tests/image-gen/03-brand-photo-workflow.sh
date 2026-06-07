@@ -20,6 +20,9 @@ TMPDIR="$(mktemp -d -t spec-085-s3-XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 export CLAUDE_PROJECT_DIR="$TMPDIR"
+# spec 165 — the paid path now sources lib/paid-media.sh from $PROJECT_DIR; provision it in the temp project (as a real project has it).
+mkdir -p "$CLAUDE_PROJECT_DIR/.agent0/tools/lib"
+cp "$AGENT0_ROOT/.agent0/tools/lib/paid-media.sh" "$CLAUDE_PROJECT_DIR/.agent0/tools/lib/"
 export FAL_KEY="test-fake-key-not-real-fa30000000-0000-0000-0000-000000000000:0000"
 
 cd "$TMPDIR"

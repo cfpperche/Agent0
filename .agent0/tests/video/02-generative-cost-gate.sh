@@ -18,6 +18,9 @@ GEN="$AGENT0_ROOT/.agent0/skills/video/scripts/gen.sh"
 TMP="$(mktemp -d -t spec-132-gate-XXXXXX)"
 trap 'rm -rf "$TMP"' EXIT
 export CLAUDE_PROJECT_DIR="$TMP"
+# spec 165 — the paid path now sources lib/paid-media.sh from $PROJECT_DIR; provision it in the temp project (as a real project has it).
+mkdir -p "$CLAUDE_PROJECT_DIR/.agent0/tools/lib"
+cp "$AGENT0_ROOT/.agent0/tools/lib/paid-media.sh" "$CLAUDE_PROJECT_DIR/.agent0/tools/lib/"
 
 fail() { echo "FAIL ($1): $2"; exit 1; }
 

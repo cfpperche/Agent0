@@ -164,7 +164,20 @@ json_escape() {
 # ---------------------------------------------------------------------------
 # Subcommand: prepare
 # ---------------------------------------------------------------------------
+# Paid sub-kit loader (spec 165). SKILL-DIR tool crosses into tools/lib via the
+# $PROJECT_DIR anchor it already uses for fal-rest.sh. LAZY: called inside the
+# paid subcommands only (prepare/exec) so --help/noargs/record never need the
+# lib. Absent → exit 70 + the kernel message (missing-kit precedent). image is a
+# pipe-table tool, so it consumes only the FAL_KEY predicate (not pm_yaml_*).
+load_paid_media() {
+  [ -n "${_PM_LOADED:-}" ] && return 0
+  . "$PROJECT_DIR/.agent0/tools/lib/paid-media.sh" 2>/dev/null \
+    || { echo "image: missing kit library lib/paid-media.sh" >&2; exit 70; }
+  _PM_LOADED=1
+}
+
 sub_prepare() {
+  load_paid_media   # spec 165 — paid path: FAL_KEY helper
   local tier="" name="" prompt="" aspect="square"
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -186,7 +199,7 @@ sub_prepare() {
   prompt="${prompt# }"
 
   [ -z "$tier" ] && die_no_tier
-  [ -z "${FAL_KEY:-}" ] && die_no_fal_key
+  pm_has_fal_key || die_no_fal_key
   [ -z "$prompt" ] && { printf '/image error: prompt is required.\n' >&2; exit 2; }
 
   if [ -n "$name" ]; then
@@ -251,6 +264,7 @@ sub_prepare() {
 # Exit 0 on success, non-zero on failure; receipt is always one JSON line on
 # stdout so the agent can parse it regardless of outcome.
 sub_exec() {
+  load_paid_media   # spec 165
   local envelope=""
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -269,7 +283,7 @@ sub_exec() {
     envelope=$(cat)
   fi
 
-  [ -z "${FAL_KEY:-}" ] && die_no_fal_key
+  pm_has_fal_key || die_no_fal_key
 
   local tier model prompt output_path image_size expected_dims
   tier="$(printf '%s' "$envelope"          | jq -r '.tier          // ""')"

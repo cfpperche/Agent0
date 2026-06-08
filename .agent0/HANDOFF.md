@@ -12,6 +12,7 @@ See `.agent0/context/rules/session-handoff.md` for the protocol.
 - **Fresh-session evidence:** after a Codex restart, only the startup brief appeared. Agent0 validation passed with JSON parse checks and hook grep showing only `startup-brief.sh`.
 - **Consumers resynced:** `/home/goat/mei-saas` `28a5a0e`, `/home/goat/acmeyard` `de84307`, and `/home/goat/cognixse` `396e1e0` (`chore(harness): sync prompt hook pause`). Each passed JSON parse checks, hook grep, and `bash .agent0/tests/context-injection/run-all.sh`.
 - **Spec 172 shipped and resynced:** Agent0 commit `37916ec` teaches `sync-harness.sh` to record Agent0-owned `.claude/settings.json` hook identities in baseline `settings_hooks` (`tool_version: 2`) and prune removed/renamed Agent0-owned hook entries only when the previous baseline proves ownership. Consumer sync commits: `mei-saas` `a93a306`, `acmeyard` `9fc6cc3`, `cognixse` `75d74f4`.
+- **Publish complete:** Agent0 and the three consumer repos were pushed to `origin/main` after the prompt-hook pause and settings-hook baseline sync.
 - **Spec 171 owns the redesign:** `docs/specs/171-context-injection-reformulation/` reframes context injection beyond keyword-only prompt hooks, with explicit `(runtime, tool)` coverage labels. Spec 170 artifacts were removed before commit and are intentionally superseded.
 - Claude critique informed spec 171 once; later convergence attempts timed out. Treat current cross-model convergence as unavailable, not confirmed.
 
@@ -23,7 +24,6 @@ See `.agent0/context/rules/session-handoff.md` for the protocol.
 ## Next Actions
 
 - For spec 171, implement the smallest v1 only after review: extend `context-inject.sh` with URL/article/gated-host prompt routing, then add hookable Bash/MCP post-tool auth-wall routing with explicit uncovered/rule-only labels.
-- When ready: `git push` Agent0 and the three consumers with local commits.
 
 ## Decisions & Gotchas
 

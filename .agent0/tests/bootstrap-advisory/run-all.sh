@@ -45,8 +45,8 @@ JSON
       printf '# Example\n\n## Language & Locale\n\n- Human communication: <replace>.\n' > "$dir/.agent0/project-core.md.example"
       ;;
     configured)
-      printf '# Example\n\n## Language & Locale\n\n- Human communication: <replace>.\n' > "$dir/.agent0/project-core.md.example"
-      printf '# Configured core\n\n## Language & Locale\n\n- Human communication: pt-BR.\n' > "$dir/.agent0/project-core.md"
+      printf '# Example\n\n<!-- AGENT0:PROJECT-CORE-TEMPLATE: test-v1 -->\n\n## Language & Locale\n\n- Human communication: <replace>.\n' > "$dir/.agent0/project-core.md.example"
+      printf '# Configured core\n\n<!-- AGENT0:PROJECT-CORE-TEMPLATE: test-v1 -->\n\n## Language & Locale\n\n- Human communication: pt-BR.\n' > "$dir/.agent0/project-core.md"
       ;;
     none) ;;
     *) fail "unknown fixture mode: $mode" ;;
@@ -138,7 +138,7 @@ shared
 <!-- AGENT0:END -->
 EOF
 printf '{"hooks":{}}\n' > "$src/.claude/settings.json"
-printf '# Example\n\n## Language & Locale\n\n- Human communication: <replace>.\n' > "$src/.agent0/project-core.md.example"
+printf '# Example\n\n<!-- AGENT0:PROJECT-CORE-TEMPLATE: test-v1 -->\n\n## Language & Locale\n\n- Human communication: <replace>.\n' > "$src/.agent0/project-core.md.example"
 
 sync_out="$(bash "$src/.agent0/tools/sync-harness.sh" --apply --agent0-path="$src" "$consumer" 2>&1)"
 assert_contains "$sync_out" "bootstrap-advisory: project-core source missing" "sync emits pending advisory"
@@ -147,7 +147,7 @@ assert_contains "$sync_out" "project-core-sync.sh --apply" "sync advisory points
 [ -f "$consumer/.agent0/project-core.md.example" ] || fail "sync did not copy project-core example"
 ok "sync copies example without creating source"
 
-printf '# Consumer core\n\n## Language & Locale\n\n- Human communication: pt-BR.\n' > "$consumer/.agent0/project-core.md"
+printf '# Consumer core\n\n<!-- AGENT0:PROJECT-CORE-TEMPLATE: test-v1 -->\n\n## Language & Locale\n\n- Human communication: pt-BR.\n' > "$consumer/.agent0/project-core.md"
 sync_quiet="$(bash "$src/.agent0/tools/sync-harness.sh" --check --agent0-path="$src" "$consumer" 2>&1 || true)"
 assert_not_contains "$sync_quiet" "bootstrap-advisory:" "sync advisory disappears after source exists"
 

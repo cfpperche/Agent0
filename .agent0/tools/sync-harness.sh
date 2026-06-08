@@ -1911,8 +1911,15 @@ sync_project_core() {
 project_core_bootstrap_advisory() {
   local example="$CONSUMER_ROOT/.agent0/project-core.md.example"
   local source="$CONSUMER_ROOT/$PROJECT_SOURCE_REL"
+  local example_version source_version
   if [ -f "$example" ] && [ ! -f "$source" ]; then
     printf 'bootstrap-advisory: project-core source missing; copy .agent0/project-core.md.example to .agent0/project-core.md, customize it, then run .agent0/tools/project-core-sync.sh --apply.\n' >&2
+  elif [ -f "$example" ] && [ -f "$source" ]; then
+    example_version="$(sed -n 's/^<!-- AGENT0:PROJECT-CORE-TEMPLATE: \(.*\) -->$/\1/p' "$example" | head -1)"
+    source_version="$(sed -n 's/^<!-- AGENT0:PROJECT-CORE-TEMPLATE: \(.*\) -->$/\1/p' "$source" | head -1)"
+    if [ -n "$example_version" ] && [ "$source_version" != "$example_version" ]; then
+      printf 'project-core-advisory: template review pending; review .agent0/project-core.md.example, update .agent0/project-core.md marker to %s, then run .agent0/tools/project-core-sync.sh --apply.\n' "$example_version" >&2
+    fi
   fi
 }
 

@@ -74,7 +74,17 @@ if [ -f "$PROJECT_DIR/.agent0/project-core.md" ]; then
   if [ -x "$pc_tool" ]; then
     pc_out="$(bash "$pc_tool" --check --quiet --root "$PROJECT_DIR" 2>&1)"; pc_rc=$?
     if [ "$pc_rc" -eq 0 ]; then
-      check ok "project-core" ".agent0/project-core.md present; mirrors up to date"
+      pc_example_version=""
+      pc_source_version=""
+      if [ -f "$PROJECT_DIR/.agent0/project-core.md.example" ]; then
+        pc_example_version="$(sed -n 's/^<!-- AGENT0:PROJECT-CORE-TEMPLATE: \(.*\) -->$/\1/p' "$PROJECT_DIR/.agent0/project-core.md.example" | head -1)"
+        pc_source_version="$(sed -n 's/^<!-- AGENT0:PROJECT-CORE-TEMPLATE: \(.*\) -->$/\1/p' "$PROJECT_DIR/.agent0/project-core.md" | head -1)"
+      fi
+      if [ -n "$pc_example_version" ] && [ "$pc_source_version" != "$pc_example_version" ]; then
+        check advisory "project-core" "template review pending — review .agent0/project-core.md.example, update .agent0/project-core.md marker to $pc_example_version, run .agent0/tools/project-core-sync.sh --apply"
+      else
+        check ok "project-core" ".agent0/project-core.md present; mirrors up to date"
+      fi
     else
       check advisory "project-core" "mirror drift — run .agent0/tools/project-core-sync.sh --apply"
     fi

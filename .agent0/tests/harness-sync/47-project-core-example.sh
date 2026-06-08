@@ -57,7 +57,7 @@ EOF
 
 make_entrypoints "$SRC" "Agent0"
 printf '# Upstream real core\n\n%s\n' "$UPSTREAM_SENTINEL" > "$SRC/.agent0/project-core.md"
-printf '# Example core\n\n## Language & Locale\n\n- Human communication: <replace me>.\n' > "$SRC/.agent0/project-core.md.example"
+printf '# Example core\n\n<!-- AGENT0:PROJECT-CORE-TEMPLATE: test-v1 -->\n\n## Language & Locale\n\n- Human communication: <replace me>.\n' > "$SRC/.agent0/project-core.md.example"
 
 # Phase 1: consumer without a real source gets the example, but no active PROJECT region.
 mkdir -p "$CONSUMER/.agent0" "$CONSUMER/.claude"
@@ -73,7 +73,7 @@ echo "  ok: phase1 example copied; real source absent; upstream project core str
 
 # Phase 2: consumer-owned source remains authoritative and mirrors into both entrypoints.
 mkdir -p "$CONSUMER2/.agent0" "$CONSUMER2/.claude"
-printf '# Consumer core\n\n%s\n' "$CONSUMER_SENTINEL" > "$CONSUMER2/.agent0/project-core.md"
+printf '# Consumer core\n\n<!-- AGENT0:PROJECT-CORE-TEMPLATE: test-v1 -->\n\n%s\n' "$CONSUMER_SENTINEL" > "$CONSUMER2/.agent0/project-core.md"
 src_sha_before="$(sha256sum "$CONSUMER2/.agent0/project-core.md" | awk '{print $1}')"
 
 out="$(bash "$TOOL" --apply --agent0-path="$SRC" "$CONSUMER2" 2>&1)" || fail "apply with consumer source failed" "$out"

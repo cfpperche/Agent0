@@ -1,5 +1,7 @@
 # Agent0 Project Core
 
+<!-- AGENT0:PROJECT-CORE-TEMPLATE: 2026-06-08-1 -->
+
 ## Language & Locale
 
 - Human communication: follow the user's language; use pt-BR when the user writes in Portuguese.

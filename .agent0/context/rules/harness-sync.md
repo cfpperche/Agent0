@@ -324,6 +324,14 @@ bash .agent0/tools/project-core-sync.sh --apply
 
 **Bootstrap advisory.** When `.agent0/project-core.md.example` exists but `.agent0/project-core.md` does not, Agent0 treats the consumer as needing project-core bootstrap and emits `bootstrap-advisory:` from `sync-harness.sh`; `startup-brief.sh`, `status.sh`, and `doctor.sh` also surface the pending state. This is advisory-only and never creates the source. Once the consumer authors `.agent0/project-core.md` and runs `.agent0/tools/project-core-sync.sh --apply`, these alerts must disappear; persistent warnings after configuration are false-positive context and should be treated as a bug.
 
+**Template review advisory.** The example carries a template acknowledgement marker:
+
+```markdown
+<!-- AGENT0:PROJECT-CORE-TEMPLATE: <id> -->
+```
+
+When a configured consumer already has `.agent0/project-core.md`, sync still updates the example as an Agent0-owned template and leaves the real source untouched. If the source's marker is missing or differs from the example's marker, Agent0 emits `project-core-advisory:` from `sync-harness.sh`; `startup-brief.sh`, `status.sh`, and `doctor.sh` also surface the review-pending state. The fix is to review the new example, update the real `.agent0/project-core.md` as needed, set its marker to the current example id, then run `.agent0/tools/project-core-sync.sh --apply`. This is the configured-consumer sibling of bootstrap: it must disappear after explicit review, otherwise it becomes false-positive context.
+
 **Consumer-source mirror — a local derived-output direction.** Unlike every other primitive here (Agent0 → consumer), this mirrors a *consumer's own* source into the *consumer's own* two entrypoints. It deliberately does **not** depend on the harness-sync baseline because the entrypoint regions are not independent consumer customizations; they are derived output from `.agent0/project-core.md`. Per region:
 
 | Region state vs source | Verdict | Behavior |

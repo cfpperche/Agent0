@@ -8,31 +8,29 @@ See `.agent0/context/rules/session-handoff.md` for the protocol.
 
 ## Current State
 
-**Session 2026-06-08 (latest) — Entrypoint capability-index COMPACTION shipped to Agent0 `main` + 3 consumers (all local commits, not pushed).** The Agent0-managed block in `CLAUDE.md`/`AGENTS.md` (the always-on entrypoint index) was compacted: opt-in capability + infra sections collapsed to a one-line discovery-function form (`/command (+ tool) — what it does (keywords) — distinction vs neighbor → rule`), invariants (SDD, governance, runtime-capabilities, handoff, delegation, secrets, memory, Compact Instructions) kept dense. Managed block **22,571 → 12,843 bytes (~2,431 tokens saved per session)**; 35 sections preserved; CLAUDE.md ≡ AGENTS.md in the block. Commit `d2d1aec` on Agent0 main.
-
-**How it was decided (not ad-hoc):** graduated from `/meeting` `.agent0/meetings/harness-token-weight-vs-importance-2026-06-08T00-59-10Z/` (classification of harness components by token-weight × importance). The human's stack-neutrality critique killed `rule_selected` frequency-as-importance instrumentation (harness ships to stack-neutral consumers; frequency on the Agent0 repo is unrepresentative → deferred as speculative observability). A scaffolded spec 170 + Codex `/sdd debate` then collapsed an over-engineered routing benchmark into a basic smoke test; **spec 170 was deleted** (proportionality — see new memory `feedback_match_rigor_to_reversibility`).
-
-**Validation:** blind routing smoke test **16/16 on both runtimes** (Claude subagent + Codex via `codex-exec`) over every near-ontology trap pair (audio/sound/transcribe, image/diagram/video, product/frontend-designer, meeting/brainstorm) + false-positive + no-capability cases. Mechanical regression green: `doctor.sh` 22 ok/0 broken, `harness-sync` 28/28, `agents-memory-block-budget` pass.
-
-**Consumers shipped (apply + commit on each `main`, local only):** mei-saas `ade8500`, cognixse `5d1e9ad`, acmeyard `d05efa0`. All brought current with Agent0 main (compaction + specs 166/167/169 + product/browser/spec-driven updates); sync was 100% clean (0 customized-refused, 0 overwritten). Consumer commits staged harness paths only (`CLAUDE.md AGENTS.md .claude .agent0`, 23 files each).
-
-**Prior shipped baseline:** specs 166-168 on Agent0 `main`; spec 168 shipped `docs/agent0-roadmap.html`, 167 scope admission, 166 governance doctrine. Capacity/media arc 153-165 complete.
+- **Session 2026-06-08 (latest) — UserPromptSubmit context injection removed from runtime hook configs.** Removed the `UserPromptSubmit` hook blocks from `.codex/hooks.json` and `.claude/settings.json`, so `.agent0/hooks/context-inject.sh` is no longer registered as the recurring prompt-time context injector in either runtime config. `SessionStart` remains registered in both configs and still points at `startup-brief.sh` for startup/resume continuity.
+- **Post-restart confirmation:** the human restarted the Codex session to force hook reload. The fresh session displayed only the startup brief from `SessionStart`; no prompt-time context-injection block appeared. Re-checked configs with `jq empty .codex/hooks.json && jq empty .claude/settings.json` and `rg 'UserPromptSubmit|context-inject.sh|startup-brief.sh' .codex/hooks.json .claude/settings.json`; only `startup-brief.sh` remains in those runtime hook configs.
+- **Session 2026-06-08 (latest) — spec 171 context-injection reformulation drafted.** Opened `docs/specs/171-context-injection-reformulation/` to reframe context injection beyond prompt-only keywording. Web/docs research confirmed Codex hook limits (`PostToolUse` does not universally intercept WebSearch/non-shell/non-MCP), and Claude critique succeeded through `claude-exec` run `20260608T150344Z-context-injection-reformulation-claude`. Spec 171 now requires `(runtime, tool)` coverage labels and a v1 cut of prompt-time URL/article/gated-host routing plus hookable post-tool auth-wall routing.
+- **Spec 170 context-injection qualification abandoned before commit.** Its rule/test/spec artifacts were removed because they qualified the old prompt-hook model. The decision is recorded in `docs/specs/171-context-injection-reformulation/notes.md`; spec 171 now owns the replacement design.
+- Latest hook-config cut validated with `jq empty .codex/hooks.json && jq empty .claude/settings.json` and `rg 'UserPromptSubmit|context-inject.sh|startup-brief.sh' .codex/hooks.json .claude/settings.json` (only `startup-brief.sh` remains).
+- Claude convergence review was attempted twice through `claude-exec`; both attempts timed out without usable output. Treat as unavailable, not as cross-model convergence.
+- Prior local commits from the session arc remain unpushed unless the human has pushed externally: Agent0 compaction (`d2d1aec`) and spec 169 (`fda6594`), plus the three consumer bring-current commits noted in older handoff state.
 
 ## Active Work
 
-- No active implementation work. Agent0 working tree is clean. The compaction is committed locally on all four repos; nothing is pushed (user chose keep-local).
-- Spec 169 `post-launch-maintenance-loop` was committed to Agent0 main as `fda6594` during this session, and propagated to the 3 consumers by the bring-current sync — source and consumers are consistent (no gap).
-- cognixse has unrelated uncommitted product work (`backoffice/leads/page.tsx`, `actions.ts`, 2 e2e) — left untouched, never staged.
+- Active spec: `docs/specs/171-context-injection-reformulation/` is draft/planning only; implementation has not started.
+- Pre-existing/unrelated dirty state is still present and was left untouched: `.agent0/meetings/terceiro-runtime-modelos-chineses-2026-06-08T14-18-05Z/`.
 
 ## Next Actions
 
-- When ready to publish: `git push` on Agent0 + the 3 consumers (local commits pending).
-- Compaction follow-through if real usage shows a missed capability: restore that one section's dense form (the compaction is reversible by design — the documented revert trigger; the smoke test proves cue-retention under attention, NOT spontaneous mid-task discovery).
-- Parked items remain condition-gated: agentskills.io re-snapshot due 2026-08-17, competitive harness audit due 2026-08-19, old `060` deferred rows. Governance follow-ups `gate-algebra`, `security-governance-lane`, `continuous-evolution-spine` still need their own scope decisions.
+- Decide whether to treat the `UserPromptSubmit` removal as a simple immediate mitigation commit, or fold it into the broader spec 171 context-injection reformulation work.
+- For spec 171, implement the smallest v1 only after review: extend `context-inject.sh` with URL/article/gated-host prompt routing, then add hookable Bash/MCP post-tool auth-wall routing with explicit uncovered/rule-only labels.
+- When ready to publish the broader session arc: `git push` on Agent0 and the three consumers with local commits.
 
 ## Decisions & Gotchas
 
-- **Importance of a harness rule is NOT measurable by frequency on the Agent0 repo** — the harness ships to stack-neutral consumers; frequency here describes harness development, not consumer use, and consumer-local telemetry never returns. Importance-for-shipping = severity-if-omitted × breadth-of-applicability, disciplined by a discovery-function-per-line test (each entrypoint line must prove command/keywords/distinction/pointer, *including* governance lines).
-- The compacted one-liners preserved routing in the smoke test specifically because the `NOT X → /Y` neighbor pointers carry the disambiguation — do not drop them when editing capability lines, or cost migrates from tokens to mis-routing.
-- `sync-harness` brings a consumer to the Agent0 source HEAD-on-disk wholesale, not per-change; "ship one change" still pulls every stale/new harness file. Surface the full drift list before applying to external repos.
-- When committing a harness sync into a consumer that has its own product work in flight, stage harness paths explicitly (`CLAUDE.md AGENTS.md .claude .agent0`), never `git add -A` — cognixse this session had product changes that must not ride along.
+- `UserPromptSubmit` was the recurring prompt-time context injector in the runtime configs. Post-restart evidence now confirms the prompt-time context-injection block stopped in the fresh Codex session.
+- `SessionStart` intentionally remains because it is the continuity/startup brief path, not the keyword-based prompt hydrator.
+- The suite intentionally avoids telemetry/frequency scoring. Agent0 is stack-neutral; repo-local frequency is not a reliable importance signal for consumers.
+- Spec 170's qualification artifacts were intentionally removed before commit; do not look for `.agent0/context/rules/context-injection-qualification.md` or `.agent0/tests/context-qualification/` in the current intended state.
+- For spec 171, do not claim the X/article silent-substitution class is closed from a curl-only fixture. Label coverage by `(runtime, tool)` and keep non-hookable web-fetch paths as `rule-only` until live evidence proves otherwise.

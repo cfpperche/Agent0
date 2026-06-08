@@ -12,6 +12,10 @@ _In-flight design memory for this spec - decisions, deviations, tradeoffs, and o
 
 Spec 170 (`context-injection-qualification`) was abandoned before commit after the prompt-time `UserPromptSubmit` hook was removed from `.codex/hooks.json` and `.claude/settings.json`. Its rule/test artifacts were removed instead of being committed as a superseded historical suite, because they qualified the old hook model and would add noise while spec 171 owns the replacement design.
 
+### 2026-06-08 - parent - Align shipped docs before consumer sync
+
+Before resyncing consumers, the runtime-capabilities row, harness-sync propagation rule, startup-brief context pointer, and context-injection registration test were aligned with the new paused prompt-hook state. This prevents consumers from receiving configs without `UserPromptSubmit` while their startup/context docs still say prompt turns receive capsules from `context-inject.sh`.
+
 ### 2026-06-08 - parent - Admit event-scoped reformulation
 
 The change is admitted as a context/replication substrate spec because the observed failure was not lack of a static rule. The missing context appeared after a tool result, so a prompt-only hydrator cannot be the complete mechanism. V1 remains bounded and advisory because runtime hook coverage differs and Codex does not intercept every web/tool surface.

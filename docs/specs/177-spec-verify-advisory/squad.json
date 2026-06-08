@@ -1,0 +1,33 @@
+{
+  "spec": "177-spec-verify-advisory",
+  "roster": ["claude", "codex"],
+
+  "max_rounds": 12,
+  "max_repair_attempts": 3,
+
+  "gate": [
+    "test -f .agent0/tools/spec-verify.sh",
+    "test -x .agent0/tools/spec-verify.sh",
+    "test -f .agent0/context/rules/spec-verify.md",
+    "test -f .agent0/tests/spec-verify/05-advisory-fires.sh",
+    "test -f .agent0/tests/spec-verify/06-advisory-silent.sh",
+    "bash .agent0/tests/spec-verify/run-all.sh",
+    "bash .agent0/tools/spec-verify.sh docs/specs/177-spec-verify-advisory",
+    "grep -q '^## Spec verify advisory' CLAUDE.md",
+    "grep -q '^## Spec verify advisory' AGENTS.md"
+  ],
+
+  "forbidden_paths": [
+    "\\.env",
+    "(^|/)secrets?/",
+    "\\.secrets?(\\.[^/]+)?$",
+    "\\.agent0/.*-audit\\.jsonl",
+    "\\.agent0/HANDOFF\\.md"
+  ],
+
+  "human_gated_paths": [
+    "\\.github/workflows/",
+    "migrations/",
+    "infra/"
+  ]
+}

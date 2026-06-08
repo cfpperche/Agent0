@@ -87,6 +87,8 @@ The doctrine preserves these possible future specs without starting them:
 
 Do not promote any of them automatically. Each needs its own evidence and scope decision.
 
+Spec 169 (`post-launch-maintenance-loop`) is a narrow, instrument-only slice of the continuous-evolution spine: it ships guidance/templates for production-signal -> work-item -> agent-review maintenance, but it does not graduate the broader `continuous-evolution-spine` follow-up and does not move Agent0 into consumer operations.
+
 ## Notes
 
 _Consumer-extension surface - append consumer-local bullets here. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add consumer bullets at the end._

@@ -8,38 +8,35 @@ See `.agent0/context/rules/session-handoff.md` for the protocol.
 
 ## Current State
 
-**▸ Session 2026-06-07 (latest) — Spec 168 `agent0-roadmap-html` SHIPPED + PUSHED to Agent0 `main`.** Added standalone `docs/agent0-roadmap.html`, inspired by roadmap.sh at the pattern level only, plus frontend-designer artifacts and a render-tier fixture under `docs/specs/168-agent0-roadmap-html/`. It visualizes Agent0 as a template/governance harness across evolution, quality, security, context, replication, multi-runtime, and scope admission, distinguishing shipped/instrument/deferred/missing work. `agent-browser verify-contract` is green via `file://` with an absolute report outdir.
+**Session 2026-06-08 — Spec 169 `post-launch-maintenance-loop` SHIPPED locally, not committed/pushed.** Added a provider-neutral post-launch maintenance loop as an instrument-only Agent0 surface: production signal -> work hub -> agent delegate -> human review gate -> feedback sink. V1 is only a context rule plus copyable templates; no skill, hook, daemon, webhook receiver, scheduler, provider client, validator, or runtime integration was added.
 
-**Previous shipped session — Spec 167 `scope-admission-governance` SHIPPED + PUSHED to Agent0 `main`.** Scope admission is now a first-class rule at `.agent0/context/rules/scope-admission-governance.md`, linked from the Agent0 governance doctrine and SDD rule. It defines admission outcomes (`admit`, `instrument-only`, `harden-existing`, `defer`, `reject`), evidence ladder, admission brief, hardening bar, product-drift boundary, and deferred-work recording discipline. No hook/validator/tool/script/sync apply was added.
+**Artifacts:** `docs/specs/169-post-launch-maintenance-loop/` is complete with Claude review/debate captured in `debate.md`; rule is `.agent0/context/rules/post-launch-maintenance-loop.md`; templates are under `.agent0/context/templates/post-launch-maintenance-loop/`; checks are under `.agent0/tests/post-launch-maintenance-loop/`.
 
-**Previous shipped session — Spec 166 `agent0-governance-doctrine` SHIPPED + PUSHED to Agent0 `main`.** The future-Agent0 brainstorm was closed/rendered, Claude was consulted via `claude-exec`, and the resulting doctrine is now codified in `.agent0/context/rules/agent0-governance-doctrine.md`. `CLAUDE.md` and `AGENTS.md` both point to it from the shared managed block; `check-instruction-drift.sh --agent0-path=/home/goat/Agent0` is green and `doctor.sh` reports OK (22 ok, 0 advisory, 0 broken). Doctrine: Agent0 remains a stack-neutral template/governance harness, not a product by default; new capacities must pass explicit scope-admission discipline.
+**Product/governance wiring:** `/product` terminal handoff now points to the loop as optional after first release, not as a phase. `pipeline-coverage.md` calls it sibling infrastructure. `agent0-governance-doctrine.md` records spec 169 as a narrow slice, not the full `continuous-evolution-spine` follow-up.
 
-**Previous shipped session — Acmeyard sync followups fixed and pushed to Agent0 `main`.** Agent0 upstream has `AGENTS.md` managed block mirrored from the canonical `CLAUDE.md` block, so `check-instruction-drift.sh --agent0-path=/home/goat/Agent0` is green. Trailing whitespace was removed from tracked text files exposed by the Acmeyard sync. While validating, a real checker bug surfaced: `printf "$sync_out" | grep -q` under `pipefail` could miss `AGENTS.md` in large `sync-harness` output; fixed with here-strings and covered by `07-sync-output-grep-pipefail.sh`.
+**User-facing usage guidance given:** with `/product`, use the loop after SDD build + first release as post-launch setup. Without `/product`, adopt it directly from the Agent0 harness by copying/filling the templates. In both cases the consumer project owns the real integrations and starts manual/dry-run before agent delegation.
 
-**Previous shipped session — Spec 165 `cross-dir-capacity-sourcing` SHIPPED + PUSHED `545da5a`, propagated to both consumers.** `video`+`image` now source `lib/paid-media.sh` cross-dir; gate GREEN 11/11, zero behavior change. `docs/specs/165-*`. **All 4 paid tools now on the kit.**
+**Validation:** `bash .agent0/tests/post-launch-maintenance-loop/run-all.sh` passed; sensitive-pattern grep found no configured credentials/IDs; equivalent temporary sync dry-run copied the new rule/templates/tests; `git diff --check` passed; no unresolved `{{...}}` placeholders in spec 169 or the new surfaces.
 
-**Recently shipped (git log + docs/specs/, no action):** `paid-media-kit`(164); media family 159–162; `capacity-kit`(163); `frontend-designer`(158); 153–155. Consumers `cognixse`+`mei-saas` carry 161–165 (synced + pushed).
-
-**Repos:** Agent0 `main` carries spec 167. cognixse and mei-saas are unchanged from the previous propagated state.
+**Prior shipped baseline:** specs 166-168 are on Agent0 `main`; spec 168 shipped `docs/agent0-roadmap.html`, spec 167 shipped scope admission, spec 166 shipped the governance doctrine. Capacity/media arc 153-165 remains complete.
 
 ## Active Work
 
-- No active implementation work.
-- No live parallel-work claims.
+- Spec 169 implementation is complete locally and awaiting the user's commit/push decision.
+- The latest user question was answered: use with `/product` after terminal SDD handoff/release; use without `/product` as a standalone harness playbook via the templates.
+- Unrelated untracked meeting directory exists at `.agent0/meetings/harness-token-weight-vs-importance-2026-06-08T00-59-10Z/`; do not stage it with spec 169 unless the user asks.
 
 ## Next Actions
 
-- Remaining candidate follow-ups from the doctrine, not yet ripe without separate scope decision: `gate-algebra`, `security-governance-lane`, `continuous-evolution-spine`.
-- The capacity/media arc (153–165) is complete, gated, and propagated. The 164 `video`/`image` reopen-trigger is CLOSED (spec 165).
-- **Condition-gated parked items (none ripe):** agentskills.io re-snapshot reminder (due 2026-08-17); next competitive harness audit (scheduled 2026-08-19); `060` deferred rows (B2 rule-analytics @ rule-count>30, B3 agent-as-peer @ orchestration-demand, A5 PermissionRequest @ demand). Don't build until the trigger fires (rule-of-three).
+- If publishing: review `git status`, stage only spec 169 paths plus the three touched docs/HANDOFF, then commit/push. Exclude the unrelated meeting directory unless intentionally publishing it.
+- If asked to demonstrate adoption next, create a consumer-local `docs/ops/post-launch-maintenance/` fixture from the templates; do not configure real Sentry/Linear/GitHub/Codex/Claude credentials unless explicitly requested.
+- Possible future work, not admitted by spec 169: a portable maintenance-loop skill only after dogfood shows rule+templates are too passive; broader `continuous-evolution-spine` still needs its own evidence and scope decision.
+- Parked items remain condition-gated: agentskills.io re-snapshot due 2026-08-17, competitive harness audit due 2026-08-19, and old `060` deferred rows.
 
 ## Decisions & Gotchas
 
-- **Capacity-kit extraction discipline:** extract ONLY byte-identical-or-cleanly-parameterized plumbing; genuine per-tool variants stay local. Helpers in `lib/paid-media.sh` are **pure** (never emit, never exit). Prove behavior-preservation with `golden.sh capture` BEFORE / `verify` AFTER.
-- **Agent0 governance doctrine (166):** before expanding Agent0 capacities, classify the proposal by layer (continuous-evolution spine, quality/security domains, context/replication substrate, multi-runtime transversal, scope-admission meta-governance) and by boundary (`own` / `instrument` / `ignore`). Product-like ownership of consumer release/operation stays out unless future evidence moves the boundary.
-- **Scope admission (167):** new capacity proposals must land in one outcome (`admit`, `instrument-only`, `harden-existing`, `defer`, `reject`) and name evidence, v1 posture, blast radius, validation, and non-goals before planning a mechanism. Hard gates require deterministic checks, low false-positive risk, bypass/audit posture, consumer blast-radius analysis, and tests.
-- **`--help` source-below-range gotcha:** tools print `--help` via `sed -n 'A,Bp' "$0"`; source libs below that range.
-- **Cross-dir kit sourcing (165):** skill-dir tools source via `$PROJECT_DIR`, lazy-loaded inside paid subcommands. Consumer-root sourcing tests must be OBSERVABLE with a sentinel.
-- **`golden.sh` is FAL_KEY-hermetic** (`env -u FAL_KEY`); `paid-golden.sh` pins set state. `git fetch` before trusting consumer `[ahead N]`.
-- **Consumer push policy:** Agent0 pushed freely; cognixse/mei-saas committed local and **pushed only when the founder triggers**; `tmux-sentinel` is sync-apply-only, NEVER commit/push harness (`.agent0/memory/tmux-sentinel-sync-no-commit.md`).
-- **agent-browser daemon gotchas** + fail-closed routing (spec 153, no MCP lane): see `.agent0/memory/agent-browser-primitive.md`.
+- Spec 169 boundary is load-bearing: Agent0 instruments the maintenance loop but does not own consumer observability, incident process, agent delegation, merge, release, rollback, or closure.
+- Keep Sentry -> Linear -> Codex isolated as an example recipe. Provider-neutral guidance must keep roles by capability class: signal source, work hub, agent delegate, review gate, feedback sink.
+- Usage distinction: `/product` is only a pointer after release; non-`/product` projects can use the same rule/templates directly. The mechanism is the same in both paths.
+- Production signal payloads are untrusted input. Trusted task instructions and untrusted incident payload must stay separated; redaction/minimization and human review are mandatory before delegation/merge/release.
+- `sync-harness.sh` uses the git index file-set. Direct dry-run will not list new untracked files; for pre-commit propagation proof, use an equivalent temporary source with only the relevant paths added to a temporary index.

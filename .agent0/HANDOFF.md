@@ -8,7 +8,9 @@ See `.agent0/context/rules/session-handoff.md` for the protocol.
 
 ## Current State
 
-**▸ Session 2026-06-07 (latest) — Spec 167 `scope-admission-governance` SHIPPED + PUSHED to Agent0 `main`.** Scope admission is now a first-class rule at `.agent0/context/rules/scope-admission-governance.md`, linked from the Agent0 governance doctrine and SDD rule. It defines admission outcomes (`admit`, `instrument-only`, `harden-existing`, `defer`, `reject`), evidence ladder, admission brief, hardening bar, product-drift boundary, and deferred-work recording discipline. No hook/validator/tool/script/sync apply was added.
+**▸ Session 2026-06-07 (latest) — Spec 168 `agent0-roadmap-html` SHIPPED + PUSHED to Agent0 `main`.** Added standalone `docs/agent0-roadmap.html`, inspired by roadmap.sh at the pattern level only, plus frontend-designer artifacts and a render-tier fixture under `docs/specs/168-agent0-roadmap-html/`. It visualizes Agent0 as a template/governance harness across evolution, quality, security, context, replication, multi-runtime, and scope admission, distinguishing shipped/instrument/deferred/missing work. `agent-browser verify-contract` is green via `file://` with an absolute report outdir.
+
+**Previous shipped session — Spec 167 `scope-admission-governance` SHIPPED + PUSHED to Agent0 `main`.** Scope admission is now a first-class rule at `.agent0/context/rules/scope-admission-governance.md`, linked from the Agent0 governance doctrine and SDD rule. It defines admission outcomes (`admit`, `instrument-only`, `harden-existing`, `defer`, `reject`), evidence ladder, admission brief, hardening bar, product-drift boundary, and deferred-work recording discipline. No hook/validator/tool/script/sync apply was added.
 
 **Previous shipped session — Spec 166 `agent0-governance-doctrine` SHIPPED + PUSHED to Agent0 `main`.** The future-Agent0 brainstorm was closed/rendered, Claude was consulted via `claude-exec`, and the resulting doctrine is now codified in `.agent0/context/rules/agent0-governance-doctrine.md`. `CLAUDE.md` and `AGENTS.md` both point to it from the shared managed block; `check-instruction-drift.sh --agent0-path=/home/goat/Agent0` is green and `doctor.sh` reports OK (22 ok, 0 advisory, 0 broken). Doctrine: Agent0 remains a stack-neutral template/governance harness, not a product by default; new capacities must pass explicit scope-admission discipline.
 
@@ -22,7 +24,7 @@ See `.agent0/context/rules/session-handoff.md` for the protocol.
 
 ## Active Work
 
-- Spec 167 implementation is complete.
+- No active implementation work.
 - No live parallel-work claims.
 
 ## Next Actions

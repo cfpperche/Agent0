@@ -1,0 +1,10 @@
+{
+  "required": [
+    { "role": "heading", "name": "Agent0 Governance Roadmap" },
+    { "role": "button", "name": "Todos" },
+    { "role": "button", "name": "Shipped" },
+    { "role": "heading", "name": "Hoje" },
+    { "role": "heading", "name": "Falta fazer" }
+  ],
+  "max_console_errors": 0
+}

@@ -1,0 +1,929 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agent0 Governance Roadmap</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f1e8;
+        --paper: #fffdf7;
+        --paper-2: #f8f5ec;
+        --ink: #171512;
+        --muted: #666052;
+        --line: #cfc7b7;
+        --line-dark: #28231d;
+        --shipped: #197a46;
+        --shipped-bg: #dff4e8;
+        --deferred: #a96508;
+        --deferred-bg: #fff0cc;
+        --missing: #a33131;
+        --missing-bg: #ffe1dd;
+        --instrument: #1d6387;
+        --instrument-bg: #dff0f7;
+        --meta: #6850a4;
+        --meta-bg: #ebe5fb;
+        --shadow: 0 14px 36px rgba(42, 35, 24, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 15% 0%, rgba(25, 122, 70, 0.12), transparent 32rem),
+          linear-gradient(180deg, #fcfaf4 0%, var(--bg) 44%, #ebe3d3 100%);
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.45;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .shell {
+        width: min(1280px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 28px 0 56px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 12px 0 28px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+        font-weight: 800;
+      }
+
+      .brand-mark {
+        width: 42px;
+        height: 42px;
+        flex: 0 0 auto;
+      }
+
+      .brand span {
+        display: block;
+        white-space: nowrap;
+      }
+
+      .toplinks {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .toplinks a {
+        min-height: 34px;
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid var(--line);
+        background: rgba(255, 253, 247, 0.72);
+        padding: 7px 10px;
+        border-radius: 6px;
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 13px;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 340px;
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .hero-main,
+      .snapshot {
+        border: 1px solid var(--line-dark);
+        background: var(--paper);
+        box-shadow: var(--shadow);
+      }
+
+      .hero-main {
+        padding: clamp(24px, 4vw, 44px);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero-main::after {
+        content: "";
+        position: absolute;
+        inset: auto 24px 22px auto;
+        width: min(44%, 360px);
+        height: 120px;
+        background:
+          linear-gradient(90deg, transparent 0 20%, rgba(23, 21, 18, 0.18) 20% 21%, transparent 21% 100%),
+          linear-gradient(0deg, transparent 0 48%, rgba(23, 21, 18, 0.18) 48% 50%, transparent 50% 100%);
+        opacity: 0.45;
+        pointer-events: none;
+      }
+
+      .eyebrow {
+        margin: 0 0 14px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 820px;
+        font-size: clamp(36px, 6vw, 72px);
+        line-height: 0.96;
+      }
+
+      .lead {
+        max-width: 780px;
+        margin: 22px 0 0;
+        color: #433d32;
+        font-size: clamp(17px, 2vw, 21px);
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 28px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 36px;
+        padding: 8px 12px;
+        border: 1px solid var(--line-dark);
+        background: #171512;
+        color: #fffdf7;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .pill.secondary {
+        background: var(--paper-2);
+        color: var(--ink);
+      }
+
+      .snapshot {
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .snapshot h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .meter {
+        display: grid;
+        gap: 9px;
+      }
+
+      .meter-row {
+        display: grid;
+        grid-template-columns: 90px minmax(0, 1fr) 34px;
+        gap: 10px;
+        align-items: center;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .bar {
+        height: 9px;
+        border: 1px solid var(--line-dark);
+        background: #eee6d6;
+      }
+
+      .bar > span {
+        display: block;
+        height: 100%;
+        background: var(--ink);
+      }
+
+      .source-note {
+        margin: auto 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .filter-panel {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        margin: 22px 0;
+        border: 1px solid var(--line-dark);
+        background: rgba(255, 253, 247, 0.92);
+        backdrop-filter: blur(10px);
+        padding: 12px;
+        box-shadow: 0 8px 24px rgba(42, 35, 24, 0.08);
+      }
+
+      .filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .filter-button {
+        min-height: 36px;
+        border: 1px solid var(--line);
+        background: var(--paper);
+        color: var(--ink);
+        border-radius: 6px;
+        padding: 8px 12px;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .filter-button[aria-pressed="true"] {
+        border-color: var(--line-dark);
+        background: var(--ink);
+        color: #fffdf7;
+      }
+
+      .content-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 330px;
+        gap: 22px;
+        align-items: start;
+      }
+
+      .roadmap {
+        display: grid;
+        gap: 18px;
+      }
+
+      .lane {
+        display: grid;
+        grid-template-columns: 220px minmax(0, 1fr);
+        position: relative;
+        border: 1px solid var(--line-dark);
+        background: rgba(255, 253, 247, 0.82);
+        box-shadow: 0 12px 28px rgba(42, 35, 24, 0.08);
+      }
+
+      .lane::before {
+        content: "";
+        position: absolute;
+        left: 220px;
+        top: 28px;
+        bottom: 28px;
+        width: 2px;
+        background: var(--line-dark);
+      }
+
+      .lane-head {
+        padding: 18px;
+        border-right: 1px solid var(--line-dark);
+        background: #efe8d9;
+      }
+
+      .lane-kicker {
+        margin: 0 0 10px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .lane h2 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.15;
+      }
+
+      .lane-desc {
+        margin: 12px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .nodes {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        padding: 18px;
+      }
+
+      .node {
+        position: relative;
+        min-height: 148px;
+        border: 1px solid var(--line-dark);
+        background: var(--paper);
+        padding: 14px;
+        border-radius: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .node::before {
+        content: "";
+        position: absolute;
+        left: -15px;
+        top: 26px;
+        width: 14px;
+        height: 2px;
+        background: var(--line-dark);
+      }
+
+      .node h3 {
+        margin: 0;
+        font-size: 17px;
+        line-height: 1.2;
+      }
+
+      .node p {
+        margin: 0;
+        color: #484136;
+        font-size: 14px;
+      }
+
+      .node-meta {
+        margin-top: auto;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        min-height: 25px;
+        padding: 4px 7px;
+        border: 1px solid currentColor;
+        border-radius: 5px;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .status-shipped {
+        color: var(--shipped);
+        background: var(--shipped-bg);
+      }
+
+      .status-deferred {
+        color: var(--deferred);
+        background: var(--deferred-bg);
+      }
+
+      .status-missing {
+        color: var(--missing);
+        background: var(--missing-bg);
+      }
+
+      .status-instrument {
+        color: var(--instrument);
+        background: var(--instrument-bg);
+      }
+
+      .status-meta {
+        color: var(--meta);
+        background: var(--meta-bg);
+      }
+
+      .side {
+        display: grid;
+        gap: 16px;
+        position: sticky;
+        top: 92px;
+      }
+
+      .panel {
+        border: 1px solid var(--line-dark);
+        background: var(--paper);
+        padding: 18px;
+        box-shadow: 0 12px 28px rgba(42, 35, 24, 0.08);
+      }
+
+      .panel h2 {
+        margin: 0 0 12px;
+        font-size: 20px;
+      }
+
+      .panel ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 10px;
+      }
+
+      .panel li {
+        display: grid;
+        grid-template-columns: 10px minmax(0, 1fr);
+        gap: 9px;
+        color: #453f34;
+        font-size: 14px;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        margin-top: 7px;
+        border-radius: 50%;
+        background: var(--line-dark);
+      }
+
+      .legend {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 6px;
+      }
+
+      .sources {
+        margin-top: 22px;
+        border: 1px solid var(--line-dark);
+        background: var(--paper);
+        padding: 18px;
+      }
+
+      .sources h2 {
+        margin: 0 0 10px;
+        font-size: 20px;
+      }
+
+      .sources p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .sources code {
+        background: #eee6d6;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 1px 4px;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      :focus-visible {
+        outline: 3px solid #d19b23;
+        outline-offset: 3px;
+      }
+
+      @media (max-width: 980px) {
+        .hero,
+        .content-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .side {
+          position: static;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 760px) {
+        .shell {
+          width: min(100% - 20px, 1280px);
+          padding-top: 16px;
+        }
+
+        .topbar,
+        .hero-actions {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .toplinks {
+          justify-content: flex-start;
+        }
+
+        .lane {
+          grid-template-columns: 1fr;
+        }
+
+        .lane::before,
+        .node::before {
+          display: none;
+        }
+
+        .lane-head {
+          border-right: 0;
+          border-bottom: 1px solid var(--line-dark);
+        }
+
+        .nodes,
+        .side,
+        .legend {
+          grid-template-columns: 1fr;
+        }
+
+        .filter-panel {
+          position: static;
+        }
+      }
+
+      @media print {
+        body {
+          background: #fff;
+        }
+
+        .filter-panel,
+        .toplinks {
+          display: none;
+        }
+
+        .side,
+        .content-grid,
+        .hero {
+          display: block;
+        }
+
+        .lane,
+        .panel,
+        .hero-main,
+        .snapshot {
+          box-shadow: none;
+          break-inside: avoid;
+          margin-bottom: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar" aria-label="Agent0 roadmap header">
+        <div class="brand">
+          <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true">
+            <rect x="6" y="6" width="52" height="52" rx="8" fill="#171512" />
+            <path d="M19 43h26M19 21h18M19 32h26" stroke="#fffdf7" stroke-width="4" stroke-linecap="round" />
+            <circle cx="46" cy="21" r="5" fill="#d19b23" />
+            <circle cx="20" cy="43" r="5" fill="#197a46" />
+          </svg>
+          <span>Agent0 Roadmap</span>
+        </div>
+        <nav class="toplinks" aria-label="Atalhos">
+          <a href="#roadmap">Mapa</a>
+          <a href="#today">Hoje</a>
+          <a href="#missing">Falta fazer</a>
+          <a href="#sources">Fontes</a>
+        </nav>
+      </header>
+
+      <section class="hero" aria-labelledby="page-title">
+        <div class="hero-main">
+          <p class="eyebrow">Snapshot de governança · 2026-06-08</p>
+          <h1 id="page-title">Agent0 Governance Roadmap</h1>
+          <p class="lead">
+            Um mapa visual do Agent0 como template/governance harness: categorias atuais,
+            capacidades já shipped, lacunas explicitamente deferidas e fronteiras que não
+            devem virar produto sem evidência.
+          </p>
+          <div class="hero-actions" aria-label="Resumo rápido">
+            <span class="pill">Template/governance, não produto</span>
+            <span class="pill secondary">7 camadas</span>
+            <span class="pill secondary">7 lacunas explícitas</span>
+          </div>
+        </div>
+
+        <aside class="snapshot" aria-label="Resumo do roadmap">
+          <h2>Estado do mapa</h2>
+          <div class="meter" aria-label="Contadores do roadmap">
+            <div class="meter-row">
+              <span>Shipped</span>
+              <div class="bar" aria-hidden="true"><span style="width: 61%"></span></div>
+              <strong id="count-shipped">17</strong>
+            </div>
+            <div class="meter-row">
+              <span>Instrumenta</span>
+              <div class="bar" aria-hidden="true"><span style="width: 14%"></span></div>
+              <strong id="count-instrument">4</strong>
+            </div>
+            <div class="meter-row">
+              <span>Falta</span>
+              <div class="bar" aria-hidden="true"><span style="width: 25%"></span></div>
+              <strong id="count-missing">7</strong>
+            </div>
+          </div>
+          <p class="source-note">
+            Curado manualmente a partir das specs 166/167, regras de contexto e handoff atual.
+          </p>
+        </aside>
+      </section>
+
+      <section class="filter-panel" aria-label="Filtros do roadmap">
+        <div class="filters">
+          <button class="filter-button" type="button" data-filter="all" aria-pressed="true">Todos</button>
+          <button class="filter-button" type="button" data-filter="shipped" aria-pressed="false">Shipped</button>
+          <button class="filter-button" type="button" data-filter="missing" aria-pressed="false">Falta fazer</button>
+          <button class="filter-button" type="button" data-filter="deferred" aria-pressed="false">Deferred</button>
+          <button class="filter-button" type="button" data-filter="security" aria-pressed="false">Segurança</button>
+          <button class="filter-button" type="button" data-filter="context" aria-pressed="false">Contexto</button>
+          <button class="filter-button" type="button" data-filter="runtime" aria-pressed="false">Runtime</button>
+        </div>
+      </section>
+
+      <section class="content-grid" id="roadmap">
+        <div class="roadmap" aria-label="Mapa conectado de governança Agent0">
+          <article class="lane" data-lane>
+            <div class="lane-head">
+              <p class="lane-kicker">Spine</p>
+              <h2>Evolução contínua</h2>
+              <p class="lane-desc">A vida do software como loop: descoberta, spec, implementação, validação, manutenção e nova descoberta.</p>
+            </div>
+            <div class="nodes">
+              <section class="node" data-tags="shipped">
+                <h3>SDD: spec → plan → tasks</h3>
+                <p>Fluxo central para trabalho não trivial, com intent antes de código e artefatos rastreáveis.</p>
+                <div class="node-meta"><span class="tag status-shipped">shipped</span><span class="tag">docs/specs</span></div>
+              </section>
+              <section class="node" data-tags="shipped context">
+                <h3>Handoff de sessão</h3>
+                <p>Estado runtime-neutral para retomar trabalho: current state, active work, next actions e gotchas.</p>
+                <div class="node-meta"><span class="tag status-shipped">shipped</span><span class="tag">handoff</span></div>
+              </section>
+              <section class="node" data-tags="missing deferred">
+                <h3>continuous-evolution-spine</h3>
+                <p>Falta formalizar a espinha como regra própria, sem transformar Agent0 em operador de release/produto.</p>
+                <div class="node-meta"><span class="tag status-deferred">deferred</span><span class="tag status-missing">missing</span></div>
+              </section>
+              <section class="node" data-tags="shipped">
+                <h3>Status, doctor, rotinas</h3>
+                <p>Leitura de estado do harness, saúde local, lembretes e rotinas recorrentes para manutenção.</p>
+                <div class="node-meta"><span class="tag status-shipped">shipped</span><span class="tag">ops-text</span></div>
+              </section>
+            </div>
+          </article>
+
+          <article class="lane" data-lane>
+            <div class="lane-head">
+              <p class="lane-kicker">Domínio</p>
+              <h2>Qualidade</h2>
+              <p class="lane-desc">Prova de comportamento correto: testes, lint, typecheck, visual contract e validação honesta.</p>
+            </div>
+            <div class="nodes">
+              <section class="node" data-tags="shipped">
+                <h3>TDD advisory</h3>
+                <p>Disciplina red/green/refactor com advisory quando código de produção muda sem teste no mesmo diff.</p>
+                <div class="node-meta"><span class="tag status-shipped">shipped</span><span class="tag">advisory</span></div>
+              </section>
+              <section class="node" data-tags="shipped">
+                <h3>Lint e typecheck</h3>
+                <p>Validadores stack-aware: rodam quando o projeto declara a primitiva, avisam quando há intenção incompleta.</p>
+                <div class="node-meta"><span class="tag status-shipped">shipped</span><span class="tag">validator</span></div>
+              </section>
+              <section class="node" data-tags="shipped">
+                <h3>Visual contract</h3>
+                <p>UI é aceita por render/interaction/flow via agent-browser, não por revisão estática.</p>
+                <div class="node-meta"><span class="tag status-shipped">shipped</span><span class="tag">spec 155</span></div>
+              </section>
+              <section class="node" data-tags="missing deferred">
+                <h3>gate-algebra</h3>
+                <p>Falta decidir se trigger → check → verdict → evidence deve virar vocabulário comum ou refactor real.</p>
+                <div class="node-meta"><span class="tag status-deferred">deferred</span><span class="tag status-missing">missing</span></div>
+              </section>
+            </div>
+          </article>
+
+          <article class="lane" data-lane>
+            <div class="lane-head">
+              <p class="lane-kicker">Domínio</p>
+              <h2>Segurança</h2>
+              <p class="lane-desc">Controles separados de qualidade porque a economia de falha envolve adversário, vazamento e custo assimétrico.</p>
+            </div>
+            <div class="nodes">
+              <section class="node" data-tags="shipped security">
+                <h3>Secrets scan</h3>
+                <p>Preflight de commits perigosos e gitleaks no pre-commit para bloquear credenciais no índice.</p>
+                <div class="node-meta"><span class="tag status-shipped">shipped</span><span class="tag status-meta">gate</span></div>
+              </section>
+              <section class="node" data-tags="shipped security">
+                <h3>Vuln audit</h3>
+                <p>Detector on-demand de dependências instaladas com CVEs/advisories via osv-scanner; reporta, não autofixa.</p>
+                <div class="node-meta"><span class="tag status-shipped">shipped</span><span class="tag">report</span></div>
+              </section>
+              <section class="node" data-tags="instrument security">
+                <h3>Browser auth state</h3>
+                <p>Estado de navegador é tratado como credential-class; Agent0 instrumenta o fluxo, não assume segredo como dado comum.</p>
+                <div class="node-meta"><span class="tag status-instrument">instrumenta</span><span class="tag">credential</span></div>
+              </section>
+              <section class="node" data-tags="missing deferred security">
+                <h3>security-governance-lane</h3>
+                <p>Falta uma regra específica para dados sensíveis, superfícies expostas, threat modeling e authz/authn.</p>
+                <div class="node-meta"><span class="tag status-deferred">deferred</span><span class="tag status-missing">missing</span></div>
+              </section>
+            </div>
+          </article>
+
+          <article class="lane" data-lane>
+            <div class="lane-head">
+              <p class="lane-kicker">Substrato</p>
+              <h2>Contexto</h2>
+              <p class="lane-desc">A maquinaria que mantém agentes e sessões orientados: regras, retrieval, memória, handoff, reunião e debate.</p>
+            </div>
+            <div class="nodes">
+              <section class="node" data-tags="shipped context">
+                <h3>Context rules + injection</h3>
+                <p>Regras canônicas em `.agent0/context/rules/` com cápsulas e ponte Codex/Claude.</p>
+                <div class="node-meta"><span class="tag status-shipped">shipped</span><span class="tag">rules</span></div>
+              </section>
+              <section class="node" data-tags="shipped context">
+                <h3>Retrieval local</h3>
+                <p>Busca determinística por regras, memória, specs e handoff; ponte de evidência, não RAG semântico.</p>
+                <div class="node-meta"><span class="tag status-shipped">shipped</span><span class="tag">spec 134</span></div>
+              </section>
+              <section class="node" data-tags="shipped context">
+                <h3>Memory + handoff</h3>
+                <p>Conhecimento factual e estado de sessão ficam separados: memória é durável, handoff é WIP de sessão.</p>
+                <div class="node-meta"><span class="tag status-shipped">shipped</span><span class="tag">state</span></div>
+              </section>
+              <section class="node" data-tags="instrument context">
+                <h3>Brainstorm / meeting / debate</h3>
+                <p>Deliberação e divergência são artefatos rastreáveis antes de virarem specs ou planos mecânicos.</p>
+                <div class="node-meta"><span class="tag status-instrument">instrumenta</span><span class="tag">deliberação</span></div>
+              </section>
+            </div>
+          </article>
+
+          <article class="lane" data-lane>
+            <div class="lane-head">
+              <p class="lane-kicker">Substrato</p>
+              <h2>Replicação</h2>
+              <p class="lane-desc">Como o harness sai do Agent0 e chega a consumidores sem pisar em código de produto.</p>
+            </div>
+            <div class="nodes">
+              <section class="node" data-tags="shipped">
+                <h3>sync-harness</h3>
+                <p>Sincronização unidirecional com baseline 3-way, proteção de customizações e exclusão de produto.</p>
+                <div class="node-meta"><span class="tag status-shipped">shipped</span><span class="tag">sync</span></div>
+              </section>
+              <section class="node" data-tags="shipped runtime">
+                <h3>Entrypoints pareados</h3>
+                <p>`CLAUDE.md` e `AGENTS.md` compartilham bloco gerenciado e respeitam customização local.</p>
+                <div class="node-meta"><span class="tag status-shipped">shipped</span><span class="tag">entrypoints</span></div>
+              </section>
+              <section class="node" data-tags="instrument">
+                <h3>Consumer policies</h3>
+                <p>Local-only consumers, baseline, drift checks e gotchas de push protegem adoção sem forçar modelo único.</p>
+                <div class="node-meta"><span class="tag status-instrument">instrumenta</span><span class="tag">consumer</span></div>
+              </section>
+              <section class="node" data-tags="missing deferred">
+                <h3>Consumer roadmap view</h3>
+                <p>Falta uma visão consolidada de quem carrega qual versão/capacidade; só construir após demanda real.</p>
+                <div class="node-meta"><span class="tag status-deferred">deferred</span><span class="tag status-missing">missing</span></div>
+              </section>
+            </div>
+          </article>
+
+          <article class="lane" data-lane>
+            <div class="lane-head">
+              <p class="lane-kicker">Transversal</p>
+              <h2>Multi-runtime</h2>
+              <p class="lane-desc">A mesma governança deve ser expressável em Claude, Codex e futuros runtimes sem fingir paridade.</p>
+            </div>
+            <div class="nodes">
+              <section class="node" data-tags="shipped runtime">
+                <h3>Capability registry</h3>
+                <p>Matriz canônica de suporte: native, native-opt-in, convention, read-only, planned, unsupported.</p>
+                <div class="node-meta"><span class="tag status-shipped">shipped</span><span class="tag">registry</span></div>
+              </section>
+              <section class="node" data-tags="shipped runtime">
+                <h3>Portable skills</h3>
+                <p>Skills canônicos em `.agent0/skills/` com discovery por symlink para Claude e Codex.</p>
+                <div class="node-meta"><span class="tag status-shipped">shipped</span><span class="tag">skills</span></div>
+              </section>
+              <section class="node" data-tags="instrument runtime">
+                <h3>Runtime bridges</h3>
+                <p>`claude-exec` e `codex-exec` permitem segunda opinião delimitada sem virar orquestrador produto.</p>
+                <div class="node-meta"><span class="tag status-instrument">instrumenta</span><span class="tag">bridge</span></div>
+              </section>
+              <section class="node" data-tags="missing deferred runtime">
+                <h3>Futuros runtimes</h3>
+                <p>Cursor, Aider e outros ficam como hipótese até dogfood ou spec comprovar comportamento real.</p>
+                <div class="node-meta"><span class="tag status-deferred">deferred</span><span class="tag status-missing">missing</span></div>
+              </section>
+            </div>
+          </article>
+
+          <article class="lane" data-lane>
+            <div class="lane-head">
+              <p class="lane-kicker">Meta-governança</p>
+              <h2>Admissão de escopo</h2>
+              <p class="lane-desc">A disciplina que decide o que Agent0 deve construir, só instrumentar, endurecer, deferir ou rejeitar.</p>
+            </div>
+            <div class="nodes">
+              <section class="node" data-tags="shipped">
+                <h3>Governance doctrine</h3>
+                <p>Spec 166 fixa Agent0 como template/governance harness e define own/instrument/ignore.</p>
+                <div class="node-meta"><span class="tag status-shipped">shipped</span><span class="tag">spec 166</span></div>
+              </section>
+              <section class="node" data-tags="shipped">
+                <h3>Scope admission</h3>
+                <p>Spec 167 transforma a doutrina em outcomes, evidence ladder, hardening bar e registro de deferred work.</p>
+                <div class="node-meta"><span class="tag status-shipped">shipped</span><span class="tag">spec 167</span></div>
+              </section>
+              <section class="node" data-tags="missing deferred">
+                <h3>Template opcional?</h3>
+                <p>Falta decidir se admission brief vira seção de template SDD após uso repetido.</p>
+                <div class="node-meta"><span class="tag status-deferred">deferred</span><span class="tag status-missing">missing</span></div>
+              </section>
+              <section class="node" data-tags="missing deferred">
+                <h3>Registro estruturado?</h3>
+                <p>Falta decidir se sinais deferidos precisam de arquivo próprio ou se reminders/spec notes bastam.</p>
+                <div class="node-meta"><span class="tag status-deferred">deferred</span><span class="tag status-missing">missing</span></div>
+              </section>
+            </div>
+          </article>
+        </div>
+
+        <aside class="side" aria-label="Resumo hoje e falta fazer">
+          <section class="panel" id="today">
+            <h2>Hoje</h2>
+            <ul>
+              <li><span class="dot"></span><span>Specs 166/167 já definem doutrina e admissão de escopo.</span></li>
+              <li><span class="dot"></span><span>Contexto, handoff, memory e retrieval já sustentam continuidade.</span></li>
+              <li><span class="dot"></span><span>Qualidade tem TDD, lint/typecheck e visual contract.</span></li>
+              <li><span class="dot"></span><span>Segurança tem secrets scan e vuln audit como controles separados.</span></li>
+              <li><span class="dot"></span><span>Sync-harness replica o harness sem tocar produto.</span></li>
+            </ul>
+          </section>
+
+          <section class="panel" id="missing">
+            <h2>Falta fazer</h2>
+            <ul>
+              <li><span class="dot"></span><span>`gate-algebra`: decidir vocabulário comum vs refactor real.</span></li>
+              <li><span class="dot"></span><span>`security-governance-lane`: threat modeling, dados sensíveis e superfícies expostas.</span></li>
+              <li><span class="dot"></span><span>`continuous-evolution-spine`: formalizar o loop sem virar operação de produto.</span></li>
+              <li><span class="dot"></span><span>Não criar dashboard/daemon/release runner sem dor recorrente.</span></li>
+            </ul>
+          </section>
+
+          <section class="panel" aria-label="Legenda">
+            <h2>Legenda</h2>
+            <div class="legend">
+              <span class="tag status-shipped">shipped</span>
+              <span class="tag status-instrument">instrumenta</span>
+              <span class="tag status-deferred">deferred</span>
+              <span class="tag status-missing">missing</span>
+            </div>
+          </section>
+        </aside>
+      </section>
+
+      <section class="sources" id="sources" aria-labelledby="sources-title">
+        <h2 id="sources-title">Fontes locais</h2>
+        <p>
+          Conteúdo baseado em <code>docs/specs/166-agent0-governance-doctrine/</code>,
+          <code>docs/specs/167-scope-admission-governance/</code>,
+          <code>.agent0/context/rules/agent0-governance-doctrine.md</code>,
+          <code>.agent0/context/rules/scope-admission-governance.md</code> e
+          <code>.agent0/HANDOFF.md</code>. Referência visual pesquisada em roadmap.sh.
+        </p>
+      </section>
+    </main>
+
+    <script>
+      const buttons = Array.from(document.querySelectorAll(".filter-button"));
+      const nodes = Array.from(document.querySelectorAll(".node"));
+      const lanes = Array.from(document.querySelectorAll("[data-lane]"));
+
+      function setFilter(filter) {
+        buttons.forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.filter === filter));
+        });
+
+        nodes.forEach((node) => {
+          const tags = (node.dataset.tags || "").split(/\s+/);
+          const show = filter === "all" || tags.includes(filter);
+          node.classList.toggle("hidden", !show);
+        });
+
+        lanes.forEach((lane) => {
+          const visible = Array.from(lane.querySelectorAll(".node")).some((node) => !node.classList.contains("hidden"));
+          lane.classList.toggle("hidden", !visible);
+        });
+      }
+
+      buttons.forEach((button) => {
+        button.addEventListener("click", () => setFilter(button.dataset.filter));
+      });
+    </script>
+  </body>
+</html>

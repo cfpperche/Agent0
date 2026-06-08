@@ -3,6 +3,7 @@
 _Created 2026-06-08._
 
 **Status:** shipped
+**Closure:** 2026-06-08 — shipped at `e31ca6f`; suite `.agent0/tests/spec-verify/` 8/8 green + self-dogfood `spec-verify.sh` exit 0; propagated to cognixse/acmeyard/mei-saas; residual: none
 
 **UI impact:** none
 

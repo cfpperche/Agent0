@@ -87,6 +87,13 @@ githooks_advisory() {
   fi
 }
 
+bootstrap_advisory() {
+  if [[ -f "$PROJECT_DIR/.agent0/project-core.md.example" && ! -f "$PROJECT_DIR/.agent0/project-core.md" ]]; then
+    printf '=== bootstrap ===\n'
+    printf 'project-core missing; configure .agent0/project-core.md from .agent0/project-core.md.example, then run .agent0/tools/project-core-sync.sh --apply\n'
+  fi
+}
+
 helper_output() {
   local script="$1"
   [ -x "$_BRIEF_COMPOSE_DIR/$script" ] || return 0

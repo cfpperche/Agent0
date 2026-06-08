@@ -61,12 +61,28 @@ check_file ".agent0/hooks/reminders-readout.sh" exec
 check_file ".agent0/hooks/routines-readout.sh" exec
 check_file ".agent0/tools/status.sh" exec
 check_file ".agent0/tools/doctor.sh" exec
+check_file ".agent0/tools/project-core-sync.sh" exec
 check_file ".agent0/context/rules" dir
 # Handoff absence is degraded, not fatal.
 if [ -f "$PROJECT_DIR/.agent0/HANDOFF.md" ]; then
   check ok ".agent0/HANDOFF.md" "present"
 else
   check advisory ".agent0/HANDOFF.md" "missing — session handoff disabled"
+fi
+if [ -f "$PROJECT_DIR/.agent0/project-core.md" ]; then
+  pc_tool="$PROJECT_DIR/.agent0/tools/project-core-sync.sh"
+  if [ -x "$pc_tool" ]; then
+    pc_out="$(bash "$pc_tool" --check --quiet --root "$PROJECT_DIR" 2>&1)"; pc_rc=$?
+    if [ "$pc_rc" -eq 0 ]; then
+      check ok "project-core" ".agent0/project-core.md present; mirrors up to date"
+    else
+      check advisory "project-core" "mirror drift — run .agent0/tools/project-core-sync.sh --apply"
+    fi
+  else
+    check advisory "project-core" ".agent0/project-core.md present; renderer missing"
+  fi
+elif [ -f "$PROJECT_DIR/.agent0/project-core.md.example" ]; then
+  check advisory "project-core" "bootstrap pending — copy .agent0/project-core.md.example to .agent0/project-core.md, customize it, run .agent0/tools/project-core-sync.sh --apply"
 fi
 
 # --- hook wiring (per-runtime; contract validation, not substring) -----------

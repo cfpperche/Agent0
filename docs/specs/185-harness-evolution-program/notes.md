@@ -12,6 +12,10 @@ _In-flight design memory for this spec — decisions, deviations, tradeoffs, and
 
 _Choices made where the spec/plan was ambiguous. The decision itself + why this option over others considered in the moment._
 
+### 2026-06-09 — parent — P7 (CI for harness tests) deferred by maintainer
+
+Disposition given without a full detailing round: **deferred** — the project is not in production, so the cost of a missed regression is low enough that ad-hoc suite runs (agents run affected suites per session, as dogfooded) are acceptable for now. Not a kill: the underlying fact stands (~360 tests / 44 suites, no CI workflow beyond site deploy, no global runner), and the deferral implicitly assumes someone keeps running suites manually. Reopen triggers: the project enters production use, a consumer beyond the maintainer's own adopts the harness, or a regression ships that an existing suite would have caught. Note the adjacency to P2 (lab-vs-asset): "not in production yet" is itself a data point for that decision round.
+
 ## Deviations
 
 _Places where implementation intentionally departed from `plan.md`. The departure + the reason it was necessary or better._

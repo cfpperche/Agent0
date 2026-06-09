@@ -8,12 +8,10 @@ See `.agent0/context/rules/session-handoff.md` for the protocol.
 
 ## Current State
 
-- **SDD-flow closure cluster edited (uncommitted, in working tree).** After a Claude×Codex adversarial debate on the SDD flow (Codex run via `codex-exec.sh`, output at `.agent0/.runtime-state/codex-exec/sdd-debate-out.md`), applied the highest-evidence/lowest-reversibility fixes mechanically — no new capacity, no spec needed:
-  - `.agent0/context/rules/spec-driven.md` — `**Status:**` is now a **bare enum** (`draft|in-progress|shipped|shipped-partial|superseded|abandoned|deferred`); dates/commits/test-counts forbidden on it; closure evidence moves to an optional adjacent `**Closure:**` line. Added the post-ship nature statement: a spec is a historical decision record, not a living contract, unless it declares `**Verify:**`.
-  - `.agent0/skills/sdd/templates/spec.md.tmpl` — documents the enum + ships a commented `**Closure:**` line (opt-in, no forced ceremony).
-  - `.agent0/skills/sdd/templates/notes.md.tmpl` — removed the 4 `{{...}}` example entry blocks that survived to shipped as noise; kept the 4 section headers (routing rubric).
-  - `docs/specs/177-spec-verify-advisory/` — dogfood: checked all 8 task + 3 verify boxes (were `[ ]` despite shipped — the exact inconsistency the debate surfaced); added the project's first real `**Closure:**` line.
-  - Smoke-tested: doctor 24 ok / 0 broken, spec-verify suite 8/8, templates have no orphan placeholders. NOT committed, NOT synced to consumers (templates/rule propagate via sync-harness → user's call).
+- **SDD-flow improvements wave SHIPPED + synced (this session).** Originated from a Claude×Codex adversarial debate on the SDD flow (Codex via `codex-exec.sh`; transcripts at `.agent0/.runtime-state/codex-exec/sdd-debate-out.md` + `sdd-threshold-out.md`). Two Agent0 commits on `main`, NOT pushed to origin yet:
+  - **`d6da13c` — closure cluster.** `spec-driven.md`: `**Status:**` is now a bare enum (`draft|in-progress|shipped|shipped-partial|superseded|abandoned|deferred`); dates/commits/test-counts forbidden on it; closure evidence on an optional `**Closure:**` line; spec is a historical decision record unless it declares `**Verify:**`. `spec.md.tmpl` documents the enum + commented `**Closure:**`. `notes.md.tmpl` dropped the 4 `{{...}}` example blocks (kept headers). 177 dogfood: checked its 8+3 boxes (were `[ ]` despite shipped) + first real `**Closure:**`.
+  - **`650b5b5` — spec 178 (sdd-admission-decision-gate), shipped.** Replaced the "Touches 3+ files" admission trigger with a **5-question decision gate** (high-cost surfaces embedded in questions 2/4, no rotting catalog); breadth is evidence only when it crosses independent boundaries. `§ When to skip` makes wide-but-trivial cases explicit + "skipping never waives proof" (PR/report.json/handoff recipients). `visual-contract.md` framing decoupled — UI proof owed with or without a spec (mechanism untouched; detector was already spec-independent). Dogfoods 177 (`**Verify:** doctor`, pass 1/1) + closure convention. doctor 24 ok/0 broken; read-through green on 4 acceptance scenarios.
+  - **Synced to the 3 active consumers** (harness-only, explicit paths, their own product specs untouched): cognixse `ba2be1b`, acmeyard `da1070f`, mei-saas `1e5875f` — each got the 2 rules + 2 templates + baseline.json. All `--check`-clean (no customization refusals).
 - **Spec 177 (spec-verify-advisory) shipped + pushed.** Per-spec rerunnable proof, ported from the studied `repository-harness` project into Agent0's markdown+shell+advisory idiom (no SQLite/CLI). `.agent0/tools/spec-verify.sh` runs a spec's `**Verify:** \`<cmd>\`` lines, records `## Verification log` to notes.md; `.agent0/validators/run.sh` emits non-blocking `spec-verify-advisory:` for a SHIPPED spec declaring a verify command with no passing latest record (opt-in). Built in `/squad` mode with Codex (3 real defects fixed in its peer turn); closed `ready_for_human_prod`. Suite `.agent0/tests/spec-verify/` 8/8 green. Agent0 commit `e31ca6f` on `main`.
 - **Consumers synced + pushed for the 177 wave:** `cognixse` (`4c061c1`), `acmeyard` (`7e1849b`), `mei-saas` (`938dac4`) — harness-only commits via `sync-harness`; spec-verify suite verified 8/8 in each. `mei-saas` also caught up on prior pending syncs in the same commit.
 - **Prompt-time context injection remains paused.** `UserPromptSubmit` hook registration is still absent from `.codex/hooks.json` and `.claude/settings.json`; `SessionStart` still points at `startup-brief.sh`.
@@ -27,17 +25,20 @@ See `.agent0/context/rules/session-handoff.md` for the protocol.
 
 ## Active Work
 
-- **SDD-flow improvements: closure cluster done (uncommitted); three larger items deferred to specs/discussion.** The debate produced a ranked backlog. Done = the mechanical closure cluster above. Deliberately NOT done this session:
-  - **`sdd close` advisory** (highest remaining ROI) — read-only checker for shipped↔unchecked-tasks↔surviving-placeholders↔missing-closure inconsistencies. New tool + validator integration ⇒ needs `/sdd new` + scope-admission classification, not a silent edit.
-  - **Debate tiers / fix "always decision-grade" contradiction** — the contradictory wording lives in BOTH `spec-driven.md` and `.claude/skills/sdd/SKILL.md` (8-step protocol); fixing only the rule would create rule↔skill drift. Needs a spec spanning both.
-  - **SDD admission threshold** (root-cause lever: ~166 specs in ~6 weeks ≈ 4/day; SDD is becoming a parallel product) — a doctrine change, needs founder decision before any edit.
-  - Rejected (rule-of-three not met): typed inter-spec relations (`Depends-on/Blocks/...`) — only one real pain case (176→173/174/175); deferred until 3 demand it.
-- None in flight as code. Spec 177 is shipped, pushed, and propagated to all three consumers. No open implementation thread.
+- **SDD-flow backlog from the debate — status after this session:**
+  - ✅ Closure cluster — done (`d6da13c`).
+  - ✅ Admission decision-gate — done (`650b5b5`, spec 178). The "admission threshold / volume" lever was **investigated and dropped as a flow change**: consumer evidence (Agent0 166 specs vs ~48 across 7 consumers) proved the volume is an Agent0 artifact, not a flow property — tightening the shipped gate would harm consumers. What survived is the file-count→decision-gate fix (different problem). Any Agent0-local "apply SDD less to meta-governance" discipline remains optional and unaddressed (would live in CLAUDE.md/project-core, not the shared rule).
+  - ⏳ **`sdd close` advisory** (now the highest remaining ROI) — read-only checker for shipped↔unchecked-tasks↔surviving-placeholders↔missing-closure. New tool + validator ⇒ needs `/sdd new` + scope-admission. Generalizes well to consumers.
+  - ⏳ **Debate tiers / "always decision-grade" contradiction** — wording lives in BOTH `spec-driven.md` and `.claude/skills/sdd/SKILL.md`; needs a spec spanning both to avoid rule↔skill drift. Lower urgency (18% debate adoption).
+  - ❌ Rejected (rule-of-three unmet): typed inter-spec relations (`Depends-on/Blocks/...`) — watch cognixse (34 specs) as the likely first place this earns its keep.
+- None in flight as code.
 - Pre-existing/unrelated dirty state is still present and left untouched: `.agent0/meetings/terceiro-runtime-modelos-chineses-2026-06-08T14-18-05Z/`. Specs 173/174/175/176 remain locally shipped but not yet committed on Agent0 (separate from the 177 commit, which staged explicit paths only).
 
 ## Next Actions
 
-- **Decide the SDD-flow follow-through:** (a) commit the closure-cluster edits on Agent0 (rule + 2 templates + 177 dogfood) and decide whether to sync templates/rule to consumers; (b) draft the `sdd close` advisory spec (best remaining ROI); or (c) discuss the SDD admission threshold (the real bottleneck) before any further mechanism.
+- **Push Agent0 `main`** — `d6da13c` + `650b5b5` are committed locally but NOT pushed to origin.
+- **Sync the remaining consumers when desired** (deferred this session by choice; the active 3 are done): ag-antecipa / tmux-sentinel / tese are `--check`-clean (visual-contract.md is a new additive file for them). **codexeng needs a separate, deliberate migration** — it is on the old `.claude/` rule layout; a sync would copy `.agent0/context/rules/*` AND delete old `.claude/rules/*` (structural, broader than this wave). Do not bundle it.
+- **Best remaining SDD-flow work:** draft the `sdd close` advisory spec (`/sdd new`).
 - If/when ready, commit the still-uncommitted 173–176 project-core/bootstrap work on Agent0 (it was deliberately excluded from the 177 commit) and sync that wave to consumers.
 - Optionally adopt the `**Verify:**` convention in future specs (it is opt-in; declare a command in `tasks.md` to get re-verification + the advisory).
 - For other consumers (`codexeng`, `tmux-sentinel`, `ag-antecipa`, `tese`), sync one by one when desired.

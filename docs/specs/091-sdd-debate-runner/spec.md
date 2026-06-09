@@ -2,7 +2,7 @@
 
 _Created 2026-05-26._
 
-**Status:** draft — deferred 2026-05-31 (parked indefinitely; manual human-brokered `debate.md` works well — see spec 132's cross-model debate — and the automated runner is not currently pursued. Canonical pause: `.agent0/context/rules/runtime-capabilities.md` "debate" row, `planned: 091-sdd-debate-runner`.)
+**Status:** superseded 2026-06-09 — decision-grade `/sdd debate` now runs through the meeting bridge (spec 149 protocol, spec 180 policy: blind Round 1 via `meeting.sh` with `codex-exec`/`claude-exec` peer turns), which delivers the orchestration this spec proposed; the standalone automated runner will not be pursued.
 
 ## Intent
 

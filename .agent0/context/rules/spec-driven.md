@@ -4,25 +4,32 @@ Non-trivial work in this repo is **spec-driven**: write the intent before the co
 
 ## When SDD applies
 
-Apply for any change that meets at least one of:
+SDD is owed when, **before editing**, any one of these questions lacks a short answer already determined by existing convention:
 
-- Touches 3+ files, or introduces a new module/package/service
-- Changes a public API, schema, or contract another component depends on
-- Has user-visible behavior change worth describing in a PR body
-- Has reversibility cost (migrations, infra, destructive ops)
-- Was prompted by a vague request ("add auth", "make it faster") that needs decomposition
+1. **What observable behavior or contract changes?** _(nothing visible outside this file → trivial)_
+2. **Who outside this local file/module depends on it?** _(callers, another service, a consumer, a public route, persisted data)_
+3. **How will it be proven?**
+4. **If it is wrong, how is it reverted or migrated?** _(migrations, auth, billing, permissions, persisted data, feature flags rarely have a trivial answer here)_
+5. **Which approach was chosen among plausible alternatives?** _(no real choice → trivial)_
+
+If every answer is trivial, already-determined, or not-applicable → **skip SDD**, go straight to the edit. If even one needs explanatory writing → **write a spec** before the code.
+
+**Breadth (file count) is not a trigger.** It is evidence only when it crosses independent boundaries — `API + client + persistence` crosses; `component + hook + test + stylesheet` does not. A wide-but-trivial change (a mechanical rename across many files, an obvious-cause bugfix touching tests and docs) skips SDD; a change crossing a contract or ownership boundary earns it even when the diff is small.
 
 ## When to skip
 
-Mechanical or local-only work — go straight to the edit:
+Go straight to the edit when the change is mechanically clear, locally bounded, and has an obvious proof path — **even if several files change**:
 
-- Typos, renames, formatting, lint fixes
-- One-file bug fixes with obvious cause
-- Dependency bumps without behavior change
-- Editing existing specs / docs / configs
+- Typos, formatting, lint fixes, dead-code cleanup, dependency bumps without behavior or contract change
+- Mechanical renames or field propagation where the source of truth is known and no compatibility/rollout decision is involved — file count is irrelevant
+- Obvious-cause bug fixes with a localized behavioral expectation, even when tests, fixtures, or docs also change
+- Small UI layout / copy / style / component tweaks that change no flow, state semantics, permission, persisted data, or public contract
+- Editing existing specs / docs / configs / tests to reflect already-decided behavior
 - Throwaway exploration in a scratch branch
 
-When in doubt, write a spec — 5 minutes of markdown is cheap insurance.
+**Skipping SDD never waives proof.** If UI surfaces changed, the visual-contract obligation still holds (see `.agent0/context/rules/visual-contract.md`) — declare or record the effective `UI impact` and keep the browser-driving evidence somewhere durable: the PR body, a `report.json` path, or the handoff. Use whichever fits the project; do not skip the proof just because there is no spec.
+
+When in doubt, don't ask "how many files?" — ask **which of the five questions a spec would answer**. If the answer is none, skip.
 
 ## The artifacts
 

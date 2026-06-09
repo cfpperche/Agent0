@@ -65,6 +65,12 @@ If these questions cannot be answered concretely, keep the idea in brainstorm, m
 
 For admitted capacity specs, use `.agent0/context/rules/scope-admission-governance.md` for the full admission outcomes, evidence ladder, hardening bar, and deferred-work recording discipline.
 
+## Grandfathering of pre-doctrine capacities
+
+Capacities admitted to Agent0 before this doctrine was adopted (2026-06-07) are grandfathered. They remain first-class harness capacities and are not retroactively re-litigated against the admission checklist above. The doctrine and its scope-admission discipline apply prospectively: to new capacities and to material expansions of existing ones.
+
+A material expansion of a grandfathered capacity — new modes, new paid lanes, new shipped sync surface — triggers the admission checklist the same as any new capacity. Ordinary maintenance — bug fixes, documentation corrections, port-parity work — does not.
+
 ## Gate-algebra lens
 
 Existing Agent0 controls already resemble a common shape:

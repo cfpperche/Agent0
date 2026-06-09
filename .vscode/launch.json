@@ -5,7 +5,10 @@
       "name": "Run Tachyon Extension",
       "type": "extensionHost",
       "request": "launch",
-      "args": ["--extensionDevelopmentPath=${workspaceFolder}/packages/tachyon"],
+      "args": [
+        "${workspaceFolder}/packages/tachyon/test/fixtures/sample-workspace",
+        "--extensionDevelopmentPath=${workspaceFolder}/packages/tachyon"
+      ],
       "outFiles": ["${workspaceFolder}/packages/tachyon/dist/**/*.js"],
       "preLaunchTask": "tachyon: build"
     }

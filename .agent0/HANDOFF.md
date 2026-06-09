@@ -8,7 +8,10 @@ See `.agent0/context/rules/session-handoff.md` for the protocol.
 
 ## Current State
 
-- **`main` is five commits ahead of `origin/main`, all local/not pushed:** `7b9bf4c` spec 181 (`claude-exec-run-bounds`), `2ee4bb8` memory correction, `7979bee` spec 183 (`runtime-platform-audit`), `74e8b18` spec 184 (`codex-exec-run-bounds`), and `HEAD` spec 182 (`product-positioning-reset`).
+- **All work is pushed — `origin/main` at `96e2eb1`.** Working trees clean across repos except the unrelated untracked `.agent0/meetings/terceiro-runtime-...` dir. This session interleaved two runtimes: Claude (specs 180/183 + 2 memo corrections) and Codex (specs 181/184/182). All seven trailing commits (`7b9bf4c`→`96e2eb1`) plus the earlier Claude block (`4e09b8d` spec 180, `19b2d16` handoff) are on `origin/main`.
+- **Spec 180 (`debate-tier-source-of-truth`) shipped + pushed + 3-consumer synced (Claude, earlier this session).** Resolved the "`/sdd debate` is always decision-grade" contradiction: `spec-driven.md` owns the POLICY, `meeting.md` the decision-grade MECHANICS, `SKILL.md` procedure-only (blind Round 1 REQUIRED; position-first = degraded fallback gated on an attempted-and-failed `meeting.sh`, emits `debate-degraded:`, barred from being cited as the `/squad` gate). Refined by a dogfooded decision-grade `/sdd debate` (blind commit/reveal + ledger 4/4 + Codex minority report preserved). Agent0 `4e09b8d`; consumers mei-saas `f4b4a4b`, acmeyard `d989640`, cognixse `24d6bfc`.
+- **Spec 183 (`runtime-platform-audit`) shipped + pushed (Claude).** Generalized the former `cc-platform-audit` into ONE provider-neutral routine (commit `7979bee`): a single weekly run audits Claude hooks → `cc-platform-hooks.md`, Codex hooks → `codex-cli-hooks.md`, agentskills.io → `spec-snapshot.md`, AND the `runtime-capabilities.md` **matrix cell values** vs upstream docs (the spec-099 stale-cell gap `check-instruction-drift.sh` omits by design). Old routine deleted, cron re-registered via `install-routines.sh` (there is now exactly ONE routine). Dry-run proved it: Codex hooks 10/10 match, and the matrix `~29 events`→`~30 events` Claude-cell drift was caught + fixed. NOT a per-runtime routine clone (governance doctrine: avoid proliferation).
+- **Two memory corrections shipped + pushed (Claude, from the routine run + its follow-up):** `2ee4bb8` corrected `cc-platform-hooks.md` PostToolUse/PostToolUseFailure exit-2 semantics (exit 2 cannot prevent execution on either event; the prior PostToolUse-can-block asymmetry is flattened). `eb1f43e` corrected `codex-cli-hooks.md` — Codex now lets an `Edit`/`Write` *matcher* fire on `apply_patch` (alias), though the payload still reports `tool_name: "apply_patch"` (verified by two independent primary-source reads; doc-stated, empirical live-`/hooks` test not run). `96e2eb1` marked the spec-183 follow-up resolved.
 - **Spec 181 (`claude-exec-run-bounds`) shipped and committed locally, not pushed.** Commit `7b9bf4c` (`feat(claude-exec): add bounded run controls`) implemented helper-owned bounds for `claude-exec`: `--timeout` default 600s (positive integer, timeout exits 124 + `timed_out` metadata), `--progress-interval` default 30s (0 disables heartbeat only), and `--max-budget-usd` forwarding/metadata as Claude's native budget guard. Added tests `06-timeout.sh` and `07-budget-and-progress.sh`; updated `SKILL.md` to v0.2; closed `docs/specs/181-claude-exec-run-bounds/` with `**Closure:**`.
 - **Validation for spec 181 passed:** `spec-verify` 1/1; `sdd-close` clean; `bash .agent0/tests/claude-exec-skill/run-all.sh`; `bash -n .agent0/skills/claude-exec/scripts/claude-exec.sh`; `bash .agent0/skills/skill/scripts/validate.sh .agent0/skills/claude-exec`; `bash .agent0/skills/skill/scripts/check-rubric.sh .agent0/skills/claude-exec`. Live smoke `.agent0/.runtime-state/claude-exec/20260609T152815Z-live-smoke-181/metadata.json` returned Claude `error_max_budget_usd`; residual documented: native `--max-budget-usd` is a budget guard, not a hard billing ceiling.
 - **Spec 184 (`codex-exec-run-bounds`) shipped and committed locally, not pushed.** Commit `74e8b18` (`feat(codex-exec): add bounded run controls`) adds helper-owned run bounds to `codex-exec`: `--timeout` default 600s (positive integer, timeout exits 124 + `timed_out` metadata) and `--progress-interval` default 30s (0 disables heartbeat only). No budget flag was added because local `codex exec --help` still has no native `--max-budget-usd` equivalent. Updated `.agent0/skills/codex-exec/SKILL.md` to v0.2, extended `.agent0/tests/codex-exec-skill/`, and closed `docs/specs/184-codex-exec-run-bounds/`.
@@ -20,18 +23,16 @@ See `.agent0/context/rules/session-handoff.md` for the protocol.
 
 ## Active Work
 
-- Git — spec 182 product-positioning reset is committed locally at `HEAD` and ready to push — release: push `main` when requested; no consumer adoption measurement or consumer sync is included.
-- Git — spec 184 local commit is ready to push — commit: `74e8b18` — release: push `main` when requested; no consumer sync is included in this spec.
-- Git — spec 183 local commit is ready to push — commit: `7979bee` — release: push `main` when requested.
-- Git — memory correction local commit is ready to push — commit: `2ee4bb8` — release: push `main` when requested.
-- Git — spec 181 local commit is ready to push — commit: `7b9bf4c` — release: push `main` when requested; no consumer sync is included in this spec.
+- None in flight as code. All session commits (specs 180/181/182/183/184 + 2 memo corrections) are on `origin/main`.
+- Consumer sync for spec 183 — DEFERRED — the new `runtime-platform-audit` routine + the `runtime-capabilities.md` matrix correction are harness-only and would propagate to the 3 active consumers, but were not synced this pass. Release: sync when desired (specs 181/182/184 carry no consumer sync by their own scope).
 - Other/local — unrelated untracked state remains — path: `.agent0/meetings/terceiro-runtime-modelos-chineses-2026-06-08T14-18-05Z/` — release: unknown; do not stage unless explicitly requested.
 
 ## Next Actions
 
-- If the user says to publish current committed work, push `main` to `origin/main` to publish all five local commits through current `HEAD`.
+- Nothing pending to push — `origin/main` is at `96e2eb1`.
+- **Optional consumer sync (spec 183):** propagate `runtime-platform-audit` + the `runtime-capabilities.md` matrix correction to the 3 active consumers (harness-only) when desired.
+- **Optional empirical confirmation (spec 183 residual):** a live Codex `/hooks` matcher test would confirm the doc-stated `Edit`/`Write`→`apply_patch` aliasing now recorded in `codex-cli-hooks.md`; not run because it needs a `.codex/hooks.json` change during an active parallel session.
 - If the user wants to change the spec 182 license holder from `cfpperche` to a legal name later, do that as a separate follow-up commit.
-- No consumer sync is owed for this pass. The user explicitly deferred adoption/dogfood measurement across local projects.
 
 ## Decisions & Gotchas
 

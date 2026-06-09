@@ -11,7 +11,7 @@ metadata:
 
 The Claude Code hook system exposes **30 event names**, not the ~9 commonly cited. This memory captures the canonical surface, the event semantics (success vs failure), and the meta-lesson behind why this file exists.
 
-Canonical source: <https://code.claude.com/docs/en/hooks> (re-verified 2026-06-02 via cc-platform-audit routine — upstream lifecycle table now enumerates **30 events**: the prior 29 plus a NEW **`MessageDisplay`** event that fires while assistant message text streams. Earlier history: 2026-05-25 audit reconciled a "32" count-drift narrative against a then-29-row table; `PermissionDenied`, `TaskCreated`, `TaskCompleted` remain present as in the 2026-05-19 snapshot).
+Canonical source: <https://code.claude.com/docs/en/hooks> (re-verified 2026-06-09 via cc-platform-audit routine — lifecycle table still enumerates **30 events**, identical set to the 2026-06-02 snapshot: no event added or removed. The one drift this run caught was **behavioral, not structural** — PostToolUse/PostToolUseFailure exit-2 semantics, corrected below. Earlier history: 2026-06-02 added `MessageDisplay` (the 30th event); 2026-05-25 reconciled a "32" count-drift narrative against a then-29-row table; `PermissionDenied`, `TaskCreated`, `TaskCompleted` present since the 2026-05-19 snapshot).
 
 ## Meta-lesson — why this memory exists
 
@@ -23,7 +23,7 @@ Second-order lesson from spec 020 itself: even with the right event registered, 
 
 ## The 30 events
 
-Quoted from the docs Hook lifecycle table (last audited 2026-06-02 via the cc-platform-audit routine):
+Quoted from the docs Hook lifecycle table (last audited 2026-06-09 via the cc-platform-audit routine):
 
 | Event | Fires when |
 | --- | --- |
@@ -44,7 +44,7 @@ Quoted from the docs Hook lifecycle table (last audited 2026-06-02 via the cc-pl
 | `TaskCreated` | A managed-task is created (task management surface; can block via exit 2) |
 | `TaskCompleted` | A managed-task completes (task management surface; can block via exit 2) |
 | `Stop` | A turn ends |
-| `StopFailure` | A turn ends with failure (output AND exit code are ignored — read-only logging surface) |
+| `StopFailure` | A turn ends due to an API error (output AND exit code are ignored — read-only logging surface) |
 | `TeammateIdle` | A teammate session goes idle |
 | `InstructionsLoaded` | Instructions get loaded |
 | `ConfigChange` | Configuration changes (cannot block `policy_settings`) |
@@ -72,7 +72,7 @@ Agent0 currently uses **5 of these 30** (counted from `.claude/settings.json`):
 
 - **`PostToolUse(Bash)`** fires only when the underlying Bash command exits **0**. Piping through `tail`/`cat`/`tee` absorbs a non-zero exit and the pipeline exits 0 — the hook fires for the pipeline.
 - **`PostToolUseFailure(Bash)`** fires only when the underlying Bash command exits **non-zero**. The two events partition the outcome space; together they cover every Bash invocation.
-- **Either hook firing exit 2** has different behavior: `PostToolUse` exit 2 can block downstream (matters for `Edit`/`Write`/`MultiEdit` consumers), but `PostToolUseFailure` cannot block (the tool already failed) — its stderr is just shown to the agent for context.
+- **Exit 2 on either event feeds stderr back to Claude as an error message but does NOT prevent execution.** The tool has already run (`PostToolUse`) or already failed (`PostToolUseFailure`), so **neither event can block the tool call itself** — exit 2 is feedback/context only on both (canonical docs, re-verified 2026-06-09 via cc-platform-audit). To block a tool *before* it executes, use `PreToolUse`. Exit codes other than 0/2 are non-blocking errors surfaced as `<hook name> hook error` (first stderr line in transcript, full stderr in debug log). **Drift correction (2026-06-09):** earlier snapshots of this memo claimed `PostToolUse` exit 2 could "block downstream" for `Edit`/`Write`/`MultiEdit` consumers while `PostToolUseFailure` could not; the current docs flatten that asymmetry — exit 2 prevents nothing on either event.
 
 ## Payload shape — events Agent0 currently uses
 

@@ -5,7 +5,7 @@ _Generated from `plan.md` on 2026-06-09. Work top-to-bottom by default, but the 
 ## Detailing rounds (recommended order)
 
 - [x] 1. **P7 — CI for harness tests** (fix, mechanical, no gates) → **deferred 2026-06-09** — maintainer: project not in production yet; revisit when production/adoption raises the cost of a missed regression. See notes.md.
-- [ ] 2. **P1 — Evidence bundle as product** (evolve, the strategic bet) — detail format, aggregation points, consumers of the bundle; check overlap with P8.
+- [x] 2. **P1 — Evidence bundle as product** (evolve, the strategic bet) → **deferred 2026-06-09** — maintainer: no users yet; revisit with adoption. Full detailing analysis preserved in notes.md (incl. the verified ephemerality finding).
 - [ ] 3. **P2 — Lab vs adoptable asset** (decision, gates P3/P4/P6) — maintainer decision round; record decision + implications in notes.md.
 - [ ] 4. **P3 — Multi-runtime posture: portable core + reference runtime** (decision, contradicts doctrine) — decision-grade debate (`/sdd debate` on a position child spec, or meeting), then disposition.
 - [ ] 5. **P4 — Shrink the prose control plane** (optimize) — inventory rules by prose-vs-mechanism; propose migration list + numeric target; conditional on P2.

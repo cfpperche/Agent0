@@ -112,6 +112,15 @@ If the change is admitted, create a spec:
 
 Then implement top-to-bottom, update the spec artifacts, run validation, and close the handoff.
 
+## Packages
+
+`packages/` hosts self-contained products that live in this monorepo but are not part of the
+Agent0 harness (sync-harness never ships them to consumers; they never touch `.agent0/`/`.claude/`):
+
+- [`packages/tachyon/`](packages/tachyon/README.md) — ⚡ Tachyon, a VSCode extension for multi-agent
+  terminal orchestration (agents as tmux sessions in editor-area terminals, coordinated by an
+  embedded MCP server). Spec: `docs/specs/186-tachyon-vscode-extension/`.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).

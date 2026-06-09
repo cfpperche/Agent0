@@ -77,11 +77,11 @@ git clone git@github.com:cfpperche/Agent0.git my-new-project
 cd my-new-project
 rm -rf .git && git init
 
-# Activate the native pre-commit hook (one-time, per-fork)
+# Activate the native pre-commit hook (one-time, per project)
 git config core.hooksPath .githooks
 
-# Open in Claude Code or Codex CLI — SessionStart surfaces
-# .agent0/HANDOFF.md and any pending reminders automatically.`;
+# Open in Claude Code or Codex. Agent0 supplies the
+# repo-local rules, hooks, handoff, and validation loop.`;
 
 const EXTEND_CODE = `/sdd new my-capacity      # scaffolds docs/specs/NNN-my-capacity/
 # fill spec.md with intent, BDD acceptance scenarios, non-goals
@@ -92,12 +92,12 @@ const EXTEND_CODE = `/sdd new my-capacity      # scaffolds docs/specs/NNN-my-cap
 export const STRINGS: Record<Locale, Strings> = {
   en: {
     meta: {
-      title: "Agent0 — the harness for AI coding agents",
+      title: "Agent0 — portable discipline for coding agents",
       description:
-        "An open-source spec-driven harness for AI coding agents on Claude Code and Codex CLI: governance gates, delegation discipline, secrets scanning, vuln audit, and more — all opt-in, all auditable.",
+        "A portable governance and evidence harness for Claude Code, Codex, and future coding-agent runtimes: specs, validation, handoff, safety checks, and syncable project discipline.",
     },
     nav: {
-      capacities: "Capacities",
+      capacities: "Surfaces",
       mcps: "MCPs",
       whyBuilt: "Why",
       quickStart: "Quick start",
@@ -106,70 +106,70 @@ export const STRINGS: Record<Locale, Strings> = {
       github: "GitHub",
     },
     hero: {
-      eyebrow: "Open-source · MIT",
-      title: "The harness for",
-      titleAccent: "AI coding agents.",
+      eyebrow: "Open-source · MIT · Claude Code + Codex",
+      title: "Portable discipline for",
+      titleAccent: "coding agents.",
       tagline:
-        "Agent0 is a base repository that ships the discipline — hooks, rules, spec-driven workflow — so every new project starts with the guardrails already wired up.",
-      sub: "Fork it. Pick a stack. The hooks activate the moment your stack is detected.",
+        "Agent0 is a base repository that gives existing agent runtimes a governed work loop: intent before code, bounded delegation, validation evidence, and session continuity.",
+      sub: "Clone it. Pick a stack. Keep the project discipline in the repo, not in one vendor's UI.",
       primaryCta: "Get started",
       secondaryCta: "View on GitHub",
     },
     whatYouGet: {
-      eyebrow: "Capacities",
-      title: "{n} capacities, all opt-in.",
-      sub: "Each one is documented in its own rule under .agent0/context/rules/, and the non-trivial ones have a spec under docs/specs/. Every override marker (# OVERRIDE: <reason ≥10 chars>) is recorded — there is no silent bypass.",
-      cardLabel: "Capacity",
+      eyebrow: "Harness surfaces",
+      title: "{n} documented surfaces, one work loop.",
+      sub: "The value is not the count. Each surface supports the same loop: specify the change, execute it with bounded agency, prove the result, and leave a handoff the next runtime can trust.",
+      cardLabel: "Surface",
       specLabel: "spec",
       ruleDocLink: "Read the rule →",
     },
     mcps: {
       eyebrow: "MCPs by Agent0",
       title: "Custom MCP servers we built for the harness.",
-      sub: "Distinct from the MCP recipes capacity above, which adopts existing third-party MCPs (Playwright, DBHub, …). These are MCP servers we author and ship in this repo to extend Agent0's tool surface itself. Each one is opt-in via `.mcp.json`, plug-and-play, and leaves no footprint on the host harness when deactivated.",
+      sub: "Distinct from the MCP recipes surface above, which adopts existing third-party MCPs (Playwright, DBHub, …). These are MCP servers we author and ship in this repo to extend Agent0's tool surface itself. Each one is opt-in via `.mcp.json`, plug-and-play, and leaves no footprint on the host harness when deactivated.",
       toolsSuffix: "tools",
       readmeLink: "Read the package →",
       placeholder: "Next MCP slot — open a discussion in the repo if you have a capability worth lifting into the catalog.",
-      distinction: "Why this matters: the harness ships discipline (capacities), and the MCP catalog ships verbs (tools the agent can invoke). Both are versioned, both stay in-repo, both are auditable.",
+      distinction: "Why this matters: the harness ships discipline, and the MCP catalog ships verbs (tools the agent can invoke). Both are versioned, both stay in-repo, both are auditable.",
     },
     whyBuilt: {
       eyebrow: "Why it was built",
-      title: "Discipline at the speed of an AI agent.",
+      title: "Discipline at the speed of coding agents.",
       paragraphs: [
-        "AI coding agents move fast. That speed cuts both ways — a single bad delegation can ship a leaked credential, a force-pushed branch, or an under-specified feature into production before anyone reviews it.",
-        "Agent0 is the operating discipline that catches those slips before they land. Not by slowing the agent down, but by giving it the same guardrails a senior engineer has internalized: never run a destructive command without saying why, never delegate without scope, never commit a credential, never install a dependency without leaving a trail.",
-        "Each capacity is a hook that fires at a specific moment in the agent's lifecycle: PreToolUse for destructive shapes, SessionStart for context injection, SubagentStop for delegated-work verification. The capacities compose — a delegation gate plus a secrets scan plus a stop-time validator together form a pipeline that catches the slips a single advisory would miss.",
-        "The discipline is spec-driven: intent before code, BDD scenarios as the contract, every override audited with a reason ≥10 characters. The agent stays fast; the surface area for accidents shrinks.",
+        "Coding agents already write code. The scarce part is not another assistant; it is a repeatable way to make agent work inspectable, recoverable, and safe enough to continue tomorrow.",
+        "Agent0 puts that discipline in the repository. The rules, hooks, skills, validators, handoff, and sync baseline travel with the project instead of living only inside Claude Code, Codex, or the current operator's memory.",
+        "The loop is intentionally concrete: write the intent when the change is non-trivial, plan before editing, run bounded delegation, prove the result with the project's own checks, and close with a truthful handoff.",
+        "The current proof is local and repo-backed, not a claim of market adoption. Agent0 is still validated by dogfood and consumer-project use on one machine; the public story should say that plainly.",
       ],
     },
     quickStart: {
       eyebrow: "Quick start",
-      title: "Three commands to a guarded project.",
+      title: "Three commands to a disciplined project.",
       intro:
-        "Agent0 is a template, not a framework. Clone it, reset the git history, point it at your own remote — you now have a project with the harness already wired in.",
+        "Agent0 is a template, not a framework or hosted service. Clone it, reset the git history, point it at your own remote — the governance and evidence loop now lives in your repo.",
       steps: [
         {
           title: "Clone & reset",
-          body: "Use Agent0 as the seed. Discard its history; the harness rides with the files.",
+          body: "Use Agent0 as the seed. Discard its history; the harness travels with the files.",
           code: QUICK_START_CODE,
         },
         {
           title: "Fill the placeholders",
-          body: "Replace the Overview / Stack / Build & test / Conventions / Gotchas sections in CLAUDE.md with your project's specifics. The Compact Instructions, SDD, Delegation, and TDD sections are template-stable.",
+          body: "Set the project-specific identity, stack, commands, conventions, and gotchas. Agent0 supplies the runtime entrypoints and shared harness rules; the product context stays yours.",
         },
         {
           title: "Plug in your stack",
-          body: "The validator auto-detects bun, pnpm, npm, python, go, rust by lockfile or marker. When your stack lands, the typecheck+test commands wire up automatically. Stack not covered? Override CLAUDE_DELEGATION_VALIDATOR with your own script.",
+          body: "The validator and rules are stack-aware where possible, but Agent0 does not choose your stack. When the default detector is not enough, plug in your own validator script.",
         },
       ],
       finalNote:
-        "That's it. Open the directory in Claude Code or Codex CLI, and the SessionStart hook will surface .agent0/HANDOFF.md and pending reminders on the first turn.",
+        "That's it. Open the directory in Claude Code or Codex, and the repo-local handoff and rules become the starting context for the session.",
     },
     howToExtend: {
       eyebrow: "Extend",
-      title: "Add your own capacity in four steps.",
+      title: "Expand the harness only when the evidence earns it.",
       intro:
-        "Every capacity in Agent0 was once a /sdd new <slug> in someone's terminal. The workflow is identical for adopters.",
+        "Agent0 should stay smaller than the temptation to automate everything. New first-party surfaces go through scope admission before they become part of the harness.",
       points: [
         {
           title: "Scaffold the spec",
@@ -189,7 +189,7 @@ export const STRINGS: Record<Locale, Strings> = {
         },
       ],
       closing:
-        "The harness already runs on top of itself — every Agent0 capacity was written using the same discipline it now enforces. The recursion is the proof.",
+        "The harness runs on top of itself, but dogfood is not market proof. It is the engineering floor: if Agent0 cannot keep its own changes disciplined, it should not ask other projects to trust it.",
     },
     faq: {
       eyebrow: "FAQ",
@@ -197,32 +197,32 @@ export const STRINGS: Record<Locale, Strings> = {
       items: [
         {
           q: "Which agent runtimes does Agent0 support?",
-          a: "Claude Code and Codex CLI both. The hooks target lifecycle events (PreToolUse, PostToolUse, SessionStart, Stop) on each runtime — Claude Code via .claude/settings.json, Codex via tracked .codex/hooks.json. Most capacities also have a native fallback that works without any agent (the gitleaks pre-commit hook is a real git hook).",
+          a: "Claude Code and Codex today. Agent0 keeps a runtime-capability matrix because support is not identical: some surfaces are native, some opt-in, and some are convention-only. The point is honest portability, not pretending every runtime is the same.",
         },
         {
           q: "What does it cost?",
-          a: "Nothing. Agent0 is MIT-licensed and has no runtime dependencies beyond what your project already needs (bash, git, jq, optionally gitleaks). It is a configuration template, not a service.",
+          a: "Nothing for Agent0 itself. It is MIT-licensed repo-local tooling, not a service. Some optional capacities use external tools or paid media providers, and those paths are cost-gated where relevant.",
         },
         {
-          q: "Will the gates slow my agent down?",
-          a: "The hooks add 10–30 ms per matched call. The discipline they enforce removes the much larger cost of an undisciplined agent — a leaked secret, a destructive command, a half-specified feature. The arithmetic favors the gates by orders of magnitude.",
+          q: "Is this another coding agent?",
+          a: "No. Agent0 does not replace Claude Code, Codex, or future runtimes. It gives them repo-local instructions, hooks, tools, proof expectations, and handoff state so their work is easier to trust and resume.",
         },
         {
-          q: "How does it stay in sync across forks?",
-          a: "The harness-sync tool (.agent0/tools/sync-harness.sh) brings a fork's hooks/rules/tools up to date with Agent0. Hash-compare per file; structured merge for settings.json + CLAUDE.md. Never touches src/ or product manifests. One-way by design — improvements flow upstream via PR.",
+          q: "How does it stay in sync across projects?",
+          a: "The harness-sync tool (.agent0/tools/sync-harness.sh) updates Agent0-owned hooks, rules, tools, skills, and entrypoints with 3-way baseline reconciliation. It refuses consumer customizations without force and never touches product code.",
         },
         {
           q: "Can I disable a capacity I don't want?",
           a: "Every capacity has an env-var escape (CLAUDE_SKIP_*, CLAUDE_*_BLOCK=0). Per-session opt-out is one var; permanent disable is removing the entry from .claude/settings.json. Override markers handle the per-action case.",
         },
         {
-          q: "Why so many gates?",
-          a: "Because each gate addresses a category of mistake that has actually been observed in real AI-agent sessions. No gate exists speculatively. The list grows when a new category surfaces; we resist adding gates for hypothetical risks.",
+          q: "What is not proven yet?",
+          a: "External adoption. Agent0 is currently validated by local dogfood, repository evidence, and use in the maintainer's own projects. That is useful engineering evidence, but it is not customer traction.",
         },
       ],
     },
     footer: {
-      builtWith: "Built with Astro · Tailwind · the same discipline it ships.",
+      builtWith: "Built with Astro · Tailwind · the same discipline it asks projects to keep.",
       license: "MIT License",
       editPage: "Edit this page",
       repoLink: "Source on GitHub",
@@ -231,12 +231,12 @@ export const STRINGS: Record<Locale, Strings> = {
 
   pt: {
     meta: {
-      title: "Agent0 — o harness para agentes de código IA",
+      title: "Agent0 — disciplina portátil para agentes de código",
       description:
-        "Um harness open-source spec-driven para agentes de código IA no Claude Code e Codex CLI: governance gates, disciplina de delegação, scan de segredos, vuln audit e mais — tudo opt-in, tudo auditável.",
+        "Um harness portátil de governança e evidência para Claude Code, Codex e futuros runtimes de agentes de código: specs, validação, handoff, checks de segurança e disciplina versionada no repo.",
     },
     nav: {
-      capacities: "Capacidades",
+      capacities: "Superfícies",
       mcps: "MCPs",
       whyBuilt: "Por quê",
       quickStart: "Início rápido",
@@ -245,47 +245,47 @@ export const STRINGS: Record<Locale, Strings> = {
       github: "GitHub",
     },
     hero: {
-      eyebrow: "Open-source · MIT",
-      title: "O harness para",
-      titleAccent: "agentes de código IA.",
+      eyebrow: "Open-source · MIT · Claude Code + Codex",
+      title: "Disciplina portátil para",
+      titleAccent: "agentes de código.",
       tagline:
-        "Agent0 é um repositório base que entrega a disciplina — hooks, regras, workflow spec-driven — para que cada novo projeto comece já com as guardrails ativas.",
-      sub: "Faça fork. Escolha a stack. Os hooks ativam no momento em que sua stack for detectada.",
+        "Agent0 é um repositório base que dá aos runtimes de agente existentes um loop governado: intenção antes do código, delegação delimitada, evidência de validação e continuidade entre sessões.",
+      sub: "Clone. Escolha a stack. Mantenha a disciplina do projeto no repo, não na interface de um único fornecedor.",
       primaryCta: "Começar",
       secondaryCta: "Ver no GitHub",
     },
     whatYouGet: {
-      eyebrow: "Capacidades",
-      title: "{n} capacidades, todas opt-in.",
-      sub: "Cada uma documentada em sua própria regra em .agent0/context/rules/, e as não-triviais têm spec em docs/specs/. Todo marcador de override (# OVERRIDE: <razão ≥10 chars>) é registrado — não existe bypass silencioso.",
-      cardLabel: "Capacidade",
+      eyebrow: "Superfícies do harness",
+      title: "{n} superfícies documentadas, um loop de trabalho.",
+      sub: "O valor não é a contagem. Cada superfície sustenta o mesmo loop: especificar a mudança, executar com agência delimitada, provar o resultado e deixar um handoff que o próximo runtime consiga confiar.",
+      cardLabel: "Superfície",
       specLabel: "spec",
       ruleDocLink: "Ler a regra →",
     },
     mcps: {
       eyebrow: "MCPs do Agent0",
       title: "Servidores MCP que escrevemos para o harness.",
-      sub: "Distinto da capacidade \"MCP recipes\" acima, que adota MCPs de terceiros prontos (Playwright, DBHub, …). Estes são servidores MCP que nós mesmos publicamos neste repo para estender a superfície de tools do Agent0. Cada um é opt-in via `.mcp.json`, plug-and-play, e não deixa rastro no harness host quando desativado.",
+      sub: "Distinto da superfície \"MCP recipes\" acima, que adota MCPs de terceiros prontos (Playwright, DBHub, …). Estes são servidores MCP que nós mesmos publicamos neste repo para estender a superfície de tools do Agent0. Cada um é opt-in via `.mcp.json`, plug-and-play, e não deixa rastro no harness host quando desativado.",
       toolsSuffix: "tools",
       readmeLink: "Ler o pacote →",
       placeholder: "Próximo slot de MCP — abra uma discussão no repo se tiver uma capability digna de entrar no catálogo.",
-      distinction: "Por que importa: o harness entrega disciplina (capacidades), e o catálogo de MCPs entrega verbos (tools que o agente pode invocar). Ambos são versionados, ambos vivem no repo, ambos são auditáveis.",
+      distinction: "Por que importa: o harness entrega disciplina, e o catálogo de MCPs entrega verbos (tools que o agente pode invocar). Ambos são versionados, ambos vivem no repo, ambos são auditáveis.",
     },
     whyBuilt: {
       eyebrow: "Por que foi construído",
-      title: "Disciplina na velocidade de um agente IA.",
+      title: "Disciplina na velocidade de agentes de código.",
       paragraphs: [
-        "Agentes de código IA são rápidos. Essa velocidade corta dos dois lados — uma única delegação ruim pode colocar uma credencial vazada, um branch force-pushed, ou uma feature sub-especificada em produção antes de qualquer revisão.",
-        "Agent0 é a disciplina operacional que pega esses escorregões antes que aconteçam. Não desacelerando o agente, mas dando a ele as mesmas guardrails que um engenheiro sênior já internalizou: nunca rodar comando destrutivo sem dizer por quê, nunca delegar sem escopo, nunca commitar credencial, nunca instalar dependência sem deixar rastro.",
-        "Cada capacidade é um hook que dispara num momento específico do ciclo de vida do agente: PreToolUse para shapes destrutivos, SessionStart para injeção de contexto, SubagentStop para verificação de trabalho delegado. As capacidades compõem — delegation gate + secrets scan + validator no stop formam juntos uma pipeline que pega os escorregões que uma advisory isolada deixaria passar.",
-        "A disciplina é spec-driven: intenção antes de código, cenários BDD como contrato, todo override auditado com razão ≥10 caracteres. O agente segue rápido; a superfície de acidentes diminui.",
+        "Agentes de código já escrevem código. A parte escassa não é outro assistente; é um modo repetível de tornar o trabalho do agente inspecionável, retomável e seguro o bastante para continuar amanhã.",
+        "Agent0 coloca essa disciplina no repositório. Regras, hooks, skills, validators, handoff e baseline de sync viajam com o projeto em vez de viver só no Claude Code, no Codex ou na memória do operador atual.",
+        "O loop é concreto de propósito: escreva a intenção quando a mudança não for trivial, planeje antes de editar, use delegação delimitada, prove o resultado com os checks do próprio projeto e feche com um handoff verdadeiro.",
+        "A prova atual é local e ancorada no repo, não uma afirmação de adoção de mercado. Agent0 ainda é validado por dogfood e uso em projetos próprios numa única máquina; a narrativa pública deve dizer isso sem inflar.",
       ],
     },
     quickStart: {
       eyebrow: "Início rápido",
-      title: "Três comandos para um projeto protegido.",
+      title: "Três comandos para um projeto disciplinado.",
       intro:
-        "Agent0 é um template, não um framework. Clone, reseta o histórico do git, aponta para o seu remote — você tem um projeto com o harness já cabeado.",
+        "Agent0 é um template, não um framework ou serviço hospedado. Clone, resete o histórico do git, aponte para seu remote — o loop de governança e evidência passa a viver no seu repo.",
       steps: [
         {
           title: "Clone & reset",
@@ -294,21 +294,21 @@ export const STRINGS: Record<Locale, Strings> = {
         },
         {
           title: "Preencha os placeholders",
-          body: "Substitua as seções Overview / Stack / Build & test / Conventions / Gotchas no CLAUDE.md com as especificidades do seu projeto. As seções Compact Instructions, SDD, Delegation e TDD são estáveis no template.",
+          body: "Defina identidade, stack, comandos, convenções e gotchas do projeto. Agent0 fornece os entrypoints de runtime e as regras compartilhadas do harness; o contexto do produto continua sendo seu.",
         },
         {
           title: "Encaixe sua stack",
-          body: "O validator auto-detecta bun, pnpm, npm, python, go, rust por lockfile ou marcador. Quando sua stack chega, os comandos de typecheck+test se conectam automaticamente. Stack não coberta? Sobrescreva CLAUDE_DELEGATION_VALIDATOR com seu próprio script.",
+          body: "O validator e as regras são stack-aware quando possível, mas Agent0 não escolhe sua stack. Quando o detector padrão não bastar, conecte seu próprio script de validação.",
         },
       ],
       finalNote:
-        "É isso. Abra o diretório no Claude Code ou Codex CLI e o hook SessionStart vai mostrar o .agent0/HANDOFF.md e reminders pendentes no primeiro turno.",
+        "É isso. Abra o diretório no Claude Code ou Codex, e o handoff e as regras do repo viram o contexto inicial da sessão.",
     },
     howToExtend: {
       eyebrow: "Estender",
-      title: "Adicione sua própria capacidade em quatro passos.",
+      title: "Expanda o harness só quando a evidência justificar.",
       intro:
-        "Toda capacidade do Agent0 já foi um /sdd new <slug> no terminal de alguém. O workflow é idêntico para quem adota.",
+        "Agent0 deve continuar menor que a tentação de automatizar tudo. Novas superfícies first-party passam por admissão de escopo antes de virar parte do harness.",
       points: [
         {
           title: "Scaffold da spec",
@@ -328,7 +328,7 @@ export const STRINGS: Record<Locale, Strings> = {
         },
       ],
       closing:
-        "O harness já roda sobre si mesmo — toda capacidade do Agent0 foi escrita usando a mesma disciplina que ela agora aplica. A recursão é a prova.",
+        "O harness roda sobre si mesmo, mas dogfood não é prova de mercado. É o piso de engenharia: se Agent0 não consegue manter suas próprias mudanças disciplinadas, não deve pedir que outros projetos confiem nele.",
     },
     faq: {
       eyebrow: "FAQ",
@@ -336,32 +336,32 @@ export const STRINGS: Record<Locale, Strings> = {
       items: [
         {
           q: "Quais runtimes de agente o Agent0 suporta?",
-          a: "Claude Code e Codex CLI, os dois. Os hooks miram eventos de ciclo de vida (PreToolUse, PostToolUse, SessionStart, Stop) em cada runtime — Claude Code via .claude/settings.json, Codex via .codex/hooks.json versionado. A maioria das capacidades também tem fallback nativo que funciona sem agente nenhum (o pre-commit do gitleaks é um hook real do git).",
+          a: "Claude Code e Codex hoje. Agent0 mantém uma matriz de capacidades por runtime porque o suporte não é idêntico: algumas superfícies são nativas, outras opt-in, outras só convenção. O ponto é portabilidade honesta, não fingir que todo runtime é igual.",
         },
         {
           q: "Quanto custa?",
-          a: "Nada. Agent0 é MIT-licenciado e não tem dependências de runtime além do que seu projeto já precisa (bash, git, jq, opcionalmente gitleaks). É um template de configuração, não um serviço.",
+          a: "Nada pelo Agent0 em si. Ele é tooling local de repo com licença MIT, não um serviço. Algumas capacidades opcionais usam ferramentas externas ou provedores pagos de mídia, e esses caminhos têm gate de custo quando relevante.",
         },
         {
-          q: "Os gates vão desacelerar meu agente?",
-          a: "Os hooks adicionam 10–30 ms por chamada que casa. A disciplina que eles aplicam remove o custo muito maior de um agente sem disciplina — segredo vazado, comando destrutivo, feature mal especificada. A aritmética favorece os gates em ordens de grandeza.",
+          q: "Isso é outro agente de código?",
+          a: "Não. Agent0 não substitui Claude Code, Codex ou runtimes futuros. Ele dá a eles instruções, hooks, tools, expectativas de prova e estado de handoff dentro do repo para que o trabalho seja mais confiável e retomável.",
         },
         {
-          q: "Como mantém sincronia entre forks?",
-          a: "A ferramenta harness-sync (.agent0/tools/sync-harness.sh) atualiza hooks/regras/ferramentas de um fork com Agent0. Hash-compare por arquivo; merge estruturado para settings.json + CLAUDE.md. Nunca toca src/ ou manifestos do produto. One-way por design — melhorias sobem via PR.",
+          q: "Como mantém sincronia entre projetos?",
+          a: "A ferramenta harness-sync (.agent0/tools/sync-harness.sh) atualiza hooks, regras, tools, skills e entrypoints do Agent0 usando reconciliação 3-way por baseline. Ela recusa customizações do consumidor sem force e nunca toca código de produto.",
         },
         {
           q: "Posso desativar uma capacidade que não quero?",
           a: "Toda capacidade tem um escape via env-var (CLAUDE_SKIP_*, CLAUDE_*_BLOCK=0). Opt-out por sessão é uma variável; desativar permanente é remover a entrada de .claude/settings.json. Marcadores de override resolvem o caso por-ação.",
         },
         {
-          q: "Por que tantos gates?",
-          a: "Porque cada gate endereça uma categoria de erro que já foi observada em sessões reais com agente. Nenhum gate existe especulativamente. A lista cresce quando uma nova categoria surge; resistimos a adicionar gates por riscos hipotéticos.",
+          q: "O que ainda não está provado?",
+          a: "Adoção externa. Agent0 hoje é validado por dogfood local, evidência do repositório e uso nos projetos próprios do mantenedor. Isso é evidência útil de engenharia, mas não é tração de clientes.",
         },
       ],
     },
     footer: {
-      builtWith: "Construído com Astro · Tailwind · a mesma disciplina que entrega.",
+      builtWith: "Construído com Astro · Tailwind · a mesma disciplina que pede aos projetos.",
       license: "Licença MIT",
       editPage: "Editar esta página",
       repoLink: "Código no GitHub",
@@ -370,12 +370,12 @@ export const STRINGS: Record<Locale, Strings> = {
 
   es: {
     meta: {
-      title: "Agent0 — el harness para agentes de código IA",
+      title: "Agent0 — disciplina portable para agentes de código",
       description:
-        "Un harness open-source spec-driven para agentes de código IA en Claude Code y Codex CLI: governance gates, disciplina de delegación, scan de secretos, vuln audit y más — todo opt-in, todo auditable.",
+        "Un harness portable de gobernanza y evidencia para Claude Code, Codex y futuros runtimes de agentes de código: specs, validación, handoff, checks de seguridad y disciplina versionada en el repo.",
     },
     nav: {
-      capacities: "Capacidades",
+      capacities: "Superficies",
       mcps: "MCPs",
       whyBuilt: "Por qué",
       quickStart: "Inicio rápido",
@@ -384,47 +384,47 @@ export const STRINGS: Record<Locale, Strings> = {
       github: "GitHub",
     },
     hero: {
-      eyebrow: "Open-source · MIT",
-      title: "El harness para",
-      titleAccent: "agentes de código IA.",
+      eyebrow: "Open-source · MIT · Claude Code + Codex",
+      title: "Disciplina portable para",
+      titleAccent: "agentes de código.",
       tagline:
-        "Agent0 es un repositorio base que entrega la disciplina — hooks, reglas, workflow spec-driven — para que cada nuevo proyecto empiece con las guardrails ya activadas.",
-      sub: "Haz fork. Elige el stack. Los hooks se activan en el momento en que tu stack es detectado.",
+        "Agent0 es un repositorio base que da a los runtimes de agente existentes un loop gobernado: intención antes del código, delegación delimitada, evidencia de validación y continuidad entre sesiones.",
+      sub: "Clona. Elige el stack. Mantén la disciplina del proyecto en el repo, no en la interfaz de un solo proveedor.",
       primaryCta: "Empezar",
       secondaryCta: "Ver en GitHub",
     },
     whatYouGet: {
-      eyebrow: "Capacidades",
-      title: "{n} capacidades, todas opt-in.",
-      sub: "Cada una documentada en su propia regla en .agent0/context/rules/, y las no-triviales tienen spec en docs/specs/. Todo marcador de override (# OVERRIDE: <razón ≥10 chars>) es registrado — no existe bypass silencioso.",
-      cardLabel: "Capacidad",
+      eyebrow: "Superficies del harness",
+      title: "{n} superficies documentadas, un loop de trabajo.",
+      sub: "El valor no es el conteo. Cada superficie sostiene el mismo loop: especificar el cambio, ejecutarlo con agencia delimitada, probar el resultado y dejar un handoff que el próximo runtime pueda confiar.",
+      cardLabel: "Superficie",
       specLabel: "spec",
       ruleDocLink: "Leer la regla →",
     },
     mcps: {
       eyebrow: "MCPs de Agent0",
       title: "Servidores MCP que construimos para el harness.",
-      sub: "Distinto de la capacidad \"MCP recipes\" arriba, que adopta MCPs de terceros existentes (Playwright, DBHub, …). Estos son servidores MCP que escribimos y publicamos en este repo para extender la superficie de tools de Agent0. Cada uno es opt-in vía `.mcp.json`, plug-and-play, y no deja huella en el harness host cuando se desactiva.",
+      sub: "Distinto de la superficie \"MCP recipes\" arriba, que adopta MCPs de terceros existentes (Playwright, DBHub, …). Estos son servidores MCP que escribimos y publicamos en este repo para extender la superficie de tools de Agent0. Cada uno es opt-in vía `.mcp.json`, plug-and-play, y no deja huella en el harness host cuando se desactiva.",
       toolsSuffix: "tools",
       readmeLink: "Leer el paquete →",
       placeholder: "Próximo slot de MCP — abre una discusión en el repo si tienes una capability que merezca entrar al catálogo.",
-      distinction: "Por qué importa: el harness entrega disciplina (capacidades), y el catálogo de MCPs entrega verbos (tools que el agente puede invocar). Ambos versionados, ambos en el repo, ambos auditables.",
+      distinction: "Por qué importa: el harness entrega disciplina, y el catálogo de MCPs entrega verbos (tools que el agente puede invocar). Ambos versionados, ambos en el repo, ambos auditables.",
     },
     whyBuilt: {
       eyebrow: "Por qué se construyó",
-      title: "Disciplina a la velocidad de un agente IA.",
+      title: "Disciplina a la velocidad de agentes de código.",
       paragraphs: [
-        "Los agentes de código IA son rápidos. Esa velocidad corta por ambos lados — una sola delegación mal hecha puede dejar una credencial filtrada, un branch force-pushed, o una feature subespecificada en producción antes de cualquier revisión.",
-        "Agent0 es la disciplina operativa que detecta esos resbalones antes de que ocurran. No frenando al agente, sino dándole las mismas guardrails que un ingeniero sénior ya tiene internalizadas: nunca ejecutar un comando destructivo sin decir por qué, nunca delegar sin scope, nunca commitear una credencial, nunca instalar una dependencia sin dejar rastro.",
-        "Cada capacidad es un hook que dispara en un momento específico del ciclo de vida del agente: PreToolUse para shapes destructivos, SessionStart para inyección de contexto, SubagentStop para verificación de trabajo delegado. Las capacidades componen — delegation gate + secrets scan + validator en el stop forman juntas un pipeline que atrapa los resbalones que un advisory aislado dejaría pasar.",
-        "La disciplina es spec-driven: intención antes de código, escenarios BDD como contrato, todo override auditado con razón ≥10 caracteres. El agente sigue rápido; la superficie de accidentes se encoge.",
+        "Los agentes de código ya escriben código. La parte escasa no es otro asistente; es una forma repetible de hacer que el trabajo del agente sea inspeccionable, retomable y suficientemente seguro para continuar mañana.",
+        "Agent0 pone esa disciplina en el repositorio. Reglas, hooks, skills, validators, handoff y baseline de sync viajan con el proyecto en vez de vivir solo en Claude Code, Codex o la memoria del operador actual.",
+        "El loop es concreto a propósito: escribe la intención cuando el cambio no es trivial, planifica antes de editar, usa delegación delimitada, prueba el resultado con los checks del propio proyecto y cierra con un handoff verdadero.",
+        "La prueba actual es local y anclada en el repo, no una afirmación de adopción de mercado. Agent0 todavía se valida por dogfood y uso en proyectos propios en una sola máquina; la narrativa pública debe decirlo sin inflarlo.",
       ],
     },
     quickStart: {
       eyebrow: "Inicio rápido",
-      title: "Tres comandos a un proyecto protegido.",
+      title: "Tres comandos a un proyecto disciplinado.",
       intro:
-        "Agent0 es un template, no un framework. Clónalo, resetea el historial de git, apúntalo a tu propio remote — ya tienes un proyecto con el harness cableado.",
+        "Agent0 es un template, no un framework ni un servicio hospedado. Clónalo, resetea el historial de git, apúntalo a tu propio remote — el loop de gobernanza y evidencia pasa a vivir en tu repo.",
       steps: [
         {
           title: "Clonar y resetear",
@@ -433,21 +433,21 @@ export const STRINGS: Record<Locale, Strings> = {
         },
         {
           title: "Rellena los placeholders",
-          body: "Reemplaza las secciones Overview / Stack / Build & test / Conventions / Gotchas en CLAUDE.md con las especificidades de tu proyecto. Las secciones Compact Instructions, SDD, Delegation y TDD son estables en el template.",
+          body: "Define la identidad, stack, comandos, convenciones y gotchas del proyecto. Agent0 suministra los entrypoints de runtime y las reglas compartidas del harness; el contexto del producto sigue siendo tuyo.",
         },
         {
           title: "Encaja tu stack",
-          body: "El validator auto-detecta bun, pnpm, npm, python, go, rust por lockfile o marker. Cuando tu stack llega, los comandos de typecheck+test se cablean automáticamente. ¿Stack no cubierto? Sobrescribe CLAUDE_DELEGATION_VALIDATOR con tu propio script.",
+          body: "El validator y las reglas son stack-aware cuando es posible, pero Agent0 no elige tu stack. Cuando el detector por defecto no alcanza, conecta tu propio script de validación.",
         },
       ],
       finalNote:
-        "Eso es todo. Abre el directorio en Claude Code o Codex CLI y el hook SessionStart va a mostrar el .agent0/HANDOFF.md y los reminders pendientes en el primer turno.",
+        "Eso es todo. Abre el directorio en Claude Code o Codex, y el handoff y las reglas del repo se vuelven el contexto inicial de la sesión.",
     },
     howToExtend: {
       eyebrow: "Extender",
-      title: "Agrega tu propia capacidad en cuatro pasos.",
+      title: "Expande el harness solo cuando la evidencia lo justifique.",
       intro:
-        "Toda capacidad de Agent0 fue alguna vez un /sdd new <slug> en la terminal de alguien. El workflow es idéntico para quien adopta.",
+        "Agent0 debe seguir siendo más pequeño que la tentación de automatizarlo todo. Nuevas superficies first-party pasan por admisión de alcance antes de volverse parte del harness.",
       points: [
         {
           title: "Scaffold del spec",
@@ -467,7 +467,7 @@ export const STRINGS: Record<Locale, Strings> = {
         },
       ],
       closing:
-        "El harness ya corre sobre sí mismo — toda capacidad de Agent0 fue escrita usando la misma disciplina que ahora hace cumplir. La recursión es la prueba.",
+        "El harness corre sobre sí mismo, pero dogfood no es prueba de mercado. Es el piso de ingeniería: si Agent0 no puede mantener sus propios cambios disciplinados, no debería pedir que otros proyectos confíen en él.",
     },
     faq: {
       eyebrow: "FAQ",
@@ -475,32 +475,32 @@ export const STRINGS: Record<Locale, Strings> = {
       items: [
         {
           q: "¿Qué runtimes de agente soporta Agent0?",
-          a: "Claude Code y Codex CLI, ambos. Los hooks apuntan a eventos de ciclo de vida (PreToolUse, PostToolUse, SessionStart, Stop) en cada runtime — Claude Code vía .claude/settings.json, Codex vía .codex/hooks.json versionado. La mayoría de las capacidades también tiene un fallback nativo que funciona sin ningún agente (el pre-commit de gitleaks es un hook real de git).",
+          a: "Claude Code y Codex hoy. Agent0 mantiene una matriz de capacidades por runtime porque el soporte no es idéntico: algunas superficies son nativas, otras opt-in y otras solo convención. El punto es portabilidad honesta, no fingir que todo runtime es igual.",
         },
         {
           q: "¿Cuánto cuesta?",
-          a: "Nada. Agent0 es MIT-licenciado y no tiene dependencias de runtime más allá de las que tu proyecto ya necesita (bash, git, jq, opcionalmente gitleaks). Es un template de configuración, no un servicio.",
+          a: "Nada por Agent0 en sí. Es tooling local de repo con licencia MIT, no un servicio. Algunas capacidades opcionales usan herramientas externas o proveedores pagos de media, y esos caminos tienen gate de costo cuando corresponde.",
         },
         {
-          q: "¿Los gates van a frenar mi agente?",
-          a: "Los hooks agregan 10–30 ms por llamada que matchea. La disciplina que aplican remueve el costo mucho mayor de un agente sin disciplina — secreto filtrado, comando destructivo, feature mal especificada. La aritmética favorece a los gates en órdenes de magnitud.",
+          q: "¿Esto es otro agente de código?",
+          a: "No. Agent0 no reemplaza a Claude Code, Codex ni runtimes futuros. Les da instrucciones, hooks, tools, expectativas de prueba y estado de handoff dentro del repo para que el trabajo sea más confiable y retomable.",
         },
         {
-          q: "¿Cómo mantiene la sincronía entre forks?",
-          a: "La herramienta harness-sync (.agent0/tools/sync-harness.sh) actualiza los hooks/reglas/herramientas de un fork con Agent0. Hash-compare por archivo; merge estructurado para settings.json + CLAUDE.md. Nunca toca src/ ni manifiestos del producto. One-way por diseño — las mejoras suben vía PR.",
+          q: "¿Cómo mantiene la sincronía entre proyectos?",
+          a: "La herramienta harness-sync (.agent0/tools/sync-harness.sh) actualiza hooks, reglas, tools, skills y entrypoints de Agent0 usando reconciliación 3-way por baseline. Rechaza customizaciones del consumidor sin force y nunca toca código de producto.",
         },
         {
           q: "¿Puedo desactivar una capacidad que no quiero?",
           a: "Toda capacidad tiene un escape vía env-var (CLAUDE_SKIP_*, CLAUDE_*_BLOCK=0). Opt-out por sesión es una variable; desactivar permanente es remover la entrada de .claude/settings.json. Los marcadores de override resuelven el caso por-acción.",
         },
         {
-          q: "¿Por qué tantos gates?",
-          a: "Porque cada gate atiende una categoría de error que ya fue observada en sesiones reales con agentes. Ningún gate existe especulativamente. La lista crece cuando una categoría nueva aparece; resistimos a agregar gates por riesgos hipotéticos.",
+          q: "¿Qué no está probado todavía?",
+          a: "Adopción externa. Agent0 hoy se valida por dogfood local, evidencia del repositorio y uso en los proyectos propios del mantenedor. Eso es evidencia útil de ingeniería, pero no es tracción de clientes.",
         },
       ],
     },
     footer: {
-      builtWith: "Construido con Astro · Tailwind · la misma disciplina que entrega.",
+      builtWith: "Construido con Astro · Tailwind · la misma disciplina que pide a los proyectos.",
       license: "Licencia MIT",
       editPage: "Editar esta página",
       repoLink: "Código en GitHub",

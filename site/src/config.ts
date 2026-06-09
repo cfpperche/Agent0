@@ -1,16 +1,12 @@
 // Site-wide maintenance toggle.
 //
-// While `true`, every route renders the trilingual "Em construção" page
-// (src/components/Maintenance.astro) instead of the marketing content. The
-// full site source is untouched — it lives in the `else` branch of each
-// layout, so flipping this back to `false` restores everything as-is.
+// When enabled, every route renders the trilingual "Em construção" page
+// (src/components/Maintenance.astro) instead of the marketing content.
 //
-// Why this exists: the Agent0 harness is changing fast and the site content
-// is drifting out of date. Maintenance mode freezes the public shopfront until
-// the content catches up.
+// Why this exists: keep a fast manual pause switch when the harness moves
+// faster than the public copy.
 //
-// Build-time override (e.g. to preview the real site locally while the flag is
-// on): `PUBLIC_UNDER_CONSTRUCTION=false bun run build`
+// Build-time override: `PUBLIC_UNDER_CONSTRUCTION=true bun run build`
 const ENV = import.meta.env.PUBLIC_UNDER_CONSTRUCTION;
 
-export const UNDER_CONSTRUCTION = ENV === undefined ? true : ENV !== "false";
+export const UNDER_CONSTRUCTION = ENV === undefined ? false : ENV === "true";

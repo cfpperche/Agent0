@@ -1,0 +1,24 @@
+{
+  "required": [
+    { "role": "heading", "name": "Portable discipline for coding agents." },
+    { "role": "heading", "name": "24 documented surfaces, one work loop." }
+  ],
+  "max_console_errors": 0,
+  "flow": [
+    {
+      "goto": "http://127.0.0.1:4321/Agent0/en/",
+      "expect_url": "/Agent0/en/",
+      "expect": { "role": "heading", "name": "Portable discipline for coding agents." }
+    },
+    {
+      "goto": "http://127.0.0.1:4321/Agent0/pt/",
+      "expect_url": "/Agent0/pt/",
+      "expect": { "role": "heading", "name": "Disciplina portátil para agentes de código." }
+    },
+    {
+      "goto": "http://127.0.0.1:4321/Agent0/es/",
+      "expect_url": "/Agent0/es/",
+      "expect": { "role": "heading", "name": "Disciplina portable para agentes de código." }
+    }
+  ]
+}

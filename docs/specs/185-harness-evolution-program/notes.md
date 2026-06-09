@@ -32,6 +32,18 @@ Disposition: **deferred** — maintainer: "no users yet; we'll think about it la
 
 **P2 adjacency:** second consecutive deferral whose rationale is "not in production / no users yet" (after P7). The maintainer is implicitly answering P2 (personal-lab posture for now) — the P2 round should make that explicit and harvest its implications for P3/P4/P6.
 
+### 2026-06-09 — parent — P2 decided: lab + public showcase
+
+Maintainer decision (explicit, via options round): **Agent0 is a personal lab optimized for one operator's throughput, with the public face (site/README/positioning-proof from the recent positioning reset) kept as a consultancy *showcase* — not an adoption funnel.** No adoption machinery (installer, quickstart, third-party stability commitments) gets built. The third option (pure lab — unpublish the showcase) was rejected: the showcase costs ~zero and serves the consultancy pitch as living proof of method.
+
+**Reopen triggers:** first genuine external party asking to adopt the harness; a consultancy engagement that wants the harness deployed; a deliberate product decision.
+
+**Implications harvested for the remaining rounds:**
+- **P3 (multi-runtime posture):** strengthened but NOT automatic — in lab mode the consumer of Codex parity is the maintainer himself, who uses both runtimes daily (squad, meetings, debate protocols *require* a second model). P3's real question becomes: does cell-by-cell capability parity cost more than the dual-runtime workflow returns? The peer-deliberation lane is load-bearing regardless.
+- **P4 (rules diet):** stands under either posture; justification shifts from "adopter compliance" to "agent compliance + single-maintainer upkeep cost".
+- **P6 (kernel out of bash):** likely kill/hibernate under lab posture — bash works, one operator, test suites exist. To be confirmed in its own round.
+- Consistent with the P7/P1 deferrals (both rationale'd "no production / no users").
+
 ## Deviations
 
 _Places where implementation intentionally departed from `plan.md`. The departure + the reason it was necessary or better._

@@ -6,7 +6,7 @@ _Generated from `plan.md` on 2026-06-09. Work top-to-bottom by default, but the 
 
 - [x] 1. **P7 — CI for harness tests** (fix, mechanical, no gates) → **deferred 2026-06-09** — maintainer: project not in production yet; revisit when production/adoption raises the cost of a missed regression. See notes.md.
 - [x] 2. **P1 — Evidence bundle as product** (evolve, the strategic bet) → **deferred 2026-06-09** — maintainer: no users yet; revisit with adoption. Full detailing analysis preserved in notes.md (incl. the verified ephemerality finding).
-- [ ] 3. **P2 — Lab vs adoptable asset** (decision, gates P3/P4/P6) — maintainer decision round; record decision + implications in notes.md.
+- [x] 3. **P2 — Lab vs adoptable asset** (decision, gates P3/P4/P6) → **decided 2026-06-09: lab + public showcase** — personal lab optimized for one operator; site/README stay as consultancy showcase; no adoption machinery. Reopen on first genuine external interest. See notes.md.
 - [ ] 4. **P3 — Multi-runtime posture: portable core + reference runtime** (decision, contradicts doctrine) — decision-grade debate (`/sdd debate` on a position child spec, or meeting), then disposition.
 - [ ] 5. **P4 — Shrink the prose control plane** (optimize) — inventory rules by prose-vs-mechanism; propose migration list + numeric target; conditional on P2.
 - [ ] 6. **P5 — Hook-chain latency** (optimize, measure-first) — measure p50/p95 of Pre/PostToolUse chains; disposition depends on numbers.

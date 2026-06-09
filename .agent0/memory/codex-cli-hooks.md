@@ -12,7 +12,7 @@ metadata:
 
 Codex CLI ships a lifecycle-hook system covering 10 events: `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PreCompact`, `PostCompact`, `SessionStart`, `SubagentStart`, `SubagentStop`, `UserPromptSubmit`, `Stop`. Configurable in `.codex/config.toml` under `[hooks]` or `.codex/hooks.json` (project or user scope), with plugin-bundled hooks via `hooks/hooks.json`. Disabled globally via `[features] hooks = false`.
 
-Canonical source: <https://developers.openai.com/codex/hooks> (verified 2026-05-27 against `/hooks` command output in a real Codex CLI session — events column matched docs verbatim).
+Canonical source: <https://developers.openai.com/codex/hooks> (verified 2026-05-27 against `/hooks` command output in a real Codex CLI session — events column matched docs verbatim; re-audited 2026-06-09 via runtime-platform-audit — 10-event list unchanged, the one drift was matcher aliasing: see § tool-name surface).
 
 ## Why this memory exists
 
@@ -49,7 +49,7 @@ The biggest blocker for a 1:1 hook port is the **tool-name catalog**:
 - **Claude Code's edit surface:** `Edit`, `Write`, `MultiEdit` — each carries `tool_input.file_path` directly.
 - **Codex CLI's edit surface:** `apply_patch` (carries the patch content; affected paths must be parsed from the diff) or `Bash` (path discovered by inspecting the command, or post-hoc via `git status --porcelain`).
 
-A hook that matches on `Edit|Write|MultiEdit` in Claude's `.claude/settings.json` will not fire in Codex. The Codex equivalent registers on `apply_patch` (and possibly `Bash` for non-patch edits) and the script discovers affected paths by parsing `tool_input` patch text or running `git diff --name-only`.
+**Matcher aliasing (updated 2026-06-09, doc-stated):** Codex now lets an `Edit` or `Write` *matcher* fire on `apply_patch` edits. Docs verbatim: *"For file edits through `apply_patch`, `matcher` values can use `apply_patch`, `Edit`, or `Write`; hook input still reports `tool_name: "apply_patch"`."* So at the **registration** layer, a matcher `Edit|Write` (no longer `MultiEdit` — not a documented alias) DOES match on Codex, improving cross-runtime matcher portability. **But the payload `tool_name` stays `apply_patch`** — so a hook *script* that branches on `tool_name == "Edit"`/`"Write"` still won't match, and affected paths still aren't in a `tool_input.file_path` field; the script discovers them by parsing the `apply_patch` patch text or running `git diff --name-only`. (Earlier snapshot, verified 2026-05-27 against a live `/hooks` session, said an `Edit|Write|MultiEdit` matcher "will not fire in Codex" — that was correct then; the matcher-alias support is the drift. This correction is **doc-stated**; a live-`/hooks` matcher test would confirm it empirically — not yet run.)
 
 Other tool-name differences: Claude `Glob` / `Grep` ≠ Codex's tool surface (Codex relies more on Bash for these); MCP tools follow `mcp__<server>__<tool>` naming on both runtimes — identical.
 

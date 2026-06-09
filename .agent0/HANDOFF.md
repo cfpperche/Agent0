@@ -24,13 +24,12 @@ See `.agent0/context/rules/session-handoff.md` for the protocol.
 ## Active Work
 
 - None in flight as code. All session commits (specs 180/181/182/183/184 + 2 memo corrections) are on `origin/main`.
-- Consumer sync for spec 183 — DEFERRED — the new `runtime-platform-audit` routine + the `runtime-capabilities.md` matrix correction are harness-only and would propagate to the 3 active consumers, but were not synced this pass. Release: sync when desired (specs 181/182/184 carry no consumer sync by their own scope).
+- Consumer sync — DONE + PUSHED (full harness sync, user-approved scope). The 3 active consumers received the `runtime-capabilities.md` matrix correction (spec 183) AND the `claude-exec`/`codex-exec` run-bounds skills/tests (specs 181/184, swept in by the all-or-nothing sync at the user's choice): mei-saas `87e777d`, acmeyard `5dbdf2c`, cognixse `565f830` — all on their `origin/main`. Validated: doctor green per consumer (mei-saas's lone advisory is the pre-existing project-core template-review), claude-exec 18/18 + codex-exec 13/13 suites pass. **Routine instances + `.agent0/memory/` did NOT sync** (project-local by doctrine) — consumers have the `/routine` capacity but not Agent0's `runtime-platform-audit` instance.
 - Other/local — unrelated untracked state remains — path: `.agent0/meetings/terceiro-runtime-modelos-chineses-2026-06-08T14-18-05Z/` — release: unknown; do not stage unless explicitly requested.
 
 ## Next Actions
 
-- Nothing pending to push — `origin/main` is at `96e2eb1`.
-- **Optional consumer sync (spec 183):** propagate `runtime-platform-audit` + the `runtime-capabilities.md` matrix correction to the 3 active consumers (harness-only) when desired.
+- Nothing pending to push — Agent0 + all 3 active consumers are on their `origin/main`.
 - **Optional empirical confirmation (spec 183 residual):** a live Codex `/hooks` matcher test would confirm the doc-stated `Edit`/`Write`→`apply_patch` aliasing now recorded in `codex-cli-hooks.md`; not run because it needs a `.codex/hooks.json` change during an active parallel session.
 - If the user wants to change the spec 182 license holder from `cfpperche` to a legal name later, do that as a separate follow-up commit.
 

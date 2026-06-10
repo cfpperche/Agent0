@@ -8,11 +8,12 @@ See `.agent0/context/rules/session-handoff.md` for the protocol.
 
 ## Current State
 
-- **⚡ Tachyon (packages/tachyon/) is shipped and evolving via umbrella spec 187.** v1 (spec 186, `a388732`) + five shipped children: sidebar increment (`fa59007`), **F1 attention detection** (spec 188, `6dbd6c9`), **F12 stable Bridge port + idempotent registration** (spec 189, `f41480b`), **F2 crash lifecycle** (spec 190, `6f3a053`), **F3 Bridge auth** (spec 191, `a4756c0`, closed `77e0051`).
-- **F3 (latest):** Bridge requires `Authorization: Bearer <token>` by default (`settings: {auth: false}` opts out). Token: stable per workspace, extension globalStorage (0600), never in committable files — registrations reference the `TACHYON_BRIDGE_TOKEN` env var (`${VAR}` .mcp.json headers / Codex `bearer_token_env_var` / OpenCode `{env:VAR}` / `mcp-remote --header`); Tachyon injects `TACHYON_BRIDGE_TOKEN`/`TACHYON_BRIDGE_URL` into every session it spawns → agents authenticate with zero manual steps. New command: `Tachyon: Copy Bridge Token`.
+- **⚡ Tachyon (packages/tachyon/) is shipped and evolving via umbrella spec 187.** v1 (spec 186, `a388732`) + six shipped children: sidebar increment (`fa59007`), **F1 attention detection** (188, `6dbd6c9`), **F12 stable port + idempotent registration** (189, `f41480b`), **F2 crash lifecycle** (190, `6f3a053`), **F3 Bridge auth** (191, `a4756c0`), **F4 pins & notes** (192, `54db674`, closed `7218d8e`).
+- **F4 (latest):** shared human↔agent memory as workspace files (.tachyon/pins.json checklist + notes.md whiteboard); sidebar Pins section with checkboxes; 5 new Bridge tools (12 total: create_pin/list_pins/complete_pin/get_notes/set_notes). Suite now 106/106 vitest + 13-passing integration + live claude -p pins E2E.
+- **F3:** Bridge requires `Authorization: Bearer <token>` by default (`settings: {auth: false}` opts out). Token: stable per workspace, extension globalStorage (0600), never in committable files — registrations reference the `TACHYON_BRIDGE_TOKEN` env var (`${VAR}` .mcp.json headers / Codex `bearer_token_env_var` / OpenCode `{env:VAR}` / `mcp-remote --header`); Tachyon injects `TACHYON_BRIDGE_TOKEN`/`TACHYON_BRIDGE_URL` into every session it spawns → agents authenticate with zero manual steps. New command: `Tachyon: Copy Bridge Token`.
 - **Validation state (suite as of F3):** 101/101 vitest + 12-passing (1 pending survivor-skip) xvfb host integration + live E2E: real `claude -p` authenticated via `${TACHYON_BRIDGE_TOKEN}` expansion against a tokened Bridge (also proves Claude Code's env-expansion-in-headers works on WSL despite open upstream bug reports). Each child spec has spec-verify pass logged.
-- **Dogfood environment prepared** at `~/tachyon-demo/` (outside the repo): `tachyon.yml` (claude/codex/opencode/gemini/shell/fragil agents, layouts, `restart: on-crash` dummy), `.mcp.json` registered with auth header + stable port 41931, `DOGFOOD.md` walkthrough (F1/F2/F3 scenarios). F5 from the Agent0 window launches it ("Run Tachyon (demo)" config); user validated F1/F2 dogfoods already; F3 dogfood handed off (one ↻ restart of the claude agent needed post-upgrade for env injection).
-- Working tree clean; all Tachyon work committed through `77e0051`.
+- **Dogfood environment prepared** at `~/tachyon-demo/` (outside the repo): `tachyon.yml` (claude/codex/opencode/gemini/shell/fragil agents, layouts, `restart: on-crash` dummy), `.mcp.json` registered with auth header + stable port 41931, `DOGFOOD.md` walkthrough (F1/F2/F3/F4 scenarios — F4 section added). F5 from the Agent0 window launches it ("Run Tachyon (demo)" config); user validated F1/F2 dogfoods already; F3 dogfood handed off (one ↻ restart of the claude agent needed post-upgrade for env injection).
+- Working tree clean; all Tachyon work committed through `7218d8e`.
 
 ## Active Work
 
@@ -20,7 +21,7 @@ See `.agent0/context/rules/session-handoff.md` for the protocol.
 
 ## Next Actions
 
-- **Umbrella 187 remaining rows (user-paced, one at a time):** F4 pins/notes (M) — next in priority order; F5 `Tachyon: Init` stack detection (S); F6 CPU/mem monitor (M); F7 publishing kit (S); F8 CI (S); F9 multi-root (M); F10 voice (recommendation: cancel); F11 native Windows PtyBackend (recommendation: defer).
+- **Umbrella 187 remaining rows (user-paced, one at a time):** F5 `Tachyon: Init` stack detection (S); F6 CPU/mem monitor (M); F7 publishing kit (S); F8 CI (S); F9 multi-root (M); F10 voice (recommendation: cancel); F11 native Windows PtyBackend (recommendation: defer).
 - **F3 small residual (recorded in spec 191 Closure):** OpenCode `{env:VAR}` header substitution not live-driven — verify on first real OpenCode use; mcp-remote fallback documented.
 - **Marketplace publishing** remains a human step when desired (publisher `cfpperche` + `vsce publish`; recipe in package README — F7 would polish LICENSE/icon first).
 - **Audit item 2 (user decision, still open, pre-Tachyon):** decide spec 171 (`context-injection-reformulation`, stalled) — resume, re-scope, or close.

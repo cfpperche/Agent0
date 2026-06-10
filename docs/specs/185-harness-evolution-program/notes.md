@@ -44,6 +44,20 @@ Maintainer decision (explicit, via options round): **Agent0 is a personal lab op
 - **P6 (kernel out of bash):** likely kill/hibernate under lab posture — bash works, one operator, test suites exist. To be confirmed in its own round.
 - Consistent with the P7/P1 deferrals (both rationale'd "no production / no users").
 
+### 2026-06-09 — parent — P3 (multi-runtime posture) detailed for the Codex-only scope, then deferred by maintainer
+
+Disposition: **deferred — "leave as is."** Symmetric-parity doctrine stands unchanged. Before deferral the maintainer narrowed scope: third runtime discarded for now; the `terceiro-runtime-modelos-chineses` meeting was deleted; only the Codex re-tier was elaborated. Analysis preserved below.
+
+**The proposal (not adopted):** re-tier Codex from co-equal first-class runtime to **deliberation peer + bounded executor** — keep meeting/debate/squad/codex-exec lanes (the second model is load-bearing for the anti-bias protocols), freeze existing ports (`.codex/hooks.json`, config example, symlinked skills — working surface stays, zero teardown), and drop the commitment that every NEW capacity ships with Codex parity (new capacities Claude-first; Codex ports on rule-of-three demand).
+
+**Evidence of the recurring cost:** specs 181/184 are the same feature built twice (claude-exec/codex-exec run bounds); every new hook requires a `.codex/hooks.json` port; new skills carry implicit runtime-agnostic pressure; the weekly platform-audit routine audits two platforms + cell-by-cell matrix upkeep; meanwhile the most important gate (delegation) is already convention-only on Codex — symmetry is partly fiction today.
+
+**Files-to-touch list (if ever adopted — effort S/M, ~1 session):** runtime-capabilities.md (posture preamble, no new vocabulary so drift-checker/test suites stay green; drop the "Re-audit pending" footnote), agent0-governance-doctrine.md (transversal constraint reword → portable core + reference runtime; admission-checklist runtime question gets a Claude-first default), CLAUDE.md+AGENTS.md managed block (byte-identical), routines/runtime-platform-audit.md (descope to existing-Codex-surface auditing), skill portability-tiers reference (cc-native acceptable default), runtime-capabilities-maintenance memory. Untouched: meeting/squad rules, exec skills+tests, all existing Codex surface and multi-runtime suites.
+
+**Risk noted for the status quo:** frozen-or-not, Codex hooks rot silently when Codex CLI changes payloads (the apply_patch matcher case); the platform-audit routine is the existing mitigation.
+
+**Reopen triggers:** the 181/184 double-build pattern recurring on the next capacity; a Codex CLI breaking change forcing a re-port investment decision; or the third-runtime question returning (this analysis reprices that decision too — peers/providers are cheap, parity runtimes are expensive).
+
 ## Deviations
 
 _Places where implementation intentionally departed from `plan.md`. The departure + the reason it was necessary or better._

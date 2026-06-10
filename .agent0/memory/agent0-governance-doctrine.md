@@ -1,14 +1,18 @@
 ---
-paths:
-  - ".agent0/context/rules/agent0-governance-doctrine.md"
-  - "docs/specs/166-agent0-governance-doctrine/"
-  - "CLAUDE.md"
-  - "AGENTS.md"
+name: agent0-governance-doctrine
+description: Scope boundary for expanding Agent0 — layered model, own/instrument/ignore,
+  admission checklist, grandfathering. Read BEFORE proposing or building any new
+  first-party capacity, governance lane, runtime surface, or shipped sync surface.
+metadata:
+  type: project
+  created_at: '2026-06-07T00:00:00-03:00'
 ---
 
 # Agent0 governance doctrine
 
-Read this rule before proposing or implementing a new first-party Agent0 capacity, governance lane, runtime surface, shipped sync surface, or product-like interface. This rule is the scope boundary for expanding Agent0 after spec 166.
+_Relocated from `.agent0/context/rules/` 2026-06-09 under the [[rule-corpus-discipline]] audience test: this binds the Agent0 maintainer (whoever expands Agent0), not consumer-project agents — as a shipped rule it was inert-to-confusing downstream. Originally adopted via spec 166._
+
+Read this before proposing or implementing a new first-party Agent0 capacity, governance lane, runtime surface, shipped sync surface, or product-like interface. This is the scope boundary for expanding Agent0 after spec 166.
 
 ## Core decision
 
@@ -24,7 +28,7 @@ Do not classify Agent0 governance as a flat feature list. Use these layers:
 2. **Governance domains** - quality and security are first-class domains applied along the spine.
 3. **Governance substrate** - context and replication are the machinery that make the domains reliable across sessions and consumer projects.
 4. **Transversal constraints** - multi-runtime support, stack neutrality, sync safety, cost honesty, and evidence discipline apply to every domain; they are not side buckets.
-5. **Scope-admission meta-governance** - rule-of-three, reopen triggers, deferred rows, and explicit non-goals decide whether a proposed capacity belongs in Agent0 at all. The detailed operating rule is `.agent0/context/rules/scope-admission-governance.md`.
+5. **Scope-admission meta-governance** - rule-of-three, reopen triggers, deferred rows, and explicit non-goals decide whether a proposed capacity belongs in Agent0 at all. The detailed operating discipline is [[scope-admission-governance]].
 
 ## Own, instrument, ignore
 
@@ -63,7 +67,7 @@ Before adding a new Agent0 capacity or expanding an existing one, answer these q
 
 If these questions cannot be answered concretely, keep the idea in brainstorm, meeting, reminder, routine, or spec open questions instead of building it.
 
-For admitted capacity specs, use `.agent0/context/rules/scope-admission-governance.md` for the full admission outcomes, evidence ladder, hardening bar, and deferred-work recording discipline.
+For admitted capacity specs, use [[scope-admission-governance]] for the full admission outcomes, evidence ladder, hardening bar, and deferred-work recording discipline.
 
 ## Grandfathering of pre-doctrine capacities
 
@@ -94,7 +98,3 @@ The doctrine preserves these possible future specs without starting them:
 Do not promote any of them automatically. Each needs its own evidence and scope decision.
 
 Spec 169 (`post-launch-maintenance-loop`) is a narrow, instrument-only slice of the continuous-evolution spine: it ships guidance/templates for production-signal -> work-item -> agent-review maintenance, but it does not graduate the broader `continuous-evolution-spine` follow-up and does not move Agent0 into consumer operations.
-
-## Notes
-
-_Consumer-extension surface - append consumer-local bullets here. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add consumer bullets at the end._

@@ -1,20 +1,22 @@
 ---
-paths:
-  - ".agent0/context/rules/scope-admission-governance.md"
-  - ".agent0/context/rules/agent0-governance-doctrine.md"
-  - ".agent0/context/rules/spec-driven.md"
-  - "docs/specs/"
+name: scope-admission-governance
+description: Operational scope-admission discipline for Agent0 capacity specs —
+  five admission outcomes, evidence ladder, admission brief, hardening bar,
+  deferred-work recording. Use before writing or approving a first-party capacity spec.
+metadata:
+  type: project
+  created_at: '2026-06-07T00:00:00-03:00'
 ---
 
 # Scope admission governance
 
-Use this rule before writing or approving a spec that adds, hardens, or expands a first-party Agent0 capacity. It is the operational form of spec 166's scope-admission doctrine.
+_Relocated from `.agent0/context/rules/` 2026-06-09 under the [[rule-corpus-discipline]] audience test: binds whoever writes/approves Agent0 capacity specs (the maintainer), not consumer-project agents. Operational form of spec 166's doctrine — see [[agent0-governance-doctrine]]._
 
-The goal is not to slow work down. The goal is to stop Agent0 from accreting mechanisms just because they are plausible.
+Use this before writing or approving a spec that adds, hardens, or expands a first-party Agent0 capacity. The goal is not to slow work down. The goal is to stop Agent0 from accreting mechanisms just because they are plausible.
 
 ## When this applies
 
-Apply this rule when a proposal would add or materially change any of:
+Apply when a proposal would add or materially change any of:
 
 - first-party hooks, validators, gates, advisories, tools, skills, context rules, sync surfaces, runtime bridges, or capacity kits;
 - a new governance lane or taxonomy category;
@@ -95,7 +97,3 @@ Use the smallest durable record that matches the trigger:
 - **Brainstorm/meeting** - unresolved strategy or multi-party deliberation.
 
 Do not leave deferred work only in chat. If it matters, put it somewhere the next session can retrieve.
-
-## Notes
-
-_Consumer-extension surface - append consumer-local bullets here. Sync flags the file as `!! customized` (sha-compare is section-blind), but the conflict region is mechanically this section: take new upstream verbatim, re-add consumer bullets at the end._

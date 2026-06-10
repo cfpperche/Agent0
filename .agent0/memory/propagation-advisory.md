@@ -1,8 +1,20 @@
+---
+name: propagation-advisory
+description: Operative doc for the propagation-advise.sh PostToolUse hook — 5 leak
+  patterns, advisory line shape, propagation-exempt override grammar, escape hatch.
+  Agent0-only mechanism; read when an edit triggers `propagation-advisory:` lines.
+metadata:
+  type: project
+  created_at: '2026-05-21T00:00:00-03:00'
+---
+
 # Propagation advisory
 
-A runtime-neutral `PostToolUse` hook (`.agent0/hooks/propagation-advise.sh`) scans the new content of shipped-file edits for upstream-internal pointers and emits one `propagation-advisory:` line per finding — on **stderr for Claude, JSON stdout `additionalContext` for Codex** (Codex `PostToolUse` ignores plain exit-0 stdout/stderr; see § Maintenance / `codex-cli-hooks.md`). Fires on Claude `Edit|Write|MultiEdit` AND on Codex `apply_patch` (spec 113), sourcing `.agent0/hooks/_memory-hook-lib.sh` for the cross-runtime path/content extraction. Mirrors the `tdd-advisory:` / `lint-advisory:` / `typecheck-advisory:` family — always exits 0, never blocks. Fires for both parent AND sub-agent edits because the maintainer writing new rules is the most common author of fresh leaks. Maintainer-only: excluded from consumer shipping (see § Maintenance) — the Codex registration is intentionally absent from tracked `.codex/hooks.json` because the hook script itself is excluded from consumer sync.
+_Relocated from `.agent0/context/rules/` 2026-06-09 under the [[rule-corpus-discipline]] audience test: the hook is maintainer-only (sync-excluded), so its operative doc was never consumer-facing — as a rule it required a standing `COPY_CHECK_EXCLUDE` special case in `sync-harness.sh`, now removed for the doc (the hook script and tests remain excluded, since they live in shipped directories)._
 
-The discipline this enforces is documented in `.agent0/memory/propagation-hygiene.md` (maintainer-binding; doesn't ship). The advisory is the mechanical companion that surfaces drift in real time instead of waiting for a periodic audit.
+A runtime-neutral `PostToolUse` hook (`.agent0/hooks/propagation-advise.sh`) scans the new content of shipped-file edits for upstream-internal pointers and emits one `propagation-advisory:` line per finding — on **stderr for Claude, JSON stdout `additionalContext` for Codex** (Codex `PostToolUse` ignores plain exit-0 stdout/stderr; see [[codex-cli-hooks]]). Fires on Claude `Edit|Write|MultiEdit` AND on Codex `apply_patch` (spec 113), sourcing `.agent0/hooks/_memory-hook-lib.sh` for the cross-runtime path/content extraction. Mirrors the `tdd-advisory:` / `lint-advisory:` / `typecheck-advisory:` family — always exits 0, never blocks. Fires for both parent AND sub-agent edits because the maintainer writing new rules is the most common author of fresh leaks. Maintainer-only: the hook script and its tests are excluded from consumer sync; the Codex registration is intentionally absent from tracked `.codex/hooks.json`.
+
+The discipline this enforces is [[propagation-hygiene]]. The advisory is the mechanical companion that surfaces drift in real time instead of waiting for a periodic audit.
 
 ## What fires, what stays silent
 
@@ -34,14 +46,10 @@ The override does NOT silence the advisory globally — it skips ONLY the specif
 - **Parent edits fire.** Unlike `tdd-advisory:` (sub-agent only), this hook fires on parent edits too. The maintainer writing new rules is the most common author of fresh leaks, so excluding parent would defeat the purpose. If parent-fire becomes noisy, the env-var escape hatch is the per-session opt-out.
 - **Override marker requires ≥10-char reason.** `# OVERRIDE: propagation-exempt: skip` is rejected by the length floor; write a real reason a future reader can grep.
 
-## Maintenance
-
-Maintainer-binding surface (5-pattern regex table, shipped-surface set, audit-log promotion policy, deep gotchas about diff-scope semantics, pattern-volume cap, vendor exclusion mechanism) lives in `.agent0/memory/propagation-advisory-maintenance.md`.
-
 ## Cross-references
 
-- `.agent0/memory/propagation-hygiene.md` — the maintainer-binding discipline this hook enforces
-- `.agent0/memory/propagation-advisory-maintenance.md` — maintainer-binding companion (pattern table, shipped-surface set, deep gotchas)
+- [[propagation-hygiene]] — the maintainer-binding discipline this hook enforces
+- [[propagation-advisory-maintenance]] — maintainer-binding companion (5-pattern regex table, shipped-surface set, audit-log promotion policy, diff-scope gotchas, pattern-volume cap, vendor exclusion)
 - `.agent0/hooks/propagation-advise.sh` — implementation (runtime-neutral; sources `_memory-hook-lib.sh`)
 - `.agent0/tests/propagation-advisory/` — scenario tests (incl. Codex `apply_patch` scenarios 12–14)
 - `.agent0/context/rules/delegation.md` § *Advisories* — the `<kind>-advisory:` pattern this follows

@@ -16,9 +16,9 @@ Adopted 2026-06-09 (spec 185, point P4 — chosen over a big-bang numeric diet, 
 
 A rule file mixes two registers: **operative instruction** (what an agent must do — the control plane) and **design memory** (rationale, history, retired alternatives, dogfood evidence — why it is so). The second register grows without bound and is where coupled-prose contradictions breed (the delegation↔artifact-budgets cascade contradiction lived 3 weeks in a rationale section). Discipline: **whenever you touch a rule, extract non-operative register in passing** — move rationale/history to a memory entry (or delete it if git history already records it), leave the rule operative. Never a dedicated sweep; always in passing, like the propagation-hygiene cleanup convention.
 
-## B2 — Admission bar for new rules
+## B2 — Admission bar for new rules: the audience test
 
-A new rule file is born only if at least one holds: (a) a mechanism backs it (hook, validator, gate, template — something that fails loudly), or (b) demonstrated demand (rule-of-three, dogfood failure, recurring drift). Otherwise the content is documentation (`docs/`) or maintainer memory — not control plane. This extends the governance doctrine's admission checklist down to the rule-file level.
+**Sharpened by the maintainer 2026-06-09:** the primary criterion is *audience* — **consumer-facing content becomes a rule; everything else becomes memory or a gate.** The rules dir IS the shipped control plane; nothing non-consumer-facing ships from it. Test: "would an agent working in a *consumer* project act differently after reading this?" If no → maintainer memory (discipline, Agent0-only mechanism docs, design rationale) or a mechanism (hook/validator/gate) if it must be enforced. Secondary bar, for content that passes the audience test: prefer mechanism-backed or demand-backed (rule-of-three, dogfood failure, recurring drift) over plausible-but-speculative prose.
 
 ## C — Prose→mechanism promotion principle
 
@@ -26,8 +26,9 @@ Mandatory prose whose corresponding advisory empirically fires on real cases get
 
 ## Seed backlog (2026-06-09 audit of the 39-rule corpus, 417 KB)
 
-**Move-whole candidates — maintainer-only content currently shipped:**
-- `agent0-governance-doctrine.md` + `scope-admission-governance.md` — both bind whoever expands *Agent0*, are written Agent0-specific ("expanding Agent0 capacities"), and have **no hook wiring** (verified: governance-gate.sh is the destructive-ops floor, unrelated; no hook/skill references either file). In a consumer they are inert-to-confusing. Moving them is a small *coordinated* change, not an in-passing edit: relocate to memory + remove their CLAUDE.md/AGENTS.md managed-block sections + fix cross-refs from other rules + accept consumer residue (append-only CLAUDE.md merge keeps the stale section; whole-file-synced rule copies need manual removal on the 3 consumers). Execute on request or when next touched.
+**Move-whole — EXECUTED 2026-06-09 (audience test applied, corpus now 36 rules):**
+- `agent0-governance-doctrine.md` + `scope-admission-governance.md` → moved to [[agent0-governance-doctrine]] / [[scope-admission-governance]]. Verified no hook wiring before the move (governance-gate.sh is the destructive-ops floor, unrelated). Coordinated edits: CLAUDE.md/AGENTS.md managed-block doctrine section removed; cross-ref bullet dropped from `spec-driven.md` § Relationship to other rules and two reference lines from `post-launch-maintenance-loop.md`. **Consumer residue:** the 3 consumers keep the stale CLAUDE.md section (append-only merge) and the stale rule copies — remove manually on the next sync visit.
+- `propagation-advisory.md` → moved to [[propagation-advisory]] (maintainer suggestion: the rule documented a maintainer-only sync-excluded mechanism). Bonus simplification: its `COPY_CHECK_EXCLUDE` entry in `sync-harness.sh` deleted (hook + tests remain excluded — they live in shipped dirs); dead skip-line removed from `propagation-advise.sh`; `memory-placement.md` split-precedent sentence re-pointed at runtime-capabilities.
 
 **Register-split candidates — stay rules, shed design memory on next touch:**
 - `harness-sync.md` (62 KB — maintainer-register sections: baseline regeneration, manifest editing rationale)
@@ -35,7 +36,7 @@ Mandatory prose whose corresponding advisory empirically fires on real cases get
 - `memory-placement.md` (26 KB — audit-outcome narrative)
 - `secrets-scan.md` (20 KB — version-skew/dropped-signal history)
 
-**Checked and NOT candidates (audience verified consumer-facing):** `post-launch-maintenance-loop.md` (explicitly instrument-only, addressed to consumer projects), `php-laravel-support.md` (orientation index for Laravel consumers), `propagation-advisory.md` (already sync-excluded via `COPY_CHECK_EXCLUDE` — the precedent this discipline generalizes), `runtime-capabilities.md` (its maintainer register already lives in [[runtime-capabilities-maintenance]] — the pattern done right).
+**Checked and NOT candidates (audience verified consumer-facing):** `post-launch-maintenance-loop.md` (explicitly instrument-only, addressed to consumer projects), `php-laravel-support.md` (orientation index for Laravel consumers), `runtime-capabilities.md` (its maintainer register already lives in [[runtime-capabilities-maintenance]] — the pattern done right).
 
 ## Review trigger
 

@@ -17,7 +17,7 @@
 # rules is the most common author of fresh leaks).
 #
 # Discipline: .agent0/memory/propagation-hygiene.md
-# Rule:       .agent0/context/rules/propagation-advisory.md
+# Doc:        .agent0/memory/propagation-advisory.md
 #
 # Opt-out:    CLAUDE_SKIP_PROPAGATION_ADVISE=1
 # Override:   `# OVERRIDE: propagation-exempt: <reason ≥10 chars>` in edit content
@@ -68,7 +68,6 @@ in_shipped_surface() {
   case "$rel" in
     .claude/skills/*/vendor/*|.claude/skills/*/design-systems/*) return 1 ;;
     .agent0/hooks/propagation-advise.sh) return 1 ;;
-    .agent0/context/rules/propagation-advisory.md) return 1 ;;
     .agent0/tests/propagation-advisory/*) return 1 ;;
   esac
   return 0

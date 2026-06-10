@@ -30,11 +30,8 @@ Mandatory prose whose corresponding advisory empirically fires on real cases get
 - `agent0-governance-doctrine.md` + `scope-admission-governance.md` → moved to [[agent0-governance-doctrine]] / [[scope-admission-governance]]. Verified no hook wiring before the move (governance-gate.sh is the destructive-ops floor, unrelated). Coordinated edits: CLAUDE.md/AGENTS.md managed-block doctrine section removed; cross-ref bullet dropped from `spec-driven.md` § Relationship to other rules and two reference lines from `post-launch-maintenance-loop.md`. **Consumer residue:** the 3 consumers keep the stale CLAUDE.md section (append-only merge) and the stale rule copies — remove manually on the next sync visit.
 - `propagation-advisory.md` → moved to [[propagation-advisory]] (maintainer suggestion: the rule documented a maintainer-only sync-excluded mechanism). Bonus simplification: its `COPY_CHECK_EXCLUDE` entry in `sync-harness.sh` deleted (hook + tests remain excluded — they live in shipped dirs); dead skip-line removed from `propagation-advise.sh`; `memory-placement.md` split-precedent sentence re-pointed at runtime-capabilities.
 
-**Register-split candidates — stay rules, shed design memory on next touch:**
-- `harness-sync.md` (62 KB — maintainer-register sections: baseline regeneration, manifest editing rationale)
-- `delegation.md` (26 KB — spec-lineage history notes)
-- `memory-placement.md` (26 KB — audit-outcome narrative)
-- `secrets-scan.md` (20 KB — version-skew/dropped-signal history)
+**Register-split — EXECUTED 2026-06-10 (maintainer-ordered one-time pass, not in-passing):**
+- `harness-sync.md` 62→57 KB → [[harness-sync-maintenance]]; `delegation.md` 26→25 KB → [[delegation-maintenance]]; `memory-placement.md` 26→23 KB → [[memory-placement-maintenance]]; `secrets-scan.md` 20→18 KB → [[secrets-scan-maintenance]]. Same pass also swept ALL remaining rules for citation leaks (≈70 instances of `spec NNN` / `docs/specs/NNN-` / memory-pointers removed, facts kept): corpus 417→384 KB. Global grep for leak patterns over rules/ now returns zero — future leaks are fresh drift, caught by the propagation advisory at edit time.
 
 **Checked and NOT candidates (audience verified consumer-facing):** `post-launch-maintenance-loop.md` (explicitly instrument-only, addressed to consumer projects), `php-laravel-support.md` (orientation index for Laravel consumers), `runtime-capabilities.md` (its maintainer register already lives in [[runtime-capabilities-maintenance]] — the pattern done right).
 

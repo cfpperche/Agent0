@@ -2,7 +2,9 @@
 
 _Created 2026-06-08._
 
-**Status:** draft
+**Status:** abandoned
+
+**Closure:** 2026-06-10 — closed by maintainer decision (spec 185 follow-through): the current context model — managed-block index + bounded SessionStart brief + on-demand rule reads, with NO prompt-time injection — is declared the final design. The motivating X-article silent-substitution incident remains a single occurrence (rule-of-three not met). `context-inject.sh` stays a diagnostic helper, permanently unregistered. Reopen trigger: a second real incident of the silent-substitution-instead-of-escalation class.
 **UI impact:** none
 
 ## Intent

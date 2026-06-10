@@ -86,6 +86,14 @@ The maintainer articulated a principle that re-sorted the two remaining quality-
 
 **First CI run (red) caught three more real environment couplings the dev machine masked, all fixed:** (1) post-launch tests shelled out to `rg` — absent on runners, replaced with POSIX `grep -qF`/`grep -nE`; (2) `agent-browser/07-adopt-detect` faked the CDP endpoint but still needed the real binary for the wrapper's fail-closed route — given the same skip-guard as the live scenarios; (3) runner shellcheck (absent locally) flagged vestigial `override_present` in `delegation-gate.sh` — removed. **Second CI run green in 3m02s** (run 27280730691). Net: the operator-quality principle paid for itself within the hour — four real defects surfaced by making the tests run automatically.
 
+### 2026-06-10 — parent — P8 admitted minimal + executed; program complete
+
+Disposition: **admitted (minimal form) and executed.** Under the lab posture the adversarial threat model is thin (distributor and consumer are the same person), but the maintainer's operator-quality principle plus the corruption/accident case justified the cheapest defensible slice. Key design find: **the integrity data already existed** — sync writes `.agent0/harness-sync-baseline.json` (`.files` = relpath→sha256) into every consumer. So P8 became a doctor section, not a new manifest mechanism: `=== shipped integrity ===` verifies the executable shipped surface (`.agent0/hooks/*.sh`, `.agent0/tools/*`, `.agent0/validators/*`, `.claude/hooks/*.sh`, `.githooks/*`) against the baseline. Mismatch/missing = **advisory** ("customized or tampered — run sync-harness --check"), never broken (divergence can be legitimate customization); no baseline (source repo / pre-first-sync) = ok/n-a. The spec.md open question "does P1's bundle subsume P8" resolved: no — standalone baseline-backed check, no bundle format needed.
+
+Validation (per maintainer directive "não entregar sem validação"): new suite `.agent0/tests/shipped-integrity/` (5 scenarios: intact-ok, tamper-advisory, missing-advisory, no-baseline-n/a, non-executable-surface-ignored; hermetic sandboxes, doctor exercised via `AGENT0_PROJECT_DIR`); full corpus 44/44 local; doctor on Agent0 25 ok / 0 advisory / 0 broken; **harness-tests CI green** (run 27281953335).
+
+**Program tally (all 8 dispositioned):** executed = P4 (discipline + 3-rule relocation), P7 (CI, reopened by operator-quality principle), P8 (doctor integrity); decided = P2 (lab + showcase); killed = P5 (by measurement), P6 (operator-quality served by tests+CI); deferred = P1 (no users yet), P3 (parity doctrine stands).
+
 ## Deviations
 
 _Places where implementation intentionally departed from `plan.md`. The departure + the reason it was necessary or better._

@@ -2,7 +2,9 @@
 
 _Created 2026-06-09._
 
-**Status:** in-progress
+**Status:** shipped
+
+**Closure:** 2026-06-10 — all 8 points dispositioned (executed: P4/P7/P8; decided: P2; killed: P5/P6; deferred: P1/P3); proof: shipped-integrity suite 5/5, full corpus 44/44, harness-tests CI green (run 27281953335), doctor 25 ok; residual: P1/P3 reopen triggers recorded in notes.md.
 
 **UI impact:** none
 
@@ -31,22 +33,22 @@ Umbrella/program spec holding the 8 findings of the 2026-06-09 external-perspect
 
 ## Acceptance criteria
 
-- [ ] **Scenario: every point reaches a disposition**
+- [x] **Scenario: every point reaches a disposition**
   - **Given** the 8 portfolio points above
   - **When** the program completes
   - **Then** each point has exactly one recorded disposition in `tasks.md`/`notes.md`: child spec opened (with NNN), killed (with rationale in `notes.md`), or decision recorded (for decision-type points)
 
-- [ ] **Scenario: decision-type points are not silently admitted**
+- [x] **Scenario: decision-type points are not silently admitted**
   - **Given** P2 (lab vs asset) and P3 (multi-runtime posture) are maintainer decisions, and P3 contradicts standing doctrine
   - **When** their detailing rounds run
   - **Then** P2 closes with an explicit maintainer decision recorded in `notes.md`, and P3 goes through a decision-grade debate (or an explicit maintainer override recorded as such) before any child spec is opened
 
-- [ ] **Scenario: a detailing round produces a verifiable artifact**
+- [x] **Scenario: a detailing round produces a verifiable artifact**
   - **Given** any point's detailing round
   - **When** the round closes
   - **Then** the round's analysis (problem, evidence, options, recommendation, effort) exists either in the child spec's `spec.md` or in this umbrella's `notes.md` — never only in chat history
 
-- [ ] Child specs are numbered at admission time (next free NNN), one per admitted point; this umbrella never contains their implementation.
+- [x] Child specs are numbered at admission time (next free NNN), one per admitted point; this umbrella never contains their implementation. (No point was admitted as a child spec — P4/P7/P8 were executed as small direct changes recorded here; trivially satisfied.)
 
 ## Non-goals
 
@@ -57,8 +59,8 @@ Umbrella/program spec holding the 8 findings of the 2026-06-09 external-perspect
 
 ## Open questions
 
-- [ ] P2 ordering: should the lab-vs-asset decision run before P3/P4/P6 detailing (it gates their worth), or after P7/P1 build momentum? Owner: maintainer.
-- [ ] Does P1's evidence bundle subsume parts of P8 (signed manifest as part of the bundle format)? Resolve when P1 is detailed.
+- [x] P2 ordering: resolved in practice — P7/P1 ran first and their identical deferral rationales surfaced the P2 answer organically; P2 then ran third and the remaining rounds inherited it.
+- [x] Does P1's evidence bundle subsume parts of P8? No — P8 shipped standalone reusing the existing sync baseline (zero new state); P1 remains deferred independently.
 
 ## Context / references
 

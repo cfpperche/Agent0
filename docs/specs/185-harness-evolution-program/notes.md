@@ -58,6 +58,12 @@ Disposition: **deferred — "leave as is."** Symmetric-parity doctrine stands un
 
 **Reopen triggers:** the 181/184 double-build pattern recurring on the next capacity; a Codex CLI breaking change forcing a re-port investment decision; or the third-runtime question returning (this analysis reprices that decision too — peers/providers are cheap, parity runtimes are expensive).
 
+### 2026-06-09 — parent — P4 adopted as discipline (B+C), big-bang diet withdrawn
+
+Disposition: **adopted, no child spec.** The original pitch (numeric target, ≤20 rules / ≤8 KB, big-bang restructure) was withdrawn during the round as over-engineering under the P2 lab posture (sync churn on 3 consumers + test/drift rework for marginal single-operator payoff). Adopted instead: (B1) register split applied on touch — operative instruction stays in rules, design memory moves out in passing; (B2) admission bar — new rule only if mechanism-backed or demand-backed; (C) prose→mechanism promotion when an advisory empirically fires, generalizing the propagation-advisory promotion policy. Recorded as maintainer memory `.agent0/memory/rule-corpus-discipline.md` (propagation-hygiene precedent: binds the maintainer, doesn't ship).
+
+Candidate audit answering "which rules should become maintainer memory": **move-whole** = `agent0-governance-doctrine.md` + `scope-admission-governance.md` (maintainer-only, no hook wiring — verified governance-gate.sh is unrelated; move is a small coordinated change incl. CLAUDE.md/AGENTS.md sections + consumer residue, execute on request/next touch). **Register-split on next touch** = harness-sync, delegation, memory-placement, secrets-scan. **Verified NOT candidates** = post-launch-maintenance-loop and php-laravel-support (consumer-facing), propagation-advisory (already sync-excluded), runtime-capabilities (maintainer register already split into memory). Review trigger: corpus >45 rules or >450 KB ≈ 2026-12 → numeric diet returns with evidence.
+
 ## Deviations
 
 _Places where implementation intentionally departed from `plan.md`. The departure + the reason it was necessary or better._

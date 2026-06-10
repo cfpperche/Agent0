@@ -14,6 +14,7 @@
 - [/product pipeline empirical baseline](product-pipeline-empirical-baseline.md) — First end-to-end full /product run with all 4 mature gates (2026-05-23) — ~3.1M tokens, ~83min, 44 dispatches, 17/17 judges. Cost+shape envelope for planning.
 - [propagation-advisory-maintenance](propagation-advisory-maintenance.md) — Maintainer discipline for propagation-advisory — pattern table + shipped-surface set + audit-log policy + deep gotchas.
 - [Propagation hygiene](propagation-hygiene.md) — Maintainer discipline — shipped files (CLAUDE.md, .agent0/context/rules/, sync manifest) must carry no Agent0-internal pointers. Read before editing CLAUDE.md or a rule.
+- [rule-corpus-discipline](rule-corpus-discipline.md) — Maintainer discipline for the rules corpus — register split on touch, mechanism-or-demand admission for new rules, prose→gate promotion. Read before adding a rule or editing a large one.
 - [runtime-capabilities-maintenance](runtime-capabilities-maintenance.md) — Maintainer discipline for the runtime-capabilities matrix — Update rule + drift enforcement + skill-portability relationship.
 - [Skill-eval pattern (observed externally)](skill-eval-pattern.md) — 5 industry posts converged on the same skill-eval recipe in early 2026; not adopted in Agent0 yet — wait for rule-of-three regression demand before building
 - [tmux-sentinel is sync-apply-only (never commit harness)](tmux-sentinel-sync-no-commit.md) — PUBLIC consumer; gitignores the whole .agent0/ harness on purpose. Keep sync --apply for local dev, but NEVER commit/push harness there.

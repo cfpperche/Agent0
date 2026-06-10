@@ -66,6 +66,16 @@ Disposition: **adopted, no child spec.** The original pitch (numeric target, ≤
 
 Candidate audit answering "which rules should become maintainer memory": **move-whole** = `agent0-governance-doctrine.md` + `scope-admission-governance.md` (maintainer-only, no hook wiring — verified governance-gate.sh is unrelated; move is a small coordinated change incl. CLAUDE.md/AGENTS.md sections + consumer residue, execute on request/next touch). **Register-split on next touch** = harness-sync, delegation, memory-placement, secrets-scan. **Verified NOT candidates** = post-launch-maintenance-loop and php-laravel-support (consumer-facing), propagation-advisory (already sync-excluded), runtime-capabilities (maintainer register already split into memory). Review trigger: corpus >45 rules or >450 KB ≈ 2026-12 → numeric diet returns with evidence.
 
+### 2026-06-09 — parent — P5 killed by measurement (hook-chain latency is a non-problem)
+
+Disposition: **killed.** The audit hypothesis ("5 PostToolUse + 4 PreToolUse bash spawns per tool call, never measured, consolidate if >~150 ms") was falsified by direct measurement. Method: each wired hook executed 20× with realistic JSON payloads on stdin (`CLAUDE_PROJECT_DIR` set, minimal env), wall-clock p50/p95 via `time.perf_counter()`.
+
+Numbers (p50): governance-gate 4.1 ms, secrets-preflight 3.4 ms (same on commit-shaped commands — the real gitleaks scan lives in the native pre-commit, not the preflight), memory-index-gate 4.8 ms, session-track-edits 3.3 ms, **project-core-sync 28.1 ms (the only outlier)**, memory-frontmatter-validate 3.3 ms, memory-events-journal 3.3 ms, propagation-advise 3.2–3.3 ms (non-shipped fast-exit and shipped-content scan virtually identical), delegation-gate 4.8 ms. **Per-Bash-call chain: ~7 ms sequential / 4 ms parallel. Per-Edit chain: ~46 ms sequential / 28 ms parallel.** A 100-edit session pays ≤5 s total, spread out.
+
+A dispatcher consolidation would save ~18 ms/edit at real complexity cost — speculative optimization, rejected. Even the lone outlier (project-core-sync running `--apply` on every edit) is fine at 28 ms.
+
+**Reopen trigger:** a future hook doing real work per edit (e.g. a project-wide validator returning to per-edit), or any measured chain exceeding ~150 ms p50.
+
 ## Deviations
 
 _Places where implementation intentionally departed from `plan.md`. The departure + the reason it was necessary or better._

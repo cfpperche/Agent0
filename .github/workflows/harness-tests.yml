@@ -1,0 +1,54 @@
+name: harness-tests
+
+# Runs the full Agent0 harness test corpus (.agent0/tests/*/run-all.sh) via the
+# global orchestrator. Suites are hermetic by convention (mktemp sandboxes,
+# PATH-prefixed mock binaries, own git identity); the only external engine
+# installed here is gitleaks, exercised by the secrets-scan suite.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".agent0/**"
+      - ".claude/**"
+      - ".codex/**"
+      - ".githooks/**"
+      - "CLAUDE.md"
+      - "AGENTS.md"
+      - ".github/workflows/harness-tests.yml"
+  pull_request:
+    paths:
+      - ".agent0/**"
+      - ".claude/**"
+      - ".codex/**"
+      - ".githooks/**"
+      - "CLAUDE.md"
+      - "AGENTS.md"
+      - ".github/workflows/harness-tests.yml"
+  workflow_dispatch:
+
+jobs:
+  suites:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install gitleaks
+        run: |
+          set -euo pipefail
+          VER="8.21.2"
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${VER}/gitleaks_${VER}_linux_x64.tar.gz" -o /tmp/gitleaks.tgz
+          tar -xzf /tmp/gitleaks.tgz -C /tmp gitleaks
+          sudo install /tmp/gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
+      - name: Git identity (fixture fallback)
+        run: |
+          git config --global user.name "ci"
+          git config --global user.email "ci@invalid"
+
+      - name: Run all harness suites
+        env:
+          AGENT0_SUITE_SKIP: ""
+        run: bash .agent0/tests/run-all-suites.sh

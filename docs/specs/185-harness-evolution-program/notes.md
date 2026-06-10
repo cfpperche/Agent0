@@ -76,6 +76,14 @@ A dispatcher consolidation would save ~18 ms/edit at real complexity cost — sp
 
 **Reopen trigger:** a future hook doing real work per edit (e.g. a project-wide validator returning to per-edit), or any measured chain exceeding ~150 ms p50.
 
+### 2026-06-09 — parent — P6 killed; P7 reopened and executed (operator-quality principle)
+
+The maintainer articulated a principle that re-sorted the two remaining quality-adjacent points: **"personal/professional use doesn't mean the project shouldn't be optimized, easy, and working perfectly."** Quality investments that serve the *operator* stand on their own; only investments whose value scales with *other users* fall to the lab posture.
+
+**P6 (kernel out of bash) → killed.** A Go/Rust rewrite buys installability/portability for strangers — it would leave the harness functionally identical for the operator while spending XL effort and risk. Operator-grade quality is delivered by the test corpus + CI instead. No dedicated reopen trigger: a P2 posture flip re-tables it naturally (carrying it as deferred would duplicate the P2 trigger).
+
+**P7 (CI) → deferral overturned, executed same session.** By the operator-quality principle, tests that only run when someone remembers don't meet the "working perfectly" bar — CI is regression insurance *for the operator*. Shipped: `.agent0/tests/run-all-suites.sh` (global orchestrator: discovers every suite run-all.sh, per-suite PASS/FAIL/SKIP table, failing-suite output tail, `AGENT0_SUITE_SKIP` env for environment-bound suites) + `.github/workflows/harness-tests.yml` (push/PR on harness paths + manual dispatch; installs gitleaks; suites are otherwise hermetic — verified: exec-skill suites use PATH-prefixed mock CLIs, agent-browser uses `AGENT0_BROWSER_BIN` fakes, 43 fixtures set their own git identity). **First full local sweep: 42/43 suites passed (~6 min) and the one failure was a live catch** — `post-launch-maintenance-loop/01` still asserted the doctrine rule file that moved to memory hours earlier; test repointed at the new home. Exactly the regression class CI exists for.
+
 ## Deviations
 
 _Places where implementation intentionally departed from `plan.md`. The departure + the reason it was necessary or better._

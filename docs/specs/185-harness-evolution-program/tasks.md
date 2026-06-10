@@ -4,14 +4,14 @@ _Generated from `plan.md` on 2026-06-09. Work top-to-bottom by default, but the 
 
 ## Detailing rounds (recommended order)
 
-- [x] 1. **P7 — CI for harness tests** (fix, mechanical, no gates) → **deferred 2026-06-09** — maintainer: project not in production yet; revisit when production/adoption raises the cost of a missed regression. See notes.md.
+- [x] 1. **P7 — CI for harness tests** (fix, mechanical, no gates) → ~~deferred 2026-06-09~~ **REOPENED + executed 2026-06-09** — maintainer's operator-quality principle ("personal doesn't mean not working perfectly") overturned the deferral: CI is quality insurance for the operator, not adoption machinery. Shipped: `.agent0/tests/run-all-suites.sh` + `.github/workflows/harness-tests.yml`. See notes.md.
 - [x] 2. **P1 — Evidence bundle as product** (evolve, the strategic bet) → **deferred 2026-06-09** — maintainer: no users yet; revisit with adoption. Full detailing analysis preserved in notes.md (incl. the verified ephemerality finding).
 - [x] 3. **P2 — Lab vs adoptable asset** (decision, gates P3/P4/P6) → **decided 2026-06-09: lab + public showcase** — personal lab optimized for one operator; site/README stay as consultancy showcase; no adoption machinery. Reopen on first genuine external interest. See notes.md.
 - [x] 4. **P3 — Multi-runtime posture: portable core + reference runtime** (decision, contradicts doctrine) → **deferred 2026-06-09** — maintainer: "leave as is"; symmetric-parity doctrine stands. Scope had been narrowed to Codex re-tier only (third runtime discarded, meeting deleted). Full impact analysis (files-to-touch, kept lanes, freeze-not-teardown, rot risk) preserved in notes.md.
 - [x] 5. **P4 — Shrink the prose control plane** (optimize) → **adopted as discipline 2026-06-09** (B+C, no child spec) — numeric-target diet withdrawn as over-engineering under lab posture; register-split-on-touch + mechanism-or-demand admission + prose→gate promotion recorded in `.agent0/memory/rule-corpus-discipline.md`, with seed backlog (move-whole: governance pair; split: harness-sync/delegation/memory-placement/secrets-scan).
 - [x] 6. **P5 — Hook-chain latency** (optimize, measure-first) → **killed 2026-06-09 by measurement** — per-Bash chain ~7ms, per-Edit chain ~46ms sequential (28ms of it = project-core-sync alone, all others 3-5ms); the 150ms consolidation threshold is not remotely approached. Benchmark method + numbers in notes.md.
 - [ ] 7. **P8 — Hook supply-chain integrity** (fix) — checksum manifest + doctor verification; check whether P1's bundle format subsumes it.
-- [ ] 8. **P6 — Kernel out of bash** (optimize, XL, gated by P2) — only detail after P2 decided; expected: admit-deferred or kill if P2 = lab.
+- [x] 8. **P6 — Kernel out of bash** (optimize, XL, gated by P2) → **killed 2026-06-09** — a rewrite buys installability/portability for strangers, not quality for the operator (bash kernel is tested, fast per P5, and working); maintainer's quality bar is served by tests+CI instead. No separate reopen trigger: a P2 posture flip re-tables it naturally. See notes.md (incl. the operator-quality principle that reopened P7).
 
 ## Verification
 

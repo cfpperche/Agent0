@@ -26,7 +26,7 @@ checklist=".agent0/context/templates/post-launch-maintenance-loop/review-checkli
 example=".agent0/context/templates/post-launch-maintenance-loop/examples/sentry-linear-codex.md"
 product_skill=".claude/skills/product/SKILL.md"
 pipeline=".claude/skills/product/references/pipeline-coverage.md"
-governance=".agent0/context/rules/agent0-governance-doctrine.md"
+governance=".agent0/memory/agent0-governance-doctrine.md"
 
 for file in "$rule" "$provider_map" "$issue_template" "$checklist" "$example" "$product_skill" "$pipeline" "$governance"; do
   require_file "$file"

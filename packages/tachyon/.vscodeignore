@@ -1,9 +1,0 @@
-**
-!dist/**
-!media/**
-!README.md
-!LICENSE
-!examples/**
-!package.json
-!package.nls*.json
-!l10n/**

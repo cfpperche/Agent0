@@ -4,7 +4,7 @@ _Created 2026-06-12._
 
 **Status:** shipped-partial
 
-**Closure:** 2026-06-12 — shipped in working tree (commit pending maintainer approval); proof: skill validator exit 0, staleness-check tests 11/11, product-overwrite suite 5/5, full harness battery 44/44; residual: the Change-2 judge-mix measurement run (requires a real `/product` dogfood; mix ships provisional per `quality-judge.md § Measurement protocol`; reminder filed).
+**Closure:** 2026-06-12 — shipped at ae6bd8f; proof: skill validator exit 0, staleness-check tests 11/11, product-overwrite suite 5/5, full harness battery 44/44; residual: the Change-2 judge-mix measurement run (requires a real `/product` dogfood; mix ships provisional per `quality-judge.md § Measurement protocol`; reminder filed).
 
 **UI impact:** none
 

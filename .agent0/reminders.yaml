@@ -234,3 +234,13 @@ reminders:
   - docs/specs/027-od-vendor-port/
   - docs/specs/135-od-design-md-validator-drift/
   snoozed_until: '2026-07-01'
+- id: r-2026-06-12-run-the-spec-205-judge
+  created: '2026-06-12'
+  context: Run the spec-205 judge-mix measurement protocol on the next /product dogfood
+    run — confirm sonnet phase-batches still catch the fixture-spec 'streak 17 vs
+    8' inconsistency class, then adopt or revert the mix (quality-judge.md § Measurement
+    protocol)
+  status: pending
+  links:
+  - docs/specs/205-product-honesty-and-fit/spec.md
+  - .claude/skills/product/references/quality-judge.md

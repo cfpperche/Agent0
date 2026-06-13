@@ -108,3 +108,10 @@ assets/generated/.sound-manifest.jsonl
 # the tracked dir assets/diagrams/ (and the .mmd source) are NOT ignored — only
 # the per-machine provenance manifest is local.
 assets/generated/.diagram-manifest.jsonl
+
+# Tachyon — local dogfooding of the VS Code extension. Agent0 is a stack-neutral
+# template; a personal tachyon.yml (and its .tachyon/ state) must NOT ship to forks
+# as a stack opinion. Kept fully local — delete these lines if you ever want Agent0
+# to advertise a Tachyon config.
+tachyon.yml
+.tachyon/

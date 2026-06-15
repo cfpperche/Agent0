@@ -19,7 +19,7 @@ chmod +x "$TMPDIR/bin/pnpm"
 
 touch "$TMPDIR/pnpm-lock.yaml"
 cat > "$TMPDIR/package.json" <<'EOF'
-{"name":"early-stage-pnpm"}
+{"name":"early-stage-pnpm","scripts":{"test":"true"}}
 EOF
 
 stderr_file="$(mktemp)"

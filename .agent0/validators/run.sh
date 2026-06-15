@@ -135,7 +135,16 @@ fi
 command_str=""
 stack=""
 stack_subtype=""
+test_advisory_msg=""
 typecheck_advisory_msg=""
+
+append_command_step() {
+  if [ -n "$command_str" ]; then
+    command_str="$command_str && $1"
+  else
+    command_str="$1"
+  fi
+}
 
 # Manifest-as-intent typecheck dispatch (mirrors lint-validator dispatch pattern):
 #   (a) tsconfig.json exists                 → use direct tsc invocation
@@ -146,6 +155,10 @@ typecheck_advisory_msg=""
 # without typecheck infrastructure (surfaced by dogfood 2026-05-12).
 has_typecheck_script() {
   [ -f "package.json" ] && jq -e '.scripts.typecheck // empty' package.json >/dev/null 2>&1
+}
+
+has_test_script() {
+  [ -f "package.json" ] && jq -e '.scripts.test // empty' package.json >/dev/null 2>&1
 }
 
 # Laravel canonical check — runs BEFORE the JS branch because Laravel 11+
@@ -177,12 +190,16 @@ elif [ -f "bun.lockb" ] || [ -f "bun.lock" ] || [ -f "bunfig.toml" ]; then
 elif [ -f "pnpm-lock.yaml" ]; then
   stack="js"
   stack_subtype="pnpm"
-  if [ -f "tsconfig.json" ]; then
-    command_str='pnpm test && pnpm tsc --noEmit'
-  elif has_typecheck_script; then
-    command_str='pnpm test && pnpm typecheck'
+  if has_test_script; then
+    append_command_step 'pnpm test'
   else
-    command_str='pnpm test'
+    test_advisory_msg="test-advisory: no 'test' script in root package.json — test step skipped (declare \`pnpm test\` or run the package/app-specific test command for this change)"
+  fi
+  if [ -f "tsconfig.json" ]; then
+    append_command_step 'pnpm tsc --noEmit'
+  elif has_typecheck_script; then
+    append_command_step 'pnpm typecheck'
+  else
     typecheck_advisory_msg="typecheck-advisory: no tsconfig.json or 'typecheck' script in package.json — typecheck step skipped (add a tsconfig.json or declare \`pnpm typecheck\` to enable)"
   fi
 elif [ -f "package-lock.json" ] || [ -f "package.json" ]; then
@@ -235,7 +252,7 @@ elif [ -f "composer.json" ]; then
   fi
 fi
 
-if [ -z "$command_str" ]; then
+if [ -z "$stack" ]; then
   emit_no_stack
 fi
 
@@ -254,9 +271,9 @@ if [ "${CLAUDE_VALIDATOR_SKIP_LINT:-0}" != "1" ]; then
     if [ -f "package.json" ] && jq -e '.devDependencies["@biomejs/biome"] // .dependencies["@biomejs/biome"] // empty' package.json >/dev/null 2>&1; then
       if [ -f "node_modules/@biomejs/biome/package.json" ]; then
         case "$stack_subtype" in
-          bun)  command_str="$command_str && bunx biome check" ;;
-          pnpm) command_str="$command_str && pnpm exec biome check" ;;
-          npm)  command_str="$command_str && npx biome check" ;;
+          bun)  append_command_step 'bunx biome check' ;;
+          pnpm) append_command_step 'pnpm exec biome check' ;;
+          npm)  append_command_step 'npx biome check' ;;
         esac
       else
         case "$stack_subtype" in
@@ -293,7 +310,7 @@ if [ "${CLAUDE_VALIDATOR_SKIP_LINT:-0}" != "1" ]; then
 
     if [ "$ruff_declared" -eq 1 ]; then
       if $py_prefix -m ruff --version >/dev/null 2>&1; then
-        command_str="$command_str && $py_prefix -m ruff check ."
+        append_command_step "$py_prefix -m ruff check ."
       else
         py_install_cmd="pip install ruff"
         if [ -f "uv.lock" ] && command -v uv >/dev/null 2>&1; then
@@ -312,7 +329,7 @@ if [ "${CLAUDE_VALIDATOR_SKIP_LINT:-0}" != "1" ]; then
     # probe: vendor/bin/pint exists. Same shape as Biome/Ruff branches.
     if [ -f "composer.json" ] && jq -e '(.["require-dev"]["laravel/pint"] // .require["laravel/pint"]) // empty' composer.json >/dev/null 2>&1; then
       if [ -x "vendor/bin/pint" ]; then
-        command_str="$command_str && vendor/bin/pint --test"
+        append_command_step 'vendor/bin/pint --test'
       else
         lint_advisory_msg="lint-advisory: pint declared in composer.json but not installed — run \`composer install\`"
       fi
@@ -321,7 +338,7 @@ if [ "${CLAUDE_VALIDATOR_SKIP_LINT:-0}" != "1" ]; then
     # rules; both ship the `vendor/bin/phpstan` binary. Either declaration counts.
     if [ -f "composer.json" ] && jq -e '(.["require-dev"]["phpstan/phpstan"] // .["require-dev"]["larastan/larastan"] // .require["phpstan/phpstan"] // .require["larastan/larastan"]) // empty' composer.json >/dev/null 2>&1; then
       if [ -x "vendor/bin/phpstan" ]; then
-        command_str="$command_str && vendor/bin/phpstan analyse --no-progress"
+        append_command_step 'vendor/bin/phpstan analyse --no-progress'
       else
         # Concatenate if Pint advisory already set; newline-separated so each
         # advisory becomes its own stderr line (the emit loop below loops once
@@ -347,8 +364,15 @@ fi
 if [ -n "$lint_advisory_msg" ]; then
   printf '%s\n' "$lint_advisory_msg" >&2
 fi
+if [ -n "$test_advisory_msg" ]; then
+  printf '%s\n' "$test_advisory_msg" >&2
+fi
 if [ -n "$typecheck_advisory_msg" ]; then
   printf '%s\n' "$typecheck_advisory_msg" >&2
+fi
+
+if [ -z "$command_str" ]; then
+  command_str='true'
 fi
 
 stdout_file="$(mktemp 2>/dev/null || mktemp -t validator-stdout)"

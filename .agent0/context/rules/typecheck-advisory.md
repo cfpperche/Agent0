@@ -10,6 +10,8 @@ paths:
 
 The post-edit validator (`.agent0/validators/run.sh`) detects typecheck primitive availability per JS branch and emits a non-blocking `typecheck-advisory:` line on stderr when the consumer project has neither — instead of hard-failing the pipeline by trying `<runner> run typecheck` against a missing script. Mirrors the lint-validator's manifest-as-intent posture: declared = run, missing = advise, neither = skip. Surfaced via dogfood where every sub-agent edit was hard-failing the validator on a fresh consumer project without typecheck infrastructure.
 
+The pnpm branch applies the same root-manifest discipline to tests: it runs `pnpm test` only when the root `package.json` declares `scripts.test`. If a pnpm monorepo has package/app-specific test scripts but no root test script, the validator omits the test step and emits `test-advisory:` instead of failing on an implicit `pnpm test`.
+
 ## What fires per branch
 
 Each JS branch picks the typecheck step based on what's available in the consumer project. State dispatch:
@@ -38,6 +40,12 @@ typecheck-advisory: no 'typecheck' script in package.json — typecheck step ski
 ```
 
 Same shape as `lint-advisory:` and `tdd-advisory:` — surfaces via `delegation-verify.sh`'s separated stderr capture into the agent's next-turn context. Never blocks; never increments delegation loop budget; advisory is the WHOLE signal.
+
+The pnpm test omission advisory is similarly non-blocking:
+
+```
+test-advisory: no 'test' script in root package.json — test step skipped (declare `pnpm test` or run the package/app-specific test command for this change)
+```
 
 ## Non-goals
 

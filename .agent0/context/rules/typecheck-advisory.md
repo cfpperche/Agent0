@@ -8,11 +8,39 @@ paths:
 
 # Typecheck advisory
 
-The post-edit validator (`.agent0/validators/run.sh`) detects typecheck primitive availability per JS branch and emits a non-blocking `typecheck-advisory:` line on stderr when the consumer project has neither — instead of hard-failing the pipeline by trying `<runner> run typecheck` against a missing script. Mirrors the lint-validator's manifest-as-intent posture: declared = run, missing = advise, neither = skip. Surfaced via dogfood where every sub-agent edit was hard-failing the validator on a fresh consumer project without typecheck infrastructure.
+The post-edit validator (`.agent0/validators/run.sh`) first looks for a repo-local declarative contract at `.agent0/validator.json`. When present, that file is the validation source of truth: the harness executes the commands the project declares under `commands.test`, `commands.typecheck`, `commands.lint`, `commands.build`, and `commands.ui` in that order. This is the recommended path for real projects, especially monorepos: Agent0 provides the quality direction, while the consumer project owns its stack-specific commands.
+
+When `.agent0/validator.json` is absent, the validator falls back to legacy stack detection. In that fallback path, it detects typecheck primitive availability per JS branch and emits a non-blocking `typecheck-advisory:` line on stderr when the consumer project has neither — instead of hard-failing the pipeline by trying `<runner> run typecheck` against a missing script. Mirrors the lint-validator's manifest-as-intent posture: declared = run, missing = advise, neither = skip. Surfaced via dogfood where every sub-agent edit was hard-failing the validator on a fresh consumer project without typecheck infrastructure.
 
 The pnpm branch applies the same root-manifest discipline to tests: it runs `pnpm test` only when the root `package.json` declares `scripts.test`. If a pnpm monorepo has package/app-specific test scripts but no root test script, the validator omits the test step and emits `test-advisory:` instead of failing on an implicit `pnpm test`.
 
 ## What fires per branch
+
+### Declarative contract
+
+Example `.agent0/validator.json`:
+
+```json
+{
+  "commands": {
+    "test": "pnpm --filter @cognix/web test:unit",
+    "typecheck": "pnpm --filter @cognix/web typecheck",
+    "lint": "pnpm --filter @cognix/web lint",
+    "build": "pnpm --filter @cognix/web build",
+    "ui": "pnpm --filter @cognix/web test:e2e:ui"
+  }
+}
+```
+
+Rules:
+
+- `.commands` must be an object.
+- Command values must be non-empty single-line strings.
+- Missing command categories are allowed in v1; the project owns which gates are proportional to the current change.
+- If `.agent0/validator.json` exists but is malformed or declares no runnable commands, the validator returns JSON `ok:false` and emits `validator-config-advisory:`. It does not fall back to guessed stack commands.
+- `.agent0/validator.json` is consumer-owned. Agent0 does not ship a managed copy; each project declares its own commands.
+
+### Legacy stack fallback
 
 Each JS branch picks the typecheck step based on what's available in the consumer project. State dispatch:
 

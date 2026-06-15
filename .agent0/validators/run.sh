@@ -23,6 +23,16 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
+emit_config_error() {
+  local msg="$1"
+  printf 'validator-config-advisory: %s\n' "$msg" >&2
+  jq -n \
+    --arg command ".agent0/validator.json" \
+    --arg stderr "$msg" \
+    '{ok:false,command:$command,exit:1,duration_ms:0,stdout:"",stderr:$stderr}'
+  exit 0
+}
+
 # --- spec-verify advisory (spec 177) ---------------------------------
 # Opt-in, non-blocking: a SHIPPED spec that DECLARES a `**Verify:**` command in
 # its tasks.md but whose notes.md has no PASSING latest record gets exactly one
@@ -161,6 +171,38 @@ has_test_script() {
   [ -f "package.json" ] && jq -e '.scripts.test // empty' package.json >/dev/null 2>&1
 }
 
+validator_config=".agent0/validator.json"
+if [ -f "$validator_config" ]; then
+  stack="declared"
+  stack_subtype="validator-json"
+
+  if ! jq -e 'type == "object" and (.commands | type == "object")' "$validator_config" >/dev/null 2>&1; then
+    emit_config_error ".agent0/validator.json must be an object with a commands object"
+  fi
+
+  invalid_command_keys="$(
+    jq -r '
+      .commands
+      | to_entries[]
+      | select((.value | type) != "string" or (.value | test("\n")) or ((.value | gsub("[[:space:]]"; "")) | length) == 0)
+      | .key
+    ' "$validator_config" 2>/dev/null
+  )"
+  if [ -n "$invalid_command_keys" ]; then
+    emit_config_error ".agent0/validator.json commands must be non-empty single-line strings (invalid: $(printf '%s' "$invalid_command_keys" | paste -sd ',' -))"
+  fi
+
+  for validator_step in test typecheck lint build ui; do
+    validator_cmd="$(jq -r --arg key "$validator_step" '.commands[$key] // empty' "$validator_config")"
+    [ -n "$validator_cmd" ] || continue
+    append_command_step "$validator_cmd"
+  done
+
+  if [ -z "$command_str" ]; then
+    emit_config_error ".agent0/validator.json declares no runnable commands under commands.{test,typecheck,lint,build,ui}"
+  fi
+fi
+
 # Laravel canonical check — runs BEFORE the JS branch because Laravel 11+
 # ships package.json (Vite frontend) by default, which would otherwise hijack
 # detection. When BOTH `artisan` and `composer.json` declaring `laravel/framework`
@@ -169,14 +211,14 @@ has_test_script() {
 # Surfaced via Acme Yard dogfood 2026-05-18: vanilla `composer create-project
 # laravel/laravel` includes package.json + composer.json; pre-fix routed to npm
 # and `package.json scripts.test` missing → exit 1.
-if [ -f "artisan" ] && [ -f "composer.json" ] && jq -e '(.require["laravel/framework"] // .["require-dev"]["laravel/framework"]) // empty' composer.json >/dev/null 2>&1; then
+if [ -z "$stack" ] && [ -f "artisan" ] && [ -f "composer.json" ] && jq -e '(.require["laravel/framework"] // .["require-dev"]["laravel/framework"]) // empty' composer.json >/dev/null 2>&1; then
   stack="php"
   if jq -e '(.["require-dev"]["pestphp/pest"] // .require["pestphp/pest"]) // empty' composer.json >/dev/null 2>&1; then
     command_str='vendor/bin/pest --colors=never'
   else
     command_str='vendor/bin/phpunit --colors=never'
   fi
-elif [ -f "bun.lockb" ] || [ -f "bun.lock" ] || [ -f "bunfig.toml" ]; then
+elif [ -z "$stack" ] && { [ -f "bun.lockb" ] || [ -f "bun.lock" ] || [ -f "bunfig.toml" ]; }; then
   stack="js"
   stack_subtype="bun"
   if [ -f "tsconfig.json" ]; then
@@ -187,7 +229,7 @@ elif [ -f "bun.lockb" ] || [ -f "bun.lock" ] || [ -f "bunfig.toml" ]; then
     command_str='bun test'
     typecheck_advisory_msg="typecheck-advisory: no tsconfig.json or 'typecheck' script in package.json — typecheck step skipped (add a tsconfig.json or declare \`bun run typecheck\` to enable)"
   fi
-elif [ -f "pnpm-lock.yaml" ]; then
+elif [ -z "$stack" ] && [ -f "pnpm-lock.yaml" ]; then
   stack="js"
   stack_subtype="pnpm"
   if has_test_script; then
@@ -202,7 +244,7 @@ elif [ -f "pnpm-lock.yaml" ]; then
   else
     typecheck_advisory_msg="typecheck-advisory: no tsconfig.json or 'typecheck' script in package.json — typecheck step skipped (add a tsconfig.json or declare \`pnpm typecheck\` to enable)"
   fi
-elif [ -f "package-lock.json" ] || [ -f "package.json" ]; then
+elif [ -z "$stack" ] && { [ -f "package-lock.json" ] || [ -f "package.json" ]; }; then
   stack="js"
   stack_subtype="npm"
   # npm path is conservative: rely on declared `typecheck` script rather than
@@ -216,7 +258,7 @@ elif [ -f "package-lock.json" ] || [ -f "package.json" ]; then
     command_str='npm test --silent'
     typecheck_advisory_msg="typecheck-advisory: no 'typecheck' script in package.json — typecheck step skipped (declare \`npm run typecheck\` to enable)"
   fi
-elif [ -f "pyproject.toml" ] || [ -f "requirements.txt" ]; then
+elif [ -z "$stack" ] && { [ -f "pyproject.toml" ] || [ -f "requirements.txt" ]; }; then
   stack="python"
   # Detect venv-style project managers (first lockfile match wins). Falls back
   # to bare `python` when no wrapper is found, preserving system-Python behavior.
@@ -232,13 +274,13 @@ elif [ -f "pyproject.toml" ] || [ -f "requirements.txt" ]; then
   # Brace group localises `|| true` to the mypy step; the prior shape
   # (`pytest && mypy || true`) collapsed pytest failures into exit 0.
   command_str="$py_prefix -m pytest -q && { $py_prefix -m mypy . || true; }"
-elif [ -f "go.mod" ]; then
+elif [ -z "$stack" ] && [ -f "go.mod" ]; then
   stack="go"
   command_str='go test ./... && go vet ./...'
-elif [ -f "Cargo.toml" ]; then
+elif [ -z "$stack" ] && [ -f "Cargo.toml" ]; then
   stack="rust"
   command_str='cargo test --quiet && cargo clippy -q -- -D warnings'
-elif [ -f "composer.json" ]; then
+elif [ -z "$stack" ] && [ -f "composer.json" ]; then
   stack="php"
   # Detect Pest vs PHPUnit via composer.json deps. Pest depends on PHPUnit so
   # checking pestphp/pest first is correct precedence. Default to phpunit when

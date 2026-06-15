@@ -133,6 +133,10 @@ External-MCP server blocks (Playwright, Chrome DevTools, DBHub, Laravel Boost, N
 
 `.agent0/tools/sync-harness.sh` brings a consumer project's harness up to date with Agent0 via 3-way baseline reconciliation against `.agent0/harness-sync-baseline.json` — stale files auto-update, consumer-customized files refuse without `--force`, never touches product code. See `.agent0/context/rules/harness-sync.md`.
 
+## Public-surface hygiene
+
+Agent0 is a public repo + distributed harness — its tracked artifacts (shipped rules/skills/tools + `CLAUDE.md`/`AGENTS.md` + `docs/specs/**`, `.agent0/memory/**`, `HANDOFF.md`) never name a consumer/client project, embed a private `/home/<user>` path, or carry operator-private commercial strategy; refer to consumers generically ("a real consumer project"). "founder" is overloaded — replace by meaning, never repo-wide. Forward-only (benign history accepted). See `.agent0/context/rules/public-surface-hygiene.md`.
+
 ## Lint validator
 
 The post-edit validator runs the project's idiomatic linter — Biome (JS/TS), Ruff (Python), Pint + PHPStan/Larastan (PHP) — when the manifest declares it; missing-but-declared emits a non-blocking `lint-advisory:`. See `.agent0/context/rules/lint-validator.md`.

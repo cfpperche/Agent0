@@ -18,7 +18,7 @@ The pnpm branch applies the same root-manifest discipline to tests: it runs `pnp
 
 ### Declarative contract
 
-Example `.agent0/validator.json`:
+Compact `.agent0/validator.json` shape for common gates:
 
 ```json
 {
@@ -32,11 +32,25 @@ Example `.agent0/validator.json`:
 }
 ```
 
+Ordered shape for consumer-specific gates outside Agent0's common category names:
+
+```json
+{
+  "commands": [
+    { "name": "test:unit", "run": "pnpm --filter @cognix/web test:unit" },
+    { "name": "db:rls", "run": "pnpm --filter @cognix/web test:e2e:rls" },
+    { "name": "ui:projects", "run": "pnpm --filter @cognix/web test:e2e:ui -- projects-section-nav.spec.ts" },
+    { "name": "build:web", "run": "pnpm --filter @cognix/web build" }
+  ]
+}
+```
+
 Rules:
 
-- `.commands` must be an object.
-- Command values must be non-empty single-line strings.
-- Missing command categories are allowed in v1; the project owns which gates are proportional to the current change.
+- `.commands` may be an object of name→command strings or an ordered array of `{ "name": "...", "run": "..." }` entries.
+- Command strings must be non-empty single-line strings.
+- Missing common categories are allowed in v1; the project owns which gates are proportional to the current change.
+- Custom command names are allowed and expected for project-specific gates (`db:rls`, `fixtures`, `ui:<surface>`, `seed:demo`, etc.).
 - If `.agent0/validator.json` exists but is malformed or declares no runnable commands, the validator returns JSON `ok:false` and emits `validator-config-advisory:`. It does not fall back to guessed stack commands.
 - `.agent0/validator.json` is consumer-owned. Agent0 does not ship a managed copy; each project declares its own commands.
 

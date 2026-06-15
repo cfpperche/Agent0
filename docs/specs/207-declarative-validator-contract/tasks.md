@@ -15,6 +15,7 @@ _Generated from `plan.md` on 2026-06-15. Work top-to-bottom. Check boxes as task
 - [x] Pnpm monorepo package-scoped commands run without implicit `pnpm test`.
 - [x] Malformed/empty `.agent0/validator.json` fails clearly instead of falling back.
 - [x] Existing pnpm fallback tests still pass when no declarative file exists.
+- [x] Ordered array contracts support consumer-specific validator names outside common categories.
 
 ## Notes
 

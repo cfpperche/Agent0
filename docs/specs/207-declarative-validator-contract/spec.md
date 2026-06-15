@@ -3,7 +3,7 @@
 _Created 2026-06-15._
 
 **Status:** shipped
-**Closure:** 2026-06-15 — implemented declarative `.agent0/validator.json` precedence in `.agent0/validators/run.sh`; validation PASS: validator-contract, validator-js-test-script, typecheck-advisory, lint-validator; `bash -n .agent0/validators/run.sh`; `bash .agent0/validators/run.sh` ok:true/no-stack-detected; doctor 25 ok.
+**Closure:** 2026-06-15 — implemented declarative `.agent0/validator.json` precedence in `.agent0/validators/run.sh`; supports common object commands and ordered custom command arrays; validation PASS: validator-contract, validator-js-test-script, typecheck-advisory, lint-validator; `bash -n .agent0/validators/run.sh`; `bash .agent0/validators/run.sh` ok:true/no-stack-detected; doctor 25 ok.
 **UI impact:** none
 
 ## Intent
@@ -31,6 +31,11 @@ Agent0's validator should express the harness quality direction without pretendi
   - **Given** a project without `.agent0/validator.json`
   - **When** the validator runs
   - **Then** existing stack fallback behavior continues, including the just-added pnpm missing-root-test advisory
+
+- [x] **Scenario: consumer-specific validators**
+  - **Given** a project needs validation gates outside Agent0's common names, such as `db:rls` or `ui:projects`
+  - **When** it declares `.agent0/validator.json` as an ordered command array
+  - **Then** the validator executes those custom commands in the declared order
 
 - [x] `.agent0/context/rules/typecheck-advisory.md` or a validator rule document explains that the recommended path is declaring project-local validator commands, while stack detection is compatibility fallback.
 

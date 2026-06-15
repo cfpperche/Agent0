@@ -176,30 +176,75 @@ if [ -f "$validator_config" ]; then
   stack="declared"
   stack_subtype="validator-json"
 
-  if ! jq -e 'type == "object" and (.commands | type == "object")' "$validator_config" >/dev/null 2>&1; then
-    emit_config_error ".agent0/validator.json must be an object with a commands object"
+  if ! jq -e 'type == "object" and ((.commands | type) == "object" or (.commands | type) == "array")' "$validator_config" >/dev/null 2>&1; then
+    emit_config_error ".agent0/validator.json must be an object with commands as an object or ordered array"
   fi
 
-  invalid_command_keys="$(
-    jq -r '
-      .commands
-      | to_entries[]
-      | select((.value | type) != "string" or (.value | test("\n")) or ((.value | gsub("[[:space:]]"; "")) | length) == 0)
-      | .key
-    ' "$validator_config" 2>/dev/null
-  )"
-  if [ -n "$invalid_command_keys" ]; then
-    emit_config_error ".agent0/validator.json commands must be non-empty single-line strings (invalid: $(printf '%s' "$invalid_command_keys" | paste -sd ',' -))"
-  fi
+  commands_type="$(jq -r '.commands | type' "$validator_config")"
+  if [ "$commands_type" = "array" ]; then
+    invalid_command_keys="$(
+      jq -r '
+        .commands
+        | to_entries[]
+        | select(
+            (.value | type) != "object"
+            or (.value.name | type) != "string"
+            or ((.value.name | gsub("[[:space:]]"; "")) | length) == 0
+            or (.value.run | type) != "string"
+            or (.value.run | test("\n"))
+            or ((.value.run | gsub("[[:space:]]"; "")) | length) == 0
+          )
+        | tostring
+      ' "$validator_config" 2>/dev/null
+    )"
+    if [ -n "$invalid_command_keys" ]; then
+      emit_config_error ".agent0/validator.json commands array entries must be objects with non-empty name and single-line run strings (invalid indexes: $(printf '%s' "$invalid_command_keys" | paste -sd ',' -))"
+    fi
 
-  for validator_step in test typecheck lint build ui; do
-    validator_cmd="$(jq -r --arg key "$validator_step" '.commands[$key] // empty' "$validator_config")"
-    [ -n "$validator_cmd" ] || continue
-    append_command_step "$validator_cmd"
-  done
+    old_ifs="$IFS"
+    IFS='
+'
+    for validator_cmd in $(jq -r '.commands[].run' "$validator_config"); do
+      append_command_step "$validator_cmd"
+    done
+    IFS="$old_ifs"
+  else
+    invalid_command_keys="$(
+      jq -r '
+        .commands
+        | to_entries[]
+        | select((.value | type) != "string" or (.value | test("\n")) or ((.value | gsub("[[:space:]]"; "")) | length) == 0)
+        | .key
+      ' "$validator_config" 2>/dev/null
+    )"
+    if [ -n "$invalid_command_keys" ]; then
+      emit_config_error ".agent0/validator.json command values must be non-empty single-line strings (invalid: $(printf '%s' "$invalid_command_keys" | paste -sd ',' -))"
+    fi
+
+    for validator_step in test typecheck lint build ui; do
+      validator_cmd="$(jq -r --arg key "$validator_step" '.commands[$key] // empty' "$validator_config")"
+      [ -n "$validator_cmd" ] || continue
+      append_command_step "$validator_cmd"
+    done
+
+    old_ifs="$IFS"
+    IFS='
+'
+    for validator_cmd in $(
+      jq -r '
+        .commands
+        | to_entries[]
+        | select(["test","typecheck","lint","build","ui"] | index(.key) | not)
+        | .value
+      ' "$validator_config"
+    ); do
+      append_command_step "$validator_cmd"
+    done
+    IFS="$old_ifs"
+  fi
 
   if [ -z "$command_str" ]; then
-    emit_config_error ".agent0/validator.json declares no runnable commands under commands.{test,typecheck,lint,build,ui}"
+    emit_config_error ".agent0/validator.json declares no runnable commands"
   fi
 fi
 

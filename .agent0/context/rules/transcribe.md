@@ -17,7 +17,7 @@ The defining decision: `/transcribe` is **deliberately NOT** in the `/image`/`/v
 
 whisper.cpp runs **on-device**. The **audio/video content never leaves the machine** — the manifest records `stayed_local: true` for the content. The *only* network egress is the **one-time model-weights fetch** (from the whisper.cpp model host). Frame it that way; never overclaim "nothing touches the network".
 
-## Maximally-invisible acquisition (founder directive)
+## Maximally-invisible acquisition (maintainer directive)
 
 Acquisition and operation are as automated and invisible as possible — `/transcribe call.mp3` just works on first run, acquiring the engine + the default `base` (multilingual, ~142 MiB) model itself. The acquisition is a deterministic ladder (macOS/Linux-first; Windows-native is best-effort, not the auto path):
 

@@ -59,7 +59,7 @@ On any `unavailable:*`, explicit commands (`run`/`audit`/`adopt`) **fail closed*
 4. **Auth wall** (a `402`/`401`/`403`, a login redirect, or a no-JS stub from a prior fetch — see § The discipline) → first reuse saved `state/<host>.json` via `agent-browser` if it exists; only if there is no state do you emit the existing bounded signal `BROWSER_LOGIN_REQUIRED: <host>` → `browser-login.sh` / `adopt` (§ Human-in-the-loop auth). That is the sanctioned human handoff — a specific host login, **not** "do the whole task for me".
 5. **Turnstile / CAPTCHA / 2FA / payment / irreversible action** → this is a legitimate human-only step, but only once you have **observed the blocker in the browser** — never inferred it from the theoretical presence of the widget. Then hand off only the blocked sub-step.
 
-**Anti-overcorrection — this is NOT "never delegate to the human".** Some handoffs are correct (the cognixse Turnstile *managed* challenge genuinely blocks automation). The bug was reaching that conclusion *speculatively, first*. The corrective shape of a legitimate handoff carries the attempt + the evidence + the minimal ask, e.g.:
+**Anti-overcorrection — this is NOT "never delegate to the human".** Some handoffs are correct (a *managed* Turnstile/CAPTCHA challenge genuinely blocks automation). The bug was reaching that conclusion *speculatively, first*. The corrective shape of a legitimate handoff carries the attempt + the evidence + the minimal ask, e.g.:
 
 > _"Carreguei o form com `agent-browser`, preenchi e tentei submeter; o Turnstile managed bloqueou a submissão automatizada (observado). Preciso só do **submit humano** — eu confirmo o lead via `supabase db query --linked` / backoffice depois."_
 

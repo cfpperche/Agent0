@@ -11,7 +11,7 @@ paths:
 
 ## Why it exists (the demand)
 
-Structural pull, honestly stated. **In-repo consumer:** `/product` emits `system-design`/`sitemap-IA`/`OST` as prose with no diagrams, and SDD specs want architecture diagrams. **Principal value (founder framing):** via consumer products — especially **cognixse, which serves software-development companies that ship diagrams as product artifacts** (mei-saas benefits too) — a product lever across a vertical, not just internal tooling. **Minority report (preserved):** there is no *measured* consumer request yet, only structural pull — so consumer harness-sync is gated on a v1 dogfood proving the asset path against real artifacts.
+Structural pull, honestly stated. **In-repo consumer:** `/product` emits `system-design`/`sitemap-IA`/`OST` as prose with no diagrams, and SDD specs want architecture diagrams. **Downstream value:** a consumer product in a diagram-heavy vertical could ship diagrams as product artifacts — a product lever, not just internal tooling. **Minority report (preserved):** there is no *measured* consumer request yet, only structural pull — so consumer harness-sync is gated on a v1 dogfood proving the asset path against real artifacts.
 
 ## Mermaid-only v1 (the source language)
 

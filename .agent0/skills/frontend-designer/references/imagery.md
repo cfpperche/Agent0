@@ -30,7 +30,7 @@ Safest patterns:
   (CSS does NOT fall back after a 404 on a single `url()`; the neutral must be its own layer.)
 - **Real `<img>` when required:** `src` defaults to a **tracked neutral asset**; the draft path comes from ignored/local config, with `onerror` swapping back to the neutral. Never a committed literal `src="assets/generated/mockups/…"`.
 
-## Degradation ladder (founder directive — pre-check AND call-time)
+## Degradation ladder (maintainer directive — pre-check AND call-time)
 
 1. **Off (default):** existing asset → tracked neutral placeholder.
 2. **Opt-in → cheap pre-check:** `/image` helper exists, `FAL_KEY` set, shell tools present. If not → neutral, done.

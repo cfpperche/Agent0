@@ -6,7 +6,7 @@
 - **`.agent0/reminders.yaml`** — *one-shot deferred do-this-thing* items with no cadence.
 - **`.agent0/routines/<slug>.md`** — *cadence-driven recurring* work that the repo's contributors all benefit from.
 
-The capacity exists because recurring project work otherwise leaks into the founder's head, a personal calendar, or `TODO` comments in code — all of which fail the "another developer cloning the repo on a fresh machine should inherit it" test. Routines pass that test by construction.
+The capacity exists because recurring project work otherwise leaks into the maintainer's head, a personal calendar, or `TODO` comments in code — all of which fail the "another developer cloning the repo on a fresh machine should inherit it" test. Routines pass that test by construction.
 
 ## When to use vs `/remind` vs `/schedule`
 

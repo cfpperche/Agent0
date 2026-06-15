@@ -12,7 +12,7 @@ paths:
 
 ## Two local engines (free, on-device) — asymmetric acquisition
 
-Dual-shape vuln-audit/transcribe: skill `/audio` + runtime-neutral `.agent0/tools/audio.sh` (Codex/CI call it directly). Two engines are first-class co-defaults; the founder chose breadth over one-default-one-documented (accepted cost: double the acquisition/voice/test surface):
+Dual-shape vuln-audit/transcribe: skill `/audio` + runtime-neutral `.agent0/tools/audio.sh` (Codex/CI call it directly). Two engines are first-class co-defaults; the maintainer chose breadth over one-default-one-documented (accepted cost: double the acquisition/voice/test surface):
 
 - **Kokoro** — zero-`--engine` default. Multilingual incl. **pt-BR**, Apache-2.0 weights, grade-A voices, best quality. BUT the official package is a **library, not a CLI**, and phonemization needs **espeak-ng — a system binary** `uvx` cannot install. So it is invoked via a tiny **first-party shim** `.agent0/tools/audio-kokoro.py` (run through `uvx --with kokoro --with soundfile python …`), and when `espeak-ng` is absent the lane degrades to a one-line `apt-get/brew install espeak-ng` hint (status `unavailable`), never a crash. **This is the headline acquisition risk** — Kokoro is the *quality* default but the *less* invisible one.
 - **Piper** (`--engine piper`) — `pip install piper-tts` ships a native `piper` CLI and **embeds phonemization**; voices are self-contained ONNX from HF `rhasspy/piper`. Fully `uvx`-able. The **more self-contained fallback** — recommend it whenever Kokoro's espeak-ng dep can't be met.

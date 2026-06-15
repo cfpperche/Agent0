@@ -168,7 +168,7 @@ Three scale-handling surfaces let the bucket operate at 100-500 entries without 
 
 ### 1. Index-line cap
 
-`memory-project.sh` checks each projected `MEMORY.md` line against `cap.max_line_chars` (default 250) read from `.agent0/memory.config.json`. Overflow emits a `memory-cap-advisory: <file> projects to <N> chars (cap <M>) — shorten description` line to stderr; the bullet is still written (no auto-truncation — the cap is a writing discipline, not a silent edit). The advisory surfaces every projection until the founder shortens the entry's `description:` frontmatter.
+`memory-project.sh` checks each projected `MEMORY.md` line against `cap.max_line_chars` (default 250) read from `.agent0/memory.config.json`. Overflow emits a `memory-cap-advisory: <file> projects to <N> chars (cap <M>) — shorten description` line to stderr; the bullet is still written (no auto-truncation — the cap is a writing discipline, not a silent edit). The advisory surfaces every projection until the maintainer shortens the entry's `description:` frontmatter.
 
 ### 2. `memory-query.sh`
 
@@ -189,7 +189,7 @@ score = (today − last_accessed_or_created_at).days − confirmed_count × conf
 
 Entries with `score > threshold_days` are listed as stale. Defaults: `threshold_days = 60`, `confirm_boost_days = 14` (each confirm discounts ~2 weeks from the staleness clock). The `.agent0/hooks/memory-decay-readout.sh` SessionStart hook fires `memory-query.sh decay --readout` every session — always-fire with `(no stale entries)` empty-case keeps the capacity discoverable.
 
-The engine never auto-archives, auto-deletes, or otherwise mutates entry files. Decay is observation, not removal — the founder (or agent) decides whether to `confirm`, manually edit, or move the entry. Auto-archive is rejected by design: staleness is a re-validation cadence question (some useful entries need re-confirming twice a year), not a wrongness signal.
+The engine never auto-archives, auto-deletes, or otherwise mutates entry files. Decay is observation, not removal — the maintainer (or agent) decides whether to `confirm`, manually edit, or move the entry. Auto-archive is rejected by design: staleness is a re-validation cadence question (some useful entries need re-confirming twice a year), not a wrongness signal.
 
 ### Config — `.agent0/memory.config.json`
 
@@ -205,7 +205,7 @@ Shipped as a starter template. Consumer projects override values directly. Missi
 ### Gotchas
 
 - **`confirm` writes via Python, NOT via the Edit/Write tool surface.** The `PostToolUse` memory-events-journal hook (which captures `Edit`/`Write`/`MultiEdit` invocations) does NOT fire on confirms. The audit trail for confirms lives in `git log <entry-file>`. If you need journal events on confirms in your consumer project, extend the Python helper to append a JSONL line directly.
-- **`last_accessed` is honest only after the founder uses `confirm`.** Backfilled values for legacy entries (those predating the metadata extension) default to "today at backfill time" (no honest read signal pre-extension). Decay won't surface anyone for ~60 days after backfill unless the founder confirms (and thus moves the timestamp) some entries first.
+- **`last_accessed` is honest only after the maintainer uses `confirm`.** Backfilled values for legacy entries (those predating the metadata extension) default to "today at backfill time" (no honest read signal pre-extension). Decay won't surface anyone for ~60 days after backfill unless the maintainer confirms (and thus moves the timestamp) some entries first.
 - **Cap counts the projected bullet length, not the raw description.** The check is on `- [<name>](<slug>.md) — <description>` after assembly. Tightening `name` (rare) is one lever; the usual fix is shortening `description`.
 - **Folded YAML strings in the entries can confuse non-Python tooling.** PyYAML's `safe_dump` folds long values across lines for readability. The Python helper handles this; the degraded awk projection path in `memory-project.sh` (used when python3+yaml absent) emits a `memory-project-advisory:` warning and may truncate folded descriptions at the first line. Consumer projects without PyYAML get a degraded but still-functional projection.
 

@@ -2,7 +2,7 @@
 
 When **any change** produces UI — whether or not it carries a spec or a delegated task — "done" must be provable by **driving the UI**, not by static code review — an agent can otherwise claim a screen works without ever loading it. The proof is **a green UI test** (the project's idiomatic e2e/runner) that covers the changed surface. The obligation is independent of SDD: a UI tweak that correctly *skips* a spec (see `spec-driven.md` § When to skip) still owes a green UI test, with the run recorded outside a spec — in the PR body, CI, or the session handoff.
 
-This rule **retires the visual contract** (spec 155 → superseded by spec 206). Agent0 no longer ships an acceptance-artifact generator: there is no `visual-contract.json` fixture, no `agent-browser verify-contract`, and no committed `agent-browser/` evidence bundle. Field evidence (the `cognixse` consumer) showed the bundle was a strict, frozen subset of the project's own e2e suite that already ran in CI — ~80% of the e2e authoring cost for ~20% of the value, plus a maintenance surface Agent0 carried. The proof of built UI belongs in a **living test**, not a frozen snapshot.
+This rule **retires the visual contract** (spec 155 → superseded by spec 206). Agent0 no longer ships an acceptance-artifact generator: there is no `visual-contract.json` fixture, no `agent-browser verify-contract`, and no committed `agent-browser/` evidence bundle. Field evidence from a real consumer project showed the bundle was a strict, frozen subset of the project's own e2e suite that already ran in CI — ~80% of the e2e authoring cost for ~20% of the value, plus a maintenance surface Agent0 carried. The proof of built UI belongs in a **living test**, not a frozen snapshot.
 
 ## The acceptance rule
 

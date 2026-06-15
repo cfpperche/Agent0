@@ -251,6 +251,11 @@ COPY_CHECK_EXCLUDE=(
   # that keeps a non-git source's degraded find() from re-leaking the cache.
   # See spec 144 (sync-harness-gitignore-aware-walk).
   "*/runtime/od-sync/extracted-*"
+  # OD-sync daily/apply reports (spec 206 hygiene): Agent0-internal audit logs,
+  # now untracked + gitignored. The git-aware walk already drops them (untracked);
+  # this is the always-applied backstop for a non-git (tarball) source. Consumers
+  # get OD content via the OD engine, never these logs.
+  "*/runtime/od-sync/*.md"
 )
 
 # Seed files: ship-once, never-reconcile (spec 156). These are git-tracked in

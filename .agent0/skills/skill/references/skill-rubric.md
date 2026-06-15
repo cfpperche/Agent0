@@ -141,5 +141,5 @@ Forks of Agent0 inherit `check-rubric.sh` via `sync-harness.sh` (it's under `.cl
 - `.claude/skills/skill/SKILL.md` § *Subcommand: audit* — invocation site
 - `.claude/skills/skill/references/spec-snapshot.md` — agentskills.io frontmatter spec (orthogonal — frontmatter, not body)
 - `.agent0/context/rules/artifact-budgets.md` § *Anti-stub floor* — same anti-stub discipline that motivates "author writes annotations manually; no auto-generation"
-- `/home/goat/anthill/.claude/skills/anthill-codebase-review/SKILL.md` — primary reference for both conventions (10 annotations, 3 eval scenarios)
+- a mature external codebase-review skill (10 annotations, 3 eval scenarios) — the reference that established both conventions
 - `docs/specs/087-skill-rubric-freedom-evals/` — origin spec for this discipline

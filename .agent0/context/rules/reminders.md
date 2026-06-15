@@ -1,12 +1,12 @@
 # Reminders
 
-`.agent0/reminders.yaml` is a structured YAML list of *action-shaped future items* that the agent or founder doesn't want to lose but doesn't want to do now. It occupies the gap between two other state files in this project:
+`.agent0/reminders.yaml` is a structured YAML list of *action-shaped future items* that the agent or maintainer doesn't want to lose but doesn't want to do now. It occupies the gap between two other state files in this project:
 
 - **`.agent0/HANDOFF.md`** — *in-flight* work-state (cross-session handoff).
 - **`~/.claude/projects/.../memory/MEMORY.md`** — *durable knowledge* (facts, preferences, decisions).
 - **`.agent0/reminders.yaml`** — *deferred do-this-thing* items, neither urgent enough to start now nor durable enough to count as knowledge.
 
-The capacity exists because deferred intent otherwise leaks into chat scrollback (lost on `/clear` or compaction), `TODO` comments in code (rot with the file, invisible across the repo), or the founder's head (lossy).
+The capacity exists because deferred intent otherwise leaks into chat scrollback (lost on `/clear` or compaction), `TODO` comments in code (rot with the file, invisible across the repo), or the maintainer's head (lossy).
 
 An earlier format used plain-bullet markdown at `.claude/REMINDERS.md`. The current structured YAML form ships the *mechanism* (typed entries, `check_command`, `snooze`, soft-delete) without the heavier policies adjacent capacities sometimes carry (no JSON Schema corpus, no autonomous check execution, no links-graph traversal).
 
@@ -72,7 +72,7 @@ The helper validates required fields and enums at write-time. Schema does NOT li
 
 ## Discipline
 
-- **No auto-stage, no auto-commit.** `add` / `done` / `snooze` / `dismiss` leave the file dirty in the working tree. The founder reviews `git diff` before history is written.
+- **No auto-stage, no auto-commit.** `add` / `done` / `snooze` / `dismiss` leave the file dirty in the working tree. The maintainer reviews `git diff` before history is written.
 - **Soft-delete is the default.** `/remind done <id>` flips `status: done` and stamps `completed_ts`. The entry stays in `reminders.yaml` so the audit history is in-band (no need to `git log -- .agent0/reminders.yaml` to recover what was dismissed). Trade-off: monotonic file growth. A `/remind prune` subcommand is deferred until growth becomes real friction (rule-of-three demand test).
 - **`check_command` is never autonomous.** The readout hook surfaces `check_command` text inline but never runs it. Execution happens only via explicit `/remind check <id>`, which prints the command's stdout/stderr/exit-code to the agent and leaves the YAML untouched. The human-in-loop decides next action. This preserves the contract-not-promise discipline; see `.agent0/context/rules/delegation.md` § Why DONE_WHEN exists.
 - **Positions are not stable IDs.** Pattern is "list, then act on the position you see right now". Stable IDs (`r-YYYY-MM-DD-<slug>`) are the canonical identifier in storage; positions are a UX convenience that resolves to IDs at command time. The skill body always logs the resolved ID in its report so the user can confirm.

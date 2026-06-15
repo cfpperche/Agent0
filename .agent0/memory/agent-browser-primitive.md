@@ -5,7 +5,7 @@ metadata:
   type: project
 ---
 
-Spec 152 (`browser-primitive-consolidation`) adopted `agent-browser` (vercel-labs native-Rust CLI) as Agent0's **primary, runtime-neutral browser primitive**, wrapped by `.agent0/tools/agent-browser.sh` (caps/route/run/verify-contract/reset/audit). Playwright + Chrome DevTools MCP (`browser-auth.md`) are a **permanent fallback** (founder decision — never deleted; also the no-binary degradation path). Graduated from the accepted meeting `agent-browser-visual-inspection` (2026-06-05, Claude↔Codex↔founder).
+Spec 152 (`browser-primitive-consolidation`) adopted `agent-browser` (vercel-labs native-Rust CLI) as Agent0's **primary, runtime-neutral browser primitive**, wrapped by `.agent0/tools/agent-browser.sh` (caps/route/run/reset/audit/adopt; `verify-contract` removed by spec 206 — UI acceptance is a green project UI test, not a browser bundle). Playwright + Chrome DevTools MCP (`browser-auth.md`) are a **permanent fallback** (founder decision — never deleted; also the no-binary degradation path). Graduated from the accepted meeting `agent-browser-visual-inspection` (2026-06-05, Claude↔Codex↔founder).
 
 **Routing rule** (the load-bearing anti-ambiguity): agent-browser is default; MCP fallback fires on exactly `fallback:{no-binary, no-chrome (AGENT0_BROWSER_NO_CHROME=1), override (AGENT0_BROWSER=mcp)}`. A missing *system* Chrome is NOT a fallback reason — agent-browser self-provides Chrome-for-Testing.
 

@@ -46,7 +46,7 @@ Security overlaps with quality but is not a child of quality. Treat it as first-
 
 The reason is failure economics, not taxonomy aesthetics:
 
-- Quality failures are usually self-inflicted regressions with continuous evidence such as tests, lint, typecheck, and visual contracts.
+- Quality failures are usually self-inflicted regressions with continuous evidence such as tests, lint, typecheck, and UI tests.
 - Security failures include adversaries, asymmetric cost, delayed discovery, and evidence that is often absence-of-finding rather than proof of safety.
 
 That difference justifies separate triggers, controls, language, and acceptance criteria.

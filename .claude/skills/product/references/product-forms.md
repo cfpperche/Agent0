@@ -64,7 +64,7 @@ The three judge-units keep their names, paths, and floors; their *content* is th
 | `bot` | every intent: triggers, slots, replies, fallback paths, PRD coverage | brand-styled killer-flow conversation threads | one user + conversation history + platform metadata |
 | `embedded` | every host touchpoint: entry points, permissions, panels, PRD coverage | brand-styled killer-flow panels in host chrome | one host account + workspace state |
 
-The SDD handoff (Phase 5) is form-neutral: the umbrella's standing constraints cite this file's row for the declared form, and the implementation-evidence visual contract (`agent-browser verify-contract`) applies wherever the built product has a drivable surface.
+The SDD handoff (Phase 5) is form-neutral: the umbrella's standing constraints cite this file's row for the declared form, and built-UI acceptance is a green project UI test (see `.agent0/context/rules/ui-acceptance.md`) wherever the built product has a drivable surface.
 
 ## Adding a form
 

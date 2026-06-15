@@ -2,7 +2,9 @@
 
 _Created 2026-06-05._
 
-**Status:** shipped
+**Status:** superseded by 206-retire-visual-contract-gate
+
+**Closure:** 2026-06-14 — the visual-contract acceptance gate is retired by spec 206 (field evidence: it duplicated the consumer's e2e suite). UI acceptance is now a green project UI test; `agent-browser` survives as a dev primitive only. The mechanism this spec shipped (`visual-contract.json` fixture, `agent-browser verify-contract`, the per-spec evidence bundle, `visual-contract.md`) is removed.
 
 **UI impact:** none
 

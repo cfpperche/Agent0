@@ -27,6 +27,14 @@ The Stop hook has two closeout branches:
 - **Dirty-work branch:** when this session has dirty own work and `.agent0/HANDOFF.md` was not updated after SessionStart, it nags once.
 - **Publish-boundary branch:** when the worktree is clean, `HEAD` moved since SessionStart, the current branch is not ahead of its upstream, and the latest commit in the session range does not touch `.agent0/HANDOFF.md`, it nags once. This catches the recurring "commit/push complete, but handoff still describes pre-push next actions" failure. It does not parse the handoff prose; it forces a final re-read/update ritual at the publish boundary.
 
+## Project scope — this handoff is for THIS workspace's project only
+
+`.agent0/HANDOFF.md` records work on the project that owns this workspace — **nothing else**. When a session works on a *different* project (a separate repo — e.g. one incubated here and later graduated to its own repo, or any sibling checkout), that work belongs in **that project's own handoff**, never here.
+
+- **One project, one handoff.** If a session switches projects mid-flight, it updates each project's handoff separately. A graduated/sibling repo (e.g. a product split out with `git filter-repo`) keeps its own `.agent0/HANDOFF.md`; do not mirror its session log here.
+- **The only cross-project lines allowed** are facts about *this* repo's own structure (e.g. "product X was incubated in `packages/` and removed when it graduated") — not the other project's running state, version ships, or dogfood log.
+- **Why this is load-bearing:** a foreign project's running-log is the single biggest source of handoff bloat and self-contradiction — it blows past the size cap (below) and forces the next session for *this* project to wade through another project's state to find its own.
+
 ## What to write in HANDOFF.md
 
 Update before ending a session that touched the repo. Use exactly these four short sections:

@@ -1,9 +1,9 @@
 ---
 name: unused-code
-description: On-demand detector for UNUSED/dead code in this project — unused files, exports, dependencies, and unreferenced members. Use when the user wants to find dead code, do code housekeeping, or check what can be removed ("find unused code", "any dead code?", "what exports are unused", "unused dependencies", "clean up the codebase"). Wraps the runtime-neutral .agent0/tools/unused-code.sh (engine - knip; JS/TS only in v1). Reports + proposes "candidate unused" items; never deletes, never gates edit/commit/install. NOT vulnerability scanning (that is the sibling /vuln-audit); NOT complexity/refactor smells (deferred). Flags - [path] --json --exit-code. See .agent0/context/rules/unused-code-audit.md.
-argument-hint: "[path] [--json] [--exit-code]"
+description: On-demand detector for UNUSED/dead code in this project — unused files, exports, dependencies, unreferenced members, and unreachable code. Use when the user wants to find dead code, do code housekeeping, or check what can be removed ("find unused code", "any dead code?", "what exports are unused", "unused dependencies", "clean up the codebase"). Wraps the runtime-neutral .agent0/tools/unused-code.sh — one engine per stack (JS/TS=knip, Python=vulture, Go=deadcode; --stack to force; polyglot repos surface unaudited_stacks). Reports + proposes "candidate unused" items; never deletes, never gates edit/commit/install. Rust/PHP deferred (their tools find unused deps, not dead code). NOT vulnerability scanning (that is the sibling /vuln-audit); NOT complexity/refactor smells (deferred). Flags - [path] --json --exit-code --stack <js|python|go>. See .agent0/context/rules/unused-code-audit.md.
+argument-hint: "[path] [--json] [--exit-code] [--stack <js|python|go>]"
 license: MIT
-compatibility: Designed for Claude Code. Core logic is the runtime-neutral bash tool `.agent0/tools/unused-code.sh` (knip + jq); the skill is a thin invocation wrapper, portable to any runtime that can run the tool. Codex CLI invokes the tool directly.
+compatibility: Designed for Claude Code. Core logic is the runtime-neutral bash tool `.agent0/tools/unused-code.sh` (knip/vulture/deadcode + jq); the skill is a thin invocation wrapper, portable to any runtime that can run the tool. Codex CLI invokes the tool directly.
 metadata:
   agent0-portability-tier: agentskills-portable
   version: "0.1"
@@ -25,21 +25,22 @@ A consumer that genuinely wants inline enforcement can declare a custom command 
    - `[path]` — directory to scan (default: repo root `.`).
    - `--json` — structured output (for wrappers/tests; shape-only, not a wire contract).
    - `--exit-code` — map result status to a non-zero exit (`findings`=1, `unconfigured`=2, `unavailable`=3, `failed`=4) for consumer-owned CI. Omit for the default advisory behavior (always exit 0).
+   - `--stack <js|python|go>` — force which stack to audit (overrides first-match). Use in polyglot repos.
 
 2. **Invoke the tool:**
    ```bash
    bash .agent0/tools/unused-code.sh $ARGUMENTS
    ```
 
-3. **Surface the result** — relay the tool's report. The first line is `status=<no-stack|clean|findings|unconfigured|unavailable|failed>`:
-   - **`clean`** — say so plainly: no unused code found *by knip*, given the project's knip config.
-   - **`findings`** — summarise per finding by kind (unused file / unused export / unused dependency / unreferenced member / other). Frame every item as a **candidate** — exports may be intentional public API, files may be loaded dynamically. **Propose** removals for the human to confirm; do NOT delete anything yourself.
-   - **`unconfigured`** — knip is installed but has no config, so it has no entry-point/boundary model and would manufacture false positives. Relay the hint to add a `knip.json`; do not run knip's bare defaults as a workaround. Offer to scaffold a minimal `knip.json` (declaring `entry` + `project`) if the user wants.
-   - **`unavailable`** — knip isn't installed. Relay the install hint; offer to proceed once installed. Do not treat this as "clean".
-   - **`no-stack`** — no JS/TS stack detected. v1 covers JS/TS via knip only; say so honestly rather than implying the project is clean.
+3. **Surface the result** — relay the tool's report. The first line is `status=<no-stack|clean|findings|unconfigured|unavailable|failed>`; the engine is one per stack (JS/TS=knip, Python=vulture, Go=deadcode):
+   - **`clean`** — say so plainly: no unused code found *by the engine* under its boundaries.
+   - **`findings`** — summarise per finding by kind (unused file / export / dependency / unreferenced member / unreachable code / other). For Python (vulture), **report the `confidence`** and note findings are heuristic. Frame every item as a **candidate** — exports may be intentional public API, code may be reached dynamically. **Propose** removals for the human to confirm; do NOT delete anything yourself.
+   - **`unconfigured`** — the engine lacks its boundary/entry model: knip with no config, or Go deadcode with no executable `main` (library-only). Relay the hint; do not work around it with bare defaults. For knip, offer to scaffold a minimal `knip.json`.
+   - **`unavailable`** — the stack's engine isn't installed. Relay the ecosystem-correct install hint; offer to proceed once installed. Do not treat this as "clean".
+   - **`no-stack`** — no supported stack (JS/TS, Python, Go) detected; say so honestly rather than implying the project is clean.
    - **`failed`** — the engine errored. Relay the diagnostic; suggest re-running the raw command.
 
-4. **Coverage caveat** — when reporting `clean`, frame it honestly: "no unused code found *by knip* under its configured boundaries", not "there is no dead code". And note v1 only covers JS/TS — other stacks are out of scope (deferred).
+4. **Polyglot + coverage caveat** — if the JSON carries `unaudited_stacks` (or the human output a "not audited" note), tell the user other stacks were detected but not audited, and offer to re-run with `--stack=<name>`. When reporting `clean`, frame it honestly: "no unused code found *by the engine* under its boundaries", not "there is no dead code". Rust/PHP are out of scope (their tools find unused deps, not dead code — deferred).
 
 ## Removal discipline
 
@@ -50,5 +51,5 @@ The capacity proposes; the human disposes. Never delete files, remove exports, o
 _Consumer-extension surface — append consumer-local bullets here. Sync flags the file as customized but the conflict region is mechanically this section._
 
 - A recurring cadence is out of scope for v1 — to run this periodically, wire `/routine` to invoke the tool (the documented deferred path; see `.agent0/context/rules/unused-code-audit.md`).
-- Suppressing individual false positives is engine-native — configure it in `knip.json` (entry points, `ignore`, plugins), not via an Agent0 marker.
-- knip configuration reference: https://knip.dev/overview/configuration
+- Suppressing individual false positives is engine-native, not an Agent0 marker — `knip.json` (entry/`ignore`/plugins) for JS/TS, a vulture whitelist or `--min-confidence` for Python, deadcode's reachability model for Go.
+- References: knip https://knip.dev/overview/configuration · vulture https://github.com/jendrikseipp/vulture · Go deadcode https://pkg.go.dev/golang.org/x/tools/cmd/deadcode

@@ -79,7 +79,7 @@ See `.agent0/context/rules/memory-placement.md` § Multi-runtime usage.
 
 ## Unused-code audit
 
-`/unused-code` (+ `.agent0/tools/unused-code.sh`) — detect UNUSED/dead code (unused files/exports/deps/members) on demand (knip, JS/TS-only v1); statuses `no-stack|clean|findings|unconfigured|unavailable|failed`, reports "candidate unused", never deletes or gates edit/commit/install — the `/vuln-audit` twin. NOT CVE scanning → `/vuln-audit`; NOT complexity/refactor smells (deferred). See `.agent0/context/rules/unused-code-audit.md`.
+`/unused-code` (+ `.agent0/tools/unused-code.sh`) — detect UNUSED/dead code (files/exports/deps/members/unreachable) on demand; one engine per stack: JS/TS=knip, Python=vulture, Go=deadcode (`--stack` to force; polyglot repos surface `unaudited_stacks`). Statuses `no-stack|clean|findings|unconfigured|unavailable|failed`, reports "candidate unused", never deletes or gates edit/commit/install — the `/vuln-audit` twin. Rust/PHP deferred (their tools find unused deps, not dead code). NOT CVE scanning → `/vuln-audit`; NOT complexity/refactor smells (deferred). See `.agent0/context/rules/unused-code-audit.md`.
 
 ## MCP recipes
 

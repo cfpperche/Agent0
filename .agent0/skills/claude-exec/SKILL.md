@@ -6,7 +6,7 @@ license: MIT
 compatibility: Compatible with agentskills.io-compatible runtimes that can run bash and have the Claude Code CLI (`claude`), `jq`, and `timeout` installed, with Claude authenticated. The helper invokes `claude` directly and writes artifacts under `.agent0/.runtime-state/claude-exec/` by default.
 metadata:
   agent0-portability-tier: agentskills-portable
-  version: "0.2"
+  version: "0.3"
 ---
 
 # /claude-exec — Claude Code CLI bridge
@@ -46,7 +46,7 @@ Supported parameters:
 - `--reasoning-effort <low|medium|high|xhigh|max>` — maps to Claude `--effort` (alias: `--effort`). Validated against the allowed set; recorded in `metadata.json` / `runs.jsonl`.
 - `--timeout <seconds>` — wall-clock limit for the Claude subprocess. Defaults to `600`; must be a positive integer. Timeout exits `124`, records `timed_out: true`, and preserves any partial artifacts.
 - `--progress-interval <seconds>` — emit a concise waiting heartbeat to stderr every N seconds while Claude is still running. Defaults to `30`; `0` disables the heartbeat, not the timeout.
-- `--max-budget-usd <amount>` — maps to Claude `--max-budget-usd`, validates obvious malformed/non-positive values, and records the configured guard in metadata. This is a native Claude budget guard, not a hard billing ceiling; Claude remains the authority for actual spend and budget-exceeded semantics.
+- `--max-budget-usd <amount>` — maps to Claude `--max-budget-usd`, validates obvious malformed/non-positive values, and records the configured guard in metadata. This is a native Claude budget guard, not a hard billing ceiling; Claude remains the authority for actual spend and budget-exceeded semantics. **Defaults to `$CLAUDE_EXEC_MAX_BUDGET_USD` or `2.00`** when omitted — pass a value (or set the env var) to override. When the guard trips, Claude returns an error result with no `.result`; the helper surfaces the `errors[]` text into `last-message.md` (e.g. `Reached maximum budget ($0.5)`), records `result_subtype`/`is_error` in metadata, and prints `result_subtype=` so a budget-exceeded run never reads as a silent death.
 - `--add-dir <dir>` — extra directory Claude may access; must resolve under the repo root.
 - `--bare` — opt-in: skip hooks/CLAUDE.md/auto-memory for a cheap isolated probe. Note: forces auth to strictly `ANTHROPIC_API_KEY` (breaks OAuth/subscription); off by default so reviews keep project context.
 - `--resume <session-id>` — continue an existing Claude session via `claude -p --resume <id>`.

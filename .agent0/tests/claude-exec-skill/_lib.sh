@@ -99,7 +99,14 @@ for arg in "$@"; do
 done
 
 sid="${FAKE_CLAUDE_SESSION:-fake-session-0001}"
-result_line=$(printf '{"type":"result","subtype":"success","is_error":false,"result":"fake claude review","session_id":"%s"}' "$sid")
+if [ -n "${FAKE_CLAUDE_ERROR_SUBTYPE:-}" ]; then
+  # Error result shape (e.g. budget exceeded): no .result field, carries
+  # is_error:true plus a human-readable errors[] array.
+  result_line=$(printf '{"type":"result","subtype":"%s","is_error":true,"errors":["%s"],"session_id":"%s"}' \
+    "$FAKE_CLAUDE_ERROR_SUBTYPE" "${FAKE_CLAUDE_ERROR_MSG:-something failed}" "$sid")
+else
+  result_line=$(printf '{"type":"result","subtype":"success","is_error":false,"result":"fake claude review","session_id":"%s"}' "$sid")
+fi
 
 if [ -n "${FAKE_CLAUDE_PARTIAL_STDOUT:-}" ]; then
   printf '%s\n' "$FAKE_CLAUDE_PARTIAL_STDOUT"

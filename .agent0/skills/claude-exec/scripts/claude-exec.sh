@@ -28,6 +28,7 @@ Options:
   --timeout <seconds>       Wall-clock limit for the Claude subprocess (default: 600).
   --progress-interval <sec> Emit waiting heartbeat to stderr every N seconds; 0 disables (default: 30).
   --max-budget-usd <amount> Forwarded to claude --max-budget-usd as a native budget guard.
+                            Defaults to $CLAUDE_EXEC_MAX_BUDGET_USD or 2.00; pass a value to override.
   --add-dir <dir>           Extra dir Claude may access; must resolve under the repo root.
   --bare                    Opt-in: skip hooks/CLAUDE.md/auto-memory (cheap isolated probe).
                             Note: forces auth to ANTHROPIC_API_KEY (breaks OAuth/subscription).
@@ -134,7 +135,7 @@ model=""
 reasoning_effort=""
 timeout_seconds="${CLAUDE_EXEC_TIMEOUT_SECONDS:-600}"
 progress_interval_seconds="${CLAUDE_EXEC_PROGRESS_INTERVAL_SECONDS:-30}"
-max_budget_usd=""
+max_budget_usd="${CLAUDE_EXEC_MAX_BUDGET_USD:-2.00}"
 add_dir=""
 bare=0
 allow_writes=0
@@ -440,9 +441,27 @@ fi
 # single-object (json) and JSONL (stream-json) forms carry a type=="result"
 # record with .result and .session_id.
 session_id=""
+result_is_error=""
+result_subtype=""
 if [ -s "$stdout_file" ]; then
   jq -r 'select(.type=="result")|.result // empty' "$stdout_file" 2>/dev/null > "$last_message" || : > "$last_message"
   session_id="$(jq -r 'select(.type=="result")|.session_id // empty' "$stdout_file" 2>/dev/null | head -n1)"
+  result_is_error="$(jq -r 'select(.type=="result")|.is_error' "$stdout_file" 2>/dev/null | grep -m1 -E '^(true|false)$' || true)"
+  result_subtype="$(jq -r 'select(.type=="result")|.subtype // empty' "$stdout_file" 2>/dev/null | head -n1)"
+  # On an error result (e.g. budget exceeded) claude emits no .result field, so
+  # last-message would be empty and the run reads as a silent death. Surface the
+  # human-readable errors[] text instead so the caller sees WHY it failed
+  # (e.g. "Reached maximum budget ($0.5)").
+  if [ "$result_is_error" = "true" ] && [ ! -s "$last_message" ]; then
+    {
+      printf 'claude-exec: run ended with an error result'
+      if [ -n "$result_subtype" ]; then
+        printf ' (subtype=%s)' "$result_subtype"
+      fi
+      printf '\n'
+      jq -r 'select(.type=="result")|.errors[]? // empty' "$stdout_file" 2>/dev/null
+    } > "$last_message"
+  fi
 fi
 if [ ! -f "$last_message" ]; then
   : > "$last_message"
@@ -468,6 +487,8 @@ fi
   printf '  "json": %s,\n' "$([ "$json" -eq 1 ] && printf true || printf false)"
   printf '  "resume_id": %s,\n' "$(json_string "$resume_id")"
   printf '  "session_id": %s,\n' "$(json_string "$session_id")"
+  printf '  "result_subtype": %s,\n' "$(json_string "$result_subtype")"
+  printf '  "is_error": %s,\n' "$([ "$result_is_error" = "true" ] && printf true || printf false)"
   printf '  "exit_code": %s,\n' "$exit_code"
   printf '  "prompt_file": %s,\n' "$(json_string "$prompt_file")"
   printf '  "last_message": %s,\n' "$(json_string "$last_message")"
@@ -492,6 +513,8 @@ fi
   printf '"json":%s,' "$([ "$json" -eq 1 ] && printf true || printf false)"
   printf '"resume_id":%s,' "$(json_string "$resume_id")"
   printf '"session_id":%s,' "$(json_string "$session_id")"
+  printf '"result_subtype":%s,' "$(json_string "$result_subtype")"
+  printf '"is_error":%s,' "$([ "$result_is_error" = "true" ] && printf true || printf false)"
   printf '"exit_code":%s,' "$exit_code"
   printf '"run_dir":%s,' "$(json_string "$run_dir")"
   printf '"last_message":%s,' "$(json_string "$last_message")"
@@ -504,6 +527,7 @@ printf 'claude-exec: exit_code=%s\n' "$exit_code"
 printf 'run_dir=%s\n' "$run_dir"
 printf 'last_message=%s\n' "$last_message"
 printf 'session_id=%s\n' "$session_id"
+printf 'result_subtype=%s\n' "$result_subtype"
 printf 'stdout_file=%s\n' "$stdout_file"
 printf 'stderr_file=%s\n' "$stderr_file"
 printf 'metadata=%s\n' "$metadata_file"

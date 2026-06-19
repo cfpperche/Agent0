@@ -94,7 +94,17 @@ test-advisory: no 'test' script in root package.json — test step skipped (decl
 - **No env-var to silence.** The advisory IS the signal; suppressing it defeats the discipline. To stop the advisory, declare a tsconfig.json or typecheck script — that's the documented path.
 - **No tsconfig-content validation.** The validator checks file presence only; an empty `{}` tsconfig.json counts as "yes, has typecheck primitive" even though `tsc --noEmit` may emit no errors and no work happened. Acceptable: signal of intent is "I have a tsconfig", not "I have a meaningful tsconfig". Consumer projects responsible for content.
 - **No npm tsconfig fast-path.** Documented choice in `validator/run.sh` comments. If a consumer project on npm wants direct tsc invocation, they declare a `typecheck` script in package.json (`"typecheck": "tsc --noEmit"`). One indirection; explicit.
-- **No multi-stack typecheck.** Single-stack v1 — first lockfile match wins (same constraint as the lint extension). Multi-stack monorepo typecheck is a future extension when the validator gains its own workspace walk.
+- **No multi-stack typecheck execution.** The legacy fallback is single-stack — first lockfile match wins (same constraint as the lint extension). Agent0 does **not** run every stack's typecheck per edit (hot-path overreach); a real monorepo declares `.agent0/validator.json` (spec 207) which owns multi-stack execution. The fallback only *advises* on partial coverage — see § Multi-stack honesty advisory.
+
+## Multi-stack honesty advisory
+
+When the validator runs the **legacy fallback** (no `.agent0/validator.json`) and detects more than one stack across the repo, it audits the first-match stack and emits a non-blocking `multi-stack-advisory:` naming the audited stack and the detected-but-unaudited ones, pointing at the declarative contract (spec 210). Detection is via `git ls-files` over the same manifest markers the fallback chain uses (`package.json`→js, `pyproject.toml`/`requirements.txt`→python, `go.mod`→go, `Cargo.toml`→rust, `composer.json`→php), ignore-aware, with vendored/generated trees pruned; it degrades to root-markers outside a git repo.
+
+```
+multi-stack-advisory: fallback validator detected multiple stacks (js php) but audited only 'js' — php not validated this run. Declare .agent0/validator.json with package-scoped commands for full multi-stack coverage.
+```
+
+It is **detection-only** — no extra pipeline runs — and never touches JSON `ok`/`exit` (advisory family, like `lint-advisory:`/`typecheck-advisory:`). It mirrors the `unaudited_stacks` honesty pattern `/unused-code` uses. Opt-out: `CLAUDE_VALIDATOR_SKIP_MULTISTACK=1`. The advisory never fires on the declarative path (`validator.json` present → stack detection bypassed → coverage is the consumer's declared commands).
 
 ## Gotchas
 

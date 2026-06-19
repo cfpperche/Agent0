@@ -343,6 +343,76 @@ if [ -z "$stack" ]; then
   emit_no_stack
 fi
 
+# --- Multi-stack honesty advisory (spec 210) ---------------------
+# The fallback chain audits ONE stack (first-match). In a polyglot repo with no
+# .agent0/validator.json, the other stacks are silently skipped — coverage the
+# run does not actually have. This advisory NAMES the audited stack + the
+# detected-but-unaudited ones and points at the declarative contract. It is
+# detection-only: NO extra pipeline runs (running every stack per edit would be
+# hot-path overreach; spec 207's validator.json already owns monorepo execution).
+# Fires ONLY in the fallback path (stack != declared). Opt-out:
+# CLAUDE_VALIDATOR_SKIP_MULTISTACK=1. Non-blocking — never touches ok/exit.
+detect_all_stacks() {
+  # Echo space-separated distinct stack names across tracked manifests. The
+  # markers MIRROR the fallback elif chain EXACTLY (pyproject.toml/requirements.txt
+  # for python, package.json for js, go.mod/Cargo.toml/composer.json) so a named
+  # "unaudited" stack is one the fallback genuinely would have audited had it been
+  # first — not a stray tooling file (codex 2026-06-19: setup.py/setup.cfg/
+  # requirements-variants are NOT fallback markers, so they're excluded here too).
+  # Uses git ls-files (ignore-aware); degrades to root-markers outside a git repo.
+  # Tracked vendored/generated trees are pruned to cut advisory noise.
+  local files="" f s stacks=""
+  if [ "$in_git_repo" -eq 1 ]; then
+    files="$(git ls-files -- \
+        '*package.json' '*bun.lockb' '*bun.lock' '*bunfig.toml' '*pnpm-lock.yaml' '*package-lock.json' \
+        '*pyproject.toml' '*requirements.txt' '*go.mod' '*Cargo.toml' '*composer.json' 2>/dev/null \
+      | grep -vE '(^|/)(vendor|node_modules|dist|build|out|coverage|\.venv|venv|target|testdata|fixtures?|__fixtures__)/' )"
+  else
+    for f in package.json bun.lockb bun.lock bunfig.toml pnpm-lock.yaml package-lock.json \
+             pyproject.toml requirements.txt go.mod Cargo.toml composer.json; do
+      [ -f "$f" ] && files="$files
+$f"
+    done
+  fi
+  local oldifs="$IFS"; IFS='
+'
+  for f in $files; do
+    [ -n "$f" ] || continue
+    case "$(basename "$f")" in
+      package.json|bun.lockb|bun.lock|bunfig.toml|pnpm-lock.yaml|package-lock.json) s=js ;;
+      pyproject.toml|requirements.txt) s=python ;;
+      go.mod)                        s=go ;;
+      Cargo.toml)                    s=rust ;;
+      composer.json)                 s=php ;;
+      *)                             s="" ;;
+    esac
+    [ -n "$s" ] || continue
+    case " $stacks " in *" $s "*) ;; *) stacks="${stacks:+$stacks }$s" ;; esac
+  done
+  IFS="$oldifs"
+  echo "$stacks"
+}
+
+multi_stack_advisory_msg=""
+if [ "${CLAUDE_VALIDATOR_SKIP_MULTISTACK:-0}" != "1" ] && [ "$stack" != "declared" ]; then
+  all_stacks="$(detect_all_stacks)"
+  # The audited stack is definitionally present — include it before counting so a
+  # lockfile-only audited stack (e.g. js via bun.lock with no root package.json)
+  # is never missed (codex 2026-06-19).
+  case " $all_stacks " in *" $stack "*) ;; *) all_stacks="${all_stacks:+$all_stacks }$stack" ;; esac
+  n_stacks="$(printf '%s' "$all_stacks" | wc -w | tr -d ' ')"
+  if [ "${n_stacks:-0}" -gt 1 ]; then
+    others=""
+    for s in $all_stacks; do
+      [ "$s" = "$stack" ] && continue
+      others="${others:+$others, }$s"
+    done
+    if [ -n "$others" ]; then
+      multi_stack_advisory_msg="multi-stack-advisory: fallback validator detected multiple stacks ($all_stacks) but audited only '$stack' — $others not validated this run. Declare .agent0/validator.json with package-scoped commands for full multi-stack coverage."
+    fi
+  fi
+fi
+
 # --- Lint extension ----------------------------------------------
 # Manifest-as-intent: linter declared in the manifest is the canonical signal
 # this consumer project wants lint enforcement. Filesystem (`node_modules/...`, `python -m
@@ -456,6 +526,9 @@ if [ -n "$test_advisory_msg" ]; then
 fi
 if [ -n "$typecheck_advisory_msg" ]; then
   printf '%s\n' "$typecheck_advisory_msg" >&2
+fi
+if [ -n "$multi_stack_advisory_msg" ]; then
+  printf '%s\n' "$multi_stack_advisory_msg" >&2
 fi
 
 if [ -z "$command_str" ]; then

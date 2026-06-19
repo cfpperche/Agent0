@@ -61,9 +61,11 @@ The advisory reaches the agent's next-turn context via `delegation-verify.sh` (a
 
 Missing `jq` falls through `emit_no_stack` early — the lint extension is never reached. Missing linter binary on declared+installed false-positive (the JS check is filesystem-only and could be wrong if biome is installed in a parent `node_modules/` via hoisting): the inner `bunx biome check` invocation handles missing binaries by failing — that flips `ok=false` and surfaces the failure naturally, not via advisory. The advisory path is reserved for the deterministic detection failure (manifest says declared, install probe says missing).
 
-## Single-stack v1
+## Single-stack fallback (compatibility) + multi-stack advisory
 
-The validator's existing stack-detect is monolithic — first `if/elif` match wins. A monorepo with both `bun.lock` AND `pyproject.toml` runs only the JS lint extension (bun branch wins). Multi-stack monorepo lint is a property of the validator's stack-detect, not of this extension. The monorepo-stack-detect extension extends the validator to walk multiple stacks; when it lands, this lint extension inherits multi-stack lint automatically with no re-implementation. Documented as explicit non-goal in spec.md to prevent duplicating walk logic.
+The validator's legacy stack-detect is monolithic — first `if/elif` match wins. A monorepo with both `bun.lock` AND `pyproject.toml` runs only the JS lint extension (bun branch wins). This fallback is **compatibility-only**: the recommended path for any real monorepo is to declare `.agent0/validator.json` with package-scoped commands (spec 207), which bypasses stack detection entirely and owns multi-stack execution. Agent0 deliberately does **not** ship an execution "walk" that runs every stack's pipeline per edit — that would turn the post-edit validator into mini-CI (hot-path overreach).
+
+What the fallback DOES do for honesty (spec 210): when it audits one stack but detects more than one stack across the repo (via `git ls-files`) and no `.agent0/validator.json` exists, it emits a non-blocking `multi-stack-advisory:` naming the audited stack and the unaudited ones, pointing at the declarative contract. So lint (like test/typecheck) is single-stack in the fallback by design; full multi-stack coverage comes from declaring `validator.json`, not from a future walk.
 
 ## Gotchas
 

@@ -97,6 +97,10 @@ See `.agent0/context/rules/memory-placement.md` § Multi-runtime usage.
 
 `/vuln-audit` (+ `.agent0/tools/vuln-audit.sh`) — scan INSTALLED dependencies for known CVEs/advisories (osv-scanner, stack-aware, on-demand); reports + proposes upgrades, never auto-fixes or gates install/commit. See `.agent0/context/rules/vuln-audit.md`.
 
+## Unused-code audit
+
+`/unused-code` (+ `.agent0/tools/unused-code.sh`) — detect UNUSED/dead code (unused files/exports/deps/members) on demand (knip, JS/TS-only v1); statuses `no-stack|clean|findings|unconfigured|unavailable|failed`, reports "candidate unused", never deletes or gates edit/commit/install — the `/vuln-audit` twin. NOT CVE scanning → `/vuln-audit`; NOT complexity/refactor smells (deferred). See `.agent0/context/rules/unused-code-audit.md`.
+
 ## MCP recipes
 
 External-MCP server blocks (Playwright, Chrome DevTools, DBHub, Laravel Boost, Next.js DevTools, fal.ai) ship as copy-paste templates only — `.mcp.json.example` (Claude Code) / `.codex/config.toml.example` (Codex), `enabled=false` by default, env-var indirection for secrets. Consult each MCP's upstream README to activate.

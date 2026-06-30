@@ -1,5 +1,7 @@
 # Agent0
 
+> ⚠️ **DEPRECATED — no longer actively maintained (as of 2026-06-29).** This repository is preserved as a reference/archive. Its capabilities matured into standalone, runtime-neutral plugins and active development has moved elsewhere; expect no further updates here.
+
 Agent0 is a portable governance and evidence harness for coding agents.
 
 It is not another coding agent, IDE, hosted control plane, or application framework. It is a reusable base repository that gives existing agent runtimes - currently Claude Code and Codex - a disciplined project loop: intent before code, bounded delegation, validation evidence, session handoff, safety checks, and syncable harness state.

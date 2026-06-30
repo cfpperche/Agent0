@@ -1,5 +1,7 @@
 # Agent0 — base repository
 
+> ⚠️ **DEPRECATED — no longer actively maintained (as of 2026-06-29).** Preserved as a reference/archive; active development has moved elsewhere. Expect no further updates.
+
 Starting point for new software projects. Replace the placeholder sections below as the project evolves. Behavior rules for any agent working on this repo live in `./.agent0/context/rules/`.
 
 ## Overview
